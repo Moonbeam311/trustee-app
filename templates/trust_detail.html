@@ -30,10 +30,12 @@
 
     <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
         <h3>Readiness</h3>
+        <p>{% if trust.settlor_name %}✅{% else %}⬜{% endif %} Parties identified</p>
+        <p>{% if trust.record_visibility != 'Not Yet Selected' %}✅{% else %}⬜{% endif %} Admin preferences selected</p>
+        <p>{% if trust.initial_corpus_description %}✅{% else %}⬜{% endif %} Funding / corpus entered</p>
         <p>{% if linked_properties|length > 0 %}✅{% else %}⬜{% endif %} Property linked</p>
         <p>{% if linked_accounts|length > 0 %}✅{% else %}⬜{% endif %} Account linked</p>
         <p>{% if linked_documents|length > 0 %}✅{% else %}⬜{% endif %} Document attached</p>
-        <p>{% if linked_ledger|length > 0 %}✅{% else %}⬜{% endif %} Ledger entry recorded</p>
     </div>
 </div>
 
@@ -44,6 +46,33 @@
     <p><strong>Trust Type:</strong> {{ trust.trust_type }}</p>
     <p><strong>Effective Date:</strong> {{ trust.effective_date }}</p>
     <p><strong>Jurisdiction:</strong> {{ trust.jurisdiction }}</p>
+    <p><strong>Purpose:</strong> {{ trust.trust_purpose }}</p>
+    <p><strong>Accounting Method:</strong> {{ trust.accounting_method }}</p>
+    <p><strong>Workflow Mode:</strong> {{ trust.workflow_mode }}</p>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Parties</h3>
+    <p><strong>Settlor / Grantor:</strong> {{ trust.settlor_name or 'Not entered' }}</p>
+    <p><strong>Primary Trustee:</strong> {{ trust.trustee_name or 'Not entered' }}</p>
+    <p><strong>Successor Trustee:</strong> {{ trust.successor_trustee_name or 'Not entered' }}</p>
+    <p><strong>Primary Beneficiary:</strong> {{ trust.beneficiary_name or 'Not entered' }}</p>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Administration Preferences</h3>
+    <p><strong>Record Visibility:</strong> {{ trust.record_visibility }}</p>
+    <p><strong>Workflow Mode Confirmed:</strong> {{ trust.workflow_mode_confirmed }}</p>
+    <p><strong>AI Explanations:</strong> {{ trust.ai_explanations }}</p>
+    <p><strong>Recommended Guidance:</strong> {{ trust.recommended_guidance }}</p>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Initial Funding / Property</h3>
+    <p><strong>Initial Corpus Description:</strong> {{ trust.initial_corpus_description or 'Not entered' }}</p>
+    <p><strong>Property Mapping Timing:</strong> {{ trust.property_mapping_timing }}</p>
+    <p><strong>Asset Categories:</strong> {{ trust.asset_categories }}</p>
+    <p><strong>Generate Schedule Recommendations:</strong> {{ trust.generate_schedule_recommendations }}</p>
 </div>
 
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">

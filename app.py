@@ -13,23 +13,102 @@ ledger_entries = []
 def home():
     return render_template("dashboard.html", trusts=trusts)
 
-
-@app.route("/create_trust", methods=["GET", "POST"])
-def create_trust():
+@app.route("/create_trust_step1", methods=["GET", "POST"])
+def create_trust_step1():
     if request.method == "POST":
         trust_id = f"TR-{len(trusts) + 1:03d}"
         trust = {
             "trust_id": trust_id,
             "trust_name": request.form.get("trust_name"),
-            "trust_type": request.form.get("trust_type"),
-            "effective_date": request.form.get("effective_date"),
+            "short_name": request.form.get("short_name"),
             "jurisdiction": request.form.get("jurisdiction"),
-            "status": "Active"
+            "effective_date": request.form.get("effective_date"),
+            "trust_type": "Not Yet Selected",
+            "trust_purpose": "Not Yet Selected",
+            "accounting_method": "Not Yet Selected",
+            "workflow_mode": "Not Yet Selected",
+            "settlor_name": "",
+            "trustee_name": "",
+            "successor_trustee_name": "",
+            "beneficiary_name": "",
+            "record_visibility": "Not Yet Selected",
+            "workflow_mode_confirmed": "Not Yet Selected",
+            "ai_explanations": "Not Yet Selected",
+            "recommended_guidance": "Not Yet Selected",
+            "initial_corpus_description": "",
+            "property_mapping_timing": "Not Yet Selected",
+            "asset_categories": "Not Yet Selected",
+            "generate_schedule_recommendations": "Not Yet Selected",
+            "status": "Draft"
         }
         trusts.append(trust)
+        return redirect(url_for("create_trust_step2", trust_id=trust_id))
+
+    return render_template("create_trust_step1.html")
+
+@app.route("/create_trust_step2/<trust_id>", methods=["GET", "POST"])
+def create_trust_step2(trust_id):
+    trust = next((t for t in trusts if t["trust_id"] == trust_id), None)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    if request.method == "POST":
+        trust["trust_type"] = request.form.get("trust_type")
+        trust["trust_purpose"] = request.form.get("trust_purpose")
+        trust["accounting_method"] = request.form.get("accounting_method")
+        trust["workflow_mode"] = request.form.get("workflow_mode")
+        trust["status"] = "Draft - Step 2 Complete"
+        return redirect(url_for("create_trust_step3", trust_id=trust_id))
+
+    return render_template("create_trust_step2.html", trust=trust)
+
+@app.route("/create_trust_step3/<trust_id>", methods=["GET", "POST"])
+def create_trust_step3(trust_id):
+    trust = next((t for t in trusts if t["trust_id"] == trust_id), None)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    if request.method == "POST":
+        trust["settlor_name"] = request.form.get("settlor_name")
+        trust["trustee_name"] = request.form.get("trustee_name")
+        trust["successor_trustee_name"] = request.form.get("successor_trustee_name")
+        trust["beneficiary_name"] = request.form.get("beneficiary_name")
+        trust["status"] = "Draft - Step 3 Complete"
+        return redirect(url_for("create_trust_step4", trust_id=trust_id))
+
+    return render_template("create_trust_step3.html", trust=trust)
+
+@app.route("/create_trust_step4/<trust_id>", methods=["GET", "POST"])
+def create_trust_step4(trust_id):
+    trust = next((t for t in trusts if t["trust_id"] == trust_id), None)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    if request.method == "POST":
+        trust["record_visibility"] = request.form.get("record_visibility")
+        trust["workflow_mode_confirmed"] = request.form.get("workflow_mode_confirmed")
+        trust["ai_explanations"] = request.form.get("ai_explanations")
+        trust["recommended_guidance"] = request.form.get("recommended_guidance")
+        trust["status"] = "Draft - Step 4 Complete"
+        return redirect(url_for("create_trust_step5", trust_id=trust_id))
+
+    return render_template("create_trust_step4.html", trust=trust)
+
+@app.route("/create_trust_step5/<trust_id>", methods=["GET", "POST"])
+def create_trust_step5(trust_id):
+    trust = next((t for t in trusts if t["trust_id"] == trust_id), None)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    if request.method == "POST":
+        trust["initial_corpus_description"] = request.form.get("initial_corpus_description")
+        trust["property_mapping_timing"] = request.form.get("property_mapping_timing")
+        trust["asset_categories"] = request.form.get("asset_categories")
+        trust["generate_schedule_recommendations"] = request.form.get("generate_schedule_recommendations")
+        trust["status"] = "Draft - Step 5 Complete"
         return redirect(url_for("trust_detail", trust_id=trust_id))
 
-    return render_template("create_trust.html")
+    return render_template("create_trust_step5.html", trust=trust)
 
 @app.route("/add_property", methods=["GET", "POST"])
 def add_property():

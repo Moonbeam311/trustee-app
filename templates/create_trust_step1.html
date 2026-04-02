@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 1: Basic Information</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This step establishes the identity of your trust and the basic governing information used throughout the system.
+</div>
+
+<div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
+    <strong>Why this matters</strong><br>
+    The trust name, jurisdiction, and effective date affect how the trust is organized, displayed, and later used in generated records and documents.
+</div>
+
+<form method="POST">
+
+    <label>Trust Name</label>
+    <input name="trust_name" required>
+    <div style="font-size:13px; margin-bottom:10px;">
+        The full official name of the trust.
+    </div>
+
+    <label>Short Name (Optional)</label>
+    <input name="short_name">
+    <div style="font-size:13px; margin-bottom:10px;">
+        A shorter internal name for dashboard use and quick reference.
+    </div>
+
+    <label>Jurisdiction (State)</label>
+    <input name="jurisdiction" required>
+    <div style="font-size:13px; margin-bottom:10px;">
+        The state whose law will generally govern the trust.
+    </div>
+
+    <label>Effective Date</label>
+    <input type="date" name="effective_date" required>
+    <div style="font-size:13px; margin-bottom:20px;">
+        The date the trust is intended to take effect.
+    </div>
+
+    <button type="submit">Next Step</button>
+</form>
+{% endblock %}
