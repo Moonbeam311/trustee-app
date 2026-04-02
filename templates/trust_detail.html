@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Trust Detail</h2>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+    <a href="/add_property" style="text-decoration:none;"><button type="button">Add Property</button></a>
+    <a href="/link_account" style="text-decoration:none;"><button type="button">Link Account</button></a>
+    <a href="/upload_document" style="text-decoration:none;"><button type="button">Upload Document</button></a>
+    <a href="/ledger_entry" style="text-decoration:none;"><button type="button">Add Ledger Entry</button></a>
+</div>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <span style="padding:6px 10px; border-radius:20px; background:#e6f4ea; border:1px solid #b7dfc2;">Status: {{ trust.status }}</span>
+    <span style="padding:6px 10px; border-radius:20px; background:#fff4e5; border:1px solid #f4c27a;">Properties: {{ linked_properties|length }}</span>
+    <span style="padding:6px 10px; border-radius:20px; background:#e8f0fe; border:1px solid #a8c7fa;">Accounts: {{ linked_accounts|length }}</span>
+    <span style="padding:6px 10px; border-radius:20px; background:#f3e8fd; border:1px solid #d7b5f8;">Documents: {{ linked_documents|length }}</span>
+    <span style="padding:6px 10px; border-radius:20px; background:#fde8e8; border:1px solid #f5b5b5;">Ledger: {{ linked_ledger|length }}</span>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Summary Card</h3>
+        <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+        <p><strong>Name:</strong> {{ trust.trust_name }}</p>
+        <p><strong>Type:</strong> {{ trust.trust_type }}</p>
+        <p><strong>Jurisdiction:</strong> {{ trust.jurisdiction }}</p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Readiness</h3>
+        <p>{% if linked_properties|length > 0 %}✅{% else %}⬜{% endif %} Property linked</p>
+        <p>{% if linked_accounts|length > 0 %}✅{% else %}⬜{% endif %} Account linked</p>
+        <p>{% if linked_documents|length > 0 %}✅{% else %}⬜{% endif %} Document attached</p>
+        <p>{% if linked_ledger|length > 0 %}✅{% else %}⬜{% endif %} Ledger entry recorded</p>
+    </div>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Overview</h3>
+    <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+    <p><strong>Trust Name:</strong> {{ trust.trust_name }}</p>
+    <p><strong>Trust Type:</strong> {{ trust.trust_type }}</p>
+    <p><strong>Effective Date:</strong> {{ trust.effective_date }}</p>
+    <p><strong>Jurisdiction:</strong> {{ trust.jurisdiction }}</p>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Linked Properties</h3>
+    <ul>
+        {% for prop in linked_properties %}
+        <li><a href="/property/{{ prop.property_id }}">{{ prop.property_id }} — {{ prop.property_name }}</a></li>
+        {% else %}
+        <li>No linked properties</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Linked Accounts</h3>
+    <ul>
+        {% for account in linked_accounts %}
+        <li>{{ account.account_id }} — {{ account.account_label }}</li>
+        {% else %}
+        <li>No linked accounts</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Linked Documents</h3>
+    <ul>
+        {% for document in linked_documents %}
+        <li>{{ document.document_id }} — {{ document.document_title }}</li>
+        {% else %}
+        <li>No linked documents</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Ledger Entries</h3>
+    <ul>
+        {% for entry in linked_ledger %}
+        <li>{{ entry.entry_id }} — {{ entry.entry_type }} — {{ entry.entry_date }}</li>
+        {% else %}
+        <li>No ledger entries</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

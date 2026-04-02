@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Upload Document</h2>
+
+<form method="POST">
+    <label>Linked Trust</label>
+    <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust.trust_id }}">{{ trust.trust_id }} - {{ trust.trust_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Linked Property</label>
+    <select name="property_id">
+        <option value="">None</option>
+        {% for prop in properties %}
+        <option value="{{ prop.property_id }}">{{ prop.property_id }} - {{ prop.property_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Linked Account</label>
+    <select name="account_id">
+        <option value="">None</option>
+        {% for account in accounts %}
+        <option value="{{ account.account_id }}">{{ account.account_id }} - {{ account.account_label }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Document Category</label>
+    <select name="document_category" required>
+        <option value="">Select Category</option>
+        <option value="trust_declaration">Trust Declaration</option>
+        <option value="trustee_acceptance">Trustee Acceptance</option>
+        <option value="property_record">Property Record</option>
+        <option value="account_record">Account Record</option>
+        <option value="ucc_filing">UCC Filing</option>
+        <option value="tax_form">Tax Form</option>
+        <option value="instrument">Instrument</option>
+        <option value="minutes_resolution">Minutes / Resolution</option>
+        <option value="correspondence">Correspondence</option>
+        <option value="other">Other</option>
+    </select>
+
+    <label>Document Title</label>
+    <input name="document_title" required>
+
+    <label>Notes</label>
+    <input name="notes">
+
+    <button type="submit">Save Document Record</button>
+</form>
+{% endblock %}

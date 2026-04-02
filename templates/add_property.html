@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Add Property</h2>
+
+<form method="POST">
+    <label>Linked Trust</label>
+    <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust.trust_id }}">{{ trust.trust_id }} - {{ trust.trust_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Property Name</label>
+    <input name="property_name" required>
+
+    <label>Property Type</label>
+    <select name="property_type" required>
+        <option value="">Select Type</option>
+        <option value="real_estate">Real Estate</option>
+        <option value="vehicle">Vehicle</option>
+        <option value="bank_account">Bank Account</option>
+        <option value="business_interest">Business Interest</option>
+        <option value="intellectual_property">Intellectual Property</option>
+        <option value="other">Other</option>
+    </select>
+
+    <label>Address or Identifier</label>
+    <input name="address_or_identifier">
+
+    <label>Acquisition Date</label>
+    <input type="date" name="acquisition_date">
+
+    <label>Legal Title Notes</label>
+    <input name="title_notes">
+
+    <label>Beneficial / Equitable Notes</label>
+    <input name="beneficial_notes">
+
+    <button type="submit">Save Property</button>
+</form>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Link Account</h2>
+
+<form method="POST">
+    <label>Linked Trust</label>
+    <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust.trust_id }}">{{ trust.trust_id }} - {{ trust.trust_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Linked Property</label>
+    <select name="property_id" required>
+        <option value="">Select Property</option>
+        {% for prop in properties %}
+        <option value="{{ prop.property_id }}">{{ prop.property_id }} - {{ prop.property_name }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Account Type</label>
+    <select name="account_type" required>
+        <option value="">Select Type</option>
+        <option value="bank">Bank</option>
+        <option value="escrow">Escrow</option>
+        <option value="insurance">Insurance</option>
+        <option value="tax">Tax</option>
+        <option value="utility">Utility</option>
+        <option value="mortgage">Mortgage</option>
+        <option value="vendor">Vendor</option>
+        <option value="reserve">Reserve</option>
+        <option value="other">Other</option>
+    </select>
+
+    <label>Institution / Provider</label>
+    <input name="institution" required>
+
+    <label>Account Label</label>
+    <input name="account_label" required>
+
+    <label>Masked Account Number</label>
+    <input name="masked_number" placeholder="****1234">
+
+    <label>Purpose</label>
+    <input name="purpose">
+
+    <button type="submit">Link Account</button>
+</form>
+{% endblock %}

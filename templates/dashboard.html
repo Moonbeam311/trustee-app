@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Trustee Dashboard</h2>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+    <a href="/create_trust" style="text-decoration:none;">
+        <div style="border:1px solid #ddd; padding:20px; border-radius:8px; background:#fafafa;">
+            <h3>Create Trust</h3>
+            <p>Start a new trust record.</p>
+        </div>
+    </a>
+
+    <a href="/add_property" style="text-decoration:none;">
+        <div style="border:1px solid #ddd; padding:20px; border-radius:8px; background:#fafafa;">
+            <h3>Add Property</h3>
+            <p>Map property into the trust system.</p>
+        </div>
+    </a>
+
+    <a href="/link_account" style="text-decoration:none;">
+        <div style="border:1px solid #ddd; padding:20px; border-radius:8px; background:#fafafa;">
+            <h3>Link Account</h3>
+            <p>Associate accounts with trust property.</p>
+        </div>
+    </a>
+
+    <a href="/upload_document" style="text-decoration:none;">
+        <div style="border:1px solid #ddd; padding:20px; border-radius:8px; background:#fafafa;">
+            <h3>Upload Document</h3>
+            <p>Attach trust, property, and account records.</p>
+        </div>
+    </a>
+
+    <a href="/ledger_entry" style="text-decoration:none;">
+        <div style="border:1px solid #ddd; padding:20px; border-radius:8px; background:#fafafa;">
+            <h3>Ledger Entry</h3>
+            <p>Record auditable trustee actions and amounts.</p>
+        </div>
+    </a>
+
+</div>
+
+{% if trusts %}
+<div style="margin-top:30px; border:1px solid #ddd; padding:20px; border-radius:8px; background:#fafafa;">
+    <h3>Existing Trusts</h3>
+    <ul>
+        {% for trust in trusts %}
+        <li><a href="/trust/{{ trust.trust_id }}">{{ trust.trust_id }} — {{ trust.trust_name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
