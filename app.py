@@ -1,4 +1,5 @@
 from flask import Flask, request, render_template, redirect, url_for
+from database.db import init_db
 
 app = Flask(__name__)
 
@@ -106,9 +107,29 @@ def create_trust_step5(trust_id):
         trust["asset_categories"] = request.form.get("asset_categories")
         trust["generate_schedule_recommendations"] = request.form.get("generate_schedule_recommendations")
         trust["status"] = "Draft - Step 5 Complete"
-        return redirect(url_for("trust_detail", trust_id=trust_id))
+        return redirect(url_for("create_trust_step6", trust_id=trust_id))
 
     return render_template("create_trust_step5.html", trust=trust)
+
+@app.route("/create_trust_step6/<trust_id>", methods=["GET", "POST"])
+def create_trust_step6(trust_id):
+    trust = next((t for t in trusts if t["trust_id"] == trust_id), None)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    if request.method == "POST":
+        trust["status"] = "Finalized"
+        return redirect(url_for("create_trust_step7", trust_id=trust_id))
+
+    return render_template("create_trust_step6.html", trust=trust)
+
+@app.route("/create_trust_step7/<trust_id>")
+def create_trust_step7(trust_id):
+    trust = next((t for t in trusts if t["trust_id"] == trust_id), None)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    return render_template("create_trust_step7.html", trust=trust)
 
 @app.route("/add_property", methods=["GET", "POST"])
 def add_property():
@@ -233,4 +254,5 @@ def property_detail(property_id):
     )
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)

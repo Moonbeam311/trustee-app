@@ -8,33 +8,56 @@
     Review your entries before proceeding. This step helps ensure accuracy before the trust is finalized.
 </div>
 
-<h3>Basic Information</h3>
-<p><strong>Name:</strong> {{ trust.trust_name }}</p>
-<p><strong>Jurisdiction:</strong> {{ trust.jurisdiction }}</p>
-<p><strong>Effective Date:</strong> {{ trust.effective_date }}</p>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Basic Information</h3>
+        <p><strong>Name:</strong> {{ trust.trust_name }}</p>
+        <p><strong>Short Name:</strong> {{ trust.short_name }}</p>
+        <p><strong>Jurisdiction:</strong> {{ trust.jurisdiction }}</p>
+        <p><strong>Effective Date:</strong> {{ trust.effective_date }}</p>
+    </div>
 
-<h3>Structure</h3>
-<p><strong>Type:</strong> {{ trust.trust_type }}</p>
-<p><strong>Purpose:</strong> {{ trust.trust_purpose }}</p>
-<p><strong>Accounting:</strong> {{ trust.accounting_method }}</p>
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Structure</h3>
+        <p><strong>Type:</strong> {{ trust.trust_type }}</p>
+        <p><strong>Purpose:</strong> {{ trust.trust_purpose }}</p>
+        <p><strong>Accounting:</strong> {{ trust.accounting_method }}</p>
+        <p><strong>Workflow:</strong> {{ trust.workflow_mode }}</p>
+    </div>
+</div>
 
-<h3>Parties</h3>
-<p><strong>Settlor:</strong> {{ trust.settlor_name }}</p>
-<p><strong>Trustee:</strong> {{ trust.trustee_name }}</p>
-<p><strong>Successor:</strong> {{ trust.successor_trustee_name }}</p>
-<p><strong>Beneficiary:</strong> {{ trust.beneficiary_name }}</p>
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Parties</h3>
+        <p><strong>Settlor:</strong> {{ trust.settlor_name }}</p>
+        <p><strong>Trustee:</strong> {{ trust.trustee_name }}</p>
+        <p><strong>Successor:</strong> {{ trust.successor_trustee_name }}</p>
+        <p><strong>Beneficiary:</strong> {{ trust.beneficiary_name }}</p>
+    </div>
 
-<h3>Administration</h3>
-<p><strong>Visibility:</strong> {{ trust.record_visibility }}</p>
-<p><strong>Workflow Mode:</strong> {{ trust.workflow_mode_confirmed }}</p>
-<p><strong>AI Enabled:</strong> {{ trust.ai_explanations }}</p>
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Administration</h3>
+        <p><strong>Visibility:</strong> {{ trust.record_visibility }}</p>
+        <p><strong>Workflow Mode Confirmed:</strong> {{ trust.workflow_mode_confirmed }}</p>
+        <p><strong>AI Enabled:</strong> {{ trust.ai_explanations }}</p>
+        <p><strong>Recommended Guidance:</strong> {{ trust.recommended_guidance }}</p>
+    </div>
+</div>
 
-<h3>Funding</h3>
-<p><strong>Corpus:</strong> {{ trust.initial_corpus_description }}</p>
-<p><strong>Asset Type:</strong> {{ trust.asset_categories }}</p>
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa; margin-bottom:20px;">
+    <h3>Initial Funding / Property</h3>
+    <p><strong>Corpus:</strong> {{ trust.initial_corpus_description }}</p>
+    <p><strong>Property Mapping Timing:</strong> {{ trust.property_mapping_timing }}</p>
+    <p><strong>Asset Type:</strong> {{ trust.asset_categories }}</p>
+    <p><strong>Schedule Recommendations:</strong> {{ trust.generate_schedule_recommendations }}</p>
+</div>
+
+<div style="margin-bottom:20px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What happens next?</strong><br>
+    Confirming this step will mark the trust as finalized in the current prototype flow and return you to the Trust Detail page.
+</div>
 
 <form method="POST">
     <button type="submit">Confirm and Finalize</button>
 </form>
-
 {% endblock %}
