@@ -1,0 +1,15 @@
+TRUSTEE APP — FORM 1041 EXPORT
+========================================
+Trust: B (TR-001)
+Tax Year: 2026
+
+Gross Income: 0.0
+Deductions: 0.0
+Net Income: 0.0
+Distributed Taxable Income: 0.0
+Retained Income: 0.0
+
+Warnings:
+- No ledger activity detected for the selected tax year.
+- No beneficiaries recorded.
+- No K-1 distributions recorded.
