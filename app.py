@@ -66,6 +66,10 @@ from database.db import (
     get_all_instruments,
     get_instrument_creation_guide,
     get_instrument_status_counts,
+    get_trust_count,
+    get_beneficiary_count,
+    get_distribution_count,
+    get_instrument_count,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -656,7 +660,13 @@ def workflow_hub():
 @app.route("/admin")
 def admin_index():
     trusts = get_all_trusts()
-    return render_template("admin_index.html", trusts=trusts)
+    report = {
+        "trust_count": get_trust_count(),
+        "beneficiary_count": get_beneficiary_count(),
+        "distribution_count": get_distribution_count(),
+        "instrument_count": get_instrument_count(),
+    }
+    return render_template("admin_index.html", trusts=trusts, report=report)
 
 
 @app.route("/exports")

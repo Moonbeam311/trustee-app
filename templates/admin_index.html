@@ -8,6 +8,8 @@
     .muted { color: #57606a; }
     ul { margin-top: 8px; }
     hr { border: none; border-top: 1px solid #d8dee4; margin: 14px 0; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
   </style>
 </head>
 <body>
@@ -15,6 +17,17 @@
 
 <h1>Admin Index</h1>
 <p class="muted">Central module and manifest overview for the Trustee App.</p>
+
+<div class="box">
+  <h2>Reporting Dashboard</h2>
+  <table>
+    <tr><th>Metric</th><th>Count</th></tr>
+    <tr><td>Trusts</td><td>{{ report['trust_count'] }}</td></tr>
+    <tr><td>Beneficiaries</td><td>{{ report['beneficiary_count'] }}</td></tr>
+    <tr><td>Distributions</td><td>{{ report['distribution_count'] }}</td></tr>
+    <tr><td>Instruments</td><td>{{ report['instrument_count'] }}</td></tr>
+  </table>
+</div>
 
 <div class="box">
   <h2>Active Modules</h2>
@@ -29,6 +42,7 @@
     <li>Assets</li>
     <li>Asset Health</li>
     <li>Workflow Hub</li>
+    <li>Export / Download Center</li>
   </ul>
 </div>
 
@@ -46,7 +60,6 @@
     <hr>
   {% endfor %}
 </div>
-
 
 <div class="box">
   <h2>Export Center</h2>

@@ -1457,3 +1457,38 @@ def get_instrument_status_counts(trust_id=None):
         counts[key] = row["count"]
     return counts
 
+
+def get_trust_count():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM trusts")
+    row = cur.fetchone()
+    conn.close()
+    return row["count"] if row else 0
+
+
+def get_beneficiary_count():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM beneficiaries")
+    row = cur.fetchone()
+    conn.close()
+    return row["count"] if row else 0
+
+
+def get_distribution_count():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM distributions")
+    row = cur.fetchone()
+    conn.close()
+    return row["count"] if row else 0
+
+
+def get_instrument_count():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM instruments")
+    row = cur.fetchone()
+    conn.close()
+    return row["count"] if row else 0
