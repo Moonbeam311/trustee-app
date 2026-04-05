@@ -83,9 +83,9 @@
 <div class="box">
   <h2>Distribution Totals</h2>
   <ul>
-    <li>Gross Total: {{ totals["gross_total"] }}</li>
-    <li>Taxable Total: {{ totals["taxable_total"] }}</li>
-    <li>Principal Total: {{ totals["principal_total"] }}</li>
+    <li>Gross Total: {{ totals["gross_total_fmt"] }}</li>
+    <li>Taxable Total: {{ totals["taxable_total_fmt"] }}</li>
+    <li>Principal Total: {{ totals["principal_total_fmt"] }}</li>
     <li>Distribution Count: {{ totals["count"] }}</li>
   </ul>
 </div>
@@ -103,9 +103,9 @@
     {% for row in beneficiary_totals %}
     <tr>
       <td>{{ row["full_name"] }}</td>
-      <td>{{ row["gross_total"] }}</td>
-      <td>{{ row["taxable_total"] }}</td>
-      <td>{{ row["principal_total"] }}</td>
+      <td>{{ row["gross_total_fmt"] }}</td>
+      <td>{{ row["taxable_total_fmt"] }}</td>
+      <td>{{ row["principal_total_fmt"] }}</td>
       <td>{{ row["count"] }}</td>
     </tr>
     {% endfor %}

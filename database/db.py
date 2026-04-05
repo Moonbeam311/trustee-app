@@ -1695,3 +1695,9 @@ def get_distribution_totals_by_beneficiary(trust_id, tax_year=None):
 
     return list(results.values())
 
+def money(value):
+    try:
+        return f"{float(value or 0):,.2f}"
+    except:
+        return "0.00"
+

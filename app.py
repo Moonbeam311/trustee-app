@@ -80,6 +80,7 @@ from database.db import (
     is_locked_status,
     get_distribution_totals_by_trust,
     get_distribution_totals_by_beneficiary,
+    money,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -476,6 +477,16 @@ def k1_trust_view(trust_id):
     summary = get_k1_summary(trust_id, tax_year)
     totals = get_distribution_totals_by_trust(trust_id, tax_year)
     beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
+
+    totals["gross_total_fmt"] = money(totals["gross_total"])
+    totals["taxable_total_fmt"] = money(totals["taxable_total"])
+    totals["principal_total_fmt"] = money(totals["principal_total"])
+
+    for row in beneficiary_totals:
+        row["gross_total_fmt"] = money(row["gross_total"])
+        row["taxable_total_fmt"] = money(row["taxable_total"])
+        row["principal_total_fmt"] = money(row["principal_total"])
+
     history = get_audit_log_by_entity("beneficiary", trust_id, 25)
 
     return render_template(
@@ -594,6 +605,11 @@ def form1041_dashboard():
         if selected_trust:
             dataset = get_1041_dataset(trust_id, tax_year)
             distribution_totals = get_distribution_totals_by_trust(trust_id, tax_year)
+
+    if distribution_totals:
+        distribution_totals["gross_total_fmt"] = money(distribution_totals["gross_total"])
+        distribution_totals["taxable_total_fmt"] = money(distribution_totals["taxable_total"])
+        distribution_totals["principal_total_fmt"] = money(distribution_totals["principal_total"])
 
     history = get_audit_log_by_entity("1041_export", trust_id, 25)
 
