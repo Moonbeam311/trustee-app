@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Export Center</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    .muted { color: #57606a; }
+    ul { margin-top: 8px; }
+    hr { border: none; border-top: 1px solid #d8dee4; margin: 14px 0; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Export / Download Center</h1>
+<p class="muted">Central place for package, handoff, and module export references.</p>
+
+<div class="box">
+  <h2>Package Exports</h2>
+  <ul>
+    <li>Trustee_App_Export_Package.zip</li>
+    <li>package_export/PACKAGE_SUMMARY.txt</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Handoff Files</h2>
+  <ul>
+    <li>handoff/ROUTE_INVENTORY.txt</li>
+    <li>handoff/ROUTE_CONSISTENCY_REPORT.txt</li>
+    <li>handoff/MODULE_STATUS.txt</li>
+    <li>handoff/PROJECT_HANDOFF.txt</li>
+    <li>handoff/FILE_MANIFEST.txt</li>
+    <li>handoff/ADMIN_MANIFEST.txt</li>
+    <li>handoff/FINAL_STABILIZATION_SUMMARY.txt</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Roadmap Files</h2>
+  <ul>
+    <li>roadmap/FEATURE_ROADMAP.md</li>
+    <li>roadmap/PRIORITY_QUEUE.txt</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Trust Quick Links</h2>
+  {% for trust in trusts %}
+    <p><strong>{{ trust['trust_name'] }}</strong> <span class="muted">({{ trust['trust_id'] }})</span></p>
+    <p>
+      <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id']) }}">K-1</a> |
+      <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a> |
+      <a href="{{ url_for('instruments_dashboard', trust_id=trust['trust_id']) }}">Instruments</a>
+    </p>
+    <hr>
+  {% endfor %}
+</div>
+</body>
+</html>

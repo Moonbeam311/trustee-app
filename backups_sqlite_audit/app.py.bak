@@ -70,9 +70,6 @@ from database.db import (
     get_beneficiary_count,
     get_distribution_count,
     get_instrument_count,
-    init_audit_table,
-    log_change,
-    get_audit_log,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -80,9 +77,6 @@ from datetime import date
 from io import BytesIO
 
 app = Flask(__name__)
-
-init_audit_table()
-
 init_db()
 ensure_k1_tables()
 ensure_instrument_tables()
@@ -744,13 +738,6 @@ def export_1041_text(trust_id):
     response.headers["Content-Type"] = "text/plain"
     response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_1041_{tax_year}.txt"
     return response
-
-
-
-@app.route("/audit")
-def audit_dashboard():
-    logs = get_audit_log(200)
-    return render_template("audit_dashboard.html", logs=logs)
 
 
 if __name__ == "__main__":
