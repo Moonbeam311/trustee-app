@@ -3,16 +3,18 @@
 <head>
   <title>Audit Log</title>
   <style>
-    body { font-family: Arial; margin: 24px; color: #1f2328; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ddd; padding: 8px; }
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; background: #f6f8fa; }
     .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .muted { color: #57606a; }
   </style>
 </head>
 <body>
 {% include '_nav.html' %}
 
 <h1>Audit Trail</h1>
+<p class="muted">Review timestamped operational changes across the Trustee App.</p>
 
 <div class="box">
   <form method="GET" action="/audit">
@@ -27,28 +29,26 @@
 </div>
 
 <div class="box">
-<table>
-<tr>
-  <th>ID</th>
-  <th>Entity</th>
-  <th>Entity ID</th>
-  <th>Action</th>
-  <th>Note</th>
-  <th>Timestamp</th>
-</tr>
-
-{% for row in logs %}
-<tr>
-  <td>{{ row['id'] }}</td>
-  <td>{{ row['entity_type'] }}</td>
-  <td>{{ row['entity_id'] }}</td>
-  <td>{{ row['action'] }}</td>
-  <td>{{ row['note'] }}</td>
-  <td>{{ row['created_at'] }}</td>
-</tr>
-{% endfor %}
-</table>
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Entity</th>
+      <th>Entity ID</th>
+      <th>Action</th>
+      <th>Note</th>
+      <th>Timestamp</th>
+    </tr>
+    {% for row in logs %}
+    <tr>
+      <td>{{ row['id'] }}</td>
+      <td>{{ row['entity_type'] }}</td>
+      <td>{{ row['entity_id'] }}</td>
+      <td>{{ row['action'] }}</td>
+      <td>{{ row['note'] }}</td>
+      <td>{{ row['created_at'] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
 </div>
-
 </body>
 </html>

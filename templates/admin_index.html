@@ -3,13 +3,17 @@
 <head>
   <title>Admin Index</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; }
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; background: #f6f8fa; }
     .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
     .muted { color: #57606a; }
     ul { margin-top: 8px; }
     hr { border: none; border-top: 1px solid #d8dee4; margin: 14px 0; }
     table { border-collapse: collapse; width: 100%; margin-top: 12px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric { border: 1px solid #d0d7de; border-radius: 10px; padding: 14px; background: #fdfdfd; }
+    .metric h3 { margin: 0 0 6px 0; font-size: 14px; color: #57606a; }
+    .metric p { margin: 0; font-size: 24px; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -20,30 +24,33 @@
 
 <div class="box">
   <h2>Reporting Dashboard</h2>
-  <table>
-    <tr><th>Metric</th><th>Count</th></tr>
-    <tr><td>Trusts</td><td>{{ report['trust_count'] }}</td></tr>
-    <tr><td>Beneficiaries</td><td>{{ report['beneficiary_count'] }}</td></tr>
-    <tr><td>Distributions</td><td>{{ report['distribution_count'] }}</td></tr>
-    <tr><td>Instruments</td><td>{{ report['instrument_count'] }}</td></tr>
-  </table>
+  <div class="grid">
+    <div class="metric">
+      <h3>Trusts</h3>
+      <p>{{ report['trust_count'] }}</p>
+    </div>
+    <div class="metric">
+      <h3>Beneficiaries</h3>
+      <p>{{ report['beneficiary_count'] }}</p>
+    </div>
+    <div class="metric">
+      <h3>Distributions</h3>
+      <p>{{ report['distribution_count'] }}</p>
+    </div>
+    <div class="metric">
+      <h3>Instruments</h3>
+      <p>{{ report['instrument_count'] }}</p>
+    </div>
+  </div>
 </div>
 
 <div class="box">
-  <h2>Active Modules</h2>
-  <ul>
-    <li>Dashboard / Home</li>
-    <li>Command Dashboard</li>
-    <li>Financial Summary</li>
-    <li>Tax Assistant</li>
-    <li>K-1</li>
-    <li>Form 1041</li>
-    <li>Instrument Registry</li>
-    <li>Assets</li>
-    <li>Asset Health</li>
-    <li>Workflow Hub</li>
-    <li>Export / Download Center</li>
-  </ul>
+  <h2>Operational Shortcuts</h2>
+  <p>
+    <a href="{{ url_for('workflow_hub') }}">Workflow Hub</a> |
+    <a href="{{ url_for('export_center') }}">Export Center</a> |
+    <a href="{{ url_for('audit_dashboard') }}">Audit Trail</a>
+  </p>
 </div>
 
 <div class="box">
@@ -59,11 +66,6 @@
     </p>
     <hr>
   {% endfor %}
-</div>
-
-<div class="box">
-  <h2>Export Center</h2>
-  <p><a href="{{ url_for('export_center') }}">Open Export / Download Center</a></p>
 </div>
 
 <div class="box">
