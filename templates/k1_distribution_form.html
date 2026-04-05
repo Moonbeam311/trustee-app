@@ -3,6 +3,13 @@
 <head><title>Record Distribution</title></head>
 <body>
 <h1>Record Distribution</h1>
+
+{% if error_message %}
+<div style="border:1px solid red; padding:10px; margin:10px 0; color:red;">
+  {{ error_message }}
+</div>
+{% endif %}
+
 <p>Trust: {{ trust["trust_name"] }}</p>
 <form method="POST">
   <label>Beneficiary</label>

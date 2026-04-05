@@ -76,6 +76,7 @@ from database.db import (
     get_audit_log_by_entity,
     validate_instrument_payload,
     validate_beneficiary_payload,
+    validate_distribution_payload,
     is_locked_status,
 )
 from pathlib import Path
@@ -523,9 +524,11 @@ def k1_new_beneficiary(trust_id):
 def k1_new_distribution(trust_id):
     trust = get_trust_by_id(trust_id)
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+
     if request.method == "POST":
         distribution_id = get_next_distribution_id()
-        create_distribution_record({
+
+        payload = {
             "distribution_id": distribution_id,
             "trust_id": trust_id,
             "beneficiary_id": request.form.get("beneficiary_id"),
@@ -538,10 +541,28 @@ def k1_new_distribution(trust_id):
             "principal_amount": request.form.get("principal_amount"),
             "source_reference": request.form.get("source_reference"),
             "status": "recorded",
-        })
+        }
+
+        errors = validate_distribution_payload(payload)
+        if errors:
+            return render_template(
+                "k1_distribution_form.html",
+                trust=trust,
+                beneficiaries=beneficiaries,
+                tax_year=request.form.get("tax_year") or str(date.today().year),
+                error_message="; ".join(errors)
+            )
+
+        create_distribution_record(payload)
         log_change("distribution", distribution_id, "create", f"Distribution created for trust {trust_id}")
         return redirect(url_for("k1_trust_view", trust_id=trust_id, tax_year=request.form.get("tax_year")))
-    return render_template("k1_distribution_form.html", trust=trust, beneficiaries=beneficiaries, tax_year=str(date.today().year))
+
+    return render_template(
+        "k1_distribution_form.html",
+        trust=trust,
+        beneficiaries=beneficiaries,
+        tax_year=str(date.today().year)
+    )
 
 @app.route("/k1/trust/<trust_id>/year_end_summary")
 def k1_year_end_summary(trust_id):
