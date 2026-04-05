@@ -14,45 +14,45 @@
 {% include '_nav.html' %}
 
 <h1>Export / Download Center</h1>
-<p class="muted">Central place for package, handoff, and module export references.</p>
+<p class="muted">Central place for package, handoff, roadmap, and live module exports.</p>
 
 <div class="box">
   <h2>Package Exports</h2>
   <ul>
-    <li>Trustee_App_Export_Package.zip</li>
-    <li>package_export/PACKAGE_SUMMARY.txt</li>
+    <li><a href="{{ url_for('export_zip_snapshot') }}">Download ZIP Snapshot</a></li>
+    <li><a href="{{ url_for('export_package_file', filename='PACKAGE_SUMMARY.txt') }}">Download Package Summary</a></li>
   </ul>
 </div>
 
 <div class="box">
   <h2>Handoff Files</h2>
   <ul>
-    <li>handoff/ROUTE_INVENTORY.txt</li>
-    <li>handoff/ROUTE_CONSISTENCY_REPORT.txt</li>
-    <li>handoff/MODULE_STATUS.txt</li>
-    <li>handoff/PROJECT_HANDOFF.txt</li>
-    <li>handoff/FILE_MANIFEST.txt</li>
-    <li>handoff/ADMIN_MANIFEST.txt</li>
-    <li>handoff/FINAL_STABILIZATION_SUMMARY.txt</li>
+    <li><a href="{{ url_for('export_handoff_file', filename='ROUTE_INVENTORY.txt') }}">ROUTE_INVENTORY.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='ROUTE_CONSISTENCY_REPORT.txt') }}">ROUTE_CONSISTENCY_REPORT.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='MODULE_STATUS.txt') }}">MODULE_STATUS.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='PROJECT_HANDOFF.txt') }}">PROJECT_HANDOFF.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='FILE_MANIFEST.txt') }}">FILE_MANIFEST.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='ADMIN_MANIFEST.txt') }}">ADMIN_MANIFEST.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='FINAL_STABILIZATION_SUMMARY.txt') }}">FINAL_STABILIZATION_SUMMARY.txt</a></li>
+    <li><a href="{{ url_for('export_handoff_file', filename='ADMIN_REPORTING_NOTE.txt') }}">ADMIN_REPORTING_NOTE.txt</a></li>
   </ul>
 </div>
 
 <div class="box">
   <h2>Roadmap Files</h2>
   <ul>
-    <li>roadmap/FEATURE_ROADMAP.md</li>
-    <li>roadmap/PRIORITY_QUEUE.txt</li>
+    <li><a href="{{ url_for('export_roadmap_file', filename='FEATURE_ROADMAP.md') }}">FEATURE_ROADMAP.md</a></li>
+    <li><a href="{{ url_for('export_roadmap_file', filename='PRIORITY_QUEUE.txt') }}">PRIORITY_QUEUE.txt</a></li>
   </ul>
 </div>
 
 <div class="box">
-  <h2>Trust Quick Links</h2>
+  <h2>Live Trust Exports</h2>
   {% for trust in trusts %}
     <p><strong>{{ trust['trust_name'] }}</strong> <span class="muted">({{ trust['trust_id'] }})</span></p>
     <p>
-      <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id']) }}">K-1</a> |
-      <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a> |
-      <a href="{{ url_for('instruments_dashboard', trust_id=trust['trust_id']) }}">Instruments</a>
+      <a href="{{ url_for('export_k1_live_csv', trust_id=trust['trust_id']) }}">Download K-1 CSV</a> |
+      <a href="{{ url_for('export_1041_text', trust_id=trust['trust_id']) }}">Download 1041 TXT</a>
     </p>
     <hr>
   {% endfor %}

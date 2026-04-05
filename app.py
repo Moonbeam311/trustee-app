@@ -74,6 +74,7 @@ from database.db import (
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from datetime import date
+from io import BytesIO
 
 app = Flask(__name__)
 init_db()
@@ -673,6 +674,70 @@ def admin_index():
 def export_center():
     trusts = get_all_trusts()
     return render_template("export_center.html", trusts=trusts)
+
+
+@app.route("/exports/handoff/<filename>")
+def export_handoff_file(filename):
+    from flask import send_from_directory
+    return send_from_directory("handoff", filename, as_attachment=True)
+
+
+@app.route("/exports/roadmap/<filename>")
+def export_roadmap_file(filename):
+    from flask import send_from_directory
+    return send_from_directory("roadmap", filename, as_attachment=True)
+
+
+@app.route("/exports/package/<filename>")
+def export_package_file(filename):
+    from flask import send_from_directory
+    return send_from_directory("package_export", filename, as_attachment=True)
+
+
+@app.route("/exports/zip")
+def export_zip_snapshot():
+    from flask import send_file
+    return send_file("Trustee_App_Export_Package.zip", as_attachment=True)
+
+
+@app.route("/exports/k1/<trust_id>.csv")
+def export_k1_live_csv(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    csv_text = export_k1_csv_text(trust_id, tax_year)
+    response = make_response(csv_text)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_k1_{tax_year}.csv"
+    return response
+
+
+@app.route("/exports/1041/<trust_id>.txt")
+def export_1041_text(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    dataset = get_1041_dataset(trust_id, tax_year)
+
+    lines = []
+    lines.append("TRUSTEE APP — FORM 1041 EXPORT")
+    lines.append("=" * 40)
+    if dataset and dataset["trust"]:
+        lines.append(f"Trust: {dataset['trust']['trust_name']} ({dataset['trust']['trust_id']})")
+        lines.append(f"Tax Year: {dataset['tax_year']}")
+        lines.append("")
+        lines.append(f"Gross Income: {dataset['gross_income']}")
+        lines.append(f"Deductions: {dataset['deductions']}")
+        lines.append(f"Net Income: {dataset['net_income']}")
+        lines.append(f"Distributed Taxable Income: {dataset['distributed_taxable_income']}")
+        lines.append(f"Retained Income: {dataset['retained_income']}")
+        lines.append("")
+        lines.append("Warnings:")
+        for item in dataset["warnings"]:
+            lines.append(f"- {item}")
+    else:
+        lines.append("No dataset available.")
+
+    response = make_response("\n".join(lines))
+    response.headers["Content-Type"] = "text/plain"
+    response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_1041_{tax_year}.txt"
+    return response
 
 
 if __name__ == "__main__":
