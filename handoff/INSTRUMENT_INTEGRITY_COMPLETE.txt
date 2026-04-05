@@ -1,0 +1,18 @@
+TRUSTEE APP — INSTRUMENT INTEGRITY COMPLETE
+==========================================
+
+This note was added via the GitHub connector to mark the completion of the instrument-only integrity rules phase.
+
+Completed scope:
+- instrument payload validation
+- issued/retired locking rules
+- safe error display
+- audit logging for blocked updates
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
