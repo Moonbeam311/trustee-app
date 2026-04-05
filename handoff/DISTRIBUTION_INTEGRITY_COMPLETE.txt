@@ -1,0 +1,17 @@
+TRUSTEE APP — DISTRIBUTION INTEGRITY COMPLETE
+============================================
+
+This note was added via the GitHub connector to mark the completion of the distribution-only integrity rules phase.
+
+Completed scope:
+- distribution payload validation
+- safe error display on distribution form
+- distribution-only enforcement after instrument and beneficiary integrity
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
