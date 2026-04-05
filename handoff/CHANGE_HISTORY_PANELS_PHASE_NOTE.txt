@@ -1,0 +1,17 @@
+TRUSTEE APP — CHANGE HISTORY PANELS
+===================================
+
+This note was added via the GitHub connector to mark the start of the change history panels phase.
+
+Planned scope:
+- surface audit log history on selected pages
+- connect per-record change history to K-1, 1041, and instruments
+- improve operational visibility without changing core architecture
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
