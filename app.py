@@ -81,6 +81,8 @@ from database.db import (
     get_distribution_totals_by_trust,
     get_distribution_totals_by_beneficiary,
     money,
+    compute_dni_components,
+    compute_beneficiary_tax_shares,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -599,17 +601,35 @@ def form1041_dashboard():
     dataset = None
 
     distribution_totals = None
+    tax_logic = None
+    beneficiary_tax_shares = None
 
     if trust_id:
         selected_trust = get_trust_by_id(trust_id)
         if selected_trust:
             dataset = get_1041_dataset(trust_id, tax_year)
             distribution_totals = get_distribution_totals_by_trust(trust_id, tax_year)
+            tax_logic = compute_dni_components(trust_id, tax_year)
+            beneficiary_tax_shares = compute_beneficiary_tax_shares(trust_id, tax_year)
 
     if distribution_totals:
         distribution_totals["gross_total_fmt"] = money(distribution_totals["gross_total"])
         distribution_totals["taxable_total_fmt"] = money(distribution_totals["taxable_total"])
         distribution_totals["principal_total_fmt"] = money(distribution_totals["principal_total"])
+
+    if tax_logic:
+        tax_logic["gross_income_fmt"] = money(tax_logic["gross_income"])
+        tax_logic["taxable_distributed_fmt"] = money(tax_logic["taxable_distributed"])
+        tax_logic["principal_distributed_fmt"] = money(tax_logic["principal_distributed"])
+        tax_logic["dni_fmt"] = money(tax_logic["dni"])
+        tax_logic["retained_income_fmt"] = money(tax_logic["retained_income"])
+
+    if beneficiary_tax_shares:
+        for row in beneficiary_tax_shares:
+            row["gross_total_fmt"] = money(row["gross_total"])
+            row["taxable_total_fmt"] = money(row["taxable_total"])
+            row["principal_total_fmt"] = money(row["principal_total"])
+            row["taxable_ratio_pct"] = f"{row['taxable_ratio'] * 100:.1f}%"
 
     history = get_audit_log_by_entity("1041_export", trust_id, 25)
 
@@ -620,6 +640,8 @@ def form1041_dashboard():
         selected_trust=selected_trust,
         dataset=dataset,
         distribution_totals=distribution_totals,
+        tax_logic=tax_logic,
+        beneficiary_tax_shares=beneficiary_tax_shares,
         tax_year=tax_year
     )
 

@@ -1701,3 +1701,49 @@ def money(value):
     except:
         return "0.00"
 
+def compute_dni_components(trust_id, tax_year=None):
+    totals = get_distribution_totals_by_trust(trust_id, tax_year)
+
+    gross_income = totals["gross_total"]
+    taxable_distributed = totals["taxable_total"]
+    principal_distributed = totals["principal_total"]
+
+    distributable_net_income = taxable_distributed
+    retained_income = gross_income - taxable_distributed
+
+    if retained_income < 0:
+        retained_income = 0.0
+
+    return {
+        "gross_income": gross_income,
+        "taxable_distributed": taxable_distributed,
+        "principal_distributed": principal_distributed,
+        "dni": distributable_net_income,
+        "retained_income": retained_income,
+    }
+
+
+def compute_beneficiary_tax_shares(trust_id, tax_year=None):
+    rows = get_distribution_totals_by_beneficiary(trust_id, tax_year)
+    results = []
+
+    for row in rows:
+        gross = to_float(row["gross_total"])
+        taxable = to_float(row["taxable_total"])
+        principal = to_float(row["principal_total"])
+
+        taxable_ratio = 0.0
+        if gross > 0:
+            taxable_ratio = taxable / gross
+
+        results.append({
+            "beneficiary_id": row["beneficiary_id"],
+            "full_name": row["full_name"],
+            "gross_total": gross,
+            "taxable_total": taxable,
+            "principal_total": principal,
+            "taxable_ratio": taxable_ratio,
+        })
+
+    return results
+
