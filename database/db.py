@@ -1642,3 +1642,56 @@ def validate_distribution_payload(data):
         errors.append("Distribution type is required.")
 
     return errors
+
+def to_float(value):
+    try:
+        return float(value or 0)
+    except:
+        return 0.0
+
+
+def get_distribution_totals_by_trust(trust_id, tax_year=None):
+    distributions = get_distributions_by_trust_id(trust_id, tax_year)
+
+    totals = {
+        "gross_total": 0.0,
+        "taxable_total": 0.0,
+        "principal_total": 0.0,
+        "count": len(distributions),
+    }
+
+    for row in distributions:
+        totals["gross_total"] += to_float(row.get("gross_amount"))
+        totals["taxable_total"] += to_float(row.get("taxable_amount"))
+        totals["principal_total"] += to_float(row.get("principal_amount"))
+
+    return totals
+
+
+def get_distribution_totals_by_beneficiary(trust_id, tax_year=None):
+    distributions = get_distributions_by_trust_id(trust_id, tax_year)
+    beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+
+    lookup = {b["beneficiary_id"]: b for b in beneficiaries}
+    results = {}
+
+    for row in distributions:
+        bid = row["beneficiary_id"]
+        if bid not in results:
+            name = lookup.get(bid, {}).get("full_name", bid)
+            results[bid] = {
+                "beneficiary_id": bid,
+                "full_name": name,
+                "gross_total": 0.0,
+                "taxable_total": 0.0,
+                "principal_total": 0.0,
+                "count": 0,
+            }
+
+        results[bid]["gross_total"] += to_float(row.get("gross_amount"))
+        results[bid]["taxable_total"] += to_float(row.get("taxable_amount"))
+        results[bid]["principal_total"] += to_float(row.get("principal_amount"))
+        results[bid]["count"] += 1
+
+    return list(results.values())
+

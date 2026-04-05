@@ -4,6 +4,13 @@
 <body>
 {% include '_nav.html' %}
 
+{% if error_message %}
+<div class="box" style="border:1px solid #cf222e; padding:16px; margin:16px 0; color:#cf222e;">
+  <strong>Error:</strong> {{ error_message }}
+</div>
+{% endif %}
+
+
 <h1>K-1 Readiness</h1>
 <p><strong>Trust:</strong> {{ trust["trust_name"] }}</p>
 <p><strong>Tax Year:</strong> {{ tax_year }}</p>
@@ -72,6 +79,39 @@
 </tr>
 {% endfor %}
 </table>
+
+<div class="box">
+  <h2>Distribution Totals</h2>
+  <ul>
+    <li>Gross Total: {{ totals["gross_total"] }}</li>
+    <li>Taxable Total: {{ totals["taxable_total"] }}</li>
+    <li>Principal Total: {{ totals["principal_total"] }}</li>
+    <li>Distribution Count: {{ totals["count"] }}</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Beneficiary Totals</h2>
+  <table>
+    <tr>
+      <th>Name</th>
+      <th>Gross</th>
+      <th>Taxable</th>
+      <th>Principal</th>
+      <th>Count</th>
+    </tr>
+    {% for row in beneficiary_totals %}
+    <tr>
+      <td>{{ row["full_name"] }}</td>
+      <td>{{ row["gross_total"] }}</td>
+      <td>{{ row["taxable_total"] }}</td>
+      <td>{{ row["principal_total"] }}</td>
+      <td>{{ row["count"] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
 </body>
 </html>
 

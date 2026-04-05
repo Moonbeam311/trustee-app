@@ -88,6 +88,19 @@
   <a href="{{ url_for('form1041_preview', trust_id=dataset['trust']['trust_id'], tax_year=tax_year) }}">Open Form 1041 Preview</a>
 </div>
 {% endif %}
+
+{% if distribution_totals %}
+<div class="box">
+  <h2>Calculated Distribution Totals</h2>
+  <ul>
+    <li>Gross Total: {{ distribution_totals["gross_total"] }}</li>
+    <li>Taxable Total: {{ distribution_totals["taxable_total"] }}</li>
+    <li>Principal Total: {{ distribution_totals["principal_total"] }}</li>
+    <li>Distribution Count: {{ distribution_totals["count"] }}</li>
+  </ul>
+</div>
+{% endif %}
+
 </body>
 </html>
 

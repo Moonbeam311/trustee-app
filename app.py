@@ -78,6 +78,8 @@ from database.db import (
     validate_beneficiary_payload,
     validate_distribution_payload,
     is_locked_status,
+    get_distribution_totals_by_trust,
+    get_distribution_totals_by_beneficiary,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -472,6 +474,8 @@ def k1_trust_view(trust_id):
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
     distributions = get_distributions_by_trust_id(trust_id, tax_year)
     summary = get_k1_summary(trust_id, tax_year)
+    totals = get_distribution_totals_by_trust(trust_id, tax_year)
+    beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
     history = get_audit_log_by_entity("beneficiary", trust_id, 25)
 
     return render_template(
@@ -482,6 +486,8 @@ def k1_trust_view(trust_id):
         distributions=distributions,
         summary=summary,
         readiness=summary,
+        totals=totals,
+        beneficiary_totals=beneficiary_totals,
         tax_year=tax_year
     )
 
@@ -581,10 +587,13 @@ def form1041_dashboard():
     selected_trust = None
     dataset = None
 
+    distribution_totals = None
+
     if trust_id:
         selected_trust = get_trust_by_id(trust_id)
         if selected_trust:
             dataset = get_1041_dataset(trust_id, tax_year)
+            distribution_totals = get_distribution_totals_by_trust(trust_id, tax_year)
 
     history = get_audit_log_by_entity("1041_export", trust_id, 25)
 
@@ -594,6 +603,7 @@ def form1041_dashboard():
         trusts=trusts,
         selected_trust=selected_trust,
         dataset=dataset,
+        distribution_totals=distribution_totals,
         tax_year=tax_year
     )
 
