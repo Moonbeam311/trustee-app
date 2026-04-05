@@ -659,6 +659,12 @@ def admin_index():
     return render_template("admin_index.html", trusts=trusts)
 
 
+@app.route("/exports")
+def export_center():
+    trusts = get_all_trusts()
+    return render_template("export_center.html", trusts=trusts)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
 
