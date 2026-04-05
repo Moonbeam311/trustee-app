@@ -31,3 +31,8 @@ NEXT RECOMMENDED PHASES
 2. Route consistency cleanup
 3. Optional repo push
 4. Later legal refinement of instrument classes
+
+ROADMAP FILES
+- roadmap/FEATURE_ROADMAP.md
+- roadmap/PRIORITY_QUEUE.txt
+
