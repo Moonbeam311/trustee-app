@@ -1,0 +1,17 @@
+TRUSTEE APP — BENEFICIARY INTEGRITY COMPLETE
+===========================================
+
+This note was added via the GitHub connector to mark the completion of the beneficiary-only integrity rules phase.
+
+Completed scope:
+- beneficiary payload validation
+- safe error display on beneficiary form
+- beneficiary-only enforcement before distributions
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
