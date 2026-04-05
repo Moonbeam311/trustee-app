@@ -3,6 +3,13 @@
 <head><title>Add Beneficiary</title></head>
 <body>
 <h1>Add Beneficiary</h1>
+
+{% if error_message %}
+<div style="border:1px solid red; padding:10px; margin:10px 0; color:red;">
+  {{ error_message }}
+</div>
+{% endif %}
+
 <p>Trust: {{ trust["trust_name"] }}</p>
 <form method="POST">
   <label>Full Name</label><input type="text" name="full_name" required><br>

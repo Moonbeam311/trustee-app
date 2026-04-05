@@ -75,6 +75,7 @@ from database.db import (
     get_audit_log,
     get_audit_log_by_entity,
     validate_instrument_payload,
+    validate_beneficiary_payload,
     is_locked_status,
 )
 from pathlib import Path
@@ -486,9 +487,11 @@ def k1_trust_view(trust_id):
 @app.route("/k1/trust/<trust_id>/beneficiary/new", methods=["GET", "POST"])
 def k1_new_beneficiary(trust_id):
     trust = get_trust_by_id(trust_id)
+
     if request.method == "POST":
         beneficiary_id = get_next_beneficiary_id()
-        create_beneficiary_record({
+
+        payload = {
             "beneficiary_id": beneficiary_id,
             "trust_id": trust_id,
             "full_name": request.form.get("full_name"),
@@ -500,9 +503,20 @@ def k1_new_beneficiary(trust_id):
             "fixed_percentage": request.form.get("fixed_percentage"),
             "is_active": "Yes",
             "notes": request.form.get("notes"),
-        })
+        }
+
+        errors = validate_beneficiary_payload(payload)
+        if errors:
+            return render_template(
+                "k1_beneficiary_form.html",
+                trust=trust,
+                error_message="; ".join(errors)
+            )
+
+        create_beneficiary_record(payload)
         log_change("beneficiary", beneficiary_id, "create", f"Beneficiary created for trust {trust_id}")
         return redirect(url_for("k1_trust_view", trust_id=trust_id))
+
     return render_template("k1_beneficiary_form.html", trust=trust)
 
 @app.route("/k1/trust/<trust_id>/distribution/new", methods=["GET", "POST"])
