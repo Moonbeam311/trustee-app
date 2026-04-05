@@ -1,0 +1,18 @@
+TRUSTEE APP — AUDIT TRAIL + CHANGE LOG LAYER
+============================================
+
+This note was added via the GitHub connector to mark the start of the audit trail and change log phase.
+
+Planned scope:
+- change log table in SQLite
+- timestamped record updates
+- module-level change notes
+- admin visibility into change history
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
