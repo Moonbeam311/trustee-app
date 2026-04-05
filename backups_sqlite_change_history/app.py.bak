@@ -469,12 +469,9 @@ def k1_trust_view(trust_id):
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
     distributions = get_distributions_by_trust_id(trust_id, tax_year)
     summary = get_k1_summary(trust_id, tax_year)
-    history = get_audit_log_by_entity("beneficiary", trust_id, 25)
-
     return render_template(
         "k1_readiness.html",
         trust=trust,
-        history=history,
         beneficiaries=beneficiaries,
         distributions=distributions,
         summary=summary,
@@ -550,11 +547,8 @@ def form1041_dashboard():
         if selected_trust:
             dataset = get_1041_dataset(trust_id, tax_year)
 
-    history = get_audit_log_by_entity("1041_export", trust_id, 25)
-
     return render_template(
         "form1041_dashboard.html",
-        history=history,
         trusts=trusts,
         selected_trust=selected_trust,
         dataset=dataset,

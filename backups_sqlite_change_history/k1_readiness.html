@@ -74,12 +74,3 @@
 </table>
 </body>
 </html>
-
-<div class="box">
-  <h2>Recent Changes</h2>
-  <ul>
-    {% for row in history %}
-      <li>{{ row['action'] }} — {{ row['note'] }} ({{ row['created_at'] }})</li>
-    {% endfor %}
-  </ul>
-</div>

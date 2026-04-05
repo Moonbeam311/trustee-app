@@ -90,14 +90,3 @@
 {% endif %}
 </body>
 </html>
-
-{% if history %}
-<div class="box">
-  <h2>Recent Export Activity</h2>
-  <ul>
-    {% for row in history %}
-      <li>{{ row['note'] }} ({{ row['created_at'] }})</li>
-    {% endfor %}
-  </ul>
-</div>
-{% endif %}

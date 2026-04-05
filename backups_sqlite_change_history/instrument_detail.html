@@ -87,17 +87,3 @@
 {% endif %}
 </body>
 </html>
-
-<div class="box">
-  <h2>Change History</h2>
-  <table>
-    <tr><th>Action</th><th>Note</th><th>Time</th></tr>
-    {% for row in history %}
-    <tr>
-      <td>{{ row['action'] }}</td>
-      <td>{{ row['note'] }}</td>
-      <td>{{ row['created_at'] }}</td>
-    </tr>
-    {% endfor %}
-  </table>
-</div>
