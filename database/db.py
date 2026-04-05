@@ -1590,3 +1590,55 @@ def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):
     rows = cur.fetchall()
     conn.close()
     return rows
+
+def normalize_text(value):
+    return (value or "").strip()
+
+
+def is_locked_status(status):
+    return normalize_text(status).lower() in {"issued", "retired"}
+
+
+def validate_instrument_payload(data):
+    errors = []
+
+    if not normalize_text(data.get("trust_id")):
+        errors.append("Trust is required.")
+
+    if not normalize_text(data.get("instrument_number")):
+        errors.append("Instrument number is required.")
+
+    if not normalize_text(data.get("instrument_type")):
+        errors.append("Instrument type is required.")
+
+    if not normalize_text(data.get("status")):
+        errors.append("Status is required.")
+
+    return errors
+
+
+def validate_beneficiary_payload(data):
+    errors = []
+
+    if not normalize_text(data.get("full_name")):
+        errors.append("Beneficiary full name is required.")
+
+    if not normalize_text(data.get("beneficiary_type")):
+        errors.append("Beneficiary type is required.")
+
+    return errors
+
+
+def validate_distribution_payload(data):
+    errors = []
+
+    if not normalize_text(data.get("beneficiary_id")):
+        errors.append("Beneficiary is required.")
+
+    if not normalize_text(data.get("tax_year")):
+        errors.append("Tax year is required.")
+
+    if not normalize_text(data.get("distribution_type")):
+        errors.append("Distribution type is required.")
+
+    return errors

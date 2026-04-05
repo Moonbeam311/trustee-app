@@ -12,6 +12,13 @@
 
 <h1>Instrument Detail</h1>
 
+{% if error_message %}
+<div class="box" style="border-color:#cf222e; color:#cf222e;">
+  <strong>Error:</strong> {{ error_message }}
+</div>
+{% endif %}
+
+
 <div class="box">
   <p>
     <a href="{{ url_for('instrument_print', instrument_id=instrument['instrument_id']) }}">

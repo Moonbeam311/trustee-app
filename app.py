@@ -74,7 +74,8 @@ from database.db import (
     log_change,
     get_audit_log,
     get_audit_log_by_entity,
-    get_audit_log_by_entity,
+    validate_instrument_payload,
+    is_locked_status,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -631,9 +632,21 @@ def instrument_detail(instrument_id):
     instrument = get_instrument_by_id(instrument_id)
     trusts = get_all_trusts()
     guide = get_instrument_creation_guide()
+    history = get_audit_log_by_entity("instrument", instrument_id, 25)
 
     if request.method == "POST":
-        update_instrument_record(instrument_id, {
+        if is_locked_status(instrument["status"]):
+            log_change("instrument", instrument_id, "blocked_update", "Locked instrument edit prevented")
+            return render_template(
+                "instrument_detail.html",
+                instrument=instrument,
+                trusts=trusts,
+                guide=guide,
+                history=history,
+                error_message="This instrument is locked and cannot be edited."
+            )
+
+        payload = {
             "trust_id": request.form.get("trust_id"),
             "instrument_number": request.form.get("instrument_number"),
             "instrument_type": request.form.get("instrument_type"),
@@ -646,7 +659,20 @@ def instrument_detail(instrument_id):
             "affidavit_reference": request.form.get("affidavit_reference"),
             "custody_reference": request.form.get("custody_reference"),
             "notes": request.form.get("notes"),
-        })
+        }
+
+        errors = validate_instrument_payload(payload)
+        if errors:
+            return render_template(
+                "instrument_detail.html",
+                instrument=instrument,
+                trusts=trusts,
+                guide=guide,
+                history=history,
+                error_message="; ".join(errors)
+            )
+
+        update_instrument_record(instrument_id, payload)
         log_change("instrument", instrument_id, "update", "Instrument record updated")
         return redirect(url_for("instrument_detail", instrument_id=instrument_id))
 
@@ -654,9 +680,9 @@ def instrument_detail(instrument_id):
         "instrument_detail.html",
         instrument=instrument,
         trusts=trusts,
-        guide=guide
+        guide=guide,
+        history=history
     )
-
 
 @app.route("/instruments/print/<instrument_id>")
 def instrument_print(instrument_id):
@@ -780,9 +806,6 @@ def audit_dashboard():
     )
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
 @app.route("/k1/trust/<trust_id>/beneficiary/<beneficiary_id>/edit", methods=["GET", "POST"])
 def k1_edit_beneficiary(trust_id, beneficiary_id):
     trust = get_trust_by_id(trust_id)
@@ -851,3 +874,5 @@ def k1_export_csv(trust_id):
     response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_k1_{tax_year}.csv"
     log_change("k1_export", trust_id, "export", f"K-1 CSV export generated for tax year {tax_year}")
     return response
+if __name__ == "__main__":
+    app.run(debug=True)
