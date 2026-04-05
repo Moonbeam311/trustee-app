@@ -1,0 +1,19 @@
+TRUSTEE APP — ADMIN REPORTING DASHBOARD
+======================================
+
+This note was added via the GitHub connector to mark the completion of the admin reporting dashboard phase.
+
+Completed in this phase:
+- trust count
+- beneficiary count
+- distribution count
+- instrument count
+- admin index reporting table
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
