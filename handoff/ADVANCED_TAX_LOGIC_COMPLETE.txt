@@ -1,0 +1,18 @@
+TRUSTEE APP — ADVANCED TAX LOGIC COMPLETE
+========================================
+
+This note was added via the GitHub connector to mark the completion of the advanced tax logic phase.
+
+Completed scope:
+- DNI component calculations
+- retained income calculations
+- beneficiary tax share calculations
+- advanced tax logic panels on Form 1041 dashboard
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
