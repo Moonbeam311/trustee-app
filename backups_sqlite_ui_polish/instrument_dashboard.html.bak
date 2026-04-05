@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Instrument Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Instrument Dashboard</h1>
+
+<div class="box">
+  <form method="GET" action="/instruments">
+    <label><strong>Trust</strong></label><br>
+    <select name="trust_id">
+      <option value="">All trusts</option>
+      {% for trust in trusts %}
+        <option value="{{ trust['trust_id'] }}" {% if selected_trust and selected_trust['trust_id'] == trust['trust_id'] %}selected{% endif %}>
+          {{ trust['trust_name'] }} ({{ trust['trust_id'] }})
+        </option>
+      {% endfor %}
+    </select>
+    <br><br>
+    <button type="submit">Filter</button>
+  </form>
+</div>
+
+<div class="box">
+  <p><a href="{{ url_for('instrument_create') }}">Create New Instrument</a></p>
+</div>
+
+<div class="box">
+  <h2>Status Summary</h2>
+  <table>
+    <tr><th>Status</th><th>Count</th></tr>
+    {% for status, count in status_counts.items() %}
+    <tr>
+      <td>{{ status }}</td>
+      <td>{{ count }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+
+{% if selected_trust %}
+<div class="box">
+  <h2>Related Modules</h2>
+  <p><a href="{{ url_for('tax_assistant', trust_id=selected_trust['trust_id']) }}">Open Tax Assistant</a></p>
+  <p><a href="{{ url_for('k1_trust_view', trust_id=selected_trust['trust_id']) }}">Open K-1 View</a></p>
+  <p><a href="{{ url_for('form1041_dashboard', trust_id=selected_trust['trust_id']) }}">Open Form 1041 Dashboard</a></p>
+  <p><a href="{{ url_for('financial_summary', trust_id=selected_trust['trust_id']) }}">Open Financial Summary</a></p>
+</div>
+{% endif %}
+
+<div class="box">
+  <h2>Creation Guide</h2>
+  <ol>
+    {% for item in guide %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ol>
+</div>
+
+<div class="box">
+  <h2>Instruments</h2>
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Trust</th>
+      <th>Number</th>
+      <th>Type</th>
+      <th>Issue Date</th>
+      <th>Face Value</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+    {% for item in instruments %}
+    <tr>
+      <td>{{ item['instrument_id'] }}</td>
+      <td>{{ item['trust_id'] }}</td>
+      <td>{{ item['instrument_number'] }}</td>
+      <td>{{ item['instrument_type'] }}</td>
+      <td>{{ item['issue_date'] }}</td>
+      <td>{{ item['face_value'] }}</td>
+      <td>{{ item['status'] }}</td>
+      <td><a href="{{ url_for('instrument_detail', instrument_id=item['instrument_id']) }}">Open</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+</body>
+</html>

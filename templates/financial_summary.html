@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Financial Summary</h2>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+    <a href="/ledger_entry" style="text-decoration:none;"><button type="button">Add Ledger Entry</button></a>
+</div>
+
+<form method="GET" style="margin-bottom:20px;">
+    <label>Choose Trust</label>
+    <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust.trust_id }}" {% if selected_trust and selected_trust.trust_id == trust.trust_id %}selected{% endif %}>
+            {{ trust.trust_id }} - {{ trust.trust_name }}
+        </option>
+        {% endfor %}
+    </select>
+    <button type="submit">Load Summary</button>
+</form>
+
+{% if selected_trust %}
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Trust</h3>
+    <p><strong>{{ selected_trust.trust_id }} — {{ selected_trust.trust_name }}</strong></p>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;">
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Cash View</h3>
+        <p><strong>Cash Income:</strong> {{ summary.cash_income }}</p>
+        <p><strong>Cash Expense:</strong> {{ summary.cash_expense }}</p>
+        <p><strong>Cash Net:</strong> {{ summary.cash_net }}</p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Accrual View</h3>
+        <p><strong>Accrual Income:</strong> {{ summary.accrual_income }}</p>
+        <p><strong>Accrual Expense:</strong> {{ summary.accrual_expense }}</p>
+        <p><strong>Accrual Net:</strong> {{ summary.accrual_net }}</p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Outstanding</h3>
+        <p><strong>Receivables:</strong> {{ summary.receivables }}</p>
+        <p><strong>Payables:</strong> {{ summary.payables }}</p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Chart of Accounts</h3>
+        <ul>
+        {% for row in coa %}
+            <li>{{ row.account_code }} — {{ row.account_name }} ({{ row.account_group }})</li>
+        {% else %}
+            <li>No chart accounts found</li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

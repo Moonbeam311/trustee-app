@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 4: Administration Preferences</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This step sets the default operating preferences for how the trust will be handled inside the app.
+</div>
+
+<div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
+    <strong>Why this matters</strong><br>
+    These choices shape how records are classified, how guidance appears, and how the administration workflow behaves later.
+</div>
+
+<form method="POST">
+
+    <label>Default Record Visibility</label>
+    <select name="record_visibility" required>
+        <option value="">Select Visibility</option>
+        <option value="private">Private</option>
+        <option value="internal">Internal</option>
+        <option value="public_facing">Public-facing</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What do these mean?</strong><br>
+        <strong>Private:</strong> intended for limited internal trust records and sensitive administration details.<br>
+        <strong>Internal:</strong> for normal operating records within the trust office environment.<br>
+        <strong>Public-facing:</strong> for records likely to be used in outward-facing, filing, or presentation contexts.
+    </div>
+
+    <label>Workflow Mode Confirmation</label>
+    <select name="workflow_mode_confirmed" required>
+        <option value="">Confirm Workflow Mode</option>
+        <option value="private_office">Private Office Mode</option>
+        <option value="public_filing">Public Filing / External Mode</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>Why are we asking this again?</strong><br>
+        This confirms whether the trust is being organized mainly for internal/private administration or for workflows that may include outward-facing records.
+    </div>
+
+    <label>AI Explanation Layer</label>
+    <select name="ai_explanations" required>
+        <option value="">Select Option</option>
+        <option value="enabled">Enabled</option>
+        <option value="disabled">Disabled</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What is this?</strong><br>
+        When enabled, the system will explain terms, fields, and common next steps throughout the workflow.
+    </div>
+
+    <label>Recommended Admin / Tax Guidance</label>
+    <select name="recommended_guidance" required>
+        <option value="">Select Option</option>
+        <option value="enabled">Enabled</option>
+        <option value="disabled">Disabled</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:20px;">
+        <strong>What is this?</strong><br>
+        When enabled, the system will recommend related administrative steps, records, and document categories based on the trust configuration.
+    </div>
+
+    <button type="submit">Next Step</button>
+</form>
+{% endblock %}

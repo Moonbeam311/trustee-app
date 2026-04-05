@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>K-1 Engine</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; }
+    .card { border: 1px solid #d0d7de; padding: 16px; margin-bottom: 14px; border-radius: 10px; background: #fff; }
+    .muted { color: #57606a; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+<h1>K-1 Engine</h1>
+<p class="muted">Safe beneficiary and distribution layer for trust reporting.</p>
+{% for trust in trusts %}
+  <div class="card">
+    <h3>{{ trust["trust_name"] }}</h3>
+    <p class="muted">{{ trust["trust_id"] }}</p>
+    <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id'], tax_year=tax_year) }}">Open K-1 View</a>
+  </div>
+{% else %}
+  <p>No trusts found.</p>
+{% endfor %}
+</body>
+</html>

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 7: Final Packet</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#e6f4ea; border-radius:6px; border:1px solid #b7dfc2;">
+    <strong>Trust Finalized</strong><br>
+    Your trust has been finalized in the current prototype workflow.
+</div>
+
+<div style="margin-bottom:20px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This completion screen summarizes the trust and shows the next recommended records and actions.
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Trust Summary</h3>
+        <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+        <p><strong>Name:</strong> {{ trust.trust_name }}</p>
+        <p><strong>Type:</strong> {{ trust.trust_type }}</p>
+        <p><strong>Purpose:</strong> {{ trust.trust_purpose }}</p>
+        <p><strong>Status:</strong> {{ trust.status }}</p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Core Parties</h3>
+        <p><strong>Settlor:</strong> {{ trust.settlor_name }}</p>
+        <p><strong>Trustee:</strong> {{ trust.trustee_name }}</p>
+        <p><strong>Successor:</strong> {{ trust.successor_trustee_name }}</p>
+        <p><strong>Beneficiary:</strong> {{ trust.beneficiary_name }}</p>
+    </div>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa; margin-bottom:20px;">
+    <h3>Recommended Next Documents</h3>
+    <ul>
+        <li>Trust Declaration / Final Trust Packet</li>
+        <li>Trustee Acceptance</li>
+        <li>Initial Property / Schedule Record</li>
+        <li>Administration Checklist</li>
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa; margin-bottom:20px;">
+    <h3>Recommended Next Actions</h3>
+    <ul>
+        <li>Add the first mapped property</li>
+        <li>Link the first account</li>
+        <li>Upload supporting core documents</li>
+        <li>Record the first ledger entry</li>
+    </ul>
+</div>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <a href="/trust/{{ trust.trust_id }}" style="text-decoration:none;"><button type="button">Open Trust Detail</button></a>
+    <a href="/add_property" style="text-decoration:none;"><button type="button">Add Property</button></a>
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><title>K-1 Readiness</title></head>
+<body>
+{% include '_nav.html' %}
+
+<h1>K-1 Readiness</h1>
+<p><strong>Trust:</strong> {{ trust["trust_name"] }}</p>
+<p><strong>Tax Year:</strong> {{ tax_year }}</p>
+
+<div style="border:1px solid #ccc; padding:16px; margin:16px 0; border-radius:8px;">
+  <h2>Related Modules</h2>
+  <p><a href="{{ url_for('tax_assistant', trust_id=trust['trust_id']) }}">Open Tax Assistant</a></p>
+  <p><a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id'], tax_year=tax_year) }}">Open Form 1041 Dashboard</a></p>
+  <p><a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Open Financial Summary</a></p>
+  <p><a href="{{ url_for('instruments_dashboard', trust_id=trust['trust_id']) }}">Open Instruments</a></p>
+</div>
+
+
+<p><a href="{{ url_for('k1_new_beneficiary', trust_id=trust['trust_id']) }}">Add Beneficiary</a></p>
+<p><a href="{{ url_for('k1_new_distribution', trust_id=trust['trust_id']) }}">Record Distribution</a></p>
+<p><a href="{{ url_for('k1_year_end_summary', trust_id=trust['trust_id'], tax_year=tax_year) }}">Year-End Summary</a></p>
+<p><a href="{{ url_for('k1_export_csv', trust_id=trust['trust_id'], tax_year=tax_year) }}">Export CSV</a></p>
+
+{% if readiness["likely_k1_required"] %}
+<p><strong>Likely K-1 Required: YES</strong></p>
+{% else %}
+<p><strong>Likely K-1 Required: NOT YET CLEAR</strong></p>
+{% endif %}
+
+<h2>Warnings</h2>
+<ul>
+{% for item in summary["warnings"] %}
+  <li>{{ item }}</li>
+{% endfor %}
+</ul>
+
+<h2>Beneficiaries</h2>
+<table border="1">
+<tr><th>Name</th><th>Type</th><th>Tax ID</th><th>Active</th><th>Actions</th></tr>
+{% for b in beneficiaries %}
+<tr>
+  <td>{{ b["full_name"] }}</td>
+  <td>{{ b["beneficiary_type"] }}</td>
+  <td>{{ b["tax_id"] or "" }}</td>
+  <td>{{ b["is_active"] }}</td>
+  <td>
+    <a href="{{ url_for('k1_edit_beneficiary', trust_id=trust['trust_id'], beneficiary_id=b['beneficiary_id']) }}">Edit</a>
+    <form method="POST" action="{{ url_for('k1_toggle_beneficiary', trust_id=trust['trust_id'], beneficiary_id=b['beneficiary_id']) }}" style="display:inline;">
+      <button type="submit">{{ "Deactivate" if b["is_active"] == "Yes" else "Activate" }}</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Distributions</h2>
+<table border="1">
+<tr><th>Date</th><th>Beneficiary</th><th>Type</th><th>Gross</th><th>Taxable</th><th>Principal</th><th>Status</th><th>Actions</th></tr>
+{% for d in distributions %}
+<tr>
+  <td>{{ d["distribution_date"] }}</td>
+  <td>{{ d["beneficiary_name"] }}</td>
+  <td>{{ d["distribution_type"] }}</td>
+  <td>{{ d["gross_amount"] }}</td>
+  <td>{{ d["taxable_amount"] }}</td>
+  <td>{{ d["principal_amount"] }}</td>
+  <td>{{ d["status"] }}</td>
+  <td>
+    <a href="{{ url_for('k1_edit_distribution', trust_id=trust['trust_id'], distribution_id=d['distribution_id']) }}">Edit</a>
+  </td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>

@@ -1,0 +1,943 @@
+import sqlite3
+from pathlib import Path
+from datetime import date, timedelta, datetime
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "trustee_app.db"
+
+def get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS trusts (
+        trust_id TEXT PRIMARY KEY,
+        trust_name TEXT,
+        short_name TEXT,
+        jurisdiction TEXT,
+        effective_date TEXT,
+        trust_type TEXT,
+        trust_purpose TEXT,
+        accounting_method TEXT,
+        workflow_mode TEXT,
+        settlor_name TEXT,
+        trustee_name TEXT,
+        successor_trustee_name TEXT,
+        beneficiary_name TEXT,
+        record_visibility TEXT,
+        workflow_mode_confirmed TEXT,
+        ai_explanations TEXT,
+        recommended_guidance TEXT,
+        initial_corpus_description TEXT,
+        property_mapping_timing TEXT,
+        asset_categories TEXT,
+        generate_schedule_recommendations TEXT,
+        status TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS properties (
+        property_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        property_name TEXT,
+        property_type TEXT,
+        address_or_identifier TEXT,
+        acquisition_date TEXT,
+        title_notes TEXT,
+        beneficial_notes TEXT,
+        status TEXT,
+        asset_class TEXT,
+        asset_subtype TEXT,
+        established_date TEXT,
+        effective_date TEXT,
+        review_date TEXT,
+        expiration_date TEXT,
+        responsible_party TEXT,
+        custodian TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS accounts (
+        account_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        property_id TEXT,
+        account_type TEXT,
+        institution TEXT,
+        account_label TEXT,
+        masked_number TEXT,
+        purpose TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS documents (
+        document_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        property_id TEXT,
+        account_id TEXT,
+        document_category TEXT,
+        document_title TEXT,
+        notes TEXT,
+        original_filename TEXT,
+        stored_filename TEXT,
+        file_path TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS ledger_entries (
+        entry_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        property_id TEXT,
+        account_id TEXT,
+        entry_type TEXT,
+        amount TEXT,
+        entry_date TEXT,
+        description TEXT,
+        entry_category TEXT,
+        accounting_method TEXT,
+        recognition_date TEXT,
+        due_date TEXT,
+        paid_date TEXT,
+        chart_account TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS chart_of_accounts (
+        coa_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        account_code TEXT,
+        account_name TEXT,
+        account_group TEXT,
+        normal_balance TEXT,
+        is_active TEXT
+    )
+    """)
+
+    existing_cols = [row["name"] for row in cur.execute("PRAGMA table_info(documents)").fetchall()]
+    if "original_filename" not in existing_cols:
+        cur.execute("ALTER TABLE documents ADD COLUMN original_filename TEXT")
+    if "stored_filename" not in existing_cols:
+        cur.execute("ALTER TABLE documents ADD COLUMN stored_filename TEXT")
+    if "file_path" not in existing_cols:
+        cur.execute("ALTER TABLE documents ADD COLUMN file_path TEXT")
+
+    prop_cols = [row["name"] for row in cur.execute("PRAGMA table_info(properties)").fetchall()]
+    for col in [
+        ("asset_class", "TEXT"),
+        ("asset_subtype", "TEXT"),
+        ("established_date", "TEXT"),
+        ("effective_date", "TEXT"),
+        ("review_date", "TEXT"),
+        ("expiration_date", "TEXT"),
+        ("responsible_party", "TEXT"),
+        ("custodian", "TEXT"),
+    ]:
+        if col[0] not in prop_cols:
+            cur.execute(f"ALTER TABLE properties ADD COLUMN {col[0]} {col[1]}")
+
+    ledger_cols = [row["name"] for row in cur.execute("PRAGMA table_info(ledger_entries)").fetchall()]
+    for col in [
+        ("entry_category", "TEXT"),
+        ("accounting_method", "TEXT"),
+        ("recognition_date", "TEXT"),
+        ("due_date", "TEXT"),
+        ("paid_date", "TEXT"),
+        ("chart_account", "TEXT"),
+    ]:
+        if col[0] not in ledger_cols:
+            cur.execute(f"ALTER TABLE ledger_entries ADD COLUMN {col[0]} {col[1]}")
+
+    conn.commit()
+    conn.close()
+
+def get_next_trust_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM trusts")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"TR-{count + 1:03d}"
+
+def create_trust_record(trust_data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO trusts (
+            trust_id, trust_name, short_name, jurisdiction, effective_date,
+            trust_type, trust_purpose, accounting_method, workflow_mode,
+            settlor_name, trustee_name, successor_trustee_name, beneficiary_name,
+            record_visibility, workflow_mode_confirmed, ai_explanations,
+            recommended_guidance, initial_corpus_description, property_mapping_timing,
+            asset_categories, generate_schedule_recommendations, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        trust_data["trust_id"], trust_data["trust_name"], trust_data["short_name"],
+        trust_data["jurisdiction"], trust_data["effective_date"], trust_data["trust_type"],
+        trust_data["trust_purpose"], trust_data["accounting_method"], trust_data["workflow_mode"],
+        trust_data["settlor_name"], trust_data["trustee_name"], trust_data["successor_trustee_name"],
+        trust_data["beneficiary_name"], trust_data["record_visibility"], trust_data["workflow_mode_confirmed"],
+        trust_data["ai_explanations"], trust_data["recommended_guidance"], trust_data["initial_corpus_description"],
+        trust_data["property_mapping_timing"], trust_data["asset_categories"],
+        trust_data["generate_schedule_recommendations"], trust_data["status"],
+    ))
+    conn.commit()
+    conn.close()
+
+def get_all_trusts():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM trusts ORDER BY trust_id")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_trust_by_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM trusts WHERE trust_id = ?", (trust_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+def update_trust_fields(trust_id, updates):
+    conn = get_connection()
+    cur = conn.cursor()
+    fields = ", ".join([f"{k} = ?" for k in updates.keys()])
+    values = list(updates.values()) + [trust_id]
+    cur.execute(f"UPDATE trusts SET {fields} WHERE trust_id = ?", values)
+    conn.commit()
+    conn.close()
+
+def get_next_property_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM properties")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"PR-{count + 1:03d}"
+
+def create_property_record(prop_data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO properties (
+            property_id, trust_id, property_name, property_type,
+            address_or_identifier, acquisition_date, title_notes,
+            beneficial_notes, status, asset_class, asset_subtype,
+            established_date, effective_date, review_date,
+            expiration_date, responsible_party, custodian
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        prop_data["property_id"], prop_data["trust_id"], prop_data["property_name"],
+        prop_data["property_type"], prop_data["address_or_identifier"], prop_data["acquisition_date"],
+        prop_data["title_notes"], prop_data["beneficial_notes"], prop_data["status"],
+        prop_data.get("asset_class"), prop_data.get("asset_subtype"), prop_data.get("established_date"),
+        prop_data.get("effective_date"), prop_data.get("review_date"), prop_data.get("expiration_date"),
+        prop_data.get("responsible_party"), prop_data.get("custodian"),
+    ))
+    conn.commit()
+    conn.close()
+
+def get_property_by_id(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM properties WHERE property_id = ?", (property_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+def get_properties_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM properties WHERE trust_id = ? ORDER BY property_id", (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_all_assets():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT p.*, t.trust_name
+        FROM properties p
+        LEFT JOIN trusts t ON p.trust_id = t.trust_id
+        ORDER BY p.property_id
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_asset_class_counts():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COALESCE(asset_class, property_type, 'unclassified') AS asset_class, COUNT(*) AS count
+        FROM properties
+        GROUP BY COALESCE(asset_class, property_type, 'unclassified')
+        ORDER BY asset_class
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_next_account_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM accounts")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"AC-{count + 1:03d}"
+
+def create_account_record(account_data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO accounts (
+            account_id, trust_id, property_id, account_type,
+            institution, account_label, masked_number, purpose
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        account_data["account_id"], account_data["trust_id"], account_data["property_id"],
+        account_data["account_type"], account_data["institution"], account_data["account_label"],
+        account_data["masked_number"], account_data["purpose"],
+    ))
+    conn.commit()
+    conn.close()
+
+def get_accounts_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM accounts WHERE trust_id = ? ORDER BY account_id", (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_accounts_by_property_id(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM accounts WHERE property_id = ? ORDER BY account_id", (property_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_next_document_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM documents")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"DOC-{count + 1:03d}"
+
+def create_document_record(doc_data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO documents (
+            document_id, trust_id, property_id, account_id,
+            document_category, document_title, notes,
+            original_filename, stored_filename, file_path
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        doc_data["document_id"], doc_data["trust_id"], doc_data["property_id"], doc_data["account_id"],
+        doc_data["document_category"], doc_data["document_title"], doc_data["notes"],
+        doc_data["original_filename"], doc_data["stored_filename"], doc_data["file_path"],
+    ))
+    conn.commit()
+    conn.close()
+
+def get_documents_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM documents WHERE trust_id = ? ORDER BY document_id", (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_documents_by_property_id(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM documents WHERE property_id = ? ORDER BY document_id", (property_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_next_entry_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM ledger_entries")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"LD-{count + 1:03d}"
+
+def create_ledger_entry(entry_data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO ledger_entries (
+            entry_id, trust_id, property_id, account_id,
+            entry_type, amount, entry_date, description,
+            entry_category, accounting_method, recognition_date,
+            due_date, paid_date, chart_account
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        entry_data["entry_id"], entry_data["trust_id"], entry_data["property_id"], entry_data["account_id"],
+        entry_data["entry_type"], entry_data["amount"], entry_data["entry_date"], entry_data["description"],
+        entry_data.get("entry_category"), entry_data.get("accounting_method"), entry_data.get("recognition_date"),
+        entry_data.get("due_date"), entry_data.get("paid_date"), entry_data.get("chart_account"),
+    ))
+    conn.commit()
+    conn.close()
+
+def get_ledger_by_trust(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM ledger_entries WHERE trust_id = ? ORDER BY entry_id", (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_ledger_by_property(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM ledger_entries WHERE property_id = ? ORDER BY entry_id", (property_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def seed_chart_of_accounts_for_trust(trust_id):
+    defaults = [
+        ("1000", "Cash", "asset", "debit"),
+        ("1100", "Accounts Receivable", "asset", "debit"),
+        ("1200", "Prepaid Expense", "asset", "debit"),
+        ("2000", "Accounts Payable", "liability", "credit"),
+        ("2100", "Deferred Revenue", "liability", "credit"),
+        ("4000", "Trust Income", "income", "credit"),
+        ("5000", "Trust Expense", "expense", "debit"),
+    ]
+    conn = get_connection()
+    cur = conn.cursor()
+    for code, name, grp, normal in defaults:
+        coa_id = f"{trust_id}-{code}"
+        cur.execute("""
+            INSERT OR IGNORE INTO chart_of_accounts (
+                coa_id, trust_id, account_code, account_name,
+                account_group, normal_balance, is_active
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (coa_id, trust_id, code, name, grp, normal, "yes"))
+    conn.commit()
+    conn.close()
+
+def get_chart_of_accounts(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM chart_of_accounts WHERE trust_id = ? ORDER BY account_code", (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def _safe_amount(v):
+    try:
+        return float(v or 0)
+    except Exception:
+        return 0.0
+
+def get_trust_financial_summary(trust_id):
+    rows = get_ledger_by_trust(trust_id)
+    cash_income = cash_expense = accrual_income = accrual_expense = receivables = payables = 0.0
+
+    for row in rows:
+        amt = _safe_amount(row["amount"])
+        category = row["entry_category"] or ""
+        paid_date = row["paid_date"]
+        due_date = row["due_date"]
+        recognition_date = row["recognition_date"]
+
+        if category == "income":
+            if paid_date:
+                cash_income += amt
+            if recognition_date:
+                accrual_income += amt
+            if recognition_date and not paid_date:
+                receivables += amt
+        elif category == "expense":
+            if paid_date:
+                cash_expense += amt
+            if recognition_date or due_date:
+                accrual_expense += amt
+            if (recognition_date or due_date) and not paid_date:
+                payables += amt
+
+    return {
+        "cash_income": round(cash_income, 2),
+        "cash_expense": round(cash_expense, 2),
+        "cash_net": round(cash_income - cash_expense, 2),
+        "accrual_income": round(accrual_income, 2),
+        "accrual_expense": round(accrual_expense, 2),
+        "accrual_net": round(accrual_income - accrual_expense, 2),
+        "receivables": round(receivables, 2),
+        "payables": round(payables, 2),
+    }
+
+def get_assets_missing_custodian():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM properties WHERE custodian IS NULL OR custodian = '' ORDER BY property_id")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_assets_missing_review_date():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM properties WHERE review_date IS NULL OR review_date = '' ORDER BY property_id")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_assets_with_expiration():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM properties WHERE expiration_date IS NOT NULL AND expiration_date != '' ORDER BY expiration_date")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_orphaned_assets():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM properties WHERE trust_id IS NULL OR trust_id = '' ORDER BY property_id")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def _parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+def _assets_within_days(field_name, days):
+    today = date.today()
+    cutoff = today + timedelta(days=days)
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM properties WHERE {field_name} IS NOT NULL AND {field_name} != ''")
+    rows = cur.fetchall()
+    conn.close()
+    return [row for row in rows if (d := _parse_iso_date(row[field_name])) and today <= d <= cutoff]
+
+def _assets_past_due(field_name):
+    today = date.today()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(f"SELECT * FROM properties WHERE {field_name} IS NOT NULL AND {field_name} != ''")
+    rows = cur.fetchall()
+    conn.close()
+    return [row for row in rows if (d := _parse_iso_date(row[field_name])) and d < today]
+
+def get_assets_expiring_within(days):
+    return _assets_within_days("expiration_date", days)
+
+def get_assets_review_due_within(days):
+    return _assets_within_days("review_date", days)
+
+def get_assets_expired():
+    return _assets_past_due("expiration_date")
+
+def get_assets_review_overdue():
+    return _assets_past_due("review_date")
+
+def get_asset_severity_summary():
+    assets = get_all_assets()
+    today = date.today()
+    results = []
+    for asset in assets:
+        severity = "LOW"
+        reasons = []
+        expiration = _parse_iso_date(asset["expiration_date"])
+        review = _parse_iso_date(asset["review_date"])
+        custodian = asset["custodian"]
+        trust_id = asset["trust_id"]
+
+        if not trust_id:
+            severity = "HIGH"
+            reasons.append("orphaned")
+        if not custodian:
+            if severity == "LOW":
+                severity = "MEDIUM"
+            reasons.append("missing custodian")
+        if review and review < today:
+            severity = "HIGH"
+            reasons.append("review overdue")
+        if expiration and expiration < today:
+            severity = "CRITICAL"
+            reasons.append("expired")
+
+        results.append({
+            "property_id": asset["property_id"],
+            "property_name": asset["property_name"],
+            "asset_class": asset["asset_class"] or asset["property_type"],
+            "severity": severity,
+            "reasons": ", ".join(reasons) if reasons else "no immediate flags",
+        })
+    return results
+
+def get_command_snapshot():
+    severity = get_asset_severity_summary()
+    assets = get_all_assets()
+    trusts = get_all_trusts()
+    critical = [a for a in severity if a["severity"] == "CRITICAL"]
+    high = [a for a in severity if a["severity"] == "HIGH"]
+    return {
+        "total_assets": len(assets),
+        "total_trusts": len(trusts),
+        "critical_count": len(critical),
+        "high_count": len(high),
+        "missing_custodian_count": len(get_assets_missing_custodian()),
+        "overdue_count": len(get_assets_review_overdue()) + len(get_assets_expired()),
+        "critical_assets": critical,
+        "high_assets": high,
+    }
+
+def get_tax_profile(trust_id):
+    trust = get_trust_by_id(trust_id)
+    ledger = get_ledger_by_trust(trust_id)
+    has_income = any(e["entry_category"] == "income" for e in ledger)
+    has_expense = any(e["entry_category"] == "expense" for e in ledger)
+    return {
+        "trust_id": trust_id,
+        "trust_name": trust["trust_name"] if trust else "",
+        "accounting_method": trust["accounting_method"] if trust else "",
+        "has_income": has_income,
+        "has_expense": has_expense,
+        "entry_count": len(ledger),
+        "has_ein": "yes" if trust and trust["jurisdiction"] else "unknown"
+    }
+
+def get_tax_form_applicability(trust_id):
+    profile = get_tax_profile(trust_id)
+    forms = []
+    if profile["has_income"] or profile["has_expense"]:
+        forms.append("Form 1041")
+    forms.append("Schedule K-1")
+    if profile["has_income"]:
+        forms.append("Form 1041-ES")
+    forms.append("Form 56")
+    return forms
+
+def get_tax_readiness(trust_id):
+    trust = get_trust_by_id(trust_id)
+    ledger = get_ledger_by_trust(trust_id)
+    issues = []
+    if not trust:
+        issues.append("Trust not found")
+        return issues
+    if not trust["accounting_method"] or trust["accounting_method"] == "Not Yet Selected":
+        issues.append("Missing accounting method")
+    if len(ledger) == 0:
+        issues.append("No financial activity recorded")
+    if not trust["beneficiary_name"]:
+        issues.append("Missing beneficiary")
+    return issues
+
+# ===============================
+# FORM 1041 SAFE MODE ENGINE
+# ===============================
+
+def get_1041_summary(trust_id):
+    ledger = get_ledger_by_trust(trust_id)
+
+    interest_income = 0.0
+    business_income = 0.0
+    other_income = 0.0
+
+    admin_expense = 0.0
+    tax_expense = 0.0
+    other_expense = 0.0
+
+    def safe(v):
+        try:
+            return float(v or 0)
+        except:
+            return 0.0
+
+    for row in ledger:
+        amt = safe(row["amount"])
+        category = row["entry_category"] or ""
+        desc = (row["description"] or "").lower()
+
+        if category == "income":
+            if "interest" in desc:
+                interest_income += amt
+            elif "business" in desc:
+                business_income += amt
+            else:
+                other_income += amt
+
+        elif category == "expense":
+            if "tax" in desc:
+                tax_expense += amt
+            elif "admin" in desc or "fee" in desc:
+                admin_expense += amt
+            else:
+                other_expense += amt
+
+    total_income = interest_income + business_income + other_income
+    total_deductions = admin_expense + tax_expense + other_expense
+    net_income = total_income - total_deductions
+
+    return {
+        "interest_income": round(interest_income, 2),
+        "business_income": round(business_income, 2),
+        "other_income": round(other_income, 2),
+        "total_income": round(total_income, 2),
+
+        "admin_expense": round(admin_expense, 2),
+        "tax_expense": round(tax_expense, 2),
+        "other_expense": round(other_expense, 2),
+        "total_deductions": round(total_deductions, 2),
+
+        "net_income": round(net_income, 2)
+    }
+
+
+def ensure_k1_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS beneficiaries (
+        beneficiary_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        full_name TEXT,
+        tax_id TEXT,
+        beneficiary_type TEXT,
+        email TEXT,
+        address TEXT,
+        allocation_method TEXT,
+        fixed_percentage TEXT,
+        is_active TEXT,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS distributions (
+        distribution_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        beneficiary_id TEXT,
+        tax_year TEXT,
+        distribution_date TEXT,
+        distribution_type TEXT,
+        description TEXT,
+        gross_amount TEXT,
+        taxable_amount TEXT,
+        principal_amount TEXT,
+        source_reference TEXT,
+        status TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_beneficiary_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM beneficiaries")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"BEN-{count + 1:03d}"
+
+
+def get_next_distribution_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM distributions")
+    count = cur.fetchone()["count"]
+    conn.close()
+    return f"DST-{count + 1:03d}"
+
+
+def create_beneficiary_record(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO beneficiaries (
+            beneficiary_id, trust_id, full_name, tax_id, beneficiary_type,
+            email, address, allocation_method, fixed_percentage, is_active, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data["beneficiary_id"], data["trust_id"], data["full_name"], data.get("tax_id"),
+        data.get("beneficiary_type"), data.get("email"), data.get("address"),
+        data.get("allocation_method"), data.get("fixed_percentage"),
+        data.get("is_active", "Yes"), data.get("notes")
+    ))
+    conn.commit()
+    conn.close()
+
+
+def update_beneficiary_record(beneficiary_id, updates):
+    conn = get_connection()
+    cur = conn.cursor()
+    fields = ", ".join([f"{k} = ?" for k in updates.keys()])
+    values = list(updates.values()) + [beneficiary_id]
+    cur.execute(f"UPDATE beneficiaries SET {fields} WHERE beneficiary_id = ?", values)
+    conn.commit()
+    conn.close()
+
+
+def get_beneficiary_by_id(beneficiary_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM beneficiaries WHERE beneficiary_id = ?", (beneficiary_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def get_beneficiaries_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM beneficiaries WHERE trust_id = ? ORDER BY full_name", (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def create_distribution_record(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO distributions (
+            distribution_id, trust_id, beneficiary_id, tax_year, distribution_date,
+            distribution_type, description, gross_amount, taxable_amount,
+            principal_amount, source_reference, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data["distribution_id"], data["trust_id"], data["beneficiary_id"], data["tax_year"],
+        data["distribution_date"], data.get("distribution_type"), data.get("description"),
+        data.get("gross_amount"), data.get("taxable_amount"), data.get("principal_amount"),
+        data.get("source_reference"), data.get("status", "recorded")
+    ))
+    conn.commit()
+    conn.close()
+
+
+def update_distribution_record(distribution_id, updates):
+    conn = get_connection()
+    cur = conn.cursor()
+    fields = ", ".join([f"{k} = ?" for k in updates.keys()])
+    values = list(updates.values()) + [distribution_id]
+    cur.execute(f"UPDATE distributions SET {fields} WHERE distribution_id = ?", values)
+    conn.commit()
+    conn.close()
+
+
+def get_distribution_by_id(distribution_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM distributions WHERE distribution_id = ?", (distribution_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def get_distributions_by_trust_id(trust_id, tax_year=None):
+    conn = get_connection()
+    cur = conn.cursor()
+    if tax_year:
+        cur.execute("""
+            SELECT d.*, b.full_name AS beneficiary_name, b.tax_id AS beneficiary_tax_id
+            FROM distributions d
+            LEFT JOIN beneficiaries b ON d.beneficiary_id = b.beneficiary_id
+            WHERE d.trust_id = ? AND d.tax_year = ?
+            ORDER BY d.distribution_date DESC, d.distribution_id DESC
+        """, (trust_id, str(tax_year)))
+    else:
+        cur.execute("""
+            SELECT d.*, b.full_name AS beneficiary_name, b.tax_id AS beneficiary_tax_id
+            FROM distributions d
+            LEFT JOIN beneficiaries b ON d.beneficiary_id = b.beneficiary_id
+            WHERE d.trust_id = ?
+            ORDER BY d.distribution_date DESC, d.distribution_id DESC
+        """, (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_k1_summary(trust_id, tax_year):
+    beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+    distributions = get_distributions_by_trust_id(trust_id, tax_year)
+
+    total_gross = sum(float(r["gross_amount"] or 0) for r in distributions)
+    total_taxable = sum(float(r["taxable_amount"] or 0) for r in distributions)
+    total_principal = sum(float(r["principal_amount"] or 0) for r in distributions)
+
+    by_beneficiary = {}
+    missing_tax_ids = []
+
+    for b in beneficiaries:
+        by_beneficiary[b["beneficiary_id"]] = {
+            "beneficiary_name": b["full_name"],
+            "tax_id": b["tax_id"] or "",
+            "active": b["is_active"],
+            "count": 0,
+            "gross": 0.0,
+            "taxable": 0.0,
+            "principal": 0.0,
+        }
+        if (b["is_active"] or "") == "Yes" and not b["tax_id"]:
+            missing_tax_ids.append(b["full_name"])
+
+    for d in distributions:
+        bid = d["beneficiary_id"]
+        if bid not in by_beneficiary:
+            by_beneficiary[bid] = {
+                "beneficiary_name": d["beneficiary_name"] or "Unknown",
+                "tax_id": d["beneficiary_tax_id"] or "",
+                "active": "Yes",
+                "count": 0,
+                "gross": 0.0,
+                "taxable": 0.0,
+                "principal": 0.0,
+            }
+        by_beneficiary[bid]["count"] += 1
+        by_beneficiary[bid]["gross"] += float(d["gross_amount"] or 0)
+        by_beneficiary[bid]["taxable"] += float(d["taxable_amount"] or 0)
+        by_beneficiary[bid]["principal"] += float(d["principal_amount"] or 0)
+
+    warnings = []
+    if len(beneficiaries) == 0:
+        warnings.append("No beneficiaries exist for this trust.")
+    if len(distributions) == 0:
+        warnings.append("No distributions were recorded for the selected tax year.")
+    if missing_tax_ids:
+        warnings.append("One or more active beneficiaries are missing tax identification data.")
+
+    likely_k1_required = len(beneficiaries) > 0 and len(distributions) > 0
+
+    return {
+        "total_beneficiaries": len(beneficiaries),
+        "total_distributions": len(distributions),
+        "total_gross": total_gross,
+        "total_taxable": total_taxable,
+        "total_principal": total_principal,
+        "by_beneficiary": by_beneficiary,
+        "missing_tax_ids": missing_tax_ids,
+        "warnings": warnings,
+        "likely_k1_required": likely_k1_required,
+    }

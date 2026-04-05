@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Index</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+    ul { margin-top: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Admin Index</h1>
+<p>Central module and manifest overview for the Trustee App.</p>
+
+<div class="box">
+  <h2>Active Modules</h2>
+  <ul>
+    <li>Dashboard / Home</li>
+    <li>Command Dashboard</li>
+    <li>Financial Summary</li>
+    <li>Tax Assistant</li>
+    <li>K-1</li>
+    <li>Form 1041</li>
+    <li>Instrument Registry</li>
+    <li>Assets</li>
+    <li>Asset Health</li>
+    <li>Workflow Hub</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Trust Quick Access</h2>
+  {% for trust in trusts %}
+    <p><strong>{{ trust['trust_name'] }}</strong> ({{ trust['trust_id'] }})</p>
+    <p>
+      <a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Financial Summary</a> |
+      <a href="{{ url_for('tax_assistant', trust_id=trust['trust_id']) }}">Tax Assistant</a> |
+      <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id']) }}">K-1</a> |
+      <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a> |
+      <a href="{{ url_for('instruments_dashboard', trust_id=trust['trust_id']) }}">Instruments</a>
+    </p>
+    <hr>
+  {% endfor %}
+</div>
+
+
+<div class="box">
+  <h2>Route and Handoff Files</h2>
+  <ul>
+    <li>handoff/ROUTE_INVENTORY.txt</li>
+    <li>handoff/ROUTE_CONSISTENCY_REPORT.txt</li>
+    <li>handoff/MODULE_STATUS.txt</li>
+    <li>handoff/PROJECT_HANDOFF.txt</li>
+    <li>handoff/FILE_MANIFEST.txt</li>
+    <li>handoff/ADMIN_MANIFEST.txt</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Local Handoff Files</h2>
+  <ul>
+    <li>handoff/ROUTE_INVENTORY.txt</li>
+    <li>handoff/MODULE_STATUS.txt</li>
+    <li>handoff/PROJECT_HANDOFF.txt</li>
+    <li>handoff/FILE_MANIFEST.txt</li>
+  </ul>
+</div>
+</body>
+</html>

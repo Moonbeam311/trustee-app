@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Instrument Detail</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Instrument Detail</h1>
+
+<div class="box">
+  <p>
+    <a href="{{ url_for('instrument_print', instrument_id=instrument['instrument_id']) }}">
+      Open Print View
+    </a>
+  </p>
+</div>
+
+<div class="box">
+  <h2>Creation Guide</h2>
+  <ol>
+    {% for item in guide %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ol>
+</div>
+
+{% if instrument %}
+<div class="box">
+<form method="POST">
+  <label>Trust</label><br>
+  <select name="trust_id" required>
+    {% for trust in trusts %}
+      <option value="{{ trust['trust_id'] }}" {% if instrument['trust_id'] == trust['trust_id'] %}selected{% endif %}>
+        {{ trust['trust_name'] }} ({{ trust['trust_id'] }})
+      </option>
+    {% endfor %}
+  </select><br><br>
+
+  <label>Instrument Number</label><br>
+  <input type="text" name="instrument_number" value="{{ instrument['instrument_number'] }}" required><br><br>
+
+  <label>Instrument Type</label><br>
+  <input type="text" name="instrument_type" value="{{ instrument['instrument_type'] }}" required><br><br>
+
+  <label>Issue Date</label><br>
+  <input type="date" name="issue_date" value="{{ instrument['issue_date'] }}"><br><br>
+
+  <label>Maturity Date</label><br>
+  <input type="date" name="maturity_date" value="{{ instrument['maturity_date'] }}"><br><br>
+
+  <label>Face Value</label><br>
+  <input type="text" name="face_value" value="{{ instrument['face_value'] }}"><br><br>
+
+  <label>Backing Type</label><br>
+  <input type="text" name="backing_type" value="{{ instrument['backing_type'] }}"><br><br>
+
+  <label>Backing Reference</label><br>
+  <input type="text" name="backing_reference" value="{{ instrument['backing_reference'] }}"><br><br>
+
+  <label>Status</label><br>
+  <select name="status">
+    <option value="draft" {% if instrument['status'] == 'draft' %}selected{% endif %}>Draft</option>
+    <option value="reviewed" {% if instrument['status'] == 'reviewed' %}selected{% endif %}>Reviewed</option>
+    <option value="issued" {% if instrument['status'] == 'issued' %}selected{% endif %}>Issued</option>
+    <option value="retired" {% if instrument['status'] == 'retired' %}selected{% endif %}>Retired</option>
+  </select><br><br>
+
+  <label>Affidavit Reference</label><br>
+  <input type="text" name="affidavit_reference" value="{{ instrument['affidavit_reference'] }}"><br><br>
+
+  <label>Custody Reference</label><br>
+  <input type="text" name="custody_reference" value="{{ instrument['custody_reference'] }}"><br><br>
+
+  <label>Notes</label><br>
+  <textarea name="notes">{{ instrument['notes'] }}</textarea><br><br>
+
+  <button type="submit">Update Instrument</button>
+</form>
+</div>
+{% else %}
+<p>Instrument not found.</p>
+{% endif %}
+</body>
+</html>

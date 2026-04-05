@@ -1,0 +1,62 @@
+{% include '_nav.html' %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Asset Dashboard</h2>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+    <a href="/add_property" style="text-decoration:none;"><button type="button">Add Asset</button></a>
+</div>
+
+<div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/assets" style="text-decoration:none;"><button type="button">All Assets</button></a>
+    <a href="/assets?class=real_property" style="text-decoration:none;"><button type="button">Real</button></a>
+    <a href="/assets?class=tangible_property" style="text-decoration:none;"><button type="button">Tangible</button></a>
+    <a href="/assets?class=financial_property" style="text-decoration:none;"><button type="button">Financial</button></a>
+    <a href="/assets?class=business_interest" style="text-decoration:none;"><button type="button">Business</button></a>
+    <a href="/assets?class=intellectual_property" style="text-decoration:none;"><button type="button">IP</button></a>
+    <a href="/assets?class=digital_property" style="text-decoration:none;"><button type="button">Digital</button></a>
+    <a href="/assets?class=contractual_right" style="text-decoration:none;"><button type="button">Contract</button></a>
+    <a href="/assets?class=ucc_secured_interest" style="text-decoration:none;"><button type="button">UCC</button></a>
+    <a href="/assets?class=other" style="text-decoration:none;"><button type="button">Other</button></a>
+</div>
+
+{% if selected_class %}
+<div style="margin-bottom:16px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>Filtered by asset class:</strong> {{ selected_class }}
+</div>
+{% endif %}
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Counts by Asset Class</h3>
+    <ul>
+        {% for row in asset_class_counts %}
+        <li><strong>{{ row.asset_class }}</strong>: {{ row.count }}</li>
+        {% else %}
+        <li>No assets found</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+    <h3>Assets</h3>
+    <ul>
+        {% for asset in assets %}
+        <li style="margin-bottom:12px;">
+            <a href="/property/{{ asset.property_id }}">
+                {{ asset.property_id }} — {{ asset.property_name }}
+            </a><br>
+            <small>
+                Class: {{ asset.asset_class or asset.property_type or 'N/A' }}
+                {% if asset.asset_subtype %}| Subtype: {{ asset.asset_subtype }}{% endif %}
+                {% if asset.address_or_identifier %}| ID: {{ asset.address_or_identifier }}{% endif %}
+                {% if asset.trust_name %}| Trust: {{ asset.trust_name }}{% endif %}
+            </small>
+        </li>
+        {% else %}
+        <li>No assets found</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% include '_nav.html' %}
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Asset Intelligence Dashboard</h2>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+    <a href="/assets" style="text-decoration:none;"><button type="button">Back to Asset Dashboard</button></a>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>⚠️ Missing Custodian</h3>
+    <ul>
+    {% for a in missing_custodian %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a></li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>⚠️ Missing Review Date</h3>
+    <ul>
+    {% for a in missing_review %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a></li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>⏰ Expiring Within 30 Days</h3>
+    <ul>
+    {% for a in expiring_30 %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a> — {{ a.expiration_date }}</li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+
+    <h3>⏰ Expiring Within 60 Days</h3>
+    <ul>
+    {% for a in expiring_60 %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a> — {{ a.expiration_date }}</li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+
+    <h3>⏰ Expiring Within 90 Days</h3>
+    <ul>
+    {% for a in expiring_90 %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a> — {{ a.expiration_date }}</li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>📅 Review Due Within 30 Days</h3>
+    <ul>
+    {% for a in review_due_30 %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a> — {{ a.review_date }}</li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+
+    <h3>📅 Review Due Within 60 Days</h3>
+    <ul>
+    {% for a in review_due_60 %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a> — {{ a.review_date }}</li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+
+    <h3>📅 Review Due Within 90 Days</h3>
+    <ul>
+    {% for a in review_due_90 %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a> — {{ a.review_date }}</li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+    <h3>🚫 Orphaned Assets</h3>
+    <ul>
+    {% for a in orphaned %}
+        <li><a href="/property/{{ a.property_id }}">{{ a.property_name }}</a></li>
+    {% else %}
+        <li>None</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}

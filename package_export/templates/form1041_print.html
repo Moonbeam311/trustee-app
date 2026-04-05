@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form 1041 Print View</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    h1, h2 { margin-bottom: 6px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; margin-bottom: 16px; }
+    th, td { border: 1px solid #222; padding: 8px; text-align: left; }
+    .section { margin-bottom: 18px; }
+    @media print {
+      a, button { display: none; }
+      body { margin: 0.5in; }
+    }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Form 1041 Print View</h1>
+
+{% if dataset and dataset['trust'] %}
+<div class="section">
+  <p><strong>Trust:</strong> {{ dataset['trust']['trust_name'] }} ({{ dataset['trust']['trust_id'] }})</p>
+  <p><strong>Tax Year:</strong> {{ dataset['tax_year'] }}</p>
+</div>
+
+<div class="section">
+  <h2>Compilation Summary</h2>
+  <table>
+    <tr><th>Item</th><th>Value</th></tr>
+    <tr><td>Gross Income</td><td>{{ dataset['gross_income'] }}</td></tr>
+    <tr><td>Deductions</td><td>{{ dataset['deductions'] }}</td></tr>
+    <tr><td>Net Income</td><td>{{ dataset['net_income'] }}</td></tr>
+    <tr><td>Distributed Taxable Income</td><td>{{ dataset['distributed_taxable_income'] }}</td></tr>
+    <tr><td>Retained Income</td><td>{{ dataset['retained_income'] }}</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Line-Mapping Worksheet</h2>
+  <table>
+    <tr><th>Worksheet Item</th><th>Value</th><th>Note</th></tr>
+    {% for row in dataset['line_mapping'] %}
+    <tr>
+      <td>{{ row['label'] }}</td>
+      <td>{{ row['value'] }}</td>
+      <td>{{ row['note'] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="section">
+  <h2>K-1 Summary</h2>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total Beneficiaries</td><td>{{ dataset['k1_summary']['total_beneficiaries'] }}</td></tr>
+    <tr><td>Total Distributions</td><td>{{ dataset['k1_summary']['total_distributions'] }}</td></tr>
+    <tr><td>Total Taxable Distributed</td><td>{{ dataset['k1_summary']['total_taxable'] }}</td></tr>
+    <tr><td>Total Principal Distributed</td><td>{{ dataset['k1_summary']['total_principal'] }}</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Warnings</h2>
+  <ul>
+  {% for item in dataset['warnings'] %}
+    <li>{{ item }}</li>
+  {% endfor %}
+  </ul>
+</div>
+{% else %}
+  <p>No 1041 dataset available.</p>
+{% endif %}
+</body>
+</html>

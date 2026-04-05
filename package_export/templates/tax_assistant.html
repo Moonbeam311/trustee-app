@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Tax Assistant</h2>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+    <a href="/financial_summary" style="text-decoration:none;"><button type="button">Financial Summary</button></a>
+</div>
+
+<form method="GET" style="margin-bottom:20px;">
+    <label>Select Trust</label>
+    <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust.trust_id }}" {% if selected_trust and selected_trust.trust_id == trust.trust_id %}selected{% endif %}>
+            {{ trust.trust_id }} - {{ trust.trust_name }}
+        </option>
+        {% endfor %}
+    </select>
+    <button type="submit">Analyze</button>
+</form>
+
+
+{% if selected_trust %}
+<div style="border:1px solid #ccc; padding:16px; margin:16px 0; border-radius:8px;">
+  <h3>Form 1041 Link</h3>
+  <p>
+    <a href="{{ url_for('form1041_dashboard', trust_id=selected_trust['trust_id'], tax_year='2026') }}">
+      Open Form 1041 Dashboard for {{ selected_trust['trust_name'] }}
+    </a>
+  </p>
+</div>
+{% endif %}
+
+{% if selected_trust %}
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Trust Overview</h3>
+    <p><strong>ID:</strong> {{ selected_trust.trust_id }}</p>
+    <p><strong>Name:</strong> {{ selected_trust.trust_name }}</p>
+    <p><strong>Accounting Method:</strong> {{ tax_profile.accounting_method }}</p>
+    <p><strong>Ledger Entry Count:</strong> {{ tax_profile.entry_count }}</p>
+    <p><strong>Income Present:</strong> {{ 'Yes' if tax_profile.has_income else 'No' }}</p>
+    <p><strong>Expense Present:</strong> {{ 'Yes' if tax_profile.has_expense else 'No' }}</p>
+    <p><strong>EIN Status:</strong> {{ tax_profile.has_ein }}</p>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Applicable Forms</h3>
+    <ul>
+    {% for form in forms %}
+        <li>{{ form }}</li>
+    {% else %}
+        <li>No forms determined</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+    <h3>Tax Readiness Issues</h3>
+    <ul>
+    {% for issue in issues %}
+        <li>{{ issue }}</li>
+    {% else %}
+        <li>All core items present</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

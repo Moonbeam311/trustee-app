@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>Year-End K-1 Summary</title></head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Year-End K-1 Summary</h1>
+<p><strong>Trust:</strong> {{ trust["trust_name"] }}</p>
+<p><strong>Tax Year:</strong> {{ tax_year }}</p>
+<p><strong>Total Beneficiaries:</strong> {{ summary["total_beneficiaries"] }}</p>
+<p><strong>Total Distribution Records:</strong> {{ summary["total_distributions"] }}</p>
+<p><strong>Total Gross:</strong> {{ summary["total_gross"] }}</p>
+<p><strong>Total Taxable:</strong> {{ summary["total_taxable"] }}</p>
+<p><strong>Total Principal:</strong> {{ summary["total_principal"] }}</p>
+
+<h2>Warnings</h2>
+<ul>
+{% for item in summary["warnings"] %}
+  <li>{{ item }}</li>
+{% endfor %}
+</ul>
+</body>
+</html>

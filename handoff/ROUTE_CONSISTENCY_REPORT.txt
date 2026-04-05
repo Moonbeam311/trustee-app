@@ -1,0 +1,81 @@
+TRUSTEE APP — ROUTE CONSISTENCY REPORT
+==================================================
+
+Declared routes:
+- / :: GET(default)
+- /command :: GET(default)
+- /financial_summary :: GET(default)
+- /tax_assistant :: GET(default)
+- /assets :: GET(default)
+- /asset :: GET(default)
+- /asset_health :: GET(default)
+- /create_trust_step1 :: "GET", "POST"
+- /create_trust_step2/<trust_id> :: "GET", "POST"
+- /create_trust_step3/<trust_id> :: "GET", "POST"
+- /create_trust_step4/<trust_id> :: "GET", "POST"
+- /create_trust_step5/<trust_id> :: "GET", "POST"
+- /create_trust_step6/<trust_id> :: "GET", "POST"
+- /create_trust_step7/<trust_id> :: GET(default)
+- /add_property :: "GET", "POST"
+- /link_account :: "GET", "POST"
+- /upload_document :: "GET", "POST"
+- /ledger_entry :: "GET", "POST"
+- /trust/<trust_id> :: GET(default)
+- /property/<property_id> :: GET(default)
+- /k1 :: GET(default)
+- /k1/trust/<trust_id> :: GET(default)
+- /k1/trust/<trust_id>/beneficiary/new :: "GET", "POST"
+- /k1/trust/<trust_id>/distribution/new :: "GET", "POST"
+- /k1/trust/<trust_id>/year_end_summary :: GET(default)
+- /form1041 :: GET(default)
+- /form1041/preview/<trust_id> :: GET(default)
+- /form1041/print/<trust_id> :: GET(default)
+- /instruments :: GET(default)
+- /instruments/new :: "GET", "POST"
+- /instruments/<instrument_id> :: "GET", "POST"
+- /instruments/print/<instrument_id> :: GET(default)
+- /workflow :: GET(default)
+- /admin :: GET(default)
+- /k1/trust/<trust_id>/beneficiary/<beneficiary_id>/edit :: "GET", "POST"
+- /k1/trust/<trust_id>/beneficiary/<beneficiary_id>/toggle :: "POST"
+- /k1/trust/<trust_id>/distribution/<distribution_id>/edit :: "GET", "POST"
+- /k1/trust/<trust_id>/export.csv :: GET(default)
+
+Route → function mapping:
+- / -> home :: GET(default)
+- /command -> command_dashboard :: GET(default)
+- /financial_summary -> financial_summary :: GET(default)
+- /tax_assistant -> tax_assistant :: GET(default)
+- /asset -> asset_dashboard :: GET(default)
+- /asset_health -> asset_health :: GET(default)
+- /create_trust_step1 -> create_trust_step1 :: "GET", "POST"
+- /create_trust_step2/<trust_id> -> create_trust_step2 :: "GET", "POST"
+- /create_trust_step3/<trust_id> -> create_trust_step3 :: "GET", "POST"
+- /create_trust_step4/<trust_id> -> create_trust_step4 :: "GET", "POST"
+- /create_trust_step5/<trust_id> -> create_trust_step5 :: "GET", "POST"
+- /create_trust_step6/<trust_id> -> create_trust_step6 :: "GET", "POST"
+- /create_trust_step7/<trust_id> -> create_trust_step7 :: GET(default)
+- /add_property -> add_property :: "GET", "POST"
+- /link_account -> link_account :: "GET", "POST"
+- /upload_document -> upload_document :: "GET", "POST"
+- /ledger_entry -> ledger_entry :: "GET", "POST"
+- /trust/<trust_id> -> trust_detail :: GET(default)
+- /property/<property_id> -> property_detail :: GET(default)
+- /k1 -> k1_dashboard :: GET(default)
+- /k1/trust/<trust_id> -> k1_trust_view :: GET(default)
+- /k1/trust/<trust_id>/beneficiary/new -> k1_new_beneficiary :: "GET", "POST"
+- /k1/trust/<trust_id>/distribution/new -> k1_new_distribution :: "GET", "POST"
+- /k1/trust/<trust_id>/year_end_summary -> k1_year_end_summary :: GET(default)
+- /form1041 -> form1041_dashboard :: GET(default)
+- /form1041/preview/<trust_id> -> form1041_preview :: GET(default)
+- /form1041/print/<trust_id> -> form1041_print :: GET(default)
+- /instruments -> instruments_dashboard :: GET(default)
+- /instruments/new -> instrument_create :: "GET", "POST"
+- /instruments/<instrument_id> -> instrument_detail :: "GET", "POST"
+- /instruments/print/<instrument_id> -> instrument_print :: GET(default)
+- /workflow -> workflow_hub :: GET(default)
+- /admin -> admin_index :: GET(default)
+- /k1/trust/<trust_id>/beneficiary/<beneficiary_id>/edit -> k1_edit_beneficiary :: "GET", "POST"
+- /k1/trust/<trust_id>/beneficiary/<beneficiary_id>/toggle -> k1_toggle_beneficiary :: "POST"
+- /k1/trust/<trust_id>/distribution/<distribution_id>/edit -> k1_edit_distribution :: "GET", "POST"
+- /k1/trust/<trust_id>/export.csv -> k1_export_csv :: GET(default)

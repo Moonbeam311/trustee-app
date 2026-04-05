@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Workflow Hub</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Workflow Hub</h1>
+<p>Use this page as the continuity center for trust administration workflows.</p>
+
+<div class="box">
+  <h2>Core Workflow</h2>
+  <ol>
+    <li>Create or select a trust</li>
+    <li>Review Financial Summary</li>
+    <li>Check Tax Assistant</li>
+    <li>Open K-1 for beneficiary/distribution review</li>
+    <li>Open Form 1041 for compilation and preview</li>
+    <li>Open Instruments for document-backed internal records</li>
+  </ol>
+</div>
+
+<div class="box">
+  <h2>Trust Quick Access</h2>
+  {% for trust in trusts %}
+    <p><strong>{{ trust['trust_name'] }}</strong> ({{ trust['trust_id'] }})</p>
+    <p>
+      <a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Financial Summary</a> |
+      <a href="{{ url_for('tax_assistant', trust_id=trust['trust_id']) }}">Tax Assistant</a> |
+      <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id']) }}">K-1</a> |
+      <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a> |
+      <a href="{{ url_for('instruments_dashboard', trust_id=trust['trust_id']) }}">Instruments</a>
+    </p>
+    <hr>
+  {% endfor %}
+</div>
+</body>
+</html>

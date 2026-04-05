@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 3: Parties and Roles</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This step identifies the key people connected to the trust.
+</div>
+
+<div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
+    <strong>Why this matters</strong><br>
+    The trust cannot be structured clearly without identifying who creates it, who manages it, who may step in later, and who benefits from it.
+</div>
+
+<form method="POST">
+
+    <label>Settlor / Grantor</label>
+    <input name="settlor_name" required>
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What is this?</strong><br>
+        The settlor or grantor is the person who creates the trust and places property or authority into it.
+    </div>
+
+    <label>Primary Trustee</label>
+    <input name="trustee_name" required>
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What is this?</strong><br>
+        The trustee is the person responsible for administering the trust and acting according to its terms.
+    </div>
+
+    <label>Successor Trustee</label>
+    <input name="successor_trustee_name">
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What is this?</strong><br>
+        A successor trustee is the person who may step in if the current trustee dies, resigns, or becomes unable to act.
+    </div>
+
+    <label>Primary Beneficiary</label>
+    <input name="beneficiary_name">
+    <div style="font-size:13px; margin-bottom:20px;">
+        <strong>What is this?</strong><br>
+        A beneficiary is the person or party for whose benefit the trust is created or administered.
+    </div>
+
+    <button type="submit">Next Step</button>
+</form>
+{% endblock %}

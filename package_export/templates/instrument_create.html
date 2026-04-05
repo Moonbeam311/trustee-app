@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Instrument</title>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Create Instrument</h1>
+
+<h2>Creation Guide</h2>
+<ol>
+  {% for item in guide %}
+    <li>{{ item }}</li>
+  {% endfor %}
+</ol>
+
+<form method="POST">
+  <label>Trust</label><br>
+  <select name="trust_id" required>
+    <option value="">Select trust</option>
+    {% for trust in trusts %}
+      <option value="{{ trust['trust_id'] }}">{{ trust['trust_name'] }} ({{ trust['trust_id'] }})</option>
+    {% endfor %}
+  </select><br><br>
+
+  <label>Instrument Number</label><br>
+  <input type="text" name="instrument_number" required><br><br>
+
+  <label>Instrument Type</label><br>
+  <input type="text" name="instrument_type" required><br><br>
+
+  <label>Issue Date</label><br>
+  <input type="date" name="issue_date"><br><br>
+
+  <label>Maturity Date</label><br>
+  <input type="date" name="maturity_date"><br><br>
+
+  <label>Face Value</label><br>
+  <input type="text" name="face_value"><br><br>
+
+  <label>Backing Type</label><br>
+  <input type="text" name="backing_type"><br><br>
+
+  <label>Backing Reference</label><br>
+  <input type="text" name="backing_reference"><br><br>
+
+  <label>Status</label><br>
+  <input type="text" name="status" value="draft"><br><br>
+
+  <label>Affidavit Reference</label><br>
+  <input type="text" name="affidavit_reference"><br><br>
+
+  <label>Custody Reference</label><br>
+  <input type="text" name="custody_reference"><br><br>
+
+  <label>Notes</label><br>
+  <textarea name="notes"></textarea><br><br>
+
+  <button type="submit">Save Instrument</button>
+</form>
+</body>
+</html>

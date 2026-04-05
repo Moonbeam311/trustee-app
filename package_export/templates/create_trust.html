@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust</h2>
+
+<form method="POST">
+    <label>Trust Name</label>
+    <input name="trust_name" required>
+
+    <label>Effective Date</label>
+    <input type="date" name="effective_date">
+
+    <label>Jurisdiction</label>
+    <input name="jurisdiction">
+
+    <label>Trust Type</label>
+    <select name="trust_type">
+        <option value="revocable">Revocable</option>
+        <option value="irrevocable">Irrevocable</option>
+        <option value="98">98 Trust</option>
+    </select>
+
+    <button type="submit">Create Trust</button>
+</form>
+{% endblock %}

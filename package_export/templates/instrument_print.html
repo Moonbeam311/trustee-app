@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Instrument Print View</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    h1, h2 { margin-bottom: 6px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 8px; margin-bottom: 16px; }
+    th, td { border: 1px solid #222; padding: 8px; text-align: left; }
+    .section { margin-bottom: 18px; }
+    @media print {
+      a, button { display: none; }
+      body { margin: 0.5in; }
+    }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Instrument Print View</h1>
+
+{% if instrument %}
+<div class="section">
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Instrument ID</td><td>{{ instrument['instrument_id'] }}</td></tr>
+    <tr><td>Trust ID</td><td>{{ instrument['trust_id'] }}</td></tr>
+    <tr><td>Instrument Number</td><td>{{ instrument['instrument_number'] }}</td></tr>
+    <tr><td>Instrument Type</td><td>{{ instrument['instrument_type'] }}</td></tr>
+    <tr><td>Issue Date</td><td>{{ instrument['issue_date'] }}</td></tr>
+    <tr><td>Maturity Date</td><td>{{ instrument['maturity_date'] }}</td></tr>
+    <tr><td>Face Value</td><td>{{ instrument['face_value'] }}</td></tr>
+    <tr><td>Backing Type</td><td>{{ instrument['backing_type'] }}</td></tr>
+    <tr><td>Backing Reference</td><td>{{ instrument['backing_reference'] }}</td></tr>
+    <tr><td>Status</td><td>{{ instrument['status'] }}</td></tr>
+    <tr><td>Affidavit Reference</td><td>{{ instrument['affidavit_reference'] }}</td></tr>
+    <tr><td>Custody Reference</td><td>{{ instrument['custody_reference'] }}</td></tr>
+    <tr><td>Notes</td><td>{{ instrument['notes'] }}</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>Creation Guide</h2>
+  <ol>
+    {% for item in guide %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ol>
+</div>
+{% else %}
+<p>Instrument not found.</p>
+{% endif %}
+</body>
+</html>

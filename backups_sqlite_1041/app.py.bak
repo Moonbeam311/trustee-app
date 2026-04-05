@@ -1,0 +1,606 @@
+from flask import Flask, request, render_template, redirect, url_for, make_response
+from database.db import (
+    init_db,
+    get_next_trust_id,
+    create_trust_record,
+    get_all_trusts,
+    get_trust_by_id,
+    update_trust_fields,
+    get_next_property_id,
+    create_property_record,
+    get_property_by_id,
+    get_properties_by_trust_id,
+    get_all_assets,
+    get_asset_class_counts,
+    get_next_account_id,
+    create_account_record,
+    get_accounts_by_trust_id,
+    get_accounts_by_property_id,
+    get_next_document_id,
+    create_document_record,
+    get_documents_by_trust_id,
+    get_documents_by_property_id,
+    get_next_entry_id,
+    create_ledger_entry,
+    get_ledger_by_trust,
+    get_ledger_by_property,
+    seed_chart_of_accounts_for_trust,
+    get_chart_of_accounts,
+    get_trust_financial_summary,
+    get_assets_missing_custodian,
+    get_assets_missing_review_date,
+    get_assets_with_expiration,
+    get_orphaned_assets,
+    get_assets_expiring_within,
+    get_assets_review_due_within,
+    get_assets_expired,
+    get_assets_review_overdue,
+    get_asset_severity_summary,
+    get_command_snapshot,
+    get_tax_profile,
+    get_tax_form_applicability,
+    get_tax_readiness,
+    ensure_k1_tables,
+    get_next_beneficiary_id,
+    create_beneficiary_record,
+    update_beneficiary_record,
+    get_beneficiary_by_id,
+    get_beneficiaries_by_trust_id,
+    get_next_distribution_id,
+    create_distribution_record,
+    update_distribution_record,
+    get_distribution_by_id,
+    get_distributions_by_trust_id,
+    get_k1_summary,
+    get_beneficiary_by_id_and_trust,
+    toggle_beneficiary_active,
+    get_distribution_by_id_and_trust,
+    export_k1_csv_text,
+    get_1041_dataset,
+)
+from pathlib import Path
+from werkzeug.utils import secure_filename
+from datetime import date
+
+app = Flask(__name__)
+init_db()
+ensure_k1_tables()
+
+UPLOAD_FOLDER = Path("uploads")
+ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png"}
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/")
+def home():
+    trusts = get_all_trusts()
+    return render_template("dashboard.html", trusts=trusts)
+
+@app.route("/command")
+def command_dashboard():
+    snapshot = get_command_snapshot()
+    return render_template("command_dashboard.html", snapshot=snapshot)
+
+@app.route("/financial_summary")
+def financial_summary():
+    trusts = get_all_trusts()
+    trust_id = request.args.get("trust_id")
+    selected_trust = None
+    summary = None
+    coa = []
+
+    if trust_id:
+        selected_trust = get_trust_by_id(trust_id)
+        if selected_trust:
+            seed_chart_of_accounts_for_trust(trust_id)
+            summary = get_trust_financial_summary(trust_id)
+            coa = get_chart_of_accounts(trust_id)
+
+    return render_template(
+        "financial_summary.html",
+        trusts=trusts,
+        selected_trust=selected_trust,
+        summary=summary,
+        coa=coa
+    )
+
+@app.route("/tax_assistant")
+def tax_assistant():
+    trusts = get_all_trusts()
+    trust_id = request.args.get("trust_id")
+
+    selected_trust = None
+    tax_profile = None
+    forms = []
+    issues = []
+
+    if trust_id:
+        selected_trust = get_trust_by_id(trust_id)
+        if selected_trust:
+            tax_profile = get_tax_profile(trust_id)
+            forms = get_tax_form_applicability(trust_id)
+            issues = get_tax_readiness(trust_id)
+
+    return render_template(
+        "tax_assistant.html",
+        trusts=trusts,
+        selected_trust=selected_trust,
+        tax_profile=tax_profile,
+        forms=forms,
+        issues=issues
+    )
+
+@app.route("/assets")
+@app.route("/asset")
+def asset_dashboard():
+    selected_class = request.args.get("class")
+    assets = get_all_assets()
+    asset_class_counts = get_asset_class_counts()
+
+    if selected_class:
+        assets = [
+            a for a in assets
+            if (a["asset_class"] or a["property_type"] or "unclassified") == selected_class
+        ]
+
+    return render_template(
+        "asset_dashboard.html",
+        assets=assets,
+        asset_class_counts=asset_class_counts,
+        selected_class=selected_class
+    )
+
+@app.route("/asset_health")
+def asset_health():
+    return render_template(
+        "asset_health.html",
+        missing_custodian=get_assets_missing_custodian(),
+        missing_review=get_assets_missing_review_date(),
+        expiring=get_assets_with_expiration(),
+        expiring_30=get_assets_expiring_within(30),
+        expiring_60=get_assets_expiring_within(60),
+        expiring_90=get_assets_expiring_within(90),
+        review_due_30=get_assets_review_due_within(30),
+        review_due_60=get_assets_review_due_within(60),
+        review_due_90=get_assets_review_due_within(90),
+        expired=get_assets_expired(),
+        overdue_review=get_assets_review_overdue(),
+        severity_summary=get_asset_severity_summary(),
+        orphaned=get_orphaned_assets()
+    )
+
+@app.route("/create_trust_step1", methods=["GET", "POST"])
+def create_trust_step1():
+    if request.method == "POST":
+        trust_id = get_next_trust_id()
+        trust = {
+            "trust_id": trust_id,
+            "trust_name": request.form.get("trust_name"),
+            "short_name": request.form.get("short_name"),
+            "jurisdiction": request.form.get("jurisdiction"),
+            "effective_date": request.form.get("effective_date"),
+            "trust_type": "Not Yet Selected",
+            "trust_purpose": "Not Yet Selected",
+            "accounting_method": "Not Yet Selected",
+            "workflow_mode": "Not Yet Selected",
+            "settlor_name": "",
+            "trustee_name": "",
+            "successor_trustee_name": "",
+            "beneficiary_name": "",
+            "record_visibility": "Not Yet Selected",
+            "workflow_mode_confirmed": "Not Yet Selected",
+            "ai_explanations": "Not Yet Selected",
+            "recommended_guidance": "Not Yet Selected",
+            "initial_corpus_description": "",
+            "property_mapping_timing": "Not Yet Selected",
+            "asset_categories": "Not Yet Selected",
+            "generate_schedule_recommendations": "Not Yet Selected",
+            "status": "Draft"
+        }
+        create_trust_record(trust)
+        return redirect(url_for("create_trust_step2", trust_id=trust_id))
+    return render_template("create_trust_step1.html")
+
+@app.route("/create_trust_step2/<trust_id>", methods=["GET", "POST"])
+def create_trust_step2(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    if request.method == "POST":
+        update_trust_fields(trust_id, {
+            "trust_type": request.form.get("trust_type"),
+            "trust_purpose": request.form.get("trust_purpose"),
+            "accounting_method": request.form.get("accounting_method"),
+            "workflow_mode": request.form.get("workflow_mode"),
+            "status": "Draft - Step 2 Complete",
+        })
+        return redirect(url_for("create_trust_step3", trust_id=trust_id))
+    return render_template("create_trust_step2.html", trust=trust)
+
+@app.route("/create_trust_step3/<trust_id>", methods=["GET", "POST"])
+def create_trust_step3(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    if request.method == "POST":
+        update_trust_fields(trust_id, {
+            "settlor_name": request.form.get("settlor_name"),
+            "trustee_name": request.form.get("trustee_name"),
+            "successor_trustee_name": request.form.get("successor_trustee_name"),
+            "beneficiary_name": request.form.get("beneficiary_name"),
+            "status": "Draft - Step 3 Complete",
+        })
+        return redirect(url_for("create_trust_step4", trust_id=trust_id))
+    return render_template("create_trust_step3.html", trust=trust)
+
+@app.route("/create_trust_step4/<trust_id>", methods=["GET", "POST"])
+def create_trust_step4(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    if request.method == "POST":
+        update_trust_fields(trust_id, {
+            "record_visibility": request.form.get("record_visibility"),
+            "workflow_mode_confirmed": request.form.get("workflow_mode_confirmed"),
+            "ai_explanations": request.form.get("ai_explanations"),
+            "recommended_guidance": request.form.get("recommended_guidance"),
+            "status": "Draft - Step 4 Complete",
+        })
+        return redirect(url_for("create_trust_step5", trust_id=trust_id))
+    return render_template("create_trust_step4.html", trust=trust)
+
+@app.route("/create_trust_step5/<trust_id>", methods=["GET", "POST"])
+def create_trust_step5(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    if request.method == "POST":
+        update_trust_fields(trust_id, {
+            "initial_corpus_description": request.form.get("initial_corpus_description"),
+            "property_mapping_timing": request.form.get("property_mapping_timing"),
+            "asset_categories": request.form.get("asset_categories"),
+            "generate_schedule_recommendations": request.form.get("generate_schedule_recommendations"),
+            "status": "Draft - Step 5 Complete",
+        })
+        return redirect(url_for("create_trust_step6", trust_id=trust_id))
+    return render_template("create_trust_step5.html", trust=trust)
+
+@app.route("/create_trust_step6/<trust_id>", methods=["GET", "POST"])
+def create_trust_step6(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    if request.method == "POST":
+        update_trust_fields(trust_id, {"status": "Finalized"})
+        return redirect(url_for("create_trust_step7", trust_id=trust_id))
+    return render_template("create_trust_step6.html", trust=trust)
+
+@app.route("/create_trust_step7/<trust_id>")
+def create_trust_step7(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    return render_template("create_trust_step7.html", trust=trust)
+
+@app.route("/add_property", methods=["GET", "POST"])
+def add_property():
+    trusts = get_all_trusts()
+    if request.method == "POST":
+        property_id = get_next_property_id()
+        prop = {
+            "property_id": property_id,
+            "trust_id": request.form.get("trust_id"),
+            "property_name": request.form.get("property_name"),
+            "property_type": request.form.get("asset_class"),
+            "address_or_identifier": request.form.get("address_or_identifier"),
+            "acquisition_date": request.form.get("acquisition_date"),
+            "title_notes": request.form.get("title_notes"),
+            "beneficial_notes": request.form.get("beneficial_notes"),
+            "status": "Mapped",
+            "asset_class": request.form.get("asset_class"),
+            "asset_subtype": request.form.get("asset_subtype"),
+            "established_date": request.form.get("established_date"),
+            "effective_date": request.form.get("effective_date"),
+            "review_date": request.form.get("review_date"),
+            "expiration_date": request.form.get("expiration_date"),
+            "responsible_party": request.form.get("responsible_party"),
+            "custodian": request.form.get("custodian"),
+        }
+        create_property_record(prop)
+        return redirect(url_for("property_detail", property_id=property_id))
+    return render_template("add_property.html", trusts=trusts)
+
+@app.route("/link_account", methods=["GET", "POST"])
+def link_account():
+    trusts = get_all_trusts()
+    if request.method == "POST":
+        account_id = get_next_account_id()
+        account = {
+            "account_id": account_id,
+            "trust_id": request.form.get("trust_id"),
+            "property_id": request.form.get("property_id"),
+            "account_type": request.form.get("account_type"),
+            "institution": request.form.get("institution"),
+            "account_label": request.form.get("account_label"),
+            "masked_number": request.form.get("masked_number"),
+            "purpose": request.form.get("purpose")
+        }
+        create_account_record(account)
+        return redirect(url_for("property_detail", property_id=account["property_id"]))
+    return render_template("link_account.html", trusts=trusts, properties=[])
+
+@app.route("/upload_document", methods=["GET", "POST"])
+def upload_document():
+    trusts = get_all_trusts()
+    if request.method == "POST":
+        uploaded_file = request.files.get("document_file")
+        if not uploaded_file or uploaded_file.filename == "":
+            return "No file selected"
+        if not allowed_file(uploaded_file.filename):
+            return "File type not allowed"
+
+        document_id = get_next_document_id()
+        original_filename = uploaded_file.filename
+        safe_name = secure_filename(original_filename)
+        stored_filename = f"{document_id}_{safe_name}"
+        file_path = UPLOAD_FOLDER / stored_filename
+        uploaded_file.save(file_path)
+
+        document = {
+            "document_id": document_id,
+            "trust_id": request.form.get("trust_id"),
+            "property_id": request.form.get("property_id"),
+            "account_id": request.form.get("account_id"),
+            "document_category": request.form.get("document_category"),
+            "document_title": request.form.get("document_title"),
+            "notes": request.form.get("notes"),
+            "original_filename": original_filename,
+            "stored_filename": stored_filename,
+            "file_path": str(file_path),
+        }
+        create_document_record(document)
+
+        if document["property_id"]:
+            return redirect(url_for("property_detail", property_id=document["property_id"]))
+        return redirect(url_for("trust_detail", trust_id=document["trust_id"]))
+    return render_template("upload_document.html", trusts=trusts)
+
+@app.route("/ledger_entry", methods=["GET", "POST"])
+def ledger_entry():
+    trusts = get_all_trusts()
+    if request.method == "POST":
+        entry_id = get_next_entry_id()
+        entry = {
+            "entry_id": entry_id,
+            "trust_id": request.form.get("trust_id"),
+            "property_id": request.form.get("property_id"),
+            "account_id": request.form.get("account_id"),
+            "entry_type": request.form.get("entry_type"),
+            "amount": request.form.get("amount"),
+            "entry_date": request.form.get("entry_date"),
+            "description": request.form.get("description"),
+            "entry_category": request.form.get("entry_category"),
+            "accounting_method": request.form.get("accounting_method"),
+            "recognition_date": request.form.get("recognition_date"),
+            "due_date": request.form.get("due_date"),
+            "paid_date": request.form.get("paid_date"),
+            "chart_account": request.form.get("chart_account"),
+        }
+        create_ledger_entry(entry)
+
+        if entry["property_id"]:
+            return redirect(url_for("property_detail", property_id=entry["property_id"]))
+        return redirect(url_for("trust_detail", trust_id=entry["trust_id"]))
+    return render_template("ledger_entry.html", trusts=trusts, properties=[], accounts=[])
+
+@app.route("/trust/<trust_id>")
+def trust_detail(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    linked_properties = get_properties_by_trust_id(trust_id)
+    linked_accounts = get_accounts_by_trust_id(trust_id)
+    linked_documents = get_documents_by_trust_id(trust_id)
+    linked_ledger = get_ledger_by_trust(trust_id)
+
+    return render_template(
+        "trust_detail.html",
+        trust=trust,
+        linked_properties=linked_properties,
+        linked_accounts=linked_accounts,
+        linked_documents=linked_documents,
+        linked_ledger=linked_ledger
+    )
+
+@app.route("/property/<property_id>")
+def property_detail(property_id):
+    prop = get_property_by_id(property_id)
+    if not prop:
+        return f"Property {property_id} not found"
+
+    linked_trust = get_trust_by_id(prop["trust_id"])
+    linked_accounts = get_accounts_by_property_id(property_id)
+    linked_documents = get_documents_by_property_id(property_id)
+    linked_ledger = get_ledger_by_property(property_id)
+
+    return render_template(
+        "property_detail.html",
+        prop=prop,
+        linked_trust=linked_trust,
+        linked_accounts=linked_accounts,
+        linked_documents=linked_documents,
+        linked_ledger=linked_ledger
+    )
+
+@app.route("/k1")
+def k1_dashboard():
+    trusts = get_all_trusts()
+    return render_template("k1_dashboard.html", trusts=trusts, tax_year=str(date.today().year))
+
+@app.route("/k1/trust/<trust_id>")
+def k1_trust_view(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    trust = get_trust_by_id(trust_id)
+    beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+    distributions = get_distributions_by_trust_id(trust_id, tax_year)
+    summary = get_k1_summary(trust_id, tax_year)
+    return render_template(
+        "k1_readiness.html",
+        trust=trust,
+        beneficiaries=beneficiaries,
+        distributions=distributions,
+        summary=summary,
+        readiness=summary,
+        tax_year=tax_year
+    )
+
+@app.route("/k1/trust/<trust_id>/beneficiary/new", methods=["GET", "POST"])
+def k1_new_beneficiary(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if request.method == "POST":
+        create_beneficiary_record({
+            "beneficiary_id": get_next_beneficiary_id(),
+            "trust_id": trust_id,
+            "full_name": request.form.get("full_name"),
+            "tax_id": request.form.get("tax_id"),
+            "beneficiary_type": request.form.get("beneficiary_type"),
+            "email": request.form.get("email"),
+            "address": request.form.get("address"),
+            "allocation_method": request.form.get("allocation_method"),
+            "fixed_percentage": request.form.get("fixed_percentage"),
+            "is_active": "Yes",
+            "notes": request.form.get("notes"),
+        })
+        return redirect(url_for("k1_trust_view", trust_id=trust_id))
+    return render_template("k1_beneficiary_form.html", trust=trust)
+
+@app.route("/k1/trust/<trust_id>/distribution/new", methods=["GET", "POST"])
+def k1_new_distribution(trust_id):
+    trust = get_trust_by_id(trust_id)
+    beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+    if request.method == "POST":
+        create_distribution_record({
+            "distribution_id": get_next_distribution_id(),
+            "trust_id": trust_id,
+            "beneficiary_id": request.form.get("beneficiary_id"),
+            "tax_year": request.form.get("tax_year"),
+            "distribution_date": request.form.get("distribution_date"),
+            "distribution_type": request.form.get("distribution_type"),
+            "description": request.form.get("description"),
+            "gross_amount": request.form.get("gross_amount"),
+            "taxable_amount": request.form.get("taxable_amount"),
+            "principal_amount": request.form.get("principal_amount"),
+            "source_reference": request.form.get("source_reference"),
+            "status": "recorded",
+        })
+        return redirect(url_for("k1_trust_view", trust_id=trust_id, tax_year=request.form.get("tax_year")))
+    return render_template("k1_distribution_form.html", trust=trust, beneficiaries=beneficiaries, tax_year=str(date.today().year))
+
+@app.route("/k1/trust/<trust_id>/year_end_summary")
+def k1_year_end_summary(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    trust = get_trust_by_id(trust_id)
+    summary = get_k1_summary(trust_id, tax_year)
+    return render_template("k1_year_end_summary.html", trust=trust, tax_year=tax_year, summary=summary)
+
+
+@app.route("/form1041")
+def form1041_dashboard():
+    trusts = get_all_trusts()
+    trust_id = request.args.get("trust_id")
+    tax_year = request.args.get("tax_year", str(date.today().year))
+
+    selected_trust = None
+    dataset = None
+
+    if trust_id:
+        selected_trust = get_trust_by_id(trust_id)
+        if selected_trust:
+            dataset = get_1041_dataset(trust_id, tax_year)
+
+    return render_template(
+        "form1041_dashboard.html",
+        trusts=trusts,
+        selected_trust=selected_trust,
+        dataset=dataset,
+        tax_year=tax_year
+    )
+
+
+@app.route("/form1041/preview/<trust_id>")
+def form1041_preview(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    dataset = get_1041_dataset(trust_id, tax_year)
+    return render_template("form1041_preview.html", dataset=dataset, tax_year=tax_year)
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+@app.route("/k1/trust/<trust_id>/beneficiary/<beneficiary_id>/edit", methods=["GET", "POST"])
+def k1_edit_beneficiary(trust_id, beneficiary_id):
+    trust = get_trust_by_id(trust_id)
+    beneficiary = get_beneficiary_by_id_and_trust(beneficiary_id, trust_id)
+
+    if request.method == "POST":
+        update_beneficiary_record(beneficiary_id, {
+            "full_name": request.form.get("full_name"),
+            "tax_id": request.form.get("tax_id"),
+            "beneficiary_type": request.form.get("beneficiary_type"),
+            "email": request.form.get("email"),
+            "address": request.form.get("address"),
+            "allocation_method": request.form.get("allocation_method"),
+            "fixed_percentage": request.form.get("fixed_percentage"),
+            "notes": request.form.get("notes"),
+            "is_active": "Yes" if request.form.get("is_active") == "on" else "No",
+        })
+        return redirect(url_for("k1_trust_view", trust_id=trust_id))
+
+    return render_template("k1_beneficiary_edit.html", trust=trust, beneficiary=beneficiary)
+
+
+@app.route("/k1/trust/<trust_id>/beneficiary/<beneficiary_id>/toggle", methods=["POST"])
+def k1_toggle_beneficiary(trust_id, beneficiary_id):
+    toggle_beneficiary_active(beneficiary_id, trust_id)
+    return redirect(url_for("k1_trust_view", trust_id=trust_id))
+
+
+@app.route("/k1/trust/<trust_id>/distribution/<distribution_id>/edit", methods=["GET", "POST"])
+def k1_edit_distribution(trust_id, distribution_id):
+    trust = get_trust_by_id(trust_id)
+    distribution = get_distribution_by_id_and_trust(distribution_id, trust_id)
+    beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+
+    if request.method == "POST":
+        update_distribution_record(distribution_id, {
+            "beneficiary_id": request.form.get("beneficiary_id"),
+            "tax_year": request.form.get("tax_year"),
+            "distribution_date": request.form.get("distribution_date"),
+            "distribution_type": request.form.get("distribution_type"),
+            "description": request.form.get("description"),
+            "gross_amount": request.form.get("gross_amount"),
+            "taxable_amount": request.form.get("taxable_amount"),
+            "principal_amount": request.form.get("principal_amount"),
+            "source_reference": request.form.get("source_reference"),
+            "status": request.form.get("status"),
+        })
+        return redirect(url_for("k1_trust_view", trust_id=trust_id, tax_year=request.form.get("tax_year")))
+
+    return render_template(
+        "k1_distribution_edit.html",
+        trust=trust,
+        distribution=distribution,
+        beneficiaries=beneficiaries
+    )
+
+
+@app.route("/k1/trust/<trust_id>/export.csv")
+def k1_export_csv(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    csv_text = export_k1_csv_text(trust_id, tax_year)
+    response = make_response(csv_text)
+    response.headers["Content-Type"] = "text/csv"
+    response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_k1_{tax_year}.csv"
+    return response

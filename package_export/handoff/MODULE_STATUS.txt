@@ -1,0 +1,59 @@
+TRUSTEE APP — MODULE STATUS
+========================================
+
+CURRENT ARCHITECTURE
+- Native SQLite helper architecture
+- database/db.py = data/helper layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+STABLE MODULES
+- Dashboard / Home
+- Command Dashboard
+- Financial Summary
+- Tax Assistant
+- Asset Dashboard
+- Asset Health
+- K-1 module
+- Form 1041 module
+- Instrument registry module
+- Workflow Hub
+- Shared navigation and module linking
+
+IMPORTANT LESSON LOCKED
+- Do NOT build new modules using a parallel ORM pattern
+- Extend the existing SQLite/helper pattern only
+
+K-1 STATUS
+- Base routes working
+- Readiness page working
+- Beneficiary add/edit/toggle working
+- Distribution add/edit working
+- Year-end summary working
+- CSV export route added and registered in codebase
+
+1041 STATUS
+- Dashboard working
+- Preview working
+- Print view working
+- Tax Assistant link working
+- Line-mapping and warning logic added
+
+INSTRUMENT STATUS
+- Registry layer working
+- Create/detail routes working
+- Status workflow added
+- Summary counts added
+- Print view added
+- Instrument engine is still a registry shell, not final legal/commercial class logic
+
+WORKFLOW STATUS
+- Shared top nav added
+- Related module links added
+- Workflow Hub added
+
+RECOMMENDED NEXT PHASES
+1. Admin index / project manifest page
+2. Export bundle / manifest packaging
+3. Route-by-route cleanup and consistency pass
+4. Later: class-based legal refinement of instrument types

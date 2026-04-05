@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Command Dashboard</h2>
+
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
+    <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
+    <a href="/assets" style="text-decoration:none;"><button type="button">Assets</button></a>
+    <a href="/asset_health" style="text-decoration:none;"><button type="button">Asset Intelligence</button></a>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:20px;">
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Total Assets</h3>
+        <p style="font-size:28px;"><strong>{{ snapshot.total_assets }}</strong></p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Total Trusts</h3>
+        <p style="font-size:28px;"><strong>{{ snapshot.total_trusts }}</strong></p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+        <h3>Overdue Items</h3>
+        <p style="font-size:28px;"><strong>{{ snapshot.overdue_count }}</strong></p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fde8e8;">
+        <h3>Critical</h3>
+        <p style="font-size:28px;"><strong>{{ snapshot.critical_count }}</strong></p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fff4e5;">
+        <h3>High</h3>
+        <p style="font-size:28px;"><strong>{{ snapshot.high_count }}</strong></p>
+    </div>
+
+    <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fef7e0;">
+        <h3>Missing Custodian</h3>
+        <p style="font-size:28px;"><strong>{{ snapshot.missing_custodian_count }}</strong></p>
+    </div>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>🚨 Critical Priority Panel</h3>
+    <ul>
+    {% for a in snapshot.critical_assets %}
+        <li>
+            <a href="/property/{{ a.property_id }}">{{ a.property_name }}</a>
+            — <strong>{{ a.severity }}</strong>
+            — {{ a.reasons }}
+        </li>
+    {% else %}
+        <li>No critical assets</li>
+    {% endfor %}
+    </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
+    <h3>⚠️ High Priority Panel</h3>
+    <ul>
+    {% for a in snapshot.high_assets %}
+        <li>
+            <a href="/property/{{ a.property_id }}">{{ a.property_name }}</a>
+            — <strong>{{ a.severity }}</strong>
+            — {{ a.reasons }}
+        </li>
+    {% else %}
+        <li>No high-priority assets</li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}

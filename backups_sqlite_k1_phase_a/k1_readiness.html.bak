@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><title>K-1 Readiness</title></head>
+<body>
+<h1>K-1 Readiness</h1>
+<p><strong>Trust:</strong> {{ trust["trust_name"] }}</p>
+<p><strong>Tax Year:</strong> {{ tax_year }}</p>
+
+<p><a href="{{ url_for('k1_new_beneficiary', trust_id=trust['trust_id']) }}">Add Beneficiary</a></p>
+<p><a href="{{ url_for('k1_new_distribution', trust_id=trust['trust_id']) }}">Record Distribution</a></p>
+<p><a href="{{ url_for('k1_year_end_summary', trust_id=trust['trust_id'], tax_year=tax_year) }}">Year-End Summary</a></p>
+
+{% if readiness["likely_k1_required"] %}
+<p><strong>Likely K-1 Required: YES</strong></p>
+{% else %}
+<p><strong>Likely K-1 Required: NOT YET CLEAR</strong></p>
+{% endif %}
+
+<h2>Warnings</h2>
+<ul>
+{% for item in summary["warnings"] %}
+  <li>{{ item }}</li>
+{% endfor %}
+</ul>
+
+<h2>Beneficiaries</h2>
+<table border="1">
+<tr><th>Name</th><th>Type</th><th>Tax ID</th><th>Active</th></tr>
+{% for b in beneficiaries %}
+<tr>
+  <td>{{ b["full_name"] }}</td>
+  <td>{{ b["beneficiary_type"] }}</td>
+  <td>{{ b["tax_id"] or "" }}</td>
+  <td>{{ b["is_active"] }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Distributions</h2>
+<table border="1">
+<tr><th>Date</th><th>Beneficiary</th><th>Type</th><th>Gross</th><th>Taxable</th><th>Principal</th></tr>
+{% for d in distributions %}
+<tr>
+  <td>{{ d["distribution_date"] }}</td>
+  <td>{{ d["beneficiary_name"] }}</td>
+  <td>{{ d["distribution_type"] }}</td>
+  <td>{{ d["gross_amount"] }}</td>
+  <td>{{ d["taxable_amount"] }}</td>
+  <td>{{ d["principal_amount"] }}</td>
+</tr>
+{% endfor %}
+</table>
+</body>
+</html>

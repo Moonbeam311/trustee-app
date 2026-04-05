@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 2: Trust Type and Purpose</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This step defines the general structure and intended use of the trust.
+</div>
+
+<div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
+    <strong>Why this matters</strong><br>
+    Your trust type and purpose affect how the trust is administered, what follow-up documents are recommended, and how later steps in the system will behave.
+</div>
+
+<form method="POST">
+
+    <label>Trust Type</label>
+    <select name="trust_type" required>
+        <option value="">Select Trust Type</option>
+        <option value="revocable">Revocable</option>
+        <option value="irrevocable">Irrevocable</option>
+        <option value="98">98 Trust</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What do these mean?</strong><br>
+        <strong>Revocable:</strong> usually more flexible and easier to modify.<br>
+        <strong>Irrevocable:</strong> usually more structured and harder to change once established.<br>
+        <strong>98 Trust:</strong> advanced custom trust mode for expanded structure and administration.
+    </div>
+
+    <label>Primary Purpose</label>
+    <select name="trust_purpose" required>
+        <option value="">Select Purpose</option>
+        <option value="family_holding">Family Holding</option>
+        <option value="property_holding">Property Holding</option>
+        <option value="business_operations">Business Operations</option>
+        <option value="education_charitable">Education / Charitable Support</option>
+        <option value="advanced_custom">Advanced Custom</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>Why are we asking this?</strong><br>
+        The trust purpose helps determine what records, assets, and administration steps are likely to matter most later in the process.
+    </div>
+
+    <label>Accounting Method</label>
+    <select name="accounting_method" required>
+        <option value="">Select Accounting Method</option>
+        <option value="cash">Cash Method</option>
+        <option value="accrual">Accrual Method</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:12px;">
+        <strong>What is this?</strong><br>
+        <strong>Cash Method:</strong> records income when received and expenses when paid.<br>
+        <strong>Accrual Method:</strong> records income when earned and expenses when incurred.
+    </div>
+
+    <label>Workflow Mode</label>
+    <select name="workflow_mode" required>
+        <option value="">Select Workflow Mode</option>
+        <option value="private_office">Private Office Mode</option>
+        <option value="public_filing">Public Filing / External Mode</option>
+    </select>
+
+    <div style="font-size:13px; margin-bottom:20px;">
+        <strong>What is this?</strong><br>
+        <strong>Private Office Mode:</strong> internal trust setup, administration, and drafting workflows.<br>
+        <strong>Public Filing / External Mode:</strong> workflows intended to support outward-facing or filing-related records.
+    </div>
+
+    <button type="submit">Next Step</button>
+</form>
+{% endblock %}

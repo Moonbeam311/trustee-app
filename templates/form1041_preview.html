@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form 1041 Preview</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .warn { color: darkorange; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Form 1041 Preview</h1>
+
+{% if dataset and dataset['trust'] %}
+<div class="box">
+  <p><strong>Trust:</strong> {{ dataset['trust']['trust_name'] }} ({{ dataset['trust']['trust_id'] }})</p>
+  <p><strong>Tax Year:</strong> {{ dataset['tax_year'] }}</p>
+  <p>
+    <a href="{{ url_for('form1041_print', trust_id=dataset['trust']['trust_id'], tax_year=tax_year) }}">
+      Open Print View
+    </a>
+  </p>
+</div>
+
+<div class="box">
+  <h2>Compilation Layer</h2>
+  <table>
+    <tr><th>Item</th><th>Value</th></tr>
+    <tr><td>Gross Income</td><td>{{ dataset['gross_income'] }}</td></tr>
+    <tr><td>Deductions</td><td>{{ dataset['deductions'] }}</td></tr>
+    <tr><td>Net Income</td><td>{{ dataset['net_income'] }}</td></tr>
+    <tr><td>Distributed Taxable Income</td><td>{{ dataset['distributed_taxable_income'] }}</td></tr>
+    <tr><td>Retained Income</td><td>{{ dataset['retained_income'] }}</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>Line-Mapping Worksheet</h2>
+  <table>
+    <tr><th>Worksheet Item</th><th>Value</th><th>Note</th></tr>
+    {% for row in dataset['line_mapping'] %}
+    <tr>
+      <td>{{ row['label'] }}</td>
+      <td>{{ row['value'] }}</td>
+      <td>{{ row['note'] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="box">
+  <h2>Readiness Flags</h2>
+  <table>
+    <tr><th>Flag</th><th>Status</th></tr>
+    <tr><td>Has Income</td><td>{{ dataset['readiness_flags']['has_income'] }}</td></tr>
+    <tr><td>Has Deductions</td><td>{{ dataset['readiness_flags']['has_deductions'] }}</td></tr>
+    <tr><td>Has Beneficiaries</td><td>{{ dataset['readiness_flags']['has_beneficiaries'] }}</td></tr>
+    <tr><td>Has Distributions</td><td>{{ dataset['readiness_flags']['has_distributions'] }}</td></tr>
+    <tr><td>Missing Tax IDs</td><td>{{ dataset['readiness_flags']['missing_tax_ids'] }}</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>K-1 Summary</h2>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total Beneficiaries</td><td>{{ dataset['k1_summary']['total_beneficiaries'] }}</td></tr>
+    <tr><td>Total Distributions</td><td>{{ dataset['k1_summary']['total_distributions'] }}</td></tr>
+    <tr><td>Total Taxable Distributed</td><td>{{ dataset['k1_summary']['total_taxable'] }}</td></tr>
+    <tr><td>Total Principal Distributed</td><td>{{ dataset['k1_summary']['total_principal'] }}</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>Warnings</h2>
+  <ul>
+  {% for item in dataset['warnings'] %}
+    <li class="warn">{{ item }}</li>
+  {% endfor %}
+  </ul>
+</div>
+{% else %}
+  <p>No 1041 dataset available.</p>
+{% endif %}
+</body>
+</html>

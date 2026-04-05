@@ -1,0 +1,31 @@
+TRUSTEE APP — PACKAGE EXPORT SUMMARY
+============================================
+
+PACKAGE CONTENTS
+- app.py
+- database/db.py
+- templates/
+- handoff/
+
+STABLE MODULES INCLUDED
+- Home / Dashboard
+- Workflow Hub
+- Admin Index
+- Command Dashboard
+- Financial Summary
+- Tax Assistant
+- K-1
+- Form 1041
+- Instrument Registry
+- Assets
+- Asset Health
+
+ARCHITECTURE
+- Native SQLite helper pattern
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+CRITICAL RULE
+- Continue safe additive changes only
+- Do not introduce ORM architecture

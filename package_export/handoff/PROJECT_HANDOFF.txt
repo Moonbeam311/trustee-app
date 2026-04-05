@@ -1,0 +1,31 @@
+CONTINUE FROM HERE:
+
+System status:
+- Native SQLite helper architecture confirmed
+- K-1 base working
+- 1041 base + refinement working
+- Instrument registry base + refinement working
+- Shared navigation working
+- Workflow hub working
+- Trust-context module linking working
+
+Critical architecture rule:
+- Do NOT rebuild using SQLAlchemy / ORM assumptions
+- Continue using database/db.py helper functions + app.py routes + templates
+
+What caused repeated earlier failures:
+- Initial builds assumed a different architecture than the actual app
+- The actual app is helper-driven sqlite3, not ORM-first
+- Once aligned to native structure, K-1 and 1041 stabilized
+
+Current safe next recommended build order:
+1. Admin index / project manifest page
+2. Export bundle / manifest packaging
+3. Route consistency cleanup
+4. Later legal refinement for instruments (money order / BOE classes only when explicitly designed)
+
+Instruction to next assistant:
+- Do NOT replace the architecture
+- Do NOT destructively overwrite stable modules
+- Use safe additive changes only
+- Preserve existing SQLite-native flow

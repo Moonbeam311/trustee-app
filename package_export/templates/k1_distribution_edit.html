@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Distribution</title></head>
+<body>
+<h1>Edit Distribution</h1>
+<p>Trust: {{ trust["trust_name"] }}</p>
+
+<form method="POST">
+  <label>Beneficiary</label>
+  <select name="beneficiary_id" required>
+    {% for b in beneficiaries %}
+      <option value="{{ b['beneficiary_id'] }}" {% if distribution["beneficiary_id"] == b["beneficiary_id"] %}selected{% endif %}>{{ b["full_name"] }}</option>
+    {% endfor %}
+  </select><br>
+
+  <label>Tax Year</label><input type="number" name="tax_year" value="{{ distribution['tax_year'] }}" required><br>
+  <label>Distribution Date</label><input type="date" name="distribution_date" value="{{ distribution['distribution_date'] }}" required><br>
+
+  <label>Distribution Type</label>
+  <select name="distribution_type">
+    <option value="cash" {% if distribution["distribution_type"] == "cash" %}selected{% endif %}>Cash</option>
+    <option value="property" {% if distribution["distribution_type"] == "property" %}selected{% endif %}>Property</option>
+    <option value="expense_paid" {% if distribution["distribution_type"] == "expense_paid" %}selected{% endif %}>Expense Paid</option>
+  </select><br>
+
+  <label>Description</label><textarea name="description">{{ distribution['description'] or '' }}</textarea><br>
+  <label>Gross Amount</label><input type="number" step="0.01" name="gross_amount" value="{{ distribution['gross_amount'] }}" required><br>
+  <label>Taxable Amount</label><input type="number" step="0.01" name="taxable_amount" value="{{ distribution['taxable_amount'] }}" required><br>
+  <label>Principal Amount</label><input type="number" step="0.01" name="principal_amount" value="{{ distribution['principal_amount'] }}" required><br>
+  <label>Source Reference</label><input type="text" name="source_reference" value="{{ distribution['source_reference'] or '' }}"><br>
+
+  <label>Status</label>
+  <select name="status">
+    <option value="recorded" {% if distribution["status"] == "recorded" %}selected{% endif %}>Recorded</option>
+    <option value="reviewed" {% if distribution["status"] == "reviewed" %}selected{% endif %}>Reviewed</option>
+    <option value="corrected" {% if distribution["status"] == "corrected" %}selected{% endif %}>Corrected</option>
+    <option value="exported" {% if distribution["status"] == "exported" %}selected{% endif %}>Exported</option>
+  </select><br>
+
+  <button type="submit">Update Distribution</button>
+</form>
+</body>
+</html>

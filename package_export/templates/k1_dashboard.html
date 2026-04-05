@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head><title>K-1 Engine</title></head>
+<body>
+{% include '_nav.html' %}
+
+<h1>K-1 Engine</h1>
+<p>Safe beneficiary and distribution layer for trust reporting.</p>
+{% for trust in trusts %}
+  <div>
+    <h3>{{ trust["trust_name"] }}</h3>
+    <p>{{ trust["trust_id"] }}</p>
+    <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id'], tax_year=tax_year) }}">Open K-1 View</a>
+  </div>
+{% else %}
+  <p>No trusts found.</p>
+{% endfor %}
+</body>
+</html>

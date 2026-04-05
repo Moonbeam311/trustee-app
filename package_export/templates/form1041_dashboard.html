@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form 1041 Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .warn { color: darkorange; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Form 1041 Dashboard</h1>
+<p>SQLite-native trust income and distribution compilation view.</p>
+
+<div class="box">
+  <form method="GET" action="/form1041">
+    <label><strong>Trust</strong></label><br>
+    <select name="trust_id">
+      <option value="">Select trust</option>
+      {% for trust in trusts %}
+        <option value="{{ trust['trust_id'] }}" {% if selected_trust and selected_trust['trust_id'] == trust['trust_id'] %}selected{% endif %}>
+          {{ trust['trust_name'] }} ({{ trust['trust_id'] }})
+        </option>
+      {% endfor %}
+    </select>
+    <br><br>
+
+    <label><strong>Tax Year</strong></label><br>
+    <input type="number" name="tax_year" value="{{ tax_year }}">
+    <br><br>
+
+    <button type="submit">Load 1041 View</button>
+  </form>
+</div>
+
+
+{% if dataset and dataset['trust'] %}
+<div class="box">
+  <h2>Related Modules</h2>
+  <p><a href="{{ url_for('tax_assistant', trust_id=dataset['trust']['trust_id']) }}">Open Tax Assistant</a></p>
+  <p><a href="{{ url_for('k1_trust_view', trust_id=dataset['trust']['trust_id'], tax_year=tax_year) }}">Open K-1 View</a></p>
+  <p><a href="{{ url_for('financial_summary', trust_id=dataset['trust']['trust_id']) }}">Open Financial Summary</a></p>
+  <p><a href="{{ url_for('instruments_dashboard', trust_id=dataset['trust']['trust_id']) }}">Open Instruments</a></p>
+</div>
+{% endif %}
+
+{% if dataset %}
+<div class="box">
+  <h2>Trust Summary</h2>
+  <p><strong>Trust:</strong> {{ dataset['trust']['trust_name'] }} ({{ dataset['trust']['trust_id'] }})</p>
+  <p><strong>Tax Year:</strong> {{ dataset['tax_year'] }}</p>
+</div>
+
+<div class="box">
+  <h2>Income Overview</h2>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Gross Income</td><td>{{ dataset['gross_income'] }}</td></tr>
+    <tr><td>Deductions</td><td>{{ dataset['deductions'] }}</td></tr>
+    <tr><td>Net Income</td><td>{{ dataset['net_income'] }}</td></tr>
+    <tr><td>Distributed Taxable Income</td><td>{{ dataset['distributed_taxable_income'] }}</td></tr>
+    <tr><td>Retained Income</td><td>{{ dataset['retained_income'] }}</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>K-1 Snapshot</h2>
+  <table>
+    <tr><th>Metric</th><th>Value</th></tr>
+    <tr><td>Total Beneficiaries</td><td>{{ dataset['k1_summary']['total_beneficiaries'] }}</td></tr>
+    <tr><td>Total Distributions</td><td>{{ dataset['k1_summary']['total_distributions'] }}</td></tr>
+    <tr><td>Total Taxable Distributed</td><td>{{ dataset['k1_summary']['total_taxable'] }}</td></tr>
+    <tr><td>Total Principal Distributed</td><td>{{ dataset['k1_summary']['total_principal'] }}</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>Warnings</h2>
+  <ul>
+  {% for item in dataset['warnings'] %}
+    <li class="warn">{{ item }}</li>
+  {% endfor %}
+  </ul>
+</div>
+
+<div class="box">
+  <a href="{{ url_for('form1041_preview', trust_id=dataset['trust']['trust_id'], tax_year=tax_year) }}">
+    Open Form 1041 Preview
+  </a>
+</div>
+{% endif %}
+</body>
+</html>

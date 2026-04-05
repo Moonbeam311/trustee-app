@@ -1,0 +1,12 @@
+<div style="border-bottom:1px solid #ccc; padding:12px 0; margin-bottom:20px;">
+  <a href="/" style="margin-right:16px;">Home</a>
+  <a href="/workflow" style="margin-right:16px;">Workflow</a>
+  <a href="/command" style="margin-right:16px;">Command</a>
+  <a href="/financial_summary" style="margin-right:16px;">Financial Summary</a>
+  <a href="/tax_assistant" style="margin-right:16px;">Tax Assistant</a>
+  <a href="/k1" style="margin-right:16px;">K-1</a>
+  <a href="/form1041" style="margin-right:16px;">Form 1041</a>
+  <a href="/instruments" style="margin-right:16px;">Instruments</a>
+  <a href="/assets" style="margin-right:16px;">Assets</a>
+  <a href="/asset_health" style="margin-right:16px;">Asset Health</a>
+</div>

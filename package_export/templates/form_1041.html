@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Form 1041 Engine</h2>
+
+<form method="GET">
+    <label>Select Trust</label>
+    <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust.trust_id }}">{{ trust.trust_name }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Load</button>
+</form>
+
+{% if summary %}
+<hr>
+
+<h3>Income</h3>
+<ul>
+    <li>Interest: {{ summary.interest_income }}</li>
+    <li>Business: {{ summary.business_income }}</li>
+    <li>Other: {{ summary.other_income }}</li>
+    <li><strong>Total: {{ summary.total_income }}</strong></li>
+</ul>
+
+<h3>Deductions</h3>
+<ul>
+    <li>Admin: {{ summary.admin_expense }}</li>
+    <li>Tax: {{ summary.tax_expense }}</li>
+    <li>Other: {{ summary.other_expense }}</li>
+    <li><strong>Total: {{ summary.total_deductions }}</strong></li>
+</ul>
+
+<h3>Net</h3>
+<p><strong>{{ summary.net_income }}</strong></p>
+
+{% endif %}
+{% endblock %}
