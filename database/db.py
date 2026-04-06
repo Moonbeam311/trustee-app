@@ -2025,3 +2025,58 @@ def get_media_by_trust_id(trust_id):
     conn.close()
     return rows
 
+def ensure_role_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS user_roles (
+        role_id TEXT PRIMARY KEY,
+        full_name TEXT,
+        role_name TEXT,
+        trust_id TEXT,
+        status TEXT,
+        notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_role_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM user_roles")
+    row = cur.fetchone()
+    conn.close()
+    return f"ROL-{row['count'] + 1:03d}"
+
+
+def create_role_record(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO user_roles (
+            role_id, full_name, role_name, trust_id, status, notes
+        ) VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        data["role_id"],
+        data.get("full_name"),
+        data.get("role_name"),
+        data.get("trust_id"),
+        data.get("status"),
+        data.get("notes"),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_all_roles():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM user_roles ORDER BY full_name")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+

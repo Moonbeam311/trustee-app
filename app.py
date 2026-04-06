@@ -100,6 +100,10 @@ from database.db import (
     get_all_media,
     get_media_by_entity,
     get_media_by_trust_id,
+    ensure_role_tables,
+    get_next_role_id,
+    create_role_record,
+    get_all_roles,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -116,6 +120,7 @@ ensure_instrument_tables()
 ensure_fiduciary_tables()
 ensure_genealogy_tables()
 ensure_media_tables()
+ensure_role_tables()
 
 UPLOAD_FOLDER = Path("uploads")
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png"}
@@ -1278,6 +1283,35 @@ def form1041_report_view(trust_id):
         shares=shares,
         evidence=evidence
     )
+
+
+
+
+@app.route("/roles")
+def role_dashboard():
+    roles = get_all_roles()
+    trusts = get_all_trusts()
+    return render_template("role_dashboard.html", roles=roles, trusts=trusts)
+
+
+@app.route("/roles/new", methods=["GET", "POST"])
+def role_new():
+    trusts = get_all_trusts()
+
+    if request.method == "POST":
+        role_id = get_next_role_id()
+        create_role_record({
+            "role_id": role_id,
+            "full_name": request.form.get("full_name"),
+            "role_name": request.form.get("role_name"),
+            "trust_id": request.form.get("trust_id"),
+            "status": request.form.get("status"),
+            "notes": request.form.get("notes"),
+        })
+        log_change("role", role_id, "create", "User role created")
+        return redirect(url_for("role_dashboard"))
+
+    return render_template("role_form.html", trusts=trusts)
 
 
 if __name__ == "__main__":
