@@ -84,6 +84,11 @@ from database.db import (
     compute_dni_components,
     compute_beneficiary_tax_shares,
     get_portfolio_summary,
+    ensure_fiduciary_tables,
+    get_next_fiduciary_id,
+    create_fiduciary_record,
+    get_all_fiduciaries,
+    get_fiduciaries_by_trust_id,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -97,6 +102,7 @@ init_audit_table()
 init_db()
 ensure_k1_tables()
 ensure_instrument_tables()
+ensure_fiduciary_tables()
 
 UPLOAD_FOLDER = Path("uploads")
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png"}
@@ -1057,6 +1063,38 @@ def portfolio_dashboard():
         portfolio=portfolio,
         totals=totals
     )
+
+
+
+
+@app.route("/fiduciaries")
+def fiduciary_dashboard():
+    trusts = get_all_trusts()
+    fiduciaries = get_all_fiduciaries()
+    return render_template("fiduciary_dashboard.html", trusts=trusts, fiduciaries=fiduciaries)
+
+
+@app.route("/fiduciaries/new", methods=["GET", "POST"])
+def fiduciary_new():
+    trusts = get_all_trusts()
+
+    if request.method == "POST":
+        fiduciary_id = get_next_fiduciary_id()
+        create_fiduciary_record({
+            "fiduciary_id": fiduciary_id,
+            "full_name": request.form.get("full_name"),
+            "role_title": request.form.get("role_title"),
+            "authority_scope": request.form.get("authority_scope"),
+            "trust_id": request.form.get("trust_id"),
+            "appointment_date": request.form.get("appointment_date"),
+            "effective_date": request.form.get("effective_date"),
+            "status": request.form.get("status"),
+            "notes": request.form.get("notes"),
+        })
+        log_change("fiduciary", fiduciary_id, "create", "Fiduciary role record created")
+        return redirect(url_for("fiduciary_dashboard"))
+
+    return render_template("fiduciary_form.html", trusts=trusts)
 
 
 if __name__ == "__main__":

@@ -1777,3 +1777,81 @@ def get_portfolio_summary():
 
     return portfolio, grand_totals
 
+def ensure_fiduciary_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS fiduciaries (
+        fiduciary_id TEXT PRIMARY KEY,
+        full_name TEXT,
+        role_title TEXT,
+        authority_scope TEXT,
+        trust_id TEXT,
+        appointment_date TEXT,
+        effective_date TEXT,
+        status TEXT,
+        notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_fiduciary_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM fiduciaries")
+    row = cur.fetchone()
+    conn.close()
+    return f"FID-{row['count'] + 1:03d}"
+
+
+def create_fiduciary_record(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO fiduciaries (
+            fiduciary_id, full_name, role_title, authority_scope,
+            trust_id, appointment_date, effective_date, status, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data["fiduciary_id"],
+        data.get("full_name"),
+        data.get("role_title"),
+        data.get("authority_scope"),
+        data.get("trust_id"),
+        data.get("appointment_date"),
+        data.get("effective_date"),
+        data.get("status"),
+        data.get("notes"),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_all_fiduciaries():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM fiduciaries
+        ORDER BY full_name
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_fiduciaries_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM fiduciaries
+        WHERE trust_id = ?
+        ORDER BY full_name
+    """, (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+

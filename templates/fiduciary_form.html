@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>New Fiduciary Role</title>
+  <style>
+    body { font-family: Arial; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    input, textarea, select { width: 100%; padding: 8px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Add Fiduciary Role</h1>
+
+<div class="box">
+  <form method="POST">
+    <label>Full Name</label>
+    <input type="text" name="full_name">
+
+    <label>Role Title</label>
+    <input type="text" name="role_title">
+
+    <label>Authority Scope</label>
+    <textarea name="authority_scope"></textarea>
+
+    <label>Trust</label>
+    <select name="trust_id">
+      {% for trust in trusts %}
+      <option value="{{ trust['trust_id'] }}">{{ trust['trust_name'] }} ({{ trust['trust_id'] }})</option>
+      {% endfor %}
+    </select>
+
+    <label>Appointment Date</label>
+    <input type="date" name="appointment_date">
+
+    <label>Effective Date</label>
+    <input type="date" name="effective_date">
+
+    <label>Status</label>
+    <input type="text" name="status" value="active">
+
+    <label>Notes</label>
+    <textarea name="notes"></textarea>
+
+    <button type="submit">Create Fiduciary Role</button>
+  </form>
+</div>
+
+</body>
+</html>
