@@ -2080,3 +2080,29 @@ def get_all_roles():
     conn.close()
     return rows
 
+def get_roles_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM user_roles
+        WHERE trust_id = ?
+        ORDER BY full_name
+    """, (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_role_summary_by_trust(trust_id):
+    rows = get_roles_by_trust_id(trust_id)
+    summary = {
+        "Admin": 0,
+        "Trustee": 0,
+        "Viewer": 0,
+    }
+    for row in rows:
+        role = row["role_name"] or ""
+        if role in summary:
+            summary[role] += 1
+    return summary
+

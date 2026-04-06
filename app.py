@@ -104,6 +104,8 @@ from database.db import (
     get_next_role_id,
     create_role_record,
     get_all_roles,
+    get_roles_by_trust_id,
+    get_role_summary_by_trust,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -1375,6 +1377,26 @@ def form1041_report_print(trust_id):
         evidence=evidence,
         fiduciaries=fiduciaries
     )
+
+
+
+
+@app.route("/permissions")
+def permissions_dashboard():
+    trusts = get_all_trusts()
+    rows = []
+
+    for trust in trusts:
+        summary = get_role_summary_by_trust(trust["trust_id"])
+        rows.append({
+            "trust_id": trust["trust_id"],
+            "trust_name": trust["trust_name"],
+            "admin_count": summary["Admin"],
+            "trustee_count": summary["Trustee"],
+            "viewer_count": summary["Viewer"],
+        })
+
+    return render_template("permissions_dashboard.html", rows=rows)
 
 
 if __name__ == "__main__":

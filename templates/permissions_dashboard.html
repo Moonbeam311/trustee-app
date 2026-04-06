@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Permissions Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+<h1>Permissions Dashboard</h1>
+
+<div class="box">
+  <table>
+    <tr>
+      <th>Trust</th>
+      <th>Admins</th>
+      <th>Trustees</th>
+      <th>Viewers</th>
+    </tr>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row["trust_name"] }} ({{ row["trust_id"] }})</td>
+      <td>{{ row["admin_count"] }}</td>
+      <td>{{ row["trustee_count"] }}</td>
+      <td>{{ row["viewer_count"] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+</body>
+</html>
