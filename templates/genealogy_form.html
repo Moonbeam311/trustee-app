@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>New Genealogy Record</title>
+  <style>
+    body { font-family: Arial; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    input, textarea, select { width: 100%; padding: 8px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Add Genealogy / Pedigree Record</h1>
+
+<div class="box">
+  <form method="POST">
+    <label>Trust</label>
+    <select name="trust_id">
+      {% for trust in trusts %}
+      <option value="{{ trust['trust_id'] }}">{{ trust['trust_name'] }} ({{ trust['trust_id'] }})</option>
+      {% endfor %}
+    </select>
+
+    <label>Full Name</label>
+    <input type="text" name="full_name">
+
+    <label>Lineage Role</label>
+    <input type="text" name="lineage_role">
+
+    <label>Birth Date</label>
+    <input type="date" name="birth_date">
+
+    <label>Death Date</label>
+    <input type="date" name="death_date">
+
+    <label>Parent 1</label>
+    <input type="text" name="parent_1">
+
+    <label>Parent 2</label>
+    <input type="text" name="parent_2">
+
+    <label>Spouse</label>
+    <input type="text" name="spouse">
+
+    <label>Notes</label>
+    <textarea name="notes"></textarea>
+
+    <label>Evidence Notes</label>
+    <textarea name="evidence_notes"></textarea>
+
+    <button type="submit">Create Genealogy Record</button>
+  </form>
+</div>
+
+</body>
+</html>

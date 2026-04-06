@@ -89,6 +89,11 @@ from database.db import (
     create_fiduciary_record,
     get_all_fiduciaries,
     get_fiduciaries_by_trust_id,
+    ensure_genealogy_tables,
+    get_next_genealogy_id,
+    create_genealogy_record,
+    get_all_genealogy_records,
+    get_genealogy_by_trust_id,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -103,6 +108,7 @@ init_db()
 ensure_k1_tables()
 ensure_instrument_tables()
 ensure_fiduciary_tables()
+ensure_genealogy_tables()
 
 UPLOAD_FOLDER = Path("uploads")
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png"}
@@ -1095,6 +1101,40 @@ def fiduciary_new():
         return redirect(url_for("fiduciary_dashboard"))
 
     return render_template("fiduciary_form.html", trusts=trusts)
+
+
+
+
+@app.route("/genealogy")
+def genealogy_dashboard():
+    trusts = get_all_trusts()
+    records = get_all_genealogy_records()
+    return render_template("genealogy_dashboard.html", trusts=trusts, records=records)
+
+
+@app.route("/genealogy/new", methods=["GET", "POST"])
+def genealogy_new():
+    trusts = get_all_trusts()
+
+    if request.method == "POST":
+        genealogy_id = get_next_genealogy_id()
+        create_genealogy_record({
+            "genealogy_id": genealogy_id,
+            "trust_id": request.form.get("trust_id"),
+            "full_name": request.form.get("full_name"),
+            "lineage_role": request.form.get("lineage_role"),
+            "birth_date": request.form.get("birth_date"),
+            "death_date": request.form.get("death_date"),
+            "parent_1": request.form.get("parent_1"),
+            "parent_2": request.form.get("parent_2"),
+            "spouse": request.form.get("spouse"),
+            "notes": request.form.get("notes"),
+            "evidence_notes": request.form.get("evidence_notes"),
+        })
+        log_change("genealogy", genealogy_id, "create", "Genealogy / pedigree record created")
+        return redirect(url_for("genealogy_dashboard"))
+
+    return render_template("genealogy_form.html", trusts=trusts)
 
 
 if __name__ == "__main__":

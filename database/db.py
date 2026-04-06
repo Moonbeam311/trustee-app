@@ -1855,3 +1855,86 @@ def get_fiduciaries_by_trust_id(trust_id):
     conn.close()
     return rows
 
+def ensure_genealogy_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS genealogy_records (
+        genealogy_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        full_name TEXT,
+        lineage_role TEXT,
+        birth_date TEXT,
+        death_date TEXT,
+        parent_1 TEXT,
+        parent_2 TEXT,
+        spouse TEXT,
+        notes TEXT,
+        evidence_notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_genealogy_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM genealogy_records")
+    row = cur.fetchone()
+    conn.close()
+    return f"GEN-{row['count'] + 1:03d}"
+
+
+def create_genealogy_record(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO genealogy_records (
+            genealogy_id, trust_id, full_name, lineage_role,
+            birth_date, death_date, parent_1, parent_2,
+            spouse, notes, evidence_notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data["genealogy_id"],
+        data.get("trust_id"),
+        data.get("full_name"),
+        data.get("lineage_role"),
+        data.get("birth_date"),
+        data.get("death_date"),
+        data.get("parent_1"),
+        data.get("parent_2"),
+        data.get("spouse"),
+        data.get("notes"),
+        data.get("evidence_notes"),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_all_genealogy_records():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM genealogy_records
+        ORDER BY full_name
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_genealogy_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM genealogy_records
+        WHERE trust_id = ?
+        ORDER BY full_name
+    """, (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+

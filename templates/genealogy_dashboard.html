@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Genealogy / Pedigree Dashboard</title>
+  <style>
+    body { font-family: Arial; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Genealogy / Pedigree Layer</h1>
+
+<div class="box">
+  <p><a href="{{ url_for('genealogy_new') }}">Add Genealogy Record</a></p>
+</div>
+
+<div class="box">
+  <table>
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Lineage Role</th>
+      <th>Trust</th>
+      <th>Parent 1</th>
+      <th>Parent 2</th>
+      <th>Spouse</th>
+    </tr>
+    {% for r in records %}
+    <tr>
+      <td>{{ r["genealogy_id"] }}</td>
+      <td>{{ r["full_name"] }}</td>
+      <td>{{ r["lineage_role"] }}</td>
+      <td>{{ r["trust_id"] }}</td>
+      <td>{{ r["parent_1"] }}</td>
+      <td>{{ r["parent_2"] }}</td>
+      <td>{{ r["spouse"] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+</body>
+</html>
