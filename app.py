@@ -94,6 +94,10 @@ from database.db import (
     create_genealogy_record,
     get_all_genealogy_records,
     get_genealogy_by_trust_id,
+    ensure_media_tables,
+    get_next_media_id,
+    create_media_record,
+    get_all_media,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -109,6 +113,7 @@ ensure_k1_tables()
 ensure_instrument_tables()
 ensure_fiduciary_tables()
 ensure_genealogy_tables()
+ensure_media_tables()
 
 UPLOAD_FOLDER = Path("uploads")
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png"}
@@ -1135,6 +1140,70 @@ def genealogy_new():
         return redirect(url_for("genealogy_dashboard"))
 
     return render_template("genealogy_form.html", trusts=trusts)
+
+
+
+
+import os
+from datetime import datetime
+from flask import request
+
+UPLOAD_FOLDER = "uploads"
+
+
+@app.route("/media")
+def media_dashboard():
+    records = get_all_media()
+    return render_template("media_dashboard.html", records=records)
+
+
+@app.route("/media/upload", methods=["GET", "POST"])
+def media_upload():
+    trusts = get_all_trusts()
+
+    if request.method == "POST":
+        file = request.files.get("file")
+        if file:
+            media_id = get_next_media_id()
+            filename = f"{media_id}_{file.filename}"
+            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(filepath)
+
+            create_media_record({
+                "media_id": media_id,
+                "trust_id": request.form.get("trust_id"),
+                "related_entity_type": request.form.get("entity_type"),
+                "related_entity_id": request.form.get("entity_id"),
+                "media_type": request.form.get("media_type"),
+                "file_path": filepath,
+                "category": request.form.get("category"),
+                "description": request.form.get("description"),
+                "created_at": datetime.now().isoformat(),
+            })
+
+            log_change("media", media_id, "upload", "Media evidence uploaded")
+
+        return redirect(url_for("media_dashboard"))
+
+    return render_template("media_form.html", trusts=trusts)
+
+
+
+
+@app.route("/media/file/<media_id>")
+def media_file(media_id):
+    records = get_all_media()
+    target = None
+    for row in records:
+        if row["media_id"] == media_id:
+            target = row
+            break
+
+    if not target:
+        return "Media not found", 404
+
+    from flask import send_file
+    return send_file(target["file_path"])
 
 
 if __name__ == "__main__":

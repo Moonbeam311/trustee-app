@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Media Evidence</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    .record { border-top: 1px solid #eee; padding-top: 14px; margin-top: 14px; }
+    audio, video { width: 100%; max-width: 500px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Media Evidence</h1>
+
+<div class="box">
+  <p><a href="/media/upload">Upload Evidence</a></p>
+</div>
+
+<div class="box">
+  {% for r in records %}
+    <div class="record">
+      <p><strong>{{ r["media_id"] }}</strong> — {{ r["category"] }} ({{ r["media_type"] }})</p>
+      <p>Trust: {{ r["trust_id"] }}</p>
+      <p>Description: {{ r["description"] }}</p>
+      <p>Entity: {{ r["related_entity_type"] }} / {{ r["related_entity_id"] }}</p>
+
+      {% if r["media_type"] == "audio" %}
+        <audio controls>
+          <source src="{{ url_for('media_file', media_id=r['media_id']) }}">
+        </audio>
+      {% elif r["media_type"] == "video" %}
+        <video controls>
+          <source src="{{ url_for('media_file', media_id=r['media_id']) }}">
+        </video>
+      {% else %}
+        <p><a href="{{ url_for('media_file', media_id=r['media_id']) }}">Open File</a></p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+</body>
+</html>
