@@ -1,0 +1,22 @@
+TRUSTEE APP — DEPLOYMENT PREP SUMMARY
+=====================================
+
+Deployment prep completed:
+- wsgi.py created
+- requirements.txt created
+- .env.example created
+- deployment checklist created
+- startup command example created
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+No ORM introduced.
+No architectural rewrite performed.
+
+Next real deployment tasks:
+- choose hosting target
+- verify writable SQLite and uploads paths
+- use production WSGI server

@@ -1,0 +1,17 @@
+TRUSTEE APP — DEPLOYMENT CHECKLIST
+==================================
+
+1. Confirm app.py and database/db.py compile
+2. Confirm local routes load successfully
+3. Confirm uploads folder exists
+4. Confirm requirements.txt is present
+5. Confirm wsgi.py is present
+6. Confirm .env or environment variables are set
+7. Confirm SQLite file path strategy for deployment
+8. Confirm generated reports and upload folders are writable
+9. Choose deployment target:
+   - local server
+   - Render
+   - Railway
+   - VPS / Ubuntu + Gunicorn + Nginx
+10. Use a production WSGI server instead of Flask debug server
