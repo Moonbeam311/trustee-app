@@ -1,0 +1,18 @@
+TRUSTEE APP — MEDIA EVIDENCE LAYER
+==================================
+
+This note was added via the GitHub connector to mark the start of the media evidence layer.
+
+Planned scope:
+- video and audio evidence uploads
+- trust-linked media records
+- optional entity linkage (fiduciary, genealogy, instrument, beneficiary)
+- evidence category labeling and notes
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
