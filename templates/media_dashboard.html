@@ -25,6 +25,7 @@
       <p>Trust: {{ r["trust_id"] }}</p>
       <p>Description: {{ r["description"] }}</p>
       <p>Entity: {{ r["related_entity_type"] }} / {{ r["related_entity_id"] }}</p>
+<p><a href="{{ url_for('evidence_by_entity', entity_type=r['related_entity_type'], entity_id=r['related_entity_id']) }}">View Linked Evidence</a></p>
 
       {% if r["media_type"] == "audio" %}
         <audio controls>

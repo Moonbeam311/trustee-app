@@ -98,6 +98,7 @@ from database.db import (
     get_next_media_id,
     create_media_record,
     get_all_media,
+    get_media_by_entity,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -1204,6 +1205,19 @@ def media_file(media_id):
 
     from flask import send_file
     return send_file(target["file_path"])
+
+
+
+
+@app.route("/evidence/<entity_type>/<entity_id>")
+def evidence_by_entity(entity_type, entity_id):
+    records = get_media_by_entity(entity_type, entity_id)
+    return render_template(
+        "evidence_entity_view.html",
+        entity_type=entity_type,
+        entity_id=entity_id,
+        records=records
+    )
 
 
 if __name__ == "__main__":

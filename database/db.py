@@ -1938,3 +1938,78 @@ def get_genealogy_by_trust_id(trust_id):
     conn.close()
     return rows
 
+def ensure_media_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS media_records (
+        media_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        related_entity_type TEXT,
+        related_entity_id TEXT,
+        media_type TEXT,
+        file_path TEXT,
+        category TEXT,
+        description TEXT,
+        created_at TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_media_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM media_records")
+    row = cur.fetchone()
+    conn.close()
+    return f"MED-{row['count'] + 1:03d}"
+
+
+def create_media_record(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO media_records (
+            media_id, trust_id, related_entity_type,
+            related_entity_id, media_type, file_path,
+            category, description, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data["media_id"],
+        data.get("trust_id"),
+        data.get("related_entity_type"),
+        data.get("related_entity_id"),
+        data.get("media_type"),
+        data.get("file_path"),
+        data.get("category"),
+        data.get("description"),
+        data.get("created_at"),
+    ))
+    conn.commit()
+    conn.close()
+
+
+def get_all_media():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM media_records ORDER BY created_at DESC")
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+def get_media_by_entity(entity_type, entity_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM media_records
+        WHERE related_entity_type = ? AND related_entity_id = ?
+        ORDER BY created_at DESC
+    """, (entity_type, entity_id))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
