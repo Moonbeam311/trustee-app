@@ -1,0 +1,17 @@
+TRUSTEE APP — MULTI-TRUST PORTFOLIO VIEW
+========================================
+
+This note was added via the GitHub connector to mark the start of the multi-trust portfolio view phase.
+
+Planned scope:
+- cross-trust dashboard
+- portfolio totals across trusts
+- high-level executive visibility without changing core architecture
+
+Architecture remains locked:
+- database/db.py = helper/data layer
+- app.py = route/application layer
+- templates/ = UI layer
+
+Proceed with safe additive changes only.
+Do not introduce ORM architecture.
