@@ -1747,3 +1747,33 @@ def compute_beneficiary_tax_shares(trust_id, tax_year=None):
 
     return results
 
+def get_portfolio_summary():
+    trusts = get_all_trusts()
+    portfolio = []
+
+    grand_totals = {
+        "gross_total": 0.0,
+        "taxable_total": 0.0,
+        "principal_total": 0.0,
+        "trust_count": len(trusts),
+    }
+
+    for t in trusts:
+        trust_id = t["trust_id"]
+        totals = get_distribution_totals_by_trust(trust_id)
+
+        grand_totals["gross_total"] += totals["gross_total"]
+        grand_totals["taxable_total"] += totals["taxable_total"]
+        grand_totals["principal_total"] += totals["principal_total"]
+
+        portfolio.append({
+            "trust_id": trust_id,
+            "trust_name": t["trust_name"],
+            "gross_total": totals["gross_total"],
+            "taxable_total": totals["taxable_total"],
+            "principal_total": totals["principal_total"],
+            "count": totals["count"],
+        })
+
+    return portfolio, grand_totals
+

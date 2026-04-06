@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Portfolio View</title>
+  <style>
+    body { font-family: Arial; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<h1>Multi-Trust Portfolio</h1>
+
+<div class="box">
+  <h2>Portfolio Totals</h2>
+  <ul>
+    <li>Gross Total: {{ totals["gross_total_fmt"] }}</li>
+    <li>Taxable Total: {{ totals["taxable_total_fmt"] }}</li>
+    <li>Principal Total: {{ totals["principal_total_fmt"] }}</li>
+    <li>Trust Count: {{ totals["trust_count"] }}</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Trust Breakdown</h2>
+  <table>
+    <tr>
+      <th>Trust</th>
+      <th>Gross</th>
+      <th>Taxable</th>
+      <th>Principal</th>
+      <th>Count</th>
+    </tr>
+    {% for t in portfolio %}
+    <tr>
+      <td>{{ t["trust_name"] }} ({{ t["trust_id"] }})</td>
+      <td>{{ t["gross_total_fmt"] }}</td>
+      <td>{{ t["taxable_total_fmt"] }}</td>
+      <td>{{ t["principal_total_fmt"] }}</td>
+      <td>{{ t["count"] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+</body>
+</html>

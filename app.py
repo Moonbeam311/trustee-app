@@ -83,6 +83,7 @@ from database.db import (
     money,
     compute_dni_components,
     compute_beneficiary_tax_shares,
+    get_portfolio_summary,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -1034,6 +1035,28 @@ def export_1041_summary_report(trust_id):
     response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_1041_summary_{tax_year}.txt"
     log_change("1041_summary_export", trust_id, "export", f"1041 summary TXT export generated for tax year {tax_year}")
     return response
+
+
+
+
+@app.route("/portfolio")
+def portfolio_dashboard():
+    portfolio, totals = get_portfolio_summary()
+
+    totals["gross_total_fmt"] = money(totals["gross_total"])
+    totals["taxable_total_fmt"] = money(totals["taxable_total"])
+    totals["principal_total_fmt"] = money(totals["principal_total"])
+
+    for row in portfolio:
+        row["gross_total_fmt"] = money(row["gross_total"])
+        row["taxable_total_fmt"] = money(row["taxable_total"])
+        row["principal_total_fmt"] = money(row["principal_total"])
+
+    return render_template(
+        "portfolio_dashboard.html",
+        portfolio=portfolio,
+        totals=totals
+    )
 
 
 if __name__ == "__main__":
