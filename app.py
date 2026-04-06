@@ -957,5 +957,84 @@ def k1_export_csv(trust_id):
     response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_k1_{tax_year}.csv"
     log_change("k1_export", trust_id, "export", f"K-1 CSV export generated for tax year {tax_year}")
     return response
+
+
+@app.route("/exports/k1_summary/<trust_id>.txt")
+def export_k1_summary_report(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    trust = get_trust_by_id(trust_id)
+    totals = get_distribution_totals_by_trust(trust_id, tax_year)
+    beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
+
+    lines = []
+    lines.append("TRUSTEE APP — K-1 SUMMARY REPORT")
+    lines.append("=" * 50)
+    lines.append(f"Trust: {trust['trust_name']} ({trust['trust_id']})")
+    lines.append(f"Tax Year: {tax_year}")
+    lines.append("")
+    lines.append("Trust Totals")
+    lines.append("-" * 20)
+    lines.append(f"Gross Total: {money(totals['gross_total'])}")
+    lines.append(f"Taxable Total: {money(totals['taxable_total'])}")
+    lines.append(f"Principal Total: {money(totals['principal_total'])}")
+    lines.append(f"Distribution Count: {totals['count']}")
+    lines.append("")
+    lines.append("Beneficiary Totals")
+    lines.append("-" * 20)
+
+    for row in beneficiary_totals:
+        lines.append(f"{row['full_name']}")
+        lines.append(f"  Gross: {money(row['gross_total'])}")
+        lines.append(f"  Taxable: {money(row['taxable_total'])}")
+        lines.append(f"  Principal: {money(row['principal_total'])}")
+        lines.append(f"  Count: {row['count']}")
+        lines.append("")
+
+    response = make_response("\n".join(lines))
+    response.headers["Content-Type"] = "text/plain"
+    response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_k1_summary_{tax_year}.txt"
+    log_change("k1_summary_export", trust_id, "export", f"K-1 summary TXT export generated for tax year {tax_year}")
+    return response
+
+
+@app.route("/exports/1041_summary/<trust_id>.txt")
+def export_1041_summary_report(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    trust = get_trust_by_id(trust_id)
+    tax_logic = compute_dni_components(trust_id, tax_year)
+    shares = compute_beneficiary_tax_shares(trust_id, tax_year)
+
+    lines = []
+    lines.append("TRUSTEE APP — FORM 1041 SUMMARY REPORT")
+    lines.append("=" * 50)
+    lines.append(f"Trust: {trust['trust_name']} ({trust['trust_id']})")
+    lines.append(f"Tax Year: {tax_year}")
+    lines.append("")
+    lines.append("Advanced Tax Logic")
+    lines.append("-" * 20)
+    lines.append(f"Gross Income: {money(tax_logic['gross_income'])}")
+    lines.append(f"Taxable Distributed: {money(tax_logic['taxable_distributed'])}")
+    lines.append(f"Principal Distributed: {money(tax_logic['principal_distributed'])}")
+    lines.append(f"DNI: {money(tax_logic['dni'])}")
+    lines.append(f"Retained Income: {money(tax_logic['retained_income'])}")
+    lines.append("")
+    lines.append("Beneficiary Tax Shares")
+    lines.append("-" * 20)
+
+    for row in shares:
+        lines.append(f"{row['full_name']}")
+        lines.append(f"  Gross: {money(row['gross_total'])}")
+        lines.append(f"  Taxable: {money(row['taxable_total'])}")
+        lines.append(f"  Principal: {money(row['principal_total'])}")
+        lines.append(f"  Taxable Ratio: {row['taxable_ratio'] * 100:.1f}%")
+        lines.append("")
+
+    response = make_response("\n".join(lines))
+    response.headers["Content-Type"] = "text/plain"
+    response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_1041_summary_{tax_year}.txt"
+    log_change("1041_summary_export", trust_id, "export", f"1041 summary TXT export generated for tax year {tax_year}")
+    return response
+
+
 if __name__ == "__main__":
     app.run(debug=True)

@@ -57,5 +57,18 @@
     <hr>
   {% endfor %}
 </div>
+
+<div class="box">
+  <h2>Report Exports</h2>
+  {% for trust in trusts %}
+    <p><strong>{{ trust['trust_name'] }}</strong> <span class="muted">({{ trust['trust_id'] }})</span></p>
+    <p>
+      <a href="{{ url_for('export_k1_summary_report', trust_id=trust['trust_id']) }}">K-1 Summary Report</a> |
+      <a href="{{ url_for('export_1041_summary_report', trust_id=trust['trust_id']) }}">1041 Summary Report</a>
+    </p>
+    <hr>
+  {% endfor %}
+</div>
+
 </body>
 </html>
