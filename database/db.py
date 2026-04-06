@@ -2013,3 +2013,15 @@ def get_media_by_entity(entity_type, entity_id):
     conn.close()
     return rows
 
+def get_media_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM media_records
+        WHERE trust_id = ?
+        ORDER BY created_at DESC
+    """, (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+

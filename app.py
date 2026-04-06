@@ -99,6 +99,7 @@ from database.db import (
     create_media_record,
     get_all_media,
     get_media_by_entity,
+    get_media_by_trust_id,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -1217,6 +1218,65 @@ def evidence_by_entity(entity_type, entity_id):
         entity_type=entity_type,
         entity_id=entity_id,
         records=records
+    )
+
+
+
+
+@app.route("/reports/k1/<trust_id>")
+def k1_report_view(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    trust = get_trust_by_id(trust_id)
+    totals = get_distribution_totals_by_trust(trust_id, tax_year)
+    beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
+    evidence = get_media_by_trust_id(trust_id)
+
+    totals["gross_total_fmt"] = money(totals["gross_total"])
+    totals["taxable_total_fmt"] = money(totals["taxable_total"])
+    totals["principal_total_fmt"] = money(totals["principal_total"])
+
+    for row in beneficiary_totals:
+        row["gross_total_fmt"] = money(row["gross_total"])
+        row["taxable_total_fmt"] = money(row["taxable_total"])
+        row["principal_total_fmt"] = money(row["principal_total"])
+
+    return render_template(
+        "k1_report_view.html",
+        trust=trust,
+        tax_year=tax_year,
+        totals=totals,
+        beneficiary_totals=beneficiary_totals,
+        evidence=evidence
+    )
+
+
+@app.route("/reports/1041/<trust_id>")
+def form1041_report_view(trust_id):
+    tax_year = request.args.get("tax_year", str(date.today().year))
+    trust = get_trust_by_id(trust_id)
+    tax_logic = compute_dni_components(trust_id, tax_year)
+    shares = compute_beneficiary_tax_shares(trust_id, tax_year)
+    evidence = get_media_by_trust_id(trust_id)
+
+    tax_logic["gross_income_fmt"] = money(tax_logic["gross_income"])
+    tax_logic["taxable_distributed_fmt"] = money(tax_logic["taxable_distributed"])
+    tax_logic["principal_distributed_fmt"] = money(tax_logic["principal_distributed"])
+    tax_logic["dni_fmt"] = money(tax_logic["dni"])
+    tax_logic["retained_income_fmt"] = money(tax_logic["retained_income"])
+
+    for row in shares:
+        row["gross_total_fmt"] = money(row["gross_total"])
+        row["taxable_total_fmt"] = money(row["taxable_total"])
+        row["principal_total_fmt"] = money(row["principal_total"])
+        row["taxable_ratio_pct"] = f"{row['taxable_ratio'] * 100:.1f}%"
+
+    return render_template(
+        "form1041_report_view.html",
+        trust=trust,
+        tax_year=tax_year,
+        tax_logic=tax_logic,
+        shares=shares,
+        evidence=evidence
     )
 
 
