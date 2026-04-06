@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>K-1 Report Print</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 28px; }
+    .box { border: 1px solid #ccc; padding: 16px; margin-bottom: 16px; border-radius: 8px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    @media print {
+      a, .no-print { display: none; }
+      body { margin: 0.5in; }
+    }
+  </style>
+</head>
+<body>
+<div class="no-print">
+  <p><a href="javascript:window.print()">Print / Save as PDF</a></p>
+</div>
+
+<h1>K-1 Summary Report</h1>
+
+<div class="box">
+  <p><strong>Trust:</strong> {{ trust["trust_name"] }} ({{ trust["trust_id"] }})</p>
+  <p><strong>Tax Year:</strong> {{ tax_year }}</p>
+</div>
+
+<div class="box">
+  <h2>Fiduciary Roles</h2>
+  {% if fiduciaries %}
+    <ul>
+      {% for f in fiduciaries %}
+      <li>{{ f["full_name"] }} — {{ f["role_title"] }} — {{ f["authority_scope"] }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No fiduciary roles listed.</p>
+  {% endif %}
+</div>
+
+<div class="box">
+  <h2>Trust Totals</h2>
+  <ul>
+    <li>Gross Total: {{ totals["gross_total_fmt"] }}</li>
+    <li>Taxable Total: {{ totals["taxable_total_fmt"] }}</li>
+    <li>Principal Total: {{ totals["principal_total_fmt"] }}</li>
+    <li>Distribution Count: {{ totals["count"] }}</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h2>Beneficiary Totals</h2>
+  <table>
+    <tr><th>Name</th><th>Gross</th><th>Taxable</th><th>Principal</th><th>Count</th></tr>
+    {% for row in beneficiary_totals %}
+    <tr>
+      <td>{{ row["full_name"] }}</td>
+      <td>{{ row["gross_total_fmt"] }}</td>
+      <td>{{ row["taxable_total_fmt"] }}</td>
+      <td>{{ row["principal_total_fmt"] }}</td>
+      <td>{{ row["count"] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="box">
+  <h2>Evidence References</h2>
+  {% if evidence %}
+    <ul>
+      {% for e in evidence %}
+      <li>{{ e["media_id"] }} — {{ e["category"] }} — {{ e["description"] }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No evidence references linked yet.</p>
+  {% endif %}
+</div>
+</body>
+</html>
