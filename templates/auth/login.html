@@ -5,7 +5,7 @@
   <style>
     body { font-family: Arial; background: #f6f8fa; padding: 40px; }
     .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
-    input, select { width: 100%; margin-bottom: 10px; padding: 8px; }
+    input { width: 100%; margin-bottom: 10px; padding: 8px; }
     button { width: 100%; padding: 10px; }
     .error { color: red; }
   </style>
@@ -20,14 +20,8 @@
   {% endif %}
 
   <form method="POST">
-    <select name="role">
-      <option>Admin</option>
-      <option>Trustee</option>
-      <option>Viewer</option>
-    </select>
-
+    <input type="text" name="username" placeholder="Username" required>
     <input type="password" name="password" placeholder="Password" required>
-
     <button type="submit">Login</button>
   </form>
 </div>

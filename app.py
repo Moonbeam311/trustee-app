@@ -101,6 +101,10 @@ from database.db import (
     get_media_by_entity,
     get_media_by_trust_id,
     ensure_role_tables,
+    ensure_user_tables,
+    get_user_by_username,
+    create_app_user,
+    get_next_user_id,
     get_next_role_id,
     create_role_record,
     get_all_roles,
@@ -110,6 +114,7 @@ from database.db import (
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 from io import BytesIO
 
@@ -126,6 +131,7 @@ ensure_fiduciary_tables()
 ensure_genealogy_tables()
 ensure_media_tables()
 ensure_role_tables()
+ensure_user_tables()
 
 UPLOAD_FOLDER = Path("uploads")
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", "wav", "mp4", "mov"}

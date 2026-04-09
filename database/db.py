@@ -2118,3 +2118,58 @@ def has_required_role(trust_id, allowed_roles):
             return True
     return False
 
+def ensure_user_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS app_users (
+        user_id TEXT PRIMARY KEY,
+        username TEXT UNIQUE,
+        password_hash TEXT,
+        role_name TEXT,
+        status TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def get_user_by_username(username):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM app_users
+        WHERE username = ?
+        LIMIT 1
+    """, (username,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def create_app_user(data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO app_users (
+            user_id, username, password_hash, role_name, status
+        ) VALUES (?, ?, ?, ?, ?)
+    """, (
+        data["user_id"],
+        data["username"],
+        data["password_hash"],
+        data["role_name"],
+        data["status"],
+    ))
+    conn.commit()
+    conn.close()
+
+def get_next_user_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM app_users")
+    row = cur.fetchone()
+    conn.close()
+    return f"USR-{row['count'] + 1:03d}"
+
