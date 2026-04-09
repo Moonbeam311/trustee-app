@@ -1,0 +1,15 @@
+TRUSTEE APP — AUTH + TIMEOUT HANDOFF
+===================================
+
+Status at handoff:
+- Security dashboard layer added
+- Lightweight role gating added
+- Session-based login/logout added
+- SQLite app_users table added
+- Hashed-password auth started
+- Admin / Trustee / Viewer seeded and tested
+- Session timeout phase started
+- Step 42 completed: SESSION_TIMEOUT_SECONDS config added to app.py
+
+Next recommended step:
+- Add per-request timeout enforcement using last_activity in session
