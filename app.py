@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, make_response
+from flask import session, Flask, request, render_template, redirect, url_for, make_response
 from database.db import (
     init_db,
     get_next_trust_id,
@@ -114,6 +114,7 @@ from datetime import date
 from io import BytesIO
 
 app = Flask(__name__)
+app.secret_key = "CHANGE_THIS_TO_RANDOM_SECRET_KEY"
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 
 init_audit_table()
@@ -134,7 +135,7 @@ def allowed_file(filename):
 
 
 def gate_trust_access(trust_id, allowed_roles):
-    acting_role = request.args.get("acting_role")
+    acting_role = session.get("role")
     if not acting_role:
         return render_template(
             "access_denied.html",
@@ -852,25 +853,25 @@ def export_center():
 
 @app.route("/exports/handoff/<filename>")
 def export_handoff_file(filename):
-    from flask import send_from_directory
+    from flask import session, send_from_directory
     return send_from_directory("handoff", filename, as_attachment=True)
 
 
 @app.route("/exports/roadmap/<filename>")
 def export_roadmap_file(filename):
-    from flask import send_from_directory
+    from flask import session, send_from_directory
     return send_from_directory("roadmap", filename, as_attachment=True)
 
 
 @app.route("/exports/package/<filename>")
 def export_package_file(filename):
-    from flask import send_from_directory
+    from flask import session, send_from_directory
     return send_from_directory("package_export", filename, as_attachment=True)
 
 
 @app.route("/exports/zip")
 def export_zip_snapshot():
-    from flask import send_file
+    from flask import session, send_file
     return send_file("Trustee_App_Export_Package.zip", as_attachment=True)
 
 
@@ -1182,7 +1183,7 @@ def genealogy_new():
 
 import os
 from datetime import datetime
-from flask import request
+from flask import session, request
 
 UPLOAD_FOLDER = "uploads"
 
@@ -1242,7 +1243,7 @@ def media_file(media_id):
     if not target:
         return "Media not found", 404
 
-    from flask import send_file
+    from flask import session, send_file
     return send_file(target["file_path"])
 
 
@@ -1455,6 +1456,38 @@ def security_dashboard():
         {"item": "Render deployment classified as pilot only", "status": "Yes"},
     ]
     return render_template("security_dashboard.html", checklist=checklist)
+
+
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        role = request.form.get("role")
+        password = request.form.get("password")
+
+        # Simple role-password mapping (upgrade later)
+        credentials = {
+            "Admin": "admin123",
+            "Trustee": "trustee123",
+            "Viewer": "viewer123"
+        }
+
+        if role in credentials and credentials[role] == password:
+            session["role"] = role
+            return redirect(url_for("admin_index"))
+
+        return render_template("auth/login.html", error="Invalid credentials")
+
+    return render_template("auth/login.html")
+
+
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 
 if __name__ == "__main__":
