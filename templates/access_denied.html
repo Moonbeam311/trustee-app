@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Access Denied</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+<h1>Access Denied</h1>
+
+<div class="box">
+  <p>{{ reason }}</p>
+  <p>Example: add <strong>?acting_role=Admin</strong> or <strong>?acting_role=Trustee</strong> to the URL.</p>
+</div>
+
+</body>
+</html>

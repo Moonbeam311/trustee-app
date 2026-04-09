@@ -106,6 +106,7 @@ from database.db import (
     get_all_roles,
     get_roles_by_trust_id,
     get_role_summary_by_trust,
+    has_required_role,
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
@@ -130,6 +131,23 @@ ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", 
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def gate_trust_access(trust_id, allowed_roles):
+    acting_role = request.args.get("acting_role")
+    if not acting_role:
+        return render_template(
+            "access_denied.html",
+            reason="No acting_role provided. Use ?acting_role=Admin or Trustee or Viewer."
+        )
+
+    if acting_role not in allowed_roles:
+        return render_template(
+            "access_denied.html",
+            reason=f"Role {acting_role} is not allowed for this page."
+        )
+
+    return None
 
 @app.route("/")
 def home():
@@ -1090,6 +1108,10 @@ def portfolio_dashboard():
 
 @app.route("/fiduciaries")
 def fiduciary_dashboard():
+    denial = gate_trust_access("GLOBAL", ["Admin", "Trustee"])
+    if denial:
+        return denial
+
     trusts = get_all_trusts()
     fiduciaries = get_all_fiduciaries()
     return render_template("fiduciary_dashboard.html", trusts=trusts, fiduciaries=fiduciaries)
@@ -1122,6 +1144,10 @@ def fiduciary_new():
 
 @app.route("/genealogy")
 def genealogy_dashboard():
+    denial = gate_trust_access("GLOBAL", ["Admin", "Trustee"])
+    if denial:
+        return denial
+
     trusts = get_all_trusts()
     records = get_all_genealogy_records()
     return render_template("genealogy_dashboard.html", trusts=trusts, records=records)
@@ -1163,6 +1189,10 @@ UPLOAD_FOLDER = "uploads"
 
 @app.route("/media")
 def media_dashboard():
+    denial = gate_trust_access("GLOBAL", ["Admin", "Trustee"])
+    if denial:
+        return denial
+
     records = get_all_media()
     return render_template("media_dashboard.html", records=records)
 
@@ -1292,6 +1322,10 @@ def form1041_report_view(trust_id):
 
 @app.route("/roles")
 def role_dashboard():
+    denial = gate_trust_access("GLOBAL", ["Admin"])
+    if denial:
+        return denial
+
     roles = get_all_roles()
     trusts = get_all_trusts()
     return render_template("role_dashboard.html", roles=roles, trusts=trusts)
@@ -1384,6 +1418,10 @@ def form1041_report_print(trust_id):
 
 @app.route("/permissions")
 def permissions_dashboard():
+    denial = gate_trust_access("GLOBAL", ["Admin"])
+    if denial:
+        return denial
+
     trusts = get_all_trusts()
     rows = []
 

@@ -2106,3 +2106,15 @@ def get_role_summary_by_trust(trust_id):
             summary[role] += 1
     return summary
 
+def get_role_names_by_trust(trust_id):
+    rows = get_roles_by_trust_id(trust_id)
+    return [row["role_name"] for row in rows if row.get("role_name")]
+
+
+def has_required_role(trust_id, allowed_roles):
+    roles = get_role_names_by_trust(trust_id)
+    for role in roles:
+        if role in allowed_roles:
+            return True
+    return False
+
