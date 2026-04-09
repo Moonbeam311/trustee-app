@@ -1,0 +1,11 @@
+TRUSTEE APP — AUTHENTICATION LAYER
+=================================
+
+This note was added via the GitHub connector to mark the start of the lightweight authentication layer.
+
+Planned scope:
+- simple login form
+- session-backed acting role
+- login/logout flow
+- access gating tied to session role instead of query string
+- no ORM or architecture changes
