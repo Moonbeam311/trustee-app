@@ -1,0 +1,36 @@
+TRUSTEE APP — SECURITY CHECKLIST
+================================
+
+IMMEDIATE NO-GO CONDITIONS
+--------------------------
+If any are true, do not upload sensitive files yet:
+- anyone with the link can open the app
+- no login is required
+- uploaded files can be guessed by URL
+- the app is using public hosting without hardened controls
+- upload storage location is unknown
+- deletion policy is unknown
+- data is sent to third-party APIs by default
+- debug mode is on
+- a public tunnel/preview link is in use
+
+RISK ITEMS TO HARDEN
+--------------------
+- password only with no deeper roles
+- files stored unencrypted
+- previews cached in browser
+- no session timeout
+- no IP restriction
+- no backup encryption
+- no malware scanning
+- no file size/type restrictions
+
+SAFER TARGET STATE
+------------------
+- private local or private hosted app
+- strong login required
+- uploads stored in non-public folders
+- HTTPS
+- restricted user access
+- no third-party transmission by default
+- logs do not contain document contents

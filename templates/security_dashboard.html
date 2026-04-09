@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Security Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    .warn { color: #9a6700; }
+    .good { color: #1a7f37; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+<h1>Security Dashboard</h1>
+
+<div class="box">
+  <p>This dashboard tracks current security posture and deployment hardening notes.</p>
+</div>
+
+<div class="box">
+  <table>
+    <tr>
+      <th>Security Item</th>
+      <th>Status</th>
+    </tr>
+    {% for row in checklist %}
+    <tr>
+      <td>{{ row["item"] }}</td>
+      <td>{{ row["status"] }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="box">
+  <h2>Current Guidance</h2>
+  <ul>
+    <li>Do not upload highly sensitive files until deployment security is fully reviewed.</li>
+    <li>Treat Render as a controlled pilot environment.</li>
+    <li>Use redacted or test files until storage/access controls are verified.</li>
+    <li>Prefer private/local-first handling for the most sensitive records.</li>
+  </ul>
+</div>
+
+</body>
+</html>

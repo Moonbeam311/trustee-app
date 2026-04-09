@@ -113,6 +113,7 @@ from datetime import date
 from io import BytesIO
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 
 init_audit_table()
 
@@ -125,7 +126,7 @@ ensure_media_tables()
 ensure_role_tables()
 
 UPLOAD_FOLDER = Path("uploads")
-ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png"}
+ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", "wav", "mp4", "mov"}
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -1397,6 +1398,25 @@ def permissions_dashboard():
         })
 
     return render_template("permissions_dashboard.html", rows=rows)
+
+
+
+
+@app.route("/security")
+def security_dashboard():
+    checklist = [
+        {"item": "Public/shareable link", "status": "Needs review"},
+        {"item": "Authentication required", "status": "Not yet enforced"},
+        {"item": "Uploads in private non-public storage", "status": "Needs review"},
+        {"item": "Third-party transmission disabled by default", "status": "Current expectation"},
+        {"item": "Debug mode disabled for deployment", "status": "Required before live use"},
+        {"item": "File size/type restrictions", "status": "Basic restrictions added"},
+        {"item": "Role-aware access cues", "status": "Implemented"},
+        {"item": "Audit trail", "status": "Implemented"},
+        {"item": "Media evidence references", "status": "Implemented"},
+        {"item": "Render deployment classified as pilot only", "status": "Yes"},
+    ]
+    return render_template("security_dashboard.html", checklist=checklist)
 
 
 if __name__ == "__main__":
