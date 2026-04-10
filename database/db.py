@@ -2173,3 +2173,15 @@ def get_next_user_id():
     conn.close()
     return f"USR-{row['count'] + 1:03d}"
 
+
+def get_all_app_users():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM app_users
+        ORDER BY username
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+

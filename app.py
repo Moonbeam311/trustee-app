@@ -105,6 +105,7 @@ from database.db import (
     get_user_by_username,
     create_app_user,
     get_next_user_id,
+    get_all_app_users,
     get_next_role_id,
     create_role_record,
     get_all_roles,
@@ -115,7 +116,7 @@ from database.db import (
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from io import BytesIO
 
 app = Flask(__name__)
@@ -168,6 +169,8 @@ ROLE_RULES = {
     "media_upload": {"Admin", "Trustee"},
     "role_new": {"Admin"},
     "admin_index": {"Admin"},
+    "users_dashboard": {"Admin"},
+    "users_new": {"Admin"},
     "export_center": {"Admin", "Trustee"},
     "audit_dashboard": {"Admin"},
     "media_file": {"Admin", "Trustee"},
@@ -902,6 +905,45 @@ def admin_index():
     return render_template("admin_index.html", trusts=trusts, report=report)
 
 
+@app.route("/users")
+def users_dashboard():
+    users = get_all_app_users()
+    return render_template("user_dashboard.html", users=users)
+
+
+@app.route("/users/new", methods=["GET", "POST"])
+def users_new():
+    if request.method == "POST":
+        username = (request.form.get("username") or "").strip()
+        password = request.form.get("password") or ""
+        role_name = request.form.get("role_name") or ""
+        status = request.form.get("status") or "active"
+
+        if not username or not password or role_name not in {"Admin", "Trustee", "Viewer"}:
+            return render_template(
+                "user_form.html",
+                error_message="Valid username, password, and role are required."
+            )
+
+        existing = get_user_by_username(username)
+        if existing:
+            return render_template(
+                "user_form.html",
+                error_message="Username already exists."
+            )
+
+        create_app_user({
+            "user_id": get_next_user_id(),
+            "username": username,
+            "password_hash": generate_password_hash(password),
+            "role_name": role_name,
+            "status": status,
+        })
+        return redirect(url_for("users_dashboard"))
+
+    return render_template("user_form.html")
+
+
 @app.route("/exports")
 def export_center():
     trusts = get_all_trusts()
@@ -1534,19 +1576,14 @@ def enforce_session_timeout():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        role = request.form.get("role")
-        password = request.form.get("password")
+        username = (request.form.get("username") or "").strip()
+        password = request.form.get("password") or ""
 
-        # Simple role-password mapping (upgrade later)
-        credentials = {
-            "Admin": "admin123",
-            "Trustee": "trustee123",
-            "Viewer": "viewer123"
-        }
+        user = get_user_by_username(username)
 
-        if role in credentials and credentials[role] == password:
-            session["role"] = role
-            session["username"] = role.lower()
+        if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
+            session["role"] = user["role_name"]
+            session["username"] = user["username"]
             session["last_activity"] = datetime.utcnow().timestamp()
             return redirect(url_for("admin_index"))
 
