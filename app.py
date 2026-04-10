@@ -1476,7 +1476,7 @@ def enforce_session_timeout():
         return
 
     if "role" not in session:
-        return
+        return redirect(url_for("login"))
 
     last_activity = session.get("last_activity")
     if last_activity is None:
