@@ -1511,6 +1511,10 @@ def login():
 
         return render_template("auth/login.html", error="Invalid credentials")
 
+    timeout = request.args.get("timeout")
+    if timeout == "1":
+        return render_template("auth/login.html", error="Your session expired due to inactivity. Please log in again.")
+
     return render_template("auth/login.html")
 
 
