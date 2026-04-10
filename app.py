@@ -142,6 +142,15 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+ROLE_RULES = {
+    "fiduciary_dashboard": {"Admin", "Trustee"},
+    "genealogy_dashboard": {"Admin", "Trustee"},
+    "media_dashboard": {"Admin", "Trustee"},
+    "role_dashboard": {"Admin"},
+    "permissions_dashboard": {"Admin"},
+}
+
+
 def gate_trust_access(trust_id, allowed_roles):
     acting_role = session.get("role")
     if not acting_role:
@@ -1477,6 +1486,13 @@ def enforce_session_timeout():
 
     if "role" not in session:
         return redirect(url_for("login"))
+
+    allowed_roles = ROLE_RULES.get(request.endpoint)
+    if allowed_roles and session.get("role") not in allowed_roles:
+        return render_template(
+            "access_denied.html",
+            reason=f"Role {session.get('role')} is not allowed for this page."
+        )
 
     last_activity = session.get("last_activity")
     if last_activity is None:
