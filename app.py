@@ -115,10 +115,12 @@ from database.db import (
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date
+from datetime import date, timedelta
 from io import BytesIO
 
 app = Flask(__name__)
+SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 app.secret_key = "CHANGE_THIS_TO_RANDOM_SECRET_KEY"
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 
@@ -1188,7 +1190,6 @@ def genealogy_new():
 
 
 import os
-from datetime import datetime
 from flask import session, request
 
 UPLOAD_FOLDER = "uploads"
@@ -1466,6 +1467,29 @@ def security_dashboard():
 
 
 
+
+
+@app.before_request
+def enforce_session_timeout():
+    allowed_routes = {"login", "static"}
+    if request.endpoint in allowed_routes or request.endpoint is None:
+        return
+
+    if "role" not in session:
+        return
+
+    last_activity = session.get("last_activity")
+    if last_activity is None:
+        session.clear()
+        return redirect(url_for("login", timeout="1"))
+
+    now_ts = datetime.utcnow().timestamp()
+    if now_ts - float(last_activity) > SESSION_TIMEOUT_SECONDS:
+        session.clear()
+        return redirect(url_for("login", timeout="1"))
+
+    session["last_activity"] = now_ts
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -1481,6 +1505,8 @@ def login():
 
         if role in credentials and credentials[role] == password:
             session["role"] = role
+            session["username"] = role.lower()
+            session["last_activity"] = datetime.utcnow().timestamp()
             return redirect(url_for("admin_index"))
 
         return render_template("auth/login.html", error="Invalid credentials")
