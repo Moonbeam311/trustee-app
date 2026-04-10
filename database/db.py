@@ -2185,3 +2185,19 @@ def get_all_app_users():
     conn.close()
     return rows
 
+
+def update_app_user(username, data):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE app_users
+        SET role_name = ?, status = ?
+        WHERE username = ?
+    """, (
+        data["role_name"],
+        data["status"],
+        username,
+    ))
+    conn.commit()
+    conn.close()
+

@@ -106,6 +106,7 @@ from database.db import (
     create_app_user,
     get_next_user_id,
     get_all_app_users,
+    update_app_user,
     get_next_role_id,
     create_role_record,
     get_all_roles,
@@ -171,6 +172,7 @@ ROLE_RULES = {
     "admin_index": {"Admin"},
     "users_dashboard": {"Admin"},
     "users_new": {"Admin"},
+    "users_edit": {"Admin"},
     "export_center": {"Admin", "Trustee"},
     "audit_dashboard": {"Admin"},
     "media_file": {"Admin", "Trustee"},
@@ -942,6 +944,32 @@ def users_new():
         return redirect(url_for("users_dashboard"))
 
     return render_template("user_form.html")
+
+
+@app.route("/users/<username>/edit", methods=["GET", "POST"])
+def users_edit(username):
+    user = get_user_by_username(username)
+    if not user:
+        return f"User {username} not found", 404
+
+    if request.method == "POST":
+        role_name = request.form.get("role_name") or ""
+        status = request.form.get("status") or "active"
+
+        if role_name not in {"Admin", "Trustee", "Viewer"}:
+            return render_template(
+                "user_edit.html",
+                user=user,
+                error_message="Valid role is required."
+            )
+
+        update_app_user(username, {
+            "role_name": role_name,
+            "status": status,
+        })
+        return redirect(url_for("users_dashboard"))
+
+    return render_template("user_edit.html", user=user)
 
 
 @app.route("/exports")
