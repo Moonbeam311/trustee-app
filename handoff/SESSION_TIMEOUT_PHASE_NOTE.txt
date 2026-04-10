@@ -1,0 +1,12 @@
+TRUSTEE APP — SESSION TIMEOUT + FORCED LOGOUT
+============================================
+
+This note marks the start of the session timeout and forced logout phase.
+
+Planned scope:
+- inactivity timeout window
+- per-request session freshness check
+- last_activity timestamp tracking
+- forced logout after timeout
+- user-facing timeout message on login page
+- keep architecture lightweight and Flask-session based
