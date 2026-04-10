@@ -148,6 +148,13 @@ ROLE_RULES = {
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "permissions_dashboard": {"Admin"},
+    "create_trust_step1": {"Admin", "Trustee"},
+    "upload_document": {"Admin", "Trustee"},
+    "admin_index": {"Admin"},
+    "export_center": {"Admin", "Trustee"},
+    "audit_dashboard": {"Admin"},
+    "media_file": {"Admin", "Trustee"},
+    "security_dashboard": {"Admin"},
 }
 
 
