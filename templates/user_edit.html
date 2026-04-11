@@ -33,6 +33,8 @@
     {% endif %}
 
     <form method="POST">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
       <select name="role_name" required>
         <option value="Admin" {% if user.role_name == "Admin" %}selected{% endif %}>Admin</option>
         <option value="Trustee" {% if user.role_name == "Trustee" %}selected{% endif %}>Trustee</option>

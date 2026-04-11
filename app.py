@@ -1,4 +1,5 @@
 import os
+import secrets
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash
 from database.db import (
     init_db,
@@ -135,6 +136,23 @@ app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = APP_ENV == "production"
+
+
+def generate_csrf_token():
+    token = session.get("_csrf_token")
+    if not token:
+        token = secrets.token_urlsafe(32)
+        session["_csrf_token"] = token
+    return token
+
+
+def validate_csrf_token():
+    session_token = session.get("_csrf_token")
+    form_token = request.form.get("_csrf_token")
+    return bool(session_token and form_token and session_token == form_token)
+
+
+app.jinja_env.globals["csrf_token"] = generate_csrf_token
 
 init_audit_table()
 
@@ -927,6 +945,9 @@ def users_dashboard():
 @app.route("/users/new", methods=["GET", "POST"])
 def users_new():
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("user_form.html", error_message="Invalid or missing CSRF token.")
+
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
         role_name = request.form.get("role_name") or ""
@@ -965,6 +986,9 @@ def users_edit(username):
         return f"User {username} not found", 404
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("user_edit.html", user=user, error_message="Invalid or missing CSRF token.")
+
         role_name = request.form.get("role_name") or ""
         status = request.form.get("status") or "active"
 
@@ -1006,6 +1030,9 @@ def users_reset_password(username):
         return f"User {username} not found", 404
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("user_reset_password.html", user=user, error_message="Invalid or missing CSRF token.")
+
         password = request.form.get("password") or ""
         confirm_password = request.form.get("confirm_password") or ""
 
@@ -1660,6 +1687,9 @@ def enforce_session_timeout():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("auth/login.html", error="Invalid or missing CSRF token.")
+
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
 
