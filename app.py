@@ -843,6 +843,9 @@ def instrument_create():
     guide = get_instrument_creation_guide()
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("instrument_create.html", trusts=trusts, guide=guide, error_message="Invalid or missing CSRF token.")
+
         create_instrument_record({
             "instrument_id": get_next_instrument_id(),
             "trust_id": request.form.get("trust_id"),
@@ -871,6 +874,16 @@ def instrument_detail(instrument_id):
     history = get_audit_log_by_entity("instrument", instrument_id, 25)
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "instrument_detail.html",
+                instrument=instrument,
+                trusts=trusts,
+                guide=guide,
+                history=history,
+                error_message="Invalid or missing CSRF token."
+            )
+
         if is_locked_status(instrument["status"]):
             log_change("instrument", instrument_id, "blocked_update", "Locked instrument edit prevented")
             return render_template(
@@ -1347,6 +1360,9 @@ def fiduciary_new():
     trusts = get_all_trusts()
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("fiduciary_form.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
         fiduciary_id = get_next_fiduciary_id()
         create_fiduciary_record({
             "fiduciary_id": fiduciary_id,
@@ -1380,6 +1396,9 @@ def genealogy_new():
     trusts = get_all_trusts()
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("genealogy_form.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
         genealogy_id = get_next_genealogy_id()
         create_genealogy_record({
             "genealogy_id": genealogy_id,
@@ -1418,6 +1437,9 @@ def media_upload():
     trusts = get_all_trusts()
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("media_form.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
         file = request.files.get("file")
         if file:
             media_id = get_next_media_id()

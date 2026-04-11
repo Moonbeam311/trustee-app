@@ -16,6 +16,7 @@
 </ol>
 
 <form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
   <label>Trust</label><br>
   <select name="trust_id" required>
     <option value="">Select trust</option>
