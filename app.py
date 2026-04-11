@@ -966,6 +966,20 @@ def users_edit(username):
                 error_message="Valid role is required."
             )
 
+        if session.get("username") == username:
+            if role_name != "Admin":
+                return render_template(
+                    "user_edit.html",
+                    user=user,
+                    error_message="You cannot remove your own Admin role."
+                )
+            if status.lower() != "active":
+                return render_template(
+                    "user_edit.html",
+                    user=user,
+                    error_message="You cannot deactivate your own account."
+                )
+
         update_app_user(username, {
             "role_name": role_name,
             "status": status,
