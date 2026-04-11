@@ -342,6 +342,9 @@ def asset_health():
 @app.route("/create_trust_step1", methods=["GET", "POST"])
 def create_trust_step1():
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step1.html", error_message="Invalid or missing CSRF token.")
+
         trust_id = get_next_trust_id()
         trust = {
             "trust_id": trust_id,
@@ -456,6 +459,9 @@ def create_trust_step7(trust_id):
 def add_property():
     trusts = get_all_trusts()
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("add_property.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
         property_id = get_next_property_id()
         prop = {
             "property_id": property_id,
@@ -484,6 +490,9 @@ def add_property():
 def link_account():
     trusts = get_all_trusts()
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("link_account.html", trusts=trusts, properties=[], error_message="Invalid or missing CSRF token.")
+
         account_id = get_next_account_id()
         account = {
             "account_id": account_id,
@@ -503,6 +512,9 @@ def link_account():
 def upload_document():
     trusts = get_all_trusts()
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("upload_document.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
         uploaded_file = request.files.get("document_file")
         if not uploaded_file or uploaded_file.filename == "":
             return "No file selected"
@@ -539,6 +551,9 @@ def upload_document():
 def ledger_entry():
     trusts = get_all_trusts()
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("ledger_entry.html", trusts=trusts, properties=[], accounts=[], error_message="Invalid or missing CSRF token.")
+
         entry_id = get_next_entry_id()
         entry = {
             "entry_id": entry_id,

@@ -4,6 +4,7 @@
 <h2>Ledger Entry</h2>
 
 <form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <label>Choose Existing Trust</label>
     <select name="trust_id" required>
         <option value="">Select Existing Trust</option>
