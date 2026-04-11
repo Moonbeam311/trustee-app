@@ -1,3 +1,4 @@
+import os
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash
 from database.db import (
     init_db,
@@ -124,8 +125,16 @@ from io import BytesIO
 app = Flask(__name__)
 SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
-app.secret_key = "CHANGE_THIS_TO_RANDOM_SECRET_KEY"
+
+APP_ENV = os.getenv("APP_ENV", "development").lower()
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "1")
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_TO_RANDOM_SECRET_KEY")
+
+app.secret_key = SECRET_KEY
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = APP_ENV == "production"
 
 init_audit_table()
 
@@ -1351,8 +1360,6 @@ def genealogy_new():
 
 
 
-import os
-from flask import session, request
 
 UPLOAD_FOLDER = "uploads"
 
@@ -1682,4 +1689,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=FLASK_DEBUG == "1")
