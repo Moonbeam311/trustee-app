@@ -44,7 +44,10 @@
           <td>{{ user.username }}</td>
           <td>{{ user.role_name }}</td>
           <td>{{ user.status }}</td>
-          <td><a href="{{ url_for('users_edit', username=user.username) }}">Edit</a></td>
+          <td>
+            <a href="{{ url_for('users_edit', username=user.username) }}">Edit</a> |
+            <a href="{{ url_for('users_reset_password', username=user.username) }}">Reset Password</a>
+          </td>
         </tr>
         {% endfor %}
       </tbody>

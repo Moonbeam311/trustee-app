@@ -2201,3 +2201,18 @@ def update_app_user(username, data):
     conn.commit()
     conn.close()
 
+
+def update_app_user_password(username, password_hash):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE app_users
+        SET password_hash = ?
+        WHERE username = ?
+    """, (
+        password_hash,
+        username,
+    ))
+    conn.commit()
+    conn.close()
+

@@ -107,6 +107,7 @@ from database.db import (
     get_next_user_id,
     get_all_app_users,
     update_app_user,
+    update_app_user_password,
     get_next_role_id,
     create_role_record,
     get_all_roles,
@@ -173,6 +174,7 @@ ROLE_RULES = {
     "users_dashboard": {"Admin"},
     "users_new": {"Admin"},
     "users_edit": {"Admin"},
+    "users_reset_password": {"Admin"},
     "export_center": {"Admin", "Trustee"},
     "audit_dashboard": {"Admin"},
     "media_file": {"Admin", "Trustee"},
@@ -970,6 +972,36 @@ def users_edit(username):
         return redirect(url_for("users_dashboard"))
 
     return render_template("user_edit.html", user=user)
+
+
+@app.route("/users/<username>/reset_password", methods=["GET", "POST"])
+def users_reset_password(username):
+    user = get_user_by_username(username)
+    if not user:
+        return f"User {username} not found", 404
+
+    if request.method == "POST":
+        password = request.form.get("password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not password:
+            return render_template(
+                "user_reset_password.html",
+                user=user,
+                error_message="Password is required."
+            )
+
+        if password != confirm_password:
+            return render_template(
+                "user_reset_password.html",
+                user=user,
+                error_message="Passwords do not match."
+            )
+
+        update_app_user_password(username, generate_password_hash(password))
+        return redirect(url_for("users_dashboard"))
+
+    return render_template("user_reset_password.html", user=user)
 
 
 @app.route("/exports")
