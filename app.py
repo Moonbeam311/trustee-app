@@ -1,4 +1,4 @@
-from flask import session, Flask, request, render_template, redirect, url_for, make_response
+from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash
 from database.db import (
     init_db,
     get_next_trust_id,
@@ -118,7 +118,7 @@ from database.db import (
 from pathlib import Path
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
 
 app = Flask(__name__)
@@ -943,6 +943,7 @@ def users_new():
             "role_name": role_name,
             "status": status,
         })
+        flash(f"User {username} created successfully.")
         return redirect(url_for("users_dashboard"))
 
     return render_template("user_form.html")
@@ -969,6 +970,7 @@ def users_edit(username):
             "role_name": role_name,
             "status": status,
         })
+        flash(f"User {username} updated successfully.")
         return redirect(url_for("users_dashboard"))
 
     return render_template("user_edit.html", user=user)
@@ -999,6 +1001,7 @@ def users_reset_password(username):
             )
 
         update_app_user_password(username, generate_password_hash(password))
+        flash(f"Password reset successfully for {username}.")
         return redirect(url_for("users_dashboard"))
 
     return render_template("user_reset_password.html", user=user)
@@ -1626,7 +1629,7 @@ def enforce_session_timeout():
         session.clear()
         return redirect(url_for("login", timeout="1"))
 
-    now_ts = datetime.utcnow().timestamp()
+    now_ts = datetime.now(UTC).timestamp()
     if now_ts - float(last_activity) > SESSION_TIMEOUT_SECONDS:
         session.clear()
         return redirect(url_for("login", timeout="1"))
@@ -1644,7 +1647,7 @@ def login():
         if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
             session["role"] = user["role_name"]
             session["username"] = user["username"]
-            session["last_activity"] = datetime.utcnow().timestamp()
+            session["last_activity"] = datetime.now(UTC).timestamp()
             return redirect(url_for("admin_index"))
 
         return render_template("auth/login.html", error="Invalid credentials")

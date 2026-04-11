@@ -14,6 +14,17 @@
   <div class="box">
     <h2>Create User</h2>
 
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div style="margin: 12px 0; padding: 10px; border: 1px solid #cce5cc; background: #eef9ee; border-radius: 6px;">
+          {% for message in messages %}
+            <div>{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+
     {% if error_message %}
       <p class="error">{{ error_message }}</p>
     {% endif %}
