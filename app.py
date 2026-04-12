@@ -380,6 +380,9 @@ def create_trust_step2(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step2.html", trust=trust, error_message="Invalid or missing CSRF token.")
+
         update_trust_fields(trust_id, {
             "trust_type": request.form.get("trust_type"),
             "trust_purpose": request.form.get("trust_purpose"),
@@ -396,6 +399,9 @@ def create_trust_step3(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step3.html", trust=trust, error_message="Invalid or missing CSRF token.")
+
         update_trust_fields(trust_id, {
             "settlor_name": request.form.get("settlor_name"),
             "trustee_name": request.form.get("trustee_name"),
@@ -412,6 +418,9 @@ def create_trust_step4(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step4.html", trust=trust, error_message="Invalid or missing CSRF token.")
+
         update_trust_fields(trust_id, {
             "record_visibility": request.form.get("record_visibility"),
             "workflow_mode_confirmed": request.form.get("workflow_mode_confirmed"),
@@ -428,6 +437,9 @@ def create_trust_step5(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step5.html", trust=trust, error_message="Invalid or missing CSRF token.")
+
         update_trust_fields(trust_id, {
             "initial_corpus_description": request.form.get("initial_corpus_description"),
             "property_mapping_timing": request.form.get("property_mapping_timing"),
@@ -444,6 +456,9 @@ def create_trust_step6(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step6.html", trust=trust, error_message="Invalid or missing CSRF token.")
+
         update_trust_fields(trust_id, {"status": "Finalized"})
         return redirect(url_for("create_trust_step7", trust_id=trust_id))
     return render_template("create_trust_step6.html", trust=trust)

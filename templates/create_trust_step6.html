@@ -58,6 +58,8 @@
 </div>
 
 <form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
     <button type="submit">Confirm and Finalize</button>
 </form>
 {% endblock %}
