@@ -178,6 +178,7 @@ ROLE_RULES = {
     "genealogy_dashboard": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
+    "report_center": {"Admin", "Trustee"},
     "permissions_dashboard": {"Admin"},
     "create_trust_step1": {"Admin", "Trustee"},
     "create_trust_step2": {"Admin", "Trustee"},
@@ -1900,6 +1901,54 @@ def instrument_detail_pdf(instrument_id):
         history=history,
     )
     return build_pdf_response(f"instrument_detail_{instrument_id}.pdf", story)
+
+@app.route("/reports", methods=["GET", "POST"])
+def report_center():
+    trusts = get_all_trusts()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("report_center.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
+        report_type = (request.form.get("report_type") or "").strip()
+        trust_id = (request.form.get("trust_id") or "").strip()
+        tax_year = (request.form.get("tax_year") or "").strip()
+        instrument_id = (request.form.get("instrument_id") or "").strip()
+        fiduciary_trust_id = (request.form.get("fiduciary_trust_id") or "").strip()
+
+        if report_type == "trust_summary":
+            if not trust_id:
+                return render_template("report_center.html", trusts=trusts, error_message="Trust is required for Trust Summary.")
+            return redirect(url_for("trust_summary_pdf", trust_id=trust_id))
+
+        if report_type == "ledger":
+            if not trust_id:
+                return render_template("report_center.html", trusts=trusts, error_message="Trust is required for Ledger Report.")
+            return redirect(url_for("ledger_report_pdf", trust_id=trust_id))
+
+        if report_type == "fiduciary":
+            if fiduciary_trust_id:
+                return redirect(url_for("fiduciary_report_pdf", trust_id=fiduciary_trust_id))
+            return redirect(url_for("fiduciary_report_pdf"))
+
+        if report_type == "k1":
+            if not trust_id or not tax_year:
+                return render_template("report_center.html", trusts=trusts, error_message="Trust and Tax Year are required for K-1 Readiness.")
+            return redirect(url_for("k1_readiness_pdf", trust_id=trust_id, tax_year=tax_year))
+
+        if report_type == "form1041":
+            if not trust_id or not tax_year:
+                return render_template("report_center.html", trusts=trusts, error_message="Trust and Tax Year are required for 1041 Report.")
+            return redirect(url_for("form1041_report_pdf", trust_id=trust_id, tax_year=tax_year))
+
+        if report_type == "instrument":
+            if not instrument_id:
+                return render_template("report_center.html", trusts=trusts, error_message="Instrument ID is required for Instrument Detail.")
+            return redirect(url_for("instrument_detail_pdf", instrument_id=instrument_id))
+
+        return render_template("report_center.html", trusts=trusts, error_message="Please select a valid report type.")
+
+    return render_template("report_center.html", trusts=trusts)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
