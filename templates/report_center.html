@@ -83,23 +83,23 @@
               <option value="">-- Select Report --</option>
 
               <optgroup label="Trust Reports">
-                <option value="trust_summary">Trust Summary PDF</option>
-                <option value="ledger">Ledger PDF</option>
-                <option value="portfolio">Portfolio PDF</option>
+                <option value="trust_summary" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "trust_summary" %}selected{% endif %}>Trust Summary PDF</option>
+                <option value="ledger" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "ledger" %}selected{% endif %}>Ledger PDF</option>
+                <option value="portfolio" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "portfolio" %}selected{% endif %}>Portfolio PDF</option>
               </optgroup>
 
               <optgroup label="Fiduciary & Audit Reports">
-                <option value="fiduciary">Fiduciary Report PDF</option>
-                <option value="audit">Audit Log PDF</option>
+                <option value="fiduciary" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "fiduciary" %}selected{% endif %}>Fiduciary Report PDF</option>
+                <option value="audit" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "audit" %}selected{% endif %}>Audit Log PDF</option>
               </optgroup>
 
               <optgroup label="Tax Reports">
-                <option value="k1">K-1 Readiness PDF</option>
-                <option value="form1041">1041 Report PDF</option>
+                <option value="k1" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "k1" %}selected{% endif %}>K-1 Readiness PDF</option>
+                <option value="form1041" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "form1041" %}selected{% endif %}>1041 Report PDF</option>
               </optgroup>
 
               <optgroup label="Instrument Reports">
-                <option value="instrument">Instrument Detail PDF</option>
+                <option value="instrument" {% if (prefill.report_type if prefill is defined else prefill.get("report_type", "") if prefill else "") == "instrument" %}selected{% endif %}>Instrument Detail PDF</option>
               </optgroup>
             </select>
             <div class="hint">Choose the report first. The required fields below will adjust automatically.</div>
@@ -110,7 +110,7 @@
             <select name="trust_id" id="trust_id">
               <option value="">-- Select Trust --</option>
               {% for trust in trusts %}
-                <option value="{{ trust['trust_id'] }}">{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
+                <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
               {% endfor %}
             </select>
             <div class="hint">Required for Trust Summary, Ledger, K-1, and 1041 reports.</div>
@@ -118,13 +118,13 @@
 
           <div id="tax_year_block">
             <label for="tax_year">Tax Year</label>
-            <input type="text" name="tax_year" id="tax_year" placeholder="2025">
+            <input type="text" name="tax_year" id="tax_year" placeholder="2025" value="{{ prefill.tax_year if prefill is defined and prefill.tax_year is defined else prefill.get('tax_year', '') if prefill else '' }}">
             <div class="hint">Required for K-1 and 1041 reports.</div>
           </div>
 
           <div id="instrument_block">
             <label for="instrument_id">Instrument ID</label>
-            <input type="text" name="instrument_id" id="instrument_id" placeholder="INSTR-001">
+            <input type="text" name="instrument_id" id="instrument_id" placeholder="INSTR-001" value="{{ prefill.instrument_id if prefill is defined and prefill.instrument_id is defined else prefill.get('instrument_id', '') if prefill else '' }}">
             <div class="hint">Required for Instrument Detail PDF.</div>
           </div>
 
@@ -133,7 +133,7 @@
             <select name="fiduciary_trust_id" id="fiduciary_trust_id">
               <option value="">All Trusts</option>
               {% for trust in trusts %}
-                <option value="{{ trust['trust_id'] }}">{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
+                <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
               {% endfor %}
             </select>
             <div class="hint">Optional filter for Fiduciary Report PDF.</div>
