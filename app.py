@@ -118,6 +118,7 @@ from database.db import (
     has_required_role,
 )
 from pathlib import Path
+from datetime import datetime
 from werkzeug.utils import secure_filename
 from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story, portfolio_report_story, audit_log_report_story
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -1908,7 +1909,7 @@ def report_center():
 
     if request.method == "POST":
         if not validate_csrf_token():
-            return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Invalid or missing CSRF token.")
+            return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Invalid or missing CSRF token.")
 
         report_type = (request.form.get("report_type") or "").strip()
         trust_id = (request.form.get("trust_id") or "").strip()
@@ -1918,12 +1919,12 @@ def report_center():
 
         if report_type == "trust_summary":
             if not trust_id:
-                return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Trust is required for Trust Summary.")
+                return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Trust is required for Trust Summary.")
             return redirect(url_for("trust_summary_pdf", trust_id=trust_id))
 
         if report_type == "ledger":
             if not trust_id:
-                return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Trust is required for Ledger Report.")
+                return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Trust is required for Ledger Report.")
             return redirect(url_for("ledger_report_pdf", trust_id=trust_id))
 
         if report_type == "fiduciary":
@@ -1939,29 +1940,30 @@ def report_center():
 
         if report_type == "k1":
             if not trust_id or not tax_year:
-                return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Trust and Tax Year are required for K-1 Readiness.")
+                return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Trust and Tax Year are required for K-1 Readiness.")
             return redirect(url_for("k1_readiness_pdf", trust_id=trust_id, tax_year=tax_year))
 
         if report_type == "form1041":
             if not trust_id or not tax_year:
-                return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Trust and Tax Year are required for 1041 Report.")
+                return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Trust and Tax Year are required for 1041 Report.")
             return redirect(url_for("form1041_report_pdf", trust_id=trust_id, tax_year=tax_year))
 
         if report_type == "instrument":
             if not instrument_id:
-                return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Instrument ID is required for Instrument Detail.")
+                return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Instrument ID is required for Instrument Detail.")
             return redirect(url_for("instrument_detail_pdf", instrument_id=instrument_id))
 
-        return render_template("report_center.html", trusts=trusts, prefill=request.form, error_message="Please select a valid report type.")
+        return render_template("report_center.html", trusts=trusts, instruments=get_all_instruments() if "get_all_instruments" in globals() else [], prefill=request.form, error_message="Please select a valid report type.")
 
     prefill = {
         "report_type": request.args.get("report_type", ""),
         "trust_id": request.args.get("trust_id", ""),
-        "tax_year": request.args.get("tax_year", ""),
+        "tax_year": request.args.get("tax_year", "") or str(datetime.now().year),
         "instrument_id": request.args.get("instrument_id", ""),
         "fiduciary_trust_id": request.args.get("fiduciary_trust_id", ""),
     }
-    return render_template("report_center.html", trusts=trusts, prefill=prefill)
+    instruments = get_all_instruments() if "get_all_instruments" in globals() else []
+    return render_template("report_center.html", trusts=trusts, instruments=instruments, prefill=prefill)
 
 @app.route("/reports/portfolio.pdf")
 def portfolio_report_pdf():

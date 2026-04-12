@@ -184,6 +184,9 @@
         <a href="/reports/portfolio.pdf" target="_blank">Open Portfolio PDF</a>
         <a href="/reports/audit.pdf" target="_blank">Open Audit PDF</a>
         <a href="/reports/fiduciaries.pdf" target="_blank">Open Fiduciary PDF</a>
+        <a href="/reports?report_type=trust_summary">Trust Summary Launch</a>
+        <a href="/reports?report_type=k1">K-1 Launch</a>
+        <a href="/reports?report_type=form1041">1041 Launch</a>
       </div>
     </div>
 
@@ -198,18 +201,35 @@
   </div>
 
   <script>
+    function syncInstrumentSelection() {
+      var picker = document.getElementById("instrument_id_select");
+      var input = document.getElementById("instrument_id");
+      if (picker && input && picker.value) {
+        input.value = picker.value;
+      }
+    }
+
+    function ensureTaxYearDefault() {
+      var taxYear = document.getElementById("tax_year");
+      if (taxYear && !taxYear.value) {
+        taxYear.value = new Date().getFullYear();
+      }
+    }
+
     function toggleFields() {
       const reportType = document.getElementById("report_type").value;
 
       const trustBlock = document.getElementById("trust_block");
       const taxYearBlock = document.getElementById("tax_year_block");
       const instrumentBlock = document.getElementById("instrument_block");
+      const instrumentSelectBlock = document.getElementById("instrument_select_block");
       const fiduciaryBlock = document.getElementById("fiduciary_block");
       const auditBlock = document.getElementById("audit_block");
 
       trustBlock.classList.add("hidden");
       taxYearBlock.classList.add("hidden");
       instrumentBlock.classList.add("hidden");
+      if (instrumentSelectBlock) instrumentSelectBlock.classList.add("hidden");
       fiduciaryBlock.classList.add("hidden");
       auditBlock.classList.add("hidden");
 
@@ -223,6 +243,7 @@
 
       if (reportType === "instrument") {
         instrumentBlock.classList.remove("hidden");
+        if (instrumentSelectBlock) instrumentSelectBlock.classList.remove("hidden");
       }
 
       if (reportType === "fiduciary") {
@@ -234,7 +255,11 @@
       }
     }
 
-    document.addEventListener("DOMContentLoaded", toggleFields);
+    document.addEventListener("DOMContentLoaded", function() {
+      ensureTaxYearDefault();
+      toggleFields();
+      syncInstrumentSelection();
+    });
   </script>
 </body>
 </html>
