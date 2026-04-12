@@ -14,6 +14,8 @@
 
 <div class="box">
   <form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
     <label>Full Name</label>
     <input type="text" name="full_name">
 

@@ -1653,6 +1653,9 @@ def role_new():
     trusts = get_all_trusts()
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("role_form.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
         role_id = get_next_role_id()
         create_role_record({
             "role_id": role_id,
