@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Visualization Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+    .timeline-item { border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Visualization Dashboard</h1>
+  <p>High-level operational visibility across learning, planning, execution, and document layers.</p>
+  <p><a href="/visualization/trust-map">Trust Relationship View</a> | <a href="/visualization/analytics">Analytics View</a></p>
+
+  <h2>System Metrics</h2>
+  <div class="grid">
+    {% for key, value in metrics.items() %}
+      <div class="card">
+        <h3>{{ key }}</h3>
+        <p>{{ value }}</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2>Recent Timeline</h2>
+  <div class="card">
+    {% for item in timeline %}
+      <div class="timeline-item">
+        <strong>{{ item['kind'] }}</strong> — {{ item['item_title'] }} ({{ item['item_id'] }})<br>
+        <small>{{ item['created_at'] }}</small>
+      </div>
+    {% else %}
+      <p>No timeline entries yet.</p>
+    {% endfor %}
+  </div>
+</body>
+</html>

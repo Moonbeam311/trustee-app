@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Execution Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Execution Dashboard</h1>
+  <p>Task-driven workflow layer for moving from planning into action.</p>
+  <p><a href="/execution/tasks/new">New Task</a> | <a href="/workspaces">Workspace Dashboard</a> | <a href="/decision">Decision Engine</a> | <a href="/documents">Document Generator</a> | <a href="/visualization">Visualization</a></p>
+
+  {% for task in tasks %}
+    <div class="card">
+      <h3><a href="/execution/tasks/{{ task['task_id'] }}">{{ task['title'] }}</a></h3>
+      <p><strong>Priority:</strong> {{ task['priority'] }}</p>
+      <p><strong>Status:</strong> {{ task['status'] }}</p>
+      <p><strong>Workspace:</strong> {{ task['workspace_id'] }}</p>
+      <p>{{ task['description'] }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>

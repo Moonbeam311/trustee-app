@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Document Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Document Generator</h1>
+  <p>Generate draft documents from reusable templates linked to workspaces and planning tracks.</p>
+  <p><a href="/documents/generate">Generate Document</a> | <a href="/execution">Execution Dashboard</a> | <a href="/workspaces">Workspace Dashboard</a> | <a href="/visualization">Visualization</a></p>
+
+  <h2>Templates</h2>
+  {% for template in templates %}
+    <div class="card">
+      <h3>{{ template['name'] }}</h3>
+      <p><strong>Category:</strong> {{ template['category'] }}</p>
+      <p>{{ template['description'] }}</p>
+    </div>
+  {% endfor %}
+
+  <h2>Generated Documents</h2>
+  {% for document in documents %}
+    <div class="card">
+      <h3><a href="/documents/{{ document['document_id'] }}">{{ document['title'] }}</a></h3>
+      <p><strong>Status:</strong> {{ document['status'] }}</p>
+      <p><strong>Workspace:</strong> {{ document['workspace_id'] }}</p>
+      <p><strong>Template:</strong> {{ document['template_id'] }}</p>
+    </div>
+  {% else %}
+    <p>No generated documents yet.</p>
+  {% endfor %}
+</body>
+</html>

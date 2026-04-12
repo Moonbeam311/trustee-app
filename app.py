@@ -192,6 +192,39 @@ ROLE_RULES = {
     "learning_article_edit": {"Admin"},
     "form_guide_new": {"Admin"},
     "form_guide_edit": {"Admin"},
+    "video_dashboard": {"Admin", "Trustee", "Viewer"},
+    "video_category": {"Admin", "Trustee", "Viewer"},
+    "video_trust_type": {"Admin", "Trustee", "Viewer"},
+    "video_detail": {"Admin", "Trustee", "Viewer"},
+    "video_upload": {"Admin", "Trustee"},
+    "video_edit": {"Admin"},
+    "workspace_dashboard": {"Admin", "Trustee", "Viewer"},
+    "workspace_new": {"Admin", "Trustee"},
+    "workspace_detail": {"Admin", "Trustee", "Viewer"},
+    "workspace_edit": {"Admin", "Trustee"},
+    "workspace_note_new": {"Admin", "Trustee"},
+    "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
+    "discussion_new": {"Admin", "Trustee"},
+    "discussion_thread": {"Admin", "Trustee", "Viewer"},
+    "discussion_reply": {"Admin", "Trustee"},
+    "workspace_discussions": {"Admin", "Trustee", "Viewer"},
+    "workspace_discussion_new": {"Admin", "Trustee"},
+    "decision_dashboard": {"Admin", "Trustee", "Viewer"},
+    "decision_run": {"Admin", "Trustee", "Viewer"},
+    "execution_dashboard": {"Admin", "Trustee", "Viewer"},
+    "execution_task_new": {"Admin", "Trustee"},
+    "execution_task_detail": {"Admin", "Trustee", "Viewer"},
+    "execution_task_status": {"Admin", "Trustee"},
+    "workspace_tasks": {"Admin", "Trustee", "Viewer"},
+    "workspace_task_new": {"Admin", "Trustee"},
+    "document_dashboard": {"Admin", "Trustee", "Viewer"},
+    "document_generate": {"Admin", "Trustee"},
+    "document_detail": {"Admin", "Trustee", "Viewer"},
+    "workspace_documents": {"Admin", "Trustee", "Viewer"},
+    "workspace_document_generate": {"Admin", "Trustee"},
+    "visualization_dashboard": {"Admin", "Trustee", "Viewer"},
+    "trust_map_dashboard": {"Admin", "Trustee", "Viewer"},
+    "analytics_dashboard": {"Admin", "Trustee", "Viewer"},
     "permissions_dashboard": {"Admin"},
     "create_trust_step1": {"Admin", "Trustee"},
     "create_trust_step2": {"Admin", "Trustee"},
@@ -1656,6 +1689,593 @@ def update_learning_article(article_id, payload):
     conn.commit()
     conn.close()
 
+def get_visualization_metrics():
+    conn = _learning_conn()
+    metrics = {}
+    table_map = {
+        "learning_articles": "learning_articles",
+        "form_guides": "tax_form_guides",
+        "tutorial_videos": "tutorial_videos",
+        "workspaces": "workspaces",
+        "workspace_notes": "workspace_notes",
+        "discussion_threads": "discussion_threads",
+        "discussion_messages": "discussion_messages",
+        "execution_tasks": "execution_tasks",
+        "document_templates": "document_templates",
+        "generated_documents": "generated_documents",
+    }
+
+    for key, table_name in table_map.items():
+        try:
+            metrics[key] = conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
+        except Exception:
+            metrics[key] = 0
+
+    conn.close()
+
+    # pull from main app helpers where available
+    try:
+        metrics["trusts"] = len(get_all_trusts())
+    except Exception:
+        metrics["trusts"] = 0
+
+    try:
+        metrics["fiduciaries"] = len(get_all_fiduciaries())
+    except Exception:
+        metrics["fiduciaries"] = 0
+
+    try:
+        metrics["instruments"] = len(get_all_instruments())
+    except Exception:
+        metrics["instruments"] = 0
+
+    try:
+        metrics["media"] = len(get_all_media())
+    except Exception:
+        metrics["media"] = 0
+
+    return metrics
+
+def get_visualization_timeline():
+    conn = _learning_conn()
+    timeline = []
+
+    sources = [
+        ("Workspace", "workspaces", "workspace_id", "title"),
+        ("Discussion Thread", "discussion_threads", "thread_id", "title"),
+        ("Execution Task", "execution_tasks", "task_id", "title"),
+        ("Generated Document", "generated_documents", "document_id", "title"),
+        ("Tutorial Video", "tutorial_videos", "video_id", "title"),
+    ]
+
+    for label, table_name, id_col, title_col in sources:
+        try:
+            rows = conn.execute(
+                f"SELECT {id_col} as item_id, {title_col} as item_title, created_at FROM {table_name} ORDER BY created_at DESC LIMIT 10"
+            ).fetchall()
+            for row in rows:
+                timeline.append({
+                    "kind": label,
+                    "item_id": row["item_id"],
+                    "item_title": row["item_title"],
+                    "created_at": row["created_at"],
+                })
+        except Exception:
+            continue
+
+    conn.close()
+    timeline.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    return timeline[:30]
+
+def get_trust_relationship_summary():
+    summary = []
+    try:
+        trusts = get_all_trusts()
+    except Exception:
+        trusts = []
+
+    for trust in trusts:
+        trust_id = trust.get("trust_id")
+        row = {
+            "trust_id": trust_id,
+            "trust_name": trust.get("trust_name"),
+            "fiduciaries": 0,
+            "instruments": 0,
+            "documents": 0,
+            "workspace_links": 0,
+            "tasks": 0,
+        }
+
+        try:
+            row["fiduciaries"] = len([f for f in get_all_fiduciaries() if f.get("trust_id") == trust_id])
+        except Exception:
+            pass
+
+        try:
+            row["instruments"] = len([i for i in get_all_instruments() if i.get("trust_id") == trust_id])
+        except Exception:
+            pass
+
+        try:
+            row["documents"] = len([d for d in get_generated_documents() if d.get("trust_id") == trust_id])
+        except Exception:
+            pass
+
+        try:
+            row["tasks"] = len([t for t in get_all_execution_tasks() if t.get("trust_id") == trust_id])
+        except Exception:
+            pass
+
+        try:
+            row["workspace_links"] = len([w for w in get_all_workspaces() if (w.get("trust_type_focus") or "").lower() in (trust.get("trust_type") or "").lower()])
+        except Exception:
+            pass
+
+        summary.append(row)
+
+    return summary
+
+def get_document_templates():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM document_templates
+        WHERE status = 'active'
+        ORDER BY category, name
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_document_template_by_id(template_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM document_templates
+        WHERE template_id = ?
+    """, (template_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_generated_documents():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM generated_documents
+        ORDER BY created_at DESC, title
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_generated_documents_by_workspace(workspace_id):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM generated_documents
+        WHERE workspace_id = ?
+        ORDER BY created_at DESC, title
+    """, (workspace_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_generated_document_by_id(document_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM generated_documents
+        WHERE document_id = ?
+    """, (document_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def create_generated_document(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO generated_documents (
+            document_id, workspace_id, trust_id, template_id, title, content, status, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("document_id"),
+        payload.get("workspace_id"),
+        payload.get("trust_id"),
+        payload.get("template_id"),
+        payload.get("title"),
+        payload.get("content"),
+        payload.get("status"),
+        payload.get("created_by"),
+    ))
+    conn.commit()
+    conn.close()
+
+def render_document_template(template_body, values):
+    content = template_body or ""
+    for key, value in (values or {}).items():
+        content = content.replace("{{" + key + "}}", value or "")
+    return content
+
+def get_all_execution_tasks():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM execution_tasks
+        ORDER BY
+            CASE priority
+                WHEN 'high' THEN 1
+                WHEN 'medium' THEN 2
+                ELSE 3
+            END,
+            created_at DESC
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_execution_tasks_by_workspace(workspace_id):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM execution_tasks
+        WHERE workspace_id = ?
+        ORDER BY
+            CASE priority
+                WHEN 'high' THEN 1
+                WHEN 'medium' THEN 2
+                ELSE 3
+            END,
+            created_at DESC
+    """, (workspace_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_execution_task_by_id(task_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM execution_tasks
+        WHERE task_id = ?
+    """, (task_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def create_execution_task(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO execution_tasks (
+            task_id, workspace_id, trust_id, title, task_type, description,
+            related_form, related_report, priority, status, due_date, assigned_to
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("task_id"),
+        payload.get("workspace_id"),
+        payload.get("trust_id"),
+        payload.get("title"),
+        payload.get("task_type"),
+        payload.get("description"),
+        payload.get("related_form"),
+        payload.get("related_report"),
+        payload.get("priority"),
+        payload.get("status"),
+        payload.get("due_date"),
+        payload.get("assigned_to"),
+    ))
+    conn.commit()
+    conn.close()
+
+def update_execution_task_status(task_id, status):
+    conn = _learning_conn()
+    conn.execute("""
+        UPDATE execution_tasks
+        SET status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE task_id = ?
+    """, (status, task_id))
+    conn.commit()
+    conn.close()
+
+def get_execution_task_types():
+    return [
+        "analysis",
+        "filing_review",
+        "document_collection",
+        "content_review",
+        "report_generation",
+        "trust_setup",
+        "asset_mapping",
+        "compliance_check",
+        "other",
+    ]
+
+def get_decision_rules():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM decision_rules
+        ORDER BY rule_id
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def run_decision_engine(goal, asset_type, control_level):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM decision_rules
+        WHERE lower(goal) = lower(?)
+          AND lower(asset_type) = lower(?)
+          AND lower(control_level) = lower(?)
+        ORDER BY rule_id
+    """, (goal, asset_type, control_level)).fetchall()
+    conn.close()
+
+    matches = [dict(r) for r in rows]
+    if matches:
+        return matches
+
+    # fallback broader match by goal only
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM decision_rules
+        WHERE lower(goal) = lower(?)
+        ORDER BY rule_id
+    """, (goal,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_all_discussion_threads():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM discussion_threads
+        ORDER BY created_at DESC, title
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_discussion_threads_by_workspace(workspace_id):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM discussion_threads
+        WHERE workspace_id = ?
+        ORDER BY created_at DESC, title
+    """, (workspace_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_discussion_thread_by_id(thread_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM discussion_threads
+        WHERE thread_id = ?
+    """, (thread_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def create_discussion_thread(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO discussion_threads (
+            thread_id, workspace_id, title, category, related_trust_type,
+            related_form, created_by, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("thread_id"),
+        payload.get("workspace_id"),
+        payload.get("title"),
+        payload.get("category"),
+        payload.get("related_trust_type"),
+        payload.get("related_form"),
+        payload.get("created_by"),
+        payload.get("status"),
+    ))
+    conn.commit()
+    conn.close()
+
+def get_discussion_messages(thread_id):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM discussion_messages
+        WHERE thread_id = ?
+        ORDER BY created_at, message_id
+    """, (thread_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def create_discussion_message(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO discussion_messages (
+            message_id, thread_id, parent_message_id, author, body
+        ) VALUES (?, ?, ?, ?, ?)
+    """, (
+        payload.get("message_id"),
+        payload.get("thread_id"),
+        payload.get("parent_message_id"),
+        payload.get("author"),
+        payload.get("body"),
+    ))
+    conn.commit()
+    conn.close()
+
+def get_discussion_categories():
+    return [
+        "general_design_discussion",
+        "trust_type_questions",
+        "tax_forms_questions",
+        "asset_structuring_questions",
+        "fiduciary_process_questions",
+        "video_linked_discussion",
+    ]
+
+def get_all_workspaces():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM workspaces
+        ORDER BY created_at DESC, title
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_workspace_by_id(workspace_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM workspaces
+        WHERE workspace_id = ?
+    """, (workspace_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def create_workspace(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO workspaces (
+            workspace_id, title, workspace_type, trust_type_focus, purpose, owner, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("workspace_id"),
+        payload.get("title"),
+        payload.get("workspace_type"),
+        payload.get("trust_type_focus"),
+        payload.get("purpose"),
+        payload.get("owner"),
+        payload.get("status"),
+    ))
+    conn.commit()
+    conn.close()
+
+def update_workspace(workspace_id, payload):
+    conn = _learning_conn()
+    conn.execute("""
+        UPDATE workspaces
+        SET title = ?,
+            workspace_type = ?,
+            trust_type_focus = ?,
+            purpose = ?,
+            owner = ?,
+            status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE workspace_id = ?
+    """, (
+        payload.get("title"),
+        payload.get("workspace_type"),
+        payload.get("trust_type_focus"),
+        payload.get("purpose"),
+        payload.get("owner"),
+        payload.get("status"),
+        workspace_id,
+    ))
+    conn.commit()
+    conn.close()
+
+def get_workspace_notes(workspace_id):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM workspace_notes
+        WHERE workspace_id = ?
+        ORDER BY section_name, created_at
+    """, (workspace_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def create_workspace_note(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO workspace_notes (
+            note_id, workspace_id, section_name, content
+        ) VALUES (?, ?, ?, ?)
+    """, (
+        payload.get("note_id"),
+        payload.get("workspace_id"),
+        payload.get("section_name"),
+        payload.get("content"),
+    ))
+    conn.commit()
+    conn.close()
+
+def get_workspace_note_sections():
+    return [
+        "goals",
+        "trust_type_analysis",
+        "party_roles",
+        "asset_plan",
+        "filing_plan",
+        "open_questions",
+        "design_notes",
+    ]
+
+def get_all_tutorial_videos():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM tutorial_videos
+        ORDER BY category, title
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_tutorial_videos_by_category(category):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM tutorial_videos
+        WHERE lower(category) = lower(?)
+        ORDER BY title
+    """, (category,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_tutorial_videos_by_trust_type(trust_type):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM tutorial_videos
+        WHERE lower(trust_type) = lower(?)
+        ORDER BY title
+    """, (trust_type,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_tutorial_video_by_id(video_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM tutorial_videos
+        WHERE video_id = ?
+    """, (video_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def create_tutorial_video(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO tutorial_videos (
+            video_id, title, category, trust_type, description, file_path,
+            thumbnail_path, transcript_notes, visibility
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("video_id"),
+        payload.get("title"),
+        payload.get("category"),
+        payload.get("trust_type"),
+        payload.get("description"),
+        payload.get("file_path"),
+        payload.get("thumbnail_path"),
+        payload.get("transcript_notes"),
+        payload.get("visibility"),
+    ))
+    conn.commit()
+    conn.close()
+
+def update_tutorial_video(video_id, payload):
+    conn = _learning_conn()
+    conn.execute("""
+        UPDATE tutorial_videos
+        SET title = ?,
+            category = ?,
+            trust_type = ?,
+            description = ?,
+            file_path = ?,
+            thumbnail_path = ?,
+            transcript_notes = ?,
+            visibility = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE video_id = ?
+    """, (
+        payload.get("title"),
+        payload.get("category"),
+        payload.get("trust_type"),
+        payload.get("description"),
+        payload.get("file_path"),
+        payload.get("thumbnail_path"),
+        payload.get("transcript_notes"),
+        payload.get("visibility"),
+        video_id,
+    ))
+    conn.commit()
+    conn.close()
+
 def create_form_guide(payload):
     conn = _learning_conn()
     conn.execute("""
@@ -2379,6 +2999,697 @@ def form_guide_edit(form_name):
         return redirect(url_for("form_guide_detail", form_name=payload["form_name"]))
 
     return render_template("form_guide_form.html", mode="edit", guide=guide)
+
+@app.route("/videos")
+def video_dashboard():
+    videos = get_all_tutorial_videos()
+    categories = sorted({v["category"] for v in videos if v.get("category")})
+    trust_types = sorted({v["trust_type"] for v in videos if v.get("trust_type")})
+    return render_template(
+        "video_dashboard.html",
+        videos=videos,
+        categories=categories,
+        trust_types=trust_types
+    )
+
+
+@app.route("/videos/category/<category>")
+def video_category(category):
+    videos = get_tutorial_videos_by_category(category)
+    return render_template("video_category.html", category=category, videos=videos)
+
+
+@app.route("/videos/trust-type/<trust_type>")
+def video_trust_type(trust_type):
+    videos = get_tutorial_videos_by_trust_type(trust_type)
+    return render_template("video_trust_type.html", trust_type=trust_type, videos=videos)
+
+
+@app.route("/videos/<video_id>")
+def video_detail(video_id):
+    video = get_tutorial_video_by_id(video_id)
+    if not video:
+        return f"Video {video_id} not found", 404
+    return render_template("video_detail.html", video=video)
+
+
+@app.route("/videos/upload", methods=["GET", "POST"])
+def video_upload():
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("video_upload.html", mode="new", error_message="Invalid or missing CSRF token.")
+
+        video_id = (request.form.get("video_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+
+        if not video_id or not title:
+            return render_template("video_upload.html", mode="new", error_message="Video ID and Title are required.")
+
+        payload = {
+            "video_id": video_id,
+            "title": title,
+            "category": request.form.get("category"),
+            "trust_type": request.form.get("trust_type"),
+            "description": request.form.get("description"),
+            "file_path": request.form.get("file_path"),
+            "thumbnail_path": request.form.get("thumbnail_path"),
+            "transcript_notes": request.form.get("transcript_notes"),
+            "visibility": request.form.get("visibility") or "internal",
+        }
+        create_tutorial_video(payload)
+        return redirect(url_for("video_detail", video_id=video_id))
+
+    return render_template("video_upload.html", mode="new")
+
+
+@app.route("/videos/<video_id>/edit", methods=["GET", "POST"])
+def video_edit(video_id):
+    video = get_tutorial_video_by_id(video_id)
+    if not video:
+        return f"Video {video_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("video_upload.html", mode="edit", video=video, error_message="Invalid or missing CSRF token.")
+
+        payload = {
+            "title": request.form.get("title"),
+            "category": request.form.get("category"),
+            "trust_type": request.form.get("trust_type"),
+            "description": request.form.get("description"),
+            "file_path": request.form.get("file_path"),
+            "thumbnail_path": request.form.get("thumbnail_path"),
+            "transcript_notes": request.form.get("transcript_notes"),
+            "visibility": request.form.get("visibility") or "internal",
+        }
+        update_tutorial_video(video_id, payload)
+        return redirect(url_for("video_detail", video_id=video_id))
+
+    return render_template("video_upload.html", mode="edit", video=video)
+
+@app.route("/workspaces")
+def workspace_dashboard():
+    workspaces = get_all_workspaces()
+    return render_template("workspace_dashboard.html", workspaces=workspaces)
+
+
+@app.route("/workspaces/new", methods=["GET", "POST"])
+def workspace_new():
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("workspace_form.html", mode="new", error_message="Invalid or missing CSRF token.", sections=get_workspace_note_sections())
+
+        workspace_id = (request.form.get("workspace_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+        if not workspace_id or not title:
+            return render_template("workspace_form.html", mode="new", error_message="Workspace ID and Title are required.", sections=get_workspace_note_sections())
+
+        payload = {
+            "workspace_id": workspace_id,
+            "title": title,
+            "workspace_type": request.form.get("workspace_type"),
+            "trust_type_focus": request.form.get("trust_type_focus"),
+            "purpose": request.form.get("purpose"),
+            "owner": request.form.get("owner") or session.get("username") or "unknown",
+            "status": request.form.get("status") or "draft",
+        }
+        create_workspace(payload)
+        return redirect(url_for("workspace_detail", workspace_id=workspace_id))
+
+    return render_template("workspace_form.html", mode="new", sections=get_workspace_note_sections())
+
+
+@app.route("/workspaces/<workspace_id>")
+def workspace_detail(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+    notes = get_workspace_notes(workspace_id)
+    return render_template("workspace_detail.html", workspace=workspace, notes=notes)
+
+
+@app.route("/workspaces/<workspace_id>/edit", methods=["GET", "POST"])
+def workspace_edit(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("workspace_form.html", mode="edit", workspace=workspace, error_message="Invalid or missing CSRF token.", sections=get_workspace_note_sections())
+
+        payload = {
+            "title": request.form.get("title"),
+            "workspace_type": request.form.get("workspace_type"),
+            "trust_type_focus": request.form.get("trust_type_focus"),
+            "purpose": request.form.get("purpose"),
+            "owner": request.form.get("owner"),
+            "status": request.form.get("status") or "draft",
+        }
+        update_workspace(workspace_id, payload)
+        return redirect(url_for("workspace_detail", workspace_id=workspace_id))
+
+    return render_template("workspace_form.html", mode="edit", workspace=workspace, sections=get_workspace_note_sections())
+
+
+@app.route("/workspaces/<workspace_id>/notes/new", methods=["GET", "POST"])
+def workspace_note_new(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("workspace_note_form.html", workspace=workspace, sections=get_workspace_note_sections(), error_message="Invalid or missing CSRF token.")
+
+        note_id = (request.form.get("note_id") or "").strip()
+        section_name = (request.form.get("section_name") or "").strip()
+        content = (request.form.get("content") or "").strip()
+
+        if not note_id or not section_name or not content:
+            return render_template("workspace_note_form.html", workspace=workspace, sections=get_workspace_note_sections(), error_message="Note ID, section, and content are required.")
+
+        payload = {
+            "note_id": note_id,
+            "workspace_id": workspace_id,
+            "section_name": section_name,
+            "content": content,
+        }
+        create_workspace_note(payload)
+        return redirect(url_for("workspace_detail", workspace_id=workspace_id))
+
+    return render_template("workspace_note_form.html", workspace=workspace, sections=get_workspace_note_sections())
+
+@app.route("/discussions")
+def discussion_dashboard():
+    threads = get_all_discussion_threads()
+    return render_template("discussion_dashboard.html", threads=threads)
+
+
+@app.route("/discussions/new", methods=["GET", "POST"])
+def discussion_new():
+    workspaces = get_all_workspaces()
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("discussion_form.html", mode="new", workspaces=workspaces, categories=get_discussion_categories(), error_message="Invalid or missing CSRF token.")
+
+        thread_id = (request.form.get("thread_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+        if not thread_id or not title:
+            return render_template("discussion_form.html", mode="new", workspaces=workspaces, categories=get_discussion_categories(), error_message="Thread ID and Title are required.")
+
+        payload = {
+            "thread_id": thread_id,
+            "workspace_id": request.form.get("workspace_id"),
+            "title": title,
+            "category": request.form.get("category"),
+            "related_trust_type": request.form.get("related_trust_type"),
+            "related_form": request.form.get("related_form"),
+            "created_by": session.get("username") or "unknown",
+            "status": request.form.get("status") or "open",
+        }
+        create_discussion_thread(payload)
+        return redirect(url_for("discussion_thread", thread_id=thread_id))
+
+    return render_template("discussion_form.html", mode="new", workspaces=workspaces, categories=get_discussion_categories())
+
+
+@app.route("/discussions/<thread_id>")
+def discussion_thread(thread_id):
+    thread = get_discussion_thread_by_id(thread_id)
+    if not thread:
+        return f"Discussion thread {thread_id} not found", 404
+    messages = get_discussion_messages(thread_id)
+    workspace = get_workspace_by_id(thread.get("workspace_id")) if thread.get("workspace_id") else None
+    return render_template("discussion_thread.html", thread=thread, messages=messages, workspace=workspace)
+
+
+@app.route("/discussions/<thread_id>/reply", methods=["GET", "POST"])
+def discussion_reply(thread_id):
+    thread = get_discussion_thread_by_id(thread_id)
+    if not thread:
+        return f"Discussion thread {thread_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("discussion_reply_form.html", thread=thread, error_message="Invalid or missing CSRF token.")
+
+        message_id = (request.form.get("message_id") or "").strip()
+        body = (request.form.get("body") or "").strip()
+        if not message_id or not body:
+            return render_template("discussion_reply_form.html", thread=thread, error_message="Message ID and body are required.")
+
+        payload = {
+            "message_id": message_id,
+            "thread_id": thread_id,
+            "parent_message_id": request.form.get("parent_message_id") or "",
+            "author": session.get("username") or "unknown",
+            "body": body,
+        }
+        create_discussion_message(payload)
+        return redirect(url_for("discussion_thread", thread_id=thread_id))
+
+    return render_template("discussion_reply_form.html", thread=thread)
+
+
+@app.route("/workspaces/<workspace_id>/discussions")
+def workspace_discussions(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+    threads = get_discussion_threads_by_workspace(workspace_id)
+    return render_template("workspace_discussions.html", workspace=workspace, threads=threads)
+
+
+@app.route("/workspaces/<workspace_id>/discussions/new", methods=["GET", "POST"])
+def workspace_discussion_new(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("discussion_form.html", mode="workspace_new", workspace=workspace, categories=get_discussion_categories(), error_message="Invalid or missing CSRF token.")
+
+        thread_id = (request.form.get("thread_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+        if not thread_id or not title:
+            return render_template("discussion_form.html", mode="workspace_new", workspace=workspace, categories=get_discussion_categories(), error_message="Thread ID and Title are required.")
+
+        payload = {
+            "thread_id": thread_id,
+            "workspace_id": workspace_id,
+            "title": title,
+            "category": request.form.get("category"),
+            "related_trust_type": request.form.get("related_trust_type"),
+            "related_form": request.form.get("related_form"),
+            "created_by": session.get("username") or "unknown",
+            "status": request.form.get("status") or "open",
+        }
+        create_discussion_thread(payload)
+        return redirect(url_for("discussion_thread", thread_id=thread_id))
+
+    return render_template("discussion_form.html", mode="workspace_new", workspace=workspace, categories=get_discussion_categories())
+
+@app.route("/decision")
+def decision_dashboard():
+    goals = [
+        "estate_planning",
+        "asset_protection",
+        "real_property_holding",
+        "insurance_planning",
+        "tax_planning",
+        "business_structure",
+    ]
+    asset_types = [
+        "general_assets",
+        "real_estate",
+        "insurance_policy",
+        "mixed_assets",
+        "business_assets",
+        "cash_equivalents",
+    ]
+    control_levels = [
+        "high_control",
+        "structured_control",
+        "management_focus",
+        "reduced_personal_control",
+    ]
+    return render_template(
+        "decision_dashboard.html",
+        goals=goals,
+        asset_types=asset_types,
+        control_levels=control_levels
+    )
+
+
+@app.route("/decision/run", methods=["POST"])
+def decision_run():
+    if not validate_csrf_token():
+        goals = [
+            "estate_planning",
+            "asset_protection",
+            "real_property_holding",
+            "insurance_planning",
+            "tax_planning",
+            "business_structure",
+        ]
+        asset_types = [
+            "general_assets",
+            "real_estate",
+            "insurance_policy",
+            "mixed_assets",
+            "business_assets",
+            "cash_equivalents",
+        ]
+        control_levels = [
+            "high_control",
+            "structured_control",
+            "management_focus",
+            "reduced_personal_control",
+        ]
+        return render_template(
+            "decision_dashboard.html",
+            goals=goals,
+            asset_types=asset_types,
+            control_levels=control_levels,
+            error_message="Invalid or missing CSRF token."
+        )
+
+    goal = (request.form.get("goal") or "").strip()
+    asset_type = (request.form.get("asset_type") or "").strip()
+    control_level = (request.form.get("control_level") or "").strip()
+
+    matches = run_decision_engine(goal, asset_type, control_level)
+
+    return render_template(
+        "decision_result.html",
+        goal=goal,
+        asset_type=asset_type,
+        control_level=control_level,
+        matches=matches
+    )
+
+@app.route("/execution")
+def execution_dashboard():
+    tasks = get_all_execution_tasks()
+    return render_template("execution_dashboard.html", tasks=tasks)
+
+
+@app.route("/execution/tasks/new", methods=["GET", "POST"])
+def execution_task_new():
+    workspaces = get_all_workspaces()
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "execution_task_form.html",
+                mode="new",
+                workspaces=workspaces,
+                task_types=get_execution_task_types(),
+                error_message="Invalid or missing CSRF token."
+            )
+
+        task_id = (request.form.get("task_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+        if not task_id or not title:
+            return render_template(
+                "execution_task_form.html",
+                mode="new",
+                workspaces=workspaces,
+                task_types=get_execution_task_types(),
+                error_message="Task ID and Title are required."
+            )
+
+        payload = {
+            "task_id": task_id,
+            "workspace_id": request.form.get("workspace_id"),
+            "trust_id": request.form.get("trust_id"),
+            "title": title,
+            "task_type": request.form.get("task_type"),
+            "description": request.form.get("description"),
+            "related_form": request.form.get("related_form"),
+            "related_report": request.form.get("related_report"),
+            "priority": request.form.get("priority") or "medium",
+            "status": request.form.get("status") or "pending",
+            "due_date": request.form.get("due_date"),
+            "assigned_to": request.form.get("assigned_to") or session.get("username") or "unknown",
+        }
+        create_execution_task(payload)
+        return redirect(url_for("execution_task_detail", task_id=task_id))
+
+    return render_template(
+        "execution_task_form.html",
+        mode="new",
+        workspaces=workspaces,
+        task_types=get_execution_task_types()
+    )
+
+
+@app.route("/execution/tasks/<task_id>")
+def execution_task_detail(task_id):
+    task = get_execution_task_by_id(task_id)
+    if not task:
+        return f"Execution task {task_id} not found", 404
+    workspace = get_workspace_by_id(task.get("workspace_id")) if task.get("workspace_id") else None
+    return render_template("execution_task_detail.html", task=task, workspace=workspace)
+
+
+@app.route("/execution/tasks/<task_id>/status", methods=["POST"])
+def execution_task_status(task_id):
+    task = get_execution_task_by_id(task_id)
+    if not task:
+        return f"Execution task {task_id} not found", 404
+
+    if not validate_csrf_token():
+        return redirect(url_for("execution_task_detail", task_id=task_id))
+
+    new_status = (request.form.get("status") or "").strip()
+    if new_status in {"pending", "in_progress", "blocked", "completed"}:
+        update_execution_task_status(task_id, new_status)
+
+    return redirect(url_for("execution_task_detail", task_id=task_id))
+
+
+@app.route("/workspaces/<workspace_id>/tasks")
+def workspace_tasks(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+    tasks = get_execution_tasks_by_workspace(workspace_id)
+    return render_template("workspace_tasks.html", workspace=workspace, tasks=tasks)
+
+
+@app.route("/workspaces/<workspace_id>/tasks/new", methods=["GET", "POST"])
+def workspace_task_new(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "execution_task_form.html",
+                mode="workspace_new",
+                workspace=workspace,
+                task_types=get_execution_task_types(),
+                error_message="Invalid or missing CSRF token."
+            )
+
+        task_id = (request.form.get("task_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+        if not task_id or not title:
+            return render_template(
+                "execution_task_form.html",
+                mode="workspace_new",
+                workspace=workspace,
+                task_types=get_execution_task_types(),
+                error_message="Task ID and Title are required."
+            )
+
+        payload = {
+            "task_id": task_id,
+            "workspace_id": workspace_id,
+            "trust_id": request.form.get("trust_id"),
+            "title": title,
+            "task_type": request.form.get("task_type"),
+            "description": request.form.get("description"),
+            "related_form": request.form.get("related_form"),
+            "related_report": request.form.get("related_report"),
+            "priority": request.form.get("priority") or "medium",
+            "status": request.form.get("status") or "pending",
+            "due_date": request.form.get("due_date"),
+            "assigned_to": request.form.get("assigned_to") or session.get("username") or "unknown",
+        }
+        create_execution_task(payload)
+        return redirect(url_for("execution_task_detail", task_id=task_id))
+
+    return render_template(
+        "execution_task_form.html",
+        mode="workspace_new",
+        workspace=workspace,
+        task_types=get_execution_task_types()
+    )
+
+@app.route("/documents")
+def document_dashboard():
+    templates = get_document_templates()
+    documents = get_generated_documents()
+    return render_template("document_dashboard.html", templates=templates, documents=documents)
+
+
+@app.route("/documents/generate", methods=["GET", "POST"])
+def document_generate():
+    templates = get_document_templates()
+    workspaces = get_all_workspaces()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "document_generate_form.html",
+                templates=templates,
+                workspaces=workspaces,
+                error_message="Invalid or missing CSRF token."
+            )
+
+        document_id = (request.form.get("document_id") or "").strip()
+        template_id = (request.form.get("template_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+
+        if not document_id or not template_id or not title:
+            return render_template(
+                "document_generate_form.html",
+                templates=templates,
+                workspaces=workspaces,
+                error_message="Document ID, Template, and Title are required."
+            )
+
+        template = get_document_template_by_id(template_id)
+        if not template:
+            return render_template(
+                "document_generate_form.html",
+                templates=templates,
+                workspaces=workspaces,
+                error_message="Selected template was not found."
+            )
+
+        values = {
+            "title": request.form.get("title") or "",
+            "purpose": request.form.get("purpose") or "",
+            "trust_type_focus": request.form.get("trust_type_focus") or "",
+            "notes": request.form.get("notes") or "",
+            "trust_name": request.form.get("trust_name") or "",
+            "trustee_name": request.form.get("trustee_name") or "",
+            "authority_scope": request.form.get("authority_scope") or "",
+            "related_forms": request.form.get("related_forms") or "",
+            "related_reports": request.form.get("related_reports") or "",
+        }
+        content = render_document_template(template.get("template_body"), values)
+
+        payload = {
+            "document_id": document_id,
+            "workspace_id": request.form.get("workspace_id"),
+            "trust_id": request.form.get("trust_id"),
+            "template_id": template_id,
+            "title": title,
+            "content": content,
+            "status": request.form.get("status") or "draft",
+            "created_by": session.get("username") or "unknown",
+        }
+        create_generated_document(payload)
+        return redirect(url_for("document_detail", document_id=document_id))
+
+    return render_template("document_generate_form.html", templates=templates, workspaces=workspaces)
+
+
+@app.route("/documents/<document_id>")
+def document_detail(document_id):
+    document = get_generated_document_by_id(document_id)
+    if not document:
+        return f"Generated document {document_id} not found", 404
+    template = get_document_template_by_id(document.get("template_id")) if document.get("template_id") else None
+    workspace = get_workspace_by_id(document.get("workspace_id")) if document.get("workspace_id") else None
+    return render_template("document_detail.html", document=document, template=template, workspace=workspace)
+
+
+@app.route("/workspaces/<workspace_id>/documents")
+def workspace_documents(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+    documents = get_generated_documents_by_workspace(workspace_id)
+    return render_template("workspace_documents.html", workspace=workspace, documents=documents)
+
+
+@app.route("/workspaces/<workspace_id>/documents/generate", methods=["GET", "POST"])
+def workspace_document_generate(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return f"Workspace {workspace_id} not found", 404
+
+    templates = get_document_templates()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "document_generate_form.html",
+                workspace=workspace,
+                templates=templates,
+                error_message="Invalid or missing CSRF token."
+            )
+
+        document_id = (request.form.get("document_id") or "").strip()
+        template_id = (request.form.get("template_id") or "").strip()
+        title = (request.form.get("title") or "").strip()
+
+        if not document_id or not template_id or not title:
+            return render_template(
+                "document_generate_form.html",
+                workspace=workspace,
+                templates=templates,
+                error_message="Document ID, Template, and Title are required."
+            )
+
+        template = get_document_template_by_id(template_id)
+        if not template:
+            return render_template(
+                "document_generate_form.html",
+                workspace=workspace,
+                templates=templates,
+                error_message="Selected template was not found."
+            )
+
+        values = {
+            "title": request.form.get("title") or "",
+            "purpose": request.form.get("purpose") or "",
+            "trust_type_focus": request.form.get("trust_type_focus") or workspace.get("trust_type_focus") or "",
+            "notes": request.form.get("notes") or "",
+            "trust_name": request.form.get("trust_name") or "",
+            "trustee_name": request.form.get("trustee_name") or "",
+            "authority_scope": request.form.get("authority_scope") or "",
+            "related_forms": request.form.get("related_forms") or "",
+            "related_reports": request.form.get("related_reports") or "",
+        }
+        content = render_document_template(template.get("template_body"), values)
+
+        payload = {
+            "document_id": document_id,
+            "workspace_id": workspace_id,
+            "trust_id": request.form.get("trust_id"),
+            "template_id": template_id,
+            "title": title,
+            "content": content,
+            "status": request.form.get("status") or "draft",
+            "created_by": session.get("username") or "unknown",
+        }
+        create_generated_document(payload)
+        return redirect(url_for("document_detail", document_id=document_id))
+
+    return render_template("document_generate_form.html", workspace=workspace, templates=templates)
+
+@app.route("/visualization")
+def visualization_dashboard():
+    metrics = get_visualization_metrics()
+    timeline = get_visualization_timeline()
+    return render_template("visualization_dashboard.html", metrics=metrics, timeline=timeline)
+
+
+@app.route("/visualization/trust-map")
+def trust_map_dashboard():
+    trust_rows = get_trust_relationship_summary()
+    return render_template("trust_map_dashboard.html", trust_rows=trust_rows)
+
+
+@app.route("/visualization/analytics")
+def analytics_dashboard():
+    metrics = get_visualization_metrics()
+    timeline = get_visualization_timeline()
+    trust_rows = get_trust_relationship_summary()
+    return render_template(
+        "analytics_dashboard.html",
+        metrics=metrics,
+        timeline=timeline,
+        trust_rows=trust_rows
+    )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Trust Relationship View</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <h1>Trust Relationship View</h1>
+  <p>Structured summary of trust-linked records across fiduciaries, instruments, workspace links, tasks, and documents.</p>
+  <p><a href="/visualization">Back to Visualization Dashboard</a></p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Trust ID</th>
+        <th>Trust Name</th>
+        <th>Fiduciaries</th>
+        <th>Instruments</th>
+        <th>Generated Docs</th>
+        <th>Workspace Links</th>
+        <th>Tasks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in trust_rows %}
+        <tr>
+          <td>{{ row['trust_id'] }}</td>
+          <td>{{ row['trust_name'] }}</td>
+          <td>{{ row['fiduciaries'] }}</td>
+          <td>{{ row['instruments'] }}</td>
+          <td>{{ row['documents'] }}</td>
+          <td>{{ row['workspace_links'] }}</td>
+          <td>{{ row['tasks'] }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7">No trust relationship data available.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
