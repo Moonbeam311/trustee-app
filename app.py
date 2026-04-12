@@ -119,6 +119,7 @@ from database.db import (
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
+from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
@@ -1805,6 +1806,44 @@ def enforce_session_timeout():
         return redirect(url_for("login", timeout="1"))
 
     session["last_activity"] = now_ts
+
+@app.route("/reports/trust/<trust_id>/summary.pdf")
+def trust_summary_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    properties = get_properties_by_trust_id(trust_id)
+    accounts = get_accounts_by_trust_id(trust_id)
+    documents = get_documents_by_trust_id(trust_id)
+    entries = get_ledger_entries_by_trust_id(trust_id)
+
+    story = trust_summary_story(trust, properties, accounts, documents, entries)
+    return build_pdf_response(f"trust_summary_{trust_id}.pdf", story)
+
+
+@app.route("/reports/k1/trust/<trust_id>/<tax_year>.pdf")
+def k1_readiness_pdf(trust_id, tax_year):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    beneficiaries = get_beneficiaries_by_trust_id(trust_id)
+    distributions = get_distributions_by_trust_id(trust_id)
+    summary = get_k1_readiness_summary(trust_id, tax_year)
+    totals = get_k1_totals(trust_id, tax_year)
+    beneficiary_totals = get_k1_beneficiary_totals(trust_id, tax_year)
+
+    story = k1_readiness_story(
+        trust=trust,
+        tax_year=tax_year,
+        summary=summary,
+        totals=totals,
+        beneficiary_totals=beneficiary_totals,
+        beneficiaries=beneficiaries,
+        distributions=distributions,
+    )
+    return build_pdf_response(f"k1_readiness_{trust_id}_{tax_year}.pdf", story)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
