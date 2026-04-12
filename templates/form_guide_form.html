@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Form Guide Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 120px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/forms">Back to Forms & Filings Center</a></p>
+  <h1>{% if mode == "edit" %}Edit Form Guide{% else %}New Form Guide{% endif %}</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    {% if mode == "new" %}
+      <label>Guide ID</label>
+      <input type="text" name="guide_id" value="{{ guide['guide_id'] if guide else '' }}">
+    {% endif %}
+
+    <label>Form Name</label>
+    <input type="text" name="form_name" value="{{ guide['form_name'] if guide else '' }}">
+
+    <label>Category</label>
+    <input type="text" name="category" value="{{ guide['category'] if guide else '' }}">
+
+    <label>Applies To</label>
+    <input type="text" name="applies_to" value="{{ guide['applies_to'] if guide else '' }}">
+
+    <label>Summary</label>
+    <textarea name="summary">{{ guide['summary'] if guide else '' }}</textarea>
+
+    <label>Body</label>
+    <textarea name="body">{{ guide['body'] if guide else '' }}</textarea>
+
+    <label>Related Trust Types</label>
+    <input type="text" name="related_trust_types" value="{{ guide['related_trust_types'] if guide else '' }}">
+
+    <label>Status</label>
+    <select name="status">
+      <option value="draft" {% if guide and guide['status'] == 'draft' %}selected{% endif %}>draft</option>
+      <option value="published" {% if guide and guide['status'] == 'published' %}selected{% endif %}>published</option>
+    </select>
+
+    <p><button type="submit">Save Guide</button></p>
+  </form>
+</body>
+</html>

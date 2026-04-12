@@ -118,6 +118,7 @@ from database.db import (
     has_required_role,
 )
 from pathlib import Path
+import sqlite3
 from datetime import datetime
 from werkzeug.utils import secure_filename
 from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story, portfolio_report_story, audit_log_report_story
@@ -180,6 +181,17 @@ ROLE_RULES = {
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "report_center": {"Admin", "Trustee"},
+    "learning_dashboard": {"Admin", "Trustee", "Viewer"},
+    "learning_category": {"Admin", "Trustee", "Viewer"},
+    "learning_article": {"Admin", "Trustee", "Viewer"},
+    "trust_type_index": {"Admin", "Trustee", "Viewer"},
+    "trust_type_detail": {"Admin", "Trustee", "Viewer"},
+    "forms_dashboard": {"Admin", "Trustee", "Viewer"},
+    "form_guide_detail": {"Admin", "Trustee", "Viewer"},
+    "learning_article_new": {"Admin"},
+    "learning_article_edit": {"Admin"},
+    "form_guide_new": {"Admin"},
+    "form_guide_edit": {"Admin"},
     "permissions_dashboard": {"Admin"},
     "create_trust_step1": {"Admin", "Trustee"},
     "create_trust_step2": {"Admin", "Trustee"},
@@ -1509,6 +1521,221 @@ def genealogy_new():
 
 UPLOAD_FOLDER = "uploads"
 
+TRUST_TYPE_LABELS = {
+    "revocable": "Revocable Trust",
+    "irrevocable": "Irrevocable Trust",
+    "simple": "Simple Trust",
+    "complex": "Complex Trust",
+    "land": "Land Trust",
+    "insurance": "Insurance Trust",
+    "foreign": "Foreign Trust",
+    "charitable": "Charitable Trust",
+    "business": "Business Trust",
+    "other": "Other Trust",
+}
+
+def _learning_conn():
+    conn = sqlite3.connect(LEARNING_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_learning_articles():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM learning_articles
+        WHERE status = 'published'
+        ORDER BY category, title
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_learning_articles_by_category(category):
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM learning_articles
+        WHERE status = 'published' AND lower(category) = lower(?)
+        ORDER BY title
+    """, (category,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_learning_article_by_id(article_id):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM learning_articles
+        WHERE article_id = ?
+    """, (article_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_form_guides():
+    conn = _learning_conn()
+    rows = conn.execute("""
+        SELECT * FROM tax_form_guides
+        WHERE status = 'published'
+        ORDER BY form_name
+    """).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_form_guide_by_name(form_name):
+    conn = _learning_conn()
+    row = conn.execute("""
+        SELECT * FROM tax_form_guides
+        WHERE lower(form_name) = lower(?)
+    """, (form_name,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_trust_type_cards():
+    return [
+        {"slug": "revocable", "label": "Revocable Trust", "summary": "Often used where flexibility and amendment capacity are priorities."},
+        {"slug": "irrevocable", "label": "Irrevocable Trust", "summary": "Often used where permanence, structure, and separation are emphasized."},
+        {"slug": "simple", "label": "Simple Trust", "summary": "Common conceptual category used in trust taxation discussions."},
+        {"slug": "complex", "label": "Complex Trust", "summary": "Common conceptual category used where distributions and retained activity become more involved."},
+        {"slug": "land", "label": "Land Trust", "summary": "Used in discussions involving real property holding structure."},
+        {"slug": "insurance", "label": "Insurance Trust", "summary": "Used in discussions involving policy ownership and insurance planning structure."},
+        {"slug": "foreign", "label": "Foreign Trust", "summary": "Advanced trust category that requires careful handling and strong tax/legal review."},
+        {"slug": "charitable", "label": "Charitable Trust", "summary": "Used where charitable mission or charitable distribution structure is central."},
+        {"slug": "business", "label": "Business Trust", "summary": "Used where business operations and trust structure intersect."},
+        {"slug": "other", "label": "Other Trust", "summary": "Catch-all category for additional trust forms and custom analysis."},
+    ]
+
+def create_learning_article(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO learning_articles (
+            article_id, title, category, subcategory, trust_type, summary, body,
+            difficulty_level, related_forms, related_reports, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("article_id"),
+        payload.get("title"),
+        payload.get("category"),
+        payload.get("subcategory"),
+        payload.get("trust_type"),
+        payload.get("summary"),
+        payload.get("body"),
+        payload.get("difficulty_level"),
+        payload.get("related_forms"),
+        payload.get("related_reports"),
+        payload.get("status"),
+    ))
+    conn.commit()
+    conn.close()
+
+def update_learning_article(article_id, payload):
+    conn = _learning_conn()
+    conn.execute("""
+        UPDATE learning_articles
+        SET title = ?,
+            category = ?,
+            subcategory = ?,
+            trust_type = ?,
+            summary = ?,
+            body = ?,
+            difficulty_level = ?,
+            related_forms = ?,
+            related_reports = ?,
+            status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE article_id = ?
+    """, (
+        payload.get("title"),
+        payload.get("category"),
+        payload.get("subcategory"),
+        payload.get("trust_type"),
+        payload.get("summary"),
+        payload.get("body"),
+        payload.get("difficulty_level"),
+        payload.get("related_forms"),
+        payload.get("related_reports"),
+        payload.get("status"),
+        article_id,
+    ))
+    conn.commit()
+    conn.close()
+
+def create_form_guide(payload):
+    conn = _learning_conn()
+    conn.execute("""
+        INSERT INTO tax_form_guides (
+            guide_id, form_name, category, applies_to, summary, body,
+            related_trust_types, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        payload.get("guide_id"),
+        payload.get("form_name"),
+        payload.get("category"),
+        payload.get("applies_to"),
+        payload.get("summary"),
+        payload.get("body"),
+        payload.get("related_trust_types"),
+        payload.get("status"),
+    ))
+    conn.commit()
+    conn.close()
+
+def update_form_guide(guide_id, payload):
+    conn = _learning_conn()
+    conn.execute("""
+        UPDATE tax_form_guides
+        SET form_name = ?,
+            category = ?,
+            applies_to = ?,
+            summary = ?,
+            body = ?,
+            related_trust_types = ?,
+            status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE guide_id = ?
+    """, (
+        payload.get("form_name"),
+        payload.get("category"),
+        payload.get("applies_to"),
+        payload.get("summary"),
+        payload.get("body"),
+        payload.get("related_trust_types"),
+        payload.get("status"),
+        guide_id,
+    ))
+    conn.commit()
+    conn.close()
+
+def get_trust_type_detail(slug):
+    cards = {c["slug"]: c for c in get_trust_type_cards()}
+    card = cards.get(slug)
+    if not card:
+        return None
+
+    body_map = {
+        "revocable": "Revocable trusts are generally discussed where amendment flexibility and ongoing control are major concerns.",
+        "irrevocable": "Irrevocable trusts are generally discussed where stronger separation and reduced unilateral change are part of the structure.",
+        "simple": "Simple trust is a common conceptual/tax classification term and should be studied together with distribution and filing implications.",
+        "complex": "Complex trust is a common conceptual/tax classification term and often arises when retention, accumulation, or broader distribution activity is involved.",
+        "land": "Land trusts are typically discussed in relation to real property holding and title/management structure.",
+        "insurance": "Insurance trusts are typically discussed when policy ownership, control, and estate-related planning structure are involved.",
+        "foreign": "Foreign trust discussions are advanced and should be handled with caution, clear documentation, and careful tax/legal review.",
+        "charitable": "Charitable trusts are mission-oriented structures that typically require close attention to purpose, governance, and compliance.",
+        "business": "Business trusts are discussed where trust structure and operational/business activity intersect.",
+        "other": "Other trust structures can be documented here as custom or specialized categories.",
+    }
+
+    related_forms = []
+    for guide in get_form_guides():
+        rel = (guide.get("related_trust_types") or "").lower().split(";")
+        if slug in rel or "other" in rel and slug == "other":
+            related_forms.append(guide)
+
+    return {
+        "slug": slug,
+        "label": card["label"],
+        "summary": card["summary"],
+        "body": body_map.get(slug, ""),
+        "related_forms": related_forms,
+    }
+LEARNING_DB_PATH = r"trustee_app.db"
+
 
 @app.route("/media")
 def media_dashboard():
@@ -1985,6 +2212,173 @@ def audit_log_report_pdf():
 
     story = audit_log_report_story(logs=logs, entity_type=entity_type, entity_id=entity_id)
     return build_pdf_response("audit_log_report.pdf", story)
+
+@app.route("/learning")
+def learning_dashboard():
+    articles = get_learning_articles()
+    trust_types = get_trust_type_cards()
+    categories = sorted({a["category"] for a in articles})
+    return render_template(
+        "learning_dashboard.html",
+        articles=articles,
+        trust_types=trust_types,
+        categories=categories
+    )
+
+
+@app.route("/learning/category/<category>")
+def learning_category(category):
+    articles = get_learning_articles_by_category(category)
+    return render_template(
+        "learning_category.html",
+        category=category,
+        articles=articles
+    )
+
+
+@app.route("/learning/article/<article_id>")
+def learning_article(article_id):
+    article = get_learning_article_by_id(article_id)
+    if not article:
+        return f"Learning article {article_id} not found", 404
+    return render_template("learning_article.html", article=article)
+
+
+@app.route("/learning/trust-types")
+def trust_type_index():
+    trust_types = get_trust_type_cards()
+    return render_template("trust_type_index.html", trust_types=trust_types)
+
+
+@app.route("/learning/trust-type/<slug>")
+def trust_type_detail(slug):
+    trust_type = get_trust_type_detail(slug)
+    if not trust_type:
+        return f"Trust type {slug} not found", 404
+    return render_template("trust_type_detail.html", trust_type=trust_type)
+
+
+@app.route("/forms")
+def forms_dashboard():
+    guides = get_form_guides()
+    categories = sorted({g["category"] for g in guides})
+    return render_template("forms_dashboard.html", guides=guides, categories=categories)
+
+
+@app.route("/forms/name/<form_name>")
+def form_guide_detail(form_name):
+    guide = get_form_guide_by_name(form_name)
+    if not guide:
+        return f"Form guide {form_name} not found", 404
+    return render_template("form_guide_detail.html", guide=guide)
+
+@app.route("/admin/learning/article/new", methods=["GET", "POST"])
+def learning_article_new():
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("learning_article_form.html", mode="new", error_message="Invalid or missing CSRF token.")
+
+        article_id = (request.form.get("article_id") or "").strip()
+        if not article_id:
+            return render_template("learning_article_form.html", mode="new", error_message="Article ID is required.")
+
+        payload = {
+            "article_id": article_id,
+            "title": request.form.get("title"),
+            "category": request.form.get("category"),
+            "subcategory": request.form.get("subcategory"),
+            "trust_type": request.form.get("trust_type"),
+            "summary": request.form.get("summary"),
+            "body": request.form.get("body"),
+            "difficulty_level": request.form.get("difficulty_level"),
+            "related_forms": request.form.get("related_forms"),
+            "related_reports": request.form.get("related_reports"),
+            "status": request.form.get("status") or "draft",
+        }
+        create_learning_article(payload)
+        return redirect(url_for("learning_article", article_id=article_id))
+
+    return render_template("learning_article_form.html", mode="new")
+
+
+@app.route("/admin/learning/article/<article_id>/edit", methods=["GET", "POST"])
+def learning_article_edit(article_id):
+    article = get_learning_article_by_id(article_id)
+    if not article:
+        return f"Learning article {article_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("learning_article_form.html", mode="edit", article=article, error_message="Invalid or missing CSRF token.")
+
+        payload = {
+            "title": request.form.get("title"),
+            "category": request.form.get("category"),
+            "subcategory": request.form.get("subcategory"),
+            "trust_type": request.form.get("trust_type"),
+            "summary": request.form.get("summary"),
+            "body": request.form.get("body"),
+            "difficulty_level": request.form.get("difficulty_level"),
+            "related_forms": request.form.get("related_forms"),
+            "related_reports": request.form.get("related_reports"),
+            "status": request.form.get("status") or "draft",
+        }
+        update_learning_article(article_id, payload)
+        return redirect(url_for("learning_article", article_id=article_id))
+
+    return render_template("learning_article_form.html", mode="edit", article=article)
+
+
+@app.route("/admin/forms/new", methods=["GET", "POST"])
+def form_guide_new():
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("form_guide_form.html", mode="new", error_message="Invalid or missing CSRF token.")
+
+        guide_id = (request.form.get("guide_id") or "").strip()
+        form_name = (request.form.get("form_name") or "").strip()
+        if not guide_id or not form_name:
+            return render_template("form_guide_form.html", mode="new", error_message="Guide ID and Form Name are required.")
+
+        payload = {
+            "guide_id": guide_id,
+            "form_name": form_name,
+            "category": request.form.get("category"),
+            "applies_to": request.form.get("applies_to"),
+            "summary": request.form.get("summary"),
+            "body": request.form.get("body"),
+            "related_trust_types": request.form.get("related_trust_types"),
+            "status": request.form.get("status") or "draft",
+        }
+        create_form_guide(payload)
+        return redirect(url_for("form_guide_detail", form_name=form_name))
+
+    return render_template("form_guide_form.html", mode="new")
+
+
+@app.route("/admin/forms/<form_name>/edit", methods=["GET", "POST"])
+def form_guide_edit(form_name):
+    guide = get_form_guide_by_name(form_name)
+    if not guide:
+        return f"Form guide {form_name} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("form_guide_form.html", mode="edit", guide=guide, error_message="Invalid or missing CSRF token.")
+
+        payload = {
+            "form_name": request.form.get("form_name"),
+            "category": request.form.get("category"),
+            "applies_to": request.form.get("applies_to"),
+            "summary": request.form.get("summary"),
+            "body": request.form.get("body"),
+            "related_trust_types": request.form.get("related_trust_types"),
+            "status": request.form.get("status") or "draft",
+        }
+        update_form_guide(guide["guide_id"], payload)
+        return redirect(url_for("form_guide_detail", form_name=payload["form_name"]))
+
+    return render_template("form_guide_form.html", mode="edit", guide=guide)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

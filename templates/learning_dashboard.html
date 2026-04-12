@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Learning Hub</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+    a { text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>Learning Hub</h1>
+<p><a href="/admin/learning/article/new">Create Learning Article</a></p>
+  <p>Foundational learning space for trust and estate management concepts.</p>
+
+  <p>
+    <a href="/learning/trust-types">Trust Types Explorer</a> |
+    <a href="/forms">Forms & Filings Center</a>
+  </p>
+
+  <h2>Categories</h2>
+  <ul>
+    {% for category in categories %}
+      <li><a href="/learning/category/{{ category }}">{{ category }}</a></li>
+    {% endfor %}
+  </ul>
+
+  <h2>Trust Types</h2>
+  <div class="grid">
+    {% for item in trust_types %}
+      <div class="card">
+        <h3><a href="/learning/trust-type/{{ item['slug'] }}">{{ item['label'] }}</a></h3>
+        <p>{{ item['summary'] }}</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2>Articles</h2>
+  <div class="grid">
+    {% for article in articles %}
+      <div class="card">
+        <h3><a href="/learning/article/{{ article['article_id'] }}">{{ article['title'] }}</a></h3>
+        <p><strong>{{ article['category'] }}</strong></p>
+        <p>{{ article['summary'] }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

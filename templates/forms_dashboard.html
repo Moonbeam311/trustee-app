@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Forms & Filings Center</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/learning">Back to Learning Hub</a></p>
+  <h1>Forms & Filings Center</h1>
+<p><a href="/admin/forms/new">Create Form Guide</a></p>
+
+  <h2>Categories</h2>
+  <ul>
+    {% for category in categories %}
+      <li>{{ category }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Guides</h2>
+  {% for guide in guides %}
+    <div class="card">
+      <h3><a href="/forms/name/{{ guide['form_name'] }}">{{ guide['form_name'] }}</a></h3>
+      <p><strong>{{ guide['category'] }}</strong></p>
+      <p>{{ guide['summary'] }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Learning Article Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 120px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/learning">Back to Learning Hub</a></p>
+  <h1>{% if mode == "edit" %}Edit Learning Article{% else %}New Learning Article{% endif %}</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    {% if mode == "new" %}
+      <label>Article ID</label>
+      <input type="text" name="article_id" value="{{ article['article_id'] if article else '' }}">
+    {% endif %}
+
+    <label>Title</label>
+    <input type="text" name="title" value="{{ article['title'] if article else '' }}">
+
+    <label>Category</label>
+    <input type="text" name="category" value="{{ article['category'] if article else '' }}">
+
+    <label>Subcategory</label>
+    <input type="text" name="subcategory" value="{{ article['subcategory'] if article else '' }}">
+
+    <label>Trust Type</label>
+    <input type="text" name="trust_type" value="{{ article['trust_type'] if article else '' }}">
+
+    <label>Difficulty Level</label>
+    <input type="text" name="difficulty_level" value="{{ article['difficulty_level'] if article else '' }}">
+
+    <label>Summary</label>
+    <textarea name="summary">{{ article['summary'] if article else '' }}</textarea>
+
+    <label>Body</label>
+    <textarea name="body">{{ article['body'] if article else '' }}</textarea>
+
+    <label>Related Forms</label>
+    <input type="text" name="related_forms" value="{{ article['related_forms'] if article else '' }}">
+
+    <label>Related Reports</label>
+    <input type="text" name="related_reports" value="{{ article['related_reports'] if article else '' }}">
+
+    <label>Status</label>
+    <select name="status">
+      <option value="draft" {% if article and article['status'] == 'draft' %}selected{% endif %}>draft</option>
+      <option value="published" {% if article and article['status'] == 'published' %}selected{% endif %}>published</option>
+    </select>
+
+    <p><button type="submit">Save Article</button></p>
+  </form>
+</body>
+</html>
