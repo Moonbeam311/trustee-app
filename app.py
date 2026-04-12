@@ -1931,6 +1931,12 @@ def report_center():
                 return redirect(url_for("fiduciary_report_pdf", trust_id=fiduciary_trust_id))
             return redirect(url_for("fiduciary_report_pdf"))
 
+        if report_type == "portfolio":
+            return redirect(url_for("portfolio_report_pdf"))
+
+        if report_type == "audit":
+            return redirect(url_for("audit_log_report_pdf"))
+
         if report_type == "k1":
             if not trust_id or not tax_year:
                 return render_template("report_center.html", trusts=trusts, error_message="Trust and Tax Year are required for K-1 Readiness.")
