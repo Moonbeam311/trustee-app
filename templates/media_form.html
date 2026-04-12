@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upload Media Evidence</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }
+    .box { border: 1px solid #d0d7de; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff; }
+    input, select, textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
+    button { padding: 10px 14px; }
+    .error { color: red; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+{% include '_nav.html' %}
+
+<div class="box">
+  <p><a href="/media">Back to Media Evidence</a></p>
+  <h1>Upload Media Evidence</h1>
+
+  {% if error_message %}
+    <p class="error">{{ error_message }}</p>
+  {% endif %}
+
+  <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Trust</label>
+    <select name="trust_id" required>
+      <option value="">Select Trust</option>
+      {% for trust in trusts %}
+      <option value="{{ trust['trust_id'] }}">{{ trust['trust_name'] }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Related Entity Type</label>
+    <input type="text" name="entity_type" placeholder="e.g. trust, property, instrument">
+
+    <label>Related Entity ID</label>
+    <input type="text" name="entity_id" placeholder="e.g. T001, P001, INSTR-001">
+
+    <label>Media Type</label>
+    <select name="media_type" required>
+      <option value="">Select Media Type</option>
+      <option value="document">document</option>
+      <option value="image">image</option>
+      <option value="audio">audio</option>
+      <option value="video">video</option>
+    </select>
+
+    <label>Category</label>
+    <input type="text" name="category" placeholder="e.g. Affidavit, Photo, Recording">
+
+    <label>Description</label>
+    <textarea name="description" rows="4" placeholder="Describe the evidence"></textarea>
+
+    <label>Choose File</label>
+    <input type="file" name="file" required>
+
+    <button type="submit">Upload Evidence</button>
+  </form>
+</div>
+
+</body>
+</html>
