@@ -677,6 +677,20 @@ def k1_new_beneficiary(trust_id):
     trust = get_trust_by_id(trust_id)
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "k1_beneficiary_form.html",
+                trust=trust,
+                error_message="Invalid or missing CSRF token."
+            )
+
+        if not validate_csrf_token():
+            return render_template(
+                "k1_beneficiary_form.html",
+                trust=trust,
+                error_message="Invalid or missing CSRF token."
+            )
+
         beneficiary_id = get_next_beneficiary_id()
 
         payload = {
@@ -713,6 +727,22 @@ def k1_new_distribution(trust_id):
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "k1_distribution_form.html",
+                trust=trust,
+                beneficiaries=beneficiaries,
+                error_message="Invalid or missing CSRF token."
+            )
+
+        if not validate_csrf_token():
+            return render_template(
+                "k1_distribution_form.html",
+                trust=trust,
+                beneficiaries=beneficiaries,
+                error_message="Invalid or missing CSRF token."
+            )
+
         distribution_id = get_next_distribution_id()
 
         payload = {
@@ -1197,6 +1227,22 @@ def k1_edit_beneficiary(trust_id, beneficiary_id):
     beneficiary = get_beneficiary_by_id_and_trust(beneficiary_id, trust_id)
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "k1_beneficiary_edit.html",
+                trust=trust,
+                beneficiary=beneficiary,
+                error_message="Invalid or missing CSRF token."
+            )
+
+        if not validate_csrf_token():
+            return render_template(
+                "k1_beneficiary_edit.html",
+                trust=trust,
+                beneficiary=beneficiary,
+                error_message="Invalid or missing CSRF token."
+            )
+
         update_beneficiary_record(beneficiary_id, {
             "full_name": request.form.get("full_name"),
             "tax_id": request.form.get("tax_id"),
@@ -1216,6 +1262,9 @@ def k1_edit_beneficiary(trust_id, beneficiary_id):
 
 @app.route("/k1/trust/<trust_id>/beneficiary/<beneficiary_id>/toggle", methods=["POST"])
 def k1_toggle_beneficiary(trust_id, beneficiary_id):
+    if not validate_csrf_token():
+        return redirect(url_for("k1_trust_view", trust_id=trust_id))
+
     toggle_beneficiary_active(beneficiary_id, trust_id)
     return redirect(url_for("k1_trust_view", trust_id=trust_id))
 
@@ -1227,6 +1276,24 @@ def k1_edit_distribution(trust_id, distribution_id):
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "k1_distribution_edit.html",
+                trust=trust,
+                distribution=distribution,
+                beneficiaries=beneficiaries,
+                error_message="Invalid or missing CSRF token."
+            )
+
+        if not validate_csrf_token():
+            return render_template(
+                "k1_distribution_edit.html",
+                trust=trust,
+                distribution=distribution,
+                beneficiaries=beneficiaries,
+                error_message="Invalid or missing CSRF token."
+            )
+
         update_distribution_record(distribution_id, {
             "beneficiary_id": request.form.get("beneficiary_id"),
             "tax_year": request.form.get("tax_year"),
