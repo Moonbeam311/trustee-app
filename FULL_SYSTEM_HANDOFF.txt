@@ -1,0 +1,161 @@
+FULL SYSTEM HANDOFF
+================================================================================
+
+1. LOCKED PLATFORM STATE
+--------------------------------------------------------------------------------
+The platform has now been extended beyond the original trust/report system into a multi-layer operating environment.
+
+Completed layers:
+- Core trust system
+- Security hardening + CSRF
+- PDF / report subsystem
+- Learning Hub
+- Learning content admin layer
+- Video Library
+- Workspace sandbox
+- Discussion system
+- Decision Engine
+- Execution Engine
+- Document Generator
+- Visualization + Analytics
+
+2. ROUTE INVENTORY SUMMARY
+--------------------------------------------------------------------------------
+Total routes detected in app.py: 123
+
+Core Reports:
+  Present (9): report_center, trust_summary_pdf, k1_readiness_pdf, fiduciary_report_pdf, ledger_report_pdf, form1041_report_pdf, instrument_detail_pdf, portfolio_report_pdf, audit_log_report_pdf
+  Missing (0): None
+
+Learning Hub:
+  Present (7): learning_dashboard, learning_category, learning_article, trust_type_index, trust_type_detail, forms_dashboard, form_guide_detail
+  Missing (0): None
+
+Learning Admin:
+  Present (4): learning_article_new, learning_article_edit, form_guide_new, form_guide_edit
+  Missing (0): None
+
+Video Library:
+  Present (6): video_dashboard, video_category, video_trust_type, video_detail, video_upload, video_edit
+  Missing (0): None
+
+Workspace:
+  Present (5): workspace_dashboard, workspace_new, workspace_detail, workspace_edit, workspace_note_new
+  Missing (0): None
+
+Discussions:
+  Present (6): discussion_dashboard, discussion_new, discussion_thread, discussion_reply, workspace_discussions, workspace_discussion_new
+  Missing (0): None
+
+Decision Engine:
+  Present (2): decision_dashboard, decision_run
+  Missing (0): None
+
+Execution Engine:
+  Present (6): execution_dashboard, execution_task_new, execution_task_detail, execution_task_status, workspace_tasks, workspace_task_new
+  Missing (0): None
+
+Document Generator:
+  Present (5): document_dashboard, document_generate, document_detail, workspace_documents, workspace_document_generate
+  Missing (0): None
+
+Visualization + Analytics:
+  Present (3): visualization_dashboard, trust_map_dashboard, analytics_dashboard
+  Missing (0): None
+
+3. TEMPLATE INVENTORY SUMMARY
+--------------------------------------------------------------------------------
+Total templates detected: 100
+
+Missing expected templates:
+- templates/report_center.html
+- templates/learning_dashboard.html
+- templates/learning_category.html
+- templates/learning_article.html
+- templates/trust_type_index.html
+- templates/trust_type_detail.html
+- templates/forms_dashboard.html
+- templates/form_guide_detail.html
+- templates/learning_article_form.html
+- templates/form_guide_form.html
+- templates/video_dashboard.html
+- templates/video_category.html
+- templates/video_trust_type.html
+- templates/video_detail.html
+- templates/video_upload.html
+- templates/workspace_dashboard.html
+- templates/workspace_form.html
+- templates/workspace_detail.html
+- templates/workspace_note_form.html
+- templates/discussion_dashboard.html
+- templates/discussion_form.html
+- templates/discussion_thread.html
+- templates/discussion_reply_form.html
+- templates/workspace_discussions.html
+- templates/decision_dashboard.html
+- templates/decision_result.html
+- templates/execution_dashboard.html
+- templates/execution_task_form.html
+- templates/execution_task_detail.html
+- templates/workspace_tasks.html
+- templates/document_dashboard.html
+- templates/document_generate_form.html
+- templates/document_detail.html
+- templates/workspace_documents.html
+- templates/visualization_dashboard.html
+- templates/trust_map_dashboard.html
+- templates/analytics_dashboard.html
+
+4. KEY USER-FACING MODULES
+--------------------------------------------------------------------------------
+/reports
+/learning
+/forms
+/videos
+/workspaces
+/discussions
+/decision
+/execution
+/documents
+/visualization
+
+5. PHASE STATUS
+--------------------------------------------------------------------------------
+Phase 1  — Learning Hub: COMPLETE
+Phase 1.5 — Learning/Admin Content Layer: COMPLETE
+Phase 2  — Video Library: COMPLETE
+Phase 3  — Workspace Sandbox: COMPLETE
+Phase 4  — Discussion System: COMPLETE
+Phase 5  — Decision Engine: COMPLETE
+Phase 6  — Execution Engine: COMPLETE
+Phase 7  — Document Generator: COMPLETE
+Phase 8  — Visualization + Analytics: COMPLETE
+
+6. NEXT RECOMMENDED PRIORITY
+--------------------------------------------------------------------------------
+Do NOT add another major subsystem yet.
+The correct next step is browser QA and stabilization, in this order:
+1. Verify route loading for each top-level module.
+2. Verify create/edit flows for admin content pages.
+3. Verify workspace → discussion → decision → execution → document flow.
+4. Verify report center and PDF links still work after platform expansion.
+5. Verify role access boundaries for Viewer, Trustee, and Admin.
+
+7. RISK / CLEANUP WATCHLIST
+--------------------------------------------------------------------------------
+- Template drift from repeated automated patching
+- Duplicate links inserted into shared templates
+- Route collisions or missing nav consistency
+- Database file ambiguity if multiple db files exist
+- Unverified browser behavior for newly added forms
+
+8. RECOMMENDED NEXT THREAD OPENING
+--------------------------------------------------------------------------------
+Continue from FULL_SYSTEM_HANDOFF.txt in ~/Desktop/trustee-app-clean on main.
+Do not add new major features yet.
+Start with browser QA and stabilization across reports, learning, videos, workspaces, discussions, decision engine, execution engine, documents, and visualization.
+
+9. BOTTOM LINE
+--------------------------------------------------------------------------------
+The platform is now a true multi-layer trust operating system rather than a single-purpose trustee app.
+The build stack is complete enough that stability, usability, and real flow validation are now more important than new scope.
