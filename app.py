@@ -119,7 +119,7 @@ from database.db import (
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story
+from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
@@ -1844,6 +1844,26 @@ def k1_readiness_pdf(trust_id, tax_year):
         distributions=distributions,
     )
     return build_pdf_response(f"k1_readiness_{trust_id}_{tax_year}.pdf", story)
+
+@app.route("/reports/fiduciaries.pdf")
+def fiduciary_report_pdf():
+    trust_id = request.args.get("trust_id")
+    trusts = get_all_trusts()
+    fiduciaries = get_all_fiduciaries()
+    story = fiduciary_report_story(trusts=trusts, fiduciaries=fiduciaries, selected_trust_id=trust_id)
+    suffix = f"_{trust_id}" if trust_id else "_all"
+    return build_pdf_response(f"fiduciary_report{suffix}.pdf", story)
+
+
+@app.route("/reports/ledger/trust/<trust_id>.pdf")
+def ledger_report_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    entries = get_ledger_entries_by_trust_id(trust_id)
+    story = ledger_report_story(trust=trust, entries=entries)
+    return build_pdf_response(f"ledger_report_{trust_id}.pdf", story)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

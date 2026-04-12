@@ -286,3 +286,91 @@ def k1_readiness_story(trust, tax_year, summary, totals, beneficiary_totals, ben
         story.append(_table(d_rows, col_widths=[1.1 * inch, 2.0 * inch, 1.1 * inch, 1.0 * inch, 1.6 * inch]))
 
     return story
+
+def fiduciary_report_story(trusts, fiduciaries, selected_trust_id=None):
+    styles = _styles()
+    story = []
+
+    trust_lookup = {str(t.get("trust_id")): t for t in (trusts or [])}
+    filtered = fiduciaries or []
+    subtitle = "All Fiduciaries"
+
+    if selected_trust_id:
+        filtered = [f for f in filtered if str(f.get("trust_id")) == str(selected_trust_id)]
+        trust_name = _safe((trust_lookup.get(str(selected_trust_id)) or {}).get("trust_name")) or str(selected_trust_id)
+        subtitle = f"Trust-Specific Fiduciaries: {trust_name}"
+
+    story.append(Paragraph("Fiduciary Report", styles["AppTitle"]))
+    story.append(Paragraph(subtitle, styles["Meta"]))
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Summary", styles["SectionHeader"]))
+    summary_rows = [
+        ["Metric", "Value"],
+        ["Selected Trust", _safe(selected_trust_id) if selected_trust_id else "All Trusts"],
+        ["Fiduciary Count", str(len(filtered))],
+    ]
+    story.append(_table(summary_rows, col_widths=[2.8 * inch, 3.2 * inch]))
+    story.append(Spacer(1, 10))
+
+    rows = [["Fiduciary ID", "Full Name", "Role", "Trust", "Status", "Effective"]]
+    for f in filtered[:100]:
+        trust_id = _safe(f.get("trust_id"))
+        trust_name = _safe((trust_lookup.get(trust_id) or {}).get("trust_name")) or trust_id
+        rows.append([
+            _safe(f.get("fiduciary_id")),
+            _safe(f.get("full_name")),
+            _safe(f.get("role_title")),
+            trust_name,
+            _safe(f.get("status")),
+            _safe(f.get("effective_date") or f.get("appointment_date")),
+        ])
+    story.append(Paragraph("Fiduciary Records", styles["SectionHeader"]))
+    story.append(_table(rows, col_widths=[0.9 * inch, 1.8 * inch, 1.3 * inch, 1.7 * inch, 0.9 * inch, 1.0 * inch]))
+
+    return story
+
+
+def ledger_report_story(trust, entries):
+    styles = _styles()
+    story = []
+
+    trust_name = _safe((trust or {}).get("trust_name")) or "Ledger Report"
+    trust_id = _safe((trust or {}).get("trust_id"))
+
+    story.append(Paragraph("Ledger Report", styles["AppTitle"]))
+    story.append(Paragraph(f"Trust: {trust_name} &nbsp;&nbsp;&nbsp; Trust ID: {trust_id}", styles["Meta"]))
+    story.append(Spacer(1, 8))
+
+    total_amount = 0.0
+    entry_count = len(entries or [])
+    for e in entries or []:
+        try:
+            total_amount += float(e.get("amount") or 0)
+        except Exception:
+            pass
+
+    summary_rows = [
+        ["Metric", "Value"],
+        ["Entry Count", str(entry_count)],
+        ["Total Amount", _money(total_amount)],
+    ]
+    story.append(Paragraph("Summary", styles["SectionHeader"]))
+    story.append(_table(summary_rows, col_widths=[2.8 * inch, 2.0 * inch]))
+    story.append(Spacer(1, 10))
+
+    rows = [["Entry ID", "Type", "Category", "Date", "Amount", "Description"]]
+    for e in (entries or [])[:150]:
+        rows.append([
+            _safe(e.get("entry_id")),
+            _safe(e.get("entry_type")),
+            _safe(e.get("entry_category")),
+            _safe(e.get("entry_date")),
+            _money(e.get("amount")),
+            _safe(e.get("description")),
+        ])
+
+    story.append(Paragraph("Ledger Entries", styles["SectionHeader"]))
+    story.append(_table(rows, col_widths=[0.8 * inch, 0.9 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch, 2.3 * inch]))
+
+    return story
