@@ -19,7 +19,38 @@
 <body>
 {% include '_nav.html' %}
 
-<h1>Admin Index</h1>\n<p><a href="/reports/portfolio.pdf" target="_blank">Download Portfolio PDF</a> &nbsp;|&nbsp; <a href="/reports/audit.pdf" target="_blank">Download Audit Log PDF</a> &nbsp;|&nbsp; <a href="/reports">Open Report Center</a></p>\n
+<h1>Admin Index</h1>
+<section style="margin: 20px 0; padding: 16px; border: 1px solid #d1d5db; border-radius: 10px; background: #f9fafb;">
+  <h2 style="margin-top: 0;">Report Launch Area</h2>
+  <p style="color: #4b5563; margin-top: 0;">Quick access to system-wide PDF exports and the full report center.</p>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+    <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+      <strong>Portfolio PDF</strong>
+      <p style="margin: 6px 0 10px 0; color: #6b7280; font-size: 13px;">Aggregate portfolio-level export across trust records.</p>
+      <a href="/reports/portfolio.pdf" target="_blank">Open Portfolio PDF</a>
+    </div>
+
+    <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+      <strong>Audit Log PDF</strong>
+      <p style="margin: 6px 0 10px 0; color: #6b7280; font-size: 13px;">System-wide audit export for review and accountability.</p>
+      <a href="/reports/audit.pdf" target="_blank">Open Audit PDF</a>
+    </div>
+
+    <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+      <strong>Fiduciary PDF</strong>
+      <p style="margin: 6px 0 10px 0; color: #6b7280; font-size: 13px;">Export fiduciary records across all trusts or use the Report Center for filters.</p>
+      <a href="/reports/fiduciaries.pdf" target="_blank">Open Fiduciary PDF</a>
+    </div>
+
+    <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+      <strong>Report Center</strong>
+      <p style="margin: 6px 0 10px 0; color: #6b7280; font-size: 13px;">Central launch point for trust, tax, instrument, and operational reports.</p>
+      <a href="/reports">Open Report Center</a>
+    </div>
+  </div>
+</section>
+\n<p><a href="/reports/portfolio.pdf" target="_blank">Download Portfolio PDF</a> &nbsp;|&nbsp; <a href="/reports/audit.pdf" target="_blank">Download Audit Log PDF</a> &nbsp;|&nbsp; <a href="/reports">Open Report Center</a></p>\n
 <p><a href="/reports">Open Report Center</a></p>
 
 <p><a href="{{ url_for('users_dashboard') }}">Manage App Users</a></p>
