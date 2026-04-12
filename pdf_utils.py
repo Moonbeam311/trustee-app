@@ -374,3 +374,111 @@ def ledger_report_story(trust, entries):
     story.append(_table(rows, col_widths=[0.8 * inch, 0.9 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch, 2.3 * inch]))
 
     return story
+
+def form1041_report_story(trust, tax_year, tax_logic, shares, evidence):
+    styles = _styles()
+    story = []
+
+    trust_name = _safe((trust or {}).get("trust_name")) or "Form 1041 Report"
+    trust_id = _safe((trust or {}).get("trust_id"))
+
+    story.append(Paragraph("Form 1041 Report", styles["AppTitle"]))
+    story.append(Paragraph(f"Trust: {trust_name} &nbsp;&nbsp;&nbsp; Trust ID: {trust_id} &nbsp;&nbsp;&nbsp; Tax Year: {_safe(tax_year)}", styles["Meta"]))
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Tax Logic", styles["SectionHeader"]))
+    rows = [["Field", "Value"]]
+    if isinstance(tax_logic, dict):
+        for k, v in tax_logic.items():
+            rows.append([_safe(k).replace("_", " ").title(), _safe(v)])
+    if len(rows) == 1:
+        rows.append(["Tax Logic", "No tax logic available"])
+    story.append(_table(rows, col_widths=[3.0 * inch, 3.5 * inch]))
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Shares / Allocation", styles["SectionHeader"]))
+    share_rows = [["Field", "Value"]]
+    if isinstance(shares, dict):
+        for k, v in shares.items():
+            share_rows.append([_safe(k).replace("_", " ").title(), _safe(v)])
+    elif isinstance(shares, list):
+        share_rows = [["Name", "Value"]]
+        for item in shares[:40]:
+            if isinstance(item, dict):
+                keys = list(item.keys())
+                if len(keys) >= 2:
+                    share_rows.append([_safe(item.get(keys[0])), _safe(item.get(keys[1]))])
+                else:
+                    share_rows.append([_safe(item), ""])
+            else:
+                share_rows.append([_safe(item), ""])
+    if len(share_rows) == 1:
+        share_rows.append(["Shares", "No share data available"])
+    story.append(_table(share_rows, col_widths=[3.0 * inch, 3.0 * inch]))
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Evidence", styles["SectionHeader"]))
+    evidence_rows = [["Reference", "Detail"]]
+    if isinstance(evidence, list):
+        for item in evidence[:50]:
+            if isinstance(item, dict):
+                keys = list(item.keys())
+                if len(keys) >= 2:
+                    evidence_rows.append([_safe(item.get(keys[0])), _safe(item.get(keys[1]))])
+                elif len(keys) == 1:
+                    evidence_rows.append([_safe(keys[0]), _safe(item.get(keys[0]))])
+                else:
+                    evidence_rows.append([_safe(item), ""])
+            else:
+                evidence_rows.append([_safe(item), ""])
+    elif isinstance(evidence, dict):
+        for k, v in evidence.items():
+            evidence_rows.append([_safe(k), _safe(v)])
+    if len(evidence_rows) == 1:
+        evidence_rows.append(["Evidence", "No evidence data available"])
+    story.append(_table(evidence_rows, col_widths=[2.2 * inch, 4.0 * inch]))
+
+    return story
+
+
+def instrument_detail_story(instrument, trust=None, history=None):
+    styles = _styles()
+    story = []
+
+    instrument_number = _safe((instrument or {}).get("instrument_number")) or _safe((instrument or {}).get("instrument_id")) or "Instrument Detail"
+    trust_name = _safe((trust or {}).get("trust_name")) if trust else _safe((instrument or {}).get("trust_id"))
+
+    story.append(Paragraph("Instrument Detail Report", styles["AppTitle"]))
+    story.append(Paragraph(f"Instrument: {instrument_number} &nbsp;&nbsp;&nbsp; Trust: {trust_name}", styles["Meta"]))
+    story.append(Spacer(1, 8))
+
+    rows = [["Field", "Value"]]
+    if isinstance(instrument, dict):
+        ordered_keys = [
+            "instrument_id", "trust_id", "instrument_number", "instrument_type",
+            "issue_date", "maturity_date", "face_value", "backing_type",
+            "backing_reference", "status", "affidavit_reference",
+            "custody_reference", "notes"
+        ]
+        for k in ordered_keys:
+            if k in instrument:
+                value = _money(instrument.get(k)) if k == "face_value" else _safe(instrument.get(k))
+                rows.append([_safe(k).replace("_", " ").title(), value])
+    story.append(Paragraph("Instrument Fields", styles["SectionHeader"]))
+    story.append(_table(rows, col_widths=[2.2 * inch, 4.0 * inch]))
+    story.append(Spacer(1, 10))
+
+    if history:
+        story.append(Paragraph("Recent History", styles["SectionHeader"]))
+        hist_rows = [["Action", "Detail"]]
+        for h in history[:40]:
+            if isinstance(h, dict):
+                hist_rows.append([
+                    _safe(h.get("action") or h.get("change_type") or h.get("event_type")),
+                    _safe(h.get("details") or h.get("description") or h.get("notes"))
+                ])
+            else:
+                hist_rows.append([_safe(h), ""])
+        story.append(_table(hist_rows, col_widths=[1.5 * inch, 4.7 * inch]))
+
+    return story

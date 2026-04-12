@@ -119,7 +119,7 @@ from database.db import (
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story
+from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
@@ -1864,6 +1864,42 @@ def ledger_report_pdf(trust_id):
     entries = get_ledger_entries_by_trust_id(trust_id)
     story = ledger_report_story(trust=trust, entries=entries)
     return build_pdf_response(f"ledger_report_{trust_id}.pdf", story)
+
+@app.route("/reports/1041/trust/<trust_id>/<tax_year>.pdf")
+def form1041_report_pdf(trust_id, tax_year):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    tax_logic = get_1041_tax_logic(trust_id, tax_year)
+    shares = get_1041_shares(trust_id, tax_year)
+    evidence = get_1041_evidence(trust_id, tax_year)
+
+    story = form1041_report_story(
+        trust=trust,
+        tax_year=tax_year,
+        tax_logic=tax_logic,
+        shares=shares,
+        evidence=evidence,
+    )
+    return build_pdf_response(f"form1041_report_{trust_id}_{tax_year}.pdf", story)
+
+
+@app.route("/reports/instrument/<instrument_id>.pdf")
+def instrument_detail_pdf(instrument_id):
+    instrument = get_instrument_by_id(instrument_id)
+    if not instrument:
+        return f"Instrument {instrument_id} not found", 404
+
+    trust = get_trust_by_id(instrument.get("trust_id")) if instrument.get("trust_id") else None
+    history = get_audit_log_by_entity("instrument", instrument_id, 25)
+
+    story = instrument_detail_story(
+        instrument=instrument,
+        trust=trust,
+        history=history,
+    )
+    return build_pdf_response(f"instrument_detail_{instrument_id}.pdf", story)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

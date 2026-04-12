@@ -11,7 +11,7 @@
 </head>
 <body>
 {% include '_nav.html' %}
-<h1>Form 1041 Report View</h1>
+<h1>Form 1041 Report View</h1>\n<p><a href="/reports/1041/trust/{{ trust["trust_id"] }}/{{ tax_year }}.pdf" target="_blank">Download 1041 Report PDF</a></p>\n
 
 <div class="box">
   <p><strong>Trust:</strong> {{ trust["trust_name"] }} ({{ trust["trust_id"] }})</p>
