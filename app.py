@@ -119,7 +119,7 @@ from database.db import (
 )
 from pathlib import Path
 from werkzeug.utils import secure_filename
-from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story
+from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story, portfolio_report_story, audit_log_report_story
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
@@ -1949,6 +1949,27 @@ def report_center():
         return render_template("report_center.html", trusts=trusts, error_message="Please select a valid report type.")
 
     return render_template("report_center.html", trusts=trusts)
+
+@app.route("/reports/portfolio.pdf")
+def portfolio_report_pdf():
+    portfolio = get_portfolio_snapshot()
+    totals = get_portfolio_totals()
+    story = portfolio_report_story(portfolio=portfolio, totals=totals)
+    return build_pdf_response("portfolio_report.pdf", story)
+
+
+@app.route("/reports/audit.pdf")
+def audit_log_report_pdf():
+    entity_type = request.args.get("entity_type")
+    entity_id = request.args.get("entity_id")
+
+    if entity_type or entity_id:
+        logs = get_audit_log_by_entity(entity_type=entity_type, entity_id=entity_id, limit=200)
+    else:
+        logs = get_audit_log(200)
+
+    story = audit_log_report_story(logs=logs, entity_type=entity_type, entity_id=entity_id)
+    return build_pdf_response("audit_log_report.pdf", story)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

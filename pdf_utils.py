@@ -482,3 +482,88 @@ def instrument_detail_story(instrument, trust=None, history=None):
         story.append(_table(hist_rows, col_widths=[1.5 * inch, 4.7 * inch]))
 
     return story
+
+def portfolio_report_story(portfolio, totals):
+    styles = _styles()
+    story = []
+
+    story.append(Paragraph("Portfolio Report", styles["AppTitle"]))
+    story.append(Paragraph("Aggregate trust portfolio view", styles["Meta"]))
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Totals", styles["SectionHeader"]))
+    total_rows = [["Metric", "Value"]]
+    if isinstance(totals, dict):
+        for k, v in totals.items():
+            label = _safe(k).replace("_", " ").title()
+            value = _money(v) if any(x in _safe(k).lower() for x in ["amount", "value", "total"]) else _safe(v)
+            total_rows.append([label, value])
+    if len(total_rows) == 1:
+        total_rows.append(["Totals", "No totals available"])
+    story.append(_table(total_rows, col_widths=[3.0 * inch, 2.3 * inch]))
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Portfolio Records", styles["SectionHeader"]))
+    rows = [["Trust ID", "Trust Name", "Category", "Status", "Amount/Value"]]
+
+    if isinstance(portfolio, list):
+        for item in portfolio[:150]:
+            if isinstance(item, dict):
+                rows.append([
+                    _safe(item.get("trust_id")),
+                    _safe(item.get("trust_name")),
+                    _safe(item.get("category") or item.get("asset_class") or item.get("type")),
+                    _safe(item.get("status")),
+                    _money(item.get("amount") or item.get("value") or item.get("total")),
+                ])
+            else:
+                rows.append([_safe(item), "", "", "", ""])
+
+    if len(rows) == 1:
+        rows.append(["No portfolio records", "", "", "", ""])
+
+    story.append(_table(rows, col_widths=[1.0 * inch, 2.1 * inch, 1.2 * inch, 1.0 * inch, 1.2 * inch]))
+    return story
+
+
+def audit_log_report_story(logs, entity_type=None, entity_id=None):
+    styles = _styles()
+    story = []
+
+    subtitle = "System-wide audit log"
+    if entity_type or entity_id:
+        subtitle = f"Filtered audit log — Entity Type: {_safe(entity_type)}  Entity ID: {_safe(entity_id)}"
+
+    story.append(Paragraph("Audit Log Report", styles["AppTitle"]))
+    story.append(Paragraph(subtitle, styles["Meta"]))
+    story.append(Spacer(1, 8))
+
+    summary_rows = [
+        ["Metric", "Value"],
+        ["Entity Type Filter", _safe(entity_type) or "None"],
+        ["Entity ID Filter", _safe(entity_id) or "None"],
+        ["Log Count", str(len(logs or []))],
+    ]
+    story.append(Paragraph("Summary", styles["SectionHeader"]))
+    story.append(_table(summary_rows, col_widths=[2.4 * inch, 3.2 * inch]))
+    story.append(Spacer(1, 10))
+
+    rows = [["When", "Entity Type", "Entity ID", "Action", "Details"]]
+    for log in (logs or [])[:200]:
+        if isinstance(log, dict):
+            rows.append([
+                _safe(log.get("created_at") or log.get("timestamp") or log.get("logged_at")),
+                _safe(log.get("entity_type")),
+                _safe(log.get("entity_id")),
+                _safe(log.get("action") or log.get("change_type") or log.get("event_type")),
+                _safe(log.get("details") or log.get("description") or log.get("notes")),
+            ])
+        else:
+            rows.append(["", "", "", "", _safe(log)])
+
+    if len(rows) == 1:
+        rows.append(["", "", "", "", "No audit log records found"])
+
+    story.append(Paragraph("Audit Entries", styles["SectionHeader"]))
+    story.append(_table(rows, col_widths=[1.2 * inch, 1.0 * inch, 0.9 * inch, 1.0 * inch, 2.4 * inch]))
+    return story
