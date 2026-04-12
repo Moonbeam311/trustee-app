@@ -66,7 +66,7 @@
 <body>
   <div class="wrap">
     <h1>Report Center</h1>
-    <p class="sub">Generate operational, fiduciary, tax, and instrument PDF reports from one place. Most reports open directly in a new browser tab.</p>
+    <p class="sub">Generate operational, fiduciary, tax, and instrument PDF reports from one place. Most reports open directly in a new browser tab. Most reports open directly in a new browser tab.</p>
 
     {% if error_message %}
       <div class="error">{{ error_message }}</div>
@@ -119,13 +119,13 @@
           <div id="tax_year_block">
             <label for="tax_year">Tax Year</label>
             <input type="text" name="tax_year" id="tax_year" placeholder="2025" value="{{ prefill.tax_year if prefill is defined and prefill.tax_year is defined else prefill.get('tax_year', '') if prefill else '' }}">
-            <div class="hint">Required for K-1 and 1041 reports. 2025 is the suggested default, but you may enter any valid tax year.</div>
+            <div class="hint">Required for K-1 and 1041 reports. 2025 is the suggested default, but you may enter any valid tax year. 2025 is the suggested default, but you may enter any valid tax year.</div>
           </div>
 
           <div id="instrument_block">
             <label for="instrument_id">Instrument ID</label>
             <input type="text" name="instrument_id" id="instrument_id" placeholder="INSTR-001" value="{{ prefill.instrument_id if prefill is defined and prefill.instrument_id is defined else prefill.get('instrument_id', '') if prefill else '' }}">
-            <div class="hint">Required for Instrument Detail PDF. Enter the exact instrument ID used in the system, such as INSTR-001.</div>
+            <div class="hint">Required for Instrument Detail PDF. Enter the exact instrument ID used in the system, such as INSTR-001. Enter the exact instrument ID used in the system, such as INSTR-001.</div>
           </div>
 
           <div id="fiduciary_block">
@@ -136,7 +136,7 @@
                 <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
               {% endfor %}
             </select>
-            <div class="hint">Optional filter for Fiduciary Report PDF. Leave blank to generate a system-wide fiduciary export.</div>
+            <div class="hint">Optional filter for Fiduciary Report PDF. Leave blank to generate a system-wide fiduciary export. Leave blank to generate a system-wide fiduciary export.</div>
           </div>
 
           <div id="audit_block" class="hidden">
