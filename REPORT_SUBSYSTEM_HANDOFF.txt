@@ -1,0 +1,84 @@
+REPORT SUBSYSTEM HANDOFF
+================================================================================
+
+1. CURRENT PURPOSE
+--------------------------------------------------------------------------------
+This file summarizes the current PDF/report subsystem state after the stabilization pass.
+Focus: route inventory, template entry points, duplication/staleness checks, and next cleanup targets.
+
+2. REPORT ROUTES FOUND
+--------------------------------------------------------------------------------
+- /reports/k1/<trust_id>    [GET]    -> k1_report_view
+- /reports/1041/<trust_id>    [GET]    -> form1041_report_view
+- /reports/k1/<trust_id>/print    [GET]    -> k1_report_print
+- /reports/1041/<trust_id>/print    [GET]    -> form1041_report_print
+- /reports/trust/<trust_id>/summary.pdf    [GET]    -> trust_summary_pdf
+- /reports/k1/trust/<trust_id>/<tax_year>.pdf    [GET]    -> k1_readiness_pdf
+- /reports/fiduciaries.pdf    [GET]    -> fiduciary_report_pdf
+- /reports/ledger/trust/<trust_id>.pdf    [GET]    -> ledger_report_pdf
+- /reports/1041/trust/<trust_id>/<tax_year>.pdf    [GET]    -> form1041_report_pdf
+- /reports/instrument/<instrument_id>.pdf    [GET]    -> instrument_detail_pdf
+- /reports    ["GET", "POST"]    -> report_center
+- /reports/portfolio.pdf    [GET]    -> portfolio_report_pdf
+- /reports/audit.pdf    [GET]    -> audit_log_report_pdf
+
+3. REPORT CENTER
+--------------------------------------------------------------------------------
+- report_center template exists: YES
+
+4. TEMPLATE REPORT ENTRY POINTS
+--------------------------------------------------------------------------------
+- templates\admin_index.html
+    * /reports/portfolio.pdf
+    * /reports/audit.pdf
+    * /reports/fiduciaries.pdf
+    * /reports
+    * /reports/portfolio.pdf
+    * /reports/audit.pdf
+    * /reports/fiduciaries.pdf
+    * /reports
+    * /reports
+- templates\audit_dashboard.html
+    * /reports/audit.pdf{% if entity_type or entity_id %}?entity_type={{ entity_type }}&entity_id={{ entity_id }}{% endif %}
+- templates\fiduciary_dashboard.html
+    * /reports/fiduciaries.pdf
+- templates\form1041_report_view.html
+    * /reports/1041/trust/{{ trust[
+- templates\instrument_detail.html
+    * /reports/instrument/{{ instrument[
+- templates\k1_readiness.html
+    * /reports/k1/trust/{{ trust[
+- templates\portfolio_dashboard.html
+    * /reports/portfolio.pdf
+- templates\report_center.html
+    * /reports/portfolio.pdf
+    * /reports/audit.pdf
+    * /reports/fiduciaries.pdf
+    * /reports?report_type=trust_summary
+    * /reports?report_type=k1
+    * /reports?report_type=form1041
+
+5. DUPLICATE REPORT LINKS
+--------------------------------------------------------------------------------
+- templates\admin_index.html
+    * 2x  /reports/portfolio.pdf
+    * 2x  /reports/audit.pdf
+    * 2x  /reports/fiduciaries.pdf
+    * 3x  /reports
+
+6. HARDCODED TAX-YEAR REPORT LINKS
+--------------------------------------------------------------------------------
+- No hardcoded tax-year PDF links detected in templates.
+
+7. NEXT BEST RECOMMENDED ACTIONS
+--------------------------------------------------------------------------------
+A. Open REPORT_SUBSYSTEM_HANDOFF.txt and review route inventory.
+B. If duplicate links are listed, remove redundant links from the affected templates.
+C. If hardcoded tax-year links remain, replace them with Report Center launch links.
+D. Do one browser pass later to test each report route from actual UI entry points.
+E. After verification, create a final PDF/report subsystem handoff summary for the next thread.
+
+8. BOTTOM LINE
+--------------------------------------------------------------------------------
+The report subsystem now appears feature-rich enough that stabilization and UI consistency matter more than adding new report types.
+This handoff file should be treated as the control document for the next report cleanup or QA pass.
