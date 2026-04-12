@@ -5,97 +5,236 @@
   <title>Report Center</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
-    .wrap { max-width: 820px; margin: 0 auto; }
-    h1 { margin-bottom: 8px; }
-    p.sub { color: #4b5563; margin-top: 0; margin-bottom: 24px; }
-    form { border: 1px solid #d1d5db; padding: 18px; border-radius: 10px; background: #f9fafb; }
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; background: #ffffff; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { margin-bottom: 6px; }
+    p.sub { color: #4b5563; margin-top: 0; margin-bottom: 20px; }
+    .panel { border: 1px solid #d1d5db; border-radius: 12px; background: #f9fafb; padding: 20px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .full { grid-column: 1 / -1; }
     label { display: block; font-weight: bold; margin-bottom: 6px; }
-    input, select, button { width: 100%; padding: 10px; font-size: 14px; box-sizing: border-box; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+    }
+    button {
+      background: #111827;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover { background: #1f2937; }
     .hint { font-size: 12px; color: #6b7280; margin-top: 4px; }
-    .links { margin-top: 18px; }
-    .links a { margin-right: 14px; }
     .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
-    .note { margin-top: 18px; color: #374151; font-size: 13px; }
+    .section { margin-top: 24px; }
+    .section h2 { margin-bottom: 8px; font-size: 18px; }
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+      background: white;
+    }
+    .card h3 { margin: 0 0 6px 0; font-size: 15px; }
+    .card p { margin: 0; color: #4b5563; font-size: 13px; line-height: 1.4; }
+    .quick-links { margin-top: 12px; }
+    .quick-links a {
+      display: inline-block;
+      margin-right: 14px;
+      margin-bottom: 8px;
+    }
+    .hidden { display: none; }
+    .meta-note {
+      margin-top: 14px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      font-size: 13px;
+    }
+    @media (max-width: 720px) {
+      .grid, .cards { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <h1>Report Center</h1>
-    <p class="sub">Generate trust, financial, fiduciary, and instrument PDF reports from one place.</p>\n<div class="links"><a href="/reports/portfolio.pdf" target="_blank">Portfolio PDF</a> <a href="/reports/audit.pdf" target="_blank">Audit PDF</a></div>\n
+    <p class="sub">Generate operational, fiduciary, tax, and instrument PDF reports from one place.</p>
 
     {% if error_message %}
       <div class="error">{{ error_message }}</div>
     {% endif %}
 
-    <form method="post">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <div class="panel">
+      <form method="post">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-      <div class="grid">
-        <div class="full">
-          <label for="report_type">Report Type</label>
-          <select name="report_type" id="report_type" required>
-            <option value="">-- Select Report --</option>
-            <option value="trust_summary">Trust Summary PDF</option>
-            <option value="ledger">Ledger PDF</option>
-            <option value="fiduciary">Fiduciary Report PDF</option>
-            <option value="k1">K-1 Readiness PDF</option>
-            <option value="form1041">1041 Report PDF</option>
-            <option value="instrument">Instrument Detail PDF</option>
-          </select>
+        <div class="grid">
+          <div class="full">
+            <label for="report_type">Report Type</label>
+            <select name="report_type" id="report_type" required onchange="toggleFields()">
+              <option value="">-- Select Report --</option>
+
+              <optgroup label="Trust Reports">
+                <option value="trust_summary">Trust Summary PDF</option>
+                <option value="ledger">Ledger PDF</option>
+                <option value="portfolio">Portfolio PDF</option>
+              </optgroup>
+
+              <optgroup label="Fiduciary & Audit Reports">
+                <option value="fiduciary">Fiduciary Report PDF</option>
+                <option value="audit">Audit Log PDF</option>
+              </optgroup>
+
+              <optgroup label="Tax Reports">
+                <option value="k1">K-1 Readiness PDF</option>
+                <option value="form1041">1041 Report PDF</option>
+              </optgroup>
+
+              <optgroup label="Instrument Reports">
+                <option value="instrument">Instrument Detail PDF</option>
+              </optgroup>
+            </select>
+            <div class="hint">Choose the report first. The required fields below will adjust automatically.</div>
+          </div>
+
+          <div id="trust_block">
+            <label for="trust_id">Trust</label>
+            <select name="trust_id" id="trust_id">
+              <option value="">-- Select Trust --</option>
+              {% for trust in trusts %}
+                <option value="{{ trust['trust_id'] }}">{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
+              {% endfor %}
+            </select>
+            <div class="hint">Required for Trust Summary, Ledger, K-1, and 1041 reports.</div>
+          </div>
+
+          <div id="tax_year_block">
+            <label for="tax_year">Tax Year</label>
+            <input type="text" name="tax_year" id="tax_year" placeholder="2025">
+            <div class="hint">Required for K-1 and 1041 reports.</div>
+          </div>
+
+          <div id="instrument_block">
+            <label for="instrument_id">Instrument ID</label>
+            <input type="text" name="instrument_id" id="instrument_id" placeholder="INSTR-001">
+            <div class="hint">Required for Instrument Detail PDF.</div>
+          </div>
+
+          <div id="fiduciary_block">
+            <label for="fiduciary_trust_id">Fiduciary Trust Filter</label>
+            <select name="fiduciary_trust_id" id="fiduciary_trust_id">
+              <option value="">All Trusts</option>
+              {% for trust in trusts %}
+                <option value="{{ trust['trust_id'] }}">{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
+              {% endfor %}
+            </select>
+            <div class="hint">Optional filter for Fiduciary Report PDF.</div>
+          </div>
+
+          <div id="audit_block" class="hidden">
+            <label for="audit_note">Audit Filter Note</label>
+            <input type="text" id="audit_note" value="Use the Audit dashboard for filtered entity-specific audit exports." readonly>
+            <div class="hint">General Audit PDF can launch directly from here. Filtered audit exports can still come from the Audit dashboard.</div>
+          </div>
+
+          <div class="full">
+            <button type="submit">Generate Report</button>
+          </div>
         </div>
 
-        <div>
-          <label for="trust_id">Trust</label>
-          <select name="trust_id" id="trust_id">
-            <option value="">-- Select Trust --</option>
-            {% for trust in trusts %}
-              <option value="{{ trust['trust_id'] }}">{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
-            {% endfor %}
-          </select>
-          <div class="hint">Used by Trust Summary, Ledger, K-1, and 1041 reports.</div>
+        <div class="meta-note">
+          Recommended flow: choose a report type first, then fill only the fields that remain visible.
         </div>
+      </form>
+    </div>
 
-        <div>
-          <label for="tax_year">Tax Year</label>
-          <input type="text" name="tax_year" id="tax_year" placeholder="2025">
-          <div class="hint">Used by K-1 and 1041 reports.</div>
+    <div class="section">
+      <h2>Report Groups</h2>
+      <div class="cards">
+        <div class="card">
+          <h3>Trust Reports</h3>
+          <p>Trust Summary, Ledger, and Portfolio reports help you review trust records, activity, and operational structure.</p>
         </div>
-
-        <div>
-          <label for="instrument_id">Instrument ID</label>
-          <input type="text" name="instrument_id" id="instrument_id" placeholder="INSTR-001">
-          <div class="hint">Used by Instrument Detail PDF.</div>
+        <div class="card">
+          <h3>Fiduciary & Audit</h3>
+          <p>Fiduciary and Audit reports provide oversight across appointments, activity logs, and system accountability.</p>
         </div>
-
-        <div>
-          <label for="fiduciary_trust_id">Fiduciary Trust Filter</label>
-          <select name="fiduciary_trust_id" id="fiduciary_trust_id">
-            <option value="">All Trusts</option>
-            {% for trust in trusts %}
-              <option value="{{ trust['trust_id'] }}">{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
-            {% endfor %}
-          </select>
-          <div class="hint">Optional filter for Fiduciary Report PDF.</div>
+        <div class="card">
+          <h3>Tax Reports</h3>
+          <p>K-1 and 1041 reports support readiness, review, and trust-level tax workflow documentation.</p>
         </div>
-
-        <div class="full">
-          <button type="submit">Generate Report</button>
+        <div class="card">
+          <h3>Instrument Reports</h3>
+          <p>Instrument Detail reports provide a clean export for trust-issued instruments and their supporting references.</p>
         </div>
       </div>
-    </form>
-
-    <div class="links">
-      <a href="/admin">Admin</a>
-      <a href="/fiduciaries">Fiduciaries</a>
-      <a href="/audit">Audit</a>
     </div>
 
-    <div class="note">
-      Tip: select a report type first, then fill only the fields relevant to that report.
+    <div class="section">
+      <h2>Quick Launch</h2>
+      <div class="quick-links">
+        <a href="/reports/portfolio.pdf" target="_blank">Portfolio PDF</a>
+        <a href="/reports/audit.pdf" target="_blank">Audit PDF</a>
+        <a href="/reports/fiduciaries.pdf" target="_blank">Fiduciary PDF</a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Navigation</h2>
+      <div class="quick-links">
+        <a href="/admin">Admin</a>
+        <a href="/fiduciaries">Fiduciaries</a>
+        <a href="/audit">Audit</a>
+      </div>
     </div>
   </div>
+
+  <script>
+    function toggleFields() {
+      const reportType = document.getElementById("report_type").value;
+
+      const trustBlock = document.getElementById("trust_block");
+      const taxYearBlock = document.getElementById("tax_year_block");
+      const instrumentBlock = document.getElementById("instrument_block");
+      const fiduciaryBlock = document.getElementById("fiduciary_block");
+      const auditBlock = document.getElementById("audit_block");
+
+      trustBlock.classList.add("hidden");
+      taxYearBlock.classList.add("hidden");
+      instrumentBlock.classList.add("hidden");
+      fiduciaryBlock.classList.add("hidden");
+      auditBlock.classList.add("hidden");
+
+      if (["trust_summary", "ledger", "k1", "form1041"].includes(reportType)) {
+        trustBlock.classList.remove("hidden");
+      }
+
+      if (["k1", "form1041"].includes(reportType)) {
+        taxYearBlock.classList.remove("hidden");
+      }
+
+      if (reportType === "instrument") {
+        instrumentBlock.classList.remove("hidden");
+      }
+
+      if (reportType === "fiduciary") {
+        fiduciaryBlock.classList.remove("hidden");
+      }
+
+      if (reportType === "audit") {
+        auditBlock.classList.remove("hidden");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", toggleFields);
+  </script>
 </body>
 </html>
