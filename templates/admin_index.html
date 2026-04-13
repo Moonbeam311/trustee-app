@@ -24,15 +24,38 @@
 
 <div class="page-header">
   <h1>Admin Index</h1>
+  <p class="page-subtitle">Start by creating or locating a trust record before using reports.</p>
 </div>
-<p><a href="/visualization">Visualization Dashboard</a> | <a href="/visualization/trust-map">Trust Map</a> | <a href="/visualization/analytics">Analytics</a></p>
-<p><a href="/documents">Document Generator</a> | <a href="/documents/generate">Generate Document</a></p>
-<p><a href="/execution">Execution Dashboard</a> | <a href="/execution/tasks/new">New Task</a></p>
-<p><a href="/decision">Decision Engine</a></p>
-<p><a href="/discussions">Discussions</a> | <a href="/discussions/new">New Thread</a></p>
-<p><a href="/workspaces">Workspace Dashboard</a> | <a href="/workspaces/new">New Workspace</a></p>
-<p><a href="/videos">Video Library</a> | <a href="/videos/upload">Upload Video</a></p>
-<p><a href="/admin/learning/article/new">New Learning Article</a> | <a href="/admin/forms/new">New Form Guide</a></p>
+
+<div class="platform-card">
+  <h2>Quick Start</h2>
+  <p>Start here if this is your first time using the platform.</p>
+  <ol>
+    <li>Create or review a trust record</li>
+    <li>Open the Learning Hub to understand trust types and forms</li>
+    <li>Use Workspace to plan before generating documents or reports</li>
+    <li>Use Reports after a trust has been created and selected</li>
+  </ol>
+  <div class="action-bar">
+    <a href="/learning">Open Learning Hub</a>
+    <a href="/workspaces">Open Workspace</a>
+    <a href="/reports">Open Report Center</a>
+  </div>
+</div>
+
+<div class="platform-card">
+  <h2>Admin Actions</h2>
+  <div class="action-bar">
+    <a href="/admin/learning/article/new">New Learning Article</a>
+    <a href="/admin/forms/new">New Form Guide</a>
+    <a href="/videos/upload">Upload Video</a>
+    <a href="/workspaces/new">New Workspace</a>
+    <a href="/discussions/new">New Thread</a>
+    <a href="/execution/tasks/new">New Task</a>
+    <a href="/documents/generate">Generate Document</a>
+  </div>
+</div>
+
 <p><a href="/learning">Learning Hub</a> | <a href="/learning/trust-types">Trust Types</a> | <a href="/forms">Forms & Filings</a></p>
 <section style="margin: 20px 0; padding: 16px; border: 1px solid #d1d5db; border-radius: 10px; background: #f9fafb;">
   <h2 style="margin-top: 0;">Report Launch Area</h2>
@@ -65,7 +88,6 @@
   </div>
 </section>
 \n<p><a href="/reports/portfolio.pdf" target="_blank">Download Portfolio PDF</a> &nbsp;|&nbsp; <a href="/reports/audit.pdf" target="_blank">Download Audit Log PDF</a> &nbsp;|&nbsp; <a href="/reports/fiduciaries.pdf" target="_blank">Download Fiduciary PDF</a> &nbsp;|&nbsp; <a href="/reports">Open Report Center</a></p>\n
-<p><a href="/reports">Open Report Center</a></p>
 
 <p><a href="{{ url_for('users_dashboard') }}">Manage App Users</a></p>
 <p class="muted">Central module and manifest overview for the Trustee App.</p>
@@ -134,7 +156,6 @@
   <h2>Permissions Layer</h2>
   <p><a href="{{ url_for('permissions_dashboard') }}">Open Permissions Dashboard</a></p>
 </div>
-
 
 <div class="box">
   <h2>Security Layer</h2>
