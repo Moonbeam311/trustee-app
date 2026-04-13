@@ -419,8 +419,30 @@ def create_trust_step1():
             "status": "Draft"
         }
         create_trust_record(trust)
-        return redirect(url_for("create_trust_step2", trust_id=trust_id))
+        return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
     return render_template("create_trust_step1.html")
+
+
+@app.route("/create_trust_step2_grantor/<trust_id>", methods=["GET", "POST"])
+def create_trust_step2_grantor(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("create_trust_step2_grantor.html", trust=trust, error_message="Invalid or missing CSRF token.")
+
+        update_trust_fields(trust_id, {
+            "grantor_name": request.form.get("grantor_name"),
+            "grantor_type": request.form.get("grantor_type"),
+            "grantor_contact": request.form.get("grantor_contact"),
+        })
+
+        return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
+
+    return render_template("create_trust_step2_grantor.html", trust=trust)
+
 
 @app.route("/create_trust_step2/<trust_id>", methods=["GET", "POST"])
 def create_trust_step2(trust_id):

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 2 of 8: Grantor / Settlor</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This step identifies who is establishing the trust.
+</div>
+
+<div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
+    <strong>Why this matters</strong><br>
+    The grantor defines the legal origin of the trust and is foundational to how the trust is interpreted and administered.
+</div>
+
+<form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Grantor Name</label>
+    <input name="grantor_name" value="{{ trust['grantor_name'] or '' }}" required>
+
+    <label>Grantor Type</label>
+    <select name="grantor_type" required>
+        <option value="">Select Type</option>
+        <option value="individual">Individual</option>
+        <option value="couple">Couple</option>
+        <option value="entity">Entity</option>
+    </select>
+
+    <label>Grantor Contact / Notes</label>
+    <input name="grantor_contact" value="{{ trust['grantor_contact'] or '' }}">
+
+    <button type="submit">Next Step</button>
+</form>
+{% endblock %}
