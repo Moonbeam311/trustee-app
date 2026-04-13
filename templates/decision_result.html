@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Decision Results</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 960px; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+    .meta { color: #4b5563; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <p><a href="/decision">Back to Decision Engine</a></p>
+  <h1>Decision Results</h1>
+  <p class="meta">
+    Goal: {{ goal }} |
+    Asset Type: {{ asset_type }} |
+    Control Level: {{ control_level }}
+  </p>
+
+  {% for match in matches %}
+    <div class="card">
+      <h3>Suggested Trust Type: {{ match['suggested_trust_type'] }}</h3>
+      <p><strong>Suggested Forms:</strong> {{ match['suggested_forms'] }}</p>
+      <p><strong>Considerations:</strong> {{ match['considerations'] }}</p>
+      <p>
+        <a href="/learning/trust-type/{{ match['suggested_trust_type'] }}">Open Trust Type Guide</a> |
+        <a href="/forms">Open Forms Center</a> |
+        <a href="/workspaces">Open Workspace</a>
+      </p>
+    </div>
+  {% else %}
+    <p>No direct matches found. Review the Learning Hub and Workspace to continue analysis.</p>
+  {% endfor %}
+</body>
+</html>

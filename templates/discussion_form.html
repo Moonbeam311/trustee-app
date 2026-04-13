@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Discussion Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 100px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/discussions">Back to Discussions</a></p>
+  <h1>New Discussion Thread</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Thread ID</label>
+    <input type="text" name="thread_id">
+
+    {% if workspace %}
+      <label>Workspace</label>
+      <input type="text" value="{{ workspace['workspace_id'] }} — {{ workspace['title'] }}" readonly>
+    {% else %}
+      <label>Workspace</label>
+      <select name="workspace_id">
+        <option value="">-- Optional Workspace --</option>
+        {% for workspace in workspaces %}
+          <option value="{{ workspace['workspace_id'] }}">{{ workspace['workspace_id'] }} — {{ workspace['title'] }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+
+    <label>Title</label>
+    <input type="text" name="title">
+
+    <label>Category</label>
+    <select name="category">
+      {% for category in categories %}
+        <option value="{{ category }}">{{ category }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Related Trust Type</label>
+    <input type="text" name="related_trust_type">
+
+    <label>Related Form</label>
+    <input type="text" name="related_form">
+
+    <label>Status</label>
+    <select name="status">
+      <option value="open">open</option>
+      <option value="review">review</option>
+      <option value="closed">closed</option>
+    </select>
+
+    <p><button type="submit">Save Thread</button></p>
+  </form>
+</body>
+</html>

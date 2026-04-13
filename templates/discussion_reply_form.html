@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Reply to Discussion</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 120px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/discussions/{{ thread['thread_id'] }}">Back to Thread</a></p>
+  <h1>Reply to Discussion</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label>Message ID</label>
+    <input type="text" name="message_id">
+
+    <label>Parent Message ID (optional)</label>
+    <input type="text" name="parent_message_id">
+
+    <label>Body</label>
+    <textarea name="body"></textarea>
+
+    <p><button type="submit">Save Reply</button></p>
+  </form>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Workspace Tasks</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/workspaces/{{ workspace['workspace_id'] }}">Back to Workspace</a></p>
+  <h1>Workspace Tasks: {{ workspace['title'] }}</h1>
+  <p><a href="/workspaces/{{ workspace['workspace_id'] }}/tasks/new">New Workspace Task</a></p>
+
+  {% for task in tasks %}
+    <div class="card">
+      <h3><a href="/execution/tasks/{{ task['task_id'] }}">{{ task['title'] }}</a></h3>
+      <p><strong>Priority:</strong> {{ task['priority'] }}</p>
+      <p><strong>Status:</strong> {{ task['status'] }}</p>
+      <p>{{ task['description'] }}</p>
+    </div>
+  {% else %}
+    <p>No tasks yet for this workspace.</p>
+  {% endfor %}
+</body>
+</html>

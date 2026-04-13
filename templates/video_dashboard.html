@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Video Library</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <h1>Video Library</h1>
+  <p>Upload and organize how-to videos for trust and estate learning.</p>
+  <p><a href="/videos/upload">Upload Video</a> | <a href="/learning">Learning Hub</a> | <a href="/workspaces">Workspace</a></p>
+
+  <h2>Categories</h2>
+  <ul>
+    {% for category in categories %}
+      <li><a href="/videos/category/{{ category }}">{{ category }}</a></li>
+    {% endfor %}
+  </ul>
+
+  <h2>Trust Types</h2>
+  <ul>
+    {% for trust_type in trust_types %}
+      <li><a href="/videos/trust-type/{{ trust_type }}">{{ trust_type }}</a></li>
+    {% endfor %}
+  </ul>
+
+  <h2>Videos</h2>
+  <div class="grid">
+    {% for video in videos %}
+      <div class="card">
+        <h3><a href="/videos/{{ video['video_id'] }}">{{ video['title'] }}</a></h3>
+        <p><strong>{{ video['category'] }}</strong></p>
+        <p>{{ video['description'] }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

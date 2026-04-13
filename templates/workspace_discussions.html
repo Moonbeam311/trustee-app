@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Workspace Discussions</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/workspaces/{{ workspace['workspace_id'] }}">Back to Workspace</a></p>
+  <h1>Workspace Discussions: {{ workspace['title'] }}</h1>
+  <p><a href="/workspaces/{{ workspace['workspace_id'] }}/discussions/new">New Workspace Thread</a></p>
+
+  {% for thread in threads %}
+    <div class="card">
+      <h3><a href="/discussions/{{ thread['thread_id'] }}">{{ thread['title'] }}</a></h3>
+      <p><strong>Category:</strong> {{ thread['category'] }}</p>
+      <p><strong>Status:</strong> {{ thread['status'] }}</p>
+    </div>
+  {% else %}
+    <p>No discussions yet for this workspace.</p>
+  {% endfor %}
+</body>
+</html>

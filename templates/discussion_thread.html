@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ thread['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 960px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 16px; }
+    .message { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: white; margin-bottom: 10px; }
+    .meta { color: #6b7280; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <p><a href="/discussions">Back to Discussions</a></p>
+  <h1>{{ thread['title'] }}</h1>
+
+  <div class="box">
+    <p><strong>Thread ID:</strong> {{ thread['thread_id'] }}</p>
+    <p><strong>Category:</strong> {{ thread['category'] }}</p>
+    <p><strong>Related Trust Type:</strong> {{ thread['related_trust_type'] }}</p>
+    <p><strong>Related Form:</strong> {{ thread['related_form'] }}</p>
+    <p><strong>Status:</strong> {{ thread['status'] }}</p>
+    {% if workspace %}
+      <p><strong>Workspace:</strong> <a href="/workspaces/{{ workspace['workspace_id'] }}">{{ workspace['title'] }}</a></p>
+    {% endif %}
+    <p><a href="/discussions/{{ thread['thread_id'] }}/reply">Reply to Thread</a></p>
+  </div>
+
+  <div class="box">
+    <h2>Messages</h2>
+    {% for message in messages %}
+      <div class="message">
+        <p class="meta">Message ID: {{ message['message_id'] }} | Author: {{ message['author'] }}</p>
+        <p>{{ message['body'] }}</p>
+      </div>
+    {% else %}
+      <p>No messages yet.</p>
+    {% endfor %}
+  </div>
+</body>
+</html>

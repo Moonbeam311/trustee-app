@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Generate Document</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 920px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 90px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/documents">Back to Document Generator</a></p>
+  <h1>Generate Document</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Document ID</label>
+    <input type="text" name="document_id">
+
+    {% if workspace %}
+      <label>Workspace</label>
+      <input type="text" value="{{ workspace['workspace_id'] }} — {{ workspace['title'] }}" readonly>
+    {% else %}
+      <label>Workspace</label>
+      <select name="workspace_id">
+        <option value="">-- Optional Workspace --</option>
+        {% for workspace in workspaces %}
+          <option value="{{ workspace['workspace_id'] }}">{{ workspace['workspace_id'] }} — {{ workspace['title'] }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+
+    <label>Trust ID (optional)</label>
+    <input type="text" name="trust_id">
+
+    <label>Template</label>
+    <select name="template_id">
+      {% for template in templates %}
+        <option value="{{ template['template_id'] }}">{{ template['template_id'] }} — {{ template['name'] }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Title</label>
+    <input type="text" name="title">
+
+    <label>Purpose</label>
+    <textarea name="purpose"></textarea>
+
+    <label>Trust Type Focus</label>
+    <input type="text" name="trust_type_focus" value="{{ workspace['trust_type_focus'] if workspace else '' }}">
+
+    <label>Trust Name</label>
+    <input type="text" name="trust_name">
+
+    <label>Trustee Name</label>
+    <input type="text" name="trustee_name">
+
+    <label>Authority Scope</label>
+    <textarea name="authority_scope"></textarea>
+
+    <label>Related Forms</label>
+    <input type="text" name="related_forms">
+
+    <label>Related Reports</label>
+    <input type="text" name="related_reports">
+
+    <label>Notes</label>
+    <textarea name="notes"></textarea>
+
+    <label>Status</label>
+    <select name="status">
+      <option value="draft" selected>draft</option>
+      <option value="review">review</option>
+      <option value="final">final</option>
+    </select>
+
+    <p><button type="submit">Generate Draft</button></p>
+  </form>
+</body>
+</html>

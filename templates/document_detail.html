@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ document['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 980px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 16px; }
+    pre { white-space: pre-wrap; font-family: inherit; }
+  </style>
+</head>
+<body>
+  <p><a href="/documents">Back to Document Generator</a></p>
+  <h1>{{ document['title'] }}</h1>
+
+  <div class="box">
+    <p><strong>Document ID:</strong> {{ document['document_id'] }}</p>
+    <p><strong>Status:</strong> {{ document['status'] }}</p>
+    <p><strong>Template:</strong> {{ template['name'] if template else document['template_id'] }}</p>
+    {% if workspace %}
+      <p><strong>Workspace:</strong> <a href="/workspaces/{{ workspace['workspace_id'] }}">{{ workspace['title'] }}</a></p>
+    {% endif %}
+    <p><strong>Created By:</strong> {{ document['created_by'] }}</p>
+  </div>
+
+  <div class="box">
+    <h2>Generated Content</h2>
+    <pre>{{ document['content'] }}</pre>
+  </div>
+</body>
+</html>

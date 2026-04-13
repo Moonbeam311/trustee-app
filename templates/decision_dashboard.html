@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Decision Engine</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    select, button { width: 100%; padding: 10px; box-sizing: border-box; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-top: 18px; }
+  </style>
+</head>
+<body>
+  <h1>Decision Engine</h1>
+  <p>Use guided selections to explore trust type and form suggestions before entering a formal trust structure.</p>
+  <p><a href="/workspaces">Workspace Dashboard</a> | <a href="/learning">Learning Hub</a> | <a href="/execution">Execution Engine</a> | <a href="/documents">Document Generator</a></p>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post" action="/decision/run">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Primary Goal</label>
+    <select name="goal">
+      {% for item in goals %}
+        <option value="{{ item }}">{{ item }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Primary Asset Type</label>
+    <select name="asset_type">
+      {% for item in asset_types %}
+        <option value="{{ item }}">{{ item }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Desired Control Level</label>
+    <select name="control_level">
+      {% for item in control_levels %}
+        <option value="{{ item }}">{{ item }}</option>
+      {% endfor %}
+    </select>
+
+    <p><button type="submit">Run Decision Engine</button></p>
+  </form>
+
+  <div class="box">
+    <p><strong>What this does:</strong> It suggests trust types and related forms based on the selections you make. It does not finalize the structure for you.</p>
+  </div>
+</body>
+</html>

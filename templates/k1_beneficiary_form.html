@@ -12,6 +12,8 @@
 
 <p>Trust: {{ trust["trust_name"] }}</p>
 <form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
   <label>Full Name</label><input type="text" name="full_name" required><br>
   <label>Tax ID</label><input type="text" name="tax_id"><br>
   <label>Beneficiary Type</label>

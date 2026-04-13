@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Video Upload</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 100px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/videos">Back to Video Library</a></p>
+  <h1>{% if mode == "edit" %}Edit Video{% else %}Upload Video{% endif %}</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    {% if mode == "new" %}
+      <label>Video ID</label>
+      <input type="text" name="video_id" value="{{ video['video_id'] if video else '' }}">
+    {% endif %}
+
+    <label>Title</label>
+    <input type="text" name="title" value="{{ video['title'] if video else '' }}">
+
+    <label>Category</label>
+    <input type="text" name="category" value="{{ video['category'] if video else '' }}">
+
+    <label>Trust Type</label>
+    <input type="text" name="trust_type" value="{{ video['trust_type'] if video else '' }}">
+
+    <label>Description</label>
+    <textarea name="description">{{ video['description'] if video else '' }}</textarea>
+
+    <label>File Path</label>
+    <input type="text" name="file_path" value="{{ video['file_path'] if video else '' }}">
+
+    <label>Thumbnail Path</label>
+    <input type="text" name="thumbnail_path" value="{{ video['thumbnail_path'] if video else '' }}">
+
+    <label>Transcript Notes</label>
+    <textarea name="transcript_notes">{{ video['transcript_notes'] if video else '' }}</textarea>
+
+    <label>Visibility</label>
+    <select name="visibility">
+      <option value="internal" {% if video and video['visibility'] == 'internal' %}selected{% endif %}>internal</option>
+      <option value="private" {% if video and video['visibility'] == 'private' %}selected{% endif %}>private</option>
+      <option value="shared" {% if video and video['visibility'] == 'shared' %}selected{% endif %}>shared</option>
+    </select>
+
+    <p><button type="submit">Save Video</button></p>
+  </form>
+</body>
+</html>

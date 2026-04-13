@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Workspace Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 100px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/workspaces">Back to Workspace Dashboard</a></p>
+  <h1>{% if mode == "edit" %}Edit Workspace{% else %}New Workspace{% endif %}</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    {% if mode == "new" %}
+      <label>Workspace ID</label>
+      <input type="text" name="workspace_id" value="{{ workspace['workspace_id'] if workspace else '' }}">
+    {% endif %}
+
+    <label>Title</label>
+    <input type="text" name="title" value="{{ workspace['title'] if workspace else '' }}">
+
+    <label>Workspace Type</label>
+    <input type="text" name="workspace_type" value="{{ workspace['workspace_type'] if workspace else '' }}">
+
+    <label>Trust Type Focus</label>
+    <input type="text" name="trust_type_focus" value="{{ workspace['trust_type_focus'] if workspace else '' }}">
+
+    <label>Purpose</label>
+    <textarea name="purpose">{{ workspace['purpose'] if workspace else '' }}</textarea>
+
+    <label>Owner</label>
+    <input type="text" name="owner" value="{{ workspace['owner'] if workspace else '' }}">
+
+    <label>Status</label>
+    <select name="status">
+      <option value="draft" {% if workspace and workspace['status'] == 'draft' %}selected{% endif %}>draft</option>
+      <option value="active" {% if workspace and workspace['status'] == 'active' %}selected{% endif %}>active</option>
+      <option value="review" {% if workspace and workspace['status'] == 'review' %}selected{% endif %}>review</option>
+      <option value="closed" {% if workspace and workspace['status'] == 'closed' %}selected{% endif %}>closed</option>
+    </select>
+
+    <p><button type="submit">Save Workspace</button></p>
+  </form>
+
+  <h2>Suggested Note Sections</h2>
+  <ul>
+    {% for section in sections %}
+      <li>{{ section }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

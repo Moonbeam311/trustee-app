@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ trust_type['label'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <p><a href="/learning/trust-types">Back to Trust Types</a></p>
+  <h1>{{ trust_type['label'] }}</h1>
+
+  <div class="box">
+    <p><strong>Summary:</strong> {{ trust_type['summary'] }}</p>
+    <p>{{ trust_type['body'] }}</p>
+  </div>
+
+  <div class="box">
+    <h2>Related Forms</h2>
+    <ul>
+      {% for guide in trust_type['related_forms'] %}
+        <li><a href="/forms/name/{{ guide['form_name'] }}">{{ guide['form_name'] }}</a> — {{ guide['summary'] }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</body>
+</html>

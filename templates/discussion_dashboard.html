@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Discussion Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Discussion Dashboard</h1>
+  <p>Structured discussion area for trust design, forms questions, and workspace planning.</p>
+  <p><a href="/discussions/new">New Discussion Thread</a> | <a href="/workspaces">Workspace Dashboard</a> | <a href="/decision">Decision Engine</a> | <a href="/execution">Execution Engine</a></p>
+
+  {% for thread in threads %}
+    <div class="card">
+      <h3><a href="/discussions/{{ thread['thread_id'] }}">{{ thread['title'] }}</a></h3>
+      <p><strong>Category:</strong> {{ thread['category'] }}</p>
+      <p><strong>Workspace:</strong> {{ thread['workspace_id'] }}</p>
+      <p><strong>Status:</strong> {{ thread['status'] }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>

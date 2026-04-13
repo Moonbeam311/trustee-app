@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ task['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 960px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <p><a href="/execution">Back to Execution Dashboard</a></p>
+  <h1>{{ task['title'] }}</h1>
+
+  <div class="box">
+    <p><strong>Task ID:</strong> {{ task['task_id'] }}</p>
+    <p><strong>Task Type:</strong> {{ task['task_type'] }}</p>
+    <p><strong>Priority:</strong> {{ task['priority'] }}</p>
+    <p><strong>Status:</strong> {{ task['status'] }}</p>
+    <p><strong>Assigned To:</strong> {{ task['assigned_to'] }}</p>
+    <p><strong>Due Date:</strong> {{ task['due_date'] or 'Not set' }}</p>
+    <p><strong>Related Form:</strong> {{ task['related_form'] or 'None' }}</p>
+    <p><strong>Related Report:</strong> {{ task['related_report'] or 'None' }}</p>
+    {% if workspace %}
+      <p><strong>Workspace:</strong> <a href="/workspaces/{{ workspace['workspace_id'] }}">{{ workspace['title'] }}</a></p>
+    {% endif %}
+    <p><strong>Description:</strong> {{ task['description'] }}</p>
+  </div>
+
+  <div class="box">
+    <h2>Update Status</h2>
+    <form method="post" action="/execution/tasks/{{ task['task_id'] }}/status">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <select name="status">
+        <option value="pending" {% if task['status'] == 'pending' %}selected{% endif %}>pending</option>
+        <option value="in_progress" {% if task['status'] == 'in_progress' %}selected{% endif %}>in_progress</option>
+        <option value="blocked" {% if task['status'] == 'blocked' %}selected{% endif %}>blocked</option>
+        <option value="completed" {% if task['status'] == 'completed' %}selected{% endif %}>completed</option>
+      </select>
+      <p><button type="submit">Update Status</button></p>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Learning Category</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Learning Category: {{ category }}</h1>
+  <p><a href="/learning">Back to Learning Hub</a></p>
+
+  {% for article in articles %}
+    <div class="card">
+      <h3><a href="/learning/article/{{ article['article_id'] }}">{{ article['title'] }}</a></h3>
+      <p>{{ article['summary'] }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Trust Types Explorer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <p><a href="/learning">Back to Learning Hub</a></p>
+  <h1>Trust Types Explorer</h1>
+  <div class="grid">
+    {% for item in trust_types %}
+      <div class="card">
+        <h3><a href="/learning/trust-type/{{ item['slug'] }}">{{ item['label'] }}</a></h3>
+        <p>{{ item['summary'] }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ guide['form_name'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <p><a href="/forms">Back to Forms & Filings Center</a></p>
+  <h1>{{ guide['form_name'] }}</h1>
+  <div class="box">
+    <p><strong>Category:</strong> {{ guide['category'] }}</p>
+    <p><strong>Applies To:</strong> {{ guide['applies_to'] }}</p>
+    <p><strong>Summary:</strong> {{ guide['summary'] }}</p>
+    <p>{{ guide['body'] }}</p>
+    <p><strong>Related Trust Types:</strong> {{ guide['related_trust_types'] }}</p>
+  </div>
+</body>
+</html>

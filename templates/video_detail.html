@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ video['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <p><a href="/videos">Back to Video Library</a></p>
+  <h1>{{ video['title'] }}</h1>
+  <div class="box">
+    <p><strong>Category:</strong> {{ video['category'] }}</p>
+    <p><strong>Trust Type:</strong> {{ video['trust_type'] }}</p>
+    <p><strong>Visibility:</strong> {{ video['visibility'] }}</p>
+    <p><strong>Description:</strong> {{ video['description'] }}</p>
+    <p><strong>File Path:</strong> {{ video['file_path'] or 'Not yet linked' }}</p>
+    <p><strong>Thumbnail Path:</strong> {{ video['thumbnail_path'] or 'Not yet linked' }}</p>
+    <p><strong>Transcript Notes:</strong> {{ video['transcript_notes'] }}</p>
+    <p><a href="/videos/{{ video['video_id'] }}/edit">Edit Video</a></p>
+  </div>
+</body>
+</html>

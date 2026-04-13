@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Video Category</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/videos">Back to Video Library</a></p>
+  <h1>Video Category: {{ category }}</h1>
+  {% for video in videos %}
+    <div class="card">
+      <h3><a href="/videos/{{ video['video_id'] }}">{{ video['title'] }}</a></h3>
+      <p>{{ video['description'] }}</p>
+    </div>
+  {% endfor %}
+</body>
+</html>

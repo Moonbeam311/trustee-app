@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ workspace['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 960px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 16px; }
+    .note { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: white; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <p><a href="/workspaces">Back to Workspace Dashboard</a></p>
+  <h1>{{ workspace['title'] }}</h1>
+
+  <div class="box">
+    <p><strong>Workspace ID:</strong> {{ workspace['workspace_id'] }}</p>
+    <p><strong>Type:</strong> {{ workspace['workspace_type'] }}</p>
+    <p><strong>Trust Focus:</strong> {{ workspace['trust_type_focus'] }}</p>
+    <p><strong>Owner:</strong> {{ workspace['owner'] }}</p>
+    <p><strong>Status:</strong> {{ workspace['status'] }}</p>
+    <p><strong>Purpose:</strong> {{ workspace['purpose'] }}</p>
+    <p><a href="/workspaces/{{ workspace['workspace_id'] }}/edit">Edit Workspace</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/notes/new">Add Note</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions">View Discussions</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions/new">New Thread</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks">View Tasks</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks/new">New Task</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/documents">View Documents</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/documents/generate">Generate Document</a></p>
+  </div>
+
+  <div class="box">
+    <h2>Workspace Notes</h2>
+    {% for note in notes %}
+      <div class="note">
+        <p><strong>{{ note['section_name'] }}</strong></p>
+        <p>{{ note['content'] }}</p>
+      </div>
+    {% else %}
+      <p>No notes yet.</p>
+    {% endfor %}
+  </div>
+</body>
+</html>

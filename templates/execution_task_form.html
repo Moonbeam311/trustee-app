@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Execution Task Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 100px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; margin-bottom: 14px; }
+  </style>
+</head>
+<body>
+  <p><a href="/execution">Back to Execution Dashboard</a></p>
+  <h1>New Execution Task</h1>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Task ID</label>
+    <input type="text" name="task_id">
+
+    {% if workspace %}
+      <label>Workspace</label>
+      <input type="text" value="{{ workspace['workspace_id'] }} — {{ workspace['title'] }}" readonly>
+    {% else %}
+      <label>Workspace</label>
+      <select name="workspace_id">
+        <option value="">-- Optional Workspace --</option>
+        {% for workspace in workspaces %}
+          <option value="{{ workspace['workspace_id'] }}">{{ workspace['workspace_id'] }} — {{ workspace['title'] }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+
+    <label>Trust ID (optional)</label>
+    <input type="text" name="trust_id">
+
+    <label>Title</label>
+    <input type="text" name="title">
+
+    <label>Task Type</label>
+    <select name="task_type">
+      {% for task_type in task_types %}
+        <option value="{{ task_type }}">{{ task_type }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Description</label>
+    <textarea name="description"></textarea>
+
+    <label>Related Form</label>
+    <input type="text" name="related_form">
+
+    <label>Related Report</label>
+    <input type="text" name="related_report">
+
+    <label>Priority</label>
+    <select name="priority">
+      <option value="high">high</option>
+      <option value="medium" selected>medium</option>
+      <option value="low">low</option>
+    </select>
+
+    <label>Status</label>
+    <select name="status">
+      <option value="pending" selected>pending</option>
+      <option value="in_progress">in_progress</option>
+      <option value="blocked">blocked</option>
+      <option value="completed">completed</option>
+    </select>
+
+    <label>Due Date</label>
+    <input type="text" name="due_date" placeholder="YYYY-MM-DD">
+
+    <label>Assigned To</label>
+    <input type="text" name="assigned_to">
+
+    <p><button type="submit">Save Task</button></p>
+  </form>
+</body>
+</html>

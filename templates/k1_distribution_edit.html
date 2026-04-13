@@ -6,6 +6,8 @@
 <p>Trust: {{ trust["trust_name"] }}</p>
 
 <form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
   <label>Beneficiary</label>
   <select name="beneficiary_id" required>
     {% for b in beneficiaries %}
