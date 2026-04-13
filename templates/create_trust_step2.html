@@ -20,16 +20,18 @@
     <label>Trust Type</label>
     <select name="trust_type" required>
         <option value="">Select Trust Type</option>
-        <option value="revocable">Revocable</option>
-        <option value="irrevocable">Irrevocable</option>
-        <option value="98">98 Trust</option>
+        {% for item in trust_types %}
+        <option value="{{ item['slug'] }}" {% if trust.get('trust_type') == item['slug'] %}selected{% endif %}>
+            {{ item['label'] }}
+        </option>
+        {% endfor %}
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
         <strong>What do these mean?</strong><br>
-        <strong>Revocable:</strong> usually more flexible and easier to modify.<br>
-        <strong>Irrevocable:</strong> usually more structured and harder to change once established.<br>
-        <strong>98 Trust:</strong> advanced custom trust mode for expanded structure and administration.
+        {% for item in trust_types %}
+        <div><strong>{{ item['label'] }}:</strong> {{ item['summary'] }}</div>
+        {% endfor %}
     </div>
 
     <label>Primary Purpose</label>

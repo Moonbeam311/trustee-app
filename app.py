@@ -429,7 +429,7 @@ def create_trust_step2(trust_id):
         return f"Trust {trust_id} not found"
     if request.method == "POST":
         if not validate_csrf_token():
-            return render_template("create_trust_step2.html", trust=trust, error_message="Invalid or missing CSRF token.")
+            return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards(), error_message="Invalid or missing CSRF token.")
 
         update_trust_fields(trust_id, {
             "trust_type": request.form.get("trust_type"),
@@ -439,7 +439,7 @@ def create_trust_step2(trust_id):
             "status": "Draft - Step 2 Complete",
         })
         return redirect(url_for("create_trust_step3", trust_id=trust_id))
-    return render_template("create_trust_step2.html", trust=trust)
+    return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards())
 
 @app.route("/create_trust_step3/<trust_id>", methods=["GET", "POST"])
 def create_trust_step3(trust_id):
