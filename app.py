@@ -3691,6 +3691,10 @@ def analytics_dashboard():
         trust_rows=trust_rows
     )
 
+@app.route("/guide")
+def guide_page():
+    return render_template("guide_page.html")
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
