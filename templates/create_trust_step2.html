@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Create Trust Wizard — Step 2: Trust Type and Purpose</h2>
+<h2>Create Trust Wizard — Step 2 of 7: Trust Structure and Purpose</h2>
 
 <div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What is this?</strong><br>
-    This step defines the general structure and intended use of the trust.
+    Use this step to classify how the trust should function, what it is primarily for, and how it should be administered.
 </div>
 
 <div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
     <strong>Why this matters</strong><br>
-    Your trust type and purpose affect how the trust is administered, what follow-up documents are recommended, and how later steps in the system will behave.
+    This step does not recreate the trust record. It classifies the trust you created in Step 1 so the rest of the wizard can behave correctly.
 </div>
+
+<div style="margin-bottom:15px; padding:12px; background:#eef7ff; border-radius:6px; border:1px solid #cfe3ff;"><strong>How this fits the sequence</strong><br>Step 1 created the trust record itself. Step 2 now defines the trust’s structure, purpose, accounting method, and operating mode.</div>
 
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
