@@ -1,0 +1,50 @@
+ROLE ACCESS MATRIX V1
+================================================================================
+
+Roles:
+- Admin
+- Trustee
+- Viewer
+
+GENERAL EXPECTATIONS
+--------------------------------------------------------------------------------
+Admin:
+- full access across all modules
+- create/edit access where applicable
+
+Trustee:
+- access to operational modules
+- create/edit access for workspace, discussions, decisions, tasks, documents
+- limited admin-only content management restrictions remain
+
+Viewer:
+- read access only where intended
+- no create/edit actions on protected operational pages
+
+MATRIX
+--------------------------------------------------------------------------------
+Module / Route Group                Admin   Trustee   Viewer
+--------------------------------------------------------------------------------
+Reports                             YES     YES       assumed read
+Learning Hub                        YES     YES       YES
+Learning Admin                      YES     NO        NO
+Video Dashboard                     YES     YES       YES
+Video Upload                        YES     YES       NO
+Video Edit                          YES     NO        NO
+Workspace Dashboard                 YES     YES       YES
+Workspace Create/Edit               YES     YES       NO
+Workspace Notes                     YES     YES       NO
+Discussion Dashboard                YES     YES       YES
+Discussion New/Reply                YES     YES       NO
+Decision Engine                     YES     YES       YES
+Execution Dashboard                 YES     YES       YES
+Execution Task Create/Update        YES     YES       NO
+Document Dashboard                  YES     YES       YES
+Document Generate                   YES     YES       NO
+Visualization / Analytics           YES     YES       YES
+
+ROLE TEST NOTES
+--------------------------------------------------------------------------------
+- Confirm Viewer cannot access create/edit routes directly
+- Confirm Trustee can use workspace/discussion/execution/document flows
+- Confirm Admin retains access to content admin functions

@@ -1,0 +1,72 @@
+SMOKE TEST ORDER V1
+================================================================================
+
+This is the recommended first-pass browser sequence for v1.
+
+1. CORE ENTRY
+--------------------------------------------------------------------------------
+1. /admin
+2. /reports
+
+2. LEARNING LAYER
+--------------------------------------------------------------------------------
+3. /learning
+4. /learning/trust-types
+5. /forms
+6. /videos
+
+3. PLANNING LAYER
+--------------------------------------------------------------------------------
+7. /workspaces
+8. one workspace detail page
+9. workspace note page
+
+4. DISCUSSION LAYER
+--------------------------------------------------------------------------------
+10. /discussions
+11. one discussion thread
+12. one workspace discussion page
+
+5. GUIDANCE LAYER
+--------------------------------------------------------------------------------
+13. /decision
+14. submit a decision run
+
+6. EXECUTION LAYER
+--------------------------------------------------------------------------------
+15. /execution
+16. one task detail page
+17. one workspace task page
+
+7. DOCUMENT LAYER
+--------------------------------------------------------------------------------
+18. /documents
+19. generate document form
+20. one document detail page
+
+8. OVERSIGHT LAYER
+--------------------------------------------------------------------------------
+21. /visualization
+22. /visualization/trust-map
+23. /visualization/analytics
+
+9. REPORT VALIDATION
+--------------------------------------------------------------------------------
+24. Trust Summary PDF
+25. Ledger PDF
+26. Fiduciary PDF
+27. Portfolio PDF
+28. Audit PDF
+29. K-1 PDF
+30. 1041 PDF
+31. Instrument PDF
+
+10. ROLE VALIDATION
+--------------------------------------------------------------------------------
+32. Admin pass
+33. Trustee pass
+34. Viewer pass
+
+Outcome:
+If the above sequence feels coherent and routes load as expected, the v1 platform
+is structurally ready for deeper QA and glitch fixing.
