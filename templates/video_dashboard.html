@@ -27,28 +27,6 @@
     {% endfor %}
   </ul>
 
-  <h2>Trust Types</h2>
-  <ul>
-    {% for trust_type in trust_types %}
-      <li>
-        <a href="/videos/trust-type/{{ trust_type }}">
-          {% if trust_type == "revocable" %}Revocable Trust
-          {% elif trust_type == "irrevocable" %}Irrevocable Trust
-          {% elif trust_type == "simple" %}Simple Trust
-          {% elif trust_type == "complex" %}Complex Trust
-          {% elif trust_type == "land" %}Land Trust
-          {% elif trust_type == "insurance" %}Insurance Trust
-          {% elif trust_type == "foreign" %}Foreign Trust
-          {% elif trust_type == "charitable" %}Charitable Trust
-          {% elif trust_type == "business" %}Business Trust
-          {% elif trust_type == "other" %}Other Trust
-          {% else %}{{ trust_type }}
-          {% endif %}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-
   <h2>Videos</h2>
   <div class="grid">
     {% for video in videos %}
