@@ -18,7 +18,7 @@
 </div>
   <p class="page-subtitle">Upload and organize how-to videos for trust and estate learning.</p>
 <div class="action-bar"><a href="/videos/upload">Upload Video</a> <a href="/learning">Learning Hub</a> <a href="/workspaces">Workspace</a></div>
-  <p><a href="/videos/upload">Upload Video</a> | <a href="/learning">Learning Hub</a> | <a href="/workspaces">Workspace</a></p>
+  
 
   <h2>Categories</h2>
   <ul>
@@ -30,7 +30,22 @@
   <h2>Trust Types</h2>
   <ul>
     {% for trust_type in trust_types %}
-      <li><a href="/videos/trust-type/{{ trust_type }}">{{ trust_type }}</a></li>
+      <li>
+        <a href="/videos/trust-type/{{ trust_type }}">
+          {% if trust_type == "revocable" %}Revocable Trust
+          {% elif trust_type == "irrevocable" %}Irrevocable Trust
+          {% elif trust_type == "simple" %}Simple Trust
+          {% elif trust_type == "complex" %}Complex Trust
+          {% elif trust_type == "land" %}Land Trust
+          {% elif trust_type == "insurance" %}Insurance Trust
+          {% elif trust_type == "foreign" %}Foreign Trust
+          {% elif trust_type == "charitable" %}Charitable Trust
+          {% elif trust_type == "business" %}Business Trust
+          {% elif trust_type == "other" %}Other Trust
+          {% else %}{{ trust_type }}
+          {% endif %}
+        </a>
+      </li>
     {% endfor %}
   </ul>
 
