@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Discussion Dashboard</title>
   <style>
@@ -9,8 +10,13 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
+  <div class="page-header">
   <h1>Discussion Dashboard</h1>
-  <p>Structured discussion area for trust design, forms questions, and workspace planning.</p>
+</div>
+  <p class="page-subtitle">Structured discussion area for trust design, forms questions, and workspace planning.</p>
+<div class="action-bar"><a href="/discussions/new">New Discussion Thread</a> <a href="/workspaces">Workspace</a> <a href="/decision">Decision Engine</a></div>
   <p><a href="/discussions/new">New Discussion Thread</a> | <a href="/workspaces">Workspace Dashboard</a> | <a href="/decision">Decision Engine</a> | <a href="/execution">Execution Engine</a></p>
 
   {% for thread in threads %}

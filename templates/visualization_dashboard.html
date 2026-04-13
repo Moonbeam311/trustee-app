@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Visualization Dashboard</title>
   <style>
@@ -11,8 +12,13 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
+  <div class="page-header">
   <h1>Visualization Dashboard</h1>
-  <p>High-level operational visibility across learning, planning, execution, and document layers.</p>
+</div>
+  <p class="page-subtitle">High-level operational visibility across learning, planning, execution, and document layers.</p>
+<div class="action-bar"><a href="/visualization/trust-map">Trust Relationship View</a> <a href="/visualization/analytics">Analytics View</a> <a href="/reports">Reports</a></div>
   <p><a href="/visualization/trust-map">Trust Relationship View</a> | <a href="/visualization/analytics">Analytics View</a></p>
 
   <h2>System Metrics</h2>

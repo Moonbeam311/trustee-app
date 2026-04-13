@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Analytics View</title>
   <style>
@@ -13,7 +14,11 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
+  <div class="page-header">
   <h1>Analytics View</h1>
+</div>
   <p><a href="/visualization">Back to Visualization Dashboard</a></p>
 
   <div class="grid">
@@ -76,5 +81,6 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </body>
 </html>

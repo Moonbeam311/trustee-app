@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Learning Hub</title>
   <style>
@@ -11,9 +12,14 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
+  <div class="page-header">
   <h1>Learning Hub</h1>
+</div>
 <p><a href="/admin/learning/article/new">Create Learning Article</a></p>
-  <p>Foundational learning space for trust and estate management concepts.</p>
+  <p class="page-subtitle">Foundational learning space for trust and estate management concepts.</p>
+<div class="action-bar"><a href="/learning/trust-types">Trust Types Explorer</a> <a href="/forms">Forms & Filings</a> <a href="/videos">Video Library</a> <a href="/workspaces">Workspace</a></div>
 
   <p>
     <a href="/learning/trust-types">Trust Types Explorer</a> |

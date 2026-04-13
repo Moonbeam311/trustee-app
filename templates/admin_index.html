@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  {% include "_platform_shell.html" %}
   <title>Admin Index</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; background: #f6f8fa; }
@@ -17,9 +18,13 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
 {% include '_nav.html' %}
 
-<h1>Admin Index</h1>
+<div class="page-header">
+  <h1>Admin Index</h1>
+</div>
 <p><a href="/visualization">Visualization Dashboard</a> | <a href="/visualization/trust-map">Trust Map</a> | <a href="/visualization/analytics">Analytics</a></p>
 <p><a href="/documents">Document Generator</a> | <a href="/documents/generate">Generate Document</a></p>
 <p><a href="/execution">Execution Dashboard</a> | <a href="/execution/tasks/new">New Task</a></p>

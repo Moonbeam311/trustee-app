@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Trust Relationship View</title>
   <style>
@@ -11,7 +12,11 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
+  <div class="page-header">
   <h1>Trust Relationship View</h1>
+</div>
   <p>Structured summary of trust-linked records across fiduciaries, instruments, workspace links, tasks, and documents.</p>
   <p><a href="/visualization">Back to Visualization Dashboard</a></p>
 
@@ -43,5 +48,6 @@
       {% endfor %}
     </tbody>
   </table>
+  </div>
 </body>
 </html>
