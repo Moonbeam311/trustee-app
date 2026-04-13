@@ -21,7 +21,7 @@
     <select name="trust_type" required>
         <option value="">Select Trust Type</option>
         {% for item in trust_types %}
-        <option value="{{ item['slug'] }}" {% if trust.get('trust_type') == item['slug'] %}selected{% endif %}>
+        <option value="{{ item['slug'] }}" {% if trust['trust_type'] == item['slug'] %}selected{% endif %}>
             {{ item['label'] }}
         </option>
         {% endfor %}
