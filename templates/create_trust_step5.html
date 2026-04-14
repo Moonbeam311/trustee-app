@@ -16,9 +16,8 @@
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-
     <label>Initial Corpus Description</label>
-    <input name="initial_corpus_description" required>
+    <input name="initial_corpus_description" required value="{{ trust[\'initial_corpus_description\'] or \'\' }}" required>
     <div style="font-size:13px; margin-bottom:12px;">
         <strong>What is this?</strong><br>
         The corpus is the initial property, value, or asset base associated with the trust.
@@ -27,8 +26,8 @@
     <label>Map Property Now or Later?</label>
     <select name="property_mapping_timing" required>
         <option value="">Select Option</option>
-        <option value="now">Map Property Now</option>
-        <option value="later">Map Property Later</option>
+        <option value="now"{% if trust['property_mapping_timing'] == "now" %} selected{% endif %}>Map Property Now</option>
+        <option value="later"{% if trust['property_mapping_timing'] == "later" %} selected{% endif %}>Map Property Later</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -39,13 +38,13 @@
     <label>Expected Asset Categories</label>
     <select name="asset_categories" required>
         <option value="">Select Primary Category</option>
-        <option value="real_property">Real Property</option>
-        <option value="vehicles">Vehicles</option>
-        <option value="accounts">Accounts</option>
-        <option value="business_interests">Business Interests</option>
-        <option value="intellectual_property">Intellectual Property</option>
-        <option value="mixed">Mixed Assets</option>
-        <option value="other">Other</option>
+        <option value="real_property"{% if trust['asset_categories'] == "real_property" %} selected{% endif %}>Real Property</option>
+        <option value="vehicles"{% if trust['asset_categories'] == "vehicles" %} selected{% endif %}>Vehicles</option>
+        <option value="accounts"{% if trust['asset_categories'] == "accounts" %} selected{% endif %}>Accounts</option>
+        <option value="business_interests"{% if trust['asset_categories'] == "business_interests" %} selected{% endif %}>Business Interests</option>
+        <option value="intellectual_property"{% if trust['asset_categories'] == "intellectual_property" %} selected{% endif %}>Intellectual Property</option>
+        <option value="mixed"{% if trust['asset_categories'] == "mixed" %} selected{% endif %}>Mixed Assets</option>
+        <option value="other"{% if trust['asset_categories'] == "other" %} selected{% endif %}>Other</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -56,8 +55,8 @@
     <label>Generate Initial Schedule Recommendations?</label>
     <select name="generate_schedule_recommendations" required>
         <option value="">Select Option</option>
-        <option value="yes">Yes</option>
-        <option value="no">No</option>
+        <option value="yes"{% if trust['generate_schedule_recommendations'] == "yes" %} selected{% endif %}>Yes</option>
+        <option value="no"{% if trust['generate_schedule_recommendations'] == "no" %} selected{% endif %}>No</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:20px;">
@@ -65,6 +64,6 @@
         When enabled, the system will later recommend schedule-style records based on the trust’s stated funding and asset profile.
     </div>
 
-    <button type="submit">Next Step</button>
+    <button type="submit">Save and Continue</button>
 </form>
 {% endblock %}

@@ -18,7 +18,6 @@
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-
     <label>Trust Type</label>
     <select name="trust_type" required>
         <option value="">Select Trust Type</option>
@@ -39,11 +38,11 @@
     <label>Primary Purpose</label>
     <select name="trust_purpose" required>
         <option value="">Select Purpose</option>
-        <option value="family_holding">Family Holding</option>
-        <option value="property_holding">Property Holding</option>
-        <option value="business_operations">Business Operations</option>
-        <option value="education_charitable">Education / Charitable Support</option>
-        <option value="advanced_custom">Advanced Custom</option>
+        <option value="family_holding"{% if trust['trust_purpose'] == "family_holding" %} selected{% endif %}>Family Holding</option>
+        <option value="property_holding"{% if trust['trust_purpose'] == "property_holding" %} selected{% endif %}>Property Holding</option>
+        <option value="business_operations"{% if trust['trust_purpose'] == "business_operations" %} selected{% endif %}>Business Operations</option>
+        <option value="education_charitable"{% if trust['trust_purpose'] == "education_charitable" %} selected{% endif %}>Education / Charitable Support</option>
+        <option value="advanced_custom"{% if trust['trust_purpose'] == "advanced_custom" %} selected{% endif %}>Advanced Custom</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -54,8 +53,8 @@
     <label>Accounting Method</label>
     <select name="accounting_method" required>
         <option value="">Select Accounting Method</option>
-        <option value="cash">Cash Method</option>
-        <option value="accrual">Accrual Method</option>
+        <option value="cash"{% if trust['accounting_method'] == "cash" %} selected{% endif %}>Cash Method</option>
+        <option value="accrual"{% if trust['accounting_method'] == "accrual" %} selected{% endif %}>Accrual Method</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -67,8 +66,8 @@
     <label>Workflow Mode</label>
     <select name="workflow_mode" required>
         <option value="">Select Workflow Mode</option>
-        <option value="private_office">Private Office Mode</option>
-        <option value="public_filing">Public Filing / External Mode</option>
+        <option value="private_office"{% if trust['workflow_mode'] == "private_office" %} selected{% endif %}>Private Office Mode</option>
+        <option value="public_filing"{% if trust['workflow_mode'] == "public_filing" %} selected{% endif %}>Public Filing / External Mode</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:20px;">
@@ -77,6 +76,6 @@
         <strong>Public Filing / External Mode:</strong> workflows intended to support outward-facing or filing-related records.
     </div>
 
-    <button type="submit">Next Step</button>
+    <button type="submit">Save and Continue</button>
 </form>
 {% endblock %}

@@ -22,14 +22,14 @@
     <label>Grantor Type</label>
     <select name="grantor_type" required>
         <option value="">Select Type</option>
-        <option value="individual">Individual</option>
-        <option value="couple">Couple</option>
-        <option value="entity">Entity</option>
+        <option value="individual"{% if trust['grantor_type'] == "individual" %} selected{% endif %}>Individual</option>
+        <option value="couple"{% if trust['grantor_type'] == "couple" %} selected{% endif %}>Couple</option>
+        <option value="entity"{% if trust['grantor_type'] == "entity" %} selected{% endif %}>Entity</option>
     </select>
 
     <label>Grantor Contact / Notes</label>
     <input name="grantor_contact" value="{{ trust['grantor_contact'] or '' }}">
 
-    <button type="submit">Next Step</button>
+    <button type="submit">Save and Continue</button>
 </form>
 {% endblock %}
