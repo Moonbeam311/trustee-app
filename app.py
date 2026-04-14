@@ -419,7 +419,7 @@ def create_trust_step1():
             "status": "Draft"
         }
         create_trust_record(trust)
-        return redirect(url_for("create_trust_step2", trust_id=trust_id))
+        return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
     return render_template("create_trust_step1.html")
 
 
