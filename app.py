@@ -3290,6 +3290,7 @@ def discussion_new():
             "related_form": request.form.get("related_form"),
             "created_by": session.get("username") or "unknown",
             "status": request.form.get("status") or "open",
+            "owner_id": "ADMIN_OWNER_001",
         }
         create_discussion_thread(payload)
         return redirect(url_for("discussion_thread", thread_id=thread_id))
@@ -3368,6 +3369,7 @@ def workspace_discussion_new(workspace_id):
             "related_form": request.form.get("related_form"),
             "created_by": session.get("username") or "unknown",
             "status": request.form.get("status") or "open",
+            "owner_id": "ADMIN_OWNER_001",
         }
         create_discussion_thread(payload)
         return redirect(url_for("discussion_thread", thread_id=thread_id))
@@ -3657,6 +3659,7 @@ def document_generate():
             "content": content,
             "status": request.form.get("status") or "draft",
             "created_by": session.get("username") or "unknown",
+            "owner_id": "ADMIN_OWNER_001",
         }
         create_generated_document(payload)
         return redirect(url_for("document_detail", document_id=document_id))
@@ -3743,6 +3746,7 @@ def workspace_document_generate(workspace_id):
             "content": content,
             "status": request.form.get("status") or "draft",
             "created_by": session.get("username") or "unknown",
+            "owner_id": "ADMIN_OWNER_001",
         }
         create_generated_document(payload)
         return redirect(url_for("document_detail", document_id=document_id))
