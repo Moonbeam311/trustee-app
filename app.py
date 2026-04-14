@@ -439,7 +439,7 @@ def create_trust_step2_grantor(trust_id):
             "grantor_contact": request.form.get("grantor_contact"),
         })
 
-        return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
+        return redirect(url_for("create_trust_step2", trust_id=trust_id))
 
     return render_template("create_trust_step2_grantor.html", trust=trust)
 
