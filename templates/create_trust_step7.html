@@ -8,6 +8,11 @@
     Your trust has been finalized in the current prototype workflow.
 </div>
 
+<div style="margin-bottom:20px; padding:12px; background:#eefaf0; border-radius:6px; border:1px solid #b7e4c7;">
+    <strong>✔ Trust Intake Complete</strong><br>
+    The trust intake sequence is complete. Use the actions below to move into trust operations, supporting records, and next-step documents.
+</div>
+
 <div style="margin-bottom:20px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What is this?</strong><br>
     This completion screen summarizes the trust and shows the next recommended records and actions.
@@ -32,6 +37,13 @@
     </div>
 </div>
 
+{% if trust['asset_categories'] == 'Not Yet Selected' or trust['property_mapping_timing'] == 'Not Yet Selected' %}
+<div style="border:1px solid #f4d58d; padding:16px; border-radius:8px; background:#fff8e1; margin-bottom:20px;">
+    <strong>⚠ Trust Property Mapping Not Yet Confirmed</strong><br>
+    This trust does not yet have confirmed asset/property mapping in the intake flow. Before relying on downstream records, consider completing property mapping and initial trust-estate details.
+</div>
+{% endif %}
+
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa; margin-bottom:20px;">
     <h3>Recommended Next Documents</h3>
     <ul>
@@ -50,6 +62,11 @@
         <li><a href="/upload_document">Upload supporting core documents</a></li>
         <li><a href="/ledger_entry">Record the first ledger entry</a></li>
     </ul>
+</div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#f7f9fc; margin-bottom:20px;">
+    <h3>Launch Into Operations</h3>
+    <p>From here, you can open the trust dashboard, begin property/account setup, upload supporting documents, or record the first ledger activity.</p>
 </div>
 
 <div style="display:flex; gap:10px; flex-wrap:wrap;">
