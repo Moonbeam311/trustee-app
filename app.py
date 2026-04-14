@@ -416,7 +416,8 @@ def create_trust_step1():
             "property_mapping_timing": "Not Yet Selected",
             "asset_categories": "Not Yet Selected",
             "generate_schedule_recommendations": "Not Yet Selected",
-            "status": "Draft"
+            "status": "Draft",
+        "owner_id": "ADMIN_OWNER_001"
         }
         create_trust_record(trust)
         return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
