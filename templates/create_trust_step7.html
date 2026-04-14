@@ -53,8 +53,13 @@
 </div>
 
 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <a href="/trust/{{ trust.trust_id }}" style="text-decoration:none;"><button type="button">Open Trust Detail</button></a>
+    <a href="/trust/{{ trust.trust_id }}" style="text-decoration:none;"><button type="button">Open Trust Dashboard</button></a>
     <a href="/add_property" style="text-decoration:none;"><button type="button">Add Property</button></a>
     <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
 </div>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step6/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+</div>
+
 {% endblock %}

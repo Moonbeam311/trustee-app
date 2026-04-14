@@ -60,6 +60,11 @@
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-    <button type="submit">Confirm and Finalize</button>
+    <button type="submit">Save and Finalize</button>
 </form>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step5/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+</div>
+
 {% endblock %}
