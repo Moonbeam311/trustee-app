@@ -2458,6 +2458,15 @@ def evidence_by_entity(entity_type, entity_id):
 def k1_report_view(trust_id):
     tax_year = request.args.get("tax_year", str(date.today().year))
     trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
+
     totals = get_distribution_totals_by_trust(trust_id, tax_year)
     beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
     evidence = get_media_by_trust_id(trust_id)
@@ -2485,6 +2494,15 @@ def k1_report_view(trust_id):
 def form1041_report_view(trust_id):
     tax_year = request.args.get("tax_year", str(date.today().year))
     trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
+
     tax_logic = compute_dni_components(trust_id, tax_year)
     shares = compute_beneficiary_tax_shares(trust_id, tax_year)
     evidence = get_media_by_trust_id(trust_id)
@@ -2550,6 +2568,15 @@ def role_new():
 def k1_report_print(trust_id):
     tax_year = request.args.get("tax_year", str(date.today().year))
     trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
+
     totals = get_distribution_totals_by_trust(trust_id, tax_year)
     beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
     evidence = get_media_by_trust_id(trust_id)
@@ -2579,6 +2606,15 @@ def k1_report_print(trust_id):
 def form1041_report_print(trust_id):
     tax_year = request.args.get("tax_year", str(date.today().year))
     trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
+
     tax_logic = compute_dni_components(trust_id, tax_year)
     shares = compute_beneficiary_tax_shares(trust_id, tax_year)
     evidence = get_media_by_trust_id(trust_id)
@@ -2685,6 +2721,12 @@ def trust_summary_pdf(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
+
     properties = get_properties_by_trust_id(trust_id)
     accounts = get_accounts_by_trust_id(trust_id)
     documents = get_documents_by_trust_id(trust_id)
@@ -2699,6 +2741,12 @@ def k1_readiness_pdf(trust_id, tax_year):
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found", 404
+
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
 
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
     distributions = get_distributions_by_trust_id(trust_id)
@@ -2733,6 +2781,12 @@ def ledger_report_pdf(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
+
     entries = get_ledger_entries_by_trust_id(trust_id)
     story = ledger_report_story(trust=trust, entries=entries)
     return build_pdf_response(f"ledger_report_{trust_id}.pdf", story)
@@ -2742,6 +2796,12 @@ def form1041_report_pdf(trust_id, tax_year):
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found", 404
+
+    if trust.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This trust report does not belong to the current owner context."
+        )
 
     tax_logic = get_1041_tax_logic(trust_id, tax_year)
     shares = get_1041_shares(trust_id, tax_year)
