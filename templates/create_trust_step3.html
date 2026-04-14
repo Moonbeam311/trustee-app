@@ -16,19 +16,19 @@
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 <label>Primary Trustee</label>
-    <input name="trustee_name" required>
+    <input name="trustee_name" required value="{{ trust['trustee_name'] or '' }}">
     <div style="font-size:13px; margin-bottom:12px;">
         The trustee is responsible for administering the trust and acting in accordance with its terms and fiduciary duties.
     </div>
 
     <label>Successor Trustee</label>
-    <input name="successor_trustee_name">
+    <input name="successor_trustee_name" value="{{ trust['successor_trustee_name'] or '' }}">
     <div style="font-size:13px; margin-bottom:12px;">
         The successor trustee may step in if the current trustee is unable or unwilling to serve.
     </div>
 
     <label>Primary Beneficiary</label>
-    <input name="beneficiary_name">
+    <input name="beneficiary_name" value="{{ trust['beneficiary_name'] or '' }}">
     <div style="font-size:13px; margin-bottom:20px;">
         The beneficiary is the person or entity for whose benefit the trust is administered.
     </div>
