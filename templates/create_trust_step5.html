@@ -17,7 +17,7 @@
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
     <label>Initial Corpus Description</label>
-    <input name="initial_corpus_description" required value="{{ trust[\'initial_corpus_description\'] or \'\' }}" required>
+    <input name="initial_corpus_description" required value="{{ trust['initial_corpus_description'] or '' }}" required>
     <div style="font-size:13px; margin-bottom:12px;">
         <strong>What is this?</strong><br>
         The corpus is the initial property, value, or asset base associated with the trust.
