@@ -3718,7 +3718,7 @@ def document_detail(document_id):
             reason="This generated document does not belong to the current owner context."
         )
 
-template = get_document_template_by_id(document.get("template_id")) if document.get("template_id") else None
+    template = get_document_template_by_id(document.get("template_id")) if document.get("template_id") else None
     workspace = get_workspace_by_id(document.get("workspace_id")) if document.get("workspace_id") else None
     return render_template("document_detail.html", document=document, template=template, workspace=workspace)
 
