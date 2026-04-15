@@ -3523,6 +3523,13 @@ def execution_task_detail(task_id):
     task = get_execution_task_by_id(task_id)
     if not task:
         return f"Execution task {task_id} not found", 404
+
+    if task.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This execution task does not belong to the current owner context."
+        )
+
     workspace = get_workspace_by_id(task.get("workspace_id")) if task.get("workspace_id") else None
     return render_template("execution_task_detail.html", task=task, workspace=workspace)
 
@@ -3532,6 +3539,12 @@ def execution_task_status(task_id):
     task = get_execution_task_by_id(task_id)
     if not task:
         return f"Execution task {task_id} not found", 404
+
+    if task.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This execution task does not belong to the current owner context."
+        )
 
     if not validate_csrf_token():
         return redirect(url_for("execution_task_detail", task_id=task_id))
