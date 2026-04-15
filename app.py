@@ -2037,8 +2037,9 @@ def get_all_discussion_threads():
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM discussion_threads
+        WHERE owner_id = ?
         ORDER BY created_at DESC, title
-    """).fetchall()
+    """, ("ADMIN_OWNER_001",)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -2047,8 +2048,9 @@ def get_discussion_threads_by_workspace(workspace_id):
     rows = conn.execute("""
         SELECT * FROM discussion_threads
         WHERE workspace_id = ?
+          AND owner_id = ?
         ORDER BY created_at DESC, title
-    """, (workspace_id,)).fetchall()
+    """, (workspace_id, "ADMIN_OWNER_001")).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
