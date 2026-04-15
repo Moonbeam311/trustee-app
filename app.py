@@ -625,6 +625,7 @@ def upload_document():
             "original_filename": original_filename,
             "stored_filename": stored_filename,
             "file_path": str(file_path),
+            "owner_id": "ADMIN_OWNER_001",
         }
         create_document_record(document)
 
