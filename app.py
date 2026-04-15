@@ -3214,7 +3214,7 @@ def workspace_detail(workspace_id):
             reason="This workspace does not belong to the current owner context."
         )
 
-notes = get_workspace_notes(workspace_id)
+    notes = get_workspace_notes(workspace_id)
     return render_template("workspace_detail.html", workspace=workspace, notes=notes)
 
 
