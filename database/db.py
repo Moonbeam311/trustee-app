@@ -258,7 +258,10 @@ def get_property_by_id(property_id):
 def get_properties_by_trust_id(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM properties WHERE trust_id = ? ORDER BY property_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM properties WHERE trust_id = ? AND owner_id = ? ORDER BY property_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -316,7 +319,10 @@ def create_account_record(account_data):
 def get_accounts_by_trust_id(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM accounts WHERE trust_id = ? ORDER BY account_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM accounts WHERE trust_id = ? AND owner_id = ? ORDER BY account_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -324,7 +330,10 @@ def get_accounts_by_trust_id(trust_id):
 def get_accounts_by_property_id(property_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM accounts WHERE property_id = ? ORDER BY account_id", (property_id,))
+    cur.execute(
+        "SELECT * FROM accounts WHERE property_id = ? AND owner_id = ? ORDER BY account_id",
+        (property_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -406,7 +415,10 @@ def create_ledger_entry(entry_data):
 def get_ledger_by_trust(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ledger_entries WHERE trust_id = ? ORDER BY entry_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM ledger_entries WHERE trust_id = ? AND owner_id = ? ORDER BY entry_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -414,7 +426,10 @@ def get_ledger_by_trust(trust_id):
 def get_ledger_by_property(property_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ledger_entries WHERE property_id = ? ORDER BY entry_id", (property_id,))
+    cur.execute(
+        "SELECT * FROM ledger_entries WHERE property_id = ? AND owner_id = ? ORDER BY entry_id",
+        (property_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
