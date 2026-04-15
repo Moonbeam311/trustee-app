@@ -3313,6 +3313,13 @@ def discussion_thread(thread_id):
     thread = get_discussion_thread_by_id(thread_id)
     if not thread:
         return f"Discussion thread {thread_id} not found", 404
+
+    if thread.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This discussion thread does not belong to the current owner context."
+        )
+
     messages = get_discussion_messages(thread_id)
     workspace = get_workspace_by_id(thread.get("workspace_id")) if thread.get("workspace_id") else None
     return render_template("discussion_thread.html", thread=thread, messages=messages, workspace=workspace)
@@ -3324,7 +3331,13 @@ def discussion_reply(thread_id):
     if not thread:
         return f"Discussion thread {thread_id} not found", 404
 
-    if request.method == "POST":
+    if thread.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This discussion thread does not belong to the current owner context."
+        )
+
+if request.method == "POST":
         if not validate_csrf_token():
             return render_template("discussion_reply_form.html", thread=thread, error_message="Invalid or missing CSRF token.")
 
