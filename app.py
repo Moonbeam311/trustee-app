@@ -691,6 +691,12 @@ def property_detail(property_id):
     if not prop:
         return f"Property {property_id} not found"
 
+    if prop.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This property record does not belong to the current owner context."
+        )
+
     linked_trust = get_trust_by_id(prop["trust_id"])
     linked_accounts = get_accounts_by_property_id(property_id)
     linked_documents = get_documents_by_property_id(property_id)
