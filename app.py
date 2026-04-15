@@ -1914,6 +1914,7 @@ def get_all_execution_tasks():
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM execution_tasks
+        WHERE owner_id = ?
         ORDER BY
             CASE priority
                 WHEN 'high' THEN 1
@@ -1921,7 +1922,7 @@ def get_all_execution_tasks():
                 ELSE 3
             END,
             created_at DESC
-    """).fetchall()
+    """, ("ADMIN_OWNER_001",)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
