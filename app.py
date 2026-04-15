@@ -3337,21 +3337,22 @@ def discussion_reply(thread_id):
             reason="This discussion thread does not belong to the current owner context."
         )
 
-if request.method == "POST":
+    if request.method == "POST":
         if not validate_csrf_token():
-            return render_template("discussion_reply_form.html", thread=thread, error_message="Invalid or missing CSRF token.")
+            return render_template(
+                "discussion_reply_form.html",
+                thread=thread,
+                error_message="Invalid or missing CSRF token."
+            )
 
-        message_id = (request.form.get("message_id") or "").strip()
-        body = (request.form.get("body") or "").strip()
-        if not message_id or not body:
-            return render_template("discussion_reply_form.html", thread=thread, error_message="Message ID and body are required.")
-
+        message_id = get_next_discussion_message_id()
         payload = {
             "message_id": message_id,
             "thread_id": thread_id,
-            "parent_message_id": request.form.get("parent_message_id") or "",
+            "parent_message_id": request.form.get("parent_message_id"),
             "author": session.get("username") or "unknown",
-            "body": body,
+            "body": request.form.get("body"),
+            "owner_id": "ADMIN_OWNER_001",
         }
         create_discussion_message(payload)
         return redirect(url_for("discussion_thread", thread_id=thread_id))
