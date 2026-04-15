@@ -3207,7 +3207,14 @@ def workspace_detail(workspace_id):
     workspace = get_workspace_by_id(workspace_id)
     if not workspace:
         return f"Workspace {workspace_id} not found", 404
-    notes = get_workspace_notes(workspace_id)
+
+    if workspace.get("owner_id") != "ADMIN_OWNER_001":
+        return render_template(
+            "access_denied.html",
+            reason="This workspace does not belong to the current owner context."
+        )
+
+notes = get_workspace_notes(workspace_id)
     return render_template("workspace_detail.html", workspace=workspace, notes=notes)
 
 
