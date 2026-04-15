@@ -357,7 +357,10 @@ def create_document_record(doc_data):
 def get_documents_by_trust_id(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM documents WHERE trust_id = ? ORDER BY document_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM documents WHERE trust_id = ? AND owner_id = ? ORDER BY document_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -365,7 +368,10 @@ def get_documents_by_trust_id(trust_id):
 def get_documents_by_property_id(property_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM documents WHERE property_id = ? ORDER BY document_id", (property_id,))
+    cur.execute(
+        "SELECT * FROM documents WHERE property_id = ? AND owner_id = ? ORDER BY document_id",
+        (property_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
