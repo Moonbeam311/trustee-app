@@ -10,7 +10,7 @@
 <body>
 {% include '_nav.html' %}
 
-<h1>Instrument Detail</h1>\n<p><a href="/reports/instrument/{{ instrument["instrument_id"] }}.pdf" target="_blank">Download Instrument PDF</a></p>\n
+<h1>Instrument Detail</h1><p><a href="/reports/instrument/{{ instrument["instrument_id"] }}.pdf" target="_blank">Download Instrument PDF</a></p>
 
 {% if error_message %}
 <div class="box" style="border-color:#cf222e; color:#cf222e;">

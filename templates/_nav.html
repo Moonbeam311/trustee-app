@@ -1,8 +1,33 @@
+
 <div style="border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;">
   <a href="/">Home</a> |
+  <a href="/guide">Guide</a> |
+  {% if session.get("role") in ["Admin", "Trustee"] %}
   <a href="/workflow">Workflow</a> |
-  <a href="/admin">Admin</a> |
-  <a href="/exports">Exports</a> |
-  <a href="/audit">Audit</a> | <a href="/portfolio">Portfolio</a> | <a href="/fiduciaries">Fiduciaries</a> | <a href="/genealogy">Genealogy</a> | <a href="/media">Media</a> | <a href="/roles">Roles</a> | <a href="/permissions">Permissions</a> | <a href="/security">Security</a>
+  {% endif %}
+  {% if session.get("role") in ["Admin", "Trustee", "Viewer"] %}
+  <a href="/portfolio">Portfolio</a> |
+  {% endif %}
+
+  {% if session.get("role") == "Admin" %}
+    <a href="/admin">Admin</a> |
+    <a href="/users">Users</a> |
+    <a href="/audit">Audit</a> |
+    <a href="/roles">Roles</a> |
+    <a href="/permissions">Permissions</a> |
+    <a href="/security">Security</a> |
+  {% endif %}
+
+  {% if session.get("role") in ["Admin", "Trustee"] %}
+    <a href="/exports">Exports</a> |
+    <a href="/fiduciaries">Fiduciaries</a> |
+    <a href="/genealogy">Genealogy</a> |
+    <a href="/media">Media</a> |
+  {% endif %}
 </div>
-<p><a href="/login">Login</a> | <a href="/logout">Logout</a></p>
+
+{% if session.get("username") %}
+<p><a href="/change_password">Change Password</a> | <a href="/logout">Logout</a></p>
+{% else %}
+<p><a href="/login">Login</a></p>
+{% endif %}

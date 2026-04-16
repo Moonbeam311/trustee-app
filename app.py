@@ -149,6 +149,15 @@ def generate_csrf_token():
     return token
 
 
+
+
+def get_current_owner():
+    """
+    Returns the current authenticated owner identity.
+    Centralized for Phase 5 owner isolation.
+    """
+    return session.get("username")
+
 def validate_csrf_token():
     session_token = session.get("_csrf_token")
     form_token = request.form.get("_csrf_token")
@@ -169,6 +178,7 @@ ensure_role_tables()
 ensure_user_tables()
 
 UPLOAD_FOLDER = Path("uploads")
+UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", "wav", "mp4", "mov"}
 
 def allowed_file(filename):
@@ -176,6 +186,9 @@ def allowed_file(filename):
 
 
 ROLE_RULES = {
+    "home": {"Admin", "Trustee", "Viewer"},
+    "workflow_hub": {"Admin", "Trustee"},
+    "portfolio_dashboard": {"Admin", "Trustee", "Viewer"},
     "fiduciary_dashboard": {"Admin", "Trustee"},
     "genealogy_dashboard": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
@@ -251,6 +264,10 @@ ROLE_RULES = {
     "users_edit": {"Admin"},
     "users_reset_password": {"Admin"},
     "export_center": {"Admin", "Trustee"},
+    "export_handoff_file": {"Admin", "Trustee"},
+    "export_roadmap_file": {"Admin", "Trustee"},
+    "export_package_file": {"Admin", "Trustee"},
+    "export_zip_snapshot": {"Admin", "Trustee"},
     "audit_dashboard": {"Admin"},
     "media_file": {"Admin", "Trustee"},
     "evidence_by_entity": {"Admin", "Trustee"},
@@ -274,17 +291,17 @@ ROLE_RULES = {
 
 
 def gate_trust_access(trust_id, allowed_roles):
-    acting_role = session.get("role")
-    if not acting_role:
+    current_role = session.get("role")
+    if not current_role:
         return render_template(
             "access_denied.html",
-            reason="No acting_role provided. Use ?acting_role=Admin or Trustee or Viewer."
+            reason="No authenticated role found in the current session."
         )
 
-    if acting_role not in allowed_roles:
+    if current_role not in allowed_roles:
         return render_template(
             "access_denied.html",
-            reason=f"Role {acting_role} is not allowed for this page."
+            reason=f"Role {current_role} is not allowed for this page."
         )
 
     return None
@@ -417,7 +434,7 @@ def create_trust_step1():
             "asset_categories": "Not Yet Selected",
             "generate_schedule_recommendations": "Not Yet Selected",
             "status": "Draft",
-        "owner_id": "ADMIN_OWNER_001"
+        "owner_id": get_current_owner()
         }
         create_trust_record(trust)
         return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
@@ -625,7 +642,7 @@ def upload_document():
             "original_filename": original_filename,
             "stored_filename": stored_filename,
             "file_path": str(file_path),
-            "owner_id": "ADMIN_OWNER_001",
+            "owner_id": get_current_owner(),
         }
         create_document_record(document)
 
@@ -691,7 +708,7 @@ def property_detail(property_id):
     if not prop:
         return f"Property {property_id} not found"
 
-    if prop.get("owner_id") != "ADMIN_OWNER_001":
+    if prop.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This property record does not belong to the current owner context."
@@ -1572,6 +1589,13 @@ def genealogy_new():
             "spouse": request.form.get("spouse"),
             "notes": request.form.get("notes"),
             "evidence_notes": request.form.get("evidence_notes"),
+            "source_platform": request.form.get("source_platform"),
+            "source_title": request.form.get("source_title"),
+            "source_reference": request.form.get("source_reference"),
+            "archive_date": request.form.get("archive_date"),
+            "verification_status": request.form.get("verification_status"),
+            "trace_summary": request.form.get("trace_summary"),
+            "guidance_prompt": request.form.get("guidance_prompt"),
         })
         log_change("genealogy", genealogy_id, "create", "Genealogy / pedigree record created")
         return redirect(url_for("genealogy_dashboard"))
@@ -1582,7 +1606,6 @@ def genealogy_new():
 
 
 
-UPLOAD_FOLDER = "uploads"
 
 TRUST_TYPE_LABELS = {
     "revocable": "Revocable Trust",
@@ -1870,7 +1893,7 @@ def get_generated_documents():
         SELECT * FROM generated_documents
         WHERE owner_id = ?
         ORDER BY created_at DESC, title
-    """, ("ADMIN_OWNER_001",)).fetchall()
+    """, (get_current_owner(),)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -1881,7 +1904,7 @@ def get_generated_documents_by_workspace(workspace_id):
         WHERE workspace_id = ?
           AND owner_id = ?
         ORDER BY created_at DESC, title
-    """, (workspace_id, "ADMIN_OWNER_001")).fetchall()
+    """, (workspace_id, get_current_owner())).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -1931,7 +1954,7 @@ def get_all_execution_tasks():
                 ELSE 3
             END,
             created_at DESC
-    """, ("ADMIN_OWNER_001",)).fetchall()
+    """, (get_current_owner(),)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -2048,7 +2071,7 @@ def get_all_discussion_threads():
         SELECT * FROM discussion_threads
         WHERE owner_id = ?
         ORDER BY created_at DESC, title
-    """, ("ADMIN_OWNER_001",)).fetchall()
+    """, (get_current_owner(),)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -2059,7 +2082,7 @@ def get_discussion_threads_by_workspace(workspace_id):
         WHERE workspace_id = ?
           AND owner_id = ?
         ORDER BY created_at DESC, title
-    """, (workspace_id, "ADMIN_OWNER_001")).fetchall()
+    """, (workspace_id, get_current_owner())).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -2410,7 +2433,9 @@ def media_upload():
         file = request.files.get("file")
         if file:
             media_id = get_next_media_id()
-            filename = f"{media_id}_{file.filename}"
+            original_name = file.filename
+            safe_name = secure_filename(original_name)
+            filename = f"{media_id}_{safe_name}"
             filepath = os.path.join(UPLOAD_FOLDER, filename)
             file.save(filepath)
 
@@ -2447,8 +2472,19 @@ def media_file(media_id):
     if not target:
         return "Media not found", 404
 
-    from flask import session, send_file
-    return send_file(target["file_path"])
+    stored_path = Path(target["file_path"]).resolve()
+    uploads_root = UPLOAD_FOLDER.resolve()
+
+    try:
+        stored_path.relative_to(uploads_root)
+    except ValueError:
+        return "Invalid media path", 400
+
+    if not stored_path.exists() or not stored_path.is_file():
+        return "Media file missing", 404
+
+    from flask import send_file
+    return send_file(stored_path)
 
 
 
@@ -2473,7 +2509,7 @@ def k1_report_view(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2509,7 +2545,7 @@ def form1041_report_view(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2583,7 +2619,7 @@ def k1_report_print(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2621,7 +2657,7 @@ def form1041_report_print(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2733,7 +2769,7 @@ def trust_summary_pdf(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2754,7 +2790,7 @@ def k1_readiness_pdf(trust_id, tax_year):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2793,7 +2829,7 @@ def ledger_report_pdf(trust_id):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -2809,7 +2845,7 @@ def form1041_report_pdf(trust_id, tax_year):
     if not trust:
         return f"Trust {trust_id} not found", 404
 
-    if trust.get("owner_id") != "ADMIN_OWNER_001":
+    if trust.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This trust report does not belong to the current owner context."
@@ -3220,7 +3256,7 @@ def workspace_detail(workspace_id):
     if not workspace:
         return f"Workspace {workspace_id} not found", 404
 
-    if workspace.get("owner_id") != "ADMIN_OWNER_001":
+    if workspace.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This workspace does not belong to the current owner context."
@@ -3309,7 +3345,7 @@ def discussion_new():
             "related_form": request.form.get("related_form"),
             "created_by": session.get("username") or "unknown",
             "status": request.form.get("status") or "open",
-            "owner_id": "ADMIN_OWNER_001",
+            "owner_id": get_current_owner(),
         }
         create_discussion_thread(payload)
         return redirect(url_for("discussion_thread", thread_id=thread_id))
@@ -3323,7 +3359,7 @@ def discussion_thread(thread_id):
     if not thread:
         return f"Discussion thread {thread_id} not found", 404
 
-    if thread.get("owner_id") != "ADMIN_OWNER_001":
+    if thread.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This discussion thread does not belong to the current owner context."
@@ -3340,7 +3376,7 @@ def discussion_reply(thread_id):
     if not thread:
         return f"Discussion thread {thread_id} not found", 404
 
-    if thread.get("owner_id") != "ADMIN_OWNER_001":
+    if thread.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This discussion thread does not belong to the current owner context."
@@ -3361,7 +3397,7 @@ def discussion_reply(thread_id):
             "parent_message_id": request.form.get("parent_message_id"),
             "author": session.get("username") or "unknown",
             "body": request.form.get("body"),
-            "owner_id": "ADMIN_OWNER_001",
+            "owner_id": get_current_owner(),
         }
         create_discussion_message(payload)
         return redirect(url_for("discussion_thread", thread_id=thread_id))
@@ -3402,7 +3438,7 @@ def workspace_discussion_new(workspace_id):
             "related_form": request.form.get("related_form"),
             "created_by": session.get("username") or "unknown",
             "status": request.form.get("status") or "open",
-            "owner_id": "ADMIN_OWNER_001",
+            "owner_id": get_current_owner(),
         }
         create_discussion_thread(payload)
         return redirect(url_for("discussion_thread", thread_id=thread_id))
@@ -3549,7 +3585,7 @@ def execution_task_detail(task_id):
     if not task:
         return f"Execution task {task_id} not found", 404
 
-    if task.get("owner_id") != "ADMIN_OWNER_001":
+    if task.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This execution task does not belong to the current owner context."
@@ -3565,7 +3601,7 @@ def execution_task_status(task_id):
     if not task:
         return f"Execution task {task_id} not found", 404
 
-    if task.get("owner_id") != "ADMIN_OWNER_001":
+    if task.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This execution task does not belong to the current owner context."
@@ -3705,7 +3741,7 @@ def document_generate():
             "content": content,
             "status": request.form.get("status") or "draft",
             "created_by": session.get("username") or "unknown",
-            "owner_id": "ADMIN_OWNER_001",
+            "owner_id": get_current_owner(),
         }
         create_generated_document(payload)
         return redirect(url_for("document_detail", document_id=document_id))
@@ -3719,7 +3755,7 @@ def document_detail(document_id):
     if not document:
         return f"Generated document {document_id} not found", 404
 
-    if document.get("owner_id") != "ADMIN_OWNER_001":
+    if document.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
             reason="This generated document does not belong to the current owner context."
@@ -3799,7 +3835,7 @@ def workspace_document_generate(workspace_id):
             "content": content,
             "status": request.form.get("status") or "draft",
             "created_by": session.get("username") or "unknown",
-            "owner_id": "ADMIN_OWNER_001",
+            "owner_id": get_current_owner(),
         }
         create_generated_document(payload)
         return redirect(url_for("document_detail", document_id=document_id))
@@ -3850,7 +3886,17 @@ def login():
             session["role"] = user["role_name"]
             session["username"] = user["username"]
             session["last_activity"] = datetime.now(UTC).timestamp()
-            return redirect(url_for("admin_index"))
+
+            role = session.get("role")
+            if role == "Admin":
+                return redirect(url_for("admin_index"))
+            elif role == "Trustee":
+                return redirect(url_for("home"))
+            elif role == "Viewer":
+                return redirect(url_for("portfolio_dashboard"))
+            else:
+                session.clear()
+                return redirect(url_for("login"))
 
         return render_template("auth/login.html", error="Invalid credentials")
 
@@ -3860,13 +3906,54 @@ def login():
 
     return render_template("auth/login.html")
 
-
-
-
 @app.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+
+@app.route("/change_password", methods=["GET", "POST"])
+def change_password():
+    username = session.get("username")
+    if not username:
+        return redirect(url_for("login"))
+
+    user = get_user_by_username(username)
+    if not user:
+        session.clear()
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("change_password.html", error_message="Invalid or missing CSRF token.")
+
+        current_password = request.form.get("current_password") or ""
+        new_password = request.form.get("new_password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not current_password or not new_password or not confirm_password:
+            return render_template(
+                "change_password.html",
+                error_message="All password fields are required."
+            )
+
+        if not check_password_hash(user["password_hash"], current_password):
+            return render_template(
+                "change_password.html",
+                error_message="Current password is incorrect."
+            )
+
+        if new_password != confirm_password:
+            return render_template(
+                "change_password.html",
+                error_message="New passwords do not match."
+            )
+
+        update_app_user_password(username, generate_password_hash(new_password))
+        flash("Password changed successfully.")
+        return redirect(url_for("change_password"))
+
+    return render_template("change_password.html")
 
 
 if __name__ == "__main__":

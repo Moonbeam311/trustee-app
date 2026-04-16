@@ -44,6 +44,41 @@
     <label>Spouse</label>
     <input type="text" name="spouse">
 
+    <label>Source Platform</label>
+    <select name="source_platform">
+      <option value="">Select source</option>
+      <option value="Ancestry">Ancestry</option>
+      <option value="FamilySearch">FamilySearch</option>
+      <option value="Census">Census</option>
+      <option value="Obituary">Obituary</option>
+      <option value="Deed">Deed</option>
+      <option value="Church/Bible Record">Church/Bible Record</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label>Source Title / Record Name</label>
+    <input type="text" name="source_title">
+
+    <label>Source Reference / URL</label>
+    <input type="text" name="source_reference">
+
+    <label>Archive Date</label>
+    <input type="date" name="archive_date">
+
+    <label>Verification Status</label>
+    <select name="verification_status">
+      <option value="unverified">unverified</option>
+      <option value="in_review">in review</option>
+      <option value="partially_verified">partially verified</option>
+      <option value="verified">verified</option>
+    </select>
+
+    <label>Trace Summary</label>
+    <textarea name="trace_summary"></textarea>
+
+    <label>Guidance Prompt</label>
+    <textarea name="guidance_prompt" placeholder="What does this record appear to prove? What should be checked next?"></textarea>
+
     <label>Notes</label>
     <textarea name="notes"></textarea>
 
