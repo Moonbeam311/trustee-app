@@ -41,6 +41,15 @@ def init_db():
     )
     """)
 
+    trust_cols = [row["name"] for row in cur.execute("PRAGMA table_info(trusts)").fetchall()]
+    for col in [
+        ("grantor_name", "TEXT"),
+        ("grantor_type", "TEXT"),
+        ("grantor_contact", "TEXT"),
+    ]:
+        if col[0] not in trust_cols:
+            cur.execute(f"ALTER TABLE trusts ADD COLUMN {col[0]} {col[1]}")
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS properties (
         property_id TEXT PRIMARY KEY,
