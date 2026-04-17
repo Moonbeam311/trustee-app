@@ -3912,6 +3912,52 @@ def logout():
     return redirect(url_for("login"))
 
 
+@app.route("/bootstrap_admin_once", methods=["GET", "POST"])
+def bootstrap_admin_once():
+    users = get_all_app_users()
+    if users:
+        return "Bootstrap route disabled: users already exist.", 403
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("bootstrap_admin_once.html", error_message="Invalid or missing CSRF token.")
+
+        username = (request.form.get("username") or "").strip()
+        password = request.form.get("password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+
+        if not username or not password or not confirm_password:
+            return render_template(
+                "bootstrap_admin_once.html",
+                error_message="All fields are required."
+            )
+
+        if password != confirm_password:
+            return render_template(
+                "bootstrap_admin_once.html",
+                error_message="Passwords do not match."
+            )
+
+        existing = get_user_by_username(username)
+        if existing:
+            return render_template(
+                "bootstrap_admin_once.html",
+                error_message="Username already exists."
+            )
+
+        create_app_user({
+            "user_id": get_next_user_id(),
+            "username": username,
+            "password_hash": generate_password_hash(password),
+            "role_name": "Admin",
+            "status": "active",
+        })
+
+        return redirect(url_for("login"))
+
+    return render_template("bootstrap_admin_once.html")
+
+
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     username = session.get("username")
