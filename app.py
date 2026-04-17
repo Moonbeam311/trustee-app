@@ -2737,7 +2737,7 @@ def security_dashboard():
 
 @app.before_request
 def enforce_session_timeout():
-    allowed_routes = {"login", "logout", "static"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
