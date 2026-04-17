@@ -27,8 +27,13 @@
         <option value="entity"{% if trust['grantor_type'] == "entity" %} selected{% endif %}>Entity</option>
     </select>
 
-    <label>Grantor Contact / Notes</label>
-    <input name="grantor_contact" value="{{ trust['grantor_contact'] or '' }}">
+    <label>Grantor Domicile / Residence (411)</label>
+    <input name="grantor_contact" value="{{ trust['grantor_contact'] or '' }}" placeholder="Enter domicile / residence / 411 information">
+
+    <div style="margin:10px 0 14px 0; padding:10px; background:#f8fafc; border:1px solid #d9e2ec; border-radius:6px;">
+        <strong>What goes here?</strong><br>
+        Use this field for the grantor's domicile, residence, or 411-style identifying location/contact information rather than general notes.
+    </div>
 
     <button type="submit">Save and Continue</button>
 </form>
