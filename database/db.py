@@ -165,6 +165,11 @@ def init_db():
         if col[0] not in ledger_cols:
             cur.execute(f"ALTER TABLE ledger_entries ADD COLUMN {col[0]} {col[1]}")
 
+    for table_name in ["properties", "accounts", "documents", "ledger_entries", "trusts"]:
+        cols = [row["name"] for row in cur.execute(f"PRAGMA table_info({table_name})").fetchall()]
+        if "owner_id" not in cols:
+            cur.execute(f"ALTER TABLE {table_name} ADD COLUMN owner_id TEXT")
+
     conn.commit()
     conn.close()
 
