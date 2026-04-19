@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Optional Support Docs {{ transfer.transfer_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.5;
+      max-width: 920px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Packet Detail</a></p>
+
+  <h1>Optional Supporting Transfer Documents</h1>
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+  <p class="muted">This page represents the second app-native missing handoff support-template module.</p>
+
+  <div class="section">
+    <h2>Transfer Context</h2>
+    <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+    <p><strong>Status:</strong> {{ transfer.status }}</p>
+    <p><strong>Mode:</strong> {{ transfer.mode }}</p>
+    <p><strong>Asset Type:</strong> {{ transfer.asset_type or '' }}</p>
+    <p><strong>Asset Name:</strong> {{ transfer.asset_name or '' }}</p>
+    <p><strong>Transfer Type:</strong> {{ transfer.transfer_type or '' }}</p>
+    <p><strong>Trustee Decision:</strong> {{ transfer.trustee_decision or '' }}</p>
+    <p><strong>Control Evidence:</strong> {{ transfer.control_change_status or '' }}</p>
+    <p><strong>Control Strength:</strong> {{ control_strength }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Optional Support Document Categories</h2>
+    <ul>
+      <li>Transfer cover memo</li>
+      <li>Supplemental authority statement</li>
+      <li>Supporting explanatory notes</li>
+      <li>Asset-specific clarification note</li>
+      <li>Optional trustee working note</li>
+      <li>Supplemental packet index</li>
+      <li>Optional checklist for downstream filing or record storage</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>When Optional Support Docs May Help</h2>
+    <ol>
+      <li>When the asset description needs extra clarification beyond the main packet.</li>
+      <li>When trustee reasoning should be explained in more detail than the decision field allows.</li>
+      <li>When control evidence is moderate or weak and supporting context may help later review.</li>
+      <li>When the packet may be reused as a model for future transfers.</li>
+      <li>When the user wants a cleaner audit trail for storage, review, or teaching/reference use.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2>Packet-Specific Guidance</h2>
+    <pre>For transfer {{ transfer.transfer_id }}, optional support documents may be useful if the packet requires extra explanatory context beyond the core required records.
+Current asset: "{{ transfer.asset_name or 'Unnamed Asset' }}"
+Transfer type: "{{ transfer.transfer_type or 'unspecified' }}"
+Trustee decision: "{{ transfer.trustee_decision or 'pending' }}"
+Control strength: "{{ control_strength }}"
+
+These optional support documents are not currently generated as individual packet artifacts, but this module establishes the category inside the app and prepares it for later expansion.</pre>
+  </div>
+</body>
+</html>

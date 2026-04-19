@@ -71,11 +71,13 @@
           [<a href="{{ get_transfer_resume_endpoint(t) }}">Resume</a>]
           [<a href="{{ url_for('transfer_detail', transfer_id=t.transfer_id) }}">Detail</a>]
           [<a href="{{ url_for('transfer_instruction_template', transfer_id=t.transfer_id) }}">Instructions</a>]
+          [<a href="{{ url_for('transfer_optional_support_docs', transfer_id=t.transfer_id) }}">Optional Docs</a>]
           [<a href="{{ url_for('transfer_print_view', transfer_id=t.transfer_id) }}" target="_blank">Print</a>]
         {% else %}
           [<a href="{{ url_for('transfer_review', transfer_id=t.transfer_id) }}">View</a>]
           [<a href="{{ url_for('transfer_detail', transfer_id=t.transfer_id) }}">Detail</a>]
           [<a href="{{ url_for('transfer_instruction_template', transfer_id=t.transfer_id) }}">Instructions</a>]
+          [<a href="{{ url_for('transfer_optional_support_docs', transfer_id=t.transfer_id) }}">Optional Docs</a>]
           [<a href="{{ url_for('transfer_print_view', transfer_id=t.transfer_id) }}" target="_blank">Print</a>]
         {% endif %}
       </li>
