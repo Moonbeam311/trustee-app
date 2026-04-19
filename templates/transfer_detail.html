@@ -40,6 +40,7 @@
   <p><a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Trust Execution</a></p>
   <p><a href="{{ url_for('transfer_instruction_template', transfer_id=transfer.transfer_id) }}">Open Universal Transfer Instruction Template</a></p>
   <p><a href="{{ url_for('transfer_optional_support_docs', transfer_id=transfer.transfer_id) }}">Open Optional Supporting Transfer Documents</a></p>
+  <p><a href="{{ url_for('transfer_recommended_support_docs', transfer_id=transfer.transfer_id) }}">Open Recommended Supporting Transfer Documents</a></p>
 
   <h1>Transfer Detail</h1>
   <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
