@@ -245,6 +245,27 @@ def seed_transfer_support_docs(transfer):
 
 
 
+def build_trust_preview_context(trust):
+    created_at_value = trust.created_at
+    if created_at_value:
+        try:
+            created_at_display = created_at_value.strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            created_at_display = str(created_at_value)
+    else:
+        created_at_display = ""
+
+    return {
+        "trust_id": trust.trust_id or "",
+        "trust_name": trust.trust_name or "",
+        "trust_type": trust.trust_type or "",
+        "grantor_name": trust.grantor_name or "",
+        "owner_id": trust.owner_id or "",
+        "status": trust.status or "",
+        "created_at_display": created_at_display,
+    }
+
+
 def get_support_doc_by_category(transfer, category_key):
     return TransferSupportDoc.query.filter_by(
         transfer_id_fk=transfer.id,
@@ -4021,9 +4042,11 @@ def trust_trustee_acceptance_preview(trust_id):
 @app.route("/trust/<trust_id>/articles-preview")
 def trust_articles_preview(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_articles_preview.html",
         trust=trust,
+        preview_context=preview_context,
     )
 
 
