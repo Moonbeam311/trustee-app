@@ -3962,6 +3962,10 @@ def transfer_start(trust_id):
 def transfer_asset(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
 
+    if request.method == "POST" and transfer.status == "completed":
+        flash("Completed transfers are read-only.", "warning")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
     if request.method == "POST":
         if not validate_csrf_token():
             flash("Invalid or missing CSRF token.", "warning")
@@ -4003,6 +4007,10 @@ def transfer_asset(transfer_id):
 def transfer_classification(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
 
+    if request.method == "POST" and transfer.status == "completed":
+        flash("Completed transfers are read-only.", "warning")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
     if request.method == "POST":
         if not validate_csrf_token():
             flash("Invalid or missing CSRF token.", "warning")
@@ -4039,6 +4047,10 @@ def transfer_classification(transfer_id):
 @app.route("/execution/transfers/<transfer_id>/assignment", methods=["GET", "POST"])
 def transfer_assignment(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST" and transfer.status == "completed":
+        flash("Completed transfers are read-only.", "warning")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if not validate_capacity_for_step("assignment", transfer.current_capacity):
         flash("Assignment step requires individual capacity.", "warning")
@@ -4086,6 +4098,10 @@ def transfer_assignment(transfer_id):
 def transfer_trustee_acceptance(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
 
+    if request.method == "POST" and transfer.status == "completed":
+        flash("Completed transfers are read-only.", "warning")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
     if request.method == "POST":
         if not validate_csrf_token():
             flash("Invalid or missing CSRF token.", "warning")
@@ -4128,6 +4144,10 @@ def transfer_trustee_acceptance(transfer_id):
 def transfer_control_evidence(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
 
+    if request.method == "POST" and transfer.status == "completed":
+        flash("Completed transfers are read-only.", "warning")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
     if request.method == "POST":
         if not validate_csrf_token():
             flash("Invalid or missing CSRF token.", "warning")
@@ -4165,6 +4185,10 @@ def transfer_control_evidence(transfer_id):
 @app.route("/execution/transfers/<transfer_id>/records", methods=["GET", "POST"])
 def transfer_records(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST" and transfer.status == "completed":
+        flash("Completed transfers are read-only.", "warning")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
         if not validate_csrf_token():
