@@ -16,6 +16,39 @@
   Real: {{ transfers|selectattr('mode', 'equalto', 'real')|list|length }}
 </div>
 
+<div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#fff; margin-bottom:16px;">
+  <strong>Template Inventory Status</strong>
+  <p style="margin-top:8px;">This panel reflects the broader handoff template inventory compared against the current app build.</p>
+
+  <p><strong>Included Now</strong></p>
+  <ul>
+    <li>Assignment</li>
+    <li>Schedule A</li>
+    <li>Transfer Log</li>
+    <li>Minutes</li>
+    <li>Review / Finalize flow</li>
+  </ul>
+
+  <p><strong>Partially Represented</strong></p>
+  <ul>
+    <li>Universal one-asset transfer workflow</li>
+    <li>Revocable trust transfer packet support</li>
+    <li>Simulation vs real execution mode</li>
+    <li>Hybrid operational + instructional flow</li>
+  </ul>
+
+  <p><strong>Still Missing</strong></p>
+  <ul>
+    <li>Universal transfer instruction templates</li>
+    <li>Optional supporting transfer documents</li>
+    <li>Recommended supporting transfer documents</li>
+    <li>Asset-specific packet variants</li>
+    <li>Expanded revocable trust transfer support documents</li>
+    <li>Template/category selection UI</li>
+    <li>Missing-document indicator per packet</li>
+  </ul>
+</div>
+
 {% if transfers %}
   <ul>
     {% for t in transfers %}
@@ -32,6 +65,8 @@
         — Asset: {{ t.asset_name or "No asset yet" }}
         <br>
         <small>Last Updated: {{ t.updated_at or t.created_at }}</small>
+        <br>
+        <small style="color:#92400e;">Template Inventory: additional handoff support docs still pending integration</small>
         {% if t.status in ["draft", "in_progress"] %}
           [<a href="{{ get_transfer_resume_endpoint(t) }}">Resume</a>]
           [<a href="{{ url_for('transfer_detail', transfer_id=t.transfer_id) }}">Detail</a>]
