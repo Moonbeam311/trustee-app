@@ -3994,6 +3994,12 @@ def workspace_document_generate(workspace_id):
 # TRANSFER ENGINE V1
 # ============================================================
 
+@app.route("/trust/<trust_id>/post-create-review")
+def trust_post_create_review(trust_id):
+    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    return redirect(url_for("trust_formation_preview_hub", trust_id=trust.trust_id))
+
+
 @app.route("/trust/<trust_id>/formation-preview-hub")
 def trust_formation_preview_hub(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
