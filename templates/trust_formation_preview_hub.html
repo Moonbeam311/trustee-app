@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Trust Formation Preview Hub {{ trust.trust_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f9fafb;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    a.button-link {
+      display: inline-block;
+      margin-top: 10px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+
+  <h1>Trust Formation Preview Hub</h1>
+  <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+  <p class="muted">Consolidated preview access for the approved revocable trust formation set before deeper wizard integration.</p>
+
+  <div class="section">
+    <h2>Trust Record Context</h2>
+    <p><strong>Trust Name:</strong> {{ trust.trust_name or '' }}</p>
+    <p><strong>Trust Type:</strong> {{ trust.trust_type or '' }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ trust.grantor_name or '' }}</p>
+    <p><strong>Status:</strong> {{ trust.status or '' }}</p>
+    <p><strong>Created:</strong> {{ trust.created_at or '' }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Formation Preview Documents</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Articles of Trust</h3>
+        <p class="muted">Preview the trust summary / articles layer.</p>
+        <a class="button-link" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>Trustee Acceptance</h3>
+        <p class="muted">Preview trustee acceptance of appointment.</p>
+        <a class="button-link" href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>Organizational Minutes</h3>
+        <p class="muted">Preview initial trustee resolutions / organizational minutes.</p>
+        <a class="button-link" href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>General Assignment</h3>
+        <p class="muted">Preview general assignment to trust.</p>
+        <a class="button-link" href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>Successor Trustee</h3>
+        <p class="muted">Preview successor trustee acceptance / appointment.</p>
+        <a class="button-link" href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
