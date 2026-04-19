@@ -122,6 +122,7 @@ from extensions import db as ext_db
 
 # --- Transfer Engine v1 imports ---
 from models.models_transfer import Transfer, TransferAction, TransferRecord
+from models.models_transfer_support import TransferSupportDoc
 from services.services_transfer import (
     generate_transfer_id,
     add_transfer_action,
@@ -203,6 +204,46 @@ def get_transfer_resume_endpoint(transfer):
     return url_for("transfer_review", transfer_id=transfer.transfer_id)
 
 
+
+
+def mark_core_support_docs_included(transfer):
+    core_keys = {"assignment", "schedule_a", "transfer_log", "minutes"}
+
+    rows = TransferSupportDoc.query.filter_by(transfer_id_fk=transfer.id).all()
+    for row in rows:
+        if row.category_key in core_keys:
+            row.status = "included"
+
+
+def seed_transfer_support_docs(transfer):
+    existing = TransferSupportDoc.query.filter_by(transfer_id_fk=transfer.id).count()
+    if existing:
+        return
+
+    defaults = [
+        ("assignment", "Assignment", "included"),
+        ("schedule_a", "Schedule A", "included"),
+        ("transfer_log", "Transfer Log", "included"),
+        ("minutes", "Minutes", "included"),
+        ("universal_instructions", "Universal Transfer Instructions", "recommended"),
+        ("optional_support_docs", "Optional Supporting Transfer Documents", "optional"),
+        ("recommended_support_docs", "Recommended Supporting Transfer Documents", "recommended"),
+        ("bank_support_docs", "Bank / Account Support Documents", "optional"),
+        ("personal_property_support_docs", "Personal Property Support Documents", "optional"),
+        ("document_support_docs", "Document / Intangible Rights Support Documents", "optional"),
+    ]
+
+    for category_key, category_label, status in defaults:
+        ext_db.session.add(
+            TransferSupportDoc(
+                transfer_id_fk=transfer.id,
+                category_key=category_key,
+                category_label=category_label,
+                status=status,
+            )
+        )
+
+
 def build_transfer_step_nav(transfer, current_step):
     step_defs = [
         ("asset", "Asset", "transfer_asset"),
@@ -249,6 +290,9 @@ ensure_genealogy_tables()
 ensure_media_tables()
 ensure_role_tables()
 ensure_user_tables()
+
+with app.app_context():
+    ext_db.create_all()
 
 UPLOAD_FOLDER = Path("uploads")
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
@@ -4308,6 +4352,7 @@ def transfer_review(transfer_id):
         )
 
         if success:
+            mark_core_support_docs_included(transfer)
             ext_db.session.commit()
             flash(f"Transfer {transfer.transfer_id} finalized.", "success")
             return redirect(url_for("trust_execution_dashboard", trust_id=transfer.trust_id))
