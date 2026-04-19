@@ -4283,6 +4283,18 @@ def transfer_review(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/print")
+def transfer_print_view(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    record_bundle = transfer.record_bundle
+    return render_template(
+        "transfer_print_view.html",
+        transfer=transfer,
+        record_bundle=record_bundle,
+        control_strength=calculate_control_strength(transfer.control_change_status),
+    )
+
+
 @app.route("/visualization")
 def visualization_dashboard():
     metrics = get_visualization_metrics()

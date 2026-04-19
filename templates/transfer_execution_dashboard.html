@@ -34,8 +34,10 @@
         <small>Last Updated: {{ t.updated_at or t.created_at }}</small>
         {% if t.status in ["draft", "in_progress"] %}
           [<a href="{{ get_transfer_resume_endpoint(t) }}">Resume</a>]
+          [<a href="{{ url_for('transfer_print_view', transfer_id=t.transfer_id) }}" target="_blank">Print</a>]
         {% else %}
           [<a href="{{ url_for('transfer_review', transfer_id=t.transfer_id) }}">View</a>]
+          [<a href="{{ url_for('transfer_print_view', transfer_id=t.transfer_id) }}" target="_blank">Print</a>]
         {% endif %}
       </li>
     {% endfor %}

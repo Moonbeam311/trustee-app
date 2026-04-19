@@ -43,6 +43,10 @@
   {% endif %}
 </form>
 
+<p style="margin-top: 12px;">
+  <a href="{{ url_for('transfer_print_view', transfer_id=transfer.transfer_id) }}" target="_blank">Print Packet View</a>
+</p>
+
 {% if transfer.mode == "simulation" %}
   <hr>
   <p><strong>Simulation Mode:</strong> Training use only.</p>
