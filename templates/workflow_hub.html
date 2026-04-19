@@ -28,6 +28,26 @@
 </div>
 
 <div class="box">
+  <h2>Transfer Engine</h2>
+  <p class="muted">Guide one-asset transfer packets through assignment, trustee acceptance, control evidence, and records.</p>
+  <ul>
+    <li>One asset at a time</li>
+    <li>Trustee action required</li>
+    <li>Schedule A, transfer log, and minutes</li>
+    <li>Simulation and real execution modes</li>
+  </ul>
+
+  {% for trust in trusts %}
+    <p>
+      <strong>{{ trust['trust_name'] }}</strong>
+      <span class="muted">({{ trust['trust_id'] }})</span><br>
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Transfer Engine</a>
+    </p>
+    <hr>
+  {% endfor %}
+</div>
+
+<div class="box">
   <h2>Trust Quick Access</h2>
   {% for trust in trusts %}
     <p><strong>{{ trust['trust_name'] }}</strong> <span class="muted">({{ trust['trust_id'] }})</span></p>

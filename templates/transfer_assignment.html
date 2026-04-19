@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Assignment</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+<p>Current Capacity: {{ transfer.current_capacity }}</p>
+
+<pre>{{ assignment_text }}</pre>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <button type="submit">Confirm Assignment Step</button>
+</form>
+
+<hr>
+<p><strong>Purpose:</strong> Confirm originating movement of the asset into packet flow.</p>
+<p><strong>Required Role:</strong> Individual</p>
+{% endblock %}

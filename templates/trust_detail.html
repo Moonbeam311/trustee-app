@@ -3,12 +3,13 @@
 {% block content %}
 <h2>Trust Detail</h2>
 
-<div style="display:flex; gap:10px; margin-bottom:16px;">
+<div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
     <a href="/"><button>Back to Dashboard</button></a>
     <a href="/add_property"><button>Add Asset</button></a>
     <a href="/link_account"><button>Link Account</button></a>
     <a href="/upload_document"><button>Upload Document</button></a>
     <a href="/ledger_entry"><button>Add Ledger Entry</button></a>
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}"><button>Trust Execution</button></a>
 </div>
 
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">

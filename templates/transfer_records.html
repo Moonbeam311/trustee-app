@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transfer Records</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>Meeting Date</label><br>
+  <input type="date" name="meeting_date"><br><br>
+
+  <label>Trustee Name</label><br>
+  <input type="text" name="trustee_name" value="{{ transfer.trustee_name or '' }}"><br><br>
+
+  <label>Record Notes</label><br>
+  <textarea name="record_notes"></textarea><br><br>
+
+  <button type="submit">Generate Records and Continue</button>
+</form>
+
+<hr>
+<p><strong>Purpose:</strong> Create Schedule A, transfer log, and minutes text.</p>
+{% endblock %}

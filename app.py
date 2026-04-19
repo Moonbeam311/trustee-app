@@ -118,6 +118,25 @@ from database.db import (
     has_required_role,
 )
 from pathlib import Path
+from extensions import db as ext_db
+
+# --- Transfer Engine v1 imports ---
+from models.models_transfer import Transfer, TransferAction, TransferRecord
+from services.services_transfer import (
+    generate_transfer_id,
+    add_transfer_action,
+    get_transfer_progress,
+    validate_capacity_for_step,
+    build_assignment_text,
+    build_schedule_a_text,
+    build_transfer_log_text,
+    build_minutes_text,
+    get_or_create_transfer_record,
+    populate_transfer_record_bundle,
+    calculate_control_strength,
+    can_finalize_transfer,
+    finalize_transfer,
+)
 import sqlite3
 from datetime import datetime
 from werkzeug.utils import secure_filename
@@ -127,6 +146,10 @@ from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
 
 app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{(Path(__file__).resolve().parent / 'trustee_app.db').as_posix()}"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+ext_db.init_app(app)
+
 SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
@@ -162,6 +185,22 @@ def validate_csrf_token():
     session_token = session.get("_csrf_token")
     form_token = request.form.get("_csrf_token")
     return bool(session_token and form_token and session_token == form_token)
+
+
+def get_transfer_resume_endpoint(transfer):
+    if not transfer.asset_name:
+        return url_for("transfer_asset", transfer_id=transfer.transfer_id)
+    if not transfer.transfer_type:
+        return url_for("transfer_classification", transfer_id=transfer.transfer_id)
+    if not transfer.assignment_confirmed:
+        return url_for("transfer_assignment", transfer_id=transfer.transfer_id)
+    if not transfer.trustee_decision:
+        return url_for("transfer_trustee_acceptance", transfer_id=transfer.transfer_id)
+    if not transfer.control_change_status:
+        return url_for("transfer_control_evidence", transfer_id=transfer.transfer_id)
+    if not transfer.records_complete:
+        return url_for("transfer_records", transfer_id=transfer.transfer_id)
+    return url_for("transfer_review", transfer_id=transfer.transfer_id)
 
 
 app.jinja_env.globals["csrf_token"] = generate_csrf_token
@@ -2605,6 +2644,7 @@ def role_new():
             "notes": request.form.get("notes"),
         })
         log_change("role", role_id, "create", "User role created")
+        flash(f"Role assignment {role_id} created successfully.")
         return redirect(url_for("role_dashboard"))
 
     return render_template("role_form.html", trusts=trusts)
@@ -3841,6 +3881,383 @@ def workspace_document_generate(workspace_id):
         return redirect(url_for("document_detail", document_id=document_id))
 
     return render_template("document_generate_form.html", workspace=workspace, templates=templates)
+
+
+# ============================================================
+# TRANSFER ENGINE V1
+# ============================================================
+
+@app.route("/trust/<trust_id>/execution")
+def trust_execution_dashboard(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    transfers = (
+        Transfer.query
+        .filter_by(trust_id=str(trust_id))
+        .order_by(Transfer.updated_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "transfer_execution_dashboard.html",
+        trust_id=trust_id,
+        transfers=transfers,
+        current_role=session.get("role"),
+    )
+
+
+@app.route("/trust/<trust_id>/execution/transfers/new", methods=["GET", "POST"])
+def transfer_start(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_start.html",
+                trust_id=trust_id,
+                current_role=session.get("role"),
+            )
+
+        mode = request.form.get("mode", "simulation")
+        current_capacity = request.form.get("current_capacity", "individual")
+
+        transfer = Transfer(
+            trust_id=str(trust_id),
+            transfer_id=generate_transfer_id(),
+            mode=mode,
+            status="draft",
+            current_capacity=current_capacity,
+            created_by=session.get("username") or "unknown",
+        )
+        ext_db.session.add(transfer)
+        ext_db.session.flush()
+
+        add_transfer_action(
+            transfer=transfer,
+            action_type="created_transfer",
+            performed_by=session.get("username") or "unknown",
+            capacity_used=current_capacity,
+            notes=f"Created transfer in {mode} mode.",
+            commit=False,
+        )
+
+        ext_db.session.commit()
+
+        flash(f"Transfer {transfer.transfer_id} created.", "success")
+        return redirect(url_for("transfer_asset", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_start.html",
+        trust_id=trust_id,
+        current_role=session.get("role"),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/asset", methods=["GET", "POST"])
+def transfer_asset(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_asset.html",
+                transfer=transfer,
+                progress=get_transfer_progress(transfer),
+            )
+
+        transfer.asset_type = request.form.get("asset_type", "")
+        transfer.asset_name = request.form.get("asset_name", "")
+        transfer.asset_description = request.form.get("asset_description", "")
+        transfer.estimated_value = request.form.get("estimated_value", "")
+        transfer.current_owner = request.form.get("current_owner", "")
+        transfer.asset_notes = request.form.get("asset_notes", "")
+        transfer.status = "in_progress"
+
+        add_transfer_action(
+            transfer=transfer,
+            action_type="saved_asset_step",
+            performed_by=session.get("username") or "unknown",
+            capacity_used=transfer.current_capacity,
+            notes=f"Asset saved: {transfer.asset_name}",
+            commit=False,
+        )
+
+        ext_db.session.commit()
+        flash("Asset step saved.", "success")
+        return redirect(url_for("transfer_classification", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_asset.html",
+        transfer=transfer,
+        progress=get_transfer_progress(transfer),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/classification", methods=["GET", "POST"])
+def transfer_classification(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_classification.html",
+                transfer=transfer,
+                progress=get_transfer_progress(transfer),
+            )
+
+        transfer.transfer_type = request.form.get("transfer_type", "")
+        transfer.consideration_text = request.form.get("consideration_text", "")
+        transfer.classification_notes = request.form.get("classification_notes", "")
+
+        add_transfer_action(
+            transfer=transfer,
+            action_type="saved_classification_step",
+            performed_by=session.get("username") or "unknown",
+            capacity_used=transfer.current_capacity,
+            notes=f"Classification: {transfer.transfer_type}",
+            commit=False,
+        )
+
+        ext_db.session.commit()
+        flash("Classification step saved.", "success")
+        return redirect(url_for("transfer_assignment", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_classification.html",
+        transfer=transfer,
+        progress=get_transfer_progress(transfer),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/assignment", methods=["GET", "POST"])
+def transfer_assignment(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if not validate_capacity_for_step("assignment", transfer.current_capacity):
+        flash("Assignment step requires individual capacity.", "warning")
+
+    assignment_text = build_assignment_text(transfer)
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_assignment.html",
+                transfer=transfer,
+                assignment_text=assignment_text,
+                progress=get_transfer_progress(transfer),
+            )
+
+        if not validate_capacity_for_step("assignment", transfer.current_capacity):
+            flash("Cannot confirm assignment until current capacity is set to individual.", "warning")
+        else:
+            transfer.assignment_confirmed = True
+            transfer.assignment_text = assignment_text
+
+            add_transfer_action(
+                transfer=transfer,
+                action_type="confirmed_assignment_step",
+                performed_by=session.get("username") or "unknown",
+                capacity_used=transfer.current_capacity,
+                notes="Assignment confirmed.",
+                commit=False,
+            )
+
+            ext_db.session.commit()
+            flash("Assignment step confirmed.", "success")
+            return redirect(url_for("transfer_trustee_acceptance", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_assignment.html",
+        transfer=transfer,
+        assignment_text=assignment_text,
+        progress=get_transfer_progress(transfer),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/trustee_acceptance", methods=["GET", "POST"])
+def transfer_trustee_acceptance(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_trustee_acceptance.html",
+                transfer=transfer,
+                progress=get_transfer_progress(transfer),
+            )
+
+        transfer.current_capacity = request.form.get("current_capacity", transfer.current_capacity)
+
+        if not validate_capacity_for_step("trustee_acceptance", transfer.current_capacity):
+            flash("Trustee acceptance requires trustee capacity.", "warning")
+        else:
+            transfer.trustee_name = request.form.get("trustee_name", "")
+            transfer.trustee_decision = request.form.get("trustee_decision", "")
+            transfer.trustee_notes = request.form.get("trustee_notes", "")
+
+            add_transfer_action(
+                transfer=transfer,
+                action_type="saved_trustee_acceptance",
+                performed_by=session.get("username") or "unknown",
+                capacity_used=transfer.current_capacity,
+                notes=f"Trustee decision: {transfer.trustee_decision}",
+                commit=False,
+            )
+
+            ext_db.session.commit()
+            flash("Trustee acceptance saved.", "success")
+            return redirect(url_for("transfer_control_evidence", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_trustee_acceptance.html",
+        transfer=transfer,
+        progress=get_transfer_progress(transfer),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/control_evidence", methods=["GET", "POST"])
+def transfer_control_evidence(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_control_evidence.html",
+                transfer=transfer,
+                progress=get_transfer_progress(transfer),
+                control_strength=calculate_control_strength(transfer.control_change_status),
+            )
+
+        transfer.control_change_status = request.form.get("control_change_status", "")
+        transfer.control_evidence_notes = request.form.get("control_evidence_notes", "")
+
+        add_transfer_action(
+            transfer=transfer,
+            action_type="saved_control_evidence",
+            performed_by=session.get("username") or "unknown",
+            capacity_used=transfer.current_capacity,
+            notes=f"Control evidence strength: {calculate_control_strength(transfer.control_change_status)}",
+            commit=False,
+        )
+
+        ext_db.session.commit()
+        flash("Control evidence saved.", "success")
+        return redirect(url_for("transfer_records", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_control_evidence.html",
+        transfer=transfer,
+        progress=get_transfer_progress(transfer),
+        control_strength=calculate_control_strength(transfer.control_change_status),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/records", methods=["GET", "POST"])
+def transfer_records(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_records.html",
+                transfer=transfer,
+                record_bundle=record_bundle,
+                progress=get_transfer_progress(transfer),
+            )
+
+        meeting_date = request.form.get("meeting_date", "")
+        trustee_name = request.form.get("trustee_name", transfer.trustee_name or "")
+        notes = request.form.get("record_notes", "")
+
+        populate_transfer_record_bundle(
+            transfer=transfer,
+            trustee_name=trustee_name,
+            meeting_date=meeting_date,
+            notes=notes,
+            recorded_by=session.get("username") or "unknown",
+        )
+
+        add_transfer_action(
+            transfer=transfer,
+            action_type="generated_transfer_records",
+            performed_by=session.get("username") or "unknown",
+            capacity_used=transfer.current_capacity,
+            notes="Generated Schedule A, transfer log, and minutes bundle.",
+            commit=False,
+        )
+
+        ext_db.session.commit()
+        flash("Transfer records created.", "success")
+        return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
+    record_bundle = get_or_create_transfer_record(transfer)
+
+    return render_template(
+        "transfer_records.html",
+        transfer=transfer,
+        record_bundle=record_bundle,
+        progress=get_transfer_progress(transfer),
+    )
+
+
+@app.route("/execution/transfers/<transfer_id>/review", methods=["GET", "POST"])
+def transfer_review(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    record_bundle = transfer.record_bundle
+    allowed, missing = can_finalize_transfer(transfer)
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template(
+                "transfer_review.html",
+                transfer=transfer,
+                record_bundle=record_bundle,
+                progress=get_transfer_progress(transfer),
+                can_finalize=allowed,
+                missing_items=missing,
+                control_strength=calculate_control_strength(transfer.control_change_status),
+            )
+
+        success, missing = finalize_transfer(
+            transfer=transfer,
+            performed_by=session.get("username") or "unknown",
+            capacity_used=transfer.current_capacity,
+            commit=False,
+        )
+
+        if success:
+            ext_db.session.commit()
+            flash(f"Transfer {transfer.transfer_id} finalized.", "success")
+            return redirect(url_for("trust_execution_dashboard", trust_id=transfer.trust_id))
+        else:
+            flash(
+                "Transfer is incomplete and cannot be finalized. Missing: "
+                + ", ".join(missing),
+                "warning",
+            )
+
+    return render_template(
+        "transfer_review.html",
+        transfer=transfer,
+        record_bundle=record_bundle,
+        progress=get_transfer_progress(transfer),
+        can_finalize=allowed,
+        missing_items=missing,
+        control_strength=calculate_control_strength(transfer.control_change_status),
+    )
+
 
 @app.route("/visualization")
 def visualization_dashboard():

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Trustee Acceptance</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>Current Capacity</label><br>
+  <select name="current_capacity">
+    <option value="individual" {% if transfer.current_capacity == 'individual' %}selected{% endif %}>Individual</option>
+    <option value="trustee" {% if transfer.current_capacity == 'trustee' %}selected{% endif %}>Trustee</option>
+    <option value="fiduciary" {% if transfer.current_capacity == 'fiduciary' %}selected{% endif %}>Fiduciary</option>
+  </select><br><br>
+
+  <label>Trustee Name</label><br>
+  <input type="text" name="trustee_name" value="{{ transfer.trustee_name or '' }}"><br><br>
+
+  <label>Decision</label><br>
+  <select name="trustee_decision">
+    <option value="approve">Approve</option>
+    <option value="deny">Deny</option>
+    <option value="revise">Revise</option>
+    <option value="approve_with_condition">Approve With Condition</option>
+  </select><br><br>
+
+  <label>Notes</label><br>
+  <textarea name="trustee_notes">{{ transfer.trustee_notes or '' }}</textarea><br><br>
+
+  <button type="submit">Save and Continue</button>
+</form>
+
+<hr>
+<p><strong>Purpose:</strong> Formal trustee acknowledgment and decision.</p>
+<p><strong>Required Role:</strong> Trustee</p>
+{% endblock %}

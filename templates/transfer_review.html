@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transfer Review</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+<p>Status: {{ transfer.status }}</p>
+<p>Mode: {{ transfer.mode }}</p>
+
+<h3>Summary</h3>
+<ul>
+  <li>Asset: {{ transfer.asset_name }}</li>
+  <li>Type: {{ transfer.transfer_type }}</li>
+  <li>Trustee Decision: {{ transfer.trustee_decision }}</li>
+  <li>Control Evidence: {{ transfer.control_change_status }}</li>
+  <li>Records Complete: {{ transfer.records_complete }}</li>
+</ul>
+
+<h3>Generated Records</h3>
+<pre>{{ transfer.schedule_a_text or '' }}</pre>
+<pre>{{ transfer.transfer_log_text or '' }}</pre>
+<pre>{{ transfer.minutes_text or '' }}</pre>
+
+{% if missing_items %}
+  <h3>Missing Items</h3>
+  <ul>
+    {% for item in missing_items %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  {% if can_finalize %}
+    <button type="submit">Finalize Transfer</button>
+  {% else %}
+    <button type="submit" disabled>Cannot Finalize Yet</button>
+  {% endif %}
+</form>
+
+{% if transfer.mode == "simulation" %}
+  <hr>
+  <p><strong>Simulation Mode:</strong> Training use only.</p>
+{% endif %}
+{% endblock %}

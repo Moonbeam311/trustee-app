@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Control Evidence</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>What Changed?</label><br>
+  <select name="control_change_status">
+    <option value="physical_separation">Physical Separation</option>
+    <option value="trustee_possession">Trustee Possession</option>
+    <option value="account_retitled">Account Retitled</option>
+    <option value="signer_changed">Signer Changed</option>
+    <option value="ownership_docs_updated">Ownership Docs Updated</option>
+    <option value="intent_only">Intent Only</option>
+  </select><br><br>
+
+  <label>Evidence Notes</label><br>
+  <textarea name="control_evidence_notes">{{ transfer.control_evidence_notes or '' }}</textarea><br><br>
+
+  <button type="submit">Save and Continue</button>
+</form>
+
+<hr>
+<p><strong>Purpose:</strong> Record what changed in reality, not just on paper.</p>
+{% endblock %}

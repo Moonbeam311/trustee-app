@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transfer Classification</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>Transfer Type</label><br>
+  <select name="transfer_type">
+    <option value="gift">Gift</option>
+    <option value="sale">Sale</option>
+    <option value="assignment">Assignment</option>
+    <option value="exchange">Exchange</option>
+    <option value="other">Other</option>
+  </select><br><br>
+
+  <label>Consideration</label><br>
+  <textarea name="consideration_text">{{ transfer.consideration_text or '' }}</textarea><br><br>
+
+  <label>Notes</label><br>
+  <textarea name="classification_notes">{{ transfer.classification_notes or '' }}</textarea><br><br>
+
+  <button type="submit">Save and Continue</button>
+</form>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Start Transfer</h1>
+<p>Trust ID: {{ trust_id }}</p>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>Mode</label><br>
+  <select name="mode">
+    <option value="simulation">Simulation</option>
+    <option value="real">Real</option>
+  </select><br><br>
+
+  <label>Current Capacity</label><br>
+  <select name="current_capacity">
+    <option value="individual">Individual</option>
+    <option value="trustee">Trustee</option>
+    <option value="fiduciary">Fiduciary</option>
+  </select><br><br>
+
+  <button type="submit">Create Transfer</button>
+</form>
+
+<hr>
+<p><strong>Purpose:</strong> Begin one transfer packet for one asset.</p>
+<p><strong>Warning:</strong> Start small and keep it explainable.</p>
+{% endblock %}

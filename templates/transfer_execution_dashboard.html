@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Trust Execution</h1>
+<p>Trust ID: {{ trust_id }}</p>
+
+<p>
+  <a href="{{ url_for('transfer_start', trust_id=trust_id) }}">Start New Transfer</a>
+</p>
+
+<div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#f9fafb; margin-bottom:16px;">
+  <strong>Execution Summary</strong><br>
+  Total: {{ transfers|length }} |
+  Completed: {{ transfers|selectattr('status', 'equalto', 'completed')|list|length }} |
+  Open: {{ transfers|rejectattr('status', 'equalto', 'completed')|list|length }} |
+  Simulation: {{ transfers|selectattr('mode', 'equalto', 'simulation')|list|length }} |
+  Real: {{ transfers|selectattr('mode', 'equalto', 'real')|list|length }}
+</div>
+
+{% if transfers %}
+  <ul>
+    {% for t in transfers %}
+      <li style="margin-bottom: 12px;">
+        <strong>{{ t.transfer_id }}</strong>
+        {% if t.status == "completed" %}
+          <span style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; background:#dcfce7; color:#166534; font-size:12px;">Completed</span>
+        {% else %}
+          <span style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:12px;">Open</span>
+        {% endif %}
+        <br>
+        Status: <strong>{{ t.status }}</strong>
+        — Mode: <strong>{{ t.mode }}</strong>
+        — Asset: {{ t.asset_name or "No asset yet" }}
+        <br>
+        <small>Last Updated: {{ t.updated_at or t.created_at }}</small>
+        {% if t.status in ["draft", "in_progress"] %}
+          [<a href="{{ get_transfer_resume_endpoint(t) }}">Resume</a>]
+        {% else %}
+          [<a href="{{ url_for('transfer_review', transfer_id=t.transfer_id) }}">View</a>]
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No transfers yet. Start a new packet to begin a trust execution workflow.</p>
+{% endif %}
+{% endblock %}
