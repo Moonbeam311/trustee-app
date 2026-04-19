@@ -694,7 +694,7 @@ def create_trust_step6(trust_id):
             return render_template("create_trust_step6.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
         update_trust_fields(trust_id, {"status": "Finalized"})
-        return redirect(url_for("create_trust_step7", trust_id=trust_id))
+        return redirect(url_for("trust_post_create_review", trust_id=trust_id))
     return render_template("create_trust_step6.html", trust=trust)
 
 @app.route("/create_trust_step7/<trust_id>")
