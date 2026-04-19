@@ -98,6 +98,7 @@
             <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Category</th>
             <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Status</th>
             <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Notes</th>
+            <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -106,6 +107,9 @@
               <td style="border-bottom:1px solid #e5e7eb; padding:8px;">{{ doc.category_label }}</td>
               <td style="border-bottom:1px solid #e5e7eb; padding:8px;">{{ doc.status }}</td>
               <td style="border-bottom:1px solid #e5e7eb; padding:8px;">{{ doc.notes or '' }}</td>
+              <td style="border-bottom:1px solid #e5e7eb; padding:8px;">
+                <a href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=doc.id) }}">Edit</a>
+              </td>
             </tr>
           {% endfor %}
         </tbody>

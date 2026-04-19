@@ -4446,6 +4446,31 @@ def transfer_instruction_template(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/support-docs/<int:support_doc_id>/edit", methods=["GET", "POST"])
+def transfer_support_doc_edit(transfer_id, support_doc_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    support_doc = TransferSupportDoc.query.get_or_404(support_doc_id)
+
+    if support_doc.transfer_id_fk != transfer.id:
+        abort(404)
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            abort(400)
+
+        support_doc.status = request.form.get("status", "missing").strip() or "missing"
+        support_doc.notes = request.form.get("notes", "").strip() or None
+        ext_db.session.commit()
+        flash("Support document status updated.", "success")
+        return redirect(url_for("transfer_detail", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_support_doc_edit.html",
+        transfer=transfer,
+        support_doc=support_doc,
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/detail")
 def transfer_detail(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
