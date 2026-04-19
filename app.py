@@ -3973,6 +3973,15 @@ def workspace_document_generate(workspace_id):
 # TRANSFER ENGINE V1
 # ============================================================
 
+@app.route("/trust/<trust_id>/organizational-minutes-preview")
+def trust_organizational_minutes_preview(trust_id):
+    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    return render_template(
+        "trust_organizational_minutes_preview.html",
+        trust=trust,
+    )
+
+
 @app.route("/trust/<trust_id>/trustee-acceptance-preview")
 def trust_trustee_acceptance_preview(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
