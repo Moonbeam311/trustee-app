@@ -4006,36 +4006,44 @@ def trust_formation_preview_hub(trust_id):
 @app.route("/trust/<trust_id>/successor-trustee-preview")
 def trust_successor_trustee_preview(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_successor_trustee_preview.html",
         trust=trust,
+        preview_context=preview_context,
     )
 
 
 @app.route("/trust/<trust_id>/general-assignment-preview")
 def trust_general_assignment_preview(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_general_assignment_preview.html",
         trust=trust,
+        preview_context=preview_context,
     )
 
 
 @app.route("/trust/<trust_id>/organizational-minutes-preview")
 def trust_organizational_minutes_preview(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_organizational_minutes_preview.html",
         trust=trust,
+        preview_context=preview_context,
     )
 
 
 @app.route("/trust/<trust_id>/trustee-acceptance-preview")
 def trust_trustee_acceptance_preview(trust_id):
     trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_trustee_acceptance_preview.html",
         trust=trust,
+        preview_context=preview_context,
     )
 
 

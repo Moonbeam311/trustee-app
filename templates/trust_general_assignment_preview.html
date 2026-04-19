@@ -43,12 +43,12 @@
 
   <div class="section">
     <h2>Trust Record Context</h2>
-    <p><strong>Trust Name:</strong> {{ trust.trust_name or '' }}</p>
-    <p><strong>Trust Type:</strong> {{ trust.trust_type or '' }}</p>
-    <p><strong>Grantor / Settlor:</strong> {{ trust.grantor_name or '' }}</p>
-    <p><strong>Owner ID:</strong> {{ trust.owner_id or '' }}</p>
-    <p><strong>Status:</strong> {{ trust.status or '' }}</p>
-    <p><strong>Created:</strong> {{ trust.created_at or '' }}</p>
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
+    <p><strong>Owner ID:</strong> {{ preview_context.owner_id }}</p>
+    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Created:</strong> {{ preview_context.created_at_display }}</p>
   </div>
 
   <div class="section">
