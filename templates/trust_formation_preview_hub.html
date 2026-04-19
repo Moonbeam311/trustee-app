@@ -50,11 +50,21 @@
 
   <div class="section">
     <h2>Trust Record Context</h2>
+    <p class="muted">This hub is now acting as the controlled trust-wizard review surface for the approved revocable template set.</p>
+    <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
     <p><strong>Trust Name:</strong> {{ trust.trust_name or '' }}</p>
     <p><strong>Trust Type:</strong> {{ trust.trust_type or '' }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ trust.grantor_name or '' }}</p>
+    <p><strong>Owner ID:</strong> {{ trust.owner_id or '' }}</p>
     <p><strong>Status:</strong> {{ trust.status or '' }}</p>
     <p><strong>Created:</strong> {{ trust.created_at or '' }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Create-Trust Guidance</h2>
+    <p class="muted">This hub is the approval bridge between the current basic create-trust flow and the approved revocable document set.</p>
+    <p>The trust wizard is currently being used in a controlled way to feed trust record data into these previews for review and approval before final generation logic is added.</p>
+    <p>At this stage, the app is using a preview-first model. Final document automation and deeper create-trust insertion will come after this review layer is locked.</p>
   </div>
 
   <div class="section">
