@@ -244,6 +244,14 @@ def seed_transfer_support_docs(transfer):
         )
 
 
+
+def get_support_doc_by_category(transfer, category_key):
+    return TransferSupportDoc.query.filter_by(
+        transfer_id_fk=transfer.id,
+        category_key=category_key,
+    ).first()
+
+
 def build_transfer_step_nav(transfer, current_step):
     step_defs = [
         ("asset", "Asset", "transfer_asset"),
@@ -4429,10 +4437,21 @@ def transfer_optional_support_docs(transfer_id):
 @app.route("/execution/transfers/<transfer_id>/template-center")
 def transfer_template_center(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    support_doc_map = {
+        "universal_instructions": get_support_doc_by_category(transfer, "universal_instructions"),
+        "optional_support_docs": get_support_doc_by_category(transfer, "optional_support_docs"),
+        "recommended_support_docs": get_support_doc_by_category(transfer, "recommended_support_docs"),
+        "bank_support_docs": get_support_doc_by_category(transfer, "bank_support_docs"),
+        "personal_property_support_docs": get_support_doc_by_category(transfer, "personal_property_support_docs"),
+        "document_support_docs": get_support_doc_by_category(transfer, "document_support_docs"),
+    }
+
     return render_template(
         "transfer_template_center.html",
         transfer=transfer,
         control_strength=calculate_control_strength(transfer.control_change_status),
+        support_doc_map=support_doc_map,
     )
 
 

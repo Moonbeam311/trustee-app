@@ -69,36 +69,54 @@
         <h3>Universal Instructions</h3>
         <p class="muted">Reusable packet guidance and process framing.</p>
         <a class="button-link" href="{{ url_for('transfer_instruction_template', transfer_id=transfer.transfer_id) }}">Open</a>
+        {% if support_doc_map.get("universal_instructions") %}
+          <a class="button-link" href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=support_doc_map["universal_instructions"].id) }}">Manage Status</a>
+        {% endif %}
       </div>
 
       <div class="card">
         <h3>Optional Support Docs</h3>
         <p class="muted">Supplemental materials that may help depending on context.</p>
         <a class="button-link" href="{{ url_for('transfer_optional_support_docs', transfer_id=transfer.transfer_id) }}">Open</a>
+        {% if support_doc_map.get("optional_support_docs") %}
+          <a class="button-link" href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=support_doc_map["optional_support_docs"].id) }}">Manage Status</a>
+        {% endif %}
       </div>
 
       <div class="card">
         <h3>Recommended Support Docs</h3>
         <p class="muted">Support materials that should usually be considered for completeness.</p>
         <a class="button-link" href="{{ url_for('transfer_recommended_support_docs', transfer_id=transfer.transfer_id) }}">Open</a>
+        {% if support_doc_map.get("recommended_support_docs") %}
+          <a class="button-link" href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=support_doc_map["recommended_support_docs"].id) }}">Manage Status</a>
+        {% endif %}
       </div>
 
       <div class="card">
         <h3>Bank / Account Support Docs</h3>
         <p class="muted">Asset-specific support materials for bank and account-style transfers.</p>
         <a class="button-link" href="{{ url_for('transfer_bank_support_docs', transfer_id=transfer.transfer_id) }}">Open</a>
+        {% if support_doc_map.get("bank_support_docs") %}
+          <a class="button-link" href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=support_doc_map["bank_support_docs"].id) }}">Manage Status</a>
+        {% endif %}
       </div>
 
       <div class="card">
         <h3>Personal Property Support Docs</h3>
         <p class="muted">Asset-specific support materials for tangible personal property transfers.</p>
         <a class="button-link" href="{{ url_for('transfer_personal_property_support_docs', transfer_id=transfer.transfer_id) }}">Open</a>
+        {% if support_doc_map.get("personal_property_support_docs") %}
+          <a class="button-link" href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=support_doc_map["personal_property_support_docs"].id) }}">Manage Status</a>
+        {% endif %}
       </div>
 
       <div class="card">
         <h3>Document / Intangible Rights Support Docs</h3>
         <p class="muted">Asset-specific support materials for documentary, contractual, and record-based transfers.</p>
         <a class="button-link" href="{{ url_for('transfer_document_support_docs', transfer_id=transfer.transfer_id) }}">Open</a>
+        {% if support_doc_map.get("document_support_docs") %}
+          <a class="button-link" href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=support_doc_map["document_support_docs"].id) }}">Manage Status</a>
+        {% endif %}
       </div>
     </div>
   </div>
