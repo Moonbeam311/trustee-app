@@ -74,6 +74,7 @@
           [<a href="{{ url_for('transfer_instruction_template', transfer_id=t.transfer_id) }}">Instructions</a>]
           [<a href="{{ url_for('transfer_optional_support_docs', transfer_id=t.transfer_id) }}">Optional Docs</a>]
           [<a href="{{ url_for('transfer_recommended_support_docs', transfer_id=t.transfer_id) }}">Recommended Docs</a>]
+          [<a href="{{ url_for('transfer_bank_support_docs', transfer_id=t.transfer_id) }}">Bank Docs</a>]
           [<a href="{{ url_for('transfer_print_view', transfer_id=t.transfer_id) }}" target="_blank">Print</a>]
         {% else %}
           [<a href="{{ url_for('transfer_review', transfer_id=t.transfer_id) }}">View</a>]
@@ -82,6 +83,7 @@
           [<a href="{{ url_for('transfer_instruction_template', transfer_id=t.transfer_id) }}">Instructions</a>]
           [<a href="{{ url_for('transfer_optional_support_docs', transfer_id=t.transfer_id) }}">Optional Docs</a>]
           [<a href="{{ url_for('transfer_recommended_support_docs', transfer_id=t.transfer_id) }}">Recommended Docs</a>]
+          [<a href="{{ url_for('transfer_bank_support_docs', transfer_id=t.transfer_id) }}">Bank Docs</a>]
           [<a href="{{ url_for('transfer_print_view', transfer_id=t.transfer_id) }}" target="_blank">Print</a>]
         {% endif %}
       </li>
