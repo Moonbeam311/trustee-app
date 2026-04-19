@@ -4351,6 +4351,16 @@ def transfer_optional_support_docs(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/template-center")
+def transfer_template_center(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    return render_template(
+        "transfer_template_center.html",
+        transfer=transfer,
+        control_strength=calculate_control_strength(transfer.control_change_status),
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/instructions")
 def transfer_instruction_template(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
