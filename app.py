@@ -203,6 +203,40 @@ def get_transfer_resume_endpoint(transfer):
     return url_for("transfer_review", transfer_id=transfer.transfer_id)
 
 
+def build_transfer_step_nav(transfer, current_step):
+    step_defs = [
+        ("asset", "Asset", "transfer_asset"),
+        ("classification", "Classification", "transfer_classification"),
+        ("assignment", "Assignment", "transfer_assignment"),
+        ("trustee_acceptance", "Trustee Acceptance", "transfer_trustee_acceptance"),
+        ("control_evidence", "Control Evidence", "transfer_control_evidence"),
+        ("records", "Records", "transfer_records"),
+        ("review", "Review", "transfer_review"),
+    ]
+
+    completed = {
+        "asset": bool(transfer.asset_name),
+        "classification": bool(transfer.transfer_type),
+        "assignment": bool(transfer.assignment_confirmed),
+        "trustee_acceptance": bool(transfer.trustee_decision),
+        "control_evidence": bool(transfer.control_change_status),
+        "records": bool(transfer.records_complete),
+        "review": transfer.status == "completed",
+    }
+
+    items = []
+    for key, label, endpoint in step_defs:
+        items.append({
+            "key": key,
+            "label": label,
+            "endpoint": endpoint,
+            "url": url_for(endpoint, transfer_id=transfer.transfer_id),
+            "is_current": key == current_step,
+            "is_complete": completed.get(key, False),
+        })
+    return items
+
+
 app.jinja_env.globals["csrf_token"] = generate_csrf_token
 
 init_audit_table()
@@ -4000,6 +4034,8 @@ def transfer_asset(transfer_id):
         "transfer_asset.html",
         transfer=transfer,
         progress=get_transfer_progress(transfer),
+        step_nav=build_transfer_step_nav(transfer, "asset"),
+        current_step="asset",
     )
 
 
@@ -4041,6 +4077,8 @@ def transfer_classification(transfer_id):
         "transfer_classification.html",
         transfer=transfer,
         progress=get_transfer_progress(transfer),
+        step_nav=build_transfer_step_nav(transfer, "classification"),
+        current_step="classification",
     )
 
 
@@ -4091,6 +4129,8 @@ def transfer_assignment(transfer_id):
         transfer=transfer,
         assignment_text=assignment_text,
         progress=get_transfer_progress(transfer),
+        step_nav=build_transfer_step_nav(transfer, "assignment"),
+        current_step="assignment",
     )
 
 
@@ -4137,6 +4177,8 @@ def transfer_trustee_acceptance(transfer_id):
         "transfer_trustee_acceptance.html",
         transfer=transfer,
         progress=get_transfer_progress(transfer),
+        step_nav=build_transfer_step_nav(transfer, "trustee_acceptance"),
+        current_step="trustee_acceptance",
     )
 
 
@@ -4179,6 +4221,8 @@ def transfer_control_evidence(transfer_id):
         transfer=transfer,
         progress=get_transfer_progress(transfer),
         control_strength=calculate_control_strength(transfer.control_change_status),
+        step_nav=build_transfer_step_nav(transfer, "control_evidence"),
+        current_step="control_evidence",
     )
 
 
@@ -4232,6 +4276,8 @@ def transfer_records(transfer_id):
         transfer=transfer,
         record_bundle=record_bundle,
         progress=get_transfer_progress(transfer),
+        step_nav=build_transfer_step_nav(transfer, "records"),
+        current_step="records",
     )
 
 
@@ -4280,6 +4326,8 @@ def transfer_review(transfer_id):
         can_finalize=allowed,
         missing_items=missing,
         control_strength=calculate_control_strength(transfer.control_change_status),
+        step_nav=build_transfer_step_nav(transfer, "review"),
+        current_step="review",
     )
 
 
