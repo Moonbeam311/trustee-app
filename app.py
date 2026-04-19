@@ -4331,6 +4331,25 @@ def transfer_review(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/detail")
+def transfer_detail(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    record_bundle = transfer.record_bundle
+    actions = (
+        TransferAction.query
+        .filter_by(transfer_id_fk=transfer.id)
+        .order_by(TransferAction.created_at.asc())
+        .all()
+    )
+    return render_template(
+        "transfer_detail.html",
+        transfer=transfer,
+        record_bundle=record_bundle,
+        actions=actions,
+        control_strength=calculate_control_strength(transfer.control_change_status),
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/print")
 def transfer_print_view(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
