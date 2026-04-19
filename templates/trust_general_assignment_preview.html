@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>General Assignment Preview {{ trust.trust_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    .doc-block {
+      white-space: pre-wrap;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+
+  <h1>General Assignment to Trust Preview</h1>
+  <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+  <p class="muted">Preview-first trust formation layer. This page is for review before deeper wizard integration.</p>
+
+  <div class="section">
+    <h2>Trust Record Context</h2>
+    <p><strong>Trust Name:</strong> {{ trust.trust_name or '' }}</p>
+    <p><strong>Trust Type:</strong> {{ trust.trust_type or '' }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ trust.grantor_name or '' }}</p>
+    <p><strong>Owner ID:</strong> {{ trust.owner_id or '' }}</p>
+    <p><strong>Status:</strong> {{ trust.status or '' }}</p>
+    <p><strong>Created:</strong> {{ trust.created_at or '' }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Preview Draft</h2>
+    <div class="doc-block">GENERAL ASSIGNMENT TO TRUST
+
+Date:
+{{ trust.created_at or "[Date]" }}
+
+For value received and for purposes of trust administration, the undersigned hereby assigns, transfers, conveys, and delivers to {{ trust.trust_name or "[Trust Name]" }}, and to its acting Trustee(s), all right, title, and interest of the undersigned in and to such property, rights, interests, claims, contract rights, general intangibles, and other assets as are intended to be held, administered, or scheduled as trust property, except as otherwise expressly excluded.
+
+This General Assignment is intended to support and supplement the governing trust instrument and any schedules, assignments, transfers, declarations, certifications, minutes, and related trust records.
+
+The undersigned affirms that this assignment is made for trust administration purposes and shall be read together with the records of the Trust.
+
+Assigned by:
+
+________________________________
+Assignor Signature
+
+________________________________
+Printed Name
+
+Accepted for administration by:
+
+________________________________
+Trustee Signature
+
+________________________________
+Printed Name
+
+Date: __________________________</div>
+  </div>
+</body>
+</html>
