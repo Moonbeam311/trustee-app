@@ -4331,6 +4331,16 @@ def transfer_review(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/personal-property-support-docs")
+def transfer_personal_property_support_docs(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    return render_template(
+        "transfer_personal_property_support_docs.html",
+        transfer=transfer,
+        control_strength=calculate_control_strength(transfer.control_change_status),
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/bank-support-docs")
 def transfer_bank_support_docs(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
