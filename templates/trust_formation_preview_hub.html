@@ -75,6 +75,27 @@
   </div>
 
   <div class="section">
+    <h2>First Approved Output Set</h2>
+    <p class="muted">This hub is now exposing the first controlled set of approved revocable outputs for review focus.</p>
+    <ul>
+      <li>Articles of Trust / Trust Summary Instrument</li>
+      <li>Trustee Acceptance of Appointment</li>
+      <li>General Assignment to Trust</li>
+    </ul>
+    <p>These are being surfaced first as the initial approved output set before deeper output automation is added for the broader revocable trust package.</p>
+  </div>
+
+  <div class="section">
+    <h2>Focused Output Actions</h2>
+    <p class="muted">These links foreground the first approved revocable output set for deliberate review focus.</p>
+    <ul>
+      <li><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Articles of Trust / Trust Summary Instrument</a></li>
+      <li><a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Trustee Acceptance of Appointment</a></li>
+      <li><a href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open General Assignment to Trust</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
     <h2>Formation Preview Documents</h2>
     <div class="card-grid">
       <div class="card">
