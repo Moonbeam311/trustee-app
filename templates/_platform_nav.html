@@ -16,7 +16,13 @@
       <a href="/workspaces">Workspace</a>
       <a href="/discussions">Discussions</a>
       <a href="/decision">Decision</a>
+      {% if trust is defined and trust and trust.trust_id %}
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Execution</a>
+{% elif trust_id is defined and trust_id %}
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Execution</a>
+{% else %}
       <a href="/execution">Execution</a>
+{% endif %}
       <a href="/documents">Documents</a>
       <a href="/visualization">Visualization</a>
     {% endif %}

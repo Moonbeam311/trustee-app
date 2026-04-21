@@ -83,12 +83,14 @@
       <li>General Assignment to Trust</li>
     </ul>
     <p>These are being surfaced first as the initial approved output set before deeper output automation is added for the broader revocable trust package.</p>
+
   </div>
 
   <div class="section">
     <h2>First Controlled Output Bridge</h2>
     <p class="muted">The first controlled bridge candidate is now being identified from the approved revocable output set.</p>
     <p><strong>Initial Bridge Candidate:</strong> Articles of Trust / Trust Summary Instrument</p>
+
     <p>This means the review hub is beginning to move from preview-only access toward intentional output bridging, while still avoiding uncontrolled package-wide automation.</p>
   </div>
 
@@ -96,14 +98,52 @@
     <h2>First Bridge Action</h2>
     <p class="muted">This is the first deliberately exposed bridge action from the approved revocable output set.</p>
     <p><strong>Bridge Target:</strong> Articles of Trust / Trust Summary Instrument</p>
-    <p><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Articles of Trust as first controlled bridge candidate</a></p>
+
+    <p><a href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Open Articles of Trust as first controlled bridge candidate</a></p>
+
   </div>
 
   <div class="section">
     <h2>First Explicit Output Path</h2>
     <p class="muted">The first explicit output path is now being defined for controlled document exposure.</p>
     <p><strong>Output Path:</strong> Articles of Trust / Trust Summary Instrument</p>
+
     <p>This path remains review-centered and is being surfaced first before any broader package-level output behavior is introduced.</p>
+  </div>
+
+  <div class="section">
+    
+  <div class="section">
+    <h2>Approved Revocable Formation Set</h2>
+    <p class="muted">These are the core approved revocable trust formation documents. This layer represents the actual legal formation set.</p>
+
+    <ul>
+      <li><strong>Revocable Living Trust Declaration</strong> (Primary Instrument)</li>
+      <li><strong>Certification of Trust</strong> (Summary Instrument)</li>
+      <li><strong>Pour-Over Will</strong> (External Support Instrument)</li>
+      <li><strong>Schedule A — Trust Property and Assignment</strong> (Asset Assignment Layer)</li>
+    </ul>
+
+    <p class="muted">These documents form the legal foundation. Output remains controlled and review-centered before full package generation is enabled.</p>
+  </div>
+
+<h2>First Bounded Output Surface</h2>
+    <p class="muted"><strong>Execution Surface 1:</strong> Articles of Trust is the first controlled output action enabled.</p>
+    <p class="muted">The Articles document is now being treated as the first bounded output surface.</p>
+    <p>This keeps the output path isolated, deliberate, and review-centered while broader package-wide output behavior remains deferred.</p>
+    <p><strong>Bounded Output Surface:</strong> Articles of Trust / Trust Summary Instrument</p>
+  <div class="bounded-output-action" style="margin-top: 12px;">
+    <a
+      href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}"
+      style="display: inline-block; padding: 10px 14px; background: #1f4e79; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;"
+    >
+      Open Bounded Articles Path
+    </a>
+    <div style="margin-top: 8px; font-size: 0.95rem; color: #555;">
+      Bounded action only: routes to the Articles preview path without triggering package-wide generation.
+    </div>
+  </div>
+
   </div>
 
   <div class="section">
@@ -134,6 +174,7 @@
       <div class="card">
         <h3>Articles of Trust</h3>
         <p class="muted">Preview the trust summary / articles layer.</p>
+
         <a class="button-link" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Preview</a>
       </div>
 

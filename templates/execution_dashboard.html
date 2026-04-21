@@ -28,5 +28,20 @@
       <p>{{ task['description'] }}</p>
     </div>
   {% endfor %}
+
+  {% if trust is defined and trust and trust.trust_id %}
+  <div style="margin-top: 24px; padding: 16px; border: 1px solid #d8d8d8; border-radius: 8px; background: #fafafa;">
+    <h3>Bounded Document Surfaces</h3>
+    <p><a href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Open Articles Output Surface</a></p>
+    <p><a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust.trust_id) }}">Open Trustee Acceptance Output Surface</a></p>
+  </div>
+  {% elif trust_id is defined and trust_id %}
+  <div style="margin-top: 24px; padding: 16px; border: 1px solid #d8d8d8; border-radius: 8px; background: #fafafa;">
+    <h3>Bounded Document Surfaces</h3>
+    <p><a href="{{ url_for('trust_articles_output_surface', trust_id=trust_id) }}">Open Articles Output Surface</a></p>
+    <p><a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust_id) }}">Open Trustee Acceptance Output Surface</a></p>
+  </div>
+  {% endif %}
+
 </body>
 </html>

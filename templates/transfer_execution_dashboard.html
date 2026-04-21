@@ -1,16 +1,209 @@
-<div style="margin: 12px 0; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px;">
-  <strong>Post-Create Review:</strong> <a href="{{ url_for('trust_post_create_review', trust_id=trust_id) }}">Open post-create review destination</a>
-</div>
-<p><a href="{{ url_for('trust_formation_preview_hub', trust_id=trust_id) }}">Open Trust Formation Preview Hub</a></p>
-<p><a href="{{ url_for('trust_articles_preview', trust_id=trust_id) }}">Preview Articles of Trust / Trust Summary Instrument</a></p>
-<p><a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust_id) }}">Preview Trustee Acceptance of Appointment</a></p>
-<p><a href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust_id) }}">Preview Initial Trustee Resolution / Organizational Minutes</a></p>
-<p><a href="{{ url_for('trust_general_assignment_preview', trust_id=trust_id) }}">Preview General Assignment to Trust</a></p>
-<p><a href="{{ url_for('trust_successor_trustee_preview', trust_id=trust_id) }}">Preview Successor Trustee Acceptance / Appointment</a></p>
 {% extends "base.html" %}
 {% block content %}
-<h1>Trust Execution</h1>
+<div class="trust-page-wrap">
+
+<div class="trust-panel">
+  <h2 class="trust-panel-heading">Trust Workflow Console</h2>
+  <p class="trust-page-subtitle">Use this page as the live operating surface for trust-specific review, validation, preview, final surfaces, and packet actions.</p>
+
+  <div class="trust-panel-inner">
+    <strong>Review & Hub</strong>
+    <p style="margin:8px 0 0;"><a href="{{ url_for('trust_post_create_review', trust_id=trust_id) }}">Open Post-Create Review</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_formation_preview_hub', trust_id=trust_id) }}">Open Trust Formation Preview Hub</a></p>
+  </div>
+
+  <div class="trust-panel-inner">
+    <strong>Preview Documents</strong>
+    <p style="margin:8px 0 0;"><a href="{{ url_for('trust_articles_preview', trust_id=trust_id) }}">Preview Articles of Trust / Trust Summary Instrument</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust_id) }}">Preview Trustee Acceptance of Appointment</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust_id) }}">Preview Initial Trustee Resolution / Organizational Minutes</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_general_assignment_preview', trust_id=trust_id) }}">Preview General Assignment to Trust</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_successor_trustee_preview', trust_id=trust_id) }}">Preview Successor Trustee Acceptance / Appointment</a></p>
+  </div>
+
+  <div class="trust-panel-inner">
+    <strong>Bounded Document Surfaces</strong>
+    <p style="margin:8px 0 0;"><a href="{{ url_for('trust_articles_output_surface', trust_id=trust_id) }}">Open Articles Output Surface</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust_id) }}">Open Trustee Acceptance Output Surface</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_general_assignment_output_surface', trust_id=trust_id) }}">Open General Assignment Output Surface</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_organizational_minutes_output_surface', trust_id=trust_id) }}">Open Organizational Minutes Output Surface</a></p>
+    <p style="margin:6px 0 0;"><a href="{{ url_for('trust_successor_trustee_output_surface', trust_id=trust_id) }}">Open Successor Trustee Output Surface</a></p>
+    <div style="margin-top:10px; padding:10px; border:1px solid #e5e7eb; border-radius:8px; background:#fcfcfc;">
+      <strong>Export Policy:</strong>
+      <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
+        {% if export_policy.strict_packet_export %}Strict mode{% else %}Advisory mode{% endif %}
+      </span>
+      <div class="trust-inline-note">
+        {% if export_policy.strict_packet_export %}
+          Packet export is blocked until all five core documents are ready.
+        {% else %}
+          Packet export remains available with warnings when core documents are incomplete.
+        {% endif %}
+      </div>
+      <div class="trust-spacer-md"></div>
+      <strong>Packet Export Status:</strong>
+      <span class="{% if packet_readiness.ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
+        {{ packet_readiness.status_label }}
+      </span>
+      {% if packet_readiness.blocked %}
+        <div style="margin-top:6px; color:#666;">Strict export mode is enabled. Packet export is blocked until all five core documents are ready.</div>
+      {% elif not packet_readiness.ready %}
+        <div style="margin-top:6px; color:#666;">One or more core documents are still incomplete. Export remains available, but review the readiness matrix before packet download.</div>
+      {% endif %}
+      <p style="margin:10px 0 0;"><a href="{{ url_for('trust_packet_preview', trust_id=trust_id) }}"><strong>Open Packet Preview</strong></a></p>
+      {% if packet_readiness.blocked %}
+        <p style="margin:6px 0 0;"><strong>Download Controlled Trust Packet (ZIP)</strong> — blocked in strict mode</p>
+      {% else %}
+        <p style="margin:6px 0 0;"><a href="{{ url_for('trust_controlled_packet_export', trust_id=trust_id) }}"><strong>Download Controlled Trust Packet (ZIP)</strong></a></p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="trust-panel-inner">
+    <strong>Latest Packet Export</strong>
+    {% if latest_export_activity %}
+      <p style="margin:8px 0 0;"><strong>Exported At:</strong> {{ latest_export_activity.exported_at }}</p>
+      <p style="margin:6px 0 0;"><strong>Status:</strong>
+        <span class="{% if latest_export_activity.packet_ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
+          {{ latest_export_activity.packet_status }}
+        </span>
+      </p>
+      <p style="margin:6px 0 0;"><strong>Filename:</strong> {{ latest_export_activity.filename }}</p>
+      <p style="margin:6px 0 0;"><strong>Ready / Incomplete:</strong> {{ latest_export_activity.ready_count }} / {{ latest_export_activity.incomplete_count }}</p>
+    {% else %}
+      <p style="margin:8px 0 0;">No packet exports recorded yet for this trust.</p>
+    {% endif %}
+  </div>
+
+  <div class="trust-panel-inner">
+    <strong>Document Status Matrix</strong>
+    <p style="margin-top:8px;">Quick visibility into the current preview, final surface, and PDF export paths for the core bounded trust documents.</p>
+
+    <table class="trust-table trust-table-compact">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Document</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Preview</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Final Surface</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">PDF</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;">Articles of Trust<br>
+<small style="color:{% if document_readiness['articles']['ready'] %}#166534{% else %}#b45309{% endif %};">
+{% if document_readiness['articles']['ready'] %}
+Ready
+{% else %}
+Incomplete: missing {{ document_readiness['articles']['missing']|join(', ') }}<br>
+<span style="color:#666;">Validation detail: update the trust profile / creation wizard fields for trust identification, grantor, trustee, and effective date.</span>
+<br>
+{% if correction_links['articles'] %}
+  {% for item in correction_links['articles'] %}
+    <a href="{{ item.url }}" style="font-weight:600;">{{ item.label }}</a>{% if not loop.last %} | {% endif %}
+  {% endfor %}
+{% endif %}
+{% endif %}
+</small></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_articles_preview', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_articles_output_surface', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_articles_output_surface_pdf', trust_id=trust_id) }}">Download</a></td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;">Trustee Acceptance<br>
+<small style="color:{% if document_readiness['trustee_acceptance']['ready'] %}#166534{% else %}#b45309{% endif %};">
+{% if document_readiness['trustee_acceptance']['ready'] %}
+Ready
+{% else %}
+Incomplete: missing {{ document_readiness['trustee_acceptance']['missing']|join(', ') }}<br>
+<span style="color:#666;">Validation detail: confirm trustee identity and effective date in the trust creation workflow.</span>
+<br>
+{% if correction_links['trustee_acceptance'] %}
+  {% for item in correction_links['trustee_acceptance'] %}
+    <a href="{{ item.url }}" style="font-weight:600;">{{ item.label }}</a>{% if not loop.last %} | {% endif %}
+  {% endfor %}
+{% endif %}
+{% endif %}
+</small></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_trustee_acceptance_output_surface_pdf', trust_id=trust_id) }}">Download</a></td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;">General Assignment<br>
+<small style="color:{% if document_readiness['general_assignment']['ready'] %}#166534{% else %}#b45309{% endif %};">
+{% if document_readiness['general_assignment']['ready'] %}
+Ready
+{% else %}
+Incomplete: missing {{ document_readiness['general_assignment']['missing']|join(', ') }}<br>
+<span style="color:#666;">Validation detail: update funding / corpus / asset category fields in the trust profile or related transfer setup.</span>
+<br>
+{% if correction_links['general_assignment'] %}
+  {% for item in correction_links['general_assignment'] %}
+    <a href="{{ item.url }}" style="font-weight:600;">{{ item.label }}</a>{% if not loop.last %} | {% endif %}
+  {% endfor %}
+{% endif %}
+{% endif %}
+</small></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_general_assignment_preview', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_general_assignment_output_surface', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_general_assignment_output_surface_pdf', trust_id=trust_id) }}">Download</a></td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;">Organizational Minutes<br>
+<small style="color:{% if document_readiness['organizational_minutes']['ready'] %}#166534{% else %}#b45309{% endif %};">
+{% if document_readiness['organizational_minutes']['ready'] %}
+Ready
+{% else %}
+Incomplete: missing {{ document_readiness['organizational_minutes']['missing']|join(', ') }}<br>
+<span style="color:#666;">Validation detail: confirm trustee identity, trust purpose, and effective date in the trust record.</span>
+<br>
+{% if correction_links['organizational_minutes'] %}
+  {% for item in correction_links['organizational_minutes'] %}
+    <a href="{{ item.url }}" style="font-weight:600;">{{ item.label }}</a>{% if not loop.last %} | {% endif %}
+  {% endfor %}
+{% endif %}
+{% endif %}
+</small></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_organizational_minutes_output_surface', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px; border-bottom:1px solid #f0f0f0;"><a href="{{ url_for('trust_organizational_minutes_output_surface_pdf', trust_id=trust_id) }}">Download</a></td>
+        </tr>
+        <tr>
+          <td style="padding:8px;">Successor Trustee<br>
+<small style="color:{% if document_readiness['successor_trustee']['ready'] %}#166534{% else %}#b45309{% endif %};">
+{% if document_readiness['successor_trustee']['ready'] %}
+Ready
+{% else %}
+Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join(', ') }}<br>
+<span style="color:#666;">Validation detail: add successor trustee information and confirm effective date in the trust profile.</span>
+<br>
+{% if correction_links['successor_trustee'] %}
+  {% for item in correction_links['successor_trustee'] %}
+    <a href="{{ item.url }}" style="font-weight:600;">{{ item.label }}</a>{% if not loop.last %} | {% endif %}
+  {% endfor %}
+{% endif %}
+{% endif %}
+</small></td>
+          <td style="padding:8px;"><a href="{{ url_for('trust_successor_trustee_preview', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px;"><a href="{{ url_for('trust_successor_trustee_output_surface', trust_id=trust_id) }}">Available</a></td>
+          <td style="padding:8px;"><a href="{{ url_for('trust_successor_trustee_output_surface_pdf', trust_id=trust_id) }}">Download</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<h1 class="trust-page-title">Trust Execution</h1>
+{% if request.args.get("returned_from_correction") == "1" %}
+  <div class="trust-panel" style="background:#ecfdf5; border-color:#bbf7d0;">
+    <strong class="trust-status-ready">Trust details updated.</strong>
+    <p class="trust-note">Returned from correction step. Review the readiness matrix below to confirm the updated status.</p>
+  </div>
+{% endif %}
 <p>Trust ID: {{ trust_id }}</p>
+<p><strong>Last Updated:</strong> {{ trust_last_updated }}</p>
 
 <p>
   <a href="{{ url_for('transfer_start', trust_id=trust_id) }}">Start New Transfer</a>
@@ -107,4 +300,5 @@
 {% else %}
   <p>No transfers yet. Start a new packet to begin a trust execution workflow.</p>
 {% endif %}
+</div>
 {% endblock %}

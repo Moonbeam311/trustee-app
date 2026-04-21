@@ -23,7 +23,117 @@
 {% include '_nav.html' %}
 
 <div class="page-header">
-  <h1>Admin Index</h1>
+  <h1 class="trust-page-title">Admin Trust Operations</h1>
+
+<div class="trust-panel">
+  <strong>Export Policy Control</strong>
+  <p class="trust-page-subtitle">Choose whether packet export is advisory or strictly blocked when core trust documents are incomplete.</p>
+
+  <p>
+    <strong>Current Mode:</strong>
+    <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
+      {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
+    </span>
+  </p>
+
+  <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+    <button type="submit" class="trust-button-link" style="border:none; cursor:pointer;">
+      Switch to {% if export_policy.strict_packet_export %}Advisory{% else %}Strict{% endif %} Mode
+    </button>
+  </form>
+
+  <p class="trust-note">
+    This export policy applies across the full trust workflow, including Trust Execution, Packet Preview, and packet ZIP export.
+    Strict mode blocks packet export until all five core documents are ready. Advisory mode allows export with warnings.
+  </p>
+</div>
+
+<div class="trust-panel">
+  <strong>Trust Operations Dashboard</strong>
+  <p style="margin-top:8px;">Operational trust summary across readiness, packet status, and quick actions.</p>
+
+  {% if trust_summaries %}
+    <table class="trust-table trust-table-compact">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Trust</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Type</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Last Updated</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Packet Status</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Ready Docs</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Incomplete Docs</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Missing Areas</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Quick Fixes</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Quick Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in trust_summaries %}
+          <tr>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              <strong>{{ item.trust_name }}</strong><br>
+              <small>{{ item.trust_id }}</small>
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.trust_type }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.last_updated }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              <span class="{% if item.packet_ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
+                {{ item.packet_status }}
+              </span>
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.ready_count }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.incomplete_count }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              {% if item.missing_areas %}
+                {% for area in item.missing_areas %}
+                  <div class="trust-small trust-muted">{{ area }}</div>
+                {% endfor %}
+              {% else %}
+                <span class="trust-status-ready">None</span>
+              {% endif %}
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              {% if item.quick_fix_links %}
+                {% for link in item.quick_fix_links %}
+                  <div><a href="{{ link.url }}">{{ link.label }}</a></div>
+                {% endfor %}
+              {% else %}
+                <span class="trust-status-ready">No action needed</span>
+              {% endif %}
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              <a href="{{ url_for('trust_execution_dashboard', trust_id=item.trust_id) }}">Execution</a> |
+              <a href="{{ url_for('trust_packet_preview', trust_id=item.trust_id) }}">Packet Preview</a> |
+              <a href="{{ url_for('trust_controlled_packet_export', trust_id=item.trust_id) }}">Download Packet</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p style="margin-top:8px;">No trust records found yet.</p>
+  {% endif %}
+</div>
+
+
+<div class="trust-panel">
+  <strong>Trust-Specific Launch Paths</strong>
+  <p style="margin-top:8px;">Use these dynamic links to enter the live trust workflow for any available trust record.</p>
+
+  {% if trusts %}
+    {% for trust in trusts %}
+      <div style="margin-top: 12px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff;">
+        <p style="margin:0 0 6px;"><strong>{{ trust['trust_name'] or 'Unnamed Trust' }}</strong> ({{ trust['trust_id'] }})</p>
+        <p style="margin:0 0 4px;"><a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Trust Execution</a></p>
+        <p style="margin:0 0 4px;"><a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Open Articles Output Surface</a></p>
+        <p style="margin:0 0 4px;"><a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust['trust_id']) }}">Open Trustee Acceptance Output Surface</a></p>
+        <p style="margin:0;"><a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download Controlled Trust Packet (ZIP)</a></p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p style="margin-top:8px;">No trust records found yet.</p>
+  {% endif %}
+</div>
   <p class="page-subtitle">Start by creating or locating a trust record before using reports.</p>
 </div>
 

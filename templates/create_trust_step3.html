@@ -38,6 +38,17 @@
 
 <div style="margin-top:18px;">
   <a href="/create_trust_step2/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+
+{% if request.args.get("return_to") == "execution" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Execution</a>
+  </p>
+{% elif request.args.get("return_to") == "packet_preview" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Packet Preview</a>
+  </p>
+{% endif %}
+
 </div>
 
 {% endblock %}

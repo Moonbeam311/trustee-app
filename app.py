@@ -1,6 +1,8 @@
+import json
+import zipfile
 import os
 import secrets
-from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash
+from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from database.db import (
     init_db,
     get_next_trust_id,
@@ -146,7 +148,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
 
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+
 app = Flask(__name__)
+STRICT_PACKET_EXPORT = True
+
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{(Path(__file__).resolve().parent / 'trustee_app.db').as_posix()}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 ext_db.init_app(app)
@@ -246,25 +254,726 @@ def seed_transfer_support_docs(transfer):
 
 
 def build_trust_preview_context(trust):
-    created_at_value = trust.created_at
-    if created_at_value:
+    def _get(obj, key, default=""):
         try:
-            created_at_display = created_at_value.strftime("%Y-%m-%d %H:%M")
+            if obj is None:
+                return default
+            if isinstance(obj, dict):
+                return obj.get(key, default)
+            try:
+                return obj[key]
+            except Exception:
+                pass
+            return getattr(obj, key, default)
         except Exception:
-            created_at_display = str(created_at_value)
-    else:
-        created_at_display = ""
+            return default
+
+    def _first(obj, keys, default=""):
+        for key in keys:
+            value = _get(obj, key, "")
+            if value not in (None, "", []):
+                return value
+        return default
+
+    trust_id_value = _first(trust, ["trust_id"])
+    trust_name_value = _first(trust, ["trust_name", "name", "trust_title"])
+    trust_type_value = _first(trust, ["trust_type", "type_of_trust", "trust_category"])
+    grantor_value = _first(trust, ["grantor_name", "settlor_name", "grantor", "settlor"])
+    trustee_value = _first(trust, ["trustee_name", "initial_trustee_name", "current_trustee_name", "trustee"])
+    successor_trustee_value = _first(trust, ["successor_trustee_name", "successor_trustee", "alternate_trustee_name"])
+    beneficiary_value = _first(trust, ["primary_beneficiary", "beneficiary_name", "primary_beneficiary_name"])
+    owner_id_value = _first(trust, ["owner_id", "owner", "client_id"])
+    status_value = _first(trust, ["status"])
+    jurisdiction_value = _first(trust, ["jurisdiction", "state_of_jurisdiction", "governing_jurisdiction"])
+    governing_law_value = _first(trust, ["governing_law", "governing_law_state", "governing_state"])
+    created_at_value = _first(trust, ["created_at", "date_created"])
+    effective_date_value = _first(trust, ["effective_date", "trust_date", "date_of_trust", "execution_date", "signed_date", "created_at"])
+    trust_purpose_value = _first(trust, ["trust_purpose", "purpose", "purpose_statement", "mission"])
+    initial_corpus_value = _first(trust, ["initial_corpus_description", "initial_corpus", "corpus_description", "funding_description"])
+    asset_categories_value = _first(trust, ["asset_categories", "asset_category", "asset_classes"])
+    property_mapping_timing_value = _first(trust, ["property_mapping_timing", "funding_timing", "transfer_timing"])
+
+    created_at_display = created_at_value or ""
+    effective_date_display = effective_date_value or ""
 
     return {
-        "trust_id": trust.trust_id or "",
-        "trust_name": trust.trust_name or "",
-        "trust_type": trust.trust_type or "",
-        "grantor_name": trust.grantor_name or "",
-        "owner_id": trust.owner_id or "",
-        "status": trust.status or "",
+        "trust_id": trust_id_value,
+        "trust_name": trust_name_value,
+        "trust_type": trust_type_value,
+        "grantor_name": grantor_value,
+        "trustee_name": trustee_value,
+        "successor_trustee_name": successor_trustee_value,
+        "primary_beneficiary": beneficiary_value,
+        "owner_id": owner_id_value,
+        "status": status_value,
+        "jurisdiction": jurisdiction_value,
+        "governing_law": governing_law_value,
+        "created_at": created_at_value,
         "created_at_display": created_at_display,
+        "effective_date": effective_date_value,
+        "effective_date_display": effective_date_display,
+        "trust_purpose": trust_purpose_value,
+        "initial_corpus_description": initial_corpus_value,
+        "asset_categories": asset_categories_value,
+        "property_mapping_timing": property_mapping_timing_value,
     }
 
+
+
+def build_trust_document_readiness(preview_context):
+    def has_value(key):
+        value = preview_context.get(key, "")
+        return value not in (None, "", [])
+
+    friendly_labels = {
+        "trust_name": "trust name",
+        "trust_type": "trust type",
+        "grantor_name": "grantor / settlor name",
+        "trustee_name": "trustee name",
+        "effective_date": "effective date",
+        "successor_trustee_name": "successor trustee name",
+        "initial_corpus_or_asset_categories": "initial corpus or asset categories",
+    }
+
+    def label_for(key):
+        return friendly_labels.get(key, key.replace("_", " "))
+
+    def build_status(required_keys, alternate_groups=None):
+        missing = []
+
+        for key in required_keys:
+            if not has_value(key):
+                missing.append(label_for(key))
+
+        if alternate_groups:
+            for label, keys in alternate_groups:
+                if not any(has_value(k) for k in keys):
+                    missing.append(label_for(label))
+
+        return {
+            "ready": len(missing) == 0,
+            "missing": missing,
+        }
+
+    readiness = {
+        "articles": build_status(
+            ["trust_name", "trust_type", "grantor_name", "trustee_name", "effective_date"]
+        ),
+        "trustee_acceptance": build_status(
+            ["trust_name", "trustee_name", "effective_date"]
+        ),
+        "general_assignment": build_status(
+            ["trust_name", "grantor_name"],
+            alternate_groups=[("initial_corpus_or_asset_categories", ["initial_corpus_description", "asset_categories"])]
+        ),
+        "organizational_minutes": build_status(
+            ["trust_name", "trustee_name", "effective_date"]
+        ),
+        "successor_trustee": build_status(
+            ["trust_name", "trustee_name", "effective_date", "successor_trustee_name"]
+        ),
+    }
+
+    return readiness
+
+
+
+def build_trust_packet_readiness(document_readiness):
+    keys = [
+        "articles",
+        "trustee_acceptance",
+        "general_assignment",
+        "organizational_minutes",
+        "successor_trustee",
+    ]
+
+    all_ready = all(document_readiness.get(key, {}).get("ready", False) for key in keys)
+
+    export_policy = get_export_policy()
+    strict_packet_export = bool(export_policy.get("strict_packet_export", True))
+    blocked = strict_packet_export and not all_ready
+
+    return {
+        "ready": all_ready,
+        "blocked": blocked,
+        "strict_mode": strict_packet_export,
+        "status_label": "Ready to export" if all_ready else ("Export blocked" if blocked else "Export with warnings"),
+    }
+
+
+
+def build_correction_links(trust_id, document_readiness, return_to="execution"):
+    def with_return(url):
+        separator = "&" if "?" in url else "?"
+        return f"{url}{separator}return_to={return_to}"
+
+    def build_link(url, label):
+        return {
+            "url": with_return(url),
+            "label": label,
+        }
+
+    def link_for_field(field_name):
+        field_name = field_name.lower().strip()
+
+        if field_name in ["grantor_name", "grantor_/_settlor_name", "grantor_settlor_name"]:
+            return build_link(
+                url_for("create_trust_step2_grantor", trust_id=trust_id),
+                "Go to Grantor / Settlor step"
+            )
+
+        if field_name in ["trustee_name", "successor_trustee_name"]:
+            return build_link(
+                url_for("create_trust_step2", trust_id=trust_id),
+                "Go to Trustee / Successor Trustee step"
+            )
+
+        if field_name in ["trust_purpose"]:
+            return build_link(
+                url_for("create_trust_step3", trust_id=trust_id),
+                "Go to Trust Purpose step"
+            )
+
+        if field_name in ["initial_corpus_description", "initial_corpus_or_asset_categories", "asset_categories"]:
+            return build_link(
+                url_for("create_trust_step4", trust_id=trust_id),
+                "Go to Corpus / Asset Details step"
+            )
+
+        if field_name in ["effective_date", "trust_name", "trust_type"]:
+            return build_link(
+                url_for("trust_detail", trust_id=trust_id) + f"?focus={field_name}",
+                "Go to Trust Detail / Identity section"
+            )
+
+        return build_link(
+            url_for("trust_detail", trust_id=trust_id) + f"?focus={field_name}",
+            "Go to Trust Detail"
+        )
+
+    correction_links = {}
+
+    for doc_key, status in document_readiness.items():
+        missing = status.get("missing", [])
+        doc_links = []
+
+        seen = set()
+        for field in missing:
+            normalized_field = field.replace(" / ", "_").replace(" ", "_").lower()
+            link = link_for_field(normalized_field)
+            unique_key = (link["url"], link["label"])
+            if unique_key not in seen:
+                seen.add(unique_key)
+                doc_links.append(link)
+
+        correction_links[doc_key] = doc_links
+
+    return correction_links
+
+
+def resolve_post_save_return(trust_id, fallback_endpoint, fallback_kwargs=None):
+    fallback_kwargs = fallback_kwargs or {}
+    return_to = request.args.get("return_to")
+
+    if return_to == "execution":
+        return redirect(url_for("trust_execution_dashboard", trust_id=trust_id, returned_from_correction=1))
+
+    if return_to == "packet_preview":
+        return redirect(url_for("trust_packet_preview", trust_id=trust_id, returned_from_correction=1))
+
+    return redirect(url_for(fallback_endpoint, **fallback_kwargs))
+
+def build_admin_trust_summary(trust):
+    preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
+    packet_readiness = build_trust_packet_readiness(document_readiness)
+    correction_links = build_correction_links(preview_context.get("trust_id"), document_readiness, return_to="execution")
+
+    keys = [
+        "articles",
+        "trustee_acceptance",
+        "general_assignment",
+        "organizational_minutes",
+        "successor_trustee",
+    ]
+
+    ready_count = sum(1 for key in keys if document_readiness.get(key, {}).get("ready", False))
+    incomplete_count = len(keys) - ready_count
+
+    missing_areas = []
+    for key in keys:
+        status = document_readiness.get(key, {})
+        if not status.get("ready", False):
+            label = key.replace("_", " ").title()
+            missing = status.get("missing", [])
+            if missing:
+                missing_areas.append(f"{label}: " + ", ".join(missing[:2]))
+            else:
+                missing_areas.append(label)
+
+    quick_fix_links = []
+    seen = set()
+    for key in keys:
+        for item in correction_links.get(key, []):
+            unique_key = (item["url"], item["label"])
+            if unique_key not in seen:
+                seen.add(unique_key)
+                quick_fix_links.append(item)
+
+    return {
+        "trust_id": preview_context.get("trust_id"),
+        "trust_name": preview_context.get("trust_name") or "Unnamed Trust",
+        "trust_type": preview_context.get("trust_type") or "",
+        "last_updated": get_trust_last_updated_value(trust),
+        "packet_status": packet_readiness.get("status_label"),
+        "packet_ready": packet_readiness.get("ready", False),
+        "ready_count": ready_count,
+        "incomplete_count": incomplete_count,
+        "missing_areas": missing_areas[:3],
+        "quick_fix_links": quick_fix_links[:3],
+    }
+
+
+EXPORT_ACTIVITY_LOG_PATH = Path("data/export_activity_log.json")
+EXPORT_POLICY_PATH = Path("data/export_policy.json")
+
+
+def get_trust_last_updated_value(trust):
+    candidate_fields = [
+        "updated_at",
+        "modified_at",
+        "last_updated",
+        "created_at",
+    ]
+
+    for field in candidate_fields:
+        try:
+            value = trust[field]
+            if value not in (None, ""):
+                return str(value)
+        except Exception:
+            pass
+
+        try:
+            value = getattr(trust, field)
+            if value not in (None, ""):
+                return str(value)
+        except Exception:
+            pass
+
+    return "Not available"
+
+def ensure_export_policy_file():
+    EXPORT_POLICY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not EXPORT_POLICY_PATH.exists():
+        EXPORT_POLICY_PATH.write_text(json.dumps({"strict_packet_export": True}, indent=2), encoding="utf-8")
+
+def get_export_policy():
+    ensure_export_policy_file()
+    try:
+        return json.loads(EXPORT_POLICY_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {"strict_packet_export": True}
+
+def set_export_policy(strict_packet_export):
+    ensure_export_policy_file()
+    EXPORT_POLICY_PATH.write_text(
+        json.dumps({"strict_packet_export": bool(strict_packet_export)}, indent=2),
+        encoding="utf-8"
+    )
+
+
+
+EXPORT_ACTIVITY_LOG_PATH = Path("data/export_activity_log.json")
+
+def ensure_export_activity_log():
+    EXPORT_ACTIVITY_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not EXPORT_ACTIVITY_LOG_PATH.exists():
+        EXPORT_ACTIVITY_LOG_PATH.write_text("[]", encoding="utf-8")
+
+def read_export_activity_log():
+    ensure_export_activity_log()
+    try:
+        return json.loads(EXPORT_ACTIVITY_LOG_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+def append_export_activity(entry):
+    entries = read_export_activity_log()
+    entries.append(entry)
+    EXPORT_ACTIVITY_LOG_PATH.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+
+def get_recent_export_activity(limit=25):
+    entries = read_export_activity_log()
+    return list(reversed(entries))[:limit]
+
+def get_latest_export_for_trust(trust_id):
+    entries = read_export_activity_log()
+    for entry in reversed(entries):
+        if entry.get("trust_id") == trust_id:
+            return entry
+    return None
+
+def build_export_activity_entry(preview_context, document_readiness, packet_readiness, filename):
+    keys = [
+        "articles",
+        "trustee_acceptance",
+        "general_assignment",
+        "organizational_minutes",
+        "successor_trustee",
+    ]
+    ready_count = sum(1 for key in keys if document_readiness.get(key, {}).get("ready", False))
+    incomplete_count = len(keys) - ready_count
+
+    return {
+        "trust_id": preview_context.get("trust_id"),
+        "trust_name": preview_context.get("trust_name") or "Unnamed Trust",
+        "trust_type": preview_context.get("trust_type") or "",
+        "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "packet_status": packet_readiness.get("status_label"),
+        "packet_ready": packet_readiness.get("ready", False),
+        "ready_count": ready_count,
+        "incomplete_count": incomplete_count,
+        "filename": filename,
+    }
+
+def ensure_export_activity_log():
+    EXPORT_ACTIVITY_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not EXPORT_ACTIVITY_LOG_PATH.exists():
+        EXPORT_ACTIVITY_LOG_PATH.write_text("[]", encoding="utf-8")
+
+def read_export_activity_log():
+    ensure_export_activity_log()
+    try:
+        return json.loads(EXPORT_ACTIVITY_LOG_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+def append_export_activity(entry):
+    entries = read_export_activity_log()
+    entries.append(entry)
+    EXPORT_ACTIVITY_LOG_PATH.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+
+def get_recent_export_activity(limit=25):
+    entries = read_export_activity_log()
+    return list(reversed(entries))[:limit]
+
+def get_latest_export_for_trust(trust_id):
+    entries = read_export_activity_log()
+    for entry in reversed(entries):
+        if entry.get("trust_id") == trust_id:
+            return entry
+    return None
+
+def build_export_activity_entry(preview_context, document_readiness, packet_readiness, filename):
+    keys = [
+        "articles",
+        "trustee_acceptance",
+        "general_assignment",
+        "organizational_minutes",
+        "successor_trustee",
+    ]
+    ready_count = sum(1 for key in keys if document_readiness.get(key, {}).get("ready", False))
+    incomplete_count = len(keys) - ready_count
+
+    return {
+        "trust_id": preview_context.get("trust_id"),
+        "trust_name": preview_context.get("trust_name") or "Unnamed Trust",
+        "trust_type": preview_context.get("trust_type") or "",
+        "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "packet_status": packet_readiness.get("status_label"),
+        "packet_ready": packet_readiness.get("ready", False),
+        "ready_count": ready_count,
+        "incomplete_count": incomplete_count,
+        "filename": filename,
+    }
+
+def build_trust_packet_readiness(document_readiness):
+    keys = [
+        "articles",
+        "trustee_acceptance",
+        "general_assignment",
+        "organizational_minutes",
+        "successor_trustee",
+    ]
+
+    all_ready = all(document_readiness.get(key, {}).get("ready", False) for key in keys)
+
+    return {
+        "ready": all_ready,
+        "status_label": "Ready to export" if all_ready else "Export with warnings",
+    }
+
+def generate_articles_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    title_style = styles["Title"]
+    heading_style = styles["Heading2"]
+    body_style = styles["BodyText"]
+
+    story.append(Paragraph("Articles of Trust", title_style))
+    story.append(Paragraph("Controlled Trust Summary Instrument", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Trust Identification", heading_style))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", body_style))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Foundational Parties", heading_style))
+    story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Primary Beneficiary:</b> {preview_context.get('primary_beneficiary') or '______________________________'}", body_style))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Purpose", heading_style))
+    story.append(Paragraph(
+        preview_context.get('trust_purpose') or
+        "The purpose of this trust is to hold, manage, and administer property and rights in accordance with its governing provisions.",
+        body_style
+    ))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Trust Property", heading_style))
+    story.append(Paragraph(f"<b>Initial Corpus Description:</b> {preview_context.get('initial_corpus_description') or 'Initial trust property and interests to be assigned and administered under this trust.'}", body_style))
+    story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or 'Personal property, contractual rights, and other assignable interests.'}", body_style))
+    story.append(Paragraph(f"<b>Property Mapping Timing:</b> {preview_context.get('property_mapping_timing') or 'To be assigned and recorded through subsequent trust funding and transfer actions.'}", body_style))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Summary Declaration", heading_style))
+    story.append(Paragraph(
+        "These Articles of Trust summarize the core trust formation details currently entered through the trust creation workflow. "
+        "This PDF is a bounded final output generated from the controlled trust document system.",
+        body_style
+    ))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Grantor / Settlor Signature: ______________________________", body_style))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Trustee Signature: ______________________________", body_style))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Date: ______________________________", body_style))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_trustee_acceptance_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("Trustee Acceptance of Appointment", styles["Title"]))
+    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Trustee Acceptance", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trustee Name:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(
+        "The undersigned hereby accepts appointment as Trustee of the above-referenced trust and agrees to perform all duties in accordance with the trust’s governing instrument and applicable law.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Trustee Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_general_assignment_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("General Assignment to Trust", styles["Title"]))
+    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Scope of Assignment", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Initial Corpus Description:</b> {preview_context.get('initial_corpus_description') or 'Initial trust property and assignable interests to be transferred into the trust structure.'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or 'Personal property, contractual rights, and other assignable interests.'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Property Mapping Timing:</b> {preview_context.get('property_mapping_timing') or 'To be assigned and documented through subsequent trust funding and transfer records.'}", styles["BodyText"]))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Assignor Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Trustee Acknowledgment: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_organizational_minutes_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("Initial Trustee Resolution / Organizational Minutes", styles["Title"]))
+    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Matters Considered", styles["Heading2"]))
+    story.append(Paragraph(
+        preview_context.get('trust_purpose') or
+        "Review of the trust’s formation purpose, administration, and initial fiduciary organization.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Trustee Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_successor_trustee_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("Successor Trustee Acceptance / Appointment", styles["Title"]))
+    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Parties", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Current Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Successor Trustee Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+
+
+def generate_packet_manifest_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    exported_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    story.append(Paragraph("Controlled Trust Packet Manifest", styles["Title"]))
+    story.append(Paragraph("Cover Sheet / Export Index", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Packet Information", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Export Timestamp:</b> {exported_at}", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Included Documents", styles["Heading2"]))
+    included_docs = [
+        "Articles of Trust",
+        "Trustee Acceptance of Appointment",
+        "General Assignment to Trust",
+        "Initial Trustee Resolution / Organizational Minutes",
+        "Successor Trustee Acceptance / Appointment",
+    ]
+    for item in included_docs:
+        story.append(Paragraph(f"• {item}", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Packet Notes", styles["Heading2"]))
+    story.append(Paragraph(
+        "This packet was generated through the controlled trust document system. "
+        "The included files represent bounded final document surfaces exported as PDFs and bundled into a trust-specific packet.",
+        styles["BodyText"]
+    ))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+def generate_controlled_trust_packet_zip(trust, preview_context):
+    packet_buffer = BytesIO()
+
+    with zipfile.ZipFile(packet_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        trust_id = preview_context.get("trust_id") or "TRUST"
+
+        docs = [
+            (f"{trust_id}_Packet_Manifest.pdf", generate_packet_manifest_pdf(trust, preview_context)),
+            (f"{trust_id}_Articles_of_Trust.pdf", generate_articles_pdf(trust, preview_context)),
+            (f"{trust_id}_Trustee_Acceptance.pdf", generate_trustee_acceptance_pdf(trust, preview_context)),
+            (f"{trust_id}_General_Assignment.pdf", generate_general_assignment_pdf(trust, preview_context)),
+            (f"{trust_id}_Organizational_Minutes.pdf", generate_organizational_minutes_pdf(trust, preview_context)),
+            (f"{trust_id}_Successor_Trustee_Acceptance.pdf", generate_successor_trustee_pdf(trust, preview_context)),
+        ]
+
+        for filename, pdf_buffer in docs:
+            zf.writestr(filename, pdf_buffer.getvalue())
+
+    packet_buffer.seek(0)
+    return packet_buffer
 
 def get_support_doc_by_category(transfer, category_key):
     return TransferSupportDoc.query.filter_by(
@@ -1237,6 +1946,16 @@ def workflow_hub():
     trusts = get_all_trusts()
     return render_template("workflow_hub.html", trusts=trusts)
 
+
+
+
+@app.route("/admin/export-policy/toggle", methods=["POST"])
+def admin_toggle_export_policy():
+    policy = get_export_policy()
+    current = bool(policy.get("strict_packet_export", True))
+    set_export_policy(not current)
+    flash(f"Export policy updated: {'Strict mode' if not current else 'Advisory mode'}")
+    return redirect(url_for("admin_index"))
 
 @app.route("/admin")
 def admin_index():
@@ -3996,22 +4715,30 @@ def workspace_document_generate(workspace_id):
 
 @app.route("/trust/<trust_id>/post-create-review")
 def trust_post_create_review(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
-    return redirect(url_for("trust_formation_preview_hub", trust_id=trust.trust_id))
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    return redirect(url_for("trust_formation_preview_hub", trust_id=trust["trust_id"]))
 
 
 @app.route("/trust/<trust_id>/formation-preview-hub")
 def trust_formation_preview_hub(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_formation_preview_hub.html",
         trust=trust,
+        preview_context=preview_context,
     )
 
 
 @app.route("/trust/<trust_id>/successor-trustee-preview")
 def trust_successor_trustee_preview(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_successor_trustee_preview.html",
@@ -4020,9 +4747,96 @@ def trust_successor_trustee_preview(trust_id):
     )
 
 
+@app.route("/trust/<trust_id>/successor-trustee-output-surface")
+def trust_successor_trustee_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_successor_trustee_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+@app.route("/trust/<trust_id>/successor-trustee-output-surface/pdf")
+def trust_successor_trustee_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_successor_trustee_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{trust_id}_Successor_Trustee_Acceptance.pdf"
+    )
+
+
+@app.route("/trust/<trust_id>/controlled-packet-export")
+def trust_controlled_packet_export(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
+    packet_readiness = build_trust_packet_readiness(document_readiness)
+
+    if packet_readiness.get("blocked"):
+        return (
+            "Packet export blocked: strict export mode is enabled and one or more core documents are incomplete.",
+            403,
+        )
+
+    packet_buffer = generate_controlled_trust_packet_zip(trust, preview_context)
+    filename = f"{trust_id}_Controlled_Trust_Packet.zip"
+
+    append_export_activity(
+        build_export_activity_entry(
+            preview_context,
+            document_readiness,
+            packet_readiness,
+            filename
+        )
+    )
+
+    return send_file(
+        packet_buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename
+    )
+
+
+@app.route("/trust/<trust_id>/packet-preview")
+def trust_packet_preview(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
+    packet_readiness = build_trust_packet_readiness(document_readiness)
+    correction_links = build_correction_links(trust_id, document_readiness, return_to="execution")
+    export_policy = get_export_policy()
+    latest_export_activity = get_latest_export_for_trust(trust_id)
+    return render_template(
+        "trust_packet_preview.html",
+        trust=trust,
+        preview_context=preview_context,
+        document_readiness=document_readiness,
+        packet_readiness=packet_readiness,
+        correction_links=correction_links,
+        export_policy=export_policy,
+        latest_export_activity=latest_export_activity,
+    )
+
+
 @app.route("/trust/<trust_id>/general-assignment-preview")
 def trust_general_assignment_preview(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_general_assignment_preview.html",
@@ -4031,9 +4845,38 @@ def trust_general_assignment_preview(trust_id):
     )
 
 
+@app.route("/trust/<trust_id>/general-assignment-output-surface")
+def trust_general_assignment_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_general_assignment_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+@app.route("/trust/<trust_id>/general-assignment-output-surface/pdf")
+def trust_general_assignment_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_general_assignment_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{trust_id}_General_Assignment.pdf"
+    )
+
+
 @app.route("/trust/<trust_id>/organizational-minutes-preview")
 def trust_organizational_minutes_preview(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_organizational_minutes_preview.html",
@@ -4042,9 +4885,38 @@ def trust_organizational_minutes_preview(trust_id):
     )
 
 
+@app.route("/trust/<trust_id>/organizational-minutes-output-surface")
+def trust_organizational_minutes_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_organizational_minutes_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+@app.route("/trust/<trust_id>/organizational-minutes-output-surface/pdf")
+def trust_organizational_minutes_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_organizational_minutes_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{trust_id}_Organizational_Minutes.pdf"
+    )
+
+
 @app.route("/trust/<trust_id>/trustee-acceptance-preview")
 def trust_trustee_acceptance_preview(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_trustee_acceptance_preview.html",
@@ -4053,9 +4925,38 @@ def trust_trustee_acceptance_preview(trust_id):
     )
 
 
+@app.route("/trust/<trust_id>/trustee-acceptance-output-surface")
+def trust_trustee_acceptance_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_trustee_acceptance_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+@app.route("/trust/<trust_id>/trustee-acceptance-output-surface/pdf")
+def trust_trustee_acceptance_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_trustee_acceptance_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{trust_id}_Trustee_Acceptance.pdf"
+    )
+
+
 @app.route("/trust/<trust_id>/articles-preview")
 def trust_articles_preview(trust_id):
-    trust = Trust.query.filter_by(trust_id=trust_id).first_or_404()
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
     return render_template(
         "trust_articles_preview.html",
@@ -4064,11 +4965,42 @@ def trust_articles_preview(trust_id):
     )
 
 
+@app.route("/trust/<trust_id>/articles-output-surface")
+def trust_articles_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_articles_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+
+@app.route("/trust/<trust_id>/articles-output-surface/pdf")
+def trust_articles_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_articles_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{trust_id}_Articles_of_Trust.pdf"
+    )
+
+
 @app.route("/trust/<trust_id>/execution")
 def trust_execution_dashboard(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found", 404
+
+    preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
 
     transfers = (
         Transfer.query
@@ -4080,6 +5012,9 @@ def trust_execution_dashboard(trust_id):
     return render_template(
         "transfer_execution_dashboard.html",
         trust_id=trust_id,
+        trust=trust,
+        preview_context=preview_context,
+        document_readiness=document_readiness,
         transfers=transfers,
         current_role=session.get("role"),
     )
