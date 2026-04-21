@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Create Trust Wizard — Step 2 of 8: Grantor / Settlor</h2>
+
+<div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
+    <strong>What is this?</strong><br>
+    This step identifies who is establishing the trust.
+</div>
+
+<div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
+    <strong>Why this matters</strong><br>
+    The grantor defines the legal origin of the trust and is foundational to how the trust is interpreted and administered.
+</div>
+
+<form method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Grantor Name</label>
+    <input name="grantor_name" value="{{ trust['grantor_name'] or '' }}" required>
+
+    <label>Grantor Type</label>
+    <select name="grantor_type" required>
+        <option value="">Select Type</option>
+        <option value="individual"{% if trust['grantor_type'] == "individual" %} selected{% endif %}>Individual</option>
+        <option value="couple"{% if trust['grantor_type'] == "couple" %} selected{% endif %}>Couple</option>
+        <option value="entity"{% if trust['grantor_type'] == "entity" %} selected{% endif %}>Entity</option>
+    </select>
+
+    <label>Grantor Domicile / Residence (411)</label>
+    <input name="grantor_contact" value="{{ trust['grantor_contact'] or '' }}" placeholder="Enter domicile / residence / 411 information">
+
+    <div style="margin:10px 0 14px 0; padding:10px; background:#f8fafc; border:1px solid #d9e2ec; border-radius:6px;">
+        <strong>What goes here?</strong><br>
+        Use this field for the grantor's domicile, residence, or 411-style identifying location/contact information rather than general notes.
+    </div>
+
+    <button type="submit">Save and Continue</button>
+</form>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step1" style="text-decoration:none;">← Back</a>
+
+{% if request.args.get("return_to") == "execution" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Execution</a>
+  </p>
+{% elif request.args.get("return_to") == "packet_preview" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Packet Preview</a>
+  </p>
+{% endif %}
+
+</div>
+
+{% endblock %}

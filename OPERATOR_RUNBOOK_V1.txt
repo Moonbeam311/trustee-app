@@ -1,0 +1,68 @@
+OPERATOR RUNBOOK V1
+================================================================================
+
+Purpose:
+This file explains how to walk the platform as an operator during the first QA pass.
+
+RECOMMENDED QA SEQUENCE
+--------------------------------------------------------------------------------
+1. Admin
+2. Reports
+3. Learning
+4. Videos
+5. Workspaces
+6. Discussions
+7. Decision
+8. Execution
+9. Documents
+10. Visualization
+
+FOR EACH PAGE, CHECK
+--------------------------------------------------------------------------------
+- Does it load?
+- Does the navigation make sense?
+- Does the page purpose feel clear?
+- Are the primary actions visible?
+- Does it feel part of the same platform?
+
+FLOW WALKS
+--------------------------------------------------------------------------------
+Flow 1:
+Learning -> Videos -> Workspace
+
+Flow 2:
+Workspace -> Discussions -> Decision
+
+Flow 3:
+Decision -> Execution -> Documents
+
+Flow 4:
+Documents -> Reports -> Visualization
+
+ROLE WALKS
+--------------------------------------------------------------------------------
+Admin:
+- should be able to access all modules and create/edit flows
+
+Trustee:
+- should be able to use operational modules and workflow layers
+
+Viewer:
+- should be limited to read-oriented pages only where intended
+
+REPORT WALKS
+--------------------------------------------------------------------------------
+Validate:
+- Trust Summary PDF
+- Ledger PDF
+- Fiduciary PDF
+- Portfolio PDF
+- Audit PDF
+- K-1 PDF
+- 1041 PDF
+- Instrument PDF
+
+SUCCESS CONDITION
+--------------------------------------------------------------------------------
+If the platform feels coherent, routes load, flows connect naturally, and roles
+behave correctly, v1 is ready for glitch-fix iteration rather than structural rebuild.

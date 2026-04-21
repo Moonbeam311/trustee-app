@@ -1,45 +1,48 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Create Trust Wizard — Step 2: Trust Type and Purpose</h2>
+<h2>Create Trust Wizard — Step 3 of 8: Trust Structure and Purpose</h2>
 
 <div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What is this?</strong><br>
-    This step defines the general structure and intended use of the trust.
+    Use this step to classify how the trust should function, what it is primarily for, and how it should be administered.
 </div>
 
 <div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
     <strong>Why this matters</strong><br>
-    Your trust type and purpose affect how the trust is administered, what follow-up documents are recommended, and how later steps in the system will behave.
+    This step does not recreate the trust record. It classifies the trust you created in Step 1 so the rest of the wizard can behave correctly.
 </div>
+
+<div style="margin-bottom:15px; padding:12px; background:#eef7ff; border-radius:6px; border:1px solid #cfe3ff;"><strong>How this fits the sequence</strong><br>Step 1 created the trust record itself. Step 2 now defines the trust’s structure, purpose, accounting method, and operating mode.</div>
 
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-
     <label>Trust Type</label>
     <select name="trust_type" required>
         <option value="">Select Trust Type</option>
-        <option value="revocable">Revocable</option>
-        <option value="irrevocable">Irrevocable</option>
-        <option value="98">98 Trust</option>
+        {% for item in trust_types %}
+        <option value="{{ item['slug'] }}" {% if trust['trust_type'] == item['slug'] %}selected{% endif %}>
+            {{ item['label'] }}
+        </option>
+        {% endfor %}
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
         <strong>What do these mean?</strong><br>
-        <strong>Revocable:</strong> usually more flexible and easier to modify.<br>
-        <strong>Irrevocable:</strong> usually more structured and harder to change once established.<br>
-        <strong>98 Trust:</strong> advanced custom trust mode for expanded structure and administration.
+        {% for item in trust_types %}
+        <div><strong>{{ item['label'] }}:</strong> {{ item['summary'] }}</div>
+        {% endfor %}
     </div>
 
     <label>Primary Purpose</label>
     <select name="trust_purpose" required>
         <option value="">Select Purpose</option>
-        <option value="family_holding">Family Holding</option>
-        <option value="property_holding">Property Holding</option>
-        <option value="business_operations">Business Operations</option>
-        <option value="education_charitable">Education / Charitable Support</option>
-        <option value="advanced_custom">Advanced Custom</option>
+        <option value="family_holding"{% if trust['trust_purpose'] == "family_holding" %} selected{% endif %}>Family Holding</option>
+        <option value="property_holding"{% if trust['trust_purpose'] == "property_holding" %} selected{% endif %}>Property Holding</option>
+        <option value="business_operations"{% if trust['trust_purpose'] == "business_operations" %} selected{% endif %}>Business Operations</option>
+        <option value="education_charitable"{% if trust['trust_purpose'] == "education_charitable" %} selected{% endif %}>Education / Charitable Support</option>
+        <option value="advanced_custom"{% if trust['trust_purpose'] == "advanced_custom" %} selected{% endif %}>Advanced Custom</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -50,8 +53,8 @@
     <label>Accounting Method</label>
     <select name="accounting_method" required>
         <option value="">Select Accounting Method</option>
-        <option value="cash">Cash Method</option>
-        <option value="accrual">Accrual Method</option>
+        <option value="cash"{% if trust['accounting_method'] == "cash" %} selected{% endif %}>Cash Method</option>
+        <option value="accrual"{% if trust['accounting_method'] == "accrual" %} selected{% endif %}>Accrual Method</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -63,8 +66,8 @@
     <label>Workflow Mode</label>
     <select name="workflow_mode" required>
         <option value="">Select Workflow Mode</option>
-        <option value="private_office">Private Office Mode</option>
-        <option value="public_filing">Public Filing / External Mode</option>
+        <option value="private_office"{% if trust['workflow_mode'] == "private_office" %} selected{% endif %}>Private Office Mode</option>
+        <option value="public_filing"{% if trust['workflow_mode'] == "public_filing" %} selected{% endif %}>Public Filing / External Mode</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:20px;">
@@ -73,6 +76,22 @@
         <strong>Public Filing / External Mode:</strong> workflows intended to support outward-facing or filing-related records.
     </div>
 
-    <button type="submit">Next Step</button>
+    <button type="submit">Save and Continue</button>
 </form>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step2_grantor/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+
+{% if request.args.get("return_to") == "execution" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Execution</a>
+  </p>
+{% elif request.args.get("return_to") == "packet_preview" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Packet Preview</a>
+  </p>
+{% endif %}
+
+</div>
+
 {% endblock %}

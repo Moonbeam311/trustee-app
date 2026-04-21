@@ -1,0 +1,31 @@
+<nav style="margin-bottom: 20px; padding: 12px 14px; border: 1px solid #d1d5db; border-radius: 10px; background: #f9fafb;">
+  <div style="font-weight: bold; margin-bottom: 8px;">Platform Navigation</div>
+  <div style="display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px;">
+
+    {% if session.get("role") == "Admin" %}
+      <a href="/admin">Admin</a>
+    {% endif %}
+
+    {% if session.get("role") in ["Admin", "Trustee"] %}
+      <a href="/reports">Reports</a>
+    {% endif %}
+
+    {% if session.get("role") in ["Admin", "Trustee", "Viewer"] %}
+      <a href="/learning">Learning</a>
+      <a href="/videos">Videos</a>
+      <a href="/workspaces">Workspace</a>
+      <a href="/discussions">Discussions</a>
+      <a href="/decision">Decision</a>
+      {% if trust is defined and trust and trust.trust_id %}
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Execution</a>
+{% elif trust_id is defined and trust_id %}
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Execution</a>
+{% else %}
+      <a href="/execution">Execution</a>
+{% endif %}
+      <a href="/documents">Documents</a>
+      <a href="/visualization">Visualization</a>
+    {% endif %}
+
+  </div>
+</nav>

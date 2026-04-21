@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  {% include "_platform_shell.html" %}
   <title>Admin Index</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; color: #1f2328; background: #f6f8fa; }
@@ -17,17 +18,180 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
 {% include '_nav.html' %}
 
-<h1>Admin Index</h1>
-<p><a href="/visualization">Visualization Dashboard</a> | <a href="/visualization/trust-map">Trust Map</a> | <a href="/visualization/analytics">Analytics</a></p>
-<p><a href="/documents">Document Generator</a> | <a href="/documents/generate">Generate Document</a></p>
-<p><a href="/execution">Execution Dashboard</a> | <a href="/execution/tasks/new">New Task</a></p>
-<p><a href="/decision">Decision Engine</a></p>
-<p><a href="/discussions">Discussions</a> | <a href="/discussions/new">New Thread</a></p>
-<p><a href="/workspaces">Workspace Dashboard</a> | <a href="/workspaces/new">New Workspace</a></p>
-<p><a href="/videos">Video Library</a> | <a href="/videos/upload">Upload Video</a></p>
-<p><a href="/admin/learning/article/new">New Learning Article</a> | <a href="/admin/forms/new">New Form Guide</a></p>
+<div class="page-header">
+  <h1 class="trust-page-title">Admin Trust Operations</h1>
+
+<div class="trust-panel">
+  <strong>Export Policy Control</strong>
+  <p class="trust-page-subtitle">Choose whether packet export is advisory or strictly blocked when core trust documents are incomplete.</p>
+
+  <p>
+    <strong>Current Mode:</strong>
+    <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
+      {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
+    </span>
+  </p>
+
+  <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+    <button type="submit" class="trust-button-link" style="border:none; cursor:pointer;">
+      Switch to {% if export_policy.strict_packet_export %}Advisory{% else %}Strict{% endif %} Mode
+    </button>
+  </form>
+
+  <p class="trust-note">
+    This export policy applies across the full trust workflow, including Trust Execution, Packet Preview, and packet ZIP export.
+    Strict mode blocks packet export until all five core documents are ready. Advisory mode allows export with warnings.
+  </p>
+</div>
+
+<div class="trust-panel">
+  <strong>Trust Operations Dashboard</strong>
+  <p style="margin-top:8px;">Operational trust summary across readiness, packet status, and quick actions.</p>
+
+  {% if trust_summaries %}
+    <table class="trust-table trust-table-compact">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Trust</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Type</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Last Updated</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Packet Status</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Ready Docs</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Incomplete Docs</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Missing Areas</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Quick Fixes</th>
+          <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Quick Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in trust_summaries %}
+          <tr>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              <strong>{{ item.trust_name }}</strong><br>
+              <small>{{ item.trust_id }}</small>
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.trust_type }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.last_updated }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              <span class="{% if item.packet_ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
+                {{ item.packet_status }}
+              </span>
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.ready_count }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">{{ item.incomplete_count }}</td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              {% if item.missing_areas %}
+                {% for area in item.missing_areas %}
+                  <div class="trust-small trust-muted">{{ area }}</div>
+                {% endfor %}
+              {% else %}
+                <span class="trust-status-ready">None</span>
+              {% endif %}
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              {% if item.quick_fix_links %}
+                {% for link in item.quick_fix_links %}
+                  <div><a href="{{ link.url }}">{{ link.label }}</a></div>
+                {% endfor %}
+              {% else %}
+                <span class="trust-status-ready">No action needed</span>
+              {% endif %}
+            </td>
+            <td style="padding:8px; border-bottom:1px solid #ececec;">
+              <a href="{{ url_for('trust_execution_dashboard', trust_id=item.trust_id) }}">Execution</a> |
+              <a href="{{ url_for('trust_packet_preview', trust_id=item.trust_id) }}">Packet Preview</a> |
+              <a href="{{ url_for('trust_controlled_packet_export', trust_id=item.trust_id) }}">Download Packet</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p style="margin-top:8px;">No trust records found yet.</p>
+  {% endif %}
+</div>
+
+
+<div class="trust-panel">
+  <strong>Trust-Specific Launch Paths</strong>
+  <p style="margin-top:8px;">Use these dynamic links to enter the live trust workflow for any available trust record.</p>
+
+  {% if trusts %}
+    {% for trust in trusts %}
+      <div style="margin-top: 12px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff;">
+        <p style="margin:0 0 6px;"><strong>{{ trust['trust_name'] or 'Unnamed Trust' }}</strong> ({{ trust['trust_id'] }})</p>
+        <p style="margin:0 0 4px;"><a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Trust Execution</a></p>
+        <p style="margin:0 0 4px;"><a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Open Articles Output Surface</a></p>
+        <p style="margin:0 0 4px;"><a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust['trust_id']) }}">Open Trustee Acceptance Output Surface</a></p>
+        <p style="margin:0;"><a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download Controlled Trust Packet (ZIP)</a></p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p style="margin-top:8px;">No trust records found yet.</p>
+  {% endif %}
+</div>
+  <p class="page-subtitle">Start by creating or locating a trust record before using reports.</p>
+</div>
+
+<div class="platform-card">
+  <h2>Quick Start</h2>
+  <p class="page-subtitle">Start here. Follow this order to use the system correctly.</p>
+  <div class="action-bar">
+    <a href="/create_trust_step1"><strong>Create Trust</strong></a>
+    <a href="/">View Existing Trusts</a>
+    <a href="/learning">Learning Hub</a>
+    <a href="/workspaces">Workspace</a>
+    <a href="/reports">Report Center</a>
+  </div>
+  <ol>
+    <li><strong>Create a trust or open an existing trust</strong></li>
+    <li>Use Learning Hub to understand trust types and forms</li>
+    <li>Use Workspace to plan before formal output</li>
+    <li>Use Reports after a trust has been selected</li>
+  </ol>
+</div>
+  <ol>
+    <li><strong>Create or review a trust</strong></li>
+    <li>Learn trust types and forms</li>
+    <li>Plan in Workspace</li>
+    <li>Generate reports and documents</li>
+  </ol>
+</div>
+
+<div class="platform-card">
+  <h2>Admin Tools</h2>
+  <div class="action-bar">
+    <a href="/admin/learning/article/new">New Learning Article</a>
+    <a href="/admin/forms/new">New Form Guide</a>
+    <a href="/videos/upload">Upload Video</a>
+    <a href="/workspaces/new">New Workspace</a>
+    <a href="/discussions/new">New Thread</a>
+    <a href="/execution/tasks/new">New Task</a>
+    <a href="/documents/generate">Generate Document</a>
+  </div>
+</div>
+
+<ol>
+    <li>Create or review a trust record</li>
+    <li>Use Learning Hub to understand trust types and forms</li>
+    <li>Use Workspace to plan before formal output</li>
+    <li>Use Reports after a trust has been selected</li>
+  </ol>
+</div>
+
+</div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
 <p><a href="/learning">Learning Hub</a> | <a href="/learning/trust-types">Trust Types</a> | <a href="/forms">Forms & Filings</a></p>
 <section style="margin: 20px 0; padding: 16px; border: 1px solid #d1d5db; border-radius: 10px; background: #f9fafb;">
   <h2 style="margin-top: 0;">Report Launch Area</h2>
@@ -59,8 +223,7 @@
     </div>
   </div>
 </section>
-\n<p><a href="/reports/portfolio.pdf" target="_blank">Download Portfolio PDF</a> &nbsp;|&nbsp; <a href="/reports/audit.pdf" target="_blank">Download Audit Log PDF</a> &nbsp;|&nbsp; <a href="/reports/fiduciaries.pdf" target="_blank">Download Fiduciary PDF</a> &nbsp;|&nbsp; <a href="/reports">Open Report Center</a></p>\n
-<p><a href="/reports">Open Report Center</a></p>
+<p><a href="/reports/portfolio.pdf" target="_blank">Download Portfolio PDF</a> &nbsp;|&nbsp; <a href="/reports/audit.pdf" target="_blank">Download Audit Log PDF</a> &nbsp;|&nbsp; <a href="/reports/fiduciaries.pdf" target="_blank">Download Fiduciary PDF</a> &nbsp;|&nbsp; <a href="/reports">Open Report Center</a></p>
 
 <p><a href="{{ url_for('users_dashboard') }}">Manage App Users</a></p>
 <p class="muted">Central module and manifest overview for the Trustee App.</p>
@@ -129,7 +292,6 @@
   <h2>Permissions Layer</h2>
   <p><a href="{{ url_for('permissions_dashboard') }}">Open Permissions Dashboard</a></p>
 </div>
-
 
 <div class="box">
   <h2>Security Layer</h2>

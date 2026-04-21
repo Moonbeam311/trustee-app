@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}">
+  <title>Articles Final Surface {{ trust.trust_id }}</title>
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      max-width: 900px;
+      margin: 28px auto;
+      padding: 0 24px 40px;
+      line-height: 1.6;
+      color: #111;
+      background: #fff;
+    }
+    .topbar {
+      margin-bottom: 24px;
+      font-family: Arial, sans-serif;
+    }
+    .topbar a {
+      text-decoration: none;
+      color: #1f4e79;
+      font-weight: 600;
+    }
+    .meta-panel {
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      background: #fafafa;
+      padding: 16px 18px;
+      margin-bottom: 24px;
+      font-family: Arial, sans-serif;
+    }
+    .meta-panel h1 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.45rem;
+    }
+    .muted {
+      color: #666;
+    }
+    .document {
+      border: 1px solid #cfcfcf;
+      border-radius: 8px;
+      padding: 42px 48px;
+      background: #fff;
+    }
+    .doc-title {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .doc-subtitle {
+      text-align: center;
+      font-size: 1rem;
+      margin-bottom: 28px;
+    }
+    .doc-section-title {
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    .signature-block {
+      margin-top: 36px;
+    }
+    .signature-line {
+      margin-top: 34px;
+      border-top: 1px solid #222;
+      width: 320px;
+      padding-top: 6px;
+    }
+    .actions {
+      margin-top: 24px;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .button-link {
+      display: inline-block;
+      padding: 10px 14px;
+      background: #1f4e79;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-right: 0;
+      white-space: nowrap;
+    }
+    @media print {
+      .topbar, .meta-panel, .actions {
+        display: none;
+      }
+      body {
+        margin: 0;
+        max-width: none;
+        padding: 0;
+      }
+      .document {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body><div class="trust-doc-wrap">
+  <div class="topbar trust-doc-topbar">
+    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">← Back to Formation Preview Hub</a>
+  </div>
+
+  <div class="meta-panel trust-doc-meta">
+    <h1>Articles Final Surface</h1>
+    <p class="muted">
+      This is the first bounded final-style document surface for Articles of Trust / Controlled Trust Summary Instrument.
+      It remains isolated, deliberate, and review-centered before broader package generation is introduced.
+    </p>
+    <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
+    <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
+    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+  </div>
+
+  <div class="document trust-doc-surface">
+    <div class="doc-title">Articles of Trust</div>
+    <div class="doc-subtitle">Controlled Trust Summary Instrument</div>
+
+    <p>
+      These Articles of Trust summarize the core trust formation details currently entered through the trust creation workflow.
+      This surface is intended to function as the first controlled final-style rendering layer for the Articles instrument.
+    </p>
+
+    <div class="doc-section-title">I. Trust Identification</div>
+<p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
+<p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
+<p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
+<p><strong>Effective Date:</strong> {{ preview_context.effective_date_display or "______________________________" }}</p>
+<p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
+<p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
+
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
+    <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
+
+    <div class="doc-section-title">II. Foundational Parties</div>
+    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
+    <p><strong>Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
+    <p><strong>Primary Beneficiary:</strong> {{ preview_context.primary_beneficiary or "______________________________" }}</p>
+
+    <div class="doc-section-title">III. Trust Standing</div>
+    <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
+    <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
+    <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
+
+    <div class="doc-section-title">IV. Summary Declaration</div>
+    <p>
+      The undersigned acknowledge that the trust identified above is being formed and reviewed through the controlled trust workflow,
+      and that these Articles of Trust constitute the first bounded final-style summary surface derived from the entered formation data.
+    </p>
+
+    <p>
+      This instrument is presented for review, refinement, and later controlled output generation.
+      Full package-wide automation remains deferred until the bounded document surfaces are stabilized.
+    </p>
+
+    <div class="doc-section-title">V. Signature Placeholders</div>
+
+    <div class="signature-block">
+      <div class="signature-line">Grantor / Settlor Signature</div>
+      <div class="signature-line">Trustee Signature</div>
+      <div class="signature-line">Date</div>
+    </div>
+
+    <div class="actions trust-doc-actions">
+      <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print Articles</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_articles_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
+    </div>
+  </div>
+</div></body>
+</html>

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Document Generator</title>
   <style>
@@ -9,9 +10,14 @@
   </style>
 </head>
 <body>
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
+  <div class="page-header">
   <h1>Document Generator</h1>
-  <p>Generate draft documents from reusable templates linked to workspaces and planning tracks.</p>
-  <p><a href="/documents/generate">Generate Document</a> | <a href="/execution">Execution Dashboard</a> | <a href="/workspaces">Workspace Dashboard</a> | <a href="/visualization">Visualization</a></p>
+</div>
+  <p class="page-subtitle">Generate draft documents from reusable templates linked to workspaces and planning tracks.</p>
+<div class="action-bar"><a href="/documents/generate">Generate Document</a> <a href="/execution">Execution</a> <a href="/workspaces">Workspace</a> <a href="/visualization">Visualization</a></div>
+  
 
   <h2>Templates</h2>
   {% for template in templates %}
@@ -33,5 +39,6 @@
   {% else %}
     <p>No generated documents yet.</p>
   {% endfor %}
+  </div>
 </body>
 </html>

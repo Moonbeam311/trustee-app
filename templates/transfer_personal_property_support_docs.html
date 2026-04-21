@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Personal Property Support Docs {{ transfer.transfer_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.5;
+      max-width: 920px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('transfer_template_center', transfer_id=transfer.transfer_id) }}">Back to Support Template Center</a></p>
+
+  <h1>Personal Property Support Documents</h1>
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+  <p class="muted">This page represents the second asset-specific support-template variant inside the app.</p>
+
+  <div class="section">
+    <h2>Transfer Context</h2>
+    <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+    <p><strong>Status:</strong> {{ transfer.status }}</p>
+    <p><strong>Mode:</strong> {{ transfer.mode }}</p>
+    <p><strong>Asset Type:</strong> {{ transfer.asset_type or '' }}</p>
+    <p><strong>Asset Name:</strong> {{ transfer.asset_name or '' }}</p>
+    <p><strong>Transfer Type:</strong> {{ transfer.transfer_type or '' }}</p>
+    <p><strong>Current Owner:</strong> {{ transfer.current_owner or '' }}</p>
+    <p><strong>Trustee Decision:</strong> {{ transfer.trustee_decision or '' }}</p>
+    <p><strong>Control Evidence:</strong> {{ transfer.control_change_status or '' }}</p>
+    <p><strong>Control Strength:</strong> {{ control_strength }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Personal Property Support Document Categories</h2>
+    <ul>
+      <li>Item description clarification note</li>
+      <li>Physical possession transfer note</li>
+      <li>Condition and identification memo</li>
+      <li>Custody/location record</li>
+      <li>Supporting note for serial number, markings, or distinguishing traits</li>
+      <li>Optional delivery/receipt support note</li>
+      <li>Property-specific packet cover note</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>When Personal Property Support Docs May Help</h2>
+    <ol>
+      <li>When the asset is tangible and identification depends on physical description.</li>
+      <li>When possession, custody, or location is part of the control story.</li>
+      <li>When multiple similar items could create ambiguity without extra description.</li>
+      <li>When a later reviewer may need more than the base packet to identify the property clearly.</li>
+      <li>When delivery, custody, or condition should be documented more carefully.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    <h2>Packet-Specific Guidance</h2>
+    <pre>For transfer {{ transfer.transfer_id }}, this personal-property variant should be considered when the asset behaves like a tangible item rather than an account-style record.
+Current asset: "{{ transfer.asset_name or 'Unnamed Asset' }}"
+Asset type: "{{ transfer.asset_type or 'unspecified' }}"
+Transfer type: "{{ transfer.transfer_type or 'unspecified' }}"
+Control strength: "{{ control_strength }}"
+
+This module does not yet generate item-specific documents automatically, but it establishes the personal-property support category inside the app and prepares it for later expansion.</pre>
+  </div>
+</body>
+</html>

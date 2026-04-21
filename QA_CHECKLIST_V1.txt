@@ -1,0 +1,112 @@
+QA CHECKLIST V1
+================================================================================
+
+Purpose:
+This checklist is used to validate the v1 platform after the full subsystem build
+and Track A product shell polish.
+
+TOP-LEVEL MODULE CHECKS
+--------------------------------------------------------------------------------
+[ ] /admin loads
+[ ] /reports loads
+[ ] /learning loads
+[ ] /videos loads
+[ ] /workspaces loads
+[ ] /discussions loads
+[ ] /decision loads
+[ ] /execution loads
+[ ] /documents loads
+[ ] /visualization loads
+
+REPORT / PDF CHECKS
+--------------------------------------------------------------------------------
+[ ] Report Center loads
+[ ] Trust Summary PDF route opens
+[ ] Ledger PDF route opens
+[ ] Fiduciary PDF route opens
+[ ] Portfolio PDF route opens
+[ ] Audit PDF route opens
+[ ] K-1 Readiness PDF route opens
+[ ] 1041 Report PDF route opens
+[ ] Instrument Detail PDF route opens
+
+LEARNING HUB CHECKS
+--------------------------------------------------------------------------------
+[ ] Learning Hub loads
+[ ] Trust Types Explorer loads
+[ ] Trust Type detail pages load
+[ ] Forms & Filings Center loads
+[ ] Form guide detail page loads
+[ ] Admin create Learning Article page loads
+[ ] Admin edit Learning Article page loads
+[ ] Admin create Form Guide page loads
+[ ] Admin edit Form Guide page loads
+
+VIDEO LIBRARY CHECKS
+--------------------------------------------------------------------------------
+[ ] Video Library loads
+[ ] Video category filter page loads
+[ ] Video trust-type filter page loads
+[ ] Video detail page loads
+[ ] Video upload page loads
+[ ] Video edit page loads
+
+WORKSPACE CHECKS
+--------------------------------------------------------------------------------
+[ ] Workspace dashboard loads
+[ ] New Workspace page loads
+[ ] Workspace detail page loads
+[ ] Workspace edit page loads
+[ ] Workspace note create page loads
+
+DISCUSSION CHECKS
+--------------------------------------------------------------------------------
+[ ] Discussion dashboard loads
+[ ] New Discussion page loads
+[ ] Discussion thread page loads
+[ ] Reply page loads
+[ ] Workspace discussion list loads
+[ ] Workspace new discussion page loads
+
+DECISION ENGINE CHECKS
+--------------------------------------------------------------------------------
+[ ] Decision Engine loads
+[ ] Decision run submits successfully
+[ ] Decision result page shows suggestions
+
+EXECUTION ENGINE CHECKS
+--------------------------------------------------------------------------------
+[ ] Execution dashboard loads
+[ ] New Task page loads
+[ ] Task detail page loads
+[ ] Task status update submits
+[ ] Workspace task list loads
+[ ] Workspace new task page loads
+
+DOCUMENT GENERATOR CHECKS
+--------------------------------------------------------------------------------
+[ ] Document dashboard loads
+[ ] Generate Document page loads
+[ ] Document detail page loads
+[ ] Workspace documents page loads
+[ ] Workspace generate document page loads
+
+VISUALIZATION CHECKS
+--------------------------------------------------------------------------------
+[ ] Visualization dashboard loads
+[ ] Trust Map page loads
+[ ] Analytics page loads
+
+FLOW CHECKS
+--------------------------------------------------------------------------------
+[ ] Learning -> Workspace flow feels coherent
+[ ] Workspace -> Discussions flow feels coherent
+[ ] Workspace -> Decision flow feels coherent
+[ ] Decision -> Execution flow feels coherent
+[ ] Execution -> Documents flow feels coherent
+[ ] Documents -> Reports / Visualization flow feels coherent
+
+NOTES
+--------------------------------------------------------------------------------
+Use this section for glitches, missing links, or visual inconsistencies discovered
+during testing.

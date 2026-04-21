@@ -10,7 +10,20 @@
 </head>
 <body>
   <p><a href="/videos">Back to Video Library</a></p>
-  <h1>Videos for Trust Type: {{ trust_type }}</h1>
+  <h1>Videos for Trust Type:
+{% if trust_type == "revocable" %}Revocable Trust
+{% elif trust_type == "irrevocable" %}Irrevocable Trust
+{% elif trust_type == "simple" %}Simple Trust
+{% elif trust_type == "complex" %}Complex Trust
+{% elif trust_type == "land" %}Land Trust
+{% elif trust_type == "insurance" %}Insurance Trust
+{% elif trust_type == "foreign" %}Foreign Trust
+{% elif trust_type == "charitable" %}Charitable Trust
+{% elif trust_type == "business" %}Business Trust
+{% elif trust_type == "other" %}Other Trust
+{% else %}{{ trust_type }}
+{% endif %}
+</h1>
   {% for video in videos %}
     <div class="card">
       <h3><a href="/videos/{{ video['video_id'] }}">{{ video['title'] }}</a></h3>

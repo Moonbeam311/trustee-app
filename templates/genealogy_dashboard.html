@@ -25,9 +25,12 @@
       <th>Name</th>
       <th>Lineage Role</th>
       <th>Trust</th>
+      <th>Source</th>
+      <th>Status</th>
       <th>Parent 1</th>
       <th>Parent 2</th>
       <th>Spouse</th>
+      <th>Evidence</th>
     </tr>
     {% for r in records %}
     <tr>
@@ -35,9 +38,15 @@
       <td>{{ r["full_name"] }}</td>
       <td>{{ r["lineage_role"] }}</td>
       <td>{{ r["trust_id"] }}</td>
+      <td>{{ r["source_platform"] or "" }}</td>
+      <td>{{ r["verification_status"] or "" }}</td>
       <td>{{ r["parent_1"] }}</td>
       <td>{{ r["parent_2"] }}</td>
       <td>{{ r["spouse"] }}</td>
+      <td>
+        <a href="{{ url_for('media_upload') }}?entity_type=genealogy&entity_id={{ r['genealogy_id'] }}&trust_id={{ r['trust_id'] }}">Attach Evidence</a><br>
+        <a href="{{ url_for('evidence_by_entity', entity_type='genealogy', entity_id=r['genealogy_id']) }}">View Evidence</a>
+      </td>
     </tr>
     {% endfor %}
   </table>

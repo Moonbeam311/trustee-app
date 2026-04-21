@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Create Trust Wizard — Step 4: Administration Preferences</h2>
+<h2>Create Trust Wizard — Step 5 of 8: Governance, Recordkeeping, and Administration</h2>
 
 <div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What is this?</strong><br>
@@ -16,13 +16,12 @@
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-
     <label>Default Record Visibility</label>
     <select name="record_visibility" required>
         <option value="">Select Visibility</option>
-        <option value="private">Private</option>
-        <option value="internal">Internal</option>
-        <option value="public_facing">Public-facing</option>
+        <option value="private"{% if trust['record_visibility'] == "private" %} selected{% endif %}>Private</option>
+        <option value="internal"{% if trust['record_visibility'] == "internal" %} selected{% endif %}>Internal</option>
+        <option value="public_facing"{% if trust['record_visibility'] == "public_facing" %} selected{% endif %}>Public-facing</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -35,8 +34,8 @@
     <label>Workflow Mode Confirmation</label>
     <select name="workflow_mode_confirmed" required>
         <option value="">Confirm Workflow Mode</option>
-        <option value="private_office">Private Office Mode</option>
-        <option value="public_filing">Public Filing / External Mode</option>
+        <option value="private_office"{% if trust['workflow_mode_confirmed'] == "private_office" %} selected{% endif %}>Private Office Mode</option>
+        <option value="public_filing"{% if trust['workflow_mode_confirmed'] == "public_filing" %} selected{% endif %}>Public Filing / External Mode</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -47,8 +46,8 @@
     <label>AI Explanation Layer</label>
     <select name="ai_explanations" required>
         <option value="">Select Option</option>
-        <option value="enabled">Enabled</option>
-        <option value="disabled">Disabled</option>
+        <option value="enabled"{% if trust['ai_explanations'] == "enabled" %} selected{% endif %}>Enabled</option>
+        <option value="disabled"{% if trust['ai_explanations'] == "disabled" %} selected{% endif %}>Disabled</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:12px;">
@@ -59,8 +58,8 @@
     <label>Recommended Admin / Tax Guidance</label>
     <select name="recommended_guidance" required>
         <option value="">Select Option</option>
-        <option value="enabled">Enabled</option>
-        <option value="disabled">Disabled</option>
+        <option value="enabled"{% if trust['recommended_guidance'] == "enabled" %} selected{% endif %}>Enabled</option>
+        <option value="disabled"{% if trust['recommended_guidance'] == "disabled" %} selected{% endif %}>Disabled</option>
     </select>
 
     <div style="font-size:13px; margin-bottom:20px;">
@@ -68,6 +67,22 @@
         When enabled, the system will recommend related administrative steps, records, and document categories based on the trust configuration.
     </div>
 
-    <button type="submit">Next Step</button>
+    <button type="submit">Save and Continue</button>
 </form>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step3/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+
+{% if request.args.get("return_to") == "execution" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Execution</a>
+  </p>
+{% elif request.args.get("return_to") == "packet_preview" %}
+  <p style="margin-top: 8px;">
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}" style="text-decoration:none; font-weight:600;">Return to Packet Preview</a>
+  </p>
+{% endif %}
+
+</div>
+
 {% endblock %}

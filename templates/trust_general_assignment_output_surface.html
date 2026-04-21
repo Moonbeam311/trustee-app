@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}">
+  <title>General Assignment Final Surface {{ trust.trust_id }}</title>
+  <style>
+    body {
+      font-family: "Times New Roman", Times, serif;
+      max-width: 900px;
+      margin: 28px auto;
+      padding: 0 24px 40px;
+      line-height: 1.6;
+      color: #111;
+      background: #fff;
+    }
+    .topbar {
+      margin-bottom: 24px;
+      font-family: Arial, sans-serif;
+    }
+    .topbar a {
+      text-decoration: none;
+      color: #1f4e79;
+      font-weight: 600;
+    }
+    .meta-panel {
+      border: 1px solid #d9d9d9;
+      border-radius: 8px;
+      background: #fafafa;
+      padding: 16px 18px;
+      margin-bottom: 24px;
+      font-family: Arial, sans-serif;
+    }
+    .meta-panel h1 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.45rem;
+    }
+    .muted {
+      color: #666;
+    }
+    .document {
+      border: 1px solid #cfcfcf;
+      border-radius: 8px;
+      padding: 42px 48px;
+      background: #fff;
+    }
+    .doc-title {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .doc-subtitle {
+      text-align: center;
+      font-size: 1rem;
+      margin-bottom: 28px;
+    }
+    .doc-section-title {
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-top: 24px;
+      margin-bottom: 10px;
+    }
+    .signature-block {
+      margin-top: 36px;
+    }
+    .signature-line {
+      margin-top: 34px;
+      border-top: 1px solid #222;
+      width: 320px;
+      padding-top: 6px;
+    }
+    .actions {
+      margin-top: 24px;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .button-link {
+      display: inline-block;
+      padding: 10px 14px;
+      background: #1f4e79;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-right: 0;
+      margin-bottom: 0;
+      white-space: nowrap;
+    }
+    @media print {
+      .topbar, .meta-panel, .actions {
+        display: none;
+      }
+      body {
+        margin: 0;
+        max-width: none;
+        padding: 0;
+      }
+      .document {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+<body><div class="trust-doc-wrap">
+  <div class="topbar trust-doc-topbar">
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">← Back to Trust Execution</a>
+  </div>
+
+  <div class="meta-panel trust-doc-meta">
+    <h1>General Assignment Final Surface</h1>
+    <p class="muted">
+      This is the bounded final document surface for General Assignment to Trust.
+      It remains bounded, review-centered, and isolated from broader package-wide generation.
+    </p>
+    <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
+    <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
+    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+  </div>
+
+  <div class="document trust-doc-surface">
+    <div class="doc-title">General Assignment to Trust</div>
+    <div class="doc-subtitle">Bounded Final Document Surface</div>
+
+    <p>
+      This General Assignment records the intent to assign, transfer, convey, and deliver the assignor’s
+      right, title, and interest in designated property, rights, or related interests to the trust identified below,
+      subject to further review and controlled execution.
+    </p>
+
+    <div class="doc-section-title">I. Trust Identification</div>
+<p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
+<p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
+<p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
+<p><strong>Effective Date:</strong> {{ preview_context.effective_date_display or "______________________________" }}</p>
+<p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
+<p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
+
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
+    <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
+
+    <div class="doc-section-title">II. Assigning Party</div>
+    <p><strong>Assignor / Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
+    <p><strong>Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
+    <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
+
+    <div class="doc-section-title">III. Assignment Statement</div>
+    <p>
+      The undersigned hereby assigns, transfers, and conveys to the trust identified above all assignable right,
+      title, and interest in and to the property, rights, and interests intended to be placed within the trust structure,
+      subject to the trust’s governing documents and associated records.
+    </p>
+
+    <p>
+      This General Assignment is being rendered through the bounded document workflow as a final-style review surface
+      and is intended to support later controlled output generation without triggering package-wide automation.
+    </p>
+
+    <div class="doc-section-title">IV. Scope of Assignment</div>
+<p><strong>Initial Corpus Description:</strong></p>
+<p>
+  {{ preview_context.initial_corpus_description or "Initial trust property and assignable interests to be transferred into the trust structure." }}
+</p>
+
+<p><strong>Asset Categories:</strong></p>
+<p>
+  {{ preview_context.asset_categories or "Personal property, contractual rights, and other assignable interests." }}
+</p>
+
+<p><strong>Property Mapping Timing:</strong></p>
+<p>
+  {{ preview_context.property_mapping_timing or "To be assigned and documented through subsequent trust funding and transfer records." }}
+</p>
+
+    <p>
+      The assignment may include personal property, intangible rights, contractual interests, schedules, and related
+      supporting descriptions as later specified in trust records, schedules, and transfer documentation.
+    </p>
+
+    <div class="doc-section-title">V. Signature Placeholders</div>
+    <div class="signature-block">
+      <div class="signature-line">Assignor Signature</div>
+      <div class="signature-line">Trustee Acknowledgment</div>
+      <div class="signature-line">Date</div>
+    </div>
+
+    <div class="actions trust-doc-actions">
+      <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print General Assignment</a>
+      <a class="button-link trust-doc-button" href="{{ url_for(\'trust_general_assignment_output_surface_pdf\', trust_id=trust.trust_id) }}">Download PDF</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
+    </div>
+  </div>
+</div></body>
+</html>

@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Create Trust Wizard — Step 1: Basic Information</h2>
+<h2>Create Trust Wizard — Step 1 of 8: Trust Identity</h2>
 
 <div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What is this?</strong><br>
-    This step establishes the identity of your trust and the basic governing information used throughout the system.
+    Use this step to create the trust record and establish its governing identity. This is the foundation the rest of the wizard will build on.
 </div>
 
 <div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
     <strong>Why this matters</strong><br>
-    The trust name, jurisdiction, and effective date affect how the trust is organized, displayed, and later used in generated records and documents.
+    The trust name, jurisdiction, and effective date define the record shell for the trust. Later steps will classify how the trust should function and be administered.
 </div>
 
 <form method="POST">
@@ -40,6 +40,8 @@
     <div style="font-size:13px; margin-bottom:20px;">
         The date the trust is intended to take effect.
     </div>
+
+    <div style="margin: 18px 0; padding: 12px; background:#eef7ff; border:1px solid #cfe3ff; border-radius:6px;">After this step, you will define the trust type, purpose, accounting method, and workflow mode.</div>
 
     <button type="submit">Next Step</button>
 </form>

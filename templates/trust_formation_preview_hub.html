@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Trust Formation Preview Hub {{ trust.trust_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f9fafb;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    a.button-link {
+      display: inline-block;
+      margin-top: 10px;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+
+  <h1>Trust Formation Preview Hub</h1>
+  <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+  <p class="muted">Consolidated preview access for the approved revocable trust formation set before deeper wizard integration.</p>
+
+  <div class="section">
+    <h2>Trust Record Context</h2>
+    <p class="muted">This hub is now acting as the controlled trust-wizard review surface for the approved revocable template set.</p>
+    <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
+    <p><strong>Owner ID:</strong> {{ preview_context.owner_id }}</p>
+    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Created:</strong> {{ preview_context.created_at_display }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Post-Create Review Guidance</h2>
+    <p class="muted">This hub now serves as the controlled post-create review destination for a newly created trust.</p>
+    <p>After trust creation, the app can route the trust record here so the approved revocable document set can be reviewed in one place before any deeper output automation is added.</p>
+    <p>This keeps the process deliberate: create the trust record first, then review the approved formation documents, then decide what output bridging should happen next.</p>
+  </div>
+
+  <div class="section">
+    <h2>Create-Trust Guidance</h2>
+    <p class="muted">This hub is the approval bridge between the current basic create-trust flow and the approved revocable document set.</p>
+    <p>The trust wizard is currently being used in a controlled way to feed trust record data into these previews for review and approval before final generation logic is added.</p>
+    <p>At this stage, the app is using a preview-first model. Final document automation and deeper create-trust insertion will come after this review layer is locked.</p>
+  </div>
+
+  <div class="section">
+    <h2>First Approved Output Set</h2>
+    <p class="muted">This hub is now exposing the first controlled set of approved revocable outputs for review focus.</p>
+    <ul>
+      <li>Articles of Trust / Trust Summary Instrument</li>
+      <li>Trustee Acceptance of Appointment</li>
+      <li>General Assignment to Trust</li>
+    </ul>
+    <p>These are being surfaced first as the initial approved output set before deeper output automation is added for the broader revocable trust package.</p>
+
+  </div>
+
+  <div class="section">
+    <h2>First Controlled Output Bridge</h2>
+    <p class="muted">The first controlled bridge candidate is now being identified from the approved revocable output set.</p>
+    <p><strong>Initial Bridge Candidate:</strong> Articles of Trust / Trust Summary Instrument</p>
+
+    <p>This means the review hub is beginning to move from preview-only access toward intentional output bridging, while still avoiding uncontrolled package-wide automation.</p>
+  </div>
+
+  <div class="section">
+    <h2>First Bridge Action</h2>
+    <p class="muted">This is the first deliberately exposed bridge action from the approved revocable output set.</p>
+    <p><strong>Bridge Target:</strong> Articles of Trust / Trust Summary Instrument</p>
+
+    <p><a href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Open Articles of Trust as first controlled bridge candidate</a></p>
+
+  </div>
+
+  <div class="section">
+    <h2>First Explicit Output Path</h2>
+    <p class="muted">The first explicit output path is now being defined for controlled document exposure.</p>
+    <p><strong>Output Path:</strong> Articles of Trust / Trust Summary Instrument</p>
+
+    <p>This path remains review-centered and is being surfaced first before any broader package-level output behavior is introduced.</p>
+  </div>
+
+  <div class="section">
+    
+  <div class="section">
+    <h2>Approved Revocable Formation Set</h2>
+    <p class="muted">These are the core approved revocable trust formation documents. This layer represents the actual legal formation set.</p>
+
+    <ul>
+      <li><strong>Revocable Living Trust Declaration</strong> (Primary Instrument)</li>
+      <li><strong>Certification of Trust</strong> (Summary Instrument)</li>
+      <li><strong>Pour-Over Will</strong> (External Support Instrument)</li>
+      <li><strong>Schedule A — Trust Property and Assignment</strong> (Asset Assignment Layer)</li>
+    </ul>
+
+    <p class="muted">These documents form the legal foundation. Output remains controlled and review-centered before full package generation is enabled.</p>
+  </div>
+
+<h2>First Bounded Output Surface</h2>
+    <p class="muted"><strong>Execution Surface 1:</strong> Articles of Trust is the first controlled output action enabled.</p>
+    <p class="muted">The Articles document is now being treated as the first bounded output surface.</p>
+    <p>This keeps the output path isolated, deliberate, and review-centered while broader package-wide output behavior remains deferred.</p>
+    <p><strong>Bounded Output Surface:</strong> Articles of Trust / Trust Summary Instrument</p>
+  <div class="bounded-output-action" style="margin-top: 12px;">
+    <a
+      href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}"
+      style="display: inline-block; padding: 10px 14px; background: #1f4e79; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;"
+    >
+      Open Bounded Articles Path
+    </a>
+    <div style="margin-top: 8px; font-size: 0.95rem; color: #555;">
+      Bounded action only: routes to the Articles preview path without triggering package-wide generation.
+    </div>
+  </div>
+
+  </div>
+
+  <div class="section">
+    <h2>Explicit Output Path Action</h2>
+    <p class="muted">This action keeps the first output path visible and deliberate.</p>
+    <p><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open First Explicit Output Path</a></p>
+  </div>
+
+  <div class="section">
+    <h2>Bridge Candidate Action</h2>
+    <p class="muted">This first bridge action keeps the output path explicit and deliberate.</p>
+    <p><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Bridge Articles Output Candidate</a></p>
+  </div>
+
+  <div class="section">
+    <h2>Focused Output Actions</h2>
+    <p class="muted">These links foreground the first approved revocable output set for deliberate review focus.</p>
+    <ul>
+      <li><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Articles of Trust / Trust Summary Instrument</a></li>
+      <li><a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Trustee Acceptance of Appointment</a></li>
+      <li><a href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open General Assignment to Trust</a></li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Formation Preview Documents</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>Articles of Trust</h3>
+        <p class="muted">Preview the trust summary / articles layer.</p>
+
+        <a class="button-link" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>Trustee Acceptance</h3>
+        <p class="muted">Preview trustee acceptance of appointment.</p>
+        <a class="button-link" href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>Organizational Minutes</h3>
+        <p class="muted">Preview initial trustee resolutions / organizational minutes.</p>
+        <a class="button-link" href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>General Assignment</h3>
+        <p class="muted">Preview general assignment to trust.</p>
+        <a class="button-link" href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+
+      <div class="card">
+        <h3>Successor Trustee</h3>
+        <p class="muted">Preview successor trustee acceptance / appointment.</p>
+        <a class="button-link" href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

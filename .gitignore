@@ -1,3 +1,10 @@
 trustee_app.db
 __pycache__/
 *.pyc
+# Local backup artifacts
+*.bak_*
+*.bak
+backups_sqlite_*/
+handoff/
+data/export_activity_log.json
+data/export_policy.json

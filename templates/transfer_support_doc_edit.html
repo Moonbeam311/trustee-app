@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Edit Support Doc {{ support_doc.category_label }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.5;
+      max-width: 860px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font: inherit;
+    }
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Packet Detail</a></p>
+
+  <h1>Edit Support Document Status</h1>
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+  <p><strong>Category:</strong> {{ support_doc.category_label }}</p>
+  <p class="muted">Use this page to edit the tracked status and notes for this support-document category.</p>
+
+  <div class="section">
+    <form method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+      <label for="status">Status</label>
+      <select id="status" name="status">
+        <option value="included" {% if support_doc.status == "included" %}selected{% endif %}>included</option>
+        <option value="recommended" {% if support_doc.status == "recommended" %}selected{% endif %}>recommended</option>
+        <option value="optional" {% if support_doc.status == "optional" %}selected{% endif %}>optional</option>
+        <option value="missing" {% if support_doc.status == "missing" %}selected{% endif %}>missing</option>
+      </select>
+
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes">{{ support_doc.notes or "" }}</textarea>
+
+      <button type="submit">Save Support Document Status</button>
+    </form>
+  </div>
+</body>
+</html>

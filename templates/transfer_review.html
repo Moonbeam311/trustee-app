@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transfer Review</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+
+<div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">
+  <strong>Packet Progress</strong>
+  <div style="margin-top:8px; line-height:1.8;">
+    {% for step in step_nav %}
+      {% if step.is_current %}
+        <span style="padding:4px 8px; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-weight:bold;">{{ step.label }}</span>
+      {% elif step.is_complete %}
+        <a href="{{ step.url }}" style="padding:4px 8px; border-radius:999px; background:#dcfce7; color:#166534; text-decoration:none;">{{ step.label }}</a>
+      {% else %}
+        <a href="{{ step.url }}" style="padding:4px 8px; border-radius:999px; background:#f3f4f6; color:#374151; text-decoration:none;">{{ step.label }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<p>Status: {{ transfer.status }}</p>
+<p>Mode: {{ transfer.mode }}</p>
+
+{% if transfer.status == "completed" %}
+  <div style="border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; padding:12px; border-radius:8px; margin:14px 0;">
+    <strong>Completed Packet:</strong> This transfer has been finalized and is now in read-only mode.
+  </div>
+{% endif %}
+
+<h3>Summary</h3>
+<ul>
+  <li>Asset: {{ transfer.asset_name }}</li>
+  <li>Type: {{ transfer.transfer_type }}</li>
+  <li>Trustee Decision: {{ transfer.trustee_decision }}</li>
+  <li>Control Evidence: {{ transfer.control_change_status }}</li>
+  <li>Records Complete: {{ transfer.records_complete }}</li>
+</ul>
+
+<h3>Generated Records</h3>
+<pre>{{ transfer.schedule_a_text or '' }}</pre>
+<pre>{{ transfer.transfer_log_text or '' }}</pre>
+<pre>{{ transfer.minutes_text or '' }}</pre>
+
+{% if missing_items %}
+  <h3>Missing Items</h3>
+  <ul>
+    {% for item in missing_items %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  {% if can_finalize %}
+    <button type="submit">Finalize Transfer</button>
+  {% else %}
+    <button type="submit" disabled>Cannot Finalize Yet</button>
+  {% endif %}
+</form>
+
+<p style="margin-top: 12px;">
+  <a href="{{ url_for('transfer_print_view', transfer_id=transfer.transfer_id) }}" target="_blank">Print Packet View</a>
+</p>
+
+{% if transfer.mode == "simulation" %}
+  <hr>
+  <p><strong>Simulation Mode:</strong> Training use only.</p>
+{% endif %}
+{% endblock %}

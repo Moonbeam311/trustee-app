@@ -1,0 +1,43 @@
+RELEASE READINESS V1
+================================================================================
+
+Branch:
+phase-9-productization-qa
+
+Purpose:
+This document defines whether the platform is ready to enter active browser QA as
+a v1 release candidate.
+
+RELEASE-CANDIDATE CRITERIA
+--------------------------------------------------------------------------------
+[ ] Core top-level modules load
+[ ] Report Center and PDF entry points load
+[ ] Learning Hub and content admin pages load
+[ ] Video Library pages load
+[ ] Workspace pages load
+[ ] Discussion pages load
+[ ] Decision Engine pages load
+[ ] Execution Engine pages load
+[ ] Document Generator pages load
+[ ] Visualization / Analytics pages load
+
+[ ] Admin role behaves correctly
+[ ] Trustee role behaves correctly
+[ ] Viewer role behaves correctly
+
+[ ] Shared navigation appears across major productized pages
+[ ] Product shell feels coherent
+[ ] Representative sample data exists across major modules
+[ ] QA harness artifacts exist
+[ ] Full-system handoff exists
+
+RELEASE DECISION
+--------------------------------------------------------------------------------
+If the above items pass in browser QA, the platform should be treated as a
+v1 release candidate for functional stabilization and bug-fix iteration.
+
+NOTES
+--------------------------------------------------------------------------------
+This release state is feature-complete relative to the locked build stack.
+The next work after QA should focus on bug fixing, consistency, and usability
+refinement before any new major subsystem is added.

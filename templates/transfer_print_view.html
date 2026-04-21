@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Transfer Packet {{ transfer.transfer_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 32px;
+      color: #111827;
+      line-height: 1.45;
+    }
+    h1, h2, h3 { margin-bottom: 8px; }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .meta p { margin: 4px 0; }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .print-bar {
+      margin-bottom: 20px;
+    }
+    @media print {
+      .print-bar { display: none; }
+      body { margin: 12mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-bar">
+    <button onclick="window.print()">Print Packet</button>
+  </div>
+
+  <h1>Transfer Packet</h1>
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+
+  <div class="section meta">
+    <h2>Packet Summary</h2>
+    <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+    <p><strong>Status:</strong> {{ transfer.status }}</p>
+    <p><strong>Mode:</strong> {{ transfer.mode }}</p>
+    <p><strong>Current Capacity:</strong> {{ transfer.current_capacity }}</p>
+    <p><strong>Asset Type:</strong> {{ transfer.asset_type or '' }}</p>
+    <p><strong>Asset Name:</strong> {{ transfer.asset_name or '' }}</p>
+    <p><strong>Description:</strong> {{ transfer.asset_description or '' }}</p>
+    <p><strong>Estimated Value:</strong> {{ transfer.estimated_value or '' }}</p>
+    <p><strong>Current Owner:</strong> {{ transfer.current_owner or '' }}</p>
+    <p><strong>Transfer Type:</strong> {{ transfer.transfer_type or '' }}</p>
+    <p><strong>Trustee Name:</strong> {{ transfer.trustee_name or '' }}</p>
+    <p><strong>Trustee Decision:</strong> {{ transfer.trustee_decision or '' }}</p>
+    <p><strong>Control Evidence:</strong> {{ transfer.control_change_status or '' }}</p>
+    <p><strong>Control Strength:</strong> {{ control_strength }}</p>
+    <p><strong>Created By:</strong> {{ transfer.created_by or '' }}</p>
+    <p><strong>Created At:</strong> {{ transfer.created_at or '' }}</p>
+    <p><strong>Finalized At:</strong> {{ transfer.finalized_at or '' }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Assignment</h2>
+    <pre>{{ transfer.assignment_text or '' }}</pre>
+  </div>
+
+  <div class="section">
+    <h2>Schedule A</h2>
+    <pre>{{ record_bundle.schedule_a_text if record_bundle else '' }}</pre>
+  </div>
+
+  <div class="section">
+    <h2>Transfer Log</h2>
+    <pre>{{ record_bundle.transfer_log_text if record_bundle else '' }}</pre>
+  </div>
+
+  <div class="section">
+    <h2>Minutes</h2>
+    <pre>{{ record_bundle.minutes_text if record_bundle else '' }}</pre>
+  </div>
+</body>
+</html>

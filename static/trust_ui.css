@@ -1,0 +1,342 @@
+
+/* Shared trust operations UI */
+
+.trust-page-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.trust-panel {
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.trust-panel-inner {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.trust-panel-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.trust-muted {
+  color: #666;
+}
+
+.trust-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.trust-button-link {
+  display: inline-block;
+  padding: 10px 14px;
+  background: #1f4e79;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.trust-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.trust-table th,
+.trust-table td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ececec;
+  vertical-align: top;
+}
+
+.trust-table thead th {
+  border-bottom: 1px solid #d1d5db;
+}
+
+.status-ready {
+  color: #166534;
+  font-weight: 600;
+}
+
+.status-warning {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.status-muted {
+  color: #666;
+}
+
+.trust-top-space {
+  margin-top: 10px;
+}
+
+.trust-small {
+  font-size: 13px;
+}
+
+.trust-inline-links a {
+  margin-right: 6px;
+}
+
+@media (max-width: 768px) {
+  .trust-table {
+    font-size: 13px;
+  }
+
+  .trust-button-link {
+    width: 100%;
+    text-align: center;
+  }
+
+  .trust-actions {
+    align-items: stretch;
+  }
+}
+
+
+
+/* Additional shared dashboard polish */
+
+.trust-page-wrap {
+  padding-bottom: 24px;
+}
+
+.trust-heading {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.trust-section-lead {
+  margin-top: 0;
+  color: #555;
+}
+
+.trust-link-row p {
+  margin: 6px 0 0;
+}
+
+.trust-summary-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #eef2f7;
+  color: #334155;
+}
+
+.trust-summary-pill.ready {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.trust-summary-pill.warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.trust-inline-note {
+  margin-top: 6px;
+  color: #666;
+  font-size: 13px;
+}
+
+.trust-table a {
+  color: #1f4e79;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.trust-table a:hover {
+  text-decoration: underline;
+}
+
+.trust-panel strong {
+  display: inline-block;
+}
+
+.trust-panel-inner strong {
+  display: inline-block;
+}
+
+.trust-status-ready {
+  color: #166534;
+  font-weight: 700;
+}
+
+.trust-status-warning {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.trust-spacer-sm {
+  margin-top: 6px;
+}
+
+.trust-spacer-md {
+  margin-top: 10px;
+}
+
+.trust-spacer-lg {
+  margin-top: 14px;
+}
+
+
+
+/* Shared final document surface polish */
+
+.trust-doc-wrap {
+  max-width: 900px;
+  margin: 28px auto;
+  padding: 0 24px 40px;
+}
+
+.trust-doc-topbar {
+  margin-bottom: 24px;
+  font-family: Arial, sans-serif;
+}
+
+.trust-doc-topbar a {
+  text-decoration: none;
+  color: #1f4e79;
+  font-weight: 600;
+}
+
+.trust-doc-meta {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  font-family: Arial, sans-serif;
+}
+
+.trust-doc-meta h1 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.45rem;
+}
+
+.trust-doc-surface {
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 42px 48px;
+  background: #fff;
+}
+
+.trust-doc-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+.trust-doc-button {
+  display: inline-block;
+  padding: 10px 14px;
+  background: #1f4e79;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media print {
+  .trust-doc-topbar,
+  .trust-doc-meta,
+  .trust-doc-actions {
+    display: none !important;
+  }
+
+  .trust-doc-wrap {
+    margin: 0;
+    max-width: none;
+    padding: 0;
+  }
+
+  .trust-doc-surface {
+    border: none;
+    border-radius: 0;
+    padding: 0;
+  }
+}
+
+
+
+/* Visual structure consistency helpers */
+
+.trust-page-title {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.9rem;
+  line-height: 1.2;
+}
+
+.trust-page-subtitle {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.trust-panel-heading {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 1.15rem;
+}
+
+.trust-kv p {
+  margin: 6px 0 0;
+}
+
+.trust-table-compact td,
+.trust-table-compact th {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.trust-note {
+  margin-top: 8px;
+  color: #666;
+  font-size: 13px;
+}
+
+.trust-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 12px 0;
+  border: 0;
+}
+
+.trust-link-stack p {
+  margin: 6px 0 0;
+}
+
+.trust-callout {
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fcfcfc;
+}
+
+.trust-callout p {
+  margin: 6px 0 0;
+}

@@ -1,10 +1,5 @@
 from datetime import date
-from flask_sqlalchemy import SQLAlchemy
-
-try:
-    from extensions import db
-except Exception:
-    db = SQLAlchemy()
+from extensions import db
 
 
 class Beneficiary(db.Model):

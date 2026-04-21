@@ -5,7 +5,11 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT
     envVars:
-      - key: FLASK_ENV
+      - key: APP_ENV
         value: production
-      - key: UPLOAD_FOLDER
-        value: uploads
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SECRET_KEY
+        sync: false
+      - key: PORT
+        value: "5000"

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Transfer Asset</h1>
+<p>Transfer ID: {{ transfer.transfer_id }}</p>
+
+<div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">
+  <strong>Packet Progress</strong>
+  <div style="margin-top:8px; line-height:1.8;">
+    {% for step in step_nav %}
+      {% if step.is_current %}
+        <span style="padding:4px 8px; border-radius:999px; background:#dbeafe; color:#1d4ed8; font-weight:bold;">{{ step.label }}</span>
+      {% elif step.is_complete %}
+        <a href="{{ step.url }}" style="padding:4px 8px; border-radius:999px; background:#dcfce7; color:#166534; text-decoration:none;">{{ step.label }}</a>
+      {% else %}
+        <a href="{{ step.url }}" style="padding:4px 8px; border-radius:999px; background:#f3f4f6; color:#374151; text-decoration:none;">{{ step.label }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<form method="post">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <label>Asset Type</label><br>
+  <select name="asset_type">
+    <option value="cash">Cash</option>
+    <option value="account">Account</option>
+    <option value="personal_property">Personal Property</option>
+    <option value="certificate">Certificate</option>
+    <option value="other">Other</option>
+  </select><br><br>
+
+  <label>Asset Name</label><br>
+  <input type="text" name="asset_name" value="{{ transfer.asset_name or '' }}"><br><br>
+
+  <label>Description</label><br>
+  <textarea name="asset_description">{{ transfer.asset_description or '' }}</textarea><br><br>
+
+  <label>Estimated Value</label><br>
+  <input type="text" name="estimated_value" value="{{ transfer.estimated_value or '' }}"><br><br>
+
+  <label>Current Owner</label><br>
+  <input type="text" name="current_owner" value="{{ transfer.current_owner or '' }}"><br><br>
+
+  <label>Notes</label><br>
+  <textarea name="asset_notes">{{ transfer.asset_notes or '' }}</textarea><br><br>
+
+  <button type="submit">Save and Continue</button>
+</form>
+{% endblock %}

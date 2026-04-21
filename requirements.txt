@@ -1,3 +1,6 @@
 Flask
 Werkzeug
 gunicorn
+reportlab
+Flask-SQLAlchemy
+SQLAlchemy

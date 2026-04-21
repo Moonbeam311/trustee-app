@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Create Trust Wizard — Step 6: Review and Confirm</h2>
+<h2>Create Trust Wizard — Step 7 of 8: Review and Finalize</h2>
 
 <div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
     <strong>Final Review</strong><br>
@@ -60,6 +60,11 @@
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-    <button type="submit">Confirm and Finalize</button>
+    <button type="submit">Save and Finalize</button>
 </form>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step5/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+</div>
+
 {% endblock %}

@@ -1,0 +1,42 @@
+KNOWN ISSUES WATCHLIST V1
+================================================================================
+
+Purpose:
+This file is not a bug list yet. It is the expected watchlist to guide the first
+QA pass.
+
+LIKELY WATCH AREAS
+--------------------------------------------------------------------------------
+1. Template drift
+- repeated automated patching may have left inconsistent action bars or duplicate links
+
+2. Navigation consistency
+- some pages may not yet expose identical nav/action structure
+- secondary templates may still feel older than the main shell
+
+3. Route-to-template friction
+- create/edit/detail flows may not always return the user to the best next page
+
+4. Role boundary edge cases
+- Viewer direct access to create/edit routes should be checked
+- Trustee vs Admin distinctions should be checked on content admin pages
+
+5. Report system regression risk
+- original report routes should be rechecked after all new platform layers
+
+6. Sparse-state handling
+- pages with no results should still feel intentional
+- empty workspaces / threads / documents / tasks should not feel broken
+
+7. Product naming drift
+- Dashboard / Center / Engine / Generator naming should be reviewed for consistency
+
+FIRST BUG-FIX PRIORITY ORDER
+--------------------------------------------------------------------------------
+1. Broken route or page load
+2. Permission/access mismatch
+3. Report/PDF regression
+4. Navigation inconsistency
+5. Create/edit flow friction
+6. Empty-state UX
+7. Visual polish defects

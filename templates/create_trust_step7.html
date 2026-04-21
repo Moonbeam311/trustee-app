@@ -1,11 +1,20 @@
+
+<div style="margin: 16px 0; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px;">
+  <strong>Next Stage:</strong> This trust now proceeds into controlled post-create review, where the approved revocable trust formation documents can be reviewed in the Formation Preview Hub before deeper output automation is added.
+</div>
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Create Trust Wizard — Step 7: Final Packet</h2>
+<h2>Create Trust Wizard — Step 8 of 8: Completion and Recommended Next Actions</h2>
 
 <div style="margin-bottom:15px; padding:12px; background:#e6f4ea; border-radius:6px; border:1px solid #b7dfc2;">
     <strong>Trust Finalized</strong><br>
     Your trust has been finalized in the current prototype workflow.
+</div>
+
+<div style="margin-bottom:20px; padding:12px; background:#eefaf0; border-radius:6px; border:1px solid #b7e4c7;">
+    <strong>✔ Trust Intake Complete</strong><br>
+    The trust intake sequence is complete. Use the actions below to move into trust operations, supporting records, and next-step documents.
 </div>
 
 <div style="margin-bottom:20px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
@@ -32,29 +41,46 @@
     </div>
 </div>
 
+{% if trust['asset_categories'] == 'Not Yet Selected' or trust['property_mapping_timing'] == 'Not Yet Selected' %}
+<div style="border:1px solid #f4d58d; padding:16px; border-radius:8px; background:#fff8e1; margin-bottom:20px;">
+    <strong>⚠ Trust Property Mapping Not Yet Confirmed</strong><br>
+    This trust does not yet have confirmed asset/property mapping in the intake flow. Before relying on downstream records, consider completing property mapping and initial trust-estate details.
+</div>
+{% endif %}
+
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa; margin-bottom:20px;">
     <h3>Recommended Next Documents</h3>
     <ul>
-        <li>Trust Declaration / Final Trust Packet</li>
-        <li>Trustee Acceptance</li>
-        <li>Initial Property / Schedule Record</li>
-        <li>Administration Checklist</li>
+        <li>Trust Declaration / Final Trust Packet <em>(recommended, not yet connected)</em></li>
+        <li>Trustee Acceptance <em>(recommended, not yet connected)</em></li>
+        <li><a href="/add_property">Initial Property / Schedule Record</a></li>
+        <li>Administration Checklist <em>(recommended, not yet connected)</em></li>
     </ul>
 </div>
 
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa; margin-bottom:20px;">
     <h3>Recommended Next Actions</h3>
     <ul>
-        <li>Add the first mapped property</li>
-        <li>Link the first account</li>
-        <li>Upload supporting core documents</li>
-        <li>Record the first ledger entry</li>
+        <li><a href="/add_property">Add the first mapped property</a></li>
+        <li><a href="/link_account">Link the first account</a></li>
+        <li><a href="/upload_document">Upload supporting core documents</a></li>
+        <li><a href="/ledger_entry">Record the first ledger entry</a></li>
     </ul>
 </div>
 
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#f7f9fc; margin-bottom:20px;">
+    <h3>Launch Into Operations</h3>
+    <p>From here, you can open the trust dashboard, begin property/account setup, upload supporting documents, or record the first ledger activity.</p>
+</div>
+
 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-    <a href="/trust/{{ trust.trust_id }}" style="text-decoration:none;"><button type="button">Open Trust Detail</button></a>
+    <a href="/trust/{{ trust.trust_id }}" style="text-decoration:none;"><button type="button">Open Trust Dashboard</button></a>
     <a href="/add_property" style="text-decoration:none;"><button type="button">Add Property</button></a>
     <a href="/" style="text-decoration:none;"><button type="button">Back to Dashboard</button></a>
 </div>
+
+<div style="margin-top:18px;">
+  <a href="/create_trust_step6/{{ trust['trust_id'] }}" style="text-decoration:none;">← Back</a>
+</div>
+
 {% endblock %}

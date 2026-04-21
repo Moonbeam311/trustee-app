@@ -41,6 +41,15 @@ def init_db():
     )
     """)
 
+    trust_cols = [row["name"] for row in cur.execute("PRAGMA table_info(trusts)").fetchall()]
+    for col in [
+        ("grantor_name", "TEXT"),
+        ("grantor_type", "TEXT"),
+        ("grantor_contact", "TEXT"),
+    ]:
+        if col[0] not in trust_cols:
+            cur.execute(f"ALTER TABLE trusts ADD COLUMN {col[0]} {col[1]}")
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS properties (
         property_id TEXT PRIMARY KEY,
@@ -156,6 +165,11 @@ def init_db():
         if col[0] not in ledger_cols:
             cur.execute(f"ALTER TABLE ledger_entries ADD COLUMN {col[0]} {col[1]}")
 
+    for table_name in ["properties", "accounts", "documents", "ledger_entries", "trusts"]:
+        cols = [row["name"] for row in cur.execute(f"PRAGMA table_info({table_name})").fetchall()]
+        if "owner_id" not in cols:
+            cur.execute(f"ALTER TABLE {table_name} ADD COLUMN owner_id TEXT")
+
     conn.commit()
     conn.close()
 
@@ -258,7 +272,10 @@ def get_property_by_id(property_id):
 def get_properties_by_trust_id(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM properties WHERE trust_id = ? ORDER BY property_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM properties WHERE trust_id = ? AND owner_id = ? ORDER BY property_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -316,7 +333,10 @@ def create_account_record(account_data):
 def get_accounts_by_trust_id(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM accounts WHERE trust_id = ? ORDER BY account_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM accounts WHERE trust_id = ? AND owner_id = ? ORDER BY account_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -324,7 +344,10 @@ def get_accounts_by_trust_id(trust_id):
 def get_accounts_by_property_id(property_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM accounts WHERE property_id = ? ORDER BY account_id", (property_id,))
+    cur.execute(
+        "SELECT * FROM accounts WHERE property_id = ? AND owner_id = ? ORDER BY account_id",
+        (property_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -357,7 +380,10 @@ def create_document_record(doc_data):
 def get_documents_by_trust_id(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM documents WHERE trust_id = ? ORDER BY document_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM documents WHERE trust_id = ? AND owner_id = ? ORDER BY document_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -365,7 +391,10 @@ def get_documents_by_trust_id(trust_id):
 def get_documents_by_property_id(property_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM documents WHERE property_id = ? ORDER BY document_id", (property_id,))
+    cur.execute(
+        "SELECT * FROM documents WHERE property_id = ? AND owner_id = ? ORDER BY document_id",
+        (property_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -400,7 +429,10 @@ def create_ledger_entry(entry_data):
 def get_ledger_by_trust(trust_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ledger_entries WHERE trust_id = ? ORDER BY entry_id", (trust_id,))
+    cur.execute(
+        "SELECT * FROM ledger_entries WHERE trust_id = ? AND owner_id = ? ORDER BY entry_id",
+        (trust_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -408,7 +440,10 @@ def get_ledger_by_trust(trust_id):
 def get_ledger_by_property(property_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ledger_entries WHERE property_id = ? ORDER BY entry_id", (property_id,))
+    cur.execute(
+        "SELECT * FROM ledger_entries WHERE property_id = ? AND owner_id = ? ORDER BY entry_id",
+        (property_id, "ADMIN_OWNER_001")
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -1871,9 +1906,29 @@ def ensure_genealogy_tables():
         parent_2 TEXT,
         spouse TEXT,
         notes TEXT,
-        evidence_notes TEXT
+        evidence_notes TEXT,
+        source_platform TEXT,
+        source_title TEXT,
+        source_reference TEXT,
+        archive_date TEXT,
+        verification_status TEXT,
+        trace_summary TEXT,
+        guidance_prompt TEXT
     )
     """)
+
+    existing_cols = [row["name"] for row in cur.execute("PRAGMA table_info(genealogy_records)").fetchall()]
+    for col in [
+        ("source_platform", "TEXT"),
+        ("source_title", "TEXT"),
+        ("source_reference", "TEXT"),
+        ("archive_date", "TEXT"),
+        ("verification_status", "TEXT"),
+        ("trace_summary", "TEXT"),
+        ("guidance_prompt", "TEXT"),
+    ]:
+        if col[0] not in existing_cols:
+            cur.execute(f"ALTER TABLE genealogy_records ADD COLUMN {col[0]} {col[1]}")
 
     conn.commit()
     conn.close()
@@ -1895,8 +1950,10 @@ def create_genealogy_record(data):
         INSERT INTO genealogy_records (
             genealogy_id, trust_id, full_name, lineage_role,
             birth_date, death_date, parent_1, parent_2,
-            spouse, notes, evidence_notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            spouse, notes, evidence_notes,
+            source_platform, source_title, source_reference,
+            archive_date, verification_status, trace_summary, guidance_prompt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["genealogy_id"],
         data.get("trust_id"),
@@ -1909,6 +1966,13 @@ def create_genealogy_record(data):
         data.get("spouse"),
         data.get("notes"),
         data.get("evidence_notes"),
+        data.get("source_platform"),
+        data.get("source_title"),
+        data.get("source_reference"),
+        data.get("archive_date"),
+        data.get("verification_status"),
+        data.get("trace_summary"),
+        data.get("guidance_prompt"),
     ))
     conn.commit()
     conn.close()

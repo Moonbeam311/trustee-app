@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Articles Preview {{ trust.trust_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+    h1, h2 {
+      margin-top: 0;
+    }
+    .doc-block {
+      white-space: pre-wrap;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+
+  <h1>Articles of Trust / Trust Summary Instrument Preview</h1>
+  <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
+  <p class="muted">Preview-first trust formation layer. This page is for review before deeper wizard integration.</p>
+
+  <div class="section">
+    <h2>Trust Record Context</h2>
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
+    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
+    <p><strong>Owner ID:</strong> {{ preview_context.owner_id }}</p>
+    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Created:</strong> {{ preview_context.created_at_display }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Preview Draft</h2>
+    <div class="doc-block">ARTICLES OF TRUST
+
+These Articles of Trust are adopted and declared for the establishment and administration of {{ trust.trust_name or "[Trust Name]" }}.
+
+ARTICLE I — NAME
+The name of the Trust shall be:
+{{ trust.trust_name or "[Trust Name]" }}
+
+ARTICLE II — DATE OF FORMATION
+The Trust is established effective:
+{{ trust.created_at or "[Effective Date]" }}
+
+ARTICLE III — NATURE OF TRUST
+The Trust shall operate as a private trust arrangement under its governing trust instrument and related trust records, subject to its stated purposes, trustee powers, and governing law.
+
+ARTICLE IV — PURPOSE
+The purpose of the Trust is to hold, manage, protect, and administer trust property and related trust records.
+
+ARTICLE V — PRINCIPAL PLACE OF ADMINISTRATION
+The principal place of administration shall be the address reflected in the governing trust records, or such other place as the Trustee(s) may determine.
+
+ARTICLE VI — SETTLOR / GRANTOR
+The Settlor / Grantor of the Trust is:
+{{ trust.grantor_name or "[Grantor / Settlor]" }}
+
+ARTICLE VII — TRUSTEE(S)
+The acting Trustee(s) shall serve according to the governing trust instrument and related appointments, acceptances, resignations, removals, or successor designations.
+
+ARTICLE VIII — TRUST PROPERTY
+The Trust Estate shall consist of all property now or later assigned, transferred, conveyed, exchanged, scheduled, gifted, or otherwise administered as trust property under the Trust.
+
+ARTICLE IX — TRUST ADMINISTRATION RECORDS
+The Trust may maintain records including declarations, certifications, schedules, assignments, trustee acceptances, minutes, and related administration records.
+
+ARTICLE X — LIMITATION
+These Articles of Trust are intended as a summary organizational instrument and do not replace the full governing trust instrument.</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Transfer Detail {{ transfer.transfer_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #111827;
+      line-height: 1.45;
+    }
+    .section {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      background: #ffffff;
+    }
+    .timeline-item {
+      border-left: 3px solid #93c5fd;
+      padding-left: 12px;
+      margin-bottom: 14px;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .muted {
+      color: #6b7280;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Trust Execution</a></p>
+  <p><a href="{{ url_for('transfer_template_center', transfer_id=transfer.transfer_id) }}">Open Support Template Center</a></p>
+  <p><a href="{{ url_for('transfer_instruction_template', transfer_id=transfer.transfer_id) }}">Open Universal Transfer Instruction Template</a></p>
+  <p><a href="{{ url_for('transfer_optional_support_docs', transfer_id=transfer.transfer_id) }}">Open Optional Supporting Transfer Documents</a></p>
+  <p><a href="{{ url_for('transfer_recommended_support_docs', transfer_id=transfer.transfer_id) }}">Open Recommended Supporting Transfer Documents</a></p>
+  <p><a href="{{ url_for('transfer_bank_support_docs', transfer_id=transfer.transfer_id) }}">Open Bank / Account Support Documents</a></p>
+  <p><a href="{{ url_for('transfer_personal_property_support_docs', transfer_id=transfer.transfer_id) }}">Open Personal Property Support Documents</a></p>
+  <p><a href="{{ url_for('transfer_document_support_docs', transfer_id=transfer.transfer_id) }}">Open Document / Intangible Rights Support Documents</a></p>
+
+  <h1>Transfer Detail</h1>
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+
+  <div class="section">
+    <h2>Summary</h2>
+    <p><strong>Status:</strong> {{ transfer.status }}</p>
+    <p><strong>Mode:</strong> {{ transfer.mode }}</p>
+    <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+    <p><strong>Asset Type:</strong> {{ transfer.asset_type or '' }}</p>
+    <p><strong>Asset Name:</strong> {{ transfer.asset_name or '' }}</p>
+    <p><strong>Description:</strong> {{ transfer.asset_description or '' }}</p>
+    <p><strong>Estimated Value:</strong> {{ transfer.estimated_value or '' }}</p>
+    <p><strong>Current Owner:</strong> {{ transfer.current_owner or '' }}</p>
+    <p><strong>Transfer Type:</strong> {{ transfer.transfer_type or '' }}</p>
+    <p><strong>Trustee Name:</strong> {{ transfer.trustee_name or '' }}</p>
+    <p><strong>Trustee Decision:</strong> {{ transfer.trustee_decision or '' }}</p>
+    <p><strong>Control Evidence:</strong> {{ transfer.control_change_status or '' }}</p>
+    <p><strong>Control Strength:</strong> {{ control_strength }}</p>
+    <p><strong>Created By:</strong> {{ transfer.created_by or '' }}</p>
+    <p><strong>Created At:</strong> {{ transfer.created_at or '' }}</p>
+    <p><strong>Updated At:</strong> {{ transfer.updated_at or '' }}</p>
+    <p><strong>Finalized At:</strong> {{ transfer.finalized_at or '' }}</p>
+  </div>
+
+  <div class="section">
+    <h2>Assignment</h2>
+    <pre>{{ transfer.assignment_text or '' }}</pre>
+  </div>
+
+  <div class="section">
+    <h2>Record Bundle</h2>
+    <h3>Schedule A</h3>
+    <pre>{{ record_bundle.schedule_a_text if record_bundle else '' }}</pre>
+
+    <h3>Transfer Log</h3>
+    <pre>{{ record_bundle.transfer_log_text if record_bundle else '' }}</pre>
+
+    <h3>Minutes</h3>
+    <pre>{{ record_bundle.minutes_text if record_bundle else '' }}</pre>
+  </div>
+
+  <div class="section">
+    <h2>Support Document Tracking</h2>
+    <p class="muted">This section now reflects tracked packet-level support document statuses.</p>
+
+    {% if support_docs %}
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Category</th>
+            <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Status</th>
+            <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Notes</th>
+            <th style="text-align:left; border-bottom:1px solid #d1d5db; padding:8px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for doc in support_docs %}
+            <tr>
+              <td style="border-bottom:1px solid #e5e7eb; padding:8px;">{{ doc.category_label }}</td>
+              <td style="border-bottom:1px solid #e5e7eb; padding:8px;">{{ doc.status }}</td>
+              <td style="border-bottom:1px solid #e5e7eb; padding:8px;">{{ doc.notes or '' }}</td>
+              <td style="border-bottom:1px solid #e5e7eb; padding:8px;">
+                <a href="{{ url_for('transfer_support_doc_edit', transfer_id=transfer.transfer_id, support_doc_id=doc.id) }}">Edit</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No tracked support document statuses found for this packet.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Action History</h2>
+    {% if actions %}
+      {% for action in actions %}
+        <div class="timeline-item">
+          <p><strong>{{ action.action_type }}</strong></p>
+          <p class="muted">By {{ action.performed_by or 'unknown' }} | Capacity: {{ action.capacity_used or '' }} | {{ action.created_at }}</p>
+          <p>{{ action.notes or '' }}</p>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No action history recorded.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
