@@ -243,7 +243,7 @@ def deny_unassigned_trust_access(trust_id):
 
 
 def get_visible_trusts_for_current_operator():
-    trusts = get_visible_trusts_for_current_operator()
+    trusts = get_all_trusts()
 
     if is_master_admin():
         return trusts
@@ -2091,7 +2091,8 @@ def admin_index():
         "distribution_count": get_distribution_count(),
         "instrument_count": get_instrument_count(),
     }
-    return render_template("admin_index.html", trusts=trusts, report=report)
+    export_policy = get_export_policy()
+    return render_template("admin_index.html", trusts=trusts, report=report, export_policy=export_policy)
 
 
 @app.route("/users")
