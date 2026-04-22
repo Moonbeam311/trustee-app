@@ -24,6 +24,15 @@
 
 <div class="page-header">
   <h1 class="trust-page-title">Admin Trust Operations</h1>
+<p class="trust-page-subtitle">
+  {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
+    Current operator scope: Master Admin — full global platform visibility.
+  {% elif session.get("role") == "Admin" %}
+    Current operator scope: Restricted Admin — limited visibility and no global user/role control.
+  {% else %}
+    Current operator scope: {{ session.get("role") or "Unknown" }}.
+  {% endif %}
+</p>
 
 <div class="trust-panel">
   <strong>Export Policy Control</strong>
@@ -225,6 +234,9 @@
 </section>
 <p><a href="/reports/portfolio.pdf" target="_blank">Download Portfolio PDF</a> &nbsp;|&nbsp; <a href="/reports/audit.pdf" target="_blank">Download Audit Log PDF</a> &nbsp;|&nbsp; <a href="/reports/fiduciaries.pdf" target="_blank">Download Fiduciary PDF</a> &nbsp;|&nbsp; <a href="/reports">Open Report Center</a></p>
 
+{% if session.get("username") == "admin" and session.get("role") == "Admin" %}
+<p><a href="{{ url_for('admin_audit_log') }}">View Audit Log</a></p>
+{% endif %}
 <p><a href="{{ url_for('users_dashboard') }}">Manage App Users</a></p>
 <p class="muted">Central module and manifest overview for the Trustee App.</p>
 

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Audit Log Viewer</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}">
+</head>
+<body>
+  <div class="trust-page-wrap">
+    <h1 class="trust-page-title">Audit Log Viewer</h1>
+    <p class="trust-page-subtitle">Master-admin view of recent audit activity.</p>
+
+    <div class="trust-panel">
+      <strong>Filter Context</strong>
+      <p class="trust-note">
+        Entity Type: {{ entity_type or "All" }}<br>
+        Entity ID: {{ entity_id or "All" }}
+      </p>
+      <p><a href="{{ url_for('admin_index') }}">Return to Admin</a></p>
+    </div>
+
+    <div class="trust-panel">
+      <strong>Recent Audit Entries</strong>
+
+      {% if logs %}
+        <table class="trust-table trust-table-compact">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Entity Type</th>
+              <th>Entity ID</th>
+              <th>Action</th>
+              <th>Note</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in logs %}
+              <tr>
+                <td>{{ row["id"] }}</td>
+                <td>{{ row["entity_type"] }}</td>
+                <td>{{ row["entity_id"] }}</td>
+                <td>{{ row["action"] }}</td>
+                <td>{{ row["note"] }}</td>
+                <td>{{ row["created_at"] }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="trust-note">No audit log entries found.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

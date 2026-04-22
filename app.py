@@ -190,6 +190,108 @@ def get_current_owner():
     """
     return session.get("username")
 
+
+
+def get_visible_trusts_for_current_operator():
+    trusts = get_all_trusts()
+
+    if is_master_admin():
+        return trusts
+
+    username = (session.get("username") or "").strip().lower()
+    if not username:
+        return []
+
+    visible = []
+    for trust in trusts:
+        role_rows = get_roles_by_trust_id(trust["trust_id"])
+        for row in role_rows:
+            full_name = (row.get("full_name") or "").strip().lower()
+            if full_name == username:
+                visible.append(trust)
+                break
+
+    return visible
+
+def operator_can_access_trust(trust_id):
+    if is_master_admin():
+        return True
+
+    username = (session.get("username") or "").strip().lower()
+    if not username:
+        return False
+
+    role_rows = get_roles_by_trust_id(trust_id)
+    for row in role_rows:
+        full_name = (row.get("full_name") or "").strip().lower()
+        if full_name == username:
+            return True
+
+    return False
+
+def deny_unassigned_trust_access(trust_id):
+    if not session.get("username"):
+        return redirect(url_for("login"))
+
+    if not operator_can_access_trust(trust_id):
+        return render_template(
+            "access_denied.html",
+            reason="You are not assigned to this trust."
+        )
+
+    return None
+
+
+def get_visible_trusts_for_current_operator():
+    trusts = get_visible_trusts_for_current_operator()
+
+    if is_master_admin():
+        return trusts
+
+    username = (session.get("username") or "").strip().lower()
+    if not username:
+        return []
+
+    visible = []
+    for trust in trusts:
+        role_rows = get_roles_by_trust_id(trust["trust_id"])
+        for row in role_rows:
+            full_name = (row.get("full_name") or "").strip().lower()
+            if full_name == username:
+                visible.append(trust)
+                break
+
+    return visible
+
+def operator_can_access_trust(trust_id):
+    if is_master_admin():
+        return True
+
+    username = (session.get("username") or "").strip().lower()
+    if not username:
+        return False
+
+    role_rows = get_roles_by_trust_id(trust_id)
+    for row in role_rows:
+        full_name = (row.get("full_name") or "").strip().lower()
+        if full_name == username:
+            return True
+
+    return False
+
+def deny_unassigned_trust_access(trust_id):
+    if not session.get("username"):
+        return redirect(url_for("login"))
+
+    if not operator_can_access_trust(trust_id):
+        return render_template(
+            "access_denied.html",
+            reason="You are not assigned to this trust."
+        )
+
+    return None
+
+
 def validate_csrf_token():
     session_token = session.get("_csrf_token")
     form_token = request.form.get("_csrf_token")
@@ -1145,6 +1247,21 @@ ROLE_RULES = {
 }
 
 
+
+
+def is_master_admin():
+    return (session.get("username") or "").strip().lower() == "admin" and session.get("role") == "Admin"
+
+def require_master_admin():
+    if not session.get("username"):
+        return redirect(url_for("login"))
+    if not is_master_admin():
+        return render_template(
+            "access_denied.html",
+            reason="Only the master admin may access this page."
+        )
+    return None
+
 def gate_trust_access(trust_id, allowed_roles):
     current_role = session.get("role")
     if not current_role:
@@ -1539,6 +1656,9 @@ def ledger_entry():
 
 @app.route("/trust/<trust_id>")
 def trust_detail(trust_id):
+    gate = deny_unassigned_trust_access(trust_id)
+    if gate:
+        return gate
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found"
@@ -1951,15 +2071,20 @@ def workflow_hub():
 
 @app.route("/admin/export-policy/toggle", methods=["POST"])
 def admin_toggle_export_policy():
+    gate = require_master_admin()
+    if gate:
+        return gate
     policy = get_export_policy()
     current = bool(policy.get("strict_packet_export", True))
     set_export_policy(not current)
-    flash(f"Export policy updated: {'Strict mode' if not current else 'Advisory mode'}")
+    new_mode = 'Strict mode' if not current else 'Advisory mode'
+    log_change("export_policy", "strict_packet_export", "toggle", f"Master admin set export policy to {new_mode}")
+    flash(f"Export policy updated: {new_mode}")
     return redirect(url_for("admin_index"))
 
 @app.route("/admin")
 def admin_index():
-    trusts = get_all_trusts()
+    trusts = get_visible_trusts_for_current_operator()
     report = {
         "trust_count": get_trust_count(),
         "beneficiary_count": get_beneficiary_count(),
@@ -1971,12 +2096,18 @@ def admin_index():
 
 @app.route("/users")
 def users_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
     users = get_all_app_users()
     return render_template("user_dashboard.html", users=users)
 
 
 @app.route("/users/new", methods=["GET", "POST"])
 def users_new():
+    gate = require_master_admin()
+    if gate:
+        return gate
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("user_form.html", error_message="Invalid or missing CSRF token.")
@@ -2006,6 +2137,7 @@ def users_new():
             "role_name": role_name,
             "status": status,
         })
+        log_change("app_user", username, "create", f"Master admin created user '{username}' with role '{role_name}' and status '{status}'")
         flash(f"User {username} created successfully.")
         return redirect(url_for("users_dashboard"))
 
@@ -2014,6 +2146,9 @@ def users_new():
 
 @app.route("/users/<username>/edit", methods=["GET", "POST"])
 def users_edit(username):
+    gate = require_master_admin()
+    if gate:
+        return gate
     user = get_user_by_username(username)
     if not user:
         return f"User {username} not found", 404
@@ -2050,6 +2185,7 @@ def users_edit(username):
             "role_name": role_name,
             "status": status,
         })
+        log_change("app_user", username, "update", f"Master admin updated user '{username}' to role '{role_name}' with status '{status}'")
         flash(f"User {username} updated successfully.")
         return redirect(url_for("users_dashboard"))
 
@@ -2058,6 +2194,9 @@ def users_edit(username):
 
 @app.route("/users/<username>/reset_password", methods=["GET", "POST"])
 def users_reset_password(username):
+    gate = require_master_admin()
+    if gate:
+        return gate
     user = get_user_by_username(username)
     if not user:
         return f"User {username} not found", 404
@@ -2084,6 +2223,7 @@ def users_reset_password(username):
             )
 
         update_app_user_password(username, generate_password_hash(password))
+        log_change("app_user", username, "reset_password", f"Master admin reset password for user '{username}'")
         flash(f"Password reset successfully for {username}.")
         return redirect(url_for("users_dashboard"))
 
@@ -3446,6 +3586,9 @@ def form1041_report_view(trust_id):
 
 @app.route("/roles")
 def role_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
 
     roles = get_all_roles()
     trusts = get_all_trusts()
@@ -3454,6 +3597,9 @@ def role_dashboard():
 
 @app.route("/roles/new", methods=["GET", "POST"])
 def role_new():
+    gate = require_master_admin()
+    if gate:
+        return gate
     trusts = get_all_trusts()
 
     if request.method == "POST":
@@ -3469,7 +3615,7 @@ def role_new():
             "status": request.form.get("status"),
             "notes": request.form.get("notes"),
         })
-        log_change("role", role_id, "create", "User role created")
+        log_change("role", role_id, "create", f"Master admin created role assignment for {request.form.get('full_name')} as {request.form.get('role_name')} on trust {request.form.get('trust_id')}")
         flash(f"Role assignment {role_id} created successfully.")
         return redirect(url_for("role_dashboard"))
 
@@ -4811,6 +4957,9 @@ def trust_controlled_packet_export(trust_id):
 
 @app.route("/trust/<trust_id>/packet-preview")
 def trust_packet_preview(trust_id):
+    gate = deny_unassigned_trust_access(trust_id)
+    if gate:
+        return gate
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found"
@@ -4995,6 +5144,9 @@ def trust_articles_output_surface_pdf(trust_id):
 
 @app.route("/trust/<trust_id>/execution")
 def trust_execution_dashboard(trust_id):
+    gate = deny_unassigned_trust_access(trust_id)
+    if gate:
+        return gate
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found", 404
@@ -5570,6 +5722,31 @@ def analytics_dashboard():
         metrics=metrics,
         timeline=timeline,
         trust_rows=trust_rows
+    )
+
+
+
+@app.route("/admin/audit-log")
+def admin_audit_log():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    entity_type = (request.args.get("entity_type") or "").strip()
+    entity_id = (request.args.get("entity_id") or "").strip()
+
+    if entity_type and entity_id:
+        logs = get_audit_log_by_entity(entity_type=entity_type, entity_id=entity_id, limit=200)
+    elif entity_type:
+        logs = get_audit_log_by_entity(entity_type=entity_type, limit=200)
+    else:
+        logs = get_audit_log(200)
+
+    return render_template(
+        "audit_log_viewer.html",
+        logs=logs,
+        entity_type=entity_type,
+        entity_id=entity_id,
     )
 
 @app.route("/guide")
