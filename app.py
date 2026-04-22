@@ -155,7 +155,10 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 app = Flask(__name__)
 STRICT_PACKET_EXPORT = True
 
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{(Path(__file__).resolve().parent / 'trustee_app.db').as_posix()}"
+DEFAULT_DB_PATH = Path(__file__).resolve().parent / "trustee_app.db"
+DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
+
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH.as_posix()}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 ext_db.init_app(app)
 
@@ -3418,7 +3421,7 @@ def get_trust_type_detail(slug):
         "body": body_map.get(slug, ""),
         "related_forms": related_forms,
     }
-LEARNING_DB_PATH = r"trustee_app.db"
+LEARNING_DB_PATH = DB_PATH.as_posix()
 
 
 @app.route("/media")

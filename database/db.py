@@ -1,9 +1,11 @@
+import os
 import sqlite3
 from pathlib import Path
 from datetime import date, timedelta, datetime
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "trustee_app.db"
+DEFAULT_DB_PATH = BASE_DIR / "trustee_app.db"
+DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
