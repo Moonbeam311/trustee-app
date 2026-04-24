@@ -5727,6 +5727,41 @@ def bootstrap_admin_once():
     return render_template("bootstrap_admin_once.html")
 
 
+
+
+@app.route("/admin/reset_admin_once")
+def reset_admin_once():
+    """
+    Controlled emergency admin reset.
+    Disabled unless ALLOW_ADMIN_RESET=1 is set.
+    """
+    if os.getenv("ALLOW_ADMIN_RESET") != "1":
+        return "Admin reset disabled. Set ALLOW_ADMIN_RESET=1 to enable.", 403
+
+    username = os.getenv("RESET_ADMIN_USERNAME", "admin").strip()
+    password = os.getenv("RESET_ADMIN_PASSWORD", "admin123")
+
+    if not username or not password:
+        return "RESET_ADMIN_USERNAME and RESET_ADMIN_PASSWORD are required.", 400
+
+    existing = get_user_by_username(username)
+
+    if existing:
+        update_app_user_password(username, generate_password_hash(password))
+        log_change("app_user", username, "emergency_reset", "Emergency admin password reset route used.")
+        return f"Admin password reset for username: {username}"
+
+    create_app_user({
+        "user_id": get_next_user_id(),
+        "username": username,
+        "password_hash": generate_password_hash(password),
+        "role_name": "Admin",
+        "status": "active",
+    })
+    log_change("app_user", username, "emergency_create", "Emergency admin user created.")
+    return f"Admin user created for username: {username}"
+
+
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     username = session.get("username")
