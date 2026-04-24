@@ -189,7 +189,7 @@
 
     <div class="actions trust-doc-actions">
       <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print Successor Trustee Acceptance</a>
-      <a class="button-link trust-doc-button" href="{{ url_for(\'trust_successor_trustee_output_surface_pdf\', trust_id=trust.trust_id) }}">Download PDF</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_successor_trustee_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
