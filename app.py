@@ -2815,6 +2815,31 @@ def render_document_template(template_body, values):
         content = content.replace("{{" + key + "}}", value or "")
     return content
 
+
+def ensure_execution_tables():
+    conn = sqlite3.connect(DB_PATH)
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS execution_tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id TEXT,
+                trust_id TEXT,
+                workspace_id TEXT,
+                title TEXT,
+                description TEXT,
+                status TEXT,
+                priority TEXT,
+                due_date TEXT,
+                assigned_to TEXT,
+                owner_id TEXT,
+                created_at TEXT
+            )
+        """)
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def get_all_execution_tasks():
     conn = _learning_conn()
     rows = conn.execute("""
