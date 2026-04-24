@@ -5652,10 +5652,7 @@ def login():
         user = get_user_by_username(username)
 
         
-print("DEBUG LOGIN:", username, user)
-if user:
-    print("DEBUG HASH CHECK:", check_password_hash(user["password_hash"], password))
-if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
+        if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
 
             session["role"] = user["role_name"]
             session["username"] = user["username"]
