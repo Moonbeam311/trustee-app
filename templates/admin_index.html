@@ -8,11 +8,59 @@
       font-family: Arial, sans-serif;
       margin: 24px;
       color: #1f2328;
-      background: #f6f8fa;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
     }
     .admin-wrap {
-      max-width: 1320px;
+      max-width: 1380px;
       margin: 0 auto;
+    }
+    .admin-hero {
+      border: 1px solid #cbd5e1;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 52%, #334155 100%);
+      color: #fff;
+      padding: 26px;
+      margin: 18px 0;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    }
+    .admin-hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      letter-spacing: -0.02em;
+    }
+    .admin-hero p {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .admin-hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .admin-hero-actions a {
+      display: inline-block;
+      padding: 10px 13px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .admin-hero-actions a:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    .admin-section-label {
+      margin: 24px 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      font-weight: 800;
     }
     .admin-grid {
       display: grid;
@@ -20,16 +68,23 @@
       gap: 12px;
       margin-top: 12px;
     }
+    .admin-two-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 16px;
+      align-items: start;
+    }
     .admin-card {
       border: 1px solid #d0d7de;
-      border-radius: 12px;
-      background: #fff;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.96);
       padding: 18px;
       margin-bottom: 18px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
     }
     .admin-card h2 {
       margin: 0 0 8px 0;
+      font-size: 20px;
     }
     .admin-card p {
       line-height: 1.45;
@@ -46,63 +101,122 @@
     .admin-actions a,
     .admin-button {
       display: inline-block;
-      padding: 8px 10px;
-      border-radius: 8px;
+      padding: 8px 11px;
+      border-radius: 10px;
       border: 1px solid #d0d7de;
       background: #f8fafc;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
       color: #1f2328;
+      transition: transform 0.08s ease, background 0.12s ease, border-color 0.12s ease;
     }
     .admin-actions a:hover,
     .admin-button:hover {
       background: #eef2ff;
+      border-color: #818cf8;
+      transform: translateY(-1px);
+    }
+    .admin-actions a.primary-action {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+      color: #fff;
+    }
+    .admin-actions a.primary-action:hover {
+      background: #1e40af;
+    }
+    .admin-actions a.warning-action {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
     }
     .metric {
       border: 1px solid #d0d7de;
-      border-radius: 10px;
-      padding: 14px;
-      background: #fdfdfd;
+      border-radius: 14px;
+      padding: 16px;
+      background: #fff;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
     }
     .metric h3 {
       margin: 0 0 6px 0;
-      font-size: 14px;
-      color: #57606a;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
     }
     .metric p {
       margin: 0;
-      font-size: 24px;
-      font-weight: bold;
+      font-size: 28px;
+      font-weight: 800;
+      color: #0f172a;
     }
     table {
       border-collapse: collapse;
       width: 100%;
       margin-top: 12px;
       background: #fff;
+      font-size: 14px;
     }
     th, td {
       border: 1px solid #e5e7eb;
-      padding: 8px;
+      padding: 9px;
       text-align: left;
       vertical-align: top;
     }
     th {
       background: #f8fafc;
+      color: #334155;
+    }
+    .trust-launch-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
     }
     .trust-launch-card {
-      margin-top: 12px;
-      padding: 12px;
+      padding: 14px;
       border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      background: #fff;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
     }
-    @media (max-width: 900px) {
-      .admin-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+    .trust-launch-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 10px;
     }
-    @media (max-width: 640px) {
-      .admin-grid {
+    .trust-launch-title strong {
+      font-size: 16px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #075985;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    @media (max-width: 980px) {
+      .admin-grid,
+      .admin-two-grid,
+      .trust-launch-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -114,9 +228,10 @@
   {% include "_platform_nav.html" %}
   {% include "_nav.html" %}
 
-  <div class="page-header">
-    <h1 class="trust-page-title">Admin Trust Operations</h1>
-    <p class="trust-page-subtitle">
+  <section class="admin-hero">
+    <h1>Admin Trust Operations</h1>
+    <p>
+      Central command surface for trust execution, packet review, document output, reports, users, and system controls.
       {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
         Current operator scope: Master Admin — full global platform visibility.
       {% elif session.get("role") == "Admin" %}
@@ -125,166 +240,19 @@
         Current operator scope: {{ session.get("role") or "Unknown" }}.
       {% endif %}
     </p>
-  </div>
-
-  <div class="admin-card">
-    <h2>Trust Operations Dashboard</h2>
-    <p class="admin-muted">Primary operating surface for trust readiness, packet status, and execution entry.</p>
-
-    {% if trust_summaries %}
-      <table class="trust-table trust-table-compact">
-        <thead>
-          <tr>
-            <th>Trust</th>
-            <th>Type</th>
-            <th>Last Updated</th>
-            <th>Packet Status</th>
-            <th>Ready Docs</th>
-            <th>Incomplete Docs</th>
-            <th>Missing Areas</th>
-            <th>Quick Fixes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in trust_summaries %}
-            <tr>
-              <td>
-                <strong>{{ item.trust_name }}</strong><br>
-                <small>{{ item.trust_id }}</small>
-              </td>
-              <td>{{ item.trust_type }}</td>
-              <td>{{ item.last_updated }}</td>
-              <td>
-                <span class="{% if item.packet_ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
-                  {{ item.packet_status }}
-                </span>
-              </td>
-              <td>{{ item.ready_count }}</td>
-              <td>{{ item.incomplete_count }}</td>
-              <td>
-                {% if item.missing_areas %}
-                  {% for area in item.missing_areas %}
-                    <div class="trust-small trust-muted">{{ area }}</div>
-                  {% endfor %}
-                {% else %}
-                  <span class="trust-status-ready">None</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if item.quick_fix_links %}
-                  {% for link in item.quick_fix_links %}
-                    <div><a href="{{ link.url }}">{{ link.label }}</a></div>
-                  {% endfor %}
-                {% else %}
-                  <span class="trust-status-ready">No action needed</span>
-                {% endif %}
-              </td>
-              <td>
-                <a href="{{ url_for('trust_execution_dashboard', trust_id=item.trust_id) }}">Execution</a><br>
-                <a href="{{ url_for('trust_packet_preview', trust_id=item.trust_id) }}">Packet Preview</a><br>
-                <a href="{{ url_for('trust_controlled_packet_export', trust_id=item.trust_id) }}">Download Packet</a>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p>No trust records found yet.</p>
-    {% endif %}
-  </div>
-
-  <div class="admin-card">
-    <h2>Trust-Specific Launch Paths</h2>
-    <p class="admin-muted">Fast entry into each trust’s live workflow and controlled output surfaces.</p>
-
-    {% if trusts %}
-      {% for trust in trusts %}
-        <div class="trust-launch-card">
-          <p style="margin:0 0 8px;">
-            <strong>{{ trust['trust_name'] or 'Unnamed Trust' }}</strong>
-            <span class="admin-muted">({{ trust['trust_id'] }})</span>
-          </p>
-          <div class="admin-actions">
-            <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Execution</a>
-            <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a>
-            <a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Articles Output</a>
-            <a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust['trust_id']) }}">Trustee Acceptance</a>
-            <a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download ZIP</a>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>No trust records found yet.</p>
-    {% endif %}
-  </div>
-
-  <div class="admin-card">
-    <h2>Export Policy Control</h2>
-    <p class="admin-muted">
-      Controls whether packet export is advisory or strictly blocked when core trust documents are incomplete.
-    </p>
-
-    <p>
-      <strong>Current Mode:</strong>
-      <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
-        {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
-      </span>
-    </p>
-
-    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
-      <button type="submit" class="admin-button" style="cursor:pointer;">
-        Switch to {% if export_policy.strict_packet_export %}Advisory{% else %}Strict{% endif %} Mode
-      </button>
-    </form>
-
-    <p class="trust-note">
-      Strict mode blocks packet export until all five core documents are ready. Advisory mode allows export with warnings.
-    </p>
-  </div>
-
-  <div class="admin-card">
-    <h2>Quick Start</h2>
-    <p class="admin-muted">Start here when creating, reviewing, or preparing trust records.</p>
-    <div class="admin-actions">
+    <div class="admin-hero-actions">
       <a href="/create_trust_step1">Create Trust</a>
-      <a href="/">View Existing Trusts</a>
+      <a href="/reports">Report Center</a>
       <a href="/learning">Learning Hub</a>
       <a href="/workspaces">Workspace</a>
-      <a href="/reports">Report Center</a>
-    </div>
-  </div>
-
-  <div class="admin-card">
-    <h2>Admin Tools</h2>
-    <div class="admin-actions">
       {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
         <a href="{{ url_for('users_dashboard') }}">Manage Users</a>
-        <a href="{{ url_for('admin_audit_log') }}">Audit Log Viewer</a>
       {% endif %}
-      <a href="/admin/learning/article/new">New Learning Article</a>
-      <a href="/admin/forms/new">New Form Guide</a>
-      <a href="/videos/upload">Upload Video</a>
-      <a href="/workspaces/new">New Workspace</a>
-      <a href="/discussions/new">New Thread</a>
-      <a href="/execution/tasks/new">New Task</a>
-      <a href="/documents/generate">Generate Document</a>
     </div>
-  </div>
+  </section>
 
+  <div class="admin-section-label">System Snapshot</div>
   <div class="admin-card">
-    <h2>Report Launch Area</h2>
-    <p class="admin-muted">Quick access to system-wide PDF exports and the guided report center.</p>
-    <div class="admin-actions">
-      <a href="/reports/portfolio.pdf" target="_blank">Portfolio PDF</a>
-      <a href="/reports/audit.pdf" target="_blank">Audit Log PDF</a>
-      <a href="/reports/fiduciaries.pdf" target="_blank">Fiduciary PDF</a>
-      <a href="/reports">Report Center</a>
-    </div>
-  </div>
-
-  <div class="admin-card">
-    <h2>Reporting Dashboard</h2>
     <div class="admin-grid">
       <div class="metric">
         <h3>Trusts</h3>
@@ -305,6 +273,165 @@
     </div>
   </div>
 
+  <div class="admin-section-label">Primary Trust Operations</div>
+  <div class="admin-card">
+    <h2>Trust Operations Dashboard</h2>
+    <p class="admin-muted">Primary operating surface for trust readiness, packet status, and execution entry.</p>
+
+    {% if trust_summaries %}
+      <table class="trust-table trust-table-compact">
+        <thead>
+          <tr>
+            <th>Trust</th>
+            <th>Type</th>
+            <th>Packet Status</th>
+            <th>Ready</th>
+            <th>Missing / Fixes</th>
+            <th>Primary Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in trust_summaries %}
+            <tr>
+              <td>
+                <strong>{{ item.trust_name }}</strong><br>
+                <small>{{ item.trust_id }}</small><br>
+                <small class="admin-muted">Updated: {{ item.last_updated }}</small>
+              </td>
+              <td>{{ item.trust_type }}</td>
+              <td>
+                <span class="{% if item.packet_ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
+                  {{ item.packet_status }}
+                </span>
+              </td>
+              <td>
+                <strong>{{ item.ready_count }}</strong> ready<br>
+                <span class="admin-muted">{{ item.incomplete_count }} incomplete</span>
+              </td>
+              <td>
+                {% if item.missing_areas %}
+                  {% for area in item.missing_areas %}
+                    <div class="trust-small trust-muted">{{ area }}</div>
+                  {% endfor %}
+                {% else %}
+                  <span class="trust-status-ready">No missing areas</span>
+                {% endif %}
+
+                {% if item.quick_fix_links %}
+                  <div style="margin-top:6px;">
+                    {% for link in item.quick_fix_links %}
+                      <div><a href="{{ link.url }}">{{ link.label }}</a></div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="admin-actions">
+                  <a class="primary-action" href="{{ url_for('trust_execution_dashboard', trust_id=item.trust_id) }}">Execution</a>
+                  <a href="{{ url_for('trust_packet_preview', trust_id=item.trust_id) }}">Packet Preview</a>
+                  <a href="{{ url_for('trust_controlled_packet_export', trust_id=item.trust_id) }}">Download Packet</a>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No trust records found yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="admin-card">
+    <h2>Trust Command Cards</h2>
+    <p class="admin-muted">Fast entry into each trust’s live workflow and controlled output surfaces.</p>
+
+    {% if trusts %}
+      <div class="trust-launch-grid">
+        {% for trust in trusts %}
+          <div class="trust-launch-card">
+            <div class="trust-launch-title">
+              <strong>{{ trust['trust_name'] or 'Unnamed Trust' }}</strong>
+              <span class="badge">{{ trust['trust_id'] }}</span>
+            </div>
+            <div class="admin-actions">
+              <a class="primary-action" href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Execution</a>
+              <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a>
+              <a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download ZIP</a>
+            </div>
+            <div class="admin-actions">
+              <a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Articles</a>
+              <a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust['trust_id']) }}">Trustee Acceptance</a>
+              <a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Financial Summary</a>
+              <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No trust records found yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="admin-two-grid">
+    <div class="admin-card">
+      <h2>Quick Start</h2>
+      <p class="admin-muted">Use these pathways to create, review, plan, and export.</p>
+      <div class="admin-actions">
+        <a class="primary-action" href="/create_trust_step1">Create Trust</a>
+        <a href="/">View Existing Trusts</a>
+        <a href="/learning">Learning Hub</a>
+        <a href="/workspaces">Workspace</a>
+        <a href="/reports">Report Center</a>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h2>Export Policy</h2>
+      <p>
+        <strong>Current Mode:</strong>
+        <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
+          {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
+        </span>
+      </p>
+      <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+        <button type="submit" class="admin-button" style="cursor:pointer;">
+          Switch to {% if export_policy.strict_packet_export %}Advisory{% else %}Strict{% endif %} Mode
+        </button>
+      </form>
+      <p class="admin-muted">Strict blocks packet export until core documents are ready. Advisory allows export with warnings.</p>
+    </div>
+  </div>
+
+  <div class="admin-two-grid">
+    <div class="admin-card">
+      <h2>Report Launch Area</h2>
+      <p class="admin-muted">System-wide PDF exports and guided report center.</p>
+      <div class="admin-actions">
+        <a href="/reports/portfolio.pdf" target="_blank">Portfolio PDF</a>
+        <a href="/reports/audit.pdf" target="_blank">Audit Log PDF</a>
+        <a href="/reports/fiduciaries.pdf" target="_blank">Fiduciary PDF</a>
+        <a class="primary-action" href="/reports">Report Center</a>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h2>Admin Tools</h2>
+      <div class="admin-actions">
+        {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
+          <a class="primary-action" href="{{ url_for('users_dashboard') }}">Manage Users</a>
+          <a href="{{ url_for('admin_audit_log') }}">Audit Log Viewer</a>
+        {% endif %}
+        <a href="/admin/learning/article/new">New Learning Article</a>
+        <a href="/admin/forms/new">New Form Guide</a>
+        <a href="/videos/upload">Upload Video</a>
+        <a href="/workspaces/new">New Workspace</a>
+        <a href="/discussions/new">New Thread</a>
+        <a href="/execution/tasks/new">New Task</a>
+        <a href="/documents/generate">Generate Document</a>
+      </div>
+    </div>
+  </div>
+
   <div class="admin-card">
     <h2>Operational Shortcuts</h2>
     <div class="admin-actions">
@@ -313,30 +440,10 @@
       <a href="{{ url_for('audit_dashboard') }}">Audit Trail</a>
       <a href="{{ url_for('permissions_dashboard') }}">Permissions</a>
       <a href="{{ url_for('security_dashboard') }}">Security</a>
+      <a href="/documents">Documents</a>
+      <a href="/visualization">Visualization</a>
+      <a href="/decision">Decision Engine</a>
     </div>
-  </div>
-
-  <div class="admin-card">
-    <h2>Trust Quick Access</h2>
-    {% if trusts %}
-      {% for trust in trusts %}
-        <div class="trust-launch-card">
-          <p style="margin:0 0 8px;">
-            <strong>{{ trust['trust_name'] }}</strong>
-            <span class="admin-muted">({{ trust['trust_id'] }})</span>
-          </p>
-          <div class="admin-actions">
-            <a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Financial Summary</a>
-            <a href="{{ url_for('tax_assistant', trust_id=trust['trust_id']) }}">Tax Assistant</a>
-            <a href="{{ url_for('k1_trust_view', trust_id=trust['trust_id']) }}">K-1</a>
-            <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a>
-            <a href="{{ url_for('instruments_dashboard', trust_id=trust['trust_id']) }}">Instruments</a>
-          </div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>No trust records found yet.</p>
-    {% endif %}
   </div>
 
   <div class="admin-card">
