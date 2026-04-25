@@ -4769,10 +4769,14 @@ def trust_formation_preview_hub(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
+    packet_readiness = build_trust_packet_readiness(document_readiness)
     return render_template(
         "trust_formation_preview_hub.html",
         trust=trust,
         preview_context=preview_context,
+        document_readiness=document_readiness,
+        packet_readiness=packet_readiness,
     )
 
 

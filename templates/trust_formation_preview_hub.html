@@ -180,6 +180,32 @@
       font-weight: 800;
       text-decoration: none;
     }
+    .packet-banner {
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 18px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    }
+    .packet-banner.ready {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+    .packet-banner.blocked {
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+    .packet-banner.warning {
+      border-color: #fed7aa;
+      background: #fff7ed;
+    }
+    .packet-banner h2 {
+      margin: 0 0 6px 0;
+    }
+    .packet-banner strong {
+      font-weight: 900;
+    }
     @media (max-width: 900px) {
       .flow-grid,
       .context-grid {
@@ -196,6 +222,25 @@
     <p>
       The trust intake is complete. Review the trust record, inspect the formation documents,
       open final document surfaces, preview the packet, then move into execution and funding.
+    </p>
+  </div>
+
+  <div class="packet-banner {% if packet_readiness.ready %}ready{% elif packet_readiness.blocked %}blocked{% else %}warning{% endif %}">
+    <h2>Packet Readiness Status</h2>
+    <p>
+      <strong>{{ packet_readiness.status_label }}</strong>
+      {% if packet_readiness.ready %}
+        — all core formation documents appear ready for packet export.
+      {% elif packet_readiness.blocked %}
+        — export is currently blocked because required formation information is missing.
+      {% else %}
+        — packet may be exported with warnings under the current export policy.
+      {% endif %}
+    </p>
+    <p class="muted">
+      Strict export mode:
+      {% if packet_readiness.strict_mode %}ON{% else %}OFF{% endif %}.
+      Use the readiness checklist below to correct missing fields before final packet output.
     </p>
   </div>
 
