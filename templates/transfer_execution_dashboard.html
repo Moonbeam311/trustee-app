@@ -2,6 +2,40 @@
 {% block content %}
 <div class="trust-page-wrap">
 
+<div class="trust-panel" style="{% if packet_readiness.blocked %}background:#fef2f2; border-color:#fca5a5;{% elif packet_readiness.ready %}background:#f0fdf4; border-color:#86efac;{% else %}background:#fff7ed; border-color:#fed7aa;{% endif %}">
+  <h2 class="trust-panel-heading">Execution Handoff Status</h2>
+
+  {% if packet_readiness.ready %}
+    <p>
+      <strong class="trust-status-ready">Formation packet appears ready.</strong>
+      This trust may proceed into execution, funding, transfers, asset records, accounts, ledgers, and administration.
+    </p>
+  {% elif packet_readiness.blocked %}
+    <p>
+      <strong class="trust-status-warning">Formation packet is not ready for export.</strong>
+      Complete missing formation items before treating this trust as fully execution-ready.
+    </p>
+  {% else %}
+    <p>
+      <strong class="trust-status-warning">Formation packet has warnings.</strong>
+      Review missing or incomplete items before relying on the packet for execution.
+    </p>
+  {% endif %}
+
+  <p class="trust-note">
+    This dashboard is the operational layer after creation and formation review.
+    Use the Post-Create Console for readiness corrections, then return here for transfers and funding.
+  </p>
+
+  <p style="margin:10px 0 0;">
+    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust_id) }}"><strong>Open Post-Create Action Console</strong></a>
+    |
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust_id) }}"><strong>Open Packet Preview</strong></a>
+    |
+    <a href="{{ url_for('transfer_start', trust_id=trust_id) }}"><strong>Start New Transfer</strong></a>
+  </p>
+</div>
+
 <div class="trust-panel">
   <h2 class="trust-panel-heading">Trust Workflow Console</h2>
   <p class="trust-page-subtitle">Use this page as the live operating surface for trust-specific review, validation, preview, final surfaces, and packet actions.</p>

@@ -5053,6 +5053,8 @@ def trust_execution_dashboard(trust_id):
 
     preview_context = build_trust_preview_context(trust)
     document_readiness = build_trust_document_readiness(preview_context)
+    packet_readiness = build_trust_packet_readiness(document_readiness)
+    correction_links = build_correction_links(trust_id, document_readiness, return_to="execution")
 
     transfers = (
         Transfer.query
@@ -5067,6 +5069,11 @@ def trust_execution_dashboard(trust_id):
         trust=trust,
         preview_context=preview_context,
         document_readiness=document_readiness,
+        packet_readiness=packet_readiness,
+        correction_links=correction_links,
+        export_policy=get_export_policy(),
+        latest_export_activity=get_latest_export_for_trust(trust_id),
+        trust_last_updated=get_trust_last_updated_value(trust),
         transfers=transfers,
         current_role=session.get("role"),
     )
