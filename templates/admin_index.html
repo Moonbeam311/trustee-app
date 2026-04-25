@@ -291,7 +291,7 @@
       {% endif %}
     </p>
     <div class="admin-hero-actions">
-      <a href="/create_trust_step1">Create Trust</a>
+      <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
       <a href="/reports">Report Center</a>
       <a href="/learning">Learning Hub</a>
       <a href="/workspaces">Workspace</a>
@@ -302,7 +302,7 @@
   </section>
 
   <div class="shortcut-strip">
-    <a href="/create_trust_step1">Create Trust<span>Start a new trust record</span></a>
+    <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
     <a href="/reports">Report Center<span>PDFs and guided reports</span></a>
     <a href="/documents">Documents<span>Generated document hub</span></a>
     <a href="/execution">Execution<span>Tasks and workflow</span></a>
@@ -435,7 +435,7 @@
       <h2>Quick Start</h2>
       <p class="admin-muted">Use these pathways to create, review, plan, and export.</p>
       <div class="admin-actions">
-        <a class="primary-action" href="/create_trust_step1">Create Trust</a>
+        <a class="primary-action" href="{{ url_for('create_trust_launch') }}">Create Trust</a>
         <a href="/">View Existing Trusts</a>
         <a href="/learning">Learning Hub</a>
         <a href="/workspaces">Workspace</a>

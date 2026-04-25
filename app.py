@@ -1262,6 +1262,12 @@ def asset_health():
         orphaned=get_orphaned_assets()
     )
 
+
+@app.route("/create-trust-launch")
+def create_trust_launch():
+    return render_template("create_trust_launch.html")
+
+
 @app.route("/create_trust_step1", methods=["GET", "POST"])
 def create_trust_step1():
     if request.method == "POST":

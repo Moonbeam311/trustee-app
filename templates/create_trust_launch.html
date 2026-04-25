@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "_platform_shell.html" %}
+  <title>Create Trust Launch</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      color: #1f2328;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    }
+    .launch-wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+    }
+    .launch-hero {
+      border: 1px solid #cbd5e1;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 52%, #334155 100%);
+      color: #fff;
+      padding: 28px;
+      margin: 18px 0;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    }
+    .launch-hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+    }
+    .launch-hero p {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+    .launch-card {
+      border: 1px solid #d0d7de;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.96);
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    }
+    .launch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .mini-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+    .mini-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    .muted {
+      color: #64748b;
+      line-height: 1.45;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 800;
+      border: 1px solid #d0d7de;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    .button.primary {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+      color: #fff;
+    }
+    .button:hover {
+      filter: brightness(0.98);
+    }
+    .flow-list li {
+      margin-bottom: 8px;
+    }
+    @media (max-width: 850px) {
+      .launch-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page-shell launch-wrap">
+  {% include "_platform_nav.html" %}
+  {% include "_nav.html" %}
+
+  <section class="launch-hero">
+    <h1>Create Trust Launch</h1>
+    <p>
+      Begin a controlled trust creation workflow. This launch screen does not replace the existing wizard.
+      It simply explains the path before entering Step 1, so the current variable carryover and final document process remain intact.
+    </p>
+  </section>
+
+  <div class="launch-card">
+    <h2>Controlled Creation Flow</h2>
+    <p class="muted">
+      The existing wizard will create the trust record first, then carry the entered values through each step into the Formation Preview Hub and final document surfaces.
+    </p>
+
+    <ol class="flow-list">
+      <li><strong>Step 1:</strong> Trust identity, name, jurisdiction, effective date, and starting record.</li>
+      <li><strong>Step 2:</strong> Grantor / settlor details.</li>
+      <li><strong>Step 3:</strong> Trust structure, purpose, accounting method, and workflow mode.</li>
+      <li><strong>Step 4:</strong> Trustee, successor trustee, and beneficiary structure.</li>
+      <li><strong>Step 5:</strong> Governance, recordkeeping, and administration preferences.</li>
+      <li><strong>Step 6:</strong> Trust property, corpus, accounts, and asset category details.</li>
+      <li><strong>Finalize:</strong> Review and finalize into the Formation Preview Hub.</li>
+    </ol>
+
+    <div class="action-row">
+      <a class="button primary" href="{{ url_for('create_trust_step1') }}">Start Controlled Trust Creation</a>
+      <a class="button" href="{{ url_for('admin_index') }}">Return to Admin Dashboard</a>
+    </div>
+  </div>
+
+  <div class="launch-grid">
+    <div class="mini-card">
+      <strong>Variable Carryover Protected</strong>
+      <p class="muted">This launch page does not rename fields, bypass routes, or change the Step 1–6 save chain.</p>
+    </div>
+    <div class="mini-card">
+      <strong>Preview Hub Preserved</strong>
+      <p class="muted">Finalized trusts still route into post-create review and the Formation Preview Hub.</p>
+    </div>
+    <div class="mini-card">
+      <strong>Output Surfaces Preserved</strong>
+      <p class="muted">Articles, trustee acceptance, assignments, minutes, packet preview, and PDFs remain on the existing routes.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
