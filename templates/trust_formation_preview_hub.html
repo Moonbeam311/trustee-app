@@ -206,6 +206,46 @@
     .packet-banner strong {
       font-weight: 900;
     }
+    .doc-readiness-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .doc-readiness-table th,
+    .doc-readiness-table td {
+      border: 1px solid #e5e7eb;
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    .doc-readiness-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 900;
+    }
+    .doc-ready-pill {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .doc-ready-pill.ready {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .doc-ready-pill.missing {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+    .missing-list {
+      margin: 0;
+      padding-left: 18px;
+    }
     @media (max-width: 900px) {
       .flow-grid,
       .context-grid {
@@ -382,6 +422,156 @@
       <div class="flow-step"><strong>5. Download ZIP</strong>Export the controlled packet when ready.</div>
       <div class="flow-step"><strong>6. Execute / Fund</strong>Move into transfers, assets, accounts, records, and ledgers.</div>
     </div>
+  </div>
+
+
+  <div class="section">
+    <h2>Document Readiness Detail Matrix</h2>
+    <p class="muted">
+      This matrix breaks down each formation document and shows exactly which required values are still missing.
+    </p>
+
+    <table class="doc-readiness-table">
+      <thead>
+        <tr>
+          <th>Document</th>
+          <th>Status</th>
+          <th>Missing Fields</th>
+          <th>Document Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Articles of Trust</strong><br><span class="muted">Trust summary / articles layer.</span></td>
+          <td>
+            {% if document_readiness.articles.ready %}
+              <span class="doc-ready-pill ready">Ready</span>
+            {% else %}
+              <span class="doc-ready-pill missing">Needs review</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if document_readiness.articles.missing %}
+              <ul class="missing-list">
+                {% for item in document_readiness.articles.missing %}
+                  <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="muted">No missing fields.</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Preview</a><br>
+            <a href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Trustee Acceptance</strong><br><span class="muted">Trustee acceptance of appointment.</span></td>
+          <td>
+            {% if document_readiness.trustee_acceptance.ready %}
+              <span class="doc-ready-pill ready">Ready</span>
+            {% else %}
+              <span class="doc-ready-pill missing">Needs review</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if document_readiness.trustee_acceptance.missing %}
+              <ul class="missing-list">
+                {% for item in document_readiness.trustee_acceptance.missing %}
+                  <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="muted">No missing fields.</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Preview</a><br>
+            <a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>General Assignment</strong><br><span class="muted">Assignment of trust property / interests.</span></td>
+          <td>
+            {% if document_readiness.general_assignment.ready %}
+              <span class="doc-ready-pill ready">Ready</span>
+            {% else %}
+              <span class="doc-ready-pill missing">Needs review</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if document_readiness.general_assignment.missing %}
+              <ul class="missing-list">
+                {% for item in document_readiness.general_assignment.missing %}
+                  <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="muted">No missing fields.</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Preview</a><br>
+            <a href="{{ url_for('trust_general_assignment_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Organizational Minutes</strong><br><span class="muted">Initial trustee resolutions / minutes.</span></td>
+          <td>
+            {% if document_readiness.organizational_minutes.ready %}
+              <span class="doc-ready-pill ready">Ready</span>
+            {% else %}
+              <span class="doc-ready-pill missing">Needs review</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if document_readiness.organizational_minutes.missing %}
+              <ul class="missing-list">
+                {% for item in document_readiness.organizational_minutes.missing %}
+                  <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="muted">No missing fields.</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust.trust_id) }}">Preview</a><br>
+            <a href="{{ url_for('trust_organizational_minutes_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Successor Trustee</strong><br><span class="muted">Successor trustee acceptance / appointment.</span></td>
+          <td>
+            {% if document_readiness.successor_trustee.ready %}
+              <span class="doc-ready-pill ready">Ready</span>
+            {% else %}
+              <span class="doc-ready-pill missing">Needs review</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if document_readiness.successor_trustee.missing %}
+              <ul class="missing-list">
+                {% for item in document_readiness.successor_trustee.missing %}
+                  <li>{{ item }}</li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <span class="muted">No missing fields.</span>
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Preview</a><br>
+            <a href="{{ url_for('trust_successor_trustee_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <div class="section">
