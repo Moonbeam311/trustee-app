@@ -2,21 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Trust Formation Preview Hub {{ trust.trust_id }}</title>
+  <title>Post-Create Action Console {{ trust.trust_id }}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 24px;
       color: #111827;
       line-height: 1.6;
-      max-width: 980px;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    }
+    .console-wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .hero {
+      border: 1px solid #cbd5e1;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 52%, #334155 100%);
+      color: #fff;
+      padding: 26px;
+      margin-bottom: 18px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
+    }
+    .hero h1 {
+      margin: 0 0 8px 0;
+      font-size: 32px;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      margin: 0;
+      color: #cbd5e1;
     }
     .section {
       border: 1px solid #d1d5db;
-      border-radius: 10px;
+      border-radius: 16px;
       padding: 18px;
       margin-bottom: 18px;
-      background: #ffffff;
+      background: rgba(255,255,255,0.96);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    }
+    .section h2 {
+      margin-top: 0;
+    }
+    .muted {
+      color: #64748b;
+      font-size: 14px;
+    }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .button-link {
+      display: inline-block;
+      padding: 10px 13px;
+      border-radius: 10px;
+      border: 1px solid #d0d7de;
+      background: #f8fafc;
+      color: #0f172a;
+      text-decoration: none;
+      font-weight: 800;
+    }
+    .button-link.primary {
+      background: #1d4ed8;
+      border-color: #1d4ed8;
+      color: #fff;
+    }
+    .button-link.success {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .button-link.warning {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #9a3412;
     }
     .card-grid {
       display: grid;
@@ -26,182 +89,319 @@
     }
     .card {
       border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      border-radius: 14px;
       padding: 14px;
-      background: #f9fafb;
+      background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
     }
-    .muted {
-      color: #6b7280;
-      font-size: 14px;
+    .card h3 {
+      margin: 0 0 6px 0;
     }
-    a.button-link {
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .flow-step {
+      border: 1px solid #dbe3ef;
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+      min-height: 84px;
+    }
+    .flow-step strong {
+      display: block;
+      color: #1d4ed8;
+      margin-bottom: 4px;
+    }
+    .context-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .context-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+    .context-item span {
+      display: block;
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 800;
+    }
+    .context-item strong {
+      display: block;
+      margin-top: 3px;
+    }
+    .readiness-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .readiness-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+    .readiness-item.ready {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+    .readiness-item.missing {
+      border-color: #fed7aa;
+      background: #fff7ed;
+    }
+    .readiness-status {
       display: inline-block;
-      margin-top: 10px;
+      margin-top: 6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .readiness-status.ready {
+      color: #166534;
+      background: #dcfce7;
+    }
+    .readiness-status.missing {
+      color: #9a3412;
+      background: #ffedd5;
+    }
+    .readiness-item a {
+      display: inline-block;
+      margin-top: 8px;
+      font-weight: 800;
       text-decoration: none;
+    }
+    @media (max-width: 900px) {
+      .flow-grid,
+      .context-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+<div class="console-wrap">
 
-  <h1>Trust Formation Preview Hub</h1>
-  <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
-  <p class="muted">Consolidated preview access for the approved revocable trust formation set before deeper wizard integration.</p>
-
-  <div class="section">
-    <h2>Trust Record Context</h2>
-    <p class="muted">This hub is now acting as the controlled trust-wizard review surface for the approved revocable template set.</p>
-    <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
-    <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
-    <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
-    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
-    <p><strong>Owner ID:</strong> {{ preview_context.owner_id }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
-    <p><strong>Created:</strong> {{ preview_context.created_at_display }}</p>
+  <div class="hero">
+    <h1>Trust Created — Post-Create Action Console</h1>
+    <p>
+      The trust intake is complete. Review the trust record, inspect the formation documents,
+      open final document surfaces, preview the packet, then move into execution and funding.
+    </p>
   </div>
 
   <div class="section">
-    <h2>Post-Create Review Guidance</h2>
-    <p class="muted">This hub now serves as the controlled post-create review destination for a newly created trust.</p>
-    <p>After trust creation, the app can route the trust record here so the approved revocable document set can be reviewed in one place before any deeper output automation is added.</p>
-    <p>This keeps the process deliberate: create the trust record first, then review the approved formation documents, then decide what output bridging should happen next.</p>
-  </div>
-
-  <div class="section">
-    <h2>Create-Trust Guidance</h2>
-    <p class="muted">This hub is the approval bridge between the current basic create-trust flow and the approved revocable document set.</p>
-    <p>The trust wizard is currently being used in a controlled way to feed trust record data into these previews for review and approval before final generation logic is added.</p>
-    <p>At this stage, the app is using a preview-first model. Final document automation and deeper create-trust insertion will come after this review layer is locked.</p>
-  </div>
-
-  <div class="section">
-    <h2>First Approved Output Set</h2>
-    <p class="muted">This hub is now exposing the first controlled set of approved revocable outputs for review focus.</p>
-    <ul>
-      <li>Articles of Trust / Trust Summary Instrument</li>
-      <li>Trustee Acceptance of Appointment</li>
-      <li>General Assignment to Trust</li>
-    </ul>
-    <p>These are being surfaced first as the initial approved output set before deeper output automation is added for the broader revocable trust package.</p>
-
-  </div>
-
-  <div class="section">
-    <h2>First Controlled Output Bridge</h2>
-    <p class="muted">The first controlled bridge candidate is now being identified from the approved revocable output set.</p>
-    <p><strong>Initial Bridge Candidate:</strong> Articles of Trust / Trust Summary Instrument</p>
-
-    <p>This means the review hub is beginning to move from preview-only access toward intentional output bridging, while still avoiding uncontrolled package-wide automation.</p>
-  </div>
-
-  <div class="section">
-    <h2>First Bridge Action</h2>
-    <p class="muted">This is the first deliberately exposed bridge action from the approved revocable output set.</p>
-    <p><strong>Bridge Target:</strong> Articles of Trust / Trust Summary Instrument</p>
-
-    <p><a href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Open Articles of Trust as first controlled bridge candidate</a></p>
-
-  </div>
-
-  <div class="section">
-    <h2>First Explicit Output Path</h2>
-    <p class="muted">The first explicit output path is now being defined for controlled document exposure.</p>
-    <p><strong>Output Path:</strong> Articles of Trust / Trust Summary Instrument</p>
-
-    <p>This path remains review-centered and is being surfaced first before any broader package-level output behavior is introduced.</p>
-  </div>
-
-  <div class="section">
-    
-  <div class="section">
-    <h2>Approved Revocable Formation Set</h2>
-    <p class="muted">These are the core approved revocable trust formation documents. This layer represents the actual legal formation set.</p>
-
-    <ul>
-      <li><strong>Revocable Living Trust Declaration</strong> (Primary Instrument)</li>
-      <li><strong>Certification of Trust</strong> (Summary Instrument)</li>
-      <li><strong>Pour-Over Will</strong> (External Support Instrument)</li>
-      <li><strong>Schedule A — Trust Property and Assignment</strong> (Asset Assignment Layer)</li>
-    </ul>
-
-    <p class="muted">These documents form the legal foundation. Output remains controlled and review-centered before full package generation is enabled.</p>
-  </div>
-
-<h2>First Bounded Output Surface</h2>
-    <p class="muted"><strong>Execution Surface 1:</strong> Articles of Trust is the first controlled output action enabled.</p>
-    <p class="muted">The Articles document is now being treated as the first bounded output surface.</p>
-    <p>This keeps the output path isolated, deliberate, and review-centered while broader package-wide output behavior remains deferred.</p>
-    <p><strong>Bounded Output Surface:</strong> Articles of Trust / Trust Summary Instrument</p>
-  <div class="bounded-output-action" style="margin-top: 12px;">
-    <a
-      href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}"
-      style="display: inline-block; padding: 10px 14px; background: #1f4e79; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 600;"
-    >
-      Open Bounded Articles Path
-    </a>
-    <div style="margin-top: 8px; font-size: 0.95rem; color: #555;">
-      Bounded action only: routes to the Articles preview path without triggering package-wide generation.
+    <h2>Primary Next Actions</h2>
+    <p class="muted">Use these buttons in order after the trust record is created.</p>
+    <div class="action-row">
+      <a class="button-link primary" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Open Execution Dashboard</a>
+      <a class="button-link" href="{{ url_for('trust_packet_preview', trust_id=trust.trust_id) }}">Open Packet Preview</a>
+      <a class="button-link success" href="{{ url_for('trust_controlled_packet_export', trust_id=trust.trust_id) }}">Download Controlled Packet ZIP</a>
+      <a class="button-link warning" href="{{ url_for('admin_index') }}">Return to Admin Dashboard</a>
     </div>
   </div>
 
+  <div class="section">
+    <h2>Trust Record Context</h2>
+    <p class="muted">These values were carried forward from the create-trust wizard into the document preview system.</p>
+    <div class="context-grid">
+      <div class="context-item"><span>Trust ID</span><strong>{{ preview_context.trust_id or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Trust Name</span><strong>{{ preview_context.trust_name or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Trust Type</span><strong>{{ preview_context.trust_type or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Status</span><strong>{{ preview_context.status or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Grantor / Settlor</span><strong>{{ preview_context.grantor_name or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Trustee</span><strong>{{ preview_context.trustee_name or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Successor Trustee</span><strong>{{ preview_context.successor_trustee_name or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Primary Beneficiary</span><strong>{{ preview_context.primary_beneficiary or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Effective Date</span><strong>{{ preview_context.effective_date_display or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Jurisdiction</span><strong>{{ preview_context.jurisdiction or "Not entered" }}</strong></div>
+    </div>
+  </div>
+
+
+  <div class="section">
+    <h2>Readiness / Missing Fields</h2>
+    <p class="muted">
+      This checklist shows whether the trust record has enough information for the core formation packet.
+      Missing items should be corrected before final packet export.
+    </p>
+
+    <div class="readiness-grid">
+      <div class="readiness-item {% if preview_context.trust_name and preview_context.effective_date and preview_context.jurisdiction %}ready{% else %}missing{% endif %}">
+        <strong>Trust Identity</strong><br>
+        <span class="muted">Trust name, effective date, and jurisdiction.</span><br>
+        {% if preview_context.trust_name and preview_context.effective_date and preview_context.jurisdiction %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Needs review</span>
+          <br><a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Review identity fields</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.grantor_name %}ready{% else %}missing{% endif %}">
+        <strong>Grantor / Settlor</strong><br>
+        <span class="muted">Required for Articles and General Assignment.</span><br>
+        {% if preview_context.grantor_name %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Missing</span>
+          <br><a href="{{ url_for('create_trust_step2_grantor', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Grantor step</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.trust_type %}ready{% else %}missing{% endif %}">
+        <strong>Trust Type</strong><br>
+        <span class="muted">Required for Articles and classification.</span><br>
+        {% if preview_context.trust_type %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Missing</span>
+          <br><a href="{{ url_for('create_trust_step2', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Structure step</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.trustee_name %}ready{% else %}missing{% endif %}">
+        <strong>Trustee</strong><br>
+        <span class="muted">Required for Trustee Acceptance, Minutes, and packet readiness.</span><br>
+        {% if preview_context.trustee_name %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Missing</span>
+          <br><a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Parties step</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.successor_trustee_name %}ready{% else %}missing{% endif %}">
+        <strong>Successor Trustee</strong><br>
+        <span class="muted">Required for successor trustee output readiness.</span><br>
+        {% if preview_context.successor_trustee_name %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Missing</span>
+          <br><a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Parties step</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.primary_beneficiary %}ready{% else %}missing{% endif %}">
+        <strong>Primary Beneficiary</strong><br>
+        <span class="muted">Recommended for full trust context and Articles completeness.</span><br>
+        {% if preview_context.primary_beneficiary %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Missing</span>
+          <br><a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Parties step</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.initial_corpus_description or preview_context.asset_categories %}ready{% else %}missing{% endif %}">
+        <strong>Property / Corpus</strong><br>
+        <span class="muted">Required for General Assignment and trust property context.</span><br>
+        {% if preview_context.initial_corpus_description or preview_context.asset_categories %}
+          <span class="readiness-status ready">Ready</span>
+        {% else %}
+          <span class="readiness-status missing">Missing</span>
+          <br><a href="{{ url_for('create_trust_step5', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Property step</a>
+        {% endif %}
+      </div>
+
+      <div class="readiness-item {% if preview_context.status == 'Finalized' %}ready{% else %}missing{% endif %}">
+        <strong>Finalize Status</strong><br>
+        <span class="muted">Trust should be finalized after wizard review.</span><br>
+        {% if preview_context.status == 'Finalized' %}
+          <span class="readiness-status ready">Finalized</span>
+        {% else %}
+          <span class="readiness-status missing">Draft / Not finalized</span>
+          <br><a href="{{ url_for('create_trust_step6', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Finalize step</a>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   <div class="section">
-    <h2>Explicit Output Path Action</h2>
-    <p class="muted">This action keeps the first output path visible and deliberate.</p>
-    <p><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open First Explicit Output Path</a></p>
+    <h2>After Creation Workflow</h2>
+    <p class="muted">This is the intended sequence after the trust wizard is finalized.</p>
+    <div class="flow-grid">
+      <div class="flow-step"><strong>1. Review Data</strong>Confirm wizard values carried forward correctly.</div>
+      <div class="flow-step"><strong>2. Preview Docs</strong>Review each formation document before final output.</div>
+      <div class="flow-step"><strong>3. Final Surfaces</strong>Open print/PDF-ready bounded document surfaces.</div>
+      <div class="flow-step"><strong>4. Packet Preview</strong>Inspect the controlled packet before export.</div>
+      <div class="flow-step"><strong>5. Download ZIP</strong>Export the controlled packet when ready.</div>
+      <div class="flow-step"><strong>6. Execute / Fund</strong>Move into transfers, assets, accounts, records, and ledgers.</div>
+    </div>
   </div>
 
   <div class="section">
-    <h2>Bridge Candidate Action</h2>
-    <p class="muted">This first bridge action keeps the output path explicit and deliberate.</p>
-    <p><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Bridge Articles Output Candidate</a></p>
-  </div>
-
-  <div class="section">
-    <h2>Focused Output Actions</h2>
-    <p class="muted">These links foreground the first approved revocable output set for deliberate review focus.</p>
-    <ul>
-      <li><a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Articles of Trust / Trust Summary Instrument</a></li>
-      <li><a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Trustee Acceptance of Appointment</a></li>
-      <li><a href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open General Assignment to Trust</a></li>
-    </ul>
-  </div>
-
-  <div class="section">
-    <h2>Formation Preview Documents</h2>
+    <h2>Formation Document Review</h2>
+    <p class="muted">Preview the core formation documents generated from the trust record.</p>
     <div class="card-grid">
       <div class="card">
         <h3>Articles of Trust</h3>
-        <p class="muted">Preview the trust summary / articles layer.</p>
-
-        <a class="button-link" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+        <p class="muted">Trust summary / articles layer.</p>
+        <div class="action-row">
+          <a class="button-link" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Preview</a>
+          <a class="button-link primary" href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+        </div>
       </div>
 
       <div class="card">
         <h3>Trustee Acceptance</h3>
-        <p class="muted">Preview trustee acceptance of appointment.</p>
-        <a class="button-link" href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+        <p class="muted">Trustee acceptance of appointment.</p>
+        <div class="action-row">
+          <a class="button-link" href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Preview</a>
+          <a class="button-link primary" href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+        </div>
       </div>
 
       <div class="card">
         <h3>Organizational Minutes</h3>
-        <p class="muted">Preview initial trustee resolutions / organizational minutes.</p>
-        <a class="button-link" href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+        <p class="muted">Initial trustee resolutions / organizational minutes.</p>
+        <div class="action-row">
+          <a class="button-link" href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust.trust_id) }}">Preview</a>
+          <a class="button-link primary" href="{{ url_for('trust_organizational_minutes_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+        </div>
       </div>
 
       <div class="card">
         <h3>General Assignment</h3>
-        <p class="muted">Preview general assignment to trust.</p>
-        <a class="button-link" href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+        <p class="muted">General assignment to trust.</p>
+        <div class="action-row">
+          <a class="button-link" href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Preview</a>
+          <a class="button-link primary" href="{{ url_for('trust_general_assignment_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+        </div>
       </div>
 
       <div class="card">
         <h3>Successor Trustee</h3>
-        <p class="muted">Preview successor trustee acceptance / appointment.</p>
-        <a class="button-link" href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Open Preview</a>
+        <p class="muted">Successor trustee acceptance / appointment.</p>
+        <div class="action-row">
+          <a class="button-link" href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Preview</a>
+          <a class="button-link primary" href="{{ url_for('trust_successor_trustee_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+        </div>
       </div>
     </div>
   </div>
+
+  <div class="section">
+    <h2>Operational Phase</h2>
+    <p class="muted">
+      After document review and packet export, the trust should move into execution:
+      funding, transfers, assets, accounts, ledgers, fiduciary records, and ongoing administration.
+    </p>
+    <div class="action-row">
+      <a class="button-link primary" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Go to Execution Dashboard</a>
+      <a class="button-link" href="{{ url_for('trust_packet_preview', trust_id=trust.trust_id) }}">Review Packet First</a>
+    </div>
+  </div>
+
+</div>
 </body>
 </html>
