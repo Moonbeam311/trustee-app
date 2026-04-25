@@ -5830,3 +5830,22 @@ def change_password():
 
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
+
+
+@app.route("/debug/transfers")
+def debug_transfers():
+    try:
+        transfers = Transfer.query.all()
+        return {
+            "count": len(transfers),
+            "transfers": [
+                {
+                    "transfer_id": t.transfer_id,
+                    "trust_id": t.trust_id,
+                    "status": t.status
+                }
+                for t in transfers
+            ]
+        }
+    except Exception as e:
+        return {"error": str(e)}
