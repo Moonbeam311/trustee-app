@@ -246,6 +246,31 @@
       margin: 0;
       padding-left: 18px;
     }
+    .correction-links {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .correction-links strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .correction-links a {
+      display: inline-block;
+      margin: 3px 6px 3px 0;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1d4ed8;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      border: 1px solid #c7d2fe;
+    }
     @media (max-width: 900px) {
       .flow-grid,
       .context-grid {
@@ -464,6 +489,15 @@
           <td>
             <a href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Preview</a><br>
             <a href="{{ url_for('trust_articles_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+            {% if document_readiness.articles.missing %}
+              <div class="correction-links">
+                <strong>Correction Links</strong>
+                <a href="{{ url_for('create_trust_step2', trust_id=trust.trust_id) }}?return_to=post_create_console">Trust Type</a>
+                <a href="{{ url_for('create_trust_step2_grantor', trust_id=trust.trust_id) }}?return_to=post_create_console">Grantor</a>
+                <a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=post_create_console">Trustee</a>
+                <a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Identity</a>
+              </div>
+            {% endif %}
           </td>
         </tr>
 
@@ -490,6 +524,13 @@
           <td>
             <a href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Preview</a><br>
             <a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+            {% if document_readiness.trustee_acceptance.missing %}
+              <div class="correction-links">
+                <strong>Correction Links</strong>
+                <a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=post_create_console">Trustee</a>
+                <a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Identity</a>
+              </div>
+            {% endif %}
           </td>
         </tr>
 
@@ -516,6 +557,14 @@
           <td>
             <a href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Preview</a><br>
             <a href="{{ url_for('trust_general_assignment_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+            {% if document_readiness.general_assignment.missing %}
+              <div class="correction-links">
+                <strong>Correction Links</strong>
+                <a href="{{ url_for('create_trust_step2_grantor', trust_id=trust.trust_id) }}?return_to=post_create_console">Grantor</a>
+                <a href="{{ url_for('create_trust_step5', trust_id=trust.trust_id) }}?return_to=post_create_console">Property / Corpus</a>
+                <a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Identity</a>
+              </div>
+            {% endif %}
           </td>
         </tr>
 
@@ -542,6 +591,13 @@
           <td>
             <a href="{{ url_for('trust_organizational_minutes_preview', trust_id=trust.trust_id) }}">Preview</a><br>
             <a href="{{ url_for('trust_organizational_minutes_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+            {% if document_readiness.organizational_minutes.missing %}
+              <div class="correction-links">
+                <strong>Correction Links</strong>
+                <a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=post_create_console">Trustee</a>
+                <a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Identity</a>
+              </div>
+            {% endif %}
           </td>
         </tr>
 
@@ -568,6 +624,13 @@
           <td>
             <a href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Preview</a><br>
             <a href="{{ url_for('trust_successor_trustee_output_surface', trust_id=trust.trust_id) }}">Final Surface</a>
+            {% if document_readiness.successor_trustee.missing %}
+              <div class="correction-links">
+                <strong>Correction Links</strong>
+                <a href="{{ url_for('create_trust_step3', trust_id=trust.trust_id) }}?return_to=post_create_console">Trustee / Successor</a>
+                <a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Identity</a>
+              </div>
+            {% endif %}
           </td>
         </tr>
       </tbody>
