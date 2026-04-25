@@ -5288,11 +5288,11 @@ def transfer_trustee_acceptance(transfer_id):
                 progress=get_transfer_progress(transfer),
             )
 
-        # FORCE trustee capacity at this step to prevent loop
-        transfer.current_capacity = "trustee"
+        transfer.current_capacity = request.form.get("current_capacity", transfer.current_capacity)
 
-        # No capacity validation needed here — this step defines trustee action
-
+        if not validate_capacity_for_step("trustee_acceptance", transfer.current_capacity):
+            flash("Trustee acceptance requires trustee capacity.", "warning")
+        else:
             transfer.trustee_name = request.form.get("trustee_name", "")
             transfer.trustee_decision = request.form.get("trustee_decision", "")
             transfer.trustee_notes = request.form.get("trustee_notes", "")
