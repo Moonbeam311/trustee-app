@@ -536,6 +536,9 @@ def resolve_post_save_return(trust_id, fallback_endpoint, fallback_kwargs=None):
     if return_to == "packet_preview":
         return redirect(url_for("trust_packet_preview", trust_id=trust_id, returned_from_correction=1))
 
+    if return_to == "post_create_console":
+        return redirect(url_for("trust_formation_preview_hub", trust_id=trust_id, returned_from_correction=1))
+
     return redirect(url_for(fallback_endpoint, **fallback_kwargs))
 
 def build_admin_trust_summary(trust):
