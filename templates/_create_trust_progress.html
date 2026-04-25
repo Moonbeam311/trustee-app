@@ -1,0 +1,97 @@
+<style>
+  .wizard-progress-wrap {
+    margin: 0 0 18px 0;
+    padding: 14px;
+    border: 1px solid #dbe3ef;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  }
+  .wizard-progress-title {
+    font-weight: 800;
+    margin-bottom: 10px;
+    color: #0f172a;
+  }
+  .wizard-progress-track {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .wizard-step {
+    border-radius: 12px;
+    padding: 10px 8px;
+    border: 1px solid #d1d5db;
+    background: #f8fafc;
+    color: #475569;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    min-height: 54px;
+  }
+  .wizard-step .num {
+    display: block;
+    font-size: 14px;
+    font-weight: 900;
+    margin-bottom: 4px;
+  }
+  .wizard-step.complete {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #166534;
+  }
+  .wizard-step.current {
+    background: #dbeafe;
+    border-color: #60a5fa;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+  }
+  .wizard-step.upcoming {
+    background: #f8fafc;
+    color: #64748b;
+  }
+  .wizard-progress-note {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #64748b;
+  }
+  @media (max-width: 850px) {
+    .wizard-progress-track {
+      grid-template-columns: 1fr;
+    }
+    .wizard-step {
+      text-align: left;
+    }
+  }
+</style>
+
+{% set steps = [
+  (1, "Identity"),
+  (2, "Grantor"),
+  (3, "Structure"),
+  (4, "Parties"),
+  (5, "Governance"),
+  (6, "Property"),
+  (7, "Finalize")
+] %}
+
+<div class="wizard-progress-wrap">
+  <div class="wizard-progress-title">Create Trust Wizard Progress</div>
+  <div class="wizard-progress-track">
+    {% for number, label in steps %}
+      {% if number < current_step %}
+        {% set state = "complete" %}
+      {% elif number == current_step %}
+        {% set state = "current" %}
+      {% else %}
+        {% set state = "upcoming" %}
+      {% endif %}
+      <div class="wizard-step {{ state }}">
+        <span class="num">Step {{ number }}</span>
+        {{ label }}
+      </div>
+    {% endfor %}
+  </div>
+  <div class="wizard-progress-note">
+    Green means completed, blue means current, gray means upcoming. The existing wizard data-carryover process remains unchanged.
+  </div>
+</div>
