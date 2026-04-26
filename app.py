@@ -5288,27 +5288,23 @@ def transfer_trustee_acceptance(transfer_id):
                 progress=get_transfer_progress(transfer),
             )
 
-        transfer.current_capacity = request.form.get("current_capacity", transfer.current_capacity)
+        transfer.current_capacity = "trustee"
+        transfer.trustee_name = request.form.get("trustee_name", "")
+        transfer.trustee_decision = request.form.get("trustee_decision", "")
+        transfer.trustee_notes = request.form.get("trustee_notes", "")
 
-        if not validate_capacity_for_step("trustee_acceptance", transfer.current_capacity):
-            flash("Trustee acceptance requires trustee capacity.", "warning")
-        else:
-            transfer.trustee_name = request.form.get("trustee_name", "")
-            transfer.trustee_decision = request.form.get("trustee_decision", "")
-            transfer.trustee_notes = request.form.get("trustee_notes", "")
+        add_transfer_action(
+            transfer=transfer,
+            action_type="saved_trustee_acceptance",
+            performed_by=session.get("username") or "unknown",
+            capacity_used=transfer.current_capacity,
+            notes=f"Trustee decision: {transfer.trustee_decision}",
+            commit=False,
+        )
 
-            add_transfer_action(
-                transfer=transfer,
-                action_type="saved_trustee_acceptance",
-                performed_by=session.get("username") or "unknown",
-                capacity_used=transfer.current_capacity,
-                notes=f"Trustee decision: {transfer.trustee_decision}",
-                commit=False,
-            )
-
-            ext_db.session.commit()
-            flash("Trustee acceptance saved.", "success")
-            return redirect(url_for("transfer_control_evidence", transfer_id=transfer.transfer_id))
+        ext_db.session.commit()
+        flash("Trustee acceptance saved.", "success")
+        return redirect(url_for("transfer_control_evidence", transfer_id=transfer.transfer_id))
 
     return render_template(
         "transfer_trustee_acceptance.html",
