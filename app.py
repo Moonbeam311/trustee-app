@@ -5780,6 +5780,20 @@ def reset_admin_once():
     return f"Admin user created for username: {username}"
 
 
+
+
+@app.route("/resume")
+def resume_process():
+    transfer = Transfer.query.filter(Transfer.status != "completed") \
+        .order_by(Transfer.id.desc()) \
+        .first()
+
+    if not transfer:
+        flash("No active transfer to resume.", "warning")
+        return redirect(url_for("execution_dashboard"))
+
+    return redirect(get_transfer_resume_endpoint(transfer))
+
 @app.route("/change_password", methods=["GET", "POST"])
 def change_password():
     username = session.get("username")
