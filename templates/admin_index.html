@@ -54,6 +54,11 @@
     .admin-hero-actions a:hover {
       background: rgba(255,255,255,0.2);
     }
+    .admin-hero-actions a.primary-hero-action {
+      background: #facc15;
+      border-color: #facc15;
+      color: #111827;
+    }
     .admin-section-label {
       margin: 24px 0 10px;
       font-size: 13px;
@@ -123,6 +128,11 @@
     }
     .admin-actions a.primary-action:hover {
       background: #1e40af;
+    }
+    .admin-actions a.resume-action {
+      background: #111827;
+      border-color: #111827;
+      color: #fff;
     }
     .admin-actions a.warning-action {
       background: #fff7ed;
@@ -291,6 +301,7 @@
       {% endif %}
     </p>
     <div class="admin-hero-actions">
+      <a class="primary-hero-action" href="/resume">Resume Process</a>
       <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
       <a href="/reports">Report Center</a>
       <a href="/learning">Learning Hub</a>
@@ -302,11 +313,11 @@
   </section>
 
   <div class="shortcut-strip">
+    <a href="/resume">Resume Process<span>Continue the latest active transfer</span></a>
     <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
     <a href="/reports">Report Center<span>PDFs and guided reports</span></a>
     <a href="/documents">Documents<span>Generated document hub</span></a>
     <a href="/execution">Execution<span>Tasks and workflow</span></a>
-    <a href="{{ url_for('security_dashboard') }}">Security<span>Access and posture checks</span></a>
   </div>
 
   <div class="admin-section-label">System Snapshot</div>
@@ -385,6 +396,7 @@
               </td>
               <td>
                 <div class="admin-actions">
+                  <a class="resume-action" href="/resume">Resume Process</a>
                   <a class="primary-action" href="{{ url_for('trust_execution_dashboard', trust_id=item.trust_id) }}">Execution</a>
                   <a href="{{ url_for('trust_packet_preview', trust_id=item.trust_id) }}">Packet Preview</a>
                   <a href="{{ url_for('trust_controlled_packet_export', trust_id=item.trust_id) }}">Download Packet</a>
@@ -412,6 +424,7 @@
               <span class="badge">{{ trust['trust_id'] }}</span>
             </div>
             <div class="admin-actions">
+              <a class="resume-action" href="/resume">Resume Process</a>
               <a class="primary-action" href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Execution</a>
               <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a>
               <a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download ZIP</a>
@@ -435,6 +448,7 @@
       <h2>Quick Start</h2>
       <p class="admin-muted">Use these pathways to create, review, plan, and export.</p>
       <div class="admin-actions">
+        <a class="resume-action" href="/resume">Resume Process</a>
         <a class="primary-action" href="{{ url_for('create_trust_launch') }}">Create Trust</a>
         <a href="/">View Existing Trusts</a>
         <a href="/learning">Learning Hub</a>
