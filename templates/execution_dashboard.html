@@ -7,6 +7,8 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
     .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 14px; }
+    .action-bar a { display: inline-block; margin: 6px 8px 6px 0; padding: 10px 14px; border-radius: 6px; border: 1px solid #d1d5db; background: #ffffff; color: #111827; text-decoration: none; }
+    .action-bar a.primary-action { background: #111827; color: #ffffff; border-color: #111827; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -16,7 +18,7 @@
   <h1>Execution Dashboard</h1>
 </div>
   <p class="page-subtitle">Task-driven workflow layer for moving from planning into action.</p>
-<div class="action-bar"><a href="/execution/tasks/new">New Task</a> <a href="/workspaces">Workspace</a> <a href="/documents">Documents</a> <a href="/visualization">Visualization</a> <a href="/workflow">Transfer Engine</a></div>
+<div class="action-bar"><a class="primary-action" href="/resume">Resume Process</a> <a href="/execution/tasks/new">New Task</a> <a href="/workspaces">Workspace</a> <a href="/documents">Documents</a> <a href="/visualization">Visualization</a> <a href="/workflow">Transfer Engine</a></div>
   
 
   {% for task in tasks %}
