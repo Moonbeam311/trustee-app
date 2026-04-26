@@ -5117,7 +5117,10 @@ def transfer_start(trust_id):
             commit=False,
         )
 
-        ext_db.session.commit()
+        
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
 
         flash(f"Transfer {transfer.transfer_id} created.", "success")
         return redirect(url_for("transfer_asset", transfer_id=transfer.transfer_id))
@@ -5163,7 +5166,10 @@ def transfer_asset(transfer_id):
             commit=False,
         )
 
-        ext_db.session.commit()
+        
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
         flash("Asset step saved.", "success")
         return redirect(url_for("transfer_classification", transfer_id=transfer.transfer_id))
 
@@ -5206,7 +5212,10 @@ def transfer_classification(transfer_id):
             commit=False,
         )
 
-        ext_db.session.commit()
+        
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
         flash("Classification step saved.", "success")
         return redirect(url_for("transfer_assignment", transfer_id=transfer.transfer_id))
 
@@ -5257,7 +5266,10 @@ def transfer_assignment(transfer_id):
                 commit=False,
             )
 
-            ext_db.session.commit()
+            
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
             flash("Assignment step confirmed.", "success")
             return redirect(url_for("transfer_trustee_acceptance", transfer_id=transfer.transfer_id))
 
@@ -5306,7 +5318,10 @@ def transfer_trustee_acceptance(transfer_id):
                 commit=False,
             )
 
-            ext_db.session.commit()
+            
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
             flash("Trustee acceptance saved.", "success")
             return redirect(url_for("transfer_control_evidence", transfer_id=transfer.transfer_id))
 
@@ -5349,7 +5364,10 @@ def transfer_control_evidence(transfer_id):
             commit=False,
         )
 
-        ext_db.session.commit()
+        
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
         flash("Control evidence saved.", "success")
         return redirect(url_for("transfer_records", transfer_id=transfer.transfer_id))
 
@@ -5402,7 +5420,10 @@ def transfer_records(transfer_id):
             commit=False,
         )
 
-        ext_db.session.commit()
+        
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
         flash("Transfer records created.", "success")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
@@ -5446,7 +5467,10 @@ def transfer_review(transfer_id):
 
         if success:
             mark_core_support_docs_included(transfer)
-            ext_db.session.commit()
+            
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
             flash(f"Transfer {transfer.transfer_id} finalized.", "success")
             return redirect(url_for("trust_execution_dashboard", trust_id=transfer.trust_id))
         else:
@@ -5564,7 +5588,10 @@ def transfer_support_doc_edit(transfer_id, support_doc_id):
 
         support_doc.status = request.form.get("status", "missing").strip() or "missing"
         support_doc.notes = request.form.get("notes", "").strip() or None
-        ext_db.session.commit()
+        
+ext_db.session.commit()
+print("DEBUG_TRANSFER_CREATED:", transfer.transfer_id)
+
         flash("Support document status updated.", "success")
         return redirect(url_for("transfer_detail", transfer_id=transfer.transfer_id))
 
