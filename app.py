@@ -1980,6 +1980,9 @@ def admin_toggle_export_policy():
 @app.route("/admin")
 def admin_index():
     trusts = get_visible_trusts_for_current_operator()
+
+    # BUILD TRUST SUMMARIES
+    trust_summaries = [build_admin_trust_summary(t) for t in trusts]
     report = {
         "trust_count": get_trust_count(),
         "beneficiary_count": get_beneficiary_count(),
@@ -1987,7 +1990,8 @@ def admin_index():
         "instrument_count": get_instrument_count(),
     }
     export_policy = get_export_policy()
-    return render_template("admin_index.html", trusts=trusts, report=report, export_policy=export_policy)
+    return render_template("admin_index.html", trusts=trusts, report=report, export_policy=export_policy,
+        trust_summaries=trust_summaries)
 
 
 @app.route("/users")
@@ -4877,6 +4881,7 @@ def trust_packet_preview(trust_id):
         packet_readiness=packet_readiness,
         correction_links=correction_links,
         export_policy=export_policy,
+        trust_summaries=trust_summaries,
         latest_export_activity=latest_export_activity,
     )
 
