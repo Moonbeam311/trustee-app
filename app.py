@@ -4881,7 +4881,6 @@ def trust_packet_preview(trust_id):
         packet_readiness=packet_readiness,
         correction_links=correction_links,
         export_policy=export_policy,
-        trust_summaries=trust_summaries,
         latest_export_activity=latest_export_activity,
     )
 
@@ -5845,3 +5844,5 @@ def change_password():
 
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
+
+app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
