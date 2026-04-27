@@ -1551,12 +1551,51 @@ def init_audit_table():
 
 
 def log_change(entity_type, entity_id, action, note=""):
+    import hashlib, json
+
     conn = get_connection()
     cur = conn.cursor()
+
+    # 1. Get previous hash
+    cur.execute("SELECT entry_hash FROM audit_log ORDER BY id DESC LIMIT 1")
+    row = cur.fetchone()
+    previous_hash = row["entry_hash"] if row and row["entry_hash"] else None
+
+    # 2. Insert base record first
     cur.execute("""
         INSERT INTO audit_log (entity_type, entity_id, action, note)
         VALUES (?, ?, ?, ?)
     """, (entity_type, entity_id, action, note))
+
+    entry_id = cur.lastrowid
+
+    # 3. Get created_at timestamp
+    cur.execute("SELECT created_at FROM audit_log WHERE id = ?", (entry_id,))
+    created_at = cur.fetchone()["created_at"]
+
+    # 4. Build canonical payload
+    payload = {
+        "id": entry_id,
+        "entity_type": entity_type,
+        "entity_id": entity_id,
+        "action": action,
+        "note": note,
+        "created_at": created_at,
+        "previous_hash": previous_hash
+    }
+
+    payload_str = json.dumps(payload, sort_keys=True)
+
+    # 5. Generate hash
+    entry_hash = hashlib.sha256(payload_str.encode()).hexdigest()
+
+    # 6. Update record with hash values
+    cur.execute("""
+        UPDATE audit_log
+        SET previous_hash = ?, entry_hash = ?, hash_algorithm = ?
+        WHERE id = ?
+    """, (previous_hash, entry_hash, "sha256", entry_id))
+
     conn.commit()
     conn.close()
 
