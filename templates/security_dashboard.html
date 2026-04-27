@@ -44,5 +44,16 @@
   </ul>
 </div>
 
+
+<div style="margin-top:20px; padding:15px; border:1px solid #ccc; border-radius:8px;">
+  <h3>Audit Integrity</h3>
+  <p><strong>Status:</strong> {{ audit_chain.status }}</p>
+  <p>Records Checked: {{ audit_chain.checked }}</p>
+  <p>Legacy Records: {{ audit_chain.legacy }}</p>
+  {% if audit_chain.status == "BROKEN" %}
+    <p style="color:red;">First Broken ID: {{ audit_chain.first_broken_id }}</p>
+  {% endif %}
+</div>
+
 </body>
 </html>

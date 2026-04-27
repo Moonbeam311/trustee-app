@@ -4,6 +4,7 @@ import os
 import secrets
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from database.db import (
+    verify_audit_log_chain,
     init_db,
     get_next_trust_id,
     create_trust_record,
@@ -3640,11 +3641,8 @@ def security_dashboard():
         {"item": "Media evidence references", "status": "Implemented"},
         {"item": "Render deployment classified as pilot only", "status": "Yes"},
     ]
-    return render_template("security_dashboard.html", checklist=checklist)
-
-
-
-
+    audit_chain = verify_audit_log_chain()
+    return render_template("security_dashboard.html", checklist=checklist, audit_chain=audit_chain)
 
 
 @app.before_request
