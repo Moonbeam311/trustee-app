@@ -1670,6 +1670,76 @@ def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):
     conn.close()
     return rows
 
+
+def verify_audit_log_chain(limit=None):
+    import hashlib, json
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = "SELECT * FROM audit_log ORDER BY id ASC"
+    if limit:
+        query += f" LIMIT {limit}"
+
+    cur.execute(query)
+    rows = cur.fetchall()
+
+    conn.close()
+
+    previous_hash = None
+    checked = 0
+    broken = 0
+    legacy = 0
+    first_broken_id = None
+
+    for row in rows:
+        row = dict(row)
+
+        # Skip legacy rows (before hash system)
+        if not row["entry_hash"]:
+            legacy += 1
+            continue
+
+        payload = {
+            "id": row["id"],
+            "entity_type": row["entity_type"],
+            "entity_id": row["entity_id"],
+            "action": row["action"],
+            "note": row["note"],
+            "created_at": row["created_at"],
+            "previous_hash": row["previous_hash"]
+        }
+
+        payload_str = json.dumps(payload, sort_keys=True)
+        expected_hash = hashlib.sha256(payload_str.encode()).hexdigest()
+
+        # Check hash integrity
+        if expected_hash != row["entry_hash"]:
+            broken += 1
+            if not first_broken_id:
+                first_broken_id = row["id"]
+
+        # Check chain linkage
+        if row["previous_hash"] != previous_hash:
+            if previous_hash is not None:
+                broken += 1
+                if not first_broken_id:
+                    first_broken_id = row["id"]
+
+        previous_hash = row["entry_hash"]
+        checked += 1
+
+    status = "VERIFIED" if broken == 0 else "BROKEN"
+
+    return {
+        "status": status,
+        "checked": checked,
+        "broken": broken,
+        "legacy": legacy,
+        "first_broken_id": first_broken_id
+    }
+
+
 def normalize_text(value):
     return (value or "").strip()
 
