@@ -5664,6 +5664,7 @@ def guide_page():
 def login():
     if request.method == "POST":
         if not validate_csrf_token():
+            log_change("auth", request.form.get("username"), "csrf_failure", "Invalid or missing CSRF token")
             return render_template("auth/login.html", error="Invalid or missing CSRF token.")
 
         username = (request.form.get("username") or "").strip()
@@ -5671,12 +5672,12 @@ def login():
 
         user = get_user_by_username(username)
 
-        
         if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
-
             session["role"] = user["role_name"]
             session["username"] = user["username"]
             session["last_activity"] = datetime.now(UTC).timestamp()
+
+            log_change("auth", username, "login_success", "User logged in successfully")
 
             role = session.get("role")
             if role == "Admin":
@@ -5689,13 +5690,16 @@ def login():
                 session.clear()
                 return redirect(url_for("login"))
 
+        log_change("auth", username, "login_failed", "Invalid credentials")
         return render_template("auth/login.html", error="Invalid credentials")
 
     timeout = request.args.get("timeout")
     if timeout == "1":
+        log_change("auth", "unknown", "session_timeout", "Session expired due to inactivity")
         return render_template("auth/login.html", error="Your session expired due to inactivity. Please log in again.")
 
     return render_template("auth/login.html")
+
 
 @app.route("/logout")
 def logout():
