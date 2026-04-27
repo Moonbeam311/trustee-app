@@ -1540,7 +1540,10 @@ def init_audit_table():
             entity_id TEXT,
             action TEXT,
             note TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+              previous_hash TEXT,
+              entry_hash TEXT,
+              hash_algorithm TEXT
         )
     """)
     conn.commit()
