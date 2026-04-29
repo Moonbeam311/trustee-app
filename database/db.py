@@ -2394,3 +2394,126 @@ def update_app_user_password(username, password_hash):
     conn.commit()
     conn.close()
 
+
+
+# =========================
+# PERMISSION MATRIX ENGINE
+# =========================
+
+def get_permissions_by_role(role_name):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT permission_name
+        FROM role_permissions
+        WHERE role_name = ?
+    """, (role_name,))
+    rows = cur.fetchall()
+    conn.close()
+    return {row["permission_name"] for row in rows}
+
+
+def role_has_permission(role_name, permission_name):
+    perms = get_permissions_by_role(role_name)
+    return permission_name in perms
+
+def replace_role_permissions(role_name, permission_names):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM role_permissions WHERE role_name = ?", (role_name,))
+
+    for permission_name in permission_names:
+        cur.execute("""
+            INSERT INTO role_permissions (role_name, permission_name)
+            VALUES (?, ?)
+        """, (role_name, permission_name))
+
+    conn.commit()
+    conn.close()
+
+def ensure_user_permission_override_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS user_permission_overrides (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT,
+        permission_name TEXT,
+        effect TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_user_permission_overrides(username):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM user_permission_overrides
+        WHERE username = ?
+        ORDER BY permission_name
+    """, (username,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def replace_user_permission_overrides(username, allow_permissions, deny_permissions):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("DELETE FROM user_permission_overrides WHERE username = ?", (username,))
+
+    for permission_name in allow_permissions:
+        cur.execute("""
+            INSERT INTO user_permission_overrides (username, permission_name, effect)
+            VALUES (?, ?, 'allow')
+        """, (username, permission_name))
+
+    for permission_name in deny_permissions:
+        cur.execute("""
+            INSERT INTO user_permission_overrides (username, permission_name, effect)
+            VALUES (?, ?, 'deny')
+        """, (username, permission_name))
+
+    conn.commit()
+    conn.close()
+
+def get_effective_permissions_for_user(username):
+    user = None
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM app_users WHERE username = ? LIMIT 1", (username,))
+    user = cur.fetchone()
+    conn.close()
+
+    if not user:
+        return set()
+
+    base_permissions = get_permissions_by_role(user["role_name"])
+    overrides = get_user_permission_overrides(username)
+
+    allow = {row["permission_name"] for row in overrides if row["effect"] == "allow"}
+    deny = {row["permission_name"] for row in overrides if row["effect"] == "deny"}
+
+    return (base_permissions | allow) - deny
+
+
+def user_has_effective_permission(username, permission_name):
+    return permission_name in get_effective_permissions_for_user(username)
+
+def get_all_permissions():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM permissions
+        ORDER BY permission_name
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows

@@ -8,6 +8,9 @@
     table { border-collapse: collapse; width: 100%; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     .muted { color: #57606a; }
+      .risk-high { color: #b42318; font-weight: bold; }
+      .risk-medium { color: #b54708; font-weight: bold; }
+      .risk-low { color: #067647; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -15,6 +18,31 @@
 
 <h1>Audit Trail</h1><p><a href="/reports/audit.pdf{% if entity_type or entity_id %}?entity_type={{ entity_type }}&entity_id={{ entity_id }}{% endif %}" target="_blank">Download Audit Log PDF</a></p>
 <p class="muted">Review timestamped operational changes across the Trustee App.</p>
+
+<div class="box">
+  <h2>Audit Chain Integrity</h2>
+  <p>
+    <strong>Status:</strong>
+    {% if integrity and integrity.status == "VERIFIED" %}
+      <span style="color:green; font-weight:bold;">VERIFIED</span>
+    {% elif integrity %}
+      <span style="color:red; font-weight:bold;">BROKEN</span>
+    {% else %}
+      <span style="color:#b54708; font-weight:bold;">UNKNOWN</span>
+    {% endif %}
+  </p>
+  {% if integrity %}
+    <p class="muted">
+      Checked: {{ integrity.checked }} |
+      Broken: {{ integrity.broken }} |
+      Legacy: {{ integrity.legacy }}
+      {% if integrity.first_broken_id %}
+        | First Broken ID: {{ integrity.first_broken_id }}
+      {% endif %}
+    </p>
+  {% endif %}
+</div>
+
 
 <div class="box">
   <form method="GET" action="/audit">
@@ -36,7 +64,7 @@
       <th>Entity ID</th>
       <th>Action</th>
       <th>Note</th>
-      <th>Timestamp</th>
+      <th>Timestamp</th><th>Risk</th>
     </tr>
     {% for row in logs %}
     <tr>
@@ -45,7 +73,7 @@
       <td>{{ row['entity_id'] }}</td>
       <td>{{ row['action'] }}</td>
       <td>{{ row['note'] }}</td>
-      <td>{{ row['created_at'] }}</td>
+      <td>{{ row['created_at'] }}</td><td><span class="risk-{{ row['risk'] | lower }}">{{ row['risk'] }}</span></td>
     </tr>
     {% endfor %}
   </table>

@@ -46,8 +46,30 @@
         <option value="inactive" {% if user.status == "inactive" %}selected{% endif %}>inactive</option>
       </select>
 
-      <button type="submit">Save Changes</button>
-    </form>
+        <h3>Permission Overrides</h3>
+        <p class="muted">Optional per-user overrides. Allow adds access. Deny removes access even if the role normally has it.</p>
+
+        <table style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+          <tr>
+            <th style="text-align:left;">Permission</th>
+            <th>Allow</th>
+            <th>Deny</th>
+          </tr>
+          {% for perm in all_permissions %}
+          <tr>
+            <td>{{ perm["permission_name"] }}</td>
+            <td style="text-align:center;">
+              <input type="checkbox" name="allow_permissions" value="{{ perm["permission_name"] }}" {% if perm["permission_name"] in allow_set %}checked{% endif %}>
+            </td>
+            <td style="text-align:center;">
+              <input type="checkbox" name="deny_permissions" value="{{ perm["permission_name"] }}" {% if perm["permission_name"] in deny_set %}checked{% endif %}>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+
+        <button type="submit">Save Changes</button>
+      </form>
   </div>
 </body>
 </html>

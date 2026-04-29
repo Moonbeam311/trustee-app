@@ -457,21 +457,33 @@
  </div>
  </div>
 
- <div class="admin-card">
- <h2>Export Policy</h2>
- <p>
- <strong>Current Mode:</strong>
- <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
- {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
- </span>
- </p>
- <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
- <button type="submit" class="admin-button" style="cursor:pointer;">
- Switch to {% if export_policy.strict_packet_export %}Advisory{% else %}Strict{% endif %} Mode
- </button>
- </form>
- <p class="admin-muted">Strict blocks packet export until core documents are ready. Advisory allows export with warnings.</p>
- </div>
+<div class="admin-card">
+<h2>System Policy Controls</h2>
+
+<p><strong>Packet Export Mode:</strong>
+<span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
+{% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
+</span></p>
+
+<p><strong>Exports:</strong>
+<span class="{% if export_policy.allow_exports %}trust-status-ready{% else %}trust-status-warning{% endif %}">
+{% if export_policy.allow_exports %}Enabled{% else %}Disabled{% endif %}
+</span></p>
+
+<p><strong>Read-Only Mode:</strong>
+<span class="{% if export_policy.read_only_mode %}trust-status-warning{% else %}trust-status-ready{% endif %}">
+{% if export_policy.read_only_mode %}Enabled{% else %}Disabled{% endif %}
+</span></p>
+
+<form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+ <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+ <button type="submit" class="admin-button" name="policy_key" value="strict_packet_export" style="cursor:pointer;">Toggle Packet Export Mode</button>
+ <button type="submit" class="admin-button" name="policy_key" value="allow_exports" style="cursor:pointer;">Toggle All Exports</button>
+ <button type="submit" class="admin-button" name="policy_key" value="read_only_mode" style="cursor:pointer;">Toggle Read-Only Mode</button>
+</form>
+
+<p class="admin-muted">System policies control export authority, write access, and packet readiness behavior.</p>
+</div>
  </div>
 
  <div class="admin-two-grid">

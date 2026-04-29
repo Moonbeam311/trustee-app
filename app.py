@@ -2,6 +2,7 @@ import json
 import zipfile
 import os
 import secrets
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from database.db import (
     verify_audit_log_chain,
@@ -79,6 +80,7 @@ from database.db import (
     log_change,
     get_audit_log,
     get_audit_log_by_entity,
+    verify_audit_log_chain,
     validate_instrument_payload,
     validate_beneficiary_payload,
     validate_distribution_payload,
@@ -119,6 +121,15 @@ from database.db import (
     get_roles_by_trust_id,
     get_role_summary_by_trust,
     has_required_role,
+    get_permissions_by_role,
+    role_has_permission,
+    replace_role_permissions,
+    ensure_user_permission_override_tables,
+    get_user_permission_overrides,
+    replace_user_permission_overrides,
+    get_effective_permissions_for_user,
+    user_has_effective_permission,
+    get_all_permissions,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -163,6 +174,11 @@ app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH.as_posix()}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 ext_db.init_app(app)
 
+
+LOGIN_ATTEMPTS_LIMIT = 5
+LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
+
+login_attempts = {}
 SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
@@ -171,6 +187,8 @@ FLASK_DEBUG = os.getenv("FLASK_DEBUG", "1")
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_TO_RANDOM_SECRET_KEY")
 
 app.secret_key = SECRET_KEY
+app.config["WTF_CSRF_FIELD_NAME"] = "_csrf_token"
+csrf = CSRFProtect(app)
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -625,21 +643,40 @@ def get_trust_last_updated_value(trust):
 def ensure_export_policy_file():
     EXPORT_POLICY_PATH.parent.mkdir(parents=True, exist_ok=True)
     if not EXPORT_POLICY_PATH.exists():
-        EXPORT_POLICY_PATH.write_text(json.dumps({"strict_packet_export": True}, indent=2), encoding="utf-8")
+        EXPORT_POLICY_PATH.write_text(json.dumps({
+    "strict_packet_export": True,
+    "allow_user_creation": True,
+    "read_only_mode": False,
+    "allow_exports": True
+}, indent=2), encoding="utf-8")
+
+def get_default_export_policy():
+    return {
+        "strict_packet_export": True,
+        "allow_user_creation": True,
+        "read_only_mode": False,
+        "allow_exports": True,
+    }
 
 def get_export_policy():
     ensure_export_policy_file()
+    default_policy = get_default_export_policy()
     try:
-        return json.loads(EXPORT_POLICY_PATH.read_text(encoding="utf-8"))
+        saved_policy = json.loads(EXPORT_POLICY_PATH.read_text(encoding="utf-8"))
+        default_policy.update(saved_policy)
+        return default_policy
     except Exception:
-        return {"strict_packet_export": True}
+        return default_policy
+
+def save_export_policy(policy):
+    merged = get_default_export_policy()
+    merged.update(policy or {})
+    EXPORT_POLICY_PATH.write_text(json.dumps(merged, indent=2), encoding="utf-8")
 
 def set_export_policy(strict_packet_export):
-    ensure_export_policy_file()
-    EXPORT_POLICY_PATH.write_text(
-        json.dumps({"strict_packet_export": bool(strict_packet_export)}, indent=2),
-        encoding="utf-8"
-    )
+    policy = get_export_policy()
+    policy["strict_packet_export"] = bool(strict_packet_export)
+    save_export_policy(policy)
 
 
 
@@ -1020,6 +1057,7 @@ ensure_genealogy_tables()
 ensure_media_tables()
 ensure_role_tables()
 ensure_user_tables()
+ensure_user_permission_override_tables()
 
 with app.app_context():
     ext_db.create_all()
@@ -1031,6 +1069,32 @@ ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+
+ENDPOINT_PERMISSION_RULES = {
+    "permissions_dashboard": "manage_permissions",
+    "security_dashboard": "view_security",
+    "users_dashboard": "manage_users",
+    "users_new": "manage_users",
+    "users_edit": "manage_users",
+    "users_reset_password": "manage_users",
+    "admin_index": "view_dashboard",
+    "document_generate": "generate_documents",
+    "workspace_document_generate": "generate_documents",
+    "export_center": "export_documents",
+    "export_handoff_file": "export_documents",
+    "export_roadmap_file": "export_documents",
+    "export_package_file": "export_documents",
+    "export_zip_snapshot": "export_documents",
+    "audit_dashboard": "view_audit",
+    "admin_audit_log": "view_audit",
+    "form1041_dashboard": "manage_tax_reports",
+    "form1041_preview": "manage_tax_reports",
+    "form1041_print": "manage_tax_reports",
+    "k1_dashboard": "manage_tax_reports",
+    "k1_trust_view": "manage_tax_reports",
+    "k1_year_end_summary": "manage_tax_reports",
+}
 
 ROLE_RULES = {
     "home": {"Admin", "Trustee", "Viewer"},
@@ -1970,12 +2034,28 @@ def admin_toggle_export_policy():
     gate = require_master_admin()
     if gate:
         return gate
+
+    allowed_keys = {"strict_packet_export", "allow_exports", "read_only_mode"}
+    policy_key = (request.form.get("policy_key") or "strict_packet_export").strip()
+
+    if policy_key not in allowed_keys:
+        log_change("export_policy", policy_key, "toggle_rejected", "Invalid policy key")
+        return redirect(url_for("admin_index"))
+
     policy = get_export_policy()
-    current = bool(policy.get("strict_packet_export", True))
-    set_export_policy(not current)
-    new_mode = 'Strict mode' if not current else 'Advisory mode'
-    log_change("export_policy", "strict_packet_export", "toggle", f"Master admin set export policy to {new_mode}")
-    flash(f"Export policy updated: {new_mode}")
+    current = bool(policy.get(policy_key, False))
+    policy[policy_key] = not current
+
+    import json
+    EXPORT_POLICY_PATH.write_text(json.dumps(policy, indent=2), encoding="utf-8")
+
+    log_change(
+        "export_policy",
+        policy_key,
+        "toggle",
+        f"Master admin set {policy_key} to {policy[policy_key]}"
+    )
+    flash(f"System policy updated: {policy_key} = {policy[policy_key]}")
     return redirect(url_for("admin_index"))
 
 @app.route("/admin")
@@ -2010,8 +2090,18 @@ def users_new():
     if gate:
         return gate
     if request.method == "POST":
-        if not validate_csrf_token():
-            return render_template("user_form.html", error_message="Invalid or missing CSRF token.")
+        policy = get_export_policy()
+        if not bool(policy.get("allow_user_creation", True)):
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "user_creation_blocked",
+                "Policy=allow_user_creation_false"
+            )
+            return render_template(
+                "access_denied.html",
+                reason="User creation is currently disabled by system policy."
+            )
 
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
@@ -2055,9 +2145,6 @@ def users_edit(username):
         return f"User {username} not found", 404
 
     if request.method == "POST":
-        if not validate_csrf_token():
-            return render_template("user_edit.html", user=user, error_message="Invalid or missing CSRF token.")
-
         role_name = request.form.get("role_name") or ""
         status = request.form.get("status") or "active"
 
@@ -2086,11 +2173,30 @@ def users_edit(username):
             "role_name": role_name,
             "status": status,
         })
+
+        allow_permissions = request.form.getlist("allow_permissions")
+        deny_permissions = request.form.getlist("deny_permissions")
+
+        replace_user_permission_overrides(username, allow_permissions, deny_permissions)
+
         log_change("app_user", username, "update", f"Master admin updated user '{username}' to role '{role_name}' with status '{status}'")
+        log_change("security", username, "user_permission_overrides_updated", f"Allow={allow_permissions}; Deny={deny_permissions}")
         flash(f"User {username} updated successfully.")
         return redirect(url_for("users_dashboard"))
 
-    return render_template("user_edit.html", user=user)
+    all_permissions = get_all_permissions()
+    overrides = get_user_permission_overrides(username)
+
+    allow_set = {row["permission_name"] for row in overrides if row["effect"] == "allow"}
+    deny_set = {row["permission_name"] for row in overrides if row["effect"] == "deny"}
+
+    return render_template(
+        "user_edit.html",
+        user=user,
+        all_permissions=all_permissions,
+        allow_set=allow_set,
+        deny_set=deny_set
+    )
 
 
 @app.route("/users/<username>/reset_password", methods=["GET", "POST"])
@@ -2131,41 +2237,139 @@ def users_reset_password(username):
     return render_template("user_reset_password.html", user=user)
 
 
+
+
+
+
+
+
+def build_export_attribution(export_label):
+    return {
+        "export_id": f"EXP-{int(datetime.now(UTC).timestamp())}",
+        "username": session.get("username") or "unknown",
+        "role": session.get("role") or "unknown",
+        "export_label": export_label,
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
+
+def build_generic_export_activity(export_label, permission_name, filename=None, trust_id=None):
+    username = session.get("username") or "unknown"
+    timestamp = datetime.now(UTC).isoformat()
+    export_id = f"EXP-{int(datetime.now(UTC).timestamp())}"
+
+    return {
+        "export_id": export_id,
+        "username": username,
+        "role": session.get("role"),
+        "export_label": export_label,
+        "permission_name": permission_name,
+        "filename": filename,
+        "trust_id": trust_id,
+        "timestamp": timestamp,
+    }
+
+def require_export_permission(permission_name, export_label):
+    username = session.get("username") or "unknown"
+
+    if not user_has_effective_permission(username, permission_name):
+        log_change(
+            "security",
+            username,
+            "export_permission_denied",
+            f"Export={export_label}; Required={permission_name}"
+        )
+        return render_template(
+            "access_denied.html",
+            reason=f"Permission '{permission_name}' required for this export."
+        )
+
+    export_activity = build_generic_export_activity(
+        export_label=export_label,
+        permission_name=permission_name
+    )
+    append_export_activity(export_activity)
+
+    log_change(
+        "export",
+        username,
+        "export_access_granted",
+        f"Export={export_label}; Permission={permission_name}; ExportID={export_activity['export_id']}"
+    )
+
+    return None
+
 @app.route("/exports")
 def export_center():
     trusts = get_all_trusts()
-    return render_template("export_center.html", trusts=trusts)
+    username = session.get("username") or "unknown"
+
+    can_export_core = user_has_effective_permission(username, "export_documents")
+    can_export_handoff = user_has_effective_permission(username, "manage_permissions")
+    can_export_roadmap = user_has_effective_permission(username, "manage_permissions")
+    can_export_tax = user_has_effective_permission(username, "manage_tax_reports")
+    can_export_reports = user_has_effective_permission(username, "manage_tax_reports")
+
+    return render_template(
+        "export_center.html",
+        trusts=trusts,
+        can_export_core=can_export_core,
+        can_export_handoff=can_export_handoff,
+        can_export_roadmap=can_export_roadmap,
+        can_export_tax=can_export_tax,
+        can_export_reports=can_export_reports
+    )
 
 
 @app.route("/exports/handoff/<filename>")
 def export_handoff_file(filename):
-    from flask import session, send_from_directory
+    gate = require_export_permission("manage_permissions", f"handoff:{filename}")
+    if gate:
+        return gate
+    from flask import send_from_directory
     return send_from_directory("handoff", filename, as_attachment=True)
 
 
 @app.route("/exports/roadmap/<filename>")
 def export_roadmap_file(filename):
-    from flask import session, send_from_directory
+    gate = require_export_permission("manage_permissions", f"roadmap:{filename}")
+    if gate:
+        return gate
+    from flask import send_from_directory
     return send_from_directory("roadmap", filename, as_attachment=True)
 
 
 @app.route("/exports/package/<filename>")
 def export_package_file(filename):
-    from flask import session, send_from_directory
+    gate = require_export_permission("export_documents", f"package:{filename}")
+    if gate:
+        return gate
+    from flask import send_from_directory
     return send_from_directory("package_export", filename, as_attachment=True)
 
 
 @app.route("/exports/zip")
 def export_zip_snapshot():
-    from flask import session, send_file
+    gate = require_export_permission("export_documents", "zip_snapshot")
+    if gate:
+        return gate
+    from flask import send_file
     return send_file("Trustee_App_Export_Package.zip", as_attachment=True)
 
 
 @app.route("/exports/k1/<trust_id>.csv")
 def export_k1_live_csv(trust_id):
+    gate = require_export_permission("manage_tax_reports", f"k1_live_csv:{trust_id}")
+    if gate:
+        return gate
     tax_year = request.args.get("tax_year", str(date.today().year))
+    attribution = build_export_attribution(f"k1_live_csv:{trust_id}")
     csv_text = export_k1_csv_text(trust_id, tax_year)
-    response = make_response(csv_text)
+    attribution_header = (
+        f"# Export ID: {attribution['export_id']}\n"
+        f"# Generated By: {attribution['username']} ({attribution['role']})\n"
+        f"# Generated At: {attribution['timestamp']}\n"
+    )
+    response = make_response(attribution_header + csv_text)
     response.headers["Content-Type"] = "text/csv"
     response.headers["Content-Disposition"] = f"attachment; filename=trust_{trust_id}_k1_{tax_year}.csv"
     log_change("k1_export", trust_id, "export", f"K-1 CSV export generated for tax year {tax_year}")
@@ -2174,12 +2378,21 @@ def export_k1_live_csv(trust_id):
 
 @app.route("/exports/1041/<trust_id>.txt")
 def export_1041_text(trust_id):
+    gate = require_export_permission("manage_tax_reports", f"1041_text:{trust_id}")
+    if gate:
+        return gate
     tax_year = request.args.get("tax_year", str(date.today().year))
     dataset = get_1041_dataset(trust_id, tax_year)
 
     lines = []
-    lines.append("TRUSTEE APP — FORM 1041 EXPORT")
+    attribution = build_export_attribution(f"1041_text:{trust_id}")
+
+    lines.append("TRUSTEE APP - FORM 1041 EXPORT")
     lines.append("=" * 40)
+    lines.append(f"Export ID: {attribution['export_id']}")
+    lines.append(f"Generated By: {attribution['username']} ({attribution['role']})")
+    lines.append(f"Generated At: {attribution['timestamp']}")
+    lines.append("")
     if dataset and dataset["trust"]:
         lines.append(f"Trust: {dataset['trust']['trust_name']} ({dataset['trust']['trust_id']})")
         lines.append(f"Tax Year: {dataset['tax_year']}")
@@ -2204,21 +2417,44 @@ def export_1041_text(trust_id):
 
 
 
+def classify_audit_risk(action):
+    high = {"login_lockout", "csrf_failure", "permissions_updated", "toggle"}
+    medium = {"login_failed", "permission_denied", "role_denied"}
+    
+    if action in high:
+        return "HIGH"
+    elif action in medium:
+        return "MEDIUM"
+    return "LOW"
+
 @app.route("/audit")
 def audit_dashboard():
     entity_type = request.args.get("entity_type")
     entity_id = request.args.get("entity_id")
+    risk_filter = (request.args.get("risk") or "").strip().upper()
 
     if entity_type or entity_id:
         logs = get_audit_log_by_entity(entity_type=entity_type, entity_id=entity_id, limit=200)
     else:
         logs = get_audit_log(200)
 
+    logs = [dict(row) for row in logs]
+
+    for row in logs:
+        row["risk"] = classify_audit_risk(row["action"])
+
+    integrity = verify_audit_log_chain()
+
+    if risk_filter in {"LOW", "MEDIUM", "HIGH"}:
+        logs = [row for row in logs if row["risk"] == risk_filter]
+
     return render_template(
         "audit_dashboard.html",
         logs=logs,
         entity_type=entity_type,
-        entity_id=entity_id
+        entity_id=entity_id,
+        risk_filter=risk_filter,
+        integrity=integrity
     )
 
 
@@ -3606,8 +3842,25 @@ def form1041_report_print(trust_id):
 
 
 
-@app.route("/permissions")
+@app.route("/permissions", methods=["GET", "POST"])
 def permissions_dashboard():
+
+    permission_roles = ["Admin", "Trustee", "Viewer"]
+
+    if request.method == "POST":
+        target_role = (request.form.get("role_name") or "").strip()
+        selected_permissions = request.form.getlist("permissions")
+
+        if target_role in permission_roles:
+            replace_role_permissions(target_role, selected_permissions)
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "permissions_updated",
+                f"Role={target_role}; Permissions={selected_permissions}"
+            )
+
+        return redirect(url_for("permissions_dashboard"))
 
     trusts = get_all_trusts()
     rows = []
@@ -3622,7 +3875,18 @@ def permissions_dashboard():
             "viewer_count": summary["Viewer"],
         })
 
-    return render_template("permissions_dashboard.html", rows=rows)
+    permission_roles = ["Admin", "Trustee", "Viewer"]
+    permission_matrix = {
+        role: sorted(get_permissions_by_role(role))
+        for role in permission_roles
+    }
+
+    return render_template(
+        "permissions_dashboard.html",
+        rows=rows,
+        permission_roles=permission_roles,
+        permission_matrix=permission_matrix
+    )
 
 
 
@@ -3645,21 +3909,103 @@ def security_dashboard():
     return render_template("security_dashboard.html", checklist=checklist, audit_chain=audit_chain)
 
 
+
+
+
+
+@app.after_request
+def apply_security_headers(response):
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data:; "
+        "font-src 'self'; "
+        "frame-ancestors 'none';"
+    )
+
+    if APP_ENV == "production":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+    return response
+
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return render_template(
+        "access_denied.html",
+        reason="Security check failed. Please go back, refresh the page, and try again."
+    ), 400
 @app.before_request
 def enforce_session_timeout():
     allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
+    if (request.endpoint or "").startswith("export_"):
+        export_policy = get_export_policy()
+        if not bool(export_policy.get("allow_exports", True)):
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "export_blocked",
+                f"Endpoint={request.endpoint}; Policy=allow_exports_false"
+            )
+            return render_template(
+                "access_denied.html",
+                reason="Exports are currently disabled by system policy."
+            )
+
+    if request.method == "POST":
+        export_policy = get_export_policy()
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "reset_admin_once"}
+        if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "read_only_blocked",
+                f"Endpoint={request.endpoint}; Method=POST; Policy=read_only_mode_true"
+            )
+            return render_template(
+                "access_denied.html",
+                reason="System is currently in read-only mode. Write actions are disabled."
+            )
+
     if "role" not in session:
         return redirect(url_for("login"))
 
     allowed_roles = ROLE_RULES.get(request.endpoint)
     if allowed_roles and session.get("role") not in allowed_roles:
+        log_change(
+            "security",
+            session.get("username") or "unknown",
+            "role_denied",
+            f"Endpoint={request.endpoint}; Role={session.get('role')}; Allowed={sorted(allowed_roles)}"
+        )
         return render_template(
             "access_denied.html",
             reason=f"Role {session.get('role')} is not allowed for this page."
         )
+
+    # HYBRID PERMISSION ENFORCEMENT + USER OVERRIDES
+    required_permission = ENDPOINT_PERMISSION_RULES.get(request.endpoint)
+    if required_permission:
+        username = session.get("username") or "unknown"
+        user_role = session.get("role")
+        if not user_has_effective_permission(username, required_permission):
+            log_change(
+                "security",
+                username,
+                "permission_denied",
+                f"Endpoint={request.endpoint}; Role={user_role}; Required={required_permission}; EffectiveOverride=True"
+            )
+            return render_template(
+                "access_denied.html",
+                reason=f"Permission '{required_permission}' required for this action."
+            )
 
     last_activity = session.get("last_activity")
     if last_activity is None:
@@ -5661,12 +6007,19 @@ def guide_page():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        if not validate_csrf_token():
-            log_change("auth", request.form.get("username"), "csrf_failure", "Invalid or missing CSRF token")
-            return render_template("auth/login.html", error="Invalid or missing CSRF token.")
 
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
+
+        now_ts = datetime.now(UTC).timestamp()
+        attempt = login_attempts.get(username, {"count": 0, "locked_until": 0})
+
+        if attempt.get("locked_until", 0) > now_ts:
+            log_change("auth", username, "login_locked", "Login blocked due to repeated failed attempts")
+            return render_template(
+                "auth/login.html",
+                error="Too many failed login attempts. Please wait and try again."
+            )
 
         user = get_user_by_username(username)
 
@@ -5675,6 +6028,7 @@ def login():
             session["username"] = user["username"]
             session["last_activity"] = datetime.now(UTC).timestamp()
 
+            login_attempts.pop(username, None)
             log_change("auth", username, "login_success", "User logged in successfully")
 
             role = session.get("role")
@@ -5688,6 +6042,19 @@ def login():
                 session.clear()
                 return redirect(url_for("login"))
 
+        attempt = login_attempts.get(username, {"count": 0, "locked_until": 0})
+        attempt["count"] = int(attempt.get("count", 0)) + 1
+
+        if attempt["count"] >= LOGIN_ATTEMPTS_LIMIT:
+            attempt["locked_until"] = datetime.now(UTC).timestamp() + LOGIN_LOCKOUT_SECONDS
+            login_attempts[username] = attempt
+            log_change("auth", username, "login_lockout", "User temporarily locked after repeated failed attempts")
+            return render_template(
+                "auth/login.html",
+                error="Too many failed login attempts. Please wait and try again."
+            )
+
+        login_attempts[username] = attempt
         log_change("auth", username, "login_failed", "Invalid credentials")
         return render_template("auth/login.html", error="Invalid credentials")
 
