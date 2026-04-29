@@ -13,9 +13,11 @@
 <body>
 {% include '_nav.html' %}
 
+
 <h1>Export / Download Center</h1>
 <p class="muted">Central place for package, handoff, roadmap, and live module exports.</p>
 
+{% if can_export_core %}
 <div class="box">
   <h2>Primary Exports</h2>
   <ul>
@@ -23,7 +25,9 @@
     <li><a href="{{ url_for('export_package_file', filename='PACKAGE_SUMMARY.txt') }}">Download Package Summary</a></li>
   </ul>
 </div>
+{% endif %}
 
+{% if can_export_handoff %}
 <div class="box">
   <h2>Handoff Files</h2>
   <ul>
@@ -37,7 +41,9 @@
     <li><a href="{{ url_for('export_handoff_file', filename='ADMIN_REPORTING_NOTE.txt') }}">ADMIN_REPORTING_NOTE.txt</a></li>
   </ul>
 </div>
+{% endif %}
 
+{% if can_export_roadmap %}
 <div class="box">
   <h2>Roadmap Files</h2>
   <ul>
@@ -45,7 +51,11 @@
     <li><a href="{{ url_for('export_roadmap_file', filename='PRIORITY_QUEUE.txt') }}">PRIORITY_QUEUE.txt</a></li>
   </ul>
 </div>
+{% endif %}
 
+</div>
+
+{% if can_export_core %}
 <div class="box">
   <h2>Live Trust Exports</h2>
   {% for trust in trusts %}
@@ -57,7 +67,9 @@
     <hr>
   {% endfor %}
 </div>
+{% endif %}
 
+{% if can_export_tax %}
 <div class="box">
   <h2>Report Exports</h2>
   {% for trust in trusts %}
@@ -70,7 +82,6 @@
   {% endfor %}
 </div>
 
-
 <div class="box">
   <h2>Formal Report Views</h2>
   {% for trust in trusts %}
@@ -82,8 +93,10 @@
     <hr>
   {% endfor %}
 </div>
+{% endif %}
 
 
+{% if can_export_tax %}
 <div class="box">
   <h2>Print / PDF Report Views</h2>
   {% for trust in trusts %}
@@ -95,6 +108,10 @@
     <hr>
   {% endfor %}
 </div>
+{% endif %}
+
+
+
 
 </body>
 </html>
