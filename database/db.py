@@ -2656,3 +2656,43 @@ def build_system_health_report():
         "overall_status": "OK" if overall_ok else "ATTENTION",
         "tables": table_reports,
     }
+
+def run_safe_recovery_migrations():
+    """
+    Re-runs safe startup migration/initialization routines.
+    This is intentionally non-destructive:
+    - creates missing tables
+    - adds missing columns where coded
+    - seeds missing default permissions
+    - does not delete user data
+    """
+    results = []
+
+    try:
+        init_audit_table()
+        results.append({"name": "audit_log", "status": "OK", "note": "Audit table and hash columns verified."})
+    except Exception as exc:
+        results.append({"name": "audit_log", "status": "ERROR", "note": str(exc)})
+
+    try:
+        ensure_role_tables()
+        results.append({"name": "permissions", "status": "OK", "note": "Permission matrix tables and defaults verified."})
+    except Exception as exc:
+        results.append({"name": "permissions", "status": "ERROR", "note": str(exc)})
+
+    try:
+        ensure_user_tables()
+        results.append({"name": "app_users", "status": "OK", "note": "User table verified."})
+    except Exception as exc:
+        results.append({"name": "app_users", "status": "ERROR", "note": str(exc)})
+
+    try:
+        ensure_user_permission_override_tables()
+        results.append({"name": "user_permission_overrides", "status": "OK", "note": "User override table verified."})
+    except Exception as exc:
+        results.append({"name": "user_permission_overrides", "status": "ERROR", "note": str(exc)})
+
+    return {
+        "overall_status": "OK" if all(item["status"] == "OK" for item in results) else "ATTENTION",
+        "results": results,
+    }

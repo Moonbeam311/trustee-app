@@ -46,6 +46,23 @@
     </p>
   </div>
 
+
+  <div class="box">
+    <h2>Controlled Recovery Actions</h2>
+    <p class="muted">
+      Safe recovery re-runs non-destructive startup checks: audit table migration,
+      permission matrix seeding, user table verification, and user override table verification.
+    </p>
+
+    <form method="POST" action="{{ url_for('system_recovery_run') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <button type="submit"
+              style="padding:10px 14px; border-radius:6px; border:1px solid #d0d7de; cursor:pointer;">
+        Run Safe Recovery Migrations
+      </button>
+    </form>
+  </div>
+
   <div class="box">
     <h2>System Policy</h2>
     <table>

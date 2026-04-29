@@ -131,6 +131,7 @@ from database.db import (
     user_has_effective_permission,
     get_all_permissions,
     build_system_health_report,
+    run_safe_recovery_migrations,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -2429,6 +2430,30 @@ def classify_audit_risk(action):
     return "LOW"
 
 
+
+
+
+@app.route("/system/recovery/run", methods=["POST"])
+def system_recovery_run():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    result = run_safe_recovery_migrations()
+
+    log_change(
+        "system_recovery",
+        session.get("username") or "unknown",
+        "safe_recovery_migrations_run",
+        f"Status={result.get('overall_status')}; Results={result.get('results')}"
+    )
+
+    if result.get("overall_status") == "OK":
+        flash("Safe recovery migrations completed successfully.")
+    else:
+        flash("Safe recovery migrations completed with warnings. Check System Health.")
+
+    return redirect(url_for("system_health_dashboard"))
 
 @app.route("/system/health")
 def system_health_dashboard():
