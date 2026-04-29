@@ -2232,6 +2232,67 @@ def ensure_role_tables():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS permissions (
+        permission_id TEXT PRIMARY KEY,
+        permission_name TEXT UNIQUE,
+        description TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS role_permissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        role_name TEXT,
+        permission_name TEXT,
+        UNIQUE(role_name, permission_name)
+    )
+    """)
+
+    default_permissions = [
+        ("PERM-001", "view_dashboard", "View dashboards and core system pages"),
+        ("PERM-002", "create_trust", "Create new trust records"),
+        ("PERM-003", "edit_trust", "Edit trust records"),
+        ("PERM-004", "view_documents", "View trust documents"),
+        ("PERM-005", "generate_documents", "Generate trust documents and packets"),
+        ("PERM-006", "export_documents", "Export documents, packets, and snapshots"),
+        ("PERM-007", "manage_users", "Create, edit, and reset app users"),
+        ("PERM-008", "manage_roles", "Create and manage fiduciary role records"),
+        ("PERM-009", "view_audit", "View audit and evidence logs"),
+        ("PERM-010", "manage_permissions", "View and manage permission matrix"),
+        ("PERM-011", "view_security", "View security dashboard and audit integrity"),
+        ("PERM-012", "manage_tax_reports", "Create, view, print, and export K-1 / 1041 reports"),
+    ]
+
+    cur.executemany("""
+        INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)
+        VALUES (?, ?, ?)
+    """, default_permissions)
+
+    default_role_permissions = {
+        "Admin": [
+            "view_dashboard", "create_trust", "edit_trust", "view_documents",
+            "generate_documents", "export_documents", "manage_users",
+            "manage_roles", "view_audit", "manage_permissions",
+            "view_security", "manage_tax_reports"
+        ],
+        "Trustee": [
+            "view_dashboard", "create_trust", "edit_trust", "view_documents",
+            "generate_documents", "export_documents", "view_audit",
+            "manage_tax_reports"
+        ],
+        "Viewer": [
+            "view_dashboard", "view_documents"
+        ],
+    }
+
+    for role_name, permission_names in default_role_permissions.items():
+        for permission_name in permission_names:
+            cur.execute("""
+                INSERT OR IGNORE INTO role_permissions (role_name, permission_name)
+                VALUES (?, ?)
+            """, (role_name, permission_name))
+
     conn.commit()
     conn.close()
 
