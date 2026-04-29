@@ -4170,6 +4170,18 @@ def handle_csrf_error(e):
     ), 400
 @app.before_request
 def enforce_session_timeout():
+    # 🔒 GLOBAL AUTHENTICATION LOCK
+    public_endpoints = {
+        "login",
+        "logout",
+        "static",
+        "bootstrap_admin_once"
+    }
+
+    if request.endpoint not in public_endpoints:
+        if "role" not in session:
+            return redirect(url_for("login"))
+
     allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
