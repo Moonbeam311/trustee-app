@@ -2592,3 +2592,67 @@ def get_all_permissions():
     rows = cur.fetchall()
     conn.close()
     return rows
+
+# =========================
+# SYSTEM HEALTH / DIAGNOSTICS
+# =========================
+
+def get_table_columns(table_name):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute(f"PRAGMA table_info({table_name})")
+        rows = cur.fetchall()
+        return [row["name"] for row in rows]
+    finally:
+        conn.close()
+
+
+def table_exists(table_name):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table' AND name = ?
+            LIMIT 1
+        """, (table_name,))
+        return cur.fetchone() is not None
+    finally:
+        conn.close()
+
+
+def build_system_health_report():
+    required_tables = {
+        "audit_log": ["id", "entity_type", "entity_id", "action", "note", "created_at", "previous_hash", "entry_hash", "hash_algorithm"],
+        "permissions": ["permission_id", "permission_name", "description"],
+        "role_permissions": ["id", "role_name", "permission_name"],
+        "app_users": ["user_id", "username", "password_hash", "role_name", "status"],
+        "user_permission_overrides": ["id", "username", "permission_name", "effect", "created_at"],
+    }
+
+    table_reports = []
+    overall_ok = True
+
+    for table_name, required_columns in required_tables.items():
+        exists = table_exists(table_name)
+        columns = get_table_columns(table_name) if exists else []
+        missing_columns = [col for col in required_columns if col not in columns]
+
+        ok = exists and not missing_columns
+        if not ok:
+            overall_ok = False
+
+        table_reports.append({
+            "table_name": table_name,
+            "exists": exists,
+            "columns": columns,
+            "missing_columns": missing_columns,
+            "ok": ok,
+        })
+
+    return {
+        "overall_status": "OK" if overall_ok else "ATTENTION",
+        "tables": table_reports,
+    }

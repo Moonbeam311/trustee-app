@@ -130,6 +130,7 @@ from database.db import (
     get_effective_permissions_for_user,
     user_has_effective_permission,
     get_all_permissions,
+    build_system_health_report,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -2426,6 +2427,25 @@ def classify_audit_risk(action):
     elif action in medium:
         return "MEDIUM"
     return "LOW"
+
+
+
+@app.route("/system/health")
+def system_health_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    health = build_system_health_report()
+    integrity = verify_audit_log_chain()
+    policy = get_export_policy()
+
+    return render_template(
+        "system_health.html",
+        health=health,
+        integrity=integrity,
+        policy=policy
+    )
 
 @app.route("/audit")
 def audit_dashboard():
