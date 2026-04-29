@@ -4,3 +4,5 @@ gunicorn
 reportlab
 Flask-SQLAlchemy
 SQLAlchemy
+
+Flask-WTF==1.2.2
