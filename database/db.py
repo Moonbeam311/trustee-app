@@ -1715,13 +1715,16 @@ def verify_audit_log_chain(limit=None):
     for row in rows:
         row = dict(row)
 
-        # Skip legacy rows (before hash system)
-        if not row["entry_hash"]:
+        # Skip legacy rows:
+        # - rows before hash system
+        # - rows before firm-aware audit epoch
+        if not row["entry_hash"] or row["id"] < 117:
             legacy += 1
             continue
 
         payload = {
             "id": row["id"],
+            "firm_id": row.get("firm_id"),
             "entity_type": row["entity_type"],
             "entity_id": row["entity_id"],
             "action": row["action"],
