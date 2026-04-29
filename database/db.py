@@ -1541,11 +1541,25 @@ def init_audit_table():
             action TEXT,
             note TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-              previous_hash TEXT,
-              entry_hash TEXT,
-              hash_algorithm TEXT
+            previous_hash TEXT,
+            entry_hash TEXT,
+            hash_algorithm TEXT
         )
     """)
+
+    cur.execute("PRAGMA table_info(audit_log)")
+    existing_columns = {row["name"] for row in cur.fetchall()}
+
+    migrations = {
+        "previous_hash": "ALTER TABLE audit_log ADD COLUMN previous_hash TEXT",
+        "entry_hash": "ALTER TABLE audit_log ADD COLUMN entry_hash TEXT",
+        "hash_algorithm": "ALTER TABLE audit_log ADD COLUMN hash_algorithm TEXT",
+    }
+
+    for column_name, ddl in migrations.items():
+        if column_name not in existing_columns:
+            cur.execute(ddl)
+
     conn.commit()
     conn.close()
 
