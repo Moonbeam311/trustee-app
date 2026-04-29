@@ -133,6 +133,7 @@ from database.db import (
     build_system_health_report,
     run_safe_recovery_migrations,
     reseed_default_role_permissions,
+    ensure_firm_columns,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -1061,6 +1062,7 @@ ensure_media_tables()
 ensure_role_tables()
 ensure_user_tables()
 ensure_user_permission_override_tables()
+ensure_firm_columns()
 
 with app.app_context():
     ext_db.create_all()
@@ -6253,6 +6255,7 @@ def login():
         if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
             session["role"] = user["role_name"]
             session["username"] = user["username"]
+            session["firm_id"] = user["firm_id"] if "firm_id" in user.keys() and user["firm_id"] else "FIRM-001"
             session["last_activity"] = datetime.now(UTC).timestamp()
 
             login_attempts.pop(username, None)

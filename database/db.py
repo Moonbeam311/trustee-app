@@ -1567,6 +1567,12 @@ def init_audit_table():
 def log_change(entity_type, entity_id, action, note=""):
     import hashlib, json
 
+    try:
+        from flask import has_request_context, session
+        firm_id = session.get("firm_id", "FIRM-001") if has_request_context() else "FIRM-001"
+    except Exception:
+        firm_id = "FIRM-001"
+
     conn = get_connection()
     cur = conn.cursor()
 
@@ -1575,11 +1581,11 @@ def log_change(entity_type, entity_id, action, note=""):
     row = cur.fetchone()
     previous_hash = row["entry_hash"] if row and row["entry_hash"] else None
 
-    # 2. Insert base record first
+    # 2. Insert base record WITH firm_id
     cur.execute("""
-        INSERT INTO audit_log (entity_type, entity_id, action, note)
-        VALUES (?, ?, ?, ?)
-    """, (entity_type, entity_id, action, note))
+        INSERT INTO audit_log (entity_type, entity_id, action, note, firm_id)
+        VALUES (?, ?, ?, ?, ?)
+    """, (entity_type, entity_id, action, note, firm_id))
 
     entry_id = cur.lastrowid
 
@@ -1590,6 +1596,7 @@ def log_change(entity_type, entity_id, action, note=""):
     # 4. Build canonical payload
     payload = {
         "id": entry_id,
+        "firm_id": firm_id,
         "entity_type": entity_type,
         "entity_id": entity_id,
         "action": action,
@@ -1612,7 +1619,6 @@ def log_change(entity_type, entity_id, action, note=""):
 
     conn.commit()
     conn.close()
-
 
 def get_audit_log(limit=100):
     conn = get_connection()
@@ -2781,3 +2787,21 @@ def reseed_default_role_permissions():
         "role_permission_rows_written": inserted,
         "note": "Default role permission matrix restored. User-specific overrides preserved.",
     }
+
+
+def ensure_firm_columns():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    def add_column(table, column_def):
+        try:
+            cur.execute(f"ALTER TABLE {table} ADD COLUMN {column_def}")
+        except Exception as e:
+            if "duplicate column" not in str(e).lower():
+                print(f"⚠️ {table}: {e}")
+
+    add_column("app_users", "firm_id TEXT")
+    add_column("audit_log", "firm_id TEXT")
+
+    conn.commit()
+    conn.close()
