@@ -48,17 +48,44 @@
 
 
   <div class="box">
-    <h2>Controlled Recovery Actions</h2>
+    
+  <div class="box">
+    <h2>System Export</h2>
+    <p class="muted">Download a full system health report for audit, compliance, or backup purposes.</p>
+
+    <a href="{{ url_for('system_health_export_txt') }}"
+       style="display:inline-block; padding:10px 14px; border-radius:6px; border:1px solid #d0d7de; text-decoration:none;">
+       Download System Health Report (TXT)</a>
+    <br><br>
+    <a href="{{ url_for('system_health_export_json') }}"
+       style="display:inline-block; padding:10px 14px; border-radius:6px; border:1px solid #d0d7de; text-decoration:none;">
+       Download System Health Report (JSON)</a>
+<br><br>
+<a href="{{ url_for('system_health_export_zip') }}"
+   style="display:inline-block; padding:10px 14px; border-radius:6px; border:1px solid #d0d7de; text-decoration:none;">
+   Download Full System Snapshot (ZIP)
+    </a>
+  </div>
+
+  <h2>Controlled Recovery Actions</h2>
     <p class="muted">
       Safe recovery re-runs non-destructive startup checks: audit table migration,
       permission matrix seeding, user table verification, and user override table verification.
     </p>
 
-    <form method="POST" action="{{ url_for('system_recovery_run') }}">
+    <form method="POST" action="{{ url_for('system_recovery_run') }}" style="margin-bottom:10px;">
       <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <button type="submit"
               style="padding:10px 14px; border-radius:6px; border:1px solid #d0d7de; cursor:pointer;">
         Run Safe Recovery Migrations
+      </button>
+    </form>
+
+    <form method="POST" action="{{ url_for('system_recovery_reseed_permissions') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <button type="submit"
+              style="padding:10px 14px; border-radius:6px; border:1px solid #d0d7de; cursor:pointer;">
+        Re-seed Default Permission Matrix
       </button>
     </form>
   </div>

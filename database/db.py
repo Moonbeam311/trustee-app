@@ -2696,3 +2696,88 @@ def run_safe_recovery_migrations():
         "overall_status": "OK" if all(item["status"] == "OK" for item in results) else "ATTENTION",
         "results": results,
     }
+
+def reseed_default_role_permissions():
+    """
+    Rebuilds the default role_permissions matrix.
+    This does not modify app_users or user_permission_overrides.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS permissions (
+        permission_id TEXT PRIMARY KEY,
+        permission_name TEXT UNIQUE,
+        description TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS role_permissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        role_name TEXT,
+        permission_name TEXT,
+        UNIQUE(role_name, permission_name)
+    )
+    """)
+
+    default_permissions = [
+        ("PERM-001", "view_dashboard", "View dashboards and core system pages"),
+        ("PERM-002", "create_trust", "Create new trust records"),
+        ("PERM-003", "edit_trust", "Edit trust records"),
+        ("PERM-004", "view_documents", "View trust documents"),
+        ("PERM-005", "generate_documents", "Generate trust documents and packets"),
+        ("PERM-006", "export_documents", "Export documents, packets, and snapshots"),
+        ("PERM-007", "manage_users", "Create, edit, and reset app users"),
+        ("PERM-008", "manage_roles", "Create and manage fiduciary role records"),
+        ("PERM-009", "view_audit", "View audit and evidence logs"),
+        ("PERM-010", "manage_permissions", "View and manage permission matrix"),
+        ("PERM-011", "view_security", "View security dashboard and audit integrity"),
+        ("PERM-012", "manage_tax_reports", "Create, view, print, and export K-1 / 1041 reports"),
+    ]
+
+    default_role_permissions = {
+        "Admin": [
+            "view_dashboard", "create_trust", "edit_trust", "view_documents",
+            "generate_documents", "export_documents", "manage_users",
+            "manage_roles", "view_audit", "manage_permissions",
+            "view_security", "manage_tax_reports"
+        ],
+        "Trustee": [
+            "view_dashboard", "create_trust", "edit_trust", "view_documents",
+            "generate_documents", "export_documents", "view_audit",
+            "manage_tax_reports"
+        ],
+        "Viewer": [
+            "view_dashboard", "view_documents"
+        ],
+    }
+
+    cur.executemany("""
+        INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)
+        VALUES (?, ?, ?)
+    """, default_permissions)
+
+    for role_name in default_role_permissions:
+        cur.execute("DELETE FROM role_permissions WHERE role_name = ?", (role_name,))
+
+    inserted = 0
+    for role_name, permission_names in default_role_permissions.items():
+        for permission_name in permission_names:
+            cur.execute("""
+                INSERT OR IGNORE INTO role_permissions (role_name, permission_name)
+                VALUES (?, ?)
+            """, (role_name, permission_name))
+            inserted += 1
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "overall_status": "OK",
+        "roles_seeded": sorted(default_role_permissions.keys()),
+        "permissions_inserted_or_verified": len(default_permissions),
+        "role_permission_rows_written": inserted,
+        "note": "Default role permission matrix restored. User-specific overrides preserved.",
+    }
