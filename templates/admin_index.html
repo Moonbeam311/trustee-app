@@ -286,7 +286,6 @@
 <body>
 <div class="page-shell admin-wrap">
  {% include "_platform_nav.html" %}
- {% include "_nav.html" %}
 
  <section class="admin-hero">
  <h1>Admin Trust Operations</h1>
@@ -303,12 +302,7 @@
  <div class="admin-hero-actions">
  <a class="primary-hero-action" href="/resume">Resume Process</a>
  <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
- <a href="/reports">Report Center</a>
- <a href="/learning">Learning Hub</a>
- <a href="/workspaces">Workspace</a>
- {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
- <a href="{{ url_for('users_dashboard') }}">Manage Users</a>
- {% endif %}
+ <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
  </div>
  </section>
 
@@ -524,6 +518,7 @@
  <a href="{{ url_for('audit_dashboard') }}">Audit Trail</a>
  <a href="{{ url_for('permissions_dashboard') }}">Permissions</a>
  <a href="{{ url_for('security_dashboard') }}">Security</a>
+ <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
  <a href="/documents">Documents</a>
  <a href="/visualization">Visualization</a>
  <a href="/decision">Decision Engine</a>
