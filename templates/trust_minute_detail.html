@@ -49,9 +49,66 @@
     <div class="label">Action Items</div>
     <div class="section">{{ minute.action_items }}</div>
 
+    
     <hr>
 
+    <h2>Execution Status</h2>
+    <p><strong>Status:</strong> {{ minute.status }}</p>
+    <p><strong>Approved At:</strong> {{ minute.approved_at or "Not approved" }}</p>
+    <p><strong>Executed At:</strong> {{ minute.executed_at or "Not executed" }}</p>
+    <p><strong>Archived At:</strong> {{ minute.archived_at or "Not archived" }}</p>
+    <p><strong>Locked:</strong> {% if minute.locked %}Yes{% else %}No{% endif %}</p>
+
+    <h3>Recorded Trustee Signatures</h3>
+    <p><strong>Trustee 1:</strong> {{ minute.trustee_1_name or "Not entered" }} — {{ minute.trustee_1_signed_date or "No date" }}</p>
+    <p><strong>Trustee 2:</strong> {{ minute.trustee_2_name or "Not entered" }} — {{ minute.trustee_2_signed_date or "No date" }}</p>
+    <p><strong>Trustee 3:</strong> {{ minute.trustee_3_name or "Not entered" }} — {{ minute.trustee_3_signed_date or "No date" }}</p>
+
+<hr>
+
     <h3>Trustee Signature Record</h3>
+
+<hr>
+
+<h2>Execution & Signatures</h2>
+
+{% if minute.locked %}
+  <p><strong>This minute is locked and executed.</strong></p>
+{% else %}
+<form method="POST" action="{{ url_for('trust_minute_execute', minute_id=minute.minute_id) }}">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+  <h3>Trustee Signatures</h3>
+
+  <label>Trustee 1 Name</label>
+  <input type="text" name="trustee_1_name" value="{{ minute.trustee_1_name or '' }}">
+
+  <label>Trustee 1 Signed Date</label>
+  <input type="date" name="trustee_1_signed_date" value="{{ minute.trustee_1_signed_date or '' }}">
+
+  <label>Trustee 2 Name</label>
+  <input type="text" name="trustee_2_name" value="{{ minute.trustee_2_name or '' }}">
+
+  <label>Trustee 2 Signed Date</label>
+  <input type="date" name="trustee_2_signed_date" value="{{ minute.trustee_2_signed_date or '' }}">
+
+  <label>Trustee 3 Name</label>
+  <input type="text" name="trustee_3_name" value="{{ minute.trustee_3_name or '' }}">
+
+  <label>Trustee 3 Signed Date</label>
+  <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">
+
+  <hr>
+
+  <h3>Actions</h3>
+
+  <button name="action" value="approve">Approve Minute</button>
+  <button name="action" value="execute">Execute Minute</button>
+  <button name="action" value="archive">Archive Minute</button>
+
+</form>
+{% endif %}
+
     <p>Trustee: __________________________ Date: _______________</p>
     <p>Trustee: __________________________ Date: _______________</p>
     <p>Trustee: __________________________ Date: _______________</p>

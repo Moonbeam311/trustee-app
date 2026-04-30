@@ -140,6 +140,8 @@ from database.db import (
     get_all_trust_minutes,
     get_trust_minutes_by_trust_id,
     get_trust_minute_by_id,
+    ensure_trust_minutes_execution_columns,
+    update_trust_minute_execution,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -1069,6 +1071,7 @@ ensure_role_tables()
 ensure_user_tables()
 ensure_user_permission_override_tables()
 ensure_trust_minutes_tables()
+ensure_trust_minutes_execution_columns()
 ensure_firm_columns()
 
 with app.app_context():
@@ -2692,6 +2695,60 @@ def trust_minutes_new():
     )
 
 
+
+
+
+@app.route("/minutes/<minute_id>/execute", methods=["POST"])
+def trust_minute_execute(minute_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    minute = get_trust_minute_by_id(minute_id)
+    if not minute:
+        return "Minute not found", 404
+
+    action = request.form.get("action")
+
+    now = datetime.utcnow().isoformat()
+
+    data = {
+        "trustee_1_name": request.form.get("trustee_1_name"),
+        "trustee_1_signed_date": request.form.get("trustee_1_signed_date"),
+        "trustee_2_name": request.form.get("trustee_2_name"),
+        "trustee_2_signed_date": request.form.get("trustee_2_signed_date"),
+        "trustee_3_name": request.form.get("trustee_3_name"),
+        "trustee_3_signed_date": request.form.get("trustee_3_signed_date"),
+        "approved_at": minute["approved_at"],
+        "executed_at": minute["executed_at"],
+        "archived_at": minute["archived_at"],
+        "status": minute["status"],
+        "locked": minute["locked"],
+    }
+
+    if action == "approve":
+        data["approved_at"] = now
+        data["status"] = "Approved"
+
+    elif action == "execute":
+        data["executed_at"] = now
+        data["status"] = "Executed"
+        data["locked"] = 1
+
+    elif action == "archive":
+        data["archived_at"] = now
+        data["status"] = "Archived"
+
+    update_trust_minute_execution(minute_id, data)
+
+    log_change(
+        "trust_minute",
+        minute_id,
+        f"minute_{action}",
+        f"Status updated to {data['status']}"
+    )
+
+    return redirect(url_for("trust_minute_detail", minute_id=minute_id))
 
 @app.route("/minutes/<minute_id>")
 def trust_minute_detail(minute_id):
