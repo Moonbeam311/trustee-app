@@ -112,9 +112,9 @@
 
     <div class="execution-readiness-panel">
       <h3>Execution Readiness Panel</h3>
-      <p class="readiness-note">Execution requires at least one complete trustee package: name, capacity, signed date, and drawn signature.</p>
+      <p class="readiness-note">Execution requires one complete Trustee signer and one complete Witness signer. Each complete signer must include name, role/capacity, signed date, and drawn signature.</p>
 
-      {% set readiness = namespace(complete_count=0) %}
+      {% set readiness = namespace(complete_count=0, has_trustee=false, has_witness=false) %}
 
       {% for idx in [1, 2, 3] %}
         {% set name = minute["trustee_" ~ idx ~ "_name"] %}
@@ -130,12 +130,22 @@
         {% if not signed_date %}{% set _ = missing_items.append("signed date") %}{% endif %}
         {% if not has_signature %}{% set _ = missing_items.append("drawn signature") %}{% endif %}
 
+        {% set role_text = capacity | lower %}
+        {% set is_trustee_role = "trustee" in role_text %}
+        {% set is_witness_role = "witness" in role_text %}
+
         {% if is_complete %}
           {% set readiness.complete_count = readiness.complete_count + 1 %}
+          {% if is_trustee_role %}
+            {% set readiness.has_trustee = true %}
+          {% endif %}
+          {% if is_witness_role %}
+            {% set readiness.has_witness = true %}
+          {% endif %}
         {% endif %}
 
         <p>
-          <strong>Trustee {{ idx }}:</strong>
+          <strong>Signer {{ idx }}:</strong>
           {% if is_complete %}
             <span class="readiness-complete">READY</span>
           {% elif has_any %}
@@ -150,10 +160,16 @@
 
       <p>
         <strong>Overall:</strong>
-        {% if readiness.complete_count > 0 %}
+        {% if readiness.has_trustee and readiness.has_witness %}
           <span class="readiness-complete">READY TO EXECUTE</span>
         {% else %}
           <span class="readiness-missing">NOT READY TO EXECUTE</span>
+          —
+          Missing:
+          {% set role_gaps = [] %}
+          {% if not readiness.has_trustee %}{% set _ = role_gaps.append("complete Trustee signer") %}{% endif %}
+          {% if not readiness.has_witness %}{% set _ = role_gaps.append("complete Witness signer") %}{% endif %}
+          {{ role_gaps | join(", ") }}
         {% endif %}
       </p>
     </div>

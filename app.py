@@ -2813,7 +2813,9 @@ def trust_minute_certificate_pdf(minute_id):
     return response
 
 def validate_trust_minute_execution_requirements(data):
-    signed_trustees = []
+    complete_signers = []
+    has_trustee = False
+    has_witness = False
 
     for idx in (1, 2, 3):
         name = (data.get(f"trustee_{idx}_name") or "").strip()
@@ -2827,24 +2829,38 @@ def validate_trust_minute_execution_requirements(data):
             missing = []
 
             if not name:
-                missing.append(f"Trustee {idx} name")
+                missing.append(f"Signer {idx} name")
             if not capacity:
-                missing.append(f"Trustee {idx} capacity")
+                missing.append(f"Signer {idx} role/capacity")
             if not signed_date:
-                missing.append(f"Trustee {idx} signed date")
+                missing.append(f"Signer {idx} signed date")
             if not has_signature_image:
-                missing.append(f"Trustee {idx} drawn signature")
+                missing.append(f"Signer {idx} drawn signature")
 
             if missing:
                 return False, "Execution blocked. Missing: " + ", ".join(missing)
 
-            signed_trustees.append(idx)
+            role_text = capacity.lower()
+            if "trustee" in role_text:
+                has_trustee = True
+            if "witness" in role_text:
+                has_witness = True
 
-    if not signed_trustees:
-        return False, "Execution blocked. At least one complete trustee signature record is required."
+            complete_signers.append(idx)
+
+    if not complete_signers:
+        return False, "Execution blocked. At least one complete Trustee signer and one complete Witness signer are required."
+
+    missing_roles = []
+    if not has_trustee:
+        missing_roles.append("one complete Trustee signer")
+    if not has_witness:
+        missing_roles.append("one complete Witness signer")
+
+    if missing_roles:
+        return False, "Execution blocked. Required: " + " and ".join(missing_roles) + "."
 
     return True, ""
-
 
 @app.route("/minutes/<minute_id>/execute", methods=["POST"])
 def trust_minute_execute(minute_id):
