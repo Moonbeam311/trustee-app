@@ -2856,6 +2856,15 @@ def trust_minute_execute(minute_id):
     if not minute:
         return "Minute not found", 404
 
+    if int(minute["locked"] or 0) == 1:
+        log_change(
+            "trust_minute",
+            minute_id,
+            "locked_minute_post_blocked",
+            "Attempted POST blocked because trust minute is locked."
+        )
+        return "This trust minute is locked and cannot be modified.", 403
+
     action = request.form.get("action")
 
     now = datetime.utcnow().isoformat()
