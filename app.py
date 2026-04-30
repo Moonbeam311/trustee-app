@@ -2766,7 +2766,7 @@ def trust_minute_certificate_pdf(minute_id):
     story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", styles["Normal"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Recorded Trustee Signatures", styles["Heading2"]))
+    story.append(Paragraph("Recorded Signer Records", styles["Heading2"]))
 
     for idx in (1, 2, 3):
         name = minute[f"trustee_{idx}_name"]
@@ -2790,7 +2790,7 @@ def trust_minute_certificate_pdf(minute_id):
             story.append(Spacer(1, 8))
             story.append(Paragraph("______________________________", styles["Normal"]))
             story.append(Spacer(1, 6))
-            story.append(Paragraph(f"Capacity: {capacity}", styles["Normal"]))
+            story.append(Paragraph(f"Role / Capacity: {capacity}", styles["Normal"]))
             story.append(Paragraph(f"Signed Date: {signed_date or 'No date recorded'}", styles["Normal"]))
 
     story.append(Spacer(1, 24))

@@ -187,7 +187,7 @@
       <p><strong>Trust ID:</strong> {{ minute.trust_id }}</p>
       <p><strong>Executed At:</strong> {{ minute.executed_at or "Not recorded" }}</p>
 
-      <h3>Recorded Signatures</h3>
+      <h3>Recorded Signer Records</h3>
 
       {% if minute.trustee_1_name %}
         {% if minute.trustee_1_signature_image %}
@@ -195,7 +195,7 @@
           {% else %}
           <div class="script-signature">{{ minute.trustee_1_name }}</div>
           {% endif %}
-        <p>Capacity: {{ minute.trustee_1_capacity or "Trustee" }}</p>
+        <p>Role / Capacity: {{ minute.trustee_1_capacity or "Trustee" }}</p>
         <p>Signed Date: {{ minute.trustee_1_signed_date or "No date recorded" }}</p>
       {% endif %}
 
@@ -205,7 +205,7 @@
           {% else %}
           <div class="script-signature">{{ minute.trustee_2_name }}</div>
           {% endif %}
-        <p>Capacity: {{ minute.trustee_2_capacity or "Trustee" }}</p>
+        <p>Role / Capacity: {{ minute.trustee_2_capacity or "Trustee" }}</p>
         <p>Signed Date: {{ minute.trustee_2_signed_date or "No date recorded" }}</p>
       {% endif %}
 
@@ -215,7 +215,7 @@
           {% else %}
           <div class="script-signature">{{ minute.trustee_3_name }}</div>
           {% endif %}
-        <p>Capacity: {{ minute.trustee_3_capacity or "Trustee" }}</p>
+        <p>Role / Capacity: {{ minute.trustee_3_capacity or "Trustee" }}</p>
         <p>Signed Date: {{ minute.trustee_3_signed_date or "No date recorded" }}</p>
       {% endif %}
     </div>
