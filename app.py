@@ -2812,6 +2812,40 @@ def trust_minute_certificate_pdf(minute_id):
 
     return response
 
+def validate_trust_minute_execution_requirements(data):
+    signed_trustees = []
+
+    for idx in (1, 2, 3):
+        name = (data.get(f"trustee_{idx}_name") or "").strip()
+        capacity = (data.get(f"trustee_{idx}_capacity") or "").strip()
+        signed_date = (data.get(f"trustee_{idx}_signed_date") or "").strip()
+        signature_image = (data.get(f"trustee_{idx}_signature_image") or "").strip()
+
+        has_signature_image = signature_image.startswith("data:image/png;base64,")
+
+        if name or capacity or signed_date or has_signature_image:
+            missing = []
+
+            if not name:
+                missing.append(f"Trustee {idx} name")
+            if not capacity:
+                missing.append(f"Trustee {idx} capacity")
+            if not signed_date:
+                missing.append(f"Trustee {idx} signed date")
+            if not has_signature_image:
+                missing.append(f"Trustee {idx} drawn signature")
+
+            if missing:
+                return False, "Execution blocked. Missing: " + ", ".join(missing)
+
+            signed_trustees.append(idx)
+
+    if not signed_trustees:
+        return False, "Execution blocked. At least one complete trustee signature record is required."
+
+    return True, ""
+
+
 @app.route("/minutes/<minute_id>/execute", methods=["POST"])
 def trust_minute_execute(minute_id):
     gate = require_master_admin()
@@ -2851,6 +2885,16 @@ def trust_minute_execute(minute_id):
         data["status"] = "Approved"
 
     elif action == "execute":
+        is_valid, validation_message = validate_trust_minute_execution_requirements(data)
+        if not is_valid:
+            log_change(
+                "trust_minute",
+                minute_id,
+                "minute_execute_blocked",
+                validation_message
+            )
+            return validation_message, 400
+
         data["executed_at"] = now
         data["status"] = "Executed"
         data["locked"] = 1
