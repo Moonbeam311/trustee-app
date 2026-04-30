@@ -2808,3 +2808,101 @@ def ensure_firm_columns():
 
     conn.commit()
     conn.close()
+
+# =========================
+# TRUST MINUTES / RESOLUTIONS
+# =========================
+
+def ensure_trust_minutes_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS trust_minutes (
+        minute_id TEXT PRIMARY KEY,
+        trust_id TEXT,
+        meeting_date TEXT,
+        meeting_type TEXT,
+        title TEXT,
+        purpose TEXT,
+        resolutions TEXT,
+        action_items TEXT,
+        status TEXT DEFAULT 'Draft',
+        created_by TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_minute_id():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) AS count FROM trust_minutes")
+    row = cur.fetchone()
+    conn.close()
+    return f"MIN-{row['count'] + 1:03d}"
+
+
+def create_trust_minute(data):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO trust_minutes (
+            minute_id, trust_id, meeting_date, meeting_type, title,
+            purpose, resolutions, action_items, status, created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        data["minute_id"],
+        data.get("trust_id"),
+        data.get("meeting_date"),
+        data.get("meeting_type"),
+        data.get("title"),
+        data.get("purpose"),
+        data.get("resolutions"),
+        data.get("action_items"),
+        data.get("status", "Draft"),
+        data.get("created_by"),
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def get_all_trust_minutes():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT *
+        FROM trust_minutes
+        ORDER BY created_at DESC
+    """)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_trust_minutes_by_trust_id(trust_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT *
+        FROM trust_minutes
+        WHERE trust_id = ?
+        ORDER BY created_at DESC
+    """, (trust_id,))
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_trust_minute_by_id(minute_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM trust_minutes WHERE minute_id = ?", (minute_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row

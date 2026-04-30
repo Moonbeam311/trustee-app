@@ -134,6 +134,12 @@ from database.db import (
     run_safe_recovery_migrations,
     reseed_default_role_permissions,
     ensure_firm_columns,
+    ensure_trust_minutes_tables,
+    get_next_minute_id,
+    create_trust_minute,
+    get_all_trust_minutes,
+    get_trust_minutes_by_trust_id,
+    get_trust_minute_by_id,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -1062,6 +1068,7 @@ ensure_media_tables()
 ensure_role_tables()
 ensure_user_tables()
 ensure_user_permission_override_tables()
+ensure_trust_minutes_tables()
 ensure_firm_columns()
 
 with app.app_context():
@@ -2638,6 +2645,23 @@ def system_health_export_txt():
 
     return response
 
+
+
+
+@app.route("/minutes")
+def trust_minutes_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    minutes = get_all_trust_minutes()
+    trusts = get_all_trusts()
+
+    return render_template(
+        "trust_minutes_dashboard.html",
+        minutes=minutes,
+        trusts=trusts
+    )
 
 @app.route("/system/health")
 def system_health_dashboard():
