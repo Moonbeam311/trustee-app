@@ -124,6 +124,11 @@
         {% set has_signature = signature_image and signature_image.startswith("data:image/png;base64,") %}
         {% set has_any = name or capacity or signed_date or has_signature %}
         {% set is_complete = name and capacity and signed_date and has_signature %}
+        {% set missing_items = [] %}
+        {% if not name %}{% set _ = missing_items.append("name") %}{% endif %}
+        {% if not capacity %}{% set _ = missing_items.append("capacity") %}{% endif %}
+        {% if not signed_date %}{% set _ = missing_items.append("signed date") %}{% endif %}
+        {% if not has_signature %}{% set _ = missing_items.append("drawn signature") %}{% endif %}
 
         {% if is_complete %}
           {% set readiness.complete_count = readiness.complete_count + 1 %}
@@ -136,11 +141,7 @@
           {% elif has_any %}
             <span class="readiness-missing">INCOMPLETE</span>
             —
-            Missing:
-            {% if not name %} name{% endif %}
-            {% if not capacity %} capacity{% endif %}
-            {% if not signed_date %} signed date{% endif %}
-            {% if not has_signature %} drawn signature{% endif %}
+            Missing: {{ missing_items | join(", ") }}
           {% else %}
             <span class="readiness-note">No signature record started</span>
           {% endif %}
