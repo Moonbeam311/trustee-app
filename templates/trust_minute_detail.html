@@ -222,6 +222,34 @@
     </div>
     {% endif %}
 
+<h3>Minute Audit Trail</h3>
+<div class="section">
+  {% if audit_logs %}
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; border-bottom:1px solid #d0d7de; padding:6px;">Created At</th>
+          <th style="text-align:left; border-bottom:1px solid #d0d7de; padding:6px;">Action</th>
+          <th style="text-align:left; border-bottom:1px solid #d0d7de; padding:6px;">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in audit_logs %}
+        <tr>
+          <td style="vertical-align:top; border-bottom:1px solid #d0d7de; padding:6px;">{{ log.created_at }}</td>
+          <td style="vertical-align:top; border-bottom:1px solid #d0d7de; padding:6px;"><strong>{{ log.action }}</strong></td>
+          <td style="vertical-align:top; border-bottom:1px solid #d0d7de; padding:6px;">{{ log.note or "" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No audit events recorded for this minute.</p>
+  {% endif %}
+</div>
+
+<hr>
+
 <h3>Signer Record</h3>
 
 <hr>

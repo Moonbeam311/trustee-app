@@ -2958,9 +2958,16 @@ def trust_minute_detail(minute_id):
     if not minute:
         return "Minute not found", 404
 
+    audit_logs = get_audit_log_by_entity(
+        entity_type="trust_minute",
+        entity_id=minute_id,
+        limit=25
+    )
+
     return render_template(
         "trust_minute_detail.html",
-        minute=minute
+        minute=minute,
+        audit_logs=audit_logs
     )
 
 @app.route("/minutes")
