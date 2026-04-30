@@ -2648,6 +2648,49 @@ def system_health_export_txt():
 
 
 
+
+
+@app.route("/minutes/new", methods=["GET", "POST"])
+def trust_minutes_new():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    trusts = get_all_trusts()
+
+    if request.method == "POST":
+        minute_id = get_next_minute_id()
+
+        data = {
+            "minute_id": minute_id,
+            "trust_id": request.form.get("trust_id"),
+            "meeting_date": request.form.get("meeting_date"),
+            "meeting_type": request.form.get("meeting_type"),
+            "title": request.form.get("title"),
+            "purpose": request.form.get("purpose"),
+            "resolutions": request.form.get("resolutions"),
+            "action_items": request.form.get("action_items"),
+            "status": request.form.get("status") or "Draft",
+            "created_by": session.get("username") or "unknown",
+        }
+
+        create_trust_minute(data)
+
+        log_change(
+            "trust_minute",
+            minute_id,
+            "minute_created",
+            f"Trust={data.get('trust_id')}; Title={data.get('title')}"
+        )
+
+        return redirect(url_for("trust_minutes_dashboard"))
+
+    return render_template(
+        "trust_minutes_form.html",
+        trusts=trusts,
+        minute_id=get_next_minute_id()
+    )
+
 @app.route("/minutes")
 def trust_minutes_dashboard():
     gate = require_master_admin()
