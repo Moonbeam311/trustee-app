@@ -2810,7 +2810,7 @@ def trust_minute_certificate_pdf(minute_id):
         "trust_minute",
         minute_id,
         "certificate_pdf_exported",
-        "Execution certificate PDF generated"
+        f"Execution certificate PDF generated | Certificate ID: {certificate_id} | Status: {minute['status']} | Executed At: {minute['executed_at'] or 'Not recorded'}"
     )
 
     return response
