@@ -9,6 +9,9 @@
     .label { font-weight:bold; margin-top:16px; }
     .section { white-space:pre-wrap; border:1px solid #d0d7de; border-radius:6px; padding:12px; background:#fff; margin-top:6px; }
     .button { display:inline-block; padding:10px 14px; border:1px solid #d0d7de; border-radius:6px; text-decoration:none; background:white; color:#24292f; cursor:pointer; }
+    .script-signature { font-family: "Brush Script MT", "Segoe Script", cursive; font-size:28px; margin-top:8px; }
+    .signature-line { border-bottom:1px solid #24292f; min-height:34px; width:320px; margin-top:8px; }
+    .certificate-box { border:2px solid #24292f; padding:22px; margin-top:24px; background:#fff; }
 
     @media print {
       body { background:white; padding:0; }
@@ -22,6 +25,15 @@
   <div class="no-print">
     <p><a href="{{ url_for('trust_minutes_dashboard') }}">Back to Trust Minutes</a></p>
     <button class="button" onclick="window.print()">Print Minute</button>
+
+    {% if minute.status in ["Executed", "Archived"] %}
+      <p class="no-print">
+        <a class="button" href="{{ url_for('trust_minute_certificate_pdf', minute_id=minute.minute_id) }}">
+          Download Execution Certificate PDF
+        </a>
+      </p>
+    {% endif %}
+
   </div>
 
   <div class="box">
@@ -60,13 +72,45 @@
     <p><strong>Locked:</strong> {% if minute.locked %}Yes{% else %}No{% endif %}</p>
 
     <h3>Recorded Trustee Signatures</h3>
-    <p><strong>Trustee 1:</strong> {{ minute.trustee_1_name or "Not entered" }} — {{ minute.trustee_1_signed_date or "No date" }}</p>
-    <p><strong>Trustee 2:</strong> {{ minute.trustee_2_name or "Not entered" }} — {{ minute.trustee_2_signed_date or "No date" }}</p>
-    <p><strong>Trustee 3:</strong> {{ minute.trustee_3_name or "Not entered" }} — {{ minute.trustee_3_signed_date or "No date" }}</p>
+    <p><strong>Trustee 1:</strong> {{ minute.trustee_1_name or "Not entered" }}{% if minute.trustee_1_capacity %}, {{ minute.trustee_1_capacity }}{% endif %} — {{ minute.trustee_1_signed_date or "No date" }}</p>
+    <p><strong>Trustee 2:</strong> {{ minute.trustee_2_name or "Not entered" }}{% if minute.trustee_2_capacity %}, {{ minute.trustee_2_capacity }}{% endif %} — {{ minute.trustee_2_signed_date or "No date" }}</p>
+    <p><strong>Trustee 3:</strong> {{ minute.trustee_3_name or "Not entered" }}{% if minute.trustee_3_capacity %}, {{ minute.trustee_3_capacity }}{% endif %} — {{ minute.trustee_3_signed_date or "No date" }}</p>
 
 <hr>
 
-    <h3>Trustee Signature Record</h3>
+    
+    {% if minute.status in ["Executed", "Archived"] %}
+    <div class="certificate-box">
+      <h2>Execution Certificate</h2>
+      <p>This certifies that the following Trust Minute / Resolution has been executed and locked in the governance record.</p>
+
+      <p><strong>Minute ID:</strong> {{ minute.minute_id }}</p>
+      <p><strong>Trust ID:</strong> {{ minute.trust_id }}</p>
+      <p><strong>Executed At:</strong> {{ minute.executed_at or "Not recorded" }}</p>
+
+      <h3>Recorded Signatures</h3>
+
+      {% if minute.trustee_1_name %}
+        <div class="script-signature">{{ minute.trustee_1_name }}</div>
+        <p>Capacity: {{ minute.trustee_1_capacity or "Trustee" }}</p>
+        <p>Signed Date: {{ minute.trustee_1_signed_date or "No date recorded" }}</p>
+      {% endif %}
+
+      {% if minute.trustee_2_name %}
+        <div class="script-signature">{{ minute.trustee_2_name }}</div>
+        <p>Capacity: {{ minute.trustee_2_capacity or "Trustee" }}</p>
+        <p>Signed Date: {{ minute.trustee_2_signed_date or "No date recorded" }}</p>
+      {% endif %}
+
+      {% if minute.trustee_3_name %}
+        <div class="script-signature">{{ minute.trustee_3_name }}</div>
+        <p>Capacity: {{ minute.trustee_3_capacity or "Trustee" }}</p>
+        <p>Signed Date: {{ minute.trustee_3_signed_date or "No date recorded" }}</p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+<h3>Trustee Signature Record</h3>
 
 <hr>
 
@@ -83,17 +127,26 @@
   <label>Trustee 1 Name</label>
   <input type="text" name="trustee_1_name" value="{{ minute.trustee_1_name or '' }}">
 
+  <label>Trustee 1 Capacity</label>
+  <input type="text" name="trustee_1_capacity" value="{{ minute.trustee_1_capacity or 'Trustee' }}">
+
   <label>Trustee 1 Signed Date</label>
   <input type="date" name="trustee_1_signed_date" value="{{ minute.trustee_1_signed_date or '' }}">
 
   <label>Trustee 2 Name</label>
   <input type="text" name="trustee_2_name" value="{{ minute.trustee_2_name or '' }}">
 
+  <label>Trustee 2 Capacity</label>
+  <input type="text" name="trustee_2_capacity" value="{{ minute.trustee_2_capacity or 'Trustee' }}">
+
   <label>Trustee 2 Signed Date</label>
   <input type="date" name="trustee_2_signed_date" value="{{ minute.trustee_2_signed_date or '' }}">
 
   <label>Trustee 3 Name</label>
   <input type="text" name="trustee_3_name" value="{{ minute.trustee_3_name or '' }}">
+
+  <label>Trustee 3 Capacity</label>
+  <input type="text" name="trustee_3_capacity" value="{{ minute.trustee_3_capacity or 'Trustee' }}">
 
   <label>Trustee 3 Signed Date</label>
   <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">

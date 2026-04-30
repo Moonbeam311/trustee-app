@@ -142,6 +142,7 @@ from database.db import (
     get_trust_minute_by_id,
     ensure_trust_minutes_execution_columns,
     update_trust_minute_execution,
+    ensure_trust_minutes_capacity_columns,
 )
 from pathlib import Path
 from extensions import db as ext_db
@@ -1072,6 +1073,7 @@ ensure_user_tables()
 ensure_user_permission_override_tables()
 ensure_trust_minutes_tables()
 ensure_trust_minutes_execution_columns()
+ensure_trust_minutes_capacity_columns()
 ensure_firm_columns()
 
 with app.app_context():
@@ -2698,6 +2700,71 @@ def trust_minutes_new():
 
 
 
+
+
+@app.route("/minutes/<minute_id>/certificate.pdf")
+def trust_minute_certificate_pdf(minute_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    minute = get_trust_minute_by_id(minute_id)
+    if not minute:
+        return "Minute not found", 404
+
+    if minute["status"] not in ("Executed", "Archived"):
+        return "Certificate available only after execution.", 403
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("TRUST MINUTE EXECUTION CERTIFICATE", styles["Title"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Title:</b> {minute['title']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Status:</b> {minute['status']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Approved At:</b> {minute['approved_at'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Recorded Trustee Signatures", styles["Heading2"]))
+
+    for idx in (1, 2, 3):
+        name = minute[f"trustee_{idx}_name"]
+        signed_date = minute[f"trustee_{idx}_signed_date"]
+        capacity = minute[f"trustee_{idx}_capacity"] or "Trustee"
+        if name:
+            story.append(Spacer(1, 16))
+            story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", styles["Normal"]))
+            story.append(Spacer(1, 8))
+            story.append(Paragraph("______________________________", styles["Normal"]))
+            story.append(Spacer(1, 6))
+            story.append(Paragraph(f"Capacity: {capacity}", styles["Normal"]))
+            story.append(Paragraph(f"Signed Date: {signed_date or 'No date recorded'}", styles["Normal"]))
+
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("This certificate reflects the internal governance record of the Trust Minute and does not replace any required wet signature, notarization, or external filing where applicable.", styles["Italic"]))
+
+    doc.build(story)
+
+    buffer.seek(0)
+    response = make_response(buffer.read())
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f"attachment; filename={minute_id}_execution_certificate.pdf"
+
+    log_change(
+        "trust_minute",
+        minute_id,
+        "certificate_pdf_exported",
+        "Execution certificate PDF generated"
+    )
+
+    return response
+
 @app.route("/minutes/<minute_id>/execute", methods=["POST"])
 def trust_minute_execute(minute_id):
     gate = require_master_admin()
@@ -2714,10 +2781,13 @@ def trust_minute_execute(minute_id):
 
     data = {
         "trustee_1_name": request.form.get("trustee_1_name"),
+        "trustee_1_capacity": request.form.get("trustee_1_capacity"),
         "trustee_1_signed_date": request.form.get("trustee_1_signed_date"),
         "trustee_2_name": request.form.get("trustee_2_name"),
+        "trustee_2_capacity": request.form.get("trustee_2_capacity"),
         "trustee_2_signed_date": request.form.get("trustee_2_signed_date"),
         "trustee_3_name": request.form.get("trustee_3_name"),
+        "trustee_3_capacity": request.form.get("trustee_3_capacity"),
         "trustee_3_signed_date": request.form.get("trustee_3_signed_date"),
         "approved_at": minute["approved_at"],
         "executed_at": minute["executed_at"],

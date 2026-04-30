@@ -2942,10 +2942,13 @@ def update_trust_minute_execution(minute_id, data):
         UPDATE trust_minutes
         SET
             trustee_1_name = ?,
+            trustee_1_capacity = ?,
             trustee_1_signed_date = ?,
             trustee_2_name = ?,
+            trustee_2_capacity = ?,
             trustee_2_signed_date = ?,
             trustee_3_name = ?,
+            trustee_3_capacity = ?,
             trustee_3_signed_date = ?,
             approved_at = ?,
             executed_at = ?,
@@ -2955,10 +2958,13 @@ def update_trust_minute_execution(minute_id, data):
         WHERE minute_id = ?
     """, (
         data.get("trustee_1_name"),
+        data.get("trustee_1_capacity"),
         data.get("trustee_1_signed_date"),
         data.get("trustee_2_name"),
+        data.get("trustee_2_capacity"),
         data.get("trustee_2_signed_date"),
         data.get("trustee_3_name"),
+        data.get("trustee_3_capacity"),
         data.get("trustee_3_signed_date"),
         data.get("approved_at"),
         data.get("executed_at"),
@@ -2979,10 +2985,13 @@ def update_trust_minute_execution(minute_id, data):
         UPDATE trust_minutes
         SET
             trustee_1_name = ?,
+            trustee_1_capacity = ?,
             trustee_1_signed_date = ?,
             trustee_2_name = ?,
+            trustee_2_capacity = ?,
             trustee_2_signed_date = ?,
             trustee_3_name = ?,
+            trustee_3_capacity = ?,
             trustee_3_signed_date = ?,
             approved_at = ?,
             executed_at = ?,
@@ -2992,10 +3001,13 @@ def update_trust_minute_execution(minute_id, data):
         WHERE minute_id = ?
     """, (
         data.get("trustee_1_name"),
+        data.get("trustee_1_capacity"),
         data.get("trustee_1_signed_date"),
         data.get("trustee_2_name"),
+        data.get("trustee_2_capacity"),
         data.get("trustee_2_signed_date"),
         data.get("trustee_3_name"),
+        data.get("trustee_3_capacity"),
         data.get("trustee_3_signed_date"),
         data.get("approved_at"),
         data.get("executed_at"),
@@ -3004,6 +3016,26 @@ def update_trust_minute_execution(minute_id, data):
         int(data.get("locked", 0)),
         minute_id,
     ))
+
+    conn.commit()
+    conn.close()
+
+def ensure_trust_minutes_capacity_columns():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("PRAGMA table_info(trust_minutes)")
+    existing = {row["name"] for row in cur.fetchall()}
+
+    columns = {
+        "trustee_1_capacity": "TEXT",
+        "trustee_2_capacity": "TEXT",
+        "trustee_3_capacity": "TEXT"
+    }
+
+    for column_name, column_type in columns.items():
+        if column_name not in existing:
+            cur.execute(f"ALTER TABLE trust_minutes ADD COLUMN {column_name} {column_type}")
 
     conn.commit()
     conn.close()
