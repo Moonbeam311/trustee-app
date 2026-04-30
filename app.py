@@ -1,6 +1,7 @@
 import json
 import zipfile
 import os
+import base64
 import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
@@ -175,7 +176,7 @@ from io import BytesIO
 
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 
 app = Flask(__name__)
 STRICT_PACKET_EXPORT = True
@@ -2737,9 +2738,21 @@ def trust_minute_certificate_pdf(minute_id):
         name = minute[f"trustee_{idx}_name"]
         signed_date = minute[f"trustee_{idx}_signed_date"]
         capacity = minute[f"trustee_{idx}_capacity"] or "Trustee"
+        signature_image = minute[f"trustee_{idx}_signature_image"]
+
         if name:
             story.append(Spacer(1, 16))
-            story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", styles["Normal"]))
+
+            if signature_image and signature_image.startswith("data:image/png;base64,"):
+                try:
+                    image_data = signature_image.split(",", 1)[1]
+                    image_bytes = BytesIO(base64.b64decode(image_data))
+                    story.append(Image(image_bytes, width=240, height=70))
+                except Exception:
+                    story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", styles["Normal"]))
+            else:
+                story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", styles["Normal"]))
+
             story.append(Spacer(1, 8))
             story.append(Paragraph("______________________________", styles["Normal"]))
             story.append(Spacer(1, 6))
