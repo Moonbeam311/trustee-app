@@ -41,7 +41,7 @@
         <tbody>
           {% for minute in minutes %}
             <tr>
-              <td>{{ minute.minute_id }}</td>
+              <td><a href="{{ url_for('trust_minute_detail', minute_id=minute.minute_id) }}">{{ minute.minute_id }}</a></td>
               <td>{{ minute.trust_id }}</td>
               <td>{{ minute.meeting_date }}</td>
               <td>{{ minute.meeting_type }}</td>
