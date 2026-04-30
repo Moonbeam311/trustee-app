@@ -12,6 +12,11 @@
     .script-signature { font-family: "Brush Script MT", "Segoe Script", cursive; font-size:28px; margin-top:8px; }
     .signature-line { border-bottom:1px solid #24292f; min-height:34px; width:320px; margin-top:8px; }
     .certificate-box { border:2px solid #24292f; padding:22px; margin-top:24px; background:#fff; }
+      .execution-readiness-panel { border:1px solid #d0d7de; border-radius:8px; padding:14px; margin:16px 0; background:#f6f8fa; }
+      .execution-readiness-panel h3 { margin-top:0; }
+      .readiness-complete { color:#116329; font-weight:bold; }
+      .readiness-missing { color:#cf222e; font-weight:bold; }
+      .readiness-note { color:#57606a; font-size:14px; }
 
     @media print {
       body { background:white; padding:0; }
@@ -104,6 +109,54 @@
     <p><strong>Trustee 1:</strong> {{ minute.trustee_1_name or "Not entered" }}{% if minute.trustee_1_capacity %}, {{ minute.trustee_1_capacity }}{% endif %} — {{ minute.trustee_1_signed_date or "No date" }}</p>
     <p><strong>Trustee 2:</strong> {{ minute.trustee_2_name or "Not entered" }}{% if minute.trustee_2_capacity %}, {{ minute.trustee_2_capacity }}{% endif %} — {{ minute.trustee_2_signed_date or "No date" }}</p>
     <p><strong>Trustee 3:</strong> {{ minute.trustee_3_name or "Not entered" }}{% if minute.trustee_3_capacity %}, {{ minute.trustee_3_capacity }}{% endif %} — {{ minute.trustee_3_signed_date or "No date" }}</p>
+
+    <div class="execution-readiness-panel">
+      <h3>Execution Readiness Panel</h3>
+      <p class="readiness-note">Execution requires at least one complete trustee package: name, capacity, signed date, and drawn signature.</p>
+
+      {% set readiness = namespace(complete_count=0) %}
+
+      {% for idx in [1, 2, 3] %}
+        {% set name = minute["trustee_" ~ idx ~ "_name"] %}
+        {% set capacity = minute["trustee_" ~ idx ~ "_capacity"] %}
+        {% set signed_date = minute["trustee_" ~ idx ~ "_signed_date"] %}
+        {% set signature_image = minute["trustee_" ~ idx ~ "_signature_image"] %}
+        {% set has_signature = signature_image and signature_image.startswith("data:image/png;base64,") %}
+        {% set has_any = name or capacity or signed_date or has_signature %}
+        {% set is_complete = name and capacity and signed_date and has_signature %}
+
+        {% if is_complete %}
+          {% set readiness.complete_count = readiness.complete_count + 1 %}
+        {% endif %}
+
+        <p>
+          <strong>Trustee {{ idx }}:</strong>
+          {% if is_complete %}
+            <span class="readiness-complete">READY</span>
+          {% elif has_any %}
+            <span class="readiness-missing">INCOMPLETE</span>
+            —
+            Missing:
+            {% if not name %} name{% endif %}
+            {% if not capacity %} capacity{% endif %}
+            {% if not signed_date %} signed date{% endif %}
+            {% if not has_signature %} drawn signature{% endif %}
+          {% else %}
+            <span class="readiness-note">No signature record started</span>
+          {% endif %}
+        </p>
+      {% endfor %}
+
+      <p>
+        <strong>Overall:</strong>
+        {% if readiness.complete_count > 0 %}
+          <span class="readiness-complete">READY TO EXECUTE</span>
+        {% else %}
+          <span class="readiness-missing">NOT READY TO EXECUTE</span>
+        {% endif %}
+      </p>
+    </div>
+
 
 <hr>
 
