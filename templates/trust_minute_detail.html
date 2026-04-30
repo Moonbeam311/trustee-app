@@ -18,7 +18,36 @@
       .no-print { display:none; }
       .box { border:none; }
     }
-  </style>
+  
+.signature-pad-block {
+  margin: 16px 0;
+}
+
+.signature-pad-canvas {
+  display: block;
+  border: 1px solid #333;
+  background: #fff;
+  margin: 8px 0;
+  max-width: 100%;
+  touch-action: none;
+}
+
+
+.drawn-signature-image {
+  display: block;
+  max-width: 320px;
+  max-height: 90px;
+  border-bottom: 1px solid #333;
+  margin: 10px 0 6px 0;
+  background: #fff;
+}
+
+.signature-clear-button {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+</style>
 </head>
 <body>
 
@@ -91,19 +120,31 @@
       <h3>Recorded Signatures</h3>
 
       {% if minute.trustee_1_name %}
-        <div class="script-signature">{{ minute.trustee_1_name }}</div>
+        {% if minute.trustee_1_signature_image %}
+          <img id="trustee_1_signature_image_display" src="{{ minute.trustee_1_signature_image }}" alt="Trustee 1 drawn signature" class="drawn-signature-image">
+          {% else %}
+          <div class="script-signature">{{ minute.trustee_1_name }}</div>
+          {% endif %}
         <p>Capacity: {{ minute.trustee_1_capacity or "Trustee" }}</p>
         <p>Signed Date: {{ minute.trustee_1_signed_date or "No date recorded" }}</p>
       {% endif %}
 
       {% if minute.trustee_2_name %}
-        <div class="script-signature">{{ minute.trustee_2_name }}</div>
+        {% if minute.trustee_2_signature_image %}
+          <img id="trustee_2_signature_image_display" src="{{ minute.trustee_2_signature_image }}" alt="Trustee 2 drawn signature" class="drawn-signature-image">
+          {% else %}
+          <div class="script-signature">{{ minute.trustee_2_name }}</div>
+          {% endif %}
         <p>Capacity: {{ minute.trustee_2_capacity or "Trustee" }}</p>
         <p>Signed Date: {{ minute.trustee_2_signed_date or "No date recorded" }}</p>
       {% endif %}
 
       {% if minute.trustee_3_name %}
-        <div class="script-signature">{{ minute.trustee_3_name }}</div>
+        {% if minute.trustee_3_signature_image %}
+          <img id="trustee_3_signature_image_display" src="{{ minute.trustee_3_signature_image }}" alt="Trustee 3 drawn signature" class="drawn-signature-image">
+          {% else %}
+          <div class="script-signature">{{ minute.trustee_3_name }}</div>
+          {% endif %}
         <p>Capacity: {{ minute.trustee_3_capacity or "Trustee" }}</p>
         <p>Signed Date: {{ minute.trustee_3_signed_date or "No date recorded" }}</p>
       {% endif %}
@@ -150,6 +191,29 @@
 
   <label>Trustee 3 Signed Date</label>
   <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">
+  <input type="hidden" name="trustee_1_signature_image" id="trustee_1_signature_image">
+  <input type="hidden" name="trustee_2_signature_image" id="trustee_2_signature_image">
+  <input type="hidden" name="trustee_3_signature_image" id="trustee_3_signature_image">
+
+  <h3>Drawn Signature Capture</h3>
+
+  <div class="signature-pad-block">
+    <label>Trustee 1 Drawn Signature</label>
+    <canvas class="signature-pad-canvas" id="trustee_1_signature_canvas" width="500" height="140"></canvas>
+    <button type="button" class="signature-clear-button" data-target="trustee_1_signature_canvas">Clear Trustee 1 Signature</button>
+  </div>
+
+  <div class="signature-pad-block">
+    <label>Trustee 2 Drawn Signature</label>
+    <canvas class="signature-pad-canvas" id="trustee_2_signature_canvas" width="500" height="140"></canvas>
+    <button type="button" class="signature-clear-button" data-target="trustee_2_signature_canvas">Clear Trustee 2 Signature</button>
+  </div>
+
+  <div class="signature-pad-block">
+    <label>Trustee 3 Drawn Signature</label>
+    <canvas class="signature-pad-canvas" id="trustee_3_signature_canvas" width="500" height="140"></canvas>
+    <button type="button" class="signature-clear-button" data-target="trustee_3_signature_canvas">Clear Trustee 3 Signature</button>
+  </div>
 
   <hr>
 
@@ -166,6 +230,90 @@
     <p>Trustee: __________________________ Date: _______________</p>
     <p>Trustee: __________________________ Date: _______________</p>
   </div>
+
+
+<script>
+function initializeSignaturePad(canvasId, inputId) {
+  const canvas = document.getElementById(canvasId);
+  const input = document.getElementById(inputId);
+
+  if (!canvas || !input) {
+    return;
+  }
+
+  const context = canvas.getContext("2d");
+  let isDrawing = false;
+
+  context.lineWidth = 2;
+  context.lineCap = "round";
+
+  function getPosition(event) {
+    const rect = canvas.getBoundingClientRect();
+    const source = event.touches ? event.touches[0] : event;
+    return {
+      x: source.clientX - rect.left,
+      y: source.clientY - rect.top
+    };
+  }
+
+  function saveSignature() {
+    input.value = canvas.toDataURL("image/png");
+  }
+
+  function startDrawing(event) {
+    event.preventDefault();
+    isDrawing = true;
+    const pos = getPosition(event);
+    context.beginPath();
+    context.moveTo(pos.x, pos.y);
+  }
+
+  function draw(event) {
+    if (!isDrawing) {
+      return;
+    }
+
+    event.preventDefault();
+    const pos = getPosition(event);
+    context.lineTo(pos.x, pos.y);
+    context.stroke();
+    saveSignature();
+  }
+
+  function stopDrawing(event) {
+    if (!isDrawing) {
+      return;
+    }
+
+    event.preventDefault();
+    isDrawing = false;
+    saveSignature();
+  }
+
+  canvas.addEventListener("mousedown", startDrawing);
+  canvas.addEventListener("mousemove", draw);
+  canvas.addEventListener("mouseup", stopDrawing);
+  canvas.addEventListener("mouseleave", stopDrawing);
+
+  canvas.addEventListener("touchstart", startDrawing);
+  canvas.addEventListener("touchmove", draw);
+  canvas.addEventListener("touchend", stopDrawing);
+
+  const clearButton = document.querySelector(`[data-target="${canvasId}"]`);
+  if (clearButton) {
+    clearButton.addEventListener("click", function () {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      input.value = "";
+    });
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  initializeSignaturePad("trustee_1_signature_canvas", "trustee_1_signature_image");
+  initializeSignaturePad("trustee_2_signature_canvas", "trustee_2_signature_image");
+  initializeSignaturePad("trustee_3_signature_canvas", "trustee_3_signature_image");
+});
+</script>
 
 </body>
 </html>

@@ -2944,12 +2944,15 @@ def update_trust_minute_execution(minute_id, data):
             trustee_1_name = ?,
             trustee_1_capacity = ?,
             trustee_1_signed_date = ?,
+            trustee_1_signature_image = ?,
             trustee_2_name = ?,
             trustee_2_capacity = ?,
             trustee_2_signed_date = ?,
+            trustee_2_signature_image = ?,
             trustee_3_name = ?,
             trustee_3_capacity = ?,
             trustee_3_signed_date = ?,
+            trustee_3_signature_image = ?,
             approved_at = ?,
             executed_at = ?,
             archived_at = ?,
@@ -2960,55 +2963,15 @@ def update_trust_minute_execution(minute_id, data):
         data.get("trustee_1_name"),
         data.get("trustee_1_capacity"),
         data.get("trustee_1_signed_date"),
+        data.get("trustee_1_signature_image"),
         data.get("trustee_2_name"),
         data.get("trustee_2_capacity"),
         data.get("trustee_2_signed_date"),
+        data.get("trustee_2_signature_image"),
         data.get("trustee_3_name"),
         data.get("trustee_3_capacity"),
         data.get("trustee_3_signed_date"),
-        data.get("approved_at"),
-        data.get("executed_at"),
-        data.get("archived_at"),
-        data.get("status"),
-        int(data.get("locked", 0)),
-        minute_id,
-    ))
-
-    conn.commit()
-    conn.close()
-
-def update_trust_minute_execution(minute_id, data):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    cur.execute("""
-        UPDATE trust_minutes
-        SET
-            trustee_1_name = ?,
-            trustee_1_capacity = ?,
-            trustee_1_signed_date = ?,
-            trustee_2_name = ?,
-            trustee_2_capacity = ?,
-            trustee_2_signed_date = ?,
-            trustee_3_name = ?,
-            trustee_3_capacity = ?,
-            trustee_3_signed_date = ?,
-            approved_at = ?,
-            executed_at = ?,
-            archived_at = ?,
-            status = ?,
-            locked = ?
-        WHERE minute_id = ?
-    """, (
-        data.get("trustee_1_name"),
-        data.get("trustee_1_capacity"),
-        data.get("trustee_1_signed_date"),
-        data.get("trustee_2_name"),
-        data.get("trustee_2_capacity"),
-        data.get("trustee_2_signed_date"),
-        data.get("trustee_3_name"),
-        data.get("trustee_3_capacity"),
-        data.get("trustee_3_signed_date"),
+        data.get("trustee_3_signature_image"),
         data.get("approved_at"),
         data.get("executed_at"),
         data.get("archived_at"),
@@ -3030,7 +2993,10 @@ def ensure_trust_minutes_capacity_columns():
     columns = {
         "trustee_1_capacity": "TEXT",
         "trustee_2_capacity": "TEXT",
-        "trustee_3_capacity": "TEXT"
+        "trustee_3_capacity": "TEXT",
+        "trustee_1_signature_image": "TEXT",
+        "trustee_2_signature_image": "TEXT",
+        "trustee_3_signature_image": "TEXT"
     }
 
     for column_name, column_type in columns.items():
