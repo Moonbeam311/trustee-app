@@ -2758,6 +2758,9 @@ def trust_minute_certificate_pdf(minute_id):
     story.append(Paragraph("TRUST MINUTE EXECUTION CERTIFICATE", styles["Title"]))
     story.append(Spacer(1, 18))
 
+    certificate_id = minute["certificate_id"] if "certificate_id" in minute.keys() and minute["certificate_id"] else f"CERT-{minute_id}"
+
+    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", styles["Normal"]))
     story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", styles["Normal"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", styles["Normal"]))
     story.append(Paragraph(f"<b>Title:</b> {minute['title']}", styles["Normal"]))
@@ -2825,7 +2828,9 @@ def validate_trust_minute_execution_requirements(data):
 
         has_signature_image = signature_image.startswith("data:image/png;base64,")
 
-        if name or capacity or signed_date or has_signature_image:
+        signer_started = bool(name or signed_date or has_signature_image)
+
+        if signer_started:
             missing = []
 
             if not name:
@@ -2903,6 +2908,7 @@ def trust_minute_execute(minute_id):
         "archived_at": minute["archived_at"],
         "status": minute["status"],
         "locked": minute["locked"],
+        "certificate_id": minute["certificate_id"] if "certificate_id" in minute.keys() else None,
     }
 
     if action == "approve":
@@ -2923,6 +2929,8 @@ def trust_minute_execute(minute_id):
         data["executed_at"] = now
         data["status"] = "Executed"
         data["locked"] = 1
+        if not data.get("certificate_id"):
+            data["certificate_id"] = f"CERT-{minute_id}"
 
     elif action == "archive":
         data["archived_at"] = now

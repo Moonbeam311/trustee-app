@@ -2953,6 +2953,7 @@ def update_trust_minute_execution(minute_id, data):
             trustee_3_capacity = ?,
             trustee_3_signed_date = ?,
             trustee_3_signature_image = ?,
+            certificate_id = ?,
             approved_at = ?,
             executed_at = ?,
             archived_at = ?,
@@ -2972,6 +2973,7 @@ def update_trust_minute_execution(minute_id, data):
         data.get("trustee_3_capacity"),
         data.get("trustee_3_signed_date"),
         data.get("trustee_3_signature_image"),
+        data.get("certificate_id"),
         data.get("approved_at"),
         data.get("executed_at"),
         data.get("archived_at"),
@@ -2996,7 +2998,8 @@ def ensure_trust_minutes_capacity_columns():
         "trustee_3_capacity": "TEXT",
         "trustee_1_signature_image": "TEXT",
         "trustee_2_signature_image": "TEXT",
-        "trustee_3_signature_image": "TEXT"
+        "trustee_3_signature_image": "TEXT",
+        "certificate_id": "TEXT"
     }
 
     for column_name, column_type in columns.items():

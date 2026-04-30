@@ -183,6 +183,7 @@
       <h2>Execution Certificate</h2>
       <p>This certifies that the following Trust Minute / Resolution has been executed and locked in the governance record.</p>
 
+      <p><strong>Certificate ID:</strong> {{ minute.certificate_id or ("CERT-" ~ minute.minute_id) }}</p>
       <p><strong>Minute ID:</strong> {{ minute.minute_id }}</p>
       <p><strong>Trust ID:</strong> {{ minute.trust_id }}</p>
       <p><strong>Executed At:</strong> {{ minute.executed_at or "Not recorded" }}</p>
@@ -248,7 +249,7 @@
   <input type="text" name="trustee_2_name" value="{{ minute.trustee_2_name or '' }}">
 
   <label>Signer 2 Role / Capacity</label>
-  <input type="text" name="trustee_2_capacity" value="{{ minute.trustee_2_capacity or 'Trustee' }}">
+  <input type="text" name="trustee_2_capacity" value="{{ minute.trustee_2_capacity or 'Witness' }}">
 
   <label>Signer 2 Signed Date</label>
   <input type="date" name="trustee_2_signed_date" value="{{ minute.trustee_2_signed_date or '' }}">
@@ -257,7 +258,7 @@
   <input type="text" name="trustee_3_name" value="{{ minute.trustee_3_name or '' }}">
 
   <label>Signer 3 Role / Capacity</label>
-  <input type="text" name="trustee_3_capacity" value="{{ minute.trustee_3_capacity or 'Trustee' }}">
+  <input type="text" name="trustee_3_capacity" value="{{ minute.trustee_3_capacity or '' }}">
 
   <label>Signer 3 Signed Date</label>
   <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">
