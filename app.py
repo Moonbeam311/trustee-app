@@ -2691,6 +2691,24 @@ def trust_minutes_new():
         minute_id=get_next_minute_id()
     )
 
+
+
+@app.route("/minutes/<minute_id>")
+def trust_minute_detail(minute_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    minute = get_trust_minute_by_id(minute_id)
+
+    if not minute:
+        return "Minute not found", 404
+
+    return render_template(
+        "trust_minute_detail.html",
+        minute=minute
+    )
+
 @app.route("/minutes")
 def trust_minutes_dashboard():
     gate = require_master_admin()
@@ -6100,6 +6118,36 @@ def transfer_review(transfer_id):
             mark_core_support_docs_included(transfer)
             ext_db.session.commit()
             flash(f"Transfer {transfer.transfer_id} finalized.", "success")
+
+            # === AUTO TRUST MINUTE FROM TRANSFER ===
+            try:
+                minute_id = get_next_minute_id()
+
+                minute_data = {
+                    "minute_id": minute_id,
+                    "trust_id": transfer.trust_id,
+                    "meeting_date": None,
+                    "meeting_type": "Resolution Without Meeting",
+                    "title": f"Transfer Finalization — {transfer.transfer_id}",
+                    "purpose": f"To record the completion and authorization of transfer {transfer.transfer_id}.",
+                    "resolutions": build_minutes_text(transfer),
+                    "action_items": "File records, update schedules, and confirm asset control.",
+                    "status": "Draft",
+                    "created_by": session.get("username") or "system",
+                }
+
+                create_trust_minute(minute_data)
+
+                log_change(
+                    "trust_minute",
+                    minute_id,
+                    "auto_generated_from_transfer",
+                    f"Transfer={transfer.transfer_id}"
+                )
+
+            except Exception as e:
+                print("⚠️ Auto-minute generation failed:", e)
+
             return redirect(url_for("trust_execution_dashboard", trust_id=transfer.trust_id))
         else:
             flash(
