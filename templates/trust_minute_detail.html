@@ -105,10 +105,10 @@
     <p><strong>Archived At:</strong> {{ minute.archived_at or "Not archived" }}</p>
     <p><strong>Locked:</strong> {% if minute.locked %}Yes{% else %}No{% endif %}</p>
 
-    <h3>Recorded Trustee Signatures</h3>
-    <p><strong>Trustee 1:</strong> {{ minute.trustee_1_name or "Not entered" }}{% if minute.trustee_1_capacity %}, {{ minute.trustee_1_capacity }}{% endif %} — {{ minute.trustee_1_signed_date or "No date" }}</p>
-    <p><strong>Trustee 2:</strong> {{ minute.trustee_2_name or "Not entered" }}{% if minute.trustee_2_capacity %}, {{ minute.trustee_2_capacity }}{% endif %} — {{ minute.trustee_2_signed_date or "No date" }}</p>
-    <p><strong>Trustee 3:</strong> {{ minute.trustee_3_name or "Not entered" }}{% if minute.trustee_3_capacity %}, {{ minute.trustee_3_capacity }}{% endif %} — {{ minute.trustee_3_signed_date or "No date" }}</p>
+    <h3>Recorded Signer Records</h3>
+    <p><strong>Signer 1:</strong> {{ minute.trustee_1_name or "Not entered" }}{% if minute.trustee_1_capacity %}, {{ minute.trustee_1_capacity }}{% endif %} — {{ minute.trustee_1_signed_date or "No date" }}</p>
+    <p><strong>Signer 2:</strong> {{ minute.trustee_2_name or "Not entered" }}{% if minute.trustee_2_capacity %}, {{ minute.trustee_2_capacity }}{% endif %} — {{ minute.trustee_2_signed_date or "No date" }}</p>
+    <p><strong>Signer 3:</strong> {{ minute.trustee_3_name or "Not entered" }}{% if minute.trustee_3_capacity %}, {{ minute.trustee_3_capacity }}{% endif %} — {{ minute.trustee_3_signed_date or "No date" }}</p>
 
     <div class="execution-readiness-panel">
       <h3>Execution Readiness Panel</h3>
@@ -175,7 +175,7 @@
 
       {% if minute.trustee_1_name %}
         {% if minute.trustee_1_signature_image %}
-          <img id="trustee_1_signature_image_display" src="{{ minute.trustee_1_signature_image }}" alt="Trustee 1 drawn signature" class="drawn-signature-image">
+          <img id="trustee_1_signature_image_display" src="{{ minute.trustee_1_signature_image }}" alt="Signer 1 drawn signature" class="drawn-signature-image">
           {% else %}
           <div class="script-signature">{{ minute.trustee_1_name }}</div>
           {% endif %}
@@ -185,7 +185,7 @@
 
       {% if minute.trustee_2_name %}
         {% if minute.trustee_2_signature_image %}
-          <img id="trustee_2_signature_image_display" src="{{ minute.trustee_2_signature_image }}" alt="Trustee 2 drawn signature" class="drawn-signature-image">
+          <img id="trustee_2_signature_image_display" src="{{ minute.trustee_2_signature_image }}" alt="Signer 2 drawn signature" class="drawn-signature-image">
           {% else %}
           <div class="script-signature">{{ minute.trustee_2_name }}</div>
           {% endif %}
@@ -195,7 +195,7 @@
 
       {% if minute.trustee_3_name %}
         {% if minute.trustee_3_signature_image %}
-          <img id="trustee_3_signature_image_display" src="{{ minute.trustee_3_signature_image }}" alt="Trustee 3 drawn signature" class="drawn-signature-image">
+          <img id="trustee_3_signature_image_display" src="{{ minute.trustee_3_signature_image }}" alt="Signer 3 drawn signature" class="drawn-signature-image">
           {% else %}
           <div class="script-signature">{{ minute.trustee_3_name }}</div>
           {% endif %}
@@ -205,7 +205,7 @@
     </div>
     {% endif %}
 
-<h3>Trustee Signature Record</h3>
+<h3>Signer Record</h3>
 
 <hr>
 
@@ -217,33 +217,33 @@
 <form method="POST" action="{{ url_for('trust_minute_execute', minute_id=minute.minute_id) }}">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-  <h3>Trustee Signatures</h3>
+  <h3>Signer Records</h3>
 
-  <label>Trustee 1 Name</label>
+  <label>Signer 1 Name</label>
   <input type="text" name="trustee_1_name" value="{{ minute.trustee_1_name or '' }}">
 
-  <label>Trustee 1 Capacity</label>
+  <label>Signer 1 Role / Capacity</label>
   <input type="text" name="trustee_1_capacity" value="{{ minute.trustee_1_capacity or 'Trustee' }}">
 
-  <label>Trustee 1 Signed Date</label>
+  <label>Signer 1 Signed Date</label>
   <input type="date" name="trustee_1_signed_date" value="{{ minute.trustee_1_signed_date or '' }}">
 
-  <label>Trustee 2 Name</label>
+  <label>Signer 2 Name</label>
   <input type="text" name="trustee_2_name" value="{{ minute.trustee_2_name or '' }}">
 
-  <label>Trustee 2 Capacity</label>
+  <label>Signer 2 Role / Capacity</label>
   <input type="text" name="trustee_2_capacity" value="{{ minute.trustee_2_capacity or 'Trustee' }}">
 
-  <label>Trustee 2 Signed Date</label>
+  <label>Signer 2 Signed Date</label>
   <input type="date" name="trustee_2_signed_date" value="{{ minute.trustee_2_signed_date or '' }}">
 
-  <label>Trustee 3 Name</label>
+  <label>Signer 3 Name</label>
   <input type="text" name="trustee_3_name" value="{{ minute.trustee_3_name or '' }}">
 
-  <label>Trustee 3 Capacity</label>
+  <label>Signer 3 Role / Capacity</label>
   <input type="text" name="trustee_3_capacity" value="{{ minute.trustee_3_capacity or 'Trustee' }}">
 
-  <label>Trustee 3 Signed Date</label>
+  <label>Signer 3 Signed Date</label>
   <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">
   <input type="hidden" name="trustee_1_signature_image" id="trustee_1_signature_image">
   <input type="hidden" name="trustee_2_signature_image" id="trustee_2_signature_image">
@@ -252,21 +252,21 @@
   <h3>Drawn Signature Capture</h3>
 
   <div class="signature-pad-block">
-    <label>Trustee 1 Drawn Signature</label>
+    <label>Signer 1 Drawn Signature</label>
     <canvas class="signature-pad-canvas" id="trustee_1_signature_canvas" width="500" height="140"></canvas>
-    <button type="button" class="signature-clear-button" data-target="trustee_1_signature_canvas">Clear Trustee 1 Signature</button>
+    <button type="button" class="signature-clear-button" data-target="trustee_1_signature_canvas">Clear Signer 1 Signature</button>
   </div>
 
   <div class="signature-pad-block">
-    <label>Trustee 2 Drawn Signature</label>
+    <label>Signer 2 Drawn Signature</label>
     <canvas class="signature-pad-canvas" id="trustee_2_signature_canvas" width="500" height="140"></canvas>
-    <button type="button" class="signature-clear-button" data-target="trustee_2_signature_canvas">Clear Trustee 2 Signature</button>
+    <button type="button" class="signature-clear-button" data-target="trustee_2_signature_canvas">Clear Signer 2 Signature</button>
   </div>
 
   <div class="signature-pad-block">
-    <label>Trustee 3 Drawn Signature</label>
+    <label>Signer 3 Drawn Signature</label>
     <canvas class="signature-pad-canvas" id="trustee_3_signature_canvas" width="500" height="140"></canvas>
-    <button type="button" class="signature-clear-button" data-target="trustee_3_signature_canvas">Clear Trustee 3 Signature</button>
+    <button type="button" class="signature-clear-button" data-target="trustee_3_signature_canvas">Clear Signer 3 Signature</button>
   </div>
 
   <hr>
@@ -280,9 +280,9 @@
 </form>
 {% endif %}
 
-    <p>Trustee: __________________________ Date: _______________</p>
-    <p>Trustee: __________________________ Date: _______________</p>
-    <p>Trustee: __________________________ Date: _______________</p>
+    <p>Signer: __________________________ Role/Capacity: __________________ Date: _______________</p>
+    <p>Signer: __________________________ Role/Capacity: __________________ Date: _______________</p>
+    <p>Signer: __________________________ Role/Capacity: __________________ Date: _______________</p>
   </div>
 
 
