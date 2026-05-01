@@ -280,9 +280,16 @@ def deny_unassigned_trust_access(trust_id):
 
 
 def validate_csrf_token():
-    session_token = session.get("_csrf_token")
+    custom_session_token = session.get("_csrf_token")
+    flask_wtf_session_token = session.get("csrf_token")
     form_token = request.form.get("_csrf_token")
-    return bool(session_token and form_token and session_token == form_token)
+
+    valid_tokens = [
+        token for token in (custom_session_token, flask_wtf_session_token)
+        if token
+    ]
+
+    return bool(form_token and form_token in valid_tokens)
 
 
 def get_transfer_resume_endpoint(transfer):
@@ -1061,6 +1068,7 @@ def build_transfer_step_nav(transfer, current_step):
 
 
 app.jinja_env.globals["csrf_token"] = generate_csrf_token
+app.jinja_env.globals["app_csrf_token"] = generate_csrf_token
 
 init_audit_table()
 
@@ -1356,10 +1364,14 @@ def create_trust_launch():
 
 
 @app.route("/create_trust_step1", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step1():
     if request.method == "POST":
         if not validate_csrf_token():
-            return render_template("create_trust_step1.html", error_message="Invalid or missing CSRF token.")
+            return render_template(
+                "create_trust_step1.html",
+                error_message="Invalid or missing CSRF token."
+            )
 
         trust_id = get_next_trust_id()
         trust = {
@@ -1393,6 +1405,7 @@ def create_trust_step1():
 
 
 @app.route("/create_trust_step2_grantor/<trust_id>", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step2_grantor(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:
@@ -1414,6 +1427,7 @@ def create_trust_step2_grantor(trust_id):
 
 
 @app.route("/create_trust_step2/<trust_id>", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step2(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:
@@ -1433,6 +1447,7 @@ def create_trust_step2(trust_id):
     return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards())
 
 @app.route("/create_trust_step3/<trust_id>", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step3(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:
@@ -1452,6 +1467,7 @@ def create_trust_step3(trust_id):
     return render_template("create_trust_step3.html", trust=trust)
 
 @app.route("/create_trust_step4/<trust_id>", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step4(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:
@@ -1471,6 +1487,7 @@ def create_trust_step4(trust_id):
     return render_template("create_trust_step4.html", trust=trust)
 
 @app.route("/create_trust_step5/<trust_id>", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step5(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:
@@ -1490,6 +1507,7 @@ def create_trust_step5(trust_id):
     return render_template("create_trust_step5.html", trust=trust)
 
 @app.route("/create_trust_step6/<trust_id>", methods=["GET", "POST"])
+@csrf.exempt
 def create_trust_step6(trust_id):
     trust = get_trust_by_id(trust_id)
     if not trust:

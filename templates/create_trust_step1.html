@@ -6,6 +6,12 @@
 
 <h2>Create Trust Wizard — Step 1 of 8: Trust Identity</h2>
 
+{% if error_message %}
+<div class="alert-error" style="margin-bottom:15px; padding:12px; background:#fff1f2; border:1px solid #fecdd3; border-radius:6px; color:#991b1b;">
+    <strong>Action blocked:</strong> {{ error_message }}
+</div>
+{% endif %}
+
 <div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What is this?</strong><br>
     Use this step to create the trust record and establish its governing identity. This is the foundation the rest of the wizard will build on.
@@ -17,7 +23,7 @@
 </div>
 
 <form method="POST">
-  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="_csrf_token" value="{{ app_csrf_token() }}">
 
 
     <label>Trust Name</label>

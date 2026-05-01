@@ -19,7 +19,7 @@
 <div style="margin-bottom:15px; padding:12px; background:#eef7ff; border-radius:6px; border:1px solid #cfe3ff;"><strong>How this fits the sequence</strong><br>Step 1 created the trust record itself. Step 2 now defines the trust’s structure, purpose, accounting method, and operating mode.</div>
 
 <form method="POST">
-  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="_csrf_token" value="{{ app_csrf_token() }}">
 
     <label>Trust Type</label>
     <select name="trust_type" required>

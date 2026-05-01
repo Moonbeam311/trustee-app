@@ -17,7 +17,7 @@
 </div>
 
 <form method="POST">
-  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="_csrf_token" value="{{ app_csrf_token() }}">
 
     <label>Grantor Name</label>
     <input name="grantor_name" value="{{ trust['grantor_name'] or '' }}" required>
