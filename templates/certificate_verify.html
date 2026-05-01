@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Certificate Verification</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f6f8fa; padding:30px; color:#24292f; }
+    .box { background:white; padding:20px; border-radius:8px; border:1px solid #d0d7de; margin-bottom:20px; }
+    table { width:100%; border-collapse:collapse; background:white; }
+    th, td { border:1px solid #d0d7de; padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f1f3f5; }
+    a.button { display:inline-block; padding:8px 12px; border:1px solid #d0d7de; border-radius:6px; text-decoration:none; background:#fff; color:#24292f; }
+    .muted { color:#57606a; }
+    .verified { color:#116329; font-weight:bold; }
+    .not-found { color:#cf222e; font-weight:bold; }
+  </style>
+</head>
+<body>
+
+  <p>
+    <a href="{{ url_for('admin_index') }}">Back to Admin</a> |
+    <a href="{{ url_for('certificate_registry') }}">Certificate Registry</a>
+  </p>
+
+  <div class="box">
+    <h1>Certificate Verification</h1>
+    <p class="muted">Internal verification page for Trust Minute execution certificates.</p>
+  </div>
+
+  {% if minute %}
+    <div class="box">
+      <h2 class="verified">VERIFIED CERTIFICATE</h2>
+
+      <p><strong>Certificate ID:</strong> {{ certificate_id }}</p>
+      <p><strong>Minute ID:</strong> {{ minute.minute_id }}</p>
+      <p><strong>Trust ID:</strong> {{ minute.trust_id }}</p>
+      <p><strong>Title:</strong> {{ minute.title }}</p>
+      <p><strong>Status:</strong> {{ minute.status }}</p>
+      <p><strong>Locked:</strong> {% if minute.locked %}Yes{% else %}No{% endif %}</p>
+      <p><strong>Approved At:</strong> {{ minute.approved_at or "Not recorded" }}</p>
+      <p><strong>Executed At:</strong> {{ minute.executed_at or "Not recorded" }}</p>
+      <p><strong>Archived At:</strong> {{ minute.archived_at or "Not archived" }}</p>
+
+      <p>
+        <a class="button" href="{{ url_for('trust_minute_detail', minute_id=minute.minute_id) }}">View Minute</a>
+        <a class="button" href="{{ url_for('trust_minute_certificate_pdf', minute_id=minute.minute_id) }}">Certificate PDF</a>
+        <a class="button" href="{{ url_for('trust_minute_execution_packet_pdf', minute_id=minute.minute_id) }}">Packet PDF</a>
+      </p>
+    </div>
+
+    <div class="box">
+      <h2>Signer Role Summary</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Signer</th>
+            <th>Name</th>
+            <th>Role / Capacity</th>
+            <th>Signed Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for idx in [1, 2, 3] %}
+            {% set name = minute["trustee_" ~ idx ~ "_name"] %}
+            {% set capacity = minute["trustee_" ~ idx ~ "_capacity"] %}
+            {% set signed_date = minute["trustee_" ~ idx ~ "_signed_date"] %}
+            {% if name or signed_date %}
+              <tr>
+                <td>Signer {{ idx }}</td>
+                <td>{{ name or "" }}</td>
+                <td>{{ capacity or "" }}</td>
+                <td>{{ signed_date or "" }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box">
+      <h2>Recent Audit Trail</h2>
+      {% if audit_logs %}
+        <table>
+          <thead>
+            <tr>
+              <th>Created At</th>
+              <th>Action</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in audit_logs %}
+              <tr>
+                <td>{{ log.created_at }}</td>
+                <td><strong>{{ log.action }}</strong></td>
+                <td>{{ log.note or "" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="muted">No audit events recorded for this certificate.</p>
+      {% endif %}
+    </div>
+
+  {% else %}
+    <div class="box">
+      <h2 class="not-found">CERTIFICATE NOT FOUND</h2>
+      <p>No Trust Minute certificate record was found for:</p>
+      <p><strong>{{ certificate_id }}</strong></p>
+      <p class="muted">Confirm the Certificate ID and try again from the Certificate Registry.</p>
+    </div>
+  {% endif %}
+
+</body>
+</html>

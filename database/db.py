@@ -2908,6 +2908,22 @@ def backfill_trust_minute_certificate_ids():
     return updated
 
 
+def get_trust_minute_by_certificate_id(certificate_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM trust_minutes
+        WHERE certificate_id = ?
+        LIMIT 1
+    """, (certificate_id,))
+
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
 def get_certificate_registry_records():
     conn = get_connection()
     cur = conn.cursor()

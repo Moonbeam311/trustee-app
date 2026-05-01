@@ -140,7 +140,7 @@ from database.db import (
     create_trust_minute,
     backfill_trust_minute_certificate_ids, get_certificate_registry_records, get_all_trust_minutes,
     get_trust_minutes_by_trust_id,
-    get_trust_minute_by_id,
+    get_trust_minute_by_certificate_id, get_trust_minute_by_id,
     ensure_trust_minutes_execution_columns,
     update_trust_minute_execution,
     ensure_trust_minutes_capacity_columns,
@@ -3079,6 +3079,36 @@ def trust_minutes_dashboard():
         minutes=minutes,
         trusts=trusts
     )
+
+@app.route("/certificates/verify/<certificate_id>")
+def verify_certificate(certificate_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    minute = get_trust_minute_by_certificate_id(certificate_id)
+
+    if not minute:
+        return render_template(
+            "certificate_verify.html",
+            certificate_id=certificate_id,
+            minute=None,
+            audit_logs=[]
+        ), 404
+
+    audit_logs = get_audit_log_by_entity(
+        entity_type="trust_minute",
+        entity_id=minute["minute_id"],
+        limit=15
+    )
+
+    return render_template(
+        "certificate_verify.html",
+        certificate_id=certificate_id,
+        minute=minute,
+        audit_logs=audit_logs
+    )
+
 
 @app.route("/certificates/backfill", methods=["POST"])
 def backfill_certificate_ids_route():
