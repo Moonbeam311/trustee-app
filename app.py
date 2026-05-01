@@ -2815,6 +2815,101 @@ def trust_minute_certificate_pdf(minute_id):
 
     return response
 
+@app.route("/minutes/<minute_id>/packet.pdf")
+def trust_minute_execution_packet_pdf(minute_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    minute = get_trust_minute_by_id(minute_id)
+    if not minute:
+        return "Minute not found", 404
+
+    if minute["status"] not in ("Executed", "Archived"):
+        return "Execution packet available only after execution.", 403
+
+    certificate_id = minute["certificate_id"] if "certificate_id" in minute.keys() and minute["certificate_id"] else f"CERT-{minute_id}"
+    audit_logs = get_audit_log_by_entity(
+        entity_type="trust_minute",
+        entity_id=minute_id,
+        limit=25
+    )
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("TRUST MINUTE EXECUTION PACKET", styles["Title"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("<b>Packet Type:</b> Execution Packet", styles["Normal"]))
+    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Title:</b> {minute['title']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Status:</b> {minute['status']}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Approved At:</b> {minute['approved_at'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Archived At:</b> {minute['archived_at'] or 'Not archived'}", styles["Normal"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Minute Substance", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Purpose:</b> {minute['purpose'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(f"<b>Resolutions:</b> {minute['resolutions'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(f"<b>Action Items:</b> {minute['action_items'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Signer Records", styles["Heading2"]))
+    for idx in (1, 2, 3):
+        name = minute[f"trustee_{idx}_name"]
+        capacity = minute[f"trustee_{idx}_capacity"] or ""
+        signed_date = minute[f"trustee_{idx}_signed_date"]
+        if name or signed_date:
+            story.append(Paragraph(
+                f"<b>Signer {idx}:</b> {name or 'Not recorded'} | Role / Capacity: {capacity or 'Not recorded'} | Signed Date: {signed_date or 'Not recorded'}",
+                styles["Normal"]
+            ))
+
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Audit Trail Summary", styles["Heading2"]))
+
+    if audit_logs:
+        for log in audit_logs:
+            story.append(Paragraph(
+                f"<b>{log['created_at']}</b> — {log['action']} — {log['note'] or ''}",
+                styles["Normal"]
+            ))
+            story.append(Spacer(1, 4))
+    else:
+        story.append(Paragraph("No audit events recorded for this minute.", styles["Normal"]))
+
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Packet Control Statement", styles["Heading2"]))
+    story.append(Paragraph(
+        "This execution packet consolidates the internal trust minute, execution certificate reference, signer role summary, and audit trail excerpts for governance review and archive control.",
+        styles["Italic"]
+    ))
+
+    doc.build(story, onFirstPage=draw_trust_minute_certificate_marks, onLaterPages=draw_trust_minute_certificate_marks)
+
+    buffer.seek(0)
+    response = make_response(buffer.read())
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = f"attachment; filename={minute_id}_execution_packet.pdf"
+
+    log_change(
+        "trust_minute",
+        minute_id,
+        "execution_packet_pdf_exported",
+        f"Execution packet PDF generated | Certificate ID: {certificate_id} | Status: {minute['status']} | Executed At: {minute['executed_at'] or 'Not recorded'}"
+    )
+
+    return response
+
+
 def validate_trust_minute_execution_requirements(data):
     complete_signers = []
     has_trustee = False

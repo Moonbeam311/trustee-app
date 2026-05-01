@@ -64,7 +64,8 @@
               <td>{% if record.locked %}Yes{% else %}No{% endif %}</td>
               <td>
                 <a class="button" href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">View</a>
-                <a class="button" href="{{ url_for('trust_minute_certificate_pdf', minute_id=record.minute_id) }}">PDF</a>
+                <a class="button" href="{{ url_for('trust_minute_certificate_pdf', minute_id=record.minute_id) }}">Certificate PDF</a>
+                <a class="button" href="{{ url_for('trust_minute_execution_packet_pdf', minute_id=record.minute_id) }}">Packet PDF</a>
               </td>
             </tr>
           {% endfor %}
