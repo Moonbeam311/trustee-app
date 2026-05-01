@@ -225,7 +225,7 @@
  }
  .shortcut-strip {
  display: grid;
- grid-template-columns: repeat(5, minmax(0, 1fr));
+ grid-template-columns: repeat(6, minmax(0, 1fr));
  gap: 10px;
  margin: 16px 0 18px;
  }
@@ -309,8 +309,9 @@
  <div class="shortcut-strip">
  <a href="/resume">Resume Process<span>Continue the latest active transfer</span></a>
  <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
+ <a href="/learning">Learning Hub<span>Guides, trust types, forms, and videos</span></a>
+ <a href="{{ url_for('certificate_registry') }}">Certificates<span>Execution certificates and packet records</span></a>
  <a href="/reports">Report Center<span>PDFs and guided reports</span></a>
- <a href="/documents">Documents<span>Generated document hub</span></a>
  <a href="/execution">Execution<span>Tasks and workflow</span></a>
  </div>
 
@@ -451,6 +452,20 @@
  </div>
  </div>
 
+ <div class="admin-card">
+ <h2>Learning & Guidance Suite</h2>
+ <p class="admin-muted">Central learning surface for trust concepts, guided forms, trust-type references, and tutorial support.</p>
+ <div class="admin-actions">
+ <a class="primary-action" href="/learning">Learning Hub</a>
+ <a href="/learning/trust-types">Trust Types</a>
+ <a href="/forms">Forms Guide</a>
+ <a href="/videos">Video Tutorials</a>
+ <a href="/admin/learning/article/new">New Learning Article</a>
+ <a href="/admin/forms/new">New Form Guide</a>
+ <a href="/videos/upload">Upload Video</a>
+ </div>
+ </div>
+
 <div class="admin-card">
 <h2>System Policy Controls</h2>
 
@@ -520,6 +535,7 @@
  <a href="{{ url_for('security_dashboard') }}">Security</a>
  <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
  <a href="{{ url_for('trust_minutes_dashboard') }}">Trust Minutes</a>
+ <a href="{{ url_for('certificate_registry') }}">Certificate Registry</a>
  <a href="/documents">Documents</a>
  <a href="/visualization">Visualization</a>
  <a href="/decision">Decision Engine</a>
