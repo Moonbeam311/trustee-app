@@ -55,6 +55,44 @@
     <p><strong>Schedule Recommendations:</strong> {{ trust.generate_schedule_recommendations }}</p>
 </div>
 
+
+{% if trust.ai_explanations == "enabled" or trust.recommended_guidance == "enabled" %}
+<div style="margin-bottom:20px; padding:14px; background:#eef6ff; border-radius:8px; border:1px solid #bfdbfe;">
+    <h3 style="margin-top:0;">AI Guidance Review</h3>
+
+    {% if trust.ai_explanations == "enabled" %}
+    <p><strong>Explanation Layer:</strong> Enabled. The system should display plain-language explanations for trust fields, document surfaces, and workflow steps.</p>
+    {% else %}
+    <p><strong>Explanation Layer:</strong> Disabled. The system will keep guidance minimal unless manually opened through Learning Hub or Forms Guide.</p>
+    {% endif %}
+
+    {% if trust.recommended_guidance == "enabled" %}
+    <p><strong>Recommended Guidance:</strong> Enabled. Based on the current trust configuration, review these next administrative actions:</p>
+    <ul>
+        <li>Review the Formation Preview Hub after finalization.</li>
+        <li>Confirm trustee acceptance, articles, organizational minutes, and general assignment surfaces.</li>
+        <li>Use the Trust Minutes module for key governance decisions.</li>
+        <li>Use the Certificate Registry after execution records are completed.</li>
+        {% if trust.property_mapping_timing != "Not Yet Selected" %}
+        <li>Complete or review property mapping and asset classification records.</li>
+        {% endif %}
+        {% if trust.workflow_mode_confirmed == "public_filing" %}
+        <li>Review outward-facing records carefully before filing, sharing, or presentation.</li>
+        {% endif %}
+        {% if trust.record_visibility == "private" %}
+        <li>Maintain private records in controlled internal folders and avoid unnecessary public exposure.</li>
+        {% endif %}
+    </ul>
+    {% else %}
+    <p><strong>Recommended Guidance:</strong> Disabled. The system will not automatically suggest administrative next steps for this trust.</p>
+    {% endif %}
+
+    <p style="font-size:13px; color:#475569;">
+        Guidance is informational and workflow-based. It is not legal, tax, or financial advice.
+    </p>
+</div>
+{% endif %}
+
 <div style="margin-bottom:20px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What happens next?</strong><br>
     Confirming this step will mark the trust as finalized in the current prototype flow and return you to the Trust Detail page.
