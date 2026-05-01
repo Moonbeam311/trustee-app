@@ -23,6 +23,11 @@
   <div class="box">
     <h1>Certificate Registry</h1>
     <p class="muted">Index of executed and archived Trust Minute certificates, certificate IDs, execution status, and export links.</p>
+
+    <form method="POST" action="{{ url_for('backfill_certificate_ids_route') }}" style="margin-top:12px;">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="button">Backfill Missing Certificate IDs</button>
+    </form>
   </div>
 
   <div class="box">

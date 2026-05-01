@@ -2872,6 +2872,42 @@ def create_trust_minute(data):
     conn.close()
 
 
+def backfill_trust_minute_certificate_ids():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT minute_id
+        FROM trust_minutes
+        WHERE status IN ('Executed', 'Archived')
+          AND (certificate_id IS NULL OR TRIM(certificate_id) = '')
+        ORDER BY minute_id ASC
+    """)
+
+    rows = cur.fetchall()
+    updated = []
+
+    for row in rows:
+        minute_id = row["minute_id"]
+        certificate_id = f"CERT-{minute_id}"
+
+        cur.execute("""
+            UPDATE trust_minutes
+            SET certificate_id = ?
+            WHERE minute_id = ?
+              AND (certificate_id IS NULL OR TRIM(certificate_id) = '')
+        """, (certificate_id, minute_id))
+
+        updated.append({
+            "minute_id": minute_id,
+            "certificate_id": certificate_id
+        })
+
+    conn.commit()
+    conn.close()
+    return updated
+
+
 def get_certificate_registry_records():
     conn = get_connection()
     cur = conn.cursor()

@@ -138,7 +138,7 @@ from database.db import (
     ensure_trust_minutes_tables,
     get_next_minute_id,
     create_trust_minute,
-    get_certificate_registry_records, get_all_trust_minutes,
+    backfill_trust_minute_certificate_ids, get_certificate_registry_records, get_all_trust_minutes,
     get_trust_minutes_by_trust_id,
     get_trust_minute_by_id,
     ensure_trust_minutes_execution_columns,
@@ -3079,6 +3079,33 @@ def trust_minutes_dashboard():
         minutes=minutes,
         trusts=trusts
     )
+
+@app.route("/certificates/backfill", methods=["POST"])
+def backfill_certificate_ids_route():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    updated = backfill_trust_minute_certificate_ids()
+
+    if updated:
+        for item in updated:
+            log_change(
+                "trust_minute",
+                item["minute_id"],
+                "certificate_id_backfilled",
+                f"Certificate ID backfilled: {item['certificate_id']}"
+            )
+    else:
+        log_change(
+            "trust_minute",
+            "certificate_registry",
+            "certificate_id_backfill_checked",
+            "Certificate ID backfill checked; no records required update."
+        )
+
+    return redirect(url_for("certificate_registry"))
+
 
 @app.route("/certificates")
 def certificate_registry():
