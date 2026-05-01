@@ -467,6 +467,15 @@
  </div>
 
 <div class="admin-card">
+<h2>Hosted Baseline Seed</h2>
+<p class="admin-muted">Manual, admin-only seed control for hosted Railway databases. This creates missing ABC baseline trusts and starter Learning/Form records without overwriting existing data.</p>
+<form method="POST" action="/admin/seed-hosted-baseline" onsubmit="return confirm('Run hosted baseline seed now? This will create only missing baseline records and will not overwrite existing data.');">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="primary-action">Seed Hosted Baseline Data</button>
+</form>
+</div>
+
+<div class="admin-card">
 <h2>System Policy Controls</h2>
 
 <p><strong>Packet Export Mode:</strong>

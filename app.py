@@ -2095,6 +2095,36 @@ def admin_toggle_export_policy():
     flash(f"System policy updated: {policy_key} = {policy[policy_key]}")
     return redirect(url_for("admin_index"))
 
+@app.route("/admin/seed-hosted-baseline", methods=["POST"])
+def seed_hosted_baseline_route():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    owner_id = get_current_owner() or "admin"
+    results = seed_hosted_baseline_data(owner_id)
+
+    summary = (
+        f"Hosted baseline seed run by {owner_id} | "
+        f"Trusts created={len(results.get('trusts_created', []))}, "
+        f"Trusts skipped={len(results.get('trusts_skipped', []))}, "
+        f"Articles created={len(results.get('learning_articles_created', []))}, "
+        f"Articles skipped={len(results.get('learning_articles_skipped', []))}, "
+        f"Guides created={len(results.get('form_guides_created', []))}, "
+        f"Guides skipped={len(results.get('form_guides_skipped', []))}"
+    )
+
+    log_change(
+        "system",
+        "hosted_baseline_seed",
+        "hosted_baseline_seed_run",
+        summary
+    )
+
+    flash(summary)
+    return redirect(url_for("admin_index"))
+
+
 @app.route("/admin")
 def admin_index():
     trusts = get_visible_trusts_for_current_operator()
@@ -4322,6 +4352,203 @@ def update_form_guide(guide_id, payload):
     ))
     conn.commit()
     conn.close()
+
+
+def learning_article_exists(article_id):
+    conn = _learning_conn()
+    row = conn.execute(
+        "SELECT article_id FROM learning_articles WHERE article_id = ? LIMIT 1",
+        (article_id,)
+    ).fetchone()
+    conn.close()
+    return bool(row)
+
+
+def form_guide_exists(form_name):
+    conn = _learning_conn()
+    row = conn.execute(
+        "SELECT form_name FROM tax_form_guides WHERE lower(form_name) = lower(?) LIMIT 1",
+        (form_name,)
+    ).fetchone()
+    conn.close()
+    return bool(row)
+
+
+def trust_name_exists_for_owner(trust_name, owner_id):
+    # Baseline seed records must be idempotent even when legacy/local rows
+    # do not preserve owner_id. Match baseline trust names globally to avoid
+    # duplicate ABC seed records on repeated runs.
+    for trust in get_all_trusts():
+        trust_row = dict(trust)
+        existing_name = (trust_row.get("trust_name") or "").strip().lower()
+        if existing_name == trust_name.strip().lower():
+            return True
+    return False
+
+
+def seed_hosted_baseline_data(owner_id):
+    results = {
+        "trusts_created": [],
+        "trusts_skipped": [],
+        "learning_articles_created": [],
+        "learning_articles_skipped": [],
+        "form_guides_created": [],
+        "form_guides_skipped": [],
+    }
+
+    baseline_trusts = [
+        {
+            "trust_name": "ABC Trust",
+            "short_name": "ABC",
+            "jurisdiction": "New Jersey",
+            "effective_date": "2026-05-01",
+            "trust_type": "revocable",
+            "trust_purpose": "baseline_governance_testing",
+            "accounting_method": "cash",
+            "workflow_mode": "private_office",
+            "settlor_name": "Baseline Settlor",
+            "trustee_name": "Baseline Trustee",
+            "successor_trustee_name": "Baseline Successor Trustee",
+            "beneficiary_name": "Baseline Beneficiary",
+            "record_visibility": "private",
+            "workflow_mode_confirmed": "private_office",
+            "ai_explanations": "enabled",
+            "recommended_guidance": "enabled",
+            "initial_corpus_description": "Baseline seed corpus for hosted runtime validation.",
+            "property_mapping_timing": "now",
+            "asset_categories": "records",
+            "generate_schedule_recommendations": "yes",
+            "status": "Draft",
+            "owner_id": owner_id,
+        },
+        {
+            "trust_name": "ABC Irrevocable Trust",
+            "short_name": "ABC-IRR",
+            "jurisdiction": "New Jersey",
+            "effective_date": "2026-05-01",
+            "trust_type": "irrevocable",
+            "trust_purpose": "baseline_irrevocable_structure_testing",
+            "accounting_method": "cash",
+            "workflow_mode": "private_office",
+            "settlor_name": "Baseline Grantor",
+            "trustee_name": "Baseline Trustee",
+            "successor_trustee_name": "Baseline Successor Trustee",
+            "beneficiary_name": "Baseline Beneficiary",
+            "record_visibility": "private",
+            "workflow_mode_confirmed": "private_office",
+            "ai_explanations": "enabled",
+            "recommended_guidance": "enabled",
+            "initial_corpus_description": "Baseline seed corpus for irrevocable trust workflow validation.",
+            "property_mapping_timing": "later",
+            "asset_categories": "records",
+            "generate_schedule_recommendations": "yes",
+            "status": "Draft",
+            "owner_id": owner_id,
+        },
+        {
+            "trust_name": "ABC Business Trust",
+            "short_name": "ABC-BIZ",
+            "jurisdiction": "New Jersey",
+            "effective_date": "2026-05-01",
+            "trust_type": "business",
+            "trust_purpose": "baseline_business_trust_testing",
+            "accounting_method": "accrual",
+            "workflow_mode": "private_office",
+            "settlor_name": "Baseline Grantor",
+            "trustee_name": "Baseline Trustee",
+            "successor_trustee_name": "Baseline Successor Trustee",
+            "beneficiary_name": "Baseline Beneficiary",
+            "record_visibility": "internal",
+            "workflow_mode_confirmed": "private_office",
+            "ai_explanations": "enabled",
+            "recommended_guidance": "enabled",
+            "initial_corpus_description": "Baseline seed corpus for business trust workflow validation.",
+            "property_mapping_timing": "now",
+            "asset_categories": "business_records",
+            "generate_schedule_recommendations": "yes",
+            "status": "Draft",
+            "owner_id": owner_id,
+        },
+    ]
+
+    for trust_payload in baseline_trusts:
+        trust_name = trust_payload["trust_name"]
+        if trust_name_exists_for_owner(trust_name, owner_id):
+            results["trusts_skipped"].append(trust_name)
+            continue
+
+        trust_payload = dict(trust_payload)
+        trust_payload["trust_id"] = get_next_trust_id()
+        create_trust_record(trust_payload)
+        results["trusts_created"].append(f"{trust_payload['trust_id']} — {trust_name}")
+
+    starter_articles = [
+        {
+            "article_id": "ART-TRUST-BASICS-001",
+            "title": "Trust Administration Basics",
+            "category": "Trust Administration",
+            "subcategory": "Foundations",
+            "trust_type": "general",
+            "summary": "A starter guide explaining the basic records and workflow surfaces used in the Trustee App.",
+            "body": "This article introduces trust identity, parties, property mapping, minutes, certificates, and packet review as separate workflow layers.",
+            "difficulty_level": "beginner",
+            "related_forms": "Trust Minutes, Certificate Registry, Formation Preview Hub",
+            "related_reports": "Report Center, System Health",
+            "status": "published",
+        },
+        {
+            "article_id": "ART-CERTIFICATES-001",
+            "title": "Execution Certificates and Audit Trails",
+            "category": "Governance Records",
+            "subcategory": "Certificates",
+            "trust_type": "general",
+            "summary": "A starter guide for understanding executed minutes, certificate IDs, packet exports, and audit trail records.",
+            "body": "Execution certificates summarize completed governance records and connect them to signer roles, packet exports, and audit trail entries.",
+            "difficulty_level": "beginner",
+            "related_forms": "Trust Minutes",
+            "related_reports": "Certificate Registry, Audit Trail",
+            "status": "published",
+        },
+    ]
+
+    for article in starter_articles:
+        if learning_article_exists(article["article_id"]):
+            results["learning_articles_skipped"].append(article["article_id"])
+            continue
+        create_learning_article(article)
+        results["learning_articles_created"].append(article["article_id"])
+
+    starter_guides = [
+        {
+            "guide_id": "GUIDE-TRUST-MINUTES-001",
+            "form_name": "Trust Minutes",
+            "category": "Governance",
+            "applies_to": "Trustee decisions, approvals, executions, and archived governance records.",
+            "summary": "Explains how trust minutes preserve decisions and connect to execution certificates.",
+            "body": "Use trust minutes to record trustee decisions, approval, execution, signer capacity, and certificate generation.",
+            "related_trust_types": "general, revocable, irrevocable, business",
+            "status": "published",
+        },
+        {
+            "guide_id": "GUIDE-CERT-REGISTRY-001",
+            "form_name": "Certificate Registry",
+            "category": "Governance",
+            "applies_to": "Executed or archived trust minutes with certificate IDs.",
+            "summary": "Explains how the certificate registry indexes executed trust records.",
+            "body": "The certificate registry lists certificate IDs, minute references, execution status, packet exports, and verification links.",
+            "related_trust_types": "general",
+            "status": "published",
+        },
+    ]
+
+    for guide in starter_guides:
+        if form_guide_exists(guide["form_name"]):
+            results["form_guides_skipped"].append(guide["form_name"])
+            continue
+        create_form_guide(guide)
+        results["form_guides_created"].append(guide["form_name"])
+
+    return results
 
 def get_trust_type_detail(slug):
     cards = {c["slug"]: c for c in get_trust_type_cards()}
