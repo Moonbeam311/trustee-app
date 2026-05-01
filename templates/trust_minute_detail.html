@@ -216,7 +216,7 @@
           {% else %}
           <div class="script-signature">{{ minute.trustee_3_name }}</div>
           {% endif %}
-        <p>Role / Capacity: {{ minute.trustee_3_capacity or "Trustee" }}</p>
+        <p>Role / Capacity: {{ minute.trustee_3_capacity or "" }}</p>
         <p>Signed Date: {{ minute.trustee_3_signed_date or "No date recorded" }}</p>
       {% endif %}
     </div>
@@ -264,11 +264,29 @@
 
   <h3>Signer Records</h3>
 
+  {% set signer_role_options = [
+    "Trustee",
+    "Co-Trustee",
+    "Successor Trustee",
+    "Witness",
+    "Fiduciary",
+    "Authorized Representative",
+    "Grantor / Settlor",
+    "Protector",
+    "Observer",
+    "Other"
+  ] %}
+
   <label>Signer 1 Name</label>
   <input type="text" name="trustee_1_name" value="{{ minute.trustee_1_name or '' }}">
 
   <label>Signer 1 Role / Capacity</label>
-  <input type="text" name="trustee_1_capacity" value="{{ minute.trustee_1_capacity or 'Trustee' }}">
+  {% set signer_1_capacity_value = minute.trustee_1_capacity or "Trustee" %}
+  <select name="trustee_1_capacity">
+    {% for role in signer_role_options %}
+      <option value="{{ role }}" {% if signer_1_capacity_value == role %}selected{% endif %}>{{ role }}</option>
+    {% endfor %}
+  </select>
 
   <label>Signer 1 Signed Date</label>
   <input type="date" name="trustee_1_signed_date" value="{{ minute.trustee_1_signed_date or '' }}">
@@ -277,7 +295,12 @@
   <input type="text" name="trustee_2_name" value="{{ minute.trustee_2_name or '' }}">
 
   <label>Signer 2 Role / Capacity</label>
-  <input type="text" name="trustee_2_capacity" value="{{ minute.trustee_2_capacity or 'Witness' }}">
+  {% set signer_2_capacity_value = minute.trustee_2_capacity or "Witness" %}
+  <select name="trustee_2_capacity">
+    {% for role in signer_role_options %}
+      <option value="{{ role }}" {% if signer_2_capacity_value == role %}selected{% endif %}>{{ role }}</option>
+    {% endfor %}
+  </select>
 
   <label>Signer 2 Signed Date</label>
   <input type="date" name="trustee_2_signed_date" value="{{ minute.trustee_2_signed_date or '' }}">
@@ -286,7 +309,13 @@
   <input type="text" name="trustee_3_name" value="{{ minute.trustee_3_name or '' }}">
 
   <label>Signer 3 Role / Capacity</label>
-  <input type="text" name="trustee_3_capacity" value="{{ minute.trustee_3_capacity or '' }}">
+  {% set signer_3_capacity_value = minute.trustee_3_capacity or "" %}
+  <select name="trustee_3_capacity">
+    <option value="" {% if not signer_3_capacity_value %}selected{% endif %}>Optional / Not Used</option>
+    {% for role in signer_role_options %}
+      <option value="{{ role }}" {% if signer_3_capacity_value == role %}selected{% endif %}>{{ role }}</option>
+    {% endfor %}
+  </select>
 
   <label>Signer 3 Signed Date</label>
   <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">
