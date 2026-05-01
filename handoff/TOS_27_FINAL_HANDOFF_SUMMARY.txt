@@ -1,0 +1,49 @@
+TOS-27 — FINAL HANDOFF SUMMARY
+Date: 2026-05-01
+Project: Trustee App
+Branch: strapback/stable-661bb66
+Latest Commit: e1839ab Add hosted baseline seed controls
+
+MAJOR COMPLETED SEQUENCE
+TOS-17 — Execution Packet Export
+TOS-18 — Backfill Certificate IDs for Older Executed Minutes
+TOS-19 — Certificate Verification Page
+TOS-20 — Signer Role Dropdown / Controlled Role Vocabulary
+TOS-21 — Final Governance Hardening
+TOS-22 — Deployment Sync / Railway Runtime Validation
+TOS-23 — Original Plan Reconciliation Audit
+TOS-24 — Learning Suite Navigation Restoration
+TOS-25 — AI Trust Creation Guidance Layer
+TOS-25B — Create Trust Wizard CSRF Flow Diagnostic and Fix
+TOS-26 — Hosted Seed / ABC Trust Data Strategy
+TOS-27 — Full Navigation + Module QA Handoff
+
+KEY OBJECTIVES ACCOMPLISHED
+1. Trust minute governance records support approval, execution, archiving, certificate IDs, registry, verification pages, signer roles, and packet export.
+2. Status transitions were hardened.
+3. Older executed minutes can be backfilled with certificate IDs.
+4. Certificate and packet export audit events are logged.
+5. Learning Hub was restored as a visible Learning & Guidance Suite.
+6. AI Trust Creation now has deterministic internal guidance.
+7. Create Trust wizard CSRF loop was diagnosed and fixed.
+8. Hosted Railway database can be seeded manually and safely from Admin.
+9. Hosted ABC baseline trusts were confirmed.
+10. Full hosted navigation smoke test passed.
+
+LATEST LOCKED COMMITS
+e1839ab Add hosted baseline seed controls
+ca88ae6 Fix create trust wizard CSRF flow
+af76c57 Add AI guidance review layer to trust creation
+966561a Restore learning suite navigation
+a3327cc Harden trust minute status transitions
+69a888f Add controlled signer role dropdowns
+856c0b2 Add certificate verification page
+2641826 Add certificate ID backfill controls
+03cf4db Add execution packet export for trust minutes
+b5da1cc Add certificate registry for executed trust minutes
+
+CURRENT PLATFORM POSTURE
+Controlled pilot-ready. Not yet final production hardened.
+
+PRIMARY NEXT PHASE RECOMMENDATION
+TOS-28 — Persistent Storage, Backup, and Recovery Hardening.

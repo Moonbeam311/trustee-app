@@ -1,0 +1,9 @@
+NEXT DIRECTIVE
+
+👉 START TOS-28 — Persistent Storage, Backup, and Recovery Hardening
+
+Purpose:
+Protect hosted Railway data, confirm SQLite persistence, add backup/export tooling, and establish a recovery procedure before treating the platform as production hardened.
+
+Start with:
+TOS-28 STEP 1 — Inspect DB_PATH, Railway volume posture, and current export/backup routes.
