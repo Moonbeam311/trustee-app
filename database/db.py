@@ -2872,6 +2872,33 @@ def create_trust_minute(data):
     conn.close()
 
 
+def get_certificate_registry_records():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            minute_id,
+            trust_id,
+            title,
+            status,
+            executed_at,
+            archived_at,
+            locked,
+            certificate_id,
+            trustee_1_capacity,
+            trustee_2_capacity,
+            trustee_3_capacity
+        FROM trust_minutes
+        WHERE status IN ('Executed', 'Archived')
+        ORDER BY executed_at DESC, minute_id DESC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
 def get_all_trust_minutes():
     conn = get_connection()
     cur = conn.cursor()

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Certificate Registry</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f6f8fa; padding:30px; color:#24292f; }
+    .box { background:white; padding:20px; border-radius:8px; border:1px solid #d0d7de; margin-bottom:20px; }
+    table { width:100%; border-collapse:collapse; background:white; }
+    th, td { border:1px solid #d0d7de; padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f1f3f5; }
+    a.button { display:inline-block; padding:8px 12px; border:1px solid #d0d7de; border-radius:6px; text-decoration:none; background:#fff; color:#24292f; }
+    .muted { color:#57606a; }
+    .status { font-weight:bold; }
+  </style>
+</head>
+<body>
+
+  <p>
+    <a href="{{ url_for('admin_index') }}">Back to Admin</a> |
+    <a href="{{ url_for('trust_minutes_dashboard') }}">Trust Minutes</a>
+  </p>
+
+  <div class="box">
+    <h1>Certificate Registry</h1>
+    <p class="muted">Index of executed and archived Trust Minute certificates, certificate IDs, execution status, and export links.</p>
+  </div>
+
+  <div class="box">
+    <h2>Recorded Certificates</h2>
+
+    {% if records %}
+      <table>
+        <thead>
+          <tr>
+            <th>Certificate ID</th>
+            <th>Minute ID</th>
+            <th>Trust ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Executed At</th>
+            <th>Archived At</th>
+            <th>Signer Roles</th>
+            <th>Locked</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in records %}
+            {% set cert_id = record.certificate_id or ("CERT-" ~ record.minute_id) %}
+            {% set roles = [] %}
+            {% if record.trustee_1_capacity %}{% set _ = roles.append(record.trustee_1_capacity) %}{% endif %}
+            {% if record.trustee_2_capacity %}{% set _ = roles.append(record.trustee_2_capacity) %}{% endif %}
+            {% if record.trustee_3_capacity %}{% set _ = roles.append(record.trustee_3_capacity) %}{% endif %}
+
+            <tr>
+              <td><strong>{{ cert_id }}</strong></td>
+              <td><a href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">{{ record.minute_id }}</a></td>
+              <td>{{ record.trust_id }}</td>
+              <td>{{ record.title }}</td>
+              <td class="status">{{ record.status }}</td>
+              <td>{{ record.executed_at or "Not recorded" }}</td>
+              <td>{{ record.archived_at or "" }}</td>
+              <td>{{ roles | join(", ") }}</td>
+              <td>{% if record.locked %}Yes{% else %}No{% endif %}</td>
+              <td>
+                <a class="button" href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">View</a>
+                <a class="button" href="{{ url_for('trust_minute_certificate_pdf', minute_id=record.minute_id) }}">PDF</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">No executed or archived certificates are currently recorded.</p>
+    {% endif %}
+  </div>
+
+</body>
+</html>

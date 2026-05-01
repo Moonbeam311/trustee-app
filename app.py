@@ -138,7 +138,7 @@ from database.db import (
     ensure_trust_minutes_tables,
     get_next_minute_id,
     create_trust_minute,
-    get_all_trust_minutes,
+    get_certificate_registry_records, get_all_trust_minutes,
     get_trust_minutes_by_trust_id,
     get_trust_minute_by_id,
     ensure_trust_minutes_execution_columns,
@@ -2984,6 +2984,20 @@ def trust_minutes_dashboard():
         minutes=minutes,
         trusts=trusts
     )
+
+@app.route("/certificates")
+def certificate_registry():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    records = get_certificate_registry_records()
+
+    return render_template(
+        "certificate_registry.html",
+        records=records
+    )
+
 
 @app.route("/system/health")
 def system_health_dashboard():
