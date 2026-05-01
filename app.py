@@ -2550,6 +2550,85 @@ def system_recovery_run():
 
 
 
+@app.route("/admin/backup/database.zip")
+def admin_database_backup_zip():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    db_file = Path(DB_PATH)
+    if not db_file.exists():
+        log_change(
+            "system_backup",
+            "database",
+            "database_backup_zip_missing",
+            f"Database ZIP backup failed; DB_PATH not found: {db_file}"
+        )
+        return render_template(
+            "access_denied.html",
+            reason=f"Database file not found at configured DB_PATH: {db_file}"
+        ), 404
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    backup_dir = Path("data/backups")
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = backup_dir / f"trustee_app_database_backup_{timestamp}.zip"
+
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.write(db_file, arcname="trustee_app.db")
+
+    log_change(
+        "system_backup",
+        "database",
+        "database_backup_zip_downloaded",
+        f"Database ZIP backup downloaded from DB_PATH={db_file}; ZIP={zip_path}"
+    )
+
+    return send_file(
+        zip_path,
+        as_attachment=True,
+        download_name=zip_path.name,
+        mimetype="application/zip"
+    )
+
+
+@app.route("/admin/backup/database")
+def admin_database_backup():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    db_file = Path(DB_PATH)
+    if not db_file.exists():
+        log_change(
+            "system_backup",
+            "database",
+            "database_backup_missing",
+            f"Database backup failed; DB_PATH not found: {db_file}"
+        )
+        return render_template(
+            "access_denied.html",
+            reason=f"Database file not found at configured DB_PATH: {db_file}"
+        ), 404
+
+    timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+    download_name = f"trustee_app_database_backup_{timestamp}.db"
+
+    log_change(
+        "system_backup",
+        "database",
+        "database_backup_downloaded",
+        f"Database backup downloaded from DB_PATH={db_file}"
+    )
+
+    return send_file(
+        db_file,
+        as_attachment=True,
+        download_name=download_name,
+        mimetype="application/octet-stream"
+    )
+
+
 @app.route("/system/health/export.zip")
 def system_health_export_zip():
     gate = require_master_admin()
