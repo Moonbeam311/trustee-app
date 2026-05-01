@@ -167,7 +167,7 @@ from services.services_transfer import (
     finalize_transfer,
 )
 import sqlite3
-from datetime import datetime
+from datetime import datetime, UTC
 from werkzeug.utils import secure_filename
 from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story, portfolio_report_story, audit_log_report_story
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -2983,7 +2983,7 @@ def trust_minute_execute(minute_id):
 
     action = request.form.get("action")
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
 
     data = {
         "trustee_1_name": request.form.get("trustee_1_name"),
@@ -3006,11 +3006,33 @@ def trust_minute_execute(minute_id):
         "certificate_id": minute["certificate_id"] if "certificate_id" in minute.keys() else None,
     }
 
+    current_status = minute["status"] or "Draft"
+
     if action == "approve":
+        if current_status in ("Executed", "Archived"):
+            message = f"Action blocked. Cannot approve a minute with status {current_status}."
+            log_change(
+                "trust_minute",
+                minute_id,
+                "minute_approve_blocked",
+                message
+            )
+            return message, 403
+
         data["approved_at"] = now
         data["status"] = "Approved"
 
     elif action == "execute":
+        if current_status == "Archived":
+            message = "Action blocked. Archived minutes cannot be executed."
+            log_change(
+                "trust_minute",
+                minute_id,
+                "minute_execute_blocked",
+                message
+            )
+            return message, 403
+
         is_valid, validation_message = validate_trust_minute_execution_requirements(data)
         if not is_valid:
             log_change(
@@ -3028,8 +3050,28 @@ def trust_minute_execute(minute_id):
             data["certificate_id"] = f"CERT-{minute_id}"
 
     elif action == "archive":
+        if current_status != "Executed":
+            message = f"Action blocked. Only executed minutes can be archived. Current status: {current_status}."
+            log_change(
+                "trust_minute",
+                minute_id,
+                "minute_archive_blocked",
+                message
+            )
+            return message, 403
+
         data["archived_at"] = now
         data["status"] = "Archived"
+
+    else:
+        message = f"Action blocked. Unknown trust minute action: {action}."
+        log_change(
+            "trust_minute",
+            minute_id,
+            "minute_action_blocked",
+            message
+        )
+        return message, 400
 
     update_trust_minute_execution(minute_id, data)
 

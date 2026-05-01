@@ -1661,36 +1661,6 @@ def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):
     conn.close()
     return rows
 
-def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):
-    conn = get_connection()
-    cur = conn.cursor()
-
-    if entity_type and entity_id:
-        cur.execute("""
-            SELECT * FROM audit_log
-            WHERE entity_type = ? AND entity_id = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-        """, (entity_type, entity_id, limit))
-    elif entity_type:
-        cur.execute("""
-            SELECT * FROM audit_log
-            WHERE entity_type = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-        """, (entity_type, limit))
-    else:
-        cur.execute("""
-            SELECT * FROM audit_log
-            ORDER BY created_at DESC
-            LIMIT ?
-        """, (limit,))
-
-    rows = cur.fetchall()
-    conn.close()
-    return rows
-
-
 def verify_audit_log_chain(limit=None):
     import hashlib, json
 
