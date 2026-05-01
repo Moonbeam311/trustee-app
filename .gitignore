@@ -8,3 +8,6 @@ backups_sqlite_*/
 handoff/
 data/export_activity_log.json
 data/export_policy.json
+
+# Generated database backup ZIP files
+data/backups/
