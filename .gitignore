@@ -11,3 +11,6 @@ data/export_policy.json
 
 # Generated database backup ZIP files
 data/backups/
+
+# Runtime uploaded user files
+uploads/

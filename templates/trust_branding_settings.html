@@ -35,7 +35,7 @@
     Seal, CAF, CRID, motto, scripture, prepared-by, and return-to fields are optional. Blank fields will not appear in document headers.
   </div>
 
-  <form method="POST" action="{{ url_for('trust_branding_settings', trust_id=trust['trust_id']) }}" class="box">
+  <form method="POST" action="{{ url_for('trust_branding_settings', trust_id=trust['trust_id']) }}" class="box" enctype="multipart/form-data">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <div class="grid">
       <div>
@@ -59,8 +59,9 @@
         <label for="return_to">Return To</label>
         <input id="return_to" name="return_to" value="{{ trust['return_to'] or '' }}" placeholder="Optional">
 
-        <label for="seal_path">Seal Path</label>
-        <input id="seal_path" name="seal_path" value="{{ trust['seal_path'] or '' }}" placeholder="Seal upload will be connected in the next step" disabled>
+        <label for="seal_file">Trust Seal / Crest Upload</label>
+        <input id="seal_file" name="seal_file" type="file" accept=".png,.jpg,.jpeg">
+        <p class="muted">Accepted formats: PNG, JPG, JPEG. Current seal path: {{ trust['seal_path'] or 'None uploaded' }}</p>
       </div>
     </div>
 
@@ -70,7 +71,7 @@
     <label for="foundation_scripture">Foundation Text / Scripture / Principle</label>
     <textarea id="foundation_scripture" name="foundation_scripture" placeholder="Optional">{{ trust['foundation_scripture'] or '' }}</textarea>
 
-    <p class="muted">Seal upload is intentionally disabled here until file validation and storage handling are added.</p>
+    <p class="muted">Seal upload is optional. Uploaded seals are trust-specific and stored under the trust branding upload folder.</p>
 
     <button type="submit">Save Branding Settings</button>
     <a class="button-link secondary" href="{{ url_for('admin_index') }}">Cancel</a>

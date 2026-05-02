@@ -412,6 +412,14 @@ def build_trust_preview_context(trust):
         "initial_corpus_description": initial_corpus_value,
         "asset_categories": asset_categories_value,
         "property_mapping_timing": property_mapping_timing_value,
+        "seal_path": _first(trust, ["seal_path", "trust_seal_path", "logo_path"]),
+        "caf_number": _first(trust, ["caf_number", "caf"]),
+        "crid_number": _first(trust, ["crid_number", "crid"]),
+        "trust_motto": _first(trust, ["trust_motto", "motto"]),
+        "foundation_scripture": _first(trust, ["foundation_scripture", "scripture"]),
+        "prepared_by": _first(trust, ["prepared_by"]),
+        "return_to": _first(trust, ["return_to"]),
+        "branding_style": _first(trust, ["branding_style"], "v3_minimal"),
     }
 
 
@@ -808,8 +816,22 @@ def add_universal_v3_letterhead(story, styles, preview_context, document_label):
     title_style = styles["Title"]
     body_style = styles["BodyText"]
 
-    # Universal fallback seal mark. This is not a personal seal.
-    story.append(Paragraph("◇", title_style))
+    # Universal trust-specific seal rendering.
+    # Render uploaded trust seal when available; otherwise use neutral fallback mark.
+    seal_path = branding.get("seal_path") or ""
+    seal_rendered = False
+    if seal_path:
+        try:
+            seal_file_path = Path(seal_path)
+            if seal_file_path.exists() and seal_file_path.is_file():
+                story.append(Image(seal_file_path.as_posix(), width=72, height=72))
+                seal_rendered = True
+        except Exception:
+            seal_rendered = False
+
+    if not seal_rendered:
+        story.append(Paragraph("◇", title_style))
+
     story.append(Paragraph(f"<b>{trust_name}</b>", title_style))
     story.append(Paragraph("Trust Administration Record", body_style))
 
@@ -1864,6 +1886,41 @@ def ledger_entry():
         return redirect(url_for("trust_detail", trust_id=entry["trust_id"]))
     return render_template("ledger_entry.html", trusts=trusts, properties=[], accounts=[])
 
+@app.route("/trust/<trust_id>/seal")
+def uploaded_seal(trust_id):
+    gate = gate_trust_access(trust_id, {"Admin", "Trustee", "Viewer"})
+    if gate:
+        return gate
+
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    seal_path = trust.get("seal_path") if hasattr(trust, "get") else trust["seal_path"]
+    if not seal_path:
+        return "No seal uploaded", 404
+
+    stored_path = Path(seal_path)
+    uploads_root = UPLOAD_FOLDER.resolve()
+
+    try:
+        resolved_path = stored_path.resolve()
+        resolved_path.relative_to(uploads_root)
+    except Exception:
+        log_change(
+            "security",
+            trust_id,
+            "blocked_seal_path_access",
+            f"Blocked invalid seal path: {seal_path}"
+        )
+        return "Invalid seal path", 403
+
+    if not resolved_path.exists() or not resolved_path.is_file():
+        return "Seal file not found", 404
+
+    return send_file(resolved_path)
+
+
 @app.route("/trust/<trust_id>/branding", methods=["GET", "POST"])
 def trust_branding_settings(trust_id):
     gate = gate_trust_access(trust_id, {"Admin", "Trustee"})
@@ -1875,7 +1932,7 @@ def trust_branding_settings(trust_id):
         return f"Trust {trust_id} not found", 404
 
     if request.method == "POST":
-        update_trust_fields(trust_id, {
+        update_payload = {
             "caf_number": request.form.get("caf_number", "").strip(),
             "crid_number": request.form.get("crid_number", "").strip(),
             "trust_motto": request.form.get("trust_motto", "").strip(),
@@ -1883,7 +1940,37 @@ def trust_branding_settings(trust_id):
             "prepared_by": request.form.get("prepared_by", "").strip(),
             "return_to": request.form.get("return_to", "").strip(),
             "branding_style": request.form.get("branding_style", "v3_minimal").strip() or "v3_minimal",
-        })
+        }
+
+        seal_file = request.files.get("seal_file")
+        if seal_file and seal_file.filename:
+            original_name = seal_file.filename
+            extension = original_name.rsplit(".", 1)[1].lower() if "." in original_name else ""
+            if extension not in {"png", "jpg", "jpeg"}:
+                trust = get_trust_by_id(trust_id)
+                return render_template(
+                    "trust_branding_settings.html",
+                    trust=trust,
+                    error_message="Seal upload must be a PNG, JPG, or JPEG image."
+                )
+
+            safe_name = secure_filename(original_name)
+            branding_dir = UPLOAD_FOLDER / "trust_branding" / trust_id
+            branding_dir.mkdir(parents=True, exist_ok=True)
+            stored_filename = f"seal_{datetime.now().strftime('%Y%m%d%H%M%S')}_{safe_name}"
+            stored_path = branding_dir / stored_filename
+            seal_file.save(stored_path)
+
+            update_payload["seal_path"] = stored_path.as_posix()
+
+            log_change(
+                "trust_branding",
+                trust_id,
+                "trust_branding_seal_uploaded",
+                f"Seal uploaded: {stored_filename}"
+            )
+
+        update_trust_fields(trust_id, update_payload)
 
         log_change(
             "trust_branding",
