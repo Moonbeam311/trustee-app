@@ -39,6 +39,16 @@
     .muted {
       color: #666;
     }
+
+    .universal-letterhead { text-align:center; background:#fff; border:1px solid #d0d7de; border-radius:14px; padding:22px; margin-bottom:16px; }
+    .seal-fallback { font-size:32px; color:#b8860b; line-height:1; }
+    .trust-seal-img { max-width:86px; max-height:86px; object-fit:contain; display:block; margin:0 auto 8px auto; }
+    .trust-name { font-size:26px; font-weight:800; margin-top:8px; }
+    .trust-subtitle { color:#57606a; font-weight:700; margin-top:4px; }
+    .gold-divider { color:#b8860b; letter-spacing:1px; margin:12px 0; }
+    .document-label { font-size:22px; font-weight:800; }
+    .optional-meta { color:#57606a; font-size:13px; margin-top:8px; }
+
     .document {
       border: 1px solid #cfcfcf;
       border-radius: 8px;
@@ -141,26 +151,30 @@
     </div>
 
   <div class="document trust-doc-surface">
-    <!-- UNIVERSAL BRAND BLOCK -->
-    {% if preview_context.seal_path %}
-      <div style="text-align:center; margin-bottom:12px;">
-        <img src="{{ url_for('uploaded_seal', trust_id=preview_context.trust_id) }}" style="max-height:90px;">
+    <div class="universal-letterhead">
+      {% if preview_context.seal_path %}
+      <img class="trust-seal-img" src="{{ url_for('uploaded_seal', trust_id=preview_context.trust_id) }}" alt="Trust Seal">
+      {% else %}
+      <div class="seal-fallback">◇</div>
+      {% endif %}
+      <div class="trust-name">{{ preview_context.trust_name or "Trust Administration Record" }}</div>
+      <div class="trust-subtitle">Trust Administration Record</div>
+      <div class="optional-meta">
+        {% if preview_context.trust_id %}Trust ID: {{ preview_context.trust_id }}{% endif %}
+        {% if preview_context.jurisdiction %} | Jurisdiction: {{ preview_context.jurisdiction }}{% endif %}
+        {% if preview_context.effective_date_display %} | Effective Date: {{ preview_context.effective_date_display }}{% endif %}
+        {% if preview_context.caf_number %} | CAF: {{ preview_context.caf_number }}{% endif %}
+        {% if preview_context.crid_number %} | CRID: {{ preview_context.crid_number }}{% endif %}
       </div>
-    {% endif %}
-    <div style="text-align:center; font-size:0.9rem; margin-bottom:10px;">
-      {% if preview_context.caf_number %}CAF: {{ preview_context.caf_number }}{% endif %}
-      {% if preview_context.crid_number %} | CRID: {{ preview_context.crid_number }}{% endif %}
+      {% if preview_context.trust_motto %}
+      <div class="optional-meta"><strong>{{ preview_context.trust_motto }}</strong></div>
+      {% endif %}
+      {% if preview_context.foundation_scripture %}
+      <div class="optional-meta">{{ preview_context.foundation_scripture }}</div>
+      {% endif %}
+      <div class="gold-divider">────────────────────────────</div>
+      <div class="document-label">Articles of Trust</div>
     </div>
-    {% if preview_context.trust_motto %}
-      <div style="text-align:center; font-weight:bold; margin-bottom:6px;">
-        {{ preview_context.trust_motto }}
-      </div>
-    {% endif %}
-    {% if preview_context.foundation_scripture %}
-      <div style="text-align:center; font-size:0.9rem; margin-bottom:12px;">
-        {{ preview_context.foundation_scripture }}
-      </div>
-    {% endif %}
 
     <div class="doc-title">Articles of Trust</div>
     <div class="doc-subtitle">Controlled Trust Summary Instrument</div>
