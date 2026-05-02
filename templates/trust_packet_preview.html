@@ -88,6 +88,27 @@
     <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
     <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
+    <!-- BRANDING READINESS PANEL -->
+    <div class="panel trust-panel">
+      <h2>Branding Readiness</h2>
+      <p><strong>Seal Uploaded:</strong>
+        {% if preview_context.seal_path %}<span class="ready">Yes</span>{% else %}<span class="incomplete">No</span>{% endif %}
+      </p>
+      <p><strong>CAF Present:</strong>
+        {% if preview_context.caf_number %}<span class="ready">Yes</span>{% else %}<span class="incomplete">No</span>{% endif %}
+      </p>
+      <p><strong>CRID Present:</strong>
+        {% if preview_context.crid_number %}<span class="ready">Yes</span>{% else %}<span class="incomplete">No</span>{% endif %}
+      </p>
+      <p><strong>Motto Present:</strong>
+        {% if preview_context.trust_motto %}<span class="ready">Yes</span>{% else %}<span class="incomplete">No</span>{% endif %}
+      </p>
+      <p><strong>Foundation Text Present:</strong>
+        {% if preview_context.foundation_scripture %}<span class="ready">Yes</span>{% else %}<span class="incomplete">No</span>{% endif %}
+      </p>
+      <p><strong>Branding Style:</strong> {{ preview_context.branding_style or "Universal V3" }}</p>
+    </div>
+
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
     <p><strong>Last Updated:</strong> {{ trust_last_updated }}</p>

@@ -991,6 +991,7 @@ def generate_articles_pdf(trust, preview_context):
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
+    add_universal_v3_letterhead(story, styles, preview_context, "Articles")
 
     title_style = styles["Title"]
     heading_style = styles["Heading2"]
@@ -1053,6 +1054,7 @@ def generate_trustee_acceptance_pdf(trust, preview_context):
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
+    add_universal_v3_letterhead(story, styles, preview_context, "Trustee Acceptance")
 
     story.append(Paragraph("Trustee Acceptance of Appointment", styles["Title"]))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
@@ -1089,6 +1091,7 @@ def generate_general_assignment_pdf(trust, preview_context):
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
+    add_universal_v3_letterhead(story, styles, preview_context, "General Assignment")
 
     story.append(Paragraph("General Assignment to Trust", styles["Title"]))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
@@ -1125,6 +1128,7 @@ def generate_organizational_minutes_pdf(trust, preview_context):
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
+    add_universal_v3_letterhead(story, styles, preview_context, "Organizational Minutes")
 
     story.append(Paragraph("Initial Trustee Resolution / Organizational Minutes", styles["Title"]))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
@@ -1161,6 +1165,7 @@ def generate_successor_trustee_pdf(trust, preview_context):
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
+    add_universal_v3_letterhead(story, styles, preview_context, "Successor Trustee")
 
     story.append(Paragraph("Successor Trustee Acceptance / Appointment", styles["Title"]))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
@@ -1197,6 +1202,7 @@ def generate_packet_manifest_pdf(trust, preview_context):
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
+    add_universal_v3_letterhead(story, styles, preview_context, "Packet Manifest")
 
     exported_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

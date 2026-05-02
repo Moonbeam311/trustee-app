@@ -130,6 +130,27 @@
   </div>
 
   <div class="document trust-doc-surface">
+    <!-- UNIVERSAL BRAND BLOCK -->
+    {% if preview_context.seal_path %}
+      <div style="text-align:center; margin-bottom:12px;">
+        <img src="{{ url_for('trust_seal', trust_id=preview_context.trust_id) }}" style="max-height:90px;">
+      </div>
+    {% endif %}
+    <div style="text-align:center; font-size:0.9rem; margin-bottom:10px;">
+      {% if preview_context.caf_number %}CAF: {{ preview_context.caf_number }}{% endif %}
+      {% if preview_context.crid_number %} | CRID: {{ preview_context.crid_number }}{% endif %}
+    </div>
+    {% if preview_context.trust_motto %}
+      <div style="text-align:center; font-weight:bold; margin-bottom:6px;">
+        {{ preview_context.trust_motto }}
+      </div>
+    {% endif %}
+    {% if preview_context.foundation_scripture %}
+      <div style="text-align:center; font-size:0.9rem; margin-bottom:12px;">
+        {{ preview_context.foundation_scripture }}
+      </div>
+    {% endif %}
+
     <div class="doc-title">General Assignment to Trust</div>
     <div class="doc-subtitle">Bounded Final Document Surface</div>
 
