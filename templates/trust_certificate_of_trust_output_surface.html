@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "_platform_shell.html" %}
+  <title>Certificate of Trust</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background:#f8fafc; color:#1f2328; }
+    .box { background:#fff; border:1px solid #d0d7de; border-radius:12px; padding:18px; margin-bottom:16px; }
+    .actions a { display:inline-block; padding:8px 11px; margin-right:8px; border:1px solid #d0d7de; border-radius:8px; text-decoration:none; color:#1f2328; background:#fff; font-weight:700; }
+    .actions a.primary { background:#1d4ed8; color:#fff; border-color:#1d4ed8; }
+    .muted { color:#57606a; }
+    table { width:100%; border-collapse:collapse; background:#fff; }
+    th, td { border:1px solid #d0d7de; padding:8px; text-align:left; vertical-align:top; }
+    th { background:#f1f5f9; width:240px; }
+  </style>
+</head>
+<body>
+  <p>
+    <a href="{{ url_for('admin_index') }}">Back to Admin</a> |
+    <a href="{{ url_for('trust_packet_preview', trust_id=preview_context.trust_id) }}">Packet Preview</a>
+  </p>
+
+  <div class="box">
+    <h1>Certificate of Trust</h1>
+    <p class="muted">Controlled trust certification output surface generated from selected trust record data.</p>
+    <div class="actions">
+      <a class="primary" href="{{ url_for('trust_certificate_of_trust_output_surface_pdf', trust_id=preview_context.trust_id) }}">Download Certificate PDF</a>
+      <a href="{{ url_for('trust_declaration_output_surface', trust_id=preview_context.trust_id) }}">View Declaration of Trust</a>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Certification Summary</h2>
+    <table>
+      <tr><th>Trust Name</th><td>{{ preview_context.trust_name or "" }}</td></tr>
+      <tr><th>Trust ID</th><td>{{ preview_context.trust_id or "" }}</td></tr>
+      <tr><th>Trust Type</th><td>{{ preview_context.trust_type or "" }}</td></tr>
+      <tr><th>Effective Date</th><td>{{ preview_context.effective_date_display or "" }}</td></tr>
+      <tr><th>Jurisdiction</th><td>{{ preview_context.jurisdiction or "" }}</td></tr>
+    </table>
+  </div>
+
+  <div class="box">
+    <h2>Trustee Authority Summary</h2>
+    <table>
+      <tr><th>Current Trustee</th><td>{{ preview_context.trustee_name or "" }}</td></tr>
+      <tr><th>Successor Trustee</th><td>{{ preview_context.successor_trustee_name or "" }}</td></tr>
+      <tr><th>Primary Beneficiary</th><td>{{ preview_context.primary_beneficiary or "" }}</td></tr>
+      <tr><th>Initial Corpus</th><td>{{ preview_context.initial_corpus_description or "" }}</td></tr>
+      <tr><th>Asset Categories</th><td>{{ preview_context.asset_categories or "" }}</td></tr>
+    </table>
+  </div>
+
+  <div class="box">
+    <h2>Reliance Limitation</h2>
+    <p class="muted">This certificate is an internal administrative summary. Third-party reliance, filing use, or external presentation should be reviewed independently and matched to the executed governing instrument.</p>
+  </div>
+</body>
+</html>

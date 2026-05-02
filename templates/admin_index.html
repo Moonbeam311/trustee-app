@@ -425,7 +425,9 @@
  <a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download ZIP</a>
  </div>
  <div class="admin-actions">
- <a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Articles</a>
+ <a href="{{ url_for('trust_declaration_output_surface', trust_id=trust['trust_id']) }}">Declaration</a>
+<a href="{{ url_for('trust_certificate_of_trust_output_surface', trust_id=trust['trust_id']) }}">Certificate</a>
+<a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Articles</a>
  <a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust['trust_id']) }}">Trustee Acceptance</a>
  <a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Financial Summary</a>
  <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a>

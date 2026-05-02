@@ -755,6 +755,134 @@ def build_export_activity_entry(preview_context, document_readiness, packet_read
         "filename": filename,
     }
 
+def generate_declaration_of_trust_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("Declaration of Trust", styles["Title"]))
+    story.append(Paragraph("Controlled Trust Declaration Output Surface", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Declaration", styles["Heading2"]))
+    story.append(Paragraph(
+        "This Declaration of Trust summarizes the trust identity, foundational parties, governing jurisdiction, "
+        "administrative purpose, and initial trust property currently recorded in the Trustee App system.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Foundational Parties", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Primary Beneficiary:</b> {preview_context.get('primary_beneficiary') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Purpose and Administration", styles["Heading2"]))
+    story.append(Paragraph(
+        preview_context.get("trust_purpose") or
+        "The trust is established for the lawful holding, administration, protection, and orderly management of trust property and related records.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Initial Trust Property", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Initial Corpus:</b> {preview_context.get('initial_corpus_description') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Property Mapping Timing:</b> {preview_context.get('property_mapping_timing') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Declaratory Statement", styles["Heading2"]))
+    story.append(Paragraph(
+        "The undersigned declares that the above trust record is maintained as a controlled internal trust administration record. "
+        "This output is generated from the Trustee App data record and should be reviewed against the governing trust instrument, "
+        "signed records, and applicable professional advice before external reliance.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Grantor / Settlor Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 16))
+    story.append(Paragraph("Trustee Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 16))
+    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_certificate_of_trust_pdf(trust, preview_context):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    styles = getSampleStyleSheet()
+    story = []
+
+    story.append(Paragraph("Certificate of Trust", styles["Title"]))
+    story.append(Paragraph("Controlled Trust Certification Output Surface", styles["Heading3"]))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Certification Summary", styles["Heading2"]))
+    story.append(Paragraph(
+        "This Certificate of Trust summarizes selected trust information for administrative verification. "
+        "It is intended as a bounded summary surface and does not replace the full Declaration of Trust, trust agreement, "
+        "trust minutes, trustee acceptance, or other governing records.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Trustee Authority Summary", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Current Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(
+        "The trustee authority summarized here is limited to the data entered into the Trustee App and should be verified against executed trust records.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Property / Corpus Summary", styles["Heading2"]))
+    story.append(Paragraph(f"<b>Initial Corpus:</b> {preview_context.get('initial_corpus_description') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("Reliance Limitation", styles["Heading2"]))
+    story.append(Paragraph(
+        "This certificate is an internal administrative summary generated from the Trustee App. "
+        "Third-party reliance, filing use, or external presentation should be reviewed independently and matched to the executed governing instrument.",
+        styles["BodyText"]
+    ))
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Trustee Certification Signature: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 16))
+    story.append(Paragraph("Capacity / Title: ______________________________", styles["BodyText"]))
+    story.append(Spacer(1, 16))
+    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
 def generate_articles_pdf(trust, preview_context):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
@@ -984,6 +1112,8 @@ def generate_packet_manifest_pdf(trust, preview_context):
 
     story.append(Paragraph("Included Documents", styles["Heading2"]))
     included_docs = [
+        "Declaration of Trust",
+        "Certificate of Trust",
         "Articles of Trust",
         "Trustee Acceptance of Appointment",
         "General Assignment to Trust",
@@ -1013,6 +1143,8 @@ def generate_controlled_trust_packet_zip(trust, preview_context):
 
         docs = [
             (f"{trust_id}_Packet_Manifest.pdf", generate_packet_manifest_pdf(trust, preview_context)),
+            (f"{trust_id}_Declaration_of_Trust.pdf", generate_declaration_of_trust_pdf(trust, preview_context)),
+            (f"{trust_id}_Certificate_of_Trust.pdf", generate_certificate_of_trust_pdf(trust, preview_context)),
             (f"{trust_id}_Articles_of_Trust.pdf", generate_articles_pdf(trust, preview_context)),
             (f"{trust_id}_Trustee_Acceptance.pdf", generate_trustee_acceptance_pdf(trust, preview_context)),
             (f"{trust_id}_General_Assignment.pdf", generate_general_assignment_pdf(trust, preview_context)),
@@ -6478,6 +6610,62 @@ def trust_articles_preview(trust_id):
         "trust_articles_preview.html",
         trust=trust,
         preview_context=preview_context,
+    )
+
+
+@app.route("/trust/<trust_id>/declaration-output-surface")
+def trust_declaration_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_declaration_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+
+@app.route("/trust/<trust_id>/declaration-output-surface/pdf")
+def trust_declaration_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_declaration_of_trust_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        mimetype="application/pdf",
+        download_name=f"{trust_id}_Declaration_of_Trust.pdf"
+    )
+
+
+@app.route("/trust/<trust_id>/certificate-of-trust-output-surface")
+def trust_certificate_of_trust_output_surface(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    return render_template(
+        "trust_certificate_of_trust_output_surface.html",
+        trust=trust,
+        preview_context=preview_context,
+    )
+
+
+@app.route("/trust/<trust_id>/certificate-of-trust-output-surface/pdf")
+def trust_certificate_of_trust_output_surface_pdf(trust_id):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found"
+    preview_context = build_trust_preview_context(trust)
+    pdf_buffer = generate_certificate_of_trust_pdf(trust, preview_context)
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        mimetype="application/pdf",
+        download_name=f"{trust_id}_Certificate_of_Trust.pdf"
     )
 
 
