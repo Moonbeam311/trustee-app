@@ -128,6 +128,18 @@
     <p><strong>Status:</strong> {{ preview_context.status }}</p>
   </div>
 
+  
+    <!-- DOCUMENT READINESS ADVISORY -->
+    <div class="panel trust-panel" style="background:#fff7ed; border-color:#fed7aa; font-family:Arial, sans-serif; margin-bottom:18px;">
+      <h2 style="margin-top:0;">Document Readiness Advisory</h2>
+      {% if document_readiness.all_ready %}
+        <p class="ready"><strong>Status:</strong> Current trust packet appears ready for controlled review.</p>
+      {% else %}
+        <p class="incomplete"><strong>Status:</strong> This document may be generated, reviewed, and exported, but one or more trust packet readiness items should be reviewed before formal execution.</p>
+        <p class="muted">This advisory does not block generation. It provides fiduciary review visibility only.</p>
+      {% endif %}
+    </div>
+
   <div class="document trust-doc-surface">
     <!-- UNIVERSAL BRAND BLOCK -->
     {% if preview_context.seal_path %}

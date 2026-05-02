@@ -6615,10 +6615,12 @@ def trust_successor_trustee_output_surface(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
     return render_template(
         "trust_successor_trustee_output_surface.html",
         trust=trust,
         preview_context=preview_context,
+        document_readiness=document_readiness,
     )
 
 @app.route("/trust/<trust_id>/successor-trustee-output-surface/pdf")
@@ -6712,10 +6714,12 @@ def trust_general_assignment_output_surface(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
     return render_template(
         "trust_general_assignment_output_surface.html",
         trust=trust,
         preview_context=preview_context,
+        document_readiness=document_readiness,
     )
 
 @app.route("/trust/<trust_id>/general-assignment-output-surface/pdf")
@@ -6752,10 +6756,12 @@ def trust_organizational_minutes_output_surface(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
     return render_template(
         "trust_organizational_minutes_output_surface.html",
         trust=trust,
         preview_context=preview_context,
+        document_readiness=document_readiness,
     )
 
 @app.route("/trust/<trust_id>/organizational-minutes-output-surface/pdf")
@@ -6792,10 +6798,12 @@ def trust_trustee_acceptance_output_surface(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
     return render_template(
         "trust_trustee_acceptance_output_surface.html",
         trust=trust,
         preview_context=preview_context,
+        document_readiness=document_readiness,
     )
 
 @app.route("/trust/<trust_id>/trustee-acceptance-output-surface/pdf")
@@ -6888,10 +6896,12 @@ def trust_articles_output_surface(trust_id):
     if not trust:
         return f"Trust {trust_id} not found"
     preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
     return render_template(
         "trust_articles_output_surface.html",
         trust=trust,
         preview_context=preview_context,
+        document_readiness=document_readiness,
     )
 
 
