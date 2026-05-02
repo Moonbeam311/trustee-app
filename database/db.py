@@ -48,6 +48,14 @@ def init_db():
         ("grantor_name", "TEXT"),
         ("grantor_type", "TEXT"),
         ("grantor_contact", "TEXT"),
+        ("seal_path", "TEXT"),
+        ("caf_number", "TEXT"),
+        ("crid_number", "TEXT"),
+        ("trust_motto", "TEXT"),
+        ("foundation_scripture", "TEXT"),
+        ("prepared_by", "TEXT"),
+        ("return_to", "TEXT"),
+        ("branding_style", "TEXT DEFAULT 'v3_minimal'"),
     ]:
         if col[0] not in trust_cols:
             cur.execute(f"ALTER TABLE trusts ADD COLUMN {col[0]} {col[1]}")

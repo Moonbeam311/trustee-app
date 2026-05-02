@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "_platform_shell.html" %}
+  <title>Trust Branding Settings</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background:#f8fafc; color:#1f2328; }
+    .box { background:#fff; border:1px solid #d0d7de; border-radius:12px; padding:18px; margin-bottom:16px; }
+    label { display:block; font-weight:700; margin-top:12px; }
+    input, textarea, select { width:100%; padding:9px; border:1px solid #d0d7de; border-radius:8px; margin-top:5px; box-sizing:border-box; }
+    textarea { min-height:80px; }
+    button, .button-link { display:inline-block; padding:9px 13px; border-radius:8px; border:1px solid #1d4ed8; background:#1d4ed8; color:#fff; text-decoration:none; font-weight:700; cursor:pointer; }
+    .secondary { background:#fff; color:#1f2328; border-color:#d0d7de; }
+    .muted { color:#57606a; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .notice { background:#eef6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px; }
+  </style>
+</head>
+<body>
+  <p>
+    <a href="{{ url_for('admin_index') }}">Back to Admin</a> |
+    <a href="{{ url_for('trust_detail', trust_id=trust['trust_id']) }}">Trust Detail</a> |
+    <a href="{{ url_for('trust_declaration_output_surface', trust_id=trust['trust_id']) }}">Declaration</a> |
+    <a href="{{ url_for('trust_certificate_of_trust_output_surface', trust_id=trust['trust_id']) }}">Certificate</a>
+  </p>
+
+  <div class="box">
+    <h1>Trust Branding Settings</h1>
+    <p class="muted">Configure optional trust-specific branding and credential fields. These values are universal and trust-specific. Nothing personal is hard-coded.</p>
+    <p><strong>Trust:</strong> {{ trust['trust_name'] or 'Unnamed Trust' }} <span class="muted">({{ trust['trust_id'] }})</span></p>
+  </div>
+
+  <div class="notice">
+    <strong>Universal Branding Layer</strong><br>
+    Seal, CAF, CRID, motto, scripture, prepared-by, and return-to fields are optional. Blank fields will not appear in document headers.
+  </div>
+
+  <form method="POST" action="{{ url_for('trust_branding_settings', trust_id=trust['trust_id']) }}" class="box">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <div class="grid">
+      <div>
+        <label for="caf_number">CAF Number</label>
+        <input id="caf_number" name="caf_number" value="{{ trust['caf_number'] or '' }}" placeholder="Optional">
+
+        <label for="crid_number">CRID Number</label>
+        <input id="crid_number" name="crid_number" value="{{ trust['crid_number'] or '' }}" placeholder="Optional">
+
+        <label for="branding_style">Branding Style</label>
+        <select id="branding_style" name="branding_style">
+          <option value="v3_minimal" {% if (trust['branding_style'] or 'v3_minimal') == 'v3_minimal' %}selected{% endif %}>V3 Minimal</option>
+          <option value="v1_formal" {% if trust['branding_style'] == 'v1_formal' %}selected{% endif %}>V1 Formal / Instrument Style</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="prepared_by">Prepared By</label>
+        <input id="prepared_by" name="prepared_by" value="{{ trust['prepared_by'] or '' }}" placeholder="Optional">
+
+        <label for="return_to">Return To</label>
+        <input id="return_to" name="return_to" value="{{ trust['return_to'] or '' }}" placeholder="Optional">
+
+        <label for="seal_path">Seal Path</label>
+        <input id="seal_path" name="seal_path" value="{{ trust['seal_path'] or '' }}" placeholder="Seal upload will be connected in the next step" disabled>
+      </div>
+    </div>
+
+    <label for="trust_motto">Trust Motto</label>
+    <textarea id="trust_motto" name="trust_motto" placeholder="Optional">{{ trust['trust_motto'] or '' }}</textarea>
+
+    <label for="foundation_scripture">Foundation Text / Scripture / Principle</label>
+    <textarea id="foundation_scripture" name="foundation_scripture" placeholder="Optional">{{ trust['foundation_scripture'] or '' }}</textarea>
+
+    <p class="muted">Seal upload is intentionally disabled here until file validation and storage handling are added.</p>
+
+    <button type="submit">Save Branding Settings</button>
+    <a class="button-link secondary" href="{{ url_for('admin_index') }}">Cancel</a>
+  </form>
+</body>
+</html>

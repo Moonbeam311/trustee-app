@@ -1864,6 +1864,40 @@ def ledger_entry():
         return redirect(url_for("trust_detail", trust_id=entry["trust_id"]))
     return render_template("ledger_entry.html", trusts=trusts, properties=[], accounts=[])
 
+@app.route("/trust/<trust_id>/branding", methods=["GET", "POST"])
+def trust_branding_settings(trust_id):
+    gate = gate_trust_access(trust_id, {"Admin", "Trustee"})
+    if gate:
+        return gate
+
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        return f"Trust {trust_id} not found", 404
+
+    if request.method == "POST":
+        update_trust_fields(trust_id, {
+            "caf_number": request.form.get("caf_number", "").strip(),
+            "crid_number": request.form.get("crid_number", "").strip(),
+            "trust_motto": request.form.get("trust_motto", "").strip(),
+            "foundation_scripture": request.form.get("foundation_scripture", "").strip(),
+            "prepared_by": request.form.get("prepared_by", "").strip(),
+            "return_to": request.form.get("return_to", "").strip(),
+            "branding_style": request.form.get("branding_style", "v3_minimal").strip() or "v3_minimal",
+        })
+
+        log_change(
+            "trust_branding",
+            trust_id,
+            "branding_settings_updated",
+            "Trust branding settings updated"
+        )
+
+        return redirect(url_for("trust_branding_settings", trust_id=trust_id))
+
+    trust = get_trust_by_id(trust_id)
+    return render_template("trust_branding_settings.html", trust=trust)
+
+
 @app.route("/trust/<trust_id>")
 def trust_detail(trust_id):
     gate = deny_unassigned_trust_access(trust_id)
