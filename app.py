@@ -501,7 +501,7 @@ def build_trust_packet_readiness(document_readiness):
         "ready": all_ready,
         "blocked": blocked,
         "strict_mode": strict_packet_export,
-        "status_label": "Ready to export" if all_ready else ("Export blocked" if blocked else "Export with warnings"),
+        "status_label": "Ready to export" if all_ready else "Incomplete — export available with warnings",
     }
 
 
