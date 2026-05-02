@@ -2900,6 +2900,41 @@ def system_recovery_run():
 
 
 
+
+@app.route("/admin/storage-diagnostics")
+def admin_storage_diagnostics():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    db_file = Path(DB_PATH)
+    upload_dir = Path(UPLOAD_FOLDER)
+
+    rows = [
+        ("DB_PATH", str(db_file)),
+        ("DB Exists", "Yes" if db_file.exists() else "No"),
+        ("DB Size Bytes", str(db_file.stat().st_size) if db_file.exists() else "N/A"),
+        ("UPLOAD_FOLDER", str(upload_dir)),
+        ("Upload Folder Exists", "Yes" if upload_dir.exists() else "No"),
+        ("Upload Folder File Count", str(sum(1 for _ in upload_dir.rglob("*") if _.is_file())) if upload_dir.exists() else "N/A"),
+        ("ENV DB_PATH", os.getenv("DB_PATH", "")),
+        ("ENV UPLOAD_FOLDER", os.getenv("UPLOAD_FOLDER", "")),
+        ("RAILWAY_ENVIRONMENT", os.getenv("RAILWAY_ENVIRONMENT", "")),
+        ("RAILWAY_SERVICE_NAME", os.getenv("RAILWAY_SERVICE_NAME", "")),
+        ("RAILWAY_PROJECT_NAME", os.getenv("RAILWAY_PROJECT_NAME", "")),
+    ]
+
+    body = "<h1>Storage Diagnostics</h1>"
+    body += "<p>Read-only storage path diagnostics for persistent volume verification.</p>"
+    body += "<table border='1' cellpadding='8' cellspacing='0'>"
+    body += "<tr><th>Key</th><th>Value</th></tr>"
+    for key, value in rows:
+        body += f"<tr><td><strong>{key}</strong></td><td>{value}</td></tr>"
+    body += "</table>"
+    body += "<p><a href='/admin'>Return to Admin</a></p>"
+
+    return body
+
 @app.route("/admin/backup/database.zip")
 def admin_database_backup_zip():
     gate = require_master_admin()
