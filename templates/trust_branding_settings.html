@@ -73,7 +73,10 @@
 
     <p class="muted">Seal upload is optional. Uploaded seals are trust-specific and stored under the trust branding upload folder.</p>
 
-    <button type="submit">Save Branding Settings</button>
+    <button type="submit" name="next_action" value="stay">Save Branding Settings</button>
+    <button type="submit" name="next_action" value="declaration">Save + View Declaration</button>
+    <button type="submit" name="next_action" value="certificate">Save + View Certificate</button>
+    <button type="submit" name="next_action" value="packet_preview">Save + Packet Preview</button>
     <a class="button-link secondary" href="{{ url_for('admin_index') }}">Cancel</a>
   </form>
 </body>

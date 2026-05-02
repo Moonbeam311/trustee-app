@@ -1979,6 +1979,15 @@ def trust_branding_settings(trust_id):
             "Trust branding settings updated"
         )
 
+        next_action = request.form.get("next_action", "stay")
+
+        if next_action == "declaration":
+            return redirect(url_for("trust_declaration_output_surface", trust_id=trust_id))
+        if next_action == "certificate":
+            return redirect(url_for("trust_certificate_of_trust_output_surface", trust_id=trust_id))
+        if next_action == "packet_preview":
+            return redirect(url_for("trust_packet_preview", trust_id=trust_id))
+
         return redirect(url_for("trust_branding_settings", trust_id=trust_id))
 
     trust = get_trust_by_id(trust_id)
