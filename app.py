@@ -755,15 +755,98 @@ def build_export_activity_entry(preview_context, document_readiness, packet_read
         "filename": filename,
     }
 
+def build_trust_branding_context(preview_context):
+    """
+    Universal trust branding context.
+
+    This helper intentionally avoids hard-coded personal estate data.
+    Future trust records may supply:
+    - seal_path
+    - caf_number
+    - crid_number
+    - motto
+    - scripture
+    - prepared_by
+    - return_to
+
+    If values are absent, the document uses a neutral professional trust header.
+    """
+    def first_value(*keys):
+        for key in keys:
+            value = preview_context.get(key)
+            if value not in (None, "", []):
+                return value
+        return ""
+
+    return {
+        "trust_name": first_value("trust_name") or "Trust Administration Record",
+        "trust_id": first_value("trust_id"),
+        "jurisdiction": first_value("jurisdiction", "governing_law"),
+        "effective_date": first_value("effective_date_display", "effective_date"),
+        "seal_path": first_value("seal_path", "trust_seal_path", "logo_path"),
+        "caf_number": first_value("caf_number", "caf"),
+        "crid_number": first_value("crid_number", "crid"),
+        "motto": first_value("motto", "trust_motto"),
+        "scripture": first_value("scripture", "foundation_scripture"),
+        "prepared_by": first_value("prepared_by"),
+        "return_to": first_value("return_to"),
+    }
+
+
+def add_universal_v3_letterhead(story, styles, preview_context, document_label):
+    branding = build_trust_branding_context(preview_context)
+
+    trust_name = branding.get("trust_name") or "Trust Administration Record"
+    trust_id = branding.get("trust_id") or ""
+    jurisdiction = branding.get("jurisdiction") or ""
+    effective_date = branding.get("effective_date") or ""
+    motto = branding.get("motto") or ""
+    scripture = branding.get("scripture") or ""
+    caf_number = branding.get("caf_number") or ""
+    crid_number = branding.get("crid_number") or ""
+
+    title_style = styles["Title"]
+    body_style = styles["BodyText"]
+
+    # Universal fallback seal mark. This is not a personal seal.
+    story.append(Paragraph("◇", title_style))
+    story.append(Paragraph(f"<b>{trust_name}</b>", title_style))
+    story.append(Paragraph("Trust Administration Record", body_style))
+
+    if motto:
+        story.append(Paragraph(motto, body_style))
+    if scripture:
+        story.append(Paragraph(scripture, body_style))
+
+    meta_parts = []
+    if trust_id:
+        meta_parts.append(f"Trust ID: {trust_id}")
+    if jurisdiction:
+        meta_parts.append(f"Jurisdiction: {jurisdiction}")
+    if effective_date:
+        meta_parts.append(f"Effective Date: {effective_date}")
+    if caf_number:
+        meta_parts.append(f"CAF: {caf_number}")
+    if crid_number:
+        meta_parts.append(f"CRID: {crid_number}")
+
+    if meta_parts:
+        story.append(Paragraph(" | ".join(meta_parts), body_style))
+
+    story.append(Spacer(1, 8))
+    story.append(Paragraph("<font color='#b8860b'>────────────────────────────────────────</font>", body_style))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(f"<b>{document_label}</b>", title_style))
+    story.append(Spacer(1, 14))
+
+
 def generate_declaration_of_trust_pdf(trust, preview_context):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
     story = []
 
-    story.append(Paragraph("Declaration of Trust", styles["Title"]))
-    story.append(Paragraph("Controlled Trust Declaration Output Surface", styles["Heading3"]))
-    story.append(Spacer(1, 18))
+    add_universal_v3_letterhead(story, styles, preview_context, "Declaration of Trust")
 
     story.append(Paragraph("Declaration", styles["Heading2"]))
     story.append(Paragraph(
@@ -829,9 +912,7 @@ def generate_certificate_of_trust_pdf(trust, preview_context):
     styles = getSampleStyleSheet()
     story = []
 
-    story.append(Paragraph("Certificate of Trust", styles["Title"]))
-    story.append(Paragraph("Controlled Trust Certification Output Surface", styles["Heading3"]))
-    story.append(Spacer(1, 18))
+    add_universal_v3_letterhead(story, styles, preview_context, "Certificate of Trust")
 
     story.append(Paragraph("Certification Summary", styles["Heading2"]))
     story.append(Paragraph(
