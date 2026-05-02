@@ -179,20 +179,11 @@
 <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
 <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
 
-    <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
-    <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
-    <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
-
     <div class="doc-section-title">II. Parties</div>
 <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
 <p><strong>Current Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
 <p><strong>Successor Trustee:</strong> {{ preview_context.successor_trustee_name or "______________________________" }}</p>
 <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
-
-    <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
-    <p><strong>Current Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
-    <p><strong>Successor Trustee:</strong> ______________________________</p>
-    <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
 
     <div class="doc-section-title">III. Appointment and Acceptance</div>
 <p>
@@ -200,12 +191,6 @@
   obligations, and fiduciary responsibilities associated with that office, subject to the trust’s governing documents,
   {{ preview_context.governing_law or "applicable governing law" }}, and later controlled output generation.
 </p>
-
-    <p>
-      The undersigned acknowledges appointment as successor trustee of the trust identified above and accepts the duties,
-      obligations, and fiduciary responsibilities associated with that office, subject to the trust’s governing documents
-      and later controlled output generation.
-    </p>
 
     <div class="doc-section-title">IV. Continuity of Administration</div>
     <p>
