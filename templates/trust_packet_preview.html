@@ -85,6 +85,17 @@
       </div>
     {% endif %}
     <p class="trust-page-subtitle trust-muted">Review the trust packet composition, readiness state, included documents, and export posture before downloading the ZIP bundle.</p>
+    <!-- READINESS ADVISORY PANEL -->
+    <div class="panel trust-panel" style="background:#fff7ed; border-color:#fed7aa;">
+      <h2>Readiness Advisory</h2>
+      {% if document_readiness.all_ready %}
+        <p class="ready"><strong>Status:</strong> Packet appears ready for controlled export.</p>
+      {% else %}
+        <p class="incomplete"><strong>Status:</strong> Packet may be exported, but one or more readiness items should be reviewed before formal use.</p>
+        <p class="muted">This advisory does not block generation. It flags incomplete or pending items so the trustee can review and correct before execution.</p>
+      {% endif %}
+    </div>
+
     <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
     <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>

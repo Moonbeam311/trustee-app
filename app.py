@@ -6645,12 +6645,8 @@ def trust_controlled_packet_export(trust_id):
     document_readiness = build_trust_document_readiness(preview_context)
     packet_readiness = build_trust_packet_readiness(document_readiness)
 
-    if packet_readiness.get("blocked"):
-        return (
-            "Packet export blocked: strict export mode is enabled and one or more core documents are incomplete.",
-            403,
-        )
-
+    # UNIVERSAL EXPORT MODE:
+    # Packet readiness is advisory only. Export remains available for review/testing.
     packet_buffer = generate_controlled_trust_packet_zip(trust, preview_context)
     filename = f"{trust_id}_Controlled_Trust_Packet.zip"
 
