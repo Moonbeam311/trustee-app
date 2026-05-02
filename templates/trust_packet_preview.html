@@ -131,16 +131,10 @@
     <p><strong>Manifest Included:</strong> Yes</p>
     <p><strong>Packet Type:</strong> Controlled Trust Packet ZIP Export</p>
     <p><strong>Export Policy:</strong>
-      <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
-        {% if export_policy.strict_packet_export %}Strict mode{% else %}Advisory mode{% endif %}
-      </span>
+      <span class="trust-status-ready">Advisory mode</span>
     </p>
     <p class="muted trust-muted">
-      {% if export_policy.strict_packet_export %}
-        Packet export is blocked until all five core documents are ready.
-      {% else %}
-        Packet export remains available with warnings when core documents are incomplete.
-      {% endif %}
+      Packet export remains available for review/testing. Readiness warnings remain visible so trustees can correct incomplete items before formal execution.
     </p>
 
     <p><strong>Packet Export Status:</strong>
@@ -351,11 +345,7 @@
     </table>
 
     <div class="actions trust-actions">
-      {% if packet_readiness.blocked %}
-        <span class="trust-status-warning">Download Controlled Trust Packet (ZIP) — blocked in strict mode</span>
-      {% else %}
-        <a class="button-link trust-button-link" href="{{ url_for('trust_controlled_packet_export', trust_id=preview_context.trust_id) }}">Download Controlled Trust Packet (ZIP)</a>
-      {% endif %}
+      <a class="button-link trust-button-link" href="{{ url_for('trust_controlled_packet_export', trust_id=preview_context.trust_id) }}">Download Controlled Trust Packet (ZIP)</a>
       <a class="button-link trust-button-link" href="{{ url_for('trust_execution_dashboard', trust_id=preview_context.trust_id) }}">Return to Execution</a>
     </div>
   </div>
