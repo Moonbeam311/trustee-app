@@ -1330,7 +1330,8 @@ ensure_firm_columns()
 with app.app_context():
     ext_db.create_all()
 
-UPLOAD_FOLDER = Path("uploads")
+DEFAULT_UPLOAD_FOLDER = Path(__file__).resolve().parent / "uploads"
+UPLOAD_FOLDER = Path(os.getenv("UPLOAD_FOLDER", str(DEFAULT_UPLOAD_FOLDER))).resolve()
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", "wav", "mp4", "mov"}
 
