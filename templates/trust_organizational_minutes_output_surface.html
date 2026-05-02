@@ -164,8 +164,10 @@
         {% if preview_context.trust_id %}Trust ID: {{ preview_context.trust_id }}{% endif %}
         {% if preview_context.jurisdiction %} | Jurisdiction: {{ preview_context.jurisdiction }}{% endif %}
         {% if preview_context.effective_date_display %} | Effective Date: {{ preview_context.effective_date_display }}{% endif %}
-        {% if preview_context.caf_number %} | CAF: {{ preview_context.caf_number }}{% endif %}
-        {% if preview_context.crid_number %} | CRID: {{ preview_context.crid_number }}{% endif %}
+        {% if preview_context.branding_style == "v1_formal" %}
+          {% if preview_context.caf_number %} | CAF: {{ preview_context.caf_number }}{% endif %}
+          {% if preview_context.crid_number %} | CRID: {{ preview_context.crid_number }}{% endif %}
+        {% endif %}
       </div>
       {% if preview_context.trust_motto %}
       <div class="optional-meta"><strong>{{ preview_context.trust_motto }}</strong></div>
