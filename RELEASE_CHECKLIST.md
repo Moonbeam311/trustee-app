@@ -34,3 +34,13 @@ Do not deploy a new patch phase unless:
 
 
 If the smoke test fails, stop and fix the failing route before pushing or deploying.
+
+## Deployment Status Check
+
+After disabling duplicate Railway auto-deploys, verify future commits only report the active production Railway service as successful.
+
+Active production service:
+- charismatic-tranquility / trustee-app
+
+Known disabled duplicate:
+- resourceful-magic / trustee-app
