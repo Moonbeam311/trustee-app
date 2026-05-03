@@ -32,7 +32,16 @@
 
   <div class="notice">
     <strong>Universal Branding Layer</strong><br>
-    Seal, CAF, CRID, motto, scripture, prepared-by, and return-to fields are optional. Blank fields will not appear in document headers.
+    These fields control how this trust appears on documents. Blank fields will not appear in document headers.
+    <br><br>
+    <strong>Plain-English Guide:</strong>
+    <ul>
+      <li><strong>Seal / Crest:</strong> Use this when you want the trust to have a consistent visual mark.</li>
+      <li><strong>V3 Minimal:</strong> Best for clean everyday trust documents. Shows the seal, trust name, trust ID, jurisdiction, effective date, motto, and foundation text when entered.</li>
+      <li><strong>V1 Formal / Instrument Style:</strong> Best for formal instruments, certificates, cover sheets, administrative packets, or filing-style documents.</li>
+      <li><strong>CAF / CRID:</strong> Think of these like office tracking numbers. They are useful on formal/admin documents, certificates, cover sheets, filing packets, and correspondence. They usually do not need to appear on every ordinary trust document.</li>
+      <li><strong>Motto / Foundation Text:</strong> Optional guiding language that can appear in the letterhead when entered.</li>
+    </ul>
   </div>
 
   <form method="POST" action="{{ url_for('trust_branding_settings', trust_id=trust['trust_id']) }}" class="box" enctype="multipart/form-data">
