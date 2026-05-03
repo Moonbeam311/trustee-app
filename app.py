@@ -178,6 +178,10 @@ from reportlab.lib.pagesizes import LETTER
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+try:
+    from PIL import Image as PILImage
+except Exception:
+    PILImage = None
 
 app = Flask(__name__)
 STRICT_PACKET_EXPORT = True
@@ -801,6 +805,45 @@ def build_trust_branding_context(preview_context):
     }
 
 
+
+def get_pdf_optimized_seal_path(seal_path):
+    """
+    Return a PDF-optimized seal image path.
+
+    Original uploaded seal remains untouched.
+    Optimized copy is used only for ReportLab PDF embedding to reduce PDF size.
+    """
+    if not seal_path:
+        return ""
+
+    source = Path(seal_path)
+    if not source.exists() or not source.is_file():
+        return seal_path
+
+    if PILImage is None:
+        return seal_path
+
+    cache_dir = Path("data/pdf_assets")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+
+    cache_name = f"{source.stem}_pdfseal.jpg"
+    target = cache_dir / cache_name
+
+    try:
+        if target.exists() and target.stat().st_mtime >= source.stat().st_mtime:
+            return target.as_posix()
+    except Exception:
+        pass
+
+    try:
+        with PILImage.open(source) as img:
+            img = img.convert("RGB")
+            img.thumbnail((300, 300))
+            img.save(target, format="JPEG", quality=72, optimize=True)
+        return target.as_posix()
+    except Exception:
+        return seal_path
+
 def add_universal_v3_letterhead(story, styles, preview_context, document_label):
     branding = build_trust_branding_context(preview_context)
 
@@ -822,7 +865,8 @@ def add_universal_v3_letterhead(story, styles, preview_context, document_label):
     seal_rendered = False
     if seal_path:
         try:
-            seal_file_path = Path(seal_path)
+            optimized_seal_path = get_pdf_optimized_seal_path(seal_path)
+            seal_file_path = Path(optimized_seal_path)
             if seal_file_path.exists() and seal_file_path.is_file():
                 story.append(Image(seal_file_path.as_posix(), width=72, height=72))
                 seal_rendered = True
