@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Trustee Acceptance</h1>
+<div style="border:1px solid #bfdbfe; border-radius:10px; padding:14px; background:#eff6ff; margin:14px 0;">
+  <strong>Step Guidance: Trustee Decision</strong>
+  <p style="margin:6px 0 0;">
+    This step records whether the trustee accepts the transfer, rejects it, or holds it for additional review. Use the notes field to explain the decision, supporting authority, or any condition that should be resolved before finalization.
+  </p>
+</div>
+
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">
