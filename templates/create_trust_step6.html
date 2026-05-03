@@ -8,7 +8,7 @@
 
 <div style="margin-bottom:15px; padding:12px; background:#fff8e1; border-radius:6px; border:1px solid #f4d58d;">
     <strong>Final Review</strong><br>
-    Review your entries before proceeding. This step helps ensure accuracy before the trust is finalized.
+    Review your entries before proceeding. This step finalizes the intake record and sends the trust into the Formation Preview Hub for controlled review.
 </div>
 
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
@@ -69,7 +69,7 @@
     {% if trust.recommended_guidance == "enabled" %}
     <p><strong>Recommended Guidance:</strong> Enabled. Based on the current trust configuration, review these next administrative actions:</p>
     <ul>
-        <li>Review the Formation Preview Hub after finalization.</li>
+        <li>Proceed into the Formation Preview Hub after finalization.</li>
         <li>Confirm trustee acceptance, articles, organizational minutes, and general assignment surfaces.</li>
         <li>Use the Trust Minutes module for key governance decisions.</li>
         <li>Use the Certificate Registry after execution records are completed.</li>
@@ -95,13 +95,13 @@
 
 <div style="margin-bottom:20px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>What happens next?</strong><br>
-    Confirming this step will mark the trust as finalized in the current prototype flow and return you to the Trust Detail page.
+    Confirming this step will mark the trust intake as finalized and route you into the Formation Preview Hub for post-create review.
 </div>
 
 <form method="POST">
   <input type="hidden" name="_csrf_token" value="{{ app_csrf_token() }}">
 
-    <button type="submit">Save and Finalize</button>
+    <button type="submit">Finalize and Open Formation Preview Hub</button>
 </form>
 
 <div style="margin-top:18px;">
