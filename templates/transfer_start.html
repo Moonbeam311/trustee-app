@@ -3,12 +3,32 @@
 <h1>Start Transfer</h1>
 <p>Trust ID: {{ trust_id }}</p>
 
+<div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#f9fafb; margin:14px 0;">
+  <h2 style="margin-top:0;">Simulation vs Real Execution Guidance</h2>
+  <p>
+    Use <strong>Simulation</strong> to practice the workflow, test packet logic, or train a fiduciary user without treating the transfer as an executed real-world action.
+  </p>
+  <p>
+    Use <strong>Real</strong> only when the trustee is intentionally documenting an actual transfer, funding action, asset movement, account change, or trust administration event.
+  </p>
+  <p style="color:#92400e; font-weight:700;">
+    Simulation records are not executed transfers. Real execution should be supported by the trust record, packet readiness review, trustee authority, and supporting documents.
+  </p>
+</div>
+
+<div style="border:1px solid #bfdbfe; border-radius:10px; padding:14px; background:#eff6ff; margin:14px 0;">
+  <strong>Before You Start:</strong>
+  <p style="margin:6px 0 0;">
+    Review the Formation Preview Hub and Packet Preview before using this page for real execution. If packet readiness is incomplete, start in Simulation mode unless a trustee intentionally decides otherwise.
+  </p>
+</div>
+
 <form method="post">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-  <label>Mode</label><br>
+  <label><strong>Mode</strong></label><br>
   <select name="mode">
-    <option value="simulation">Simulation</option>
-    <option value="real">Real</option>
+    <option value="simulation">Simulation — training / testing / non-executed workflow</option>
+    <option value="real">Real — intended execution / funding record</option>
   </select><br><br>
 
   <label>Current Capacity</label><br>
@@ -18,10 +38,11 @@
     <option value="fiduciary">Fiduciary</option>
   </select><br><br>
 
-  <button type="submit">Create Transfer</button>
+  <button type="submit">Create Transfer Packet</button>
 </form>
 
 <hr>
 <p><strong>Purpose:</strong> Begin one transfer packet for one asset.</p>
+<p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Return to Execution Dashboard</a> | <a href="{{ url_for('trust_packet_preview', trust_id=trust_id) }}">Open Packet Preview</a></p>
 <p><strong>Warning:</strong> Start small and keep it explainable.</p>
 {% endblock %}
