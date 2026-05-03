@@ -181,6 +181,7 @@
       <thead>
         <tr>
           <th>Document</th>
+          <th>Record</th>
           <th>Readiness</th>
           <th>Final Surface</th>
           <th>PDF</th>
@@ -189,10 +190,10 @@
       <tbody>
         <tr>
           <td>Articles of Trust</td>
-          <td colspan="100%">
+          <td>
             <small>
-              Record Created: {{ preview_context.created_at_display }} | 
-              Record Updated: {{ trust_last_updated }}
+              Created: {{ preview_context.created_at_display or "—" }}<br>
+              Updated: {{ trust_last_updated or "—" }}
             </small>
           </td>
           <td>
@@ -214,10 +215,10 @@
         </tr>
         <tr>
           <td>Trustee Acceptance</td>
-          <td colspan="100%">
+          <td>
             <small>
-              Record Created: {{ preview_context.created_at_display }} | 
-              Record Updated: {{ trust_last_updated }}
+              Created: {{ preview_context.created_at_display or "—" }}<br>
+              Updated: {{ trust_last_updated or "—" }}
             </small>
           </td>
           <td>
@@ -239,10 +240,10 @@
         </tr>
         <tr>
           <td>General Assignment</td>
-          <td colspan="100%">
+          <td>
             <small>
-              Record Created: {{ preview_context.created_at_display }} | 
-              Record Updated: {{ trust_last_updated }}
+              Created: {{ preview_context.created_at_display or "—" }}<br>
+              Updated: {{ trust_last_updated or "—" }}
             </small>
           </td>
           <td>
@@ -264,10 +265,10 @@
         </tr>
         <tr>
           <td>Organizational Minutes</td>
-          <td colspan="100%">
+          <td>
             <small>
-              Record Created: {{ preview_context.created_at_display }} | 
-              Record Updated: {{ trust_last_updated }}
+              Created: {{ preview_context.created_at_display or "—" }}<br>
+              Updated: {{ trust_last_updated or "—" }}
             </small>
           </td>
           <td>
@@ -289,10 +290,10 @@
         </tr>
         <tr>
           <td>Successor Trustee</td>
-          <td colspan="100%">
+          <td>
             <small>
-              Record Created: {{ preview_context.created_at_display }} | 
-              Record Updated: {{ trust_last_updated }}
+              Created: {{ preview_context.created_at_display or "—" }}<br>
+              Updated: {{ trust_last_updated or "—" }}
             </small>
           </td>
           <td>
