@@ -24,13 +24,19 @@
 
   <p class="trust-note">
     This dashboard is the operational layer after creation and formation review.
-    Use the Post-Create Console for readiness corrections, then return here for transfers and funding.
+    Use the Formation Preview Hub and Packet Preview to confirm readiness before starting transfers or funding.
   </p>
 
   <p style="margin:10px 0 0;">
-    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust_id) }}"><strong>Open Post-Create Action Console</strong></a>
+    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust_id) }}"><strong>Open Formation Preview Hub</strong></a>
     |
     <a href="{{ url_for('trust_packet_preview', trust_id=trust_id) }}"><strong>Open Packet Preview</strong></a>
+    |
+    {% if packet_readiness.blocked %}
+      <strong>Download Controlled Trust Packet (ZIP)</strong> — blocked in strict mode
+    {% else %}
+      <a href="{{ url_for('trust_controlled_packet_export', trust_id=trust_id) }}"><strong>Download Controlled Trust Packet (ZIP)</strong></a>
+    {% endif %}
     |
     <a href="{{ url_for('transfer_start', trust_id=trust_id) }}"><strong>Start New Transfer</strong></a>
   </p>
@@ -42,7 +48,7 @@
 
   <div class="trust-panel-inner">
     <strong>Review & Hub</strong>
-    <p style="margin:8px 0 0;"><a href="{{ url_for('trust_post_create_review', trust_id=trust_id) }}">Open Post-Create Review</a></p>
+    <p style="margin:8px 0 0;"><a href="{{ url_for('trust_post_create_review', trust_id=trust_id) }}">Open Formation Review</a></p>
     <p style="margin:6px 0 0;"><a href="{{ url_for('trust_formation_preview_hub', trust_id=trust_id) }}">Open Trust Formation Preview Hub</a></p>
   </div>
 
