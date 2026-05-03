@@ -311,16 +311,17 @@
 
   <div class="section">
     <h2>Primary Next Actions</h2>
-    <p class="muted">Use these buttons in order after the trust record is created.</p>
+    <p class="muted">Use these actions in order: review the trust record, inspect packet readiness, download the controlled packet when ready, then move into execution and funding.</p>
     <div class="action-row">
-      <a class="button-link primary" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Open Execution Dashboard</a>
+      <a class="button-link primary" href="#trust-record-context">Review Trust Record</a>
       <a class="button-link" href="{{ url_for('trust_packet_preview', trust_id=trust.trust_id) }}">Open Packet Preview</a>
       <a class="button-link success" href="{{ url_for('trust_controlled_packet_export', trust_id=trust.trust_id) }}">Download Controlled Packet ZIP</a>
+      <a class="button-link" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Open Execution Dashboard</a>
       <a class="button-link warning" href="{{ url_for('admin_index') }}">Return to Admin Dashboard</a>
     </div>
   </div>
 
-  <div class="section">
+  <div class="section" id="trust-record-context">
     <h2>Trust Record Context</h2>
     <p class="muted">These values were carried forward from the create-trust wizard into the document preview system.</p>
     <div class="context-grid">
