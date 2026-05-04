@@ -3,6 +3,12 @@
 <h1>Start Transfer</h1>
 <p>Trust ID: {{ trust_id }}</p>
 
+{% if error_message %}
+  <div id="transfer-start-error" style="border:1px solid #fca5a5; border-radius:10px; padding:12px; background:#fef2f2; color:#991b1b; margin:12px 0;">
+    <strong>Transfer Start Error:</strong> {{ error_message }}
+  </div>
+{% endif %}
+
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#f9fafb; margin:14px 0;">
   <h2 style="margin-top:0;">Simulation vs Real Execution Guidance</h2>
   <p>
