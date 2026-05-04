@@ -4,6 +4,10 @@
 
 {% include '_transfer_mode_badge.html' %}
 
+{% include '_transfer_completion_score.html' %}
+
+{% include '_transfer_review_warnings.html' %}
+
 {% set guidance_what = "You are reviewing the full transfer packet before finalizing or recording completion." %}
 {% set guidance_why = "This step ensures all required information, documents, and confirmations are accurate and complete before finalizing the transfer." %}
 {% set guidance_record = "This step supports the final transfer record, packet completion status, and audit trail." %}
@@ -61,7 +65,9 @@
 <form method="post">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
   {% if can_finalize %}
-    <button type="submit">Finalize Transfer</button>
+    <button type="submit">{% include '_transfer_execution_gate.html' %}
+
+Finalize Transfer</button>
   {% else %}
     <button type="submit" disabled>Cannot Finalize Yet</button>
   {% endif %}

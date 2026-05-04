@@ -1,0 +1,40 @@
+{% if transfer %}
+{% set warnings = [] %}
+
+{# --- CRITICAL CHECKS --- #}
+
+{% if not transfer.assignment_confirmed %}
+  {% set _ = warnings.append("Assignment has not been confirmed.") %}
+{% endif %}
+
+{% if not transfer.trustee_decision %}
+  {% set _ = warnings.append("Trustee acceptance is missing.") %}
+{% endif %}
+
+{% if not transfer.control_evidence_notes and not transfer.control_change_status and not transfer.control_change_status %}
+  {% set _ = warnings.append("No control evidence has been recorded.") %}
+{% endif %}
+
+{% if not transfer.records_complete %}
+  {% set _ = warnings.append("Records step is not complete.") %}
+{% endif %}
+
+{% if warnings %}
+<div style="
+  padding: 12px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  font-weight: 700;
+">
+  ⚠ Review Warnings:
+  <ul style="margin: 6px 0 0 16px; font-weight: 500;">
+    {% for w in warnings %}
+      <li>{{ w }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endif %}

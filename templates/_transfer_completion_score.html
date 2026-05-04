@@ -1,0 +1,57 @@
+{% if transfer %}
+{% set missing = [] %}
+
+{# --- ASSET --- #}
+{% if not transfer.asset_name or not transfer.asset_type %}
+  {% set _ = missing.append("Asset") %}
+{% endif %}
+
+{# --- CLASSIFICATION --- #}
+{% if not transfer.transfer_type %}
+  {% set _ = missing.append("Classification") %}
+{% endif %}
+
+{# --- ASSIGNMENT --- #}
+{% if not transfer.assignment_confirmed %}
+  {% set _ = missing.append("Assignment") %}
+{% endif %}
+
+{# --- TRUSTEE ACCEPTANCE --- #}
+{% if not transfer.trustee_decision %}
+  {% set _ = missing.append("Trustee Acceptance") %}
+{% endif %}
+
+{# --- CONTROL EVIDENCE --- #}
+{% if not transfer.control_evidence_notes and not transfer.control_change_status and not transfer.control_change_status %}
+  {% set _ = missing.append("Evidence") %}
+{% endif %}
+
+{# --- RECORDS --- #}
+{% if not transfer.records_complete %}
+  {% set _ = missing.append("Records") %}
+{% endif %}
+
+{% set total = 6 %}
+{% set complete = total - missing|length %}
+{% set percent = (complete / total * 100) | int %}
+
+<div style="
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  background-color: #e2e3e5;
+  color: #383d41;
+  border: 1px solid #d6d8db;
+">
+  Completion: {{ percent }}%
+
+  {% if missing %}
+    <br>
+    Missing: {{ missing | join(', ') }}
+  {% else %}
+    <br>
+    ✔ Transfer appears complete
+  {% endif %}
+</div>
+{% endif %}

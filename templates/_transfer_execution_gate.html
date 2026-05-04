@@ -1,0 +1,42 @@
+{% if transfer %}
+
+{% set blocking_issues = [] %}
+
+{# --- SAME LOGIC AS SCORING --- #}
+
+{% if not transfer.assignment_confirmed %}
+  {% set _ = blocking_issues.append("Assignment not confirmed") %}
+{% endif %}
+
+{% if not transfer.trustee_decision %}
+  {% set _ = blocking_issues.append("Trustee acceptance missing") %}
+{% endif %}
+
+{% if not transfer.control_evidence_notes and not transfer.control_change_status %}
+  {% set _ = blocking_issues.append("Control evidence missing") %}
+{% endif %}
+
+{% if not transfer.records_complete %}
+  {% set _ = blocking_issues.append("Records not complete") %}
+{% endif %}
+
+{% if blocking_issues %}
+<div style="
+  padding: 12px 14px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  font-weight: 700;
+">
+  ❌ Cannot finalize transfer:
+  <ul style="margin: 6px 0 0 16px; font-weight: 500;">
+    {% for issue in blocking_issues %}
+      <li>{{ issue }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+{% endif %}
