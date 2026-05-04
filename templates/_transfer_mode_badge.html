@@ -1,0 +1,29 @@
+{% if transfer and transfer.mode %}
+<div class="transfer-mode-badge transfer-mode-{{ transfer.mode }}">
+  <strong>Mode:</strong>
+  {% if transfer.mode == 'simulation' %}
+    Simulation — Non-executed / training workflow
+  {% else %}
+    Real Execution — Official transfer record
+  {% endif %}
+</div>
+
+<style>
+.transfer-mode-badge {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+.transfer-mode-simulation {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+.transfer-mode-real {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+</style>
+{% endif %}
