@@ -1651,7 +1651,7 @@ def create_trust_launch():
 @csrf.exempt
 def create_trust_step1():
     if request.method == "POST":
-        if False:  # TEMP BYPASS CSRF FOR DEBUG
+        if not validate_csrf_token():
             return render_template(
                 "create_trust_step1.html",
                 error_message="Invalid or missing CSRF token."
