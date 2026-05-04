@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Transfer Asset</h1>
-<div style="border:1px solid #bfdbfe; border-radius:10px; padding:14px; background:#eff6ff; margin:14px 0;">
-  <strong>Step Guidance: Asset Identification</strong>
-  <p style="margin:6px 0 0;">
-    Identify the specific property, account, right, interest, document, or asset category being placed into this transfer packet. Keep the description narrow enough that a trustee, fiduciary, or reviewer can understand exactly what is being moved or documented.
-  </p>
-</div>
 
+{% set guidance_what = "You are identifying the specific asset, account, right, document, or interest being placed into this transfer packet." %}
+{% set guidance_why = "A trust can only administer property that is clearly identified and properly documented. Clear identification prevents vague funding records and later disputes." %}
+{% set guidance_record = "This step supports the Assignment record, Schedule A property listing, and transfer packet asset summary." %}
+{% set guidance_execution = "Simulation: practice identifying assets and testing packet logic. Real: document an actual transfer, funding event, or asset movement into trust administration." %}
+{% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">

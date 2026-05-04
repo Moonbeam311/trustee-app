@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Control Evidence</h1>
+
+{% set guidance_what = "You are attaching or describing the evidence that supports this transfer or assignment." %}
+{% set guidance_why = "Evidence supports the legitimacy of the transfer. Without supporting proof, the record may be incomplete or challenged." %}
+{% set guidance_record = "This step supports the transfer packet’s supporting documentation, including receipts, titles, statements, or supporting affidavits." %}
+{% set guidance_execution = "Simulation: test what evidence would be required. Real: document actual proof supporting the transfer or control of the asset." %}
+{% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">

@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Transfer Review</h1>
+
+{% set guidance_what = "You are reviewing the full transfer packet before finalizing or recording completion." %}
+{% set guidance_why = "This step ensures all required information, documents, and confirmations are accurate and complete before finalizing the transfer." %}
+{% set guidance_record = "This step supports the final transfer record, packet completion status, and audit trail." %}
+{% set guidance_execution = "Simulation: validate the workflow and completeness. Real: confirm that the transfer is fully documented and ready to stand as a completed trust action." %}
+{% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">

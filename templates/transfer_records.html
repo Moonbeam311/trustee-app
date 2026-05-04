@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Transfer Records</h1>
+
+{% set guidance_what = "You are recording the details of this transfer into the trust’s internal records and logs." %}
+{% set guidance_why = "Accurate records ensure continuity, auditability, and accountability. Without proper records, trust activity cannot be verified or reconstructed." %}
+{% set guidance_record = "This step supports the trust’s internal ledger, transfer log, and documentation archive." %}
+{% set guidance_execution = "Simulation: practice documenting transfers. Real: create a permanent record of an actual trust transaction or administrative action." %}
+{% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">

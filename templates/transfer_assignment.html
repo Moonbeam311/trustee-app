@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Assignment</h1>
-<div style="border:1px solid #fed7aa; border-radius:10px; padding:14px; background:#fff7ed; margin:14px 0;">
-  <strong>Step Guidance: Assignment Confirmation</strong>
-  <p style="margin:6px 0 0;">
-    Review the assignment language carefully before confirming this step. Confirmation records that the asset or interest is being placed into the transfer packet flow under the stated capacity and facts.
-  </p>
-</div>
 
+{% set guidance_what = "You are formally assigning the identified asset into the trust or documenting the transfer event." %}
+{% set guidance_why = "Assignment is the legal act that connects the asset to the trust. Without assignment, the trust has no enforceable record of control over the asset." %}
+{% set guidance_record = "This step supports the General Assignment document, Schedule A property listing, and internal transfer ledger." %}
+{% set guidance_execution = "Simulation: practice assignment logic and documentation flow. Real: record an actual transfer of ownership, control, or beneficial interest into trust administration." %}
+{% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 <p>Current Capacity: {{ transfer.current_capacity }}</p>
 

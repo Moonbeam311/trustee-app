@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Trustee Acceptance</h1>
-<div style="border:1px solid #bfdbfe; border-radius:10px; padding:14px; background:#eff6ff; margin:14px 0;">
-  <strong>Step Guidance: Trustee Decision</strong>
-  <p style="margin:6px 0 0;">
-    This step records whether the trustee accepts the transfer, rejects it, or holds it for additional review. Use the notes field to explain the decision, supporting authority, or any condition that should be resolved before finalization.
-  </p>
-</div>
 
+{% set guidance_what = "You are confirming that the trustee accepts responsibility for this transfer and the associated asset or record." %}
+{% set guidance_why = "Trustee acceptance establishes fiduciary authority and responsibility. Without acceptance, the trust cannot formally act on the transfer." %}
+{% set guidance_record = "This step supports the Trustee Acceptance record and confirms fiduciary control within the transfer packet." %}
+{% set guidance_execution = "Simulation: practice fiduciary acknowledgment. Real: document a trustee’s acceptance of responsibility for an actual transfer or asset." %}
+{% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:12px; background:#f9fafb; margin-bottom:16px;">

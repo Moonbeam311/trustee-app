@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Transfer Classification</h1>
+
+{% set guidance_what = "You are defining how the asset is legally and administratively categorized within the trust." %}
+{% set guidance_why = "Proper classification determines how the asset is managed, reported, and transferred. It affects documentation, authority, and future actions." %}
+{% set guidance_record = "This step informs the Assignment structure and determines how the asset appears in trust records and reports." %}
+{% set guidance_execution = "Simulation: test classification logic. Real: define how the asset will be treated within actual trust administration." %}
+{% include "_transfer_guidance.html" with context %}
 <div style="border:1px solid #bfdbfe; border-radius:10px; padding:14px; background:#eff6ff; margin:14px 0;">
   <strong>Step Guidance: Classification and Consideration</strong>
   <p style="margin:6px 0 0;">
