@@ -7199,6 +7199,11 @@ def transfer_assignment(transfer_id):
             )
 
         if not validate_capacity_for_step("assignment", transfer.current_capacity):
+            transfer.current_capacity = "individual"
+            flash("Capacity automatically set to Individual for assignment step.", "info")
+
+        # Re-check after auto-correction
+        if not validate_capacity_for_step("assignment", transfer.current_capacity):
             flash("Cannot confirm assignment until current capacity is set to individual.", "warning")
         else:
             transfer.assignment_confirmed = True
