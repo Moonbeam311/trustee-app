@@ -218,6 +218,8 @@ def finalize_transfer(
 
     transfer.status = "completed"
     transfer.finalized_at = datetime.utcnow()
+    transfer.finalized_by = performed_by
+    transfer.finalized_capacity = capacity_used
 
     add_transfer_action(
         transfer=transfer,

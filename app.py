@@ -276,6 +276,7 @@ def deny_unassigned_trust_access(trust_id):
 
     if not operator_can_access_trust(trust_id):
         return render_template(
+        
             "access_denied.html",
             reason="You are not assigned to this trust."
         )
@@ -7021,6 +7022,7 @@ def trust_execution_dashboard(trust_id):
 
     return render_template(
         "transfer_execution_dashboard.html",
+        get_transfer_resume_endpoint=get_transfer_resume_endpoint,
         trust_id=trust_id,
         trust=trust,
         preview_context=preview_context,

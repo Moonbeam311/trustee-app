@@ -43,6 +43,9 @@ class Transfer(db.Model):
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
     )
     finalized_at = db.Column(db.DateTime, nullable=True)
+    finalized_by = db.Column(db.String(255), nullable=True)
+    finalized_capacity = db.Column(db.String(50), nullable=True)
+
 
     actions = db.relationship(
         "TransferAction",
