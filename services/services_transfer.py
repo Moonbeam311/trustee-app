@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from models.models_transfer import Transfer, TransferAction, TransferRecord, db
+from database.db import get_media_by_entity
 
 
 STEP_ORDER = [
@@ -202,6 +203,21 @@ def can_finalize_transfer(transfer: Transfer) -> tuple[bool, list[str]]:
         missing.append("control_evidence")
     if not transfer.records_complete:
         missing.append("records")
+
+    # === II-A SOFT HYBRID ENFORCEMENT ===
+    # Require at least one external execution proof before finalization.
+    # Full ledger enforcement comes after ledger timing is redesigned.
+    proof_count = 0
+    try:
+        proof_count = len(get_media_by_entity("transfer", transfer.transfer_id))
+    except Exception:
+        proof_count = 0
+
+    external_ok = bool(getattr(transfer, "external_verified", False))
+    proof_ok = proof_count > 0
+
+    if not (external_ok or proof_ok):
+        missing.append("external_verification_or_proof")
 
     return (len(missing) == 0, missing)
 
