@@ -30,6 +30,7 @@ from database.db import (
     get_next_entry_id,
     create_ledger_entry,
     get_ledger_by_trust,
+    get_ledger_entries_by_trust_id,
     get_ledger_by_property,
     seed_chart_of_accounts_for_trust,
     get_chart_of_accounts,
@@ -7299,6 +7300,15 @@ def trust_execution_dashboard(trust_id):
         for t in transfers
     }
 
+    transfer_ledger_counts = {}
+    for t in transfers:
+        ledger_rows = get_ledger_entries_by_trust_id(t.trust_id)
+        transfer_ledger_counts[t.transfer_id] = sum(
+            1 for row in ledger_rows
+            if t.transfer_id in (row["description"] or "")
+        )
+
+
     return render_template(
         "transfer_execution_dashboard.html",
         get_transfer_resume_endpoint=get_transfer_resume_endpoint,
@@ -7313,6 +7323,7 @@ def trust_execution_dashboard(trust_id):
         trust_last_updated=get_trust_last_updated_value(trust),
         transfers=transfers,
           transfer_proof_counts=transfer_proof_counts,
+          transfer_ledger_counts=transfer_ledger_counts,
         current_role=session.get("role"),
     )
 
@@ -7945,12 +7956,19 @@ def transfer_detail(transfer_id):
     )
     transfer_proof_records = get_media_by_entity("transfer", transfer.transfer_id)
 
+
+    transfer_ledger_records = [
+        row for row in get_ledger_entries_by_trust_id(transfer.trust_id)
+        if transfer.transfer_id in (row["description"] or "")
+    ]
+
     return render_template(
         "transfer_detail.html",
         transfer=transfer,
         record_bundle=record_bundle,
         actions=actions,
         transfer_proof_records=transfer_proof_records,
+        transfer_ledger_records=transfer_ledger_records,
         control_strength=calculate_control_strength(transfer.control_change_status),
     )
 

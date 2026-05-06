@@ -80,6 +80,30 @@
   </div>
 
     <div class="section">
+      <h2>Hybrid Completion Status</h2>
+
+      {% set ledger_count = transfer_ledger_records|length if transfer_ledger_records else 0 %}
+      {% set proof_count = transfer_proof_records|length if transfer_proof_records else 0 %}
+      {% set ledger_ok = ledger_count > 0 %}
+      {% set external_ok = transfer.external_verified %}
+      {% set proof_ok = proof_count > 0 %}
+
+      <p><strong>Internal Ledger Posted:</strong> {% if ledger_ok %}Yes{% else %}No{% endif %} ({{ ledger_count }})</p>
+      <p><strong>External Verified:</strong> {% if external_ok %}Yes{% else %}No / Pending{% endif %}</p>
+      <p><strong>Proof Attached:</strong> {% if proof_ok %}Yes{% else %}No{% endif %} ({{ proof_count }})</p>
+
+      <p><strong>Overall Hybrid Status:</strong>
+        {% if ledger_ok and external_ok and proof_ok %}
+          Complete
+        {% elif ledger_ok or external_ok or proof_ok %}
+          Partial
+        {% else %}
+          Not Started
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="section">
       <h2>External Tracking Status</h2>
       <p><strong>Verified:</strong> {% if transfer.external_verified %}Yes{% else %}No / Pending{% endif %}</p>
       <p><strong>Institution:</strong> {{ transfer.external_institution or "Not recorded" }}</p>

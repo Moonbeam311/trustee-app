@@ -318,6 +318,26 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
             — Proof Attached: <strong>{{ transfer_proof_counts.get(t.transfer_id, 0) if transfer_proof_counts else 0 }}</strong>
           </small>
           <br>
+          {% set ledger_count = transfer_ledger_counts.get(t.transfer_id, 0) if transfer_ledger_counts else 0 %}
+          {% set proof_count = transfer_proof_counts.get(t.transfer_id, 0) if transfer_proof_counts else 0 %}
+          {% set ledger_ok = ledger_count > 0 %}
+          {% set external_ok = t.external_verified %}
+          {% set proof_ok = proof_count > 0 %}
+          <small>
+            Hybrid Status:
+            <strong>
+              {% if ledger_ok and external_ok and proof_ok %}
+                Complete
+              {% elif ledger_ok or external_ok or proof_ok %}
+                Partial
+              {% else %}
+                Not Started
+              {% endif %}
+            </strong>
+            — Ledger: {{ ledger_count }}
+            — Proof: {{ proof_count }}
+          </small>
+          <br>
         <small style="color:#92400e;">Template Inventory: additional handoff support docs still pending integration</small>
         {% if t.status in ["draft", "in_progress"] %}
           [<a href="{{ get_transfer_resume_endpoint(t) }}">Resume</a>]
