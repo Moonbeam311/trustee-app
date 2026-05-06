@@ -7810,6 +7810,17 @@ def transfer_review(transfer_id):
             flash("Transfer cannot be finalized until the trust accounting method is selected.", "error")
             return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
+        
+        # === II-A ENFORCEMENT: BLOCK FINALIZATION IF REQUIREMENTS NOT MET ===
+        if not allowed:
+            flash("Transfer cannot be finalized. Required execution elements are missing.", "error")
+
+            if missing:
+                for item in missing:
+                    flash(f"Missing: {item}", "warning")
+
+            return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
         success, missing = finalize_transfer(
             transfer=transfer,
             performed_by=session.get("username") or "unknown",
