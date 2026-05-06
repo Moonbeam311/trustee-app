@@ -7287,6 +7287,7 @@ def trust_execution_dashboard(trust_id):
     document_readiness = build_trust_document_readiness(preview_context)
     packet_readiness = build_trust_packet_readiness(document_readiness)
     correction_links = build_correction_links(trust_id, document_readiness, return_to="execution")
+    active_transfer_filter = (request.args.get("transfer_filter") or "all").strip()
 
     transfers = (
         Transfer.query
@@ -7340,6 +7341,36 @@ def trust_execution_dashboard(trust_id):
         else:
             transfer_completion_summary["hybrid_not_started"] += 1
 
+
+    def transfer_matches_filter(t):
+        ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
+        proof_count = transfer_proof_counts.get(t.transfer_id, 0)
+        ledger_ok = ledger_count > 0
+        external_ok = bool(t.external_verified)
+        proof_ok = proof_count > 0
+
+        if active_transfer_filter == "all":
+            return True
+        if active_transfer_filter == "completed":
+            return t.status == "completed"
+        if active_transfer_filter == "open":
+            return t.status != "completed"
+        if active_transfer_filter == "hybrid_complete":
+            return ledger_ok and external_ok and proof_ok
+        if active_transfer_filter == "hybrid_partial":
+            return (ledger_ok or external_ok or proof_ok) and not (ledger_ok and external_ok and proof_ok)
+        if active_transfer_filter == "hybrid_not_started":
+            return not ledger_ok and not external_ok and not proof_ok
+        if active_transfer_filter == "ledger_posted":
+            return ledger_ok
+        if active_transfer_filter == "external_verified":
+            return external_ok
+        if active_transfer_filter == "proof_attached":
+            return proof_ok
+        return True
+
+    filtered_transfers = [t for t in transfers if transfer_matches_filter(t)]
+
     return render_template(
         "transfer_execution_dashboard.html",
         get_transfer_resume_endpoint=get_transfer_resume_endpoint,
@@ -7352,10 +7383,12 @@ def trust_execution_dashboard(trust_id):
         export_policy=get_export_policy(),
         latest_export_activity=get_latest_export_for_trust(trust_id),
         trust_last_updated=get_trust_last_updated_value(trust),
-        transfers=transfers,
+          transfers=filtered_transfers,
+          all_transfers=transfers,
           transfer_proof_counts=transfer_proof_counts,
           transfer_ledger_counts=transfer_ledger_counts,
           transfer_completion_summary=transfer_completion_summary,
+          active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),
     )
 

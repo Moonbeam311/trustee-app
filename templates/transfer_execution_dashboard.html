@@ -283,6 +283,37 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
     </div>
 </div>
 
+
+    <div style="margin-top:12px;">
+      <strong>Transfer Filters</strong>
+      <div class="transfer-status-row" style="margin-top:8px;">
+        <a class="transfer-status-badge {% if active_transfer_filter == 'all' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">All</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'hybrid_complete' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=hybrid_complete">Hybrid Complete</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'hybrid_partial' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=hybrid_partial">Hybrid Partial</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'hybrid_not_started' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=hybrid_not_started">Hybrid Not Started</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'ledger_posted' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=ledger_posted">Ledger Posted</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'external_verified' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=external_verified">External Verified</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'proof_attached' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=proof_attached">Proof Attached</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'completed' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=completed">Completed</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'open' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=open">Open</a>
+      </div>
+
+      {% if active_transfer_filter and active_transfer_filter != 'all' %}
+        <p class="trust-note" style="margin-top:8px;">
+          Showing filtered transfers for: <strong>{{ active_transfer_filter }}</strong>.
+          <a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Clear filter</a>
+        </p>
+      {% endif %}
+    </div>
+
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#fff; margin-bottom:16px;">
   <strong>Template Inventory Status</strong>
   <p style="margin-top:8px;">This panel reflects the broader handoff template inventory compared against the current app build.</p>
