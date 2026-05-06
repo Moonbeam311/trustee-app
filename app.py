@@ -7294,6 +7294,11 @@ def trust_execution_dashboard(trust_id):
         .all()
     )
 
+    transfer_proof_counts = {
+        t.transfer_id: len(get_media_by_entity("transfer", t.transfer_id))
+        for t in transfers
+    }
+
     return render_template(
         "transfer_execution_dashboard.html",
         get_transfer_resume_endpoint=get_transfer_resume_endpoint,
@@ -7307,6 +7312,7 @@ def trust_execution_dashboard(trust_id):
         latest_export_activity=get_latest_export_for_trust(trust_id),
         trust_last_updated=get_trust_last_updated_value(trust),
         transfers=transfers,
+          transfer_proof_counts=transfer_proof_counts,
         current_role=session.get("role"),
     )
 
@@ -7937,11 +7943,14 @@ def transfer_detail(transfer_id):
         .order_by(TransferAction.created_at.asc())
         .all()
     )
+    transfer_proof_records = get_media_by_entity("transfer", transfer.transfer_id)
+
     return render_template(
         "transfer_detail.html",
         transfer=transfer,
         record_bundle=record_bundle,
         actions=actions,
+        transfer_proof_records=transfer_proof_records,
         control_strength=calculate_control_strength(transfer.control_change_status),
     )
 

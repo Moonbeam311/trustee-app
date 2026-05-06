@@ -79,6 +79,22 @@
     {% endif %}
   </div>
 
+    <div class="section">
+      <h2>External Tracking Status</h2>
+      <p><strong>Verified:</strong> {% if transfer.external_verified %}Yes{% else %}No / Pending{% endif %}</p>
+      <p><strong>Institution:</strong> {{ transfer.external_institution or "Not recorded" }}</p>
+      <p><strong>Account / Reference:</strong> {{ transfer.external_account_ref or "Not recorded" }}</p>
+      <p><strong>Method:</strong> {{ transfer.external_transfer_method or "Not recorded" }}</p>
+      <p><strong>Transaction ID:</strong> {{ transfer.external_transaction_id or "Not recorded" }}</p>
+      <p><strong>Verified At:</strong> {{ transfer.external_verified_at or "Not verified" }}</p>
+      <p><strong>Proof Attached:</strong> {{ transfer_proof_records|length if transfer_proof_records else 0 }}</p>
+      <p>
+        <a href="{{ url_for('transfer_external_tracking', transfer_id=transfer.transfer_id) }}">Update External Tracking</a>
+        |
+        <a href="{{ url_for('evidence_by_entity', entity_type='transfer', entity_id=transfer.transfer_id) }}">View Linked Proof</a>
+      </p>
+    </div>
+
   <div class="section">
     <h2>Assignment</h2>
     <pre>{{ transfer.assignment_text or '' }}</pre>

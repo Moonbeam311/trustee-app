@@ -310,6 +310,14 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
         <br>
         <small>Last Updated: {{ t.updated_at or t.created_at }}</small>
         <br>
+          <small>
+            External Verified:
+            <strong>{% if t.external_verified %}Yes{% else %}No/Pending{% endif %}</strong>
+            {% if t.external_institution %} — Institution: {{ t.external_institution }}{% endif %}
+            {% if t.external_transaction_id %} — Txn: {{ t.external_transaction_id }}{% endif %}
+            — Proof Attached: <strong>{{ transfer_proof_counts.get(t.transfer_id, 0) if transfer_proof_counts else 0 }}</strong>
+          </small>
+          <br>
         <small style="color:#92400e;">Template Inventory: additional handoff support docs still pending integration</small>
         {% if t.status in ["draft", "in_progress"] %}
           [<a href="{{ get_transfer_resume_endpoint(t) }}">Resume</a>]
