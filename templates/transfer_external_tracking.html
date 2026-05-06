@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-shell">
+  <h1>External Transfer Tracking</h1>
+
+  <p class="muted">
+    Transfer {{ transfer.transfer_id }} — record real-world institution, account, transaction,
+    and verification details for external tracking.
+  </p>
+
+  <p>
+    <a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Transfer Detail</a>
+    |
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Trust Execution</a>
+  </p>
+
+  <div class="card">
+    <h2>Internal Transfer Reference</h2>
+    <p><strong>Status:</strong> {{ transfer.status }}</p>
+    <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+    <p><strong>Asset:</strong> {{ transfer.asset_name or "Not recorded" }}</p>
+    <p><strong>Asset Type:</strong> {{ transfer.asset_type or "Not recorded" }}</p>
+    <p><strong>Estimated Value:</strong> {{ transfer.estimated_value or "Not recorded" }}</p>
+    <p><strong>Finalized At:</strong> {{ transfer.finalized_at or "Not finalized" }}</p>
+  </div>
+
+  <div class="card">
+    <h2>External Tracking Record</h2>
+
+    <form method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+      <label>External Institution</label>
+      <input type="text" name="external_institution" value="{{ transfer.external_institution or '' }}" placeholder="Bank, brokerage, custodian, agency, counterparty">
+
+      <label>External Account / Reference</label>
+      <input type="text" name="external_account_ref" value="{{ transfer.external_account_ref or '' }}" placeholder="Masked account, reference number, last 4, file ref">
+
+      <label>Transfer Method</label>
+      <select name="external_transfer_method">
+        {% set method = transfer.external_transfer_method or '' %}
+        <option value="">Select method</option>
+        <option value="internal_account_transfer"{% if method == "internal_account_transfer" %} selected{% endif %}>Internal Account Transfer</option>
+        <option value="ach"{% if method == "ach" %} selected{% endif %}>ACH</option>
+        <option value="wire"{% if method == "wire" %} selected{% endif %}>Wire</option>
+        <option value="check"{% if method == "check" %} selected{% endif %}>Check</option>
+        <option value="cash_deposit"{% if method == "cash_deposit" %} selected{% endif %}>Cash Deposit</option>
+        <option value="title_or_account_update"{% if method == "title_or_account_update" %} selected{% endif %}>Title / Account Update</option>
+        <option value="other"{% if method == "other" %} selected{% endif %}>Other</option>
+      </select>
+
+      <label>External Transaction ID</label>
+      <input type="text" name="external_transaction_id" value="{{ transfer.external_transaction_id or '' }}" placeholder="Transaction ID, confirmation number, receipt ID">
+
+      <label>Verification Status</label>
+      {% set verified = transfer.external_verified %}
+      <select name="external_verified">
+        <option value="0"{% if not verified %} selected{% endif %}>Pending / Not Verified</option>
+        <option value="1"{% if verified %} selected{% endif %}>Verified</option>
+      </select>
+
+      <label>Proof / Verification Notes</label>
+      <textarea name="external_proof_notes" rows="8" placeholder="Describe receipt, statement, confirmation page, title update, or external evidence.">{{ transfer.external_proof_notes or '' }}</textarea>
+
+      <button type="submit">Save External Tracking</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Operational Note</h2>
+    <p class="muted">
+      This page records external transfer tracking metadata. It does not replace uploading evidence.
+      Proof upload will be connected in the next layer.
+    </p>
+  </div>
+</div>
+{% endblock %}

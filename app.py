@@ -7884,6 +7884,42 @@ def transfer_support_doc_edit(transfer_id, support_doc_id):
     )
 
 
+
+
+@app.route("/execution/transfers/<transfer_id>/external-tracking", methods=["GET", "POST"])
+def transfer_external_tracking(transfer_id):
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template("transfer_external_tracking.html", transfer=transfer)
+
+        transfer.external_institution = request.form.get("external_institution", "").strip() or None
+        transfer.external_account_ref = request.form.get("external_account_ref", "").strip() or None
+        transfer.external_transfer_method = request.form.get("external_transfer_method", "").strip() or None
+        transfer.external_transaction_id = request.form.get("external_transaction_id", "").strip() or None
+        transfer.external_proof_notes = request.form.get("external_proof_notes", "").strip() or None
+
+        verified_raw = request.form.get("external_verified", "0")
+        transfer.external_verified = verified_raw == "1"
+        transfer.external_verified_at = datetime.now(UTC) if transfer.external_verified else None
+
+        ext_db.session.commit()
+
+        log_change(
+            "transfer",
+            transfer.transfer_id,
+            "external_tracking_updated",
+            f"Institution={transfer.external_institution or 'Not recorded'}; Verified={transfer.external_verified}"
+        )
+
+        flash("External transfer tracking updated.", "success")
+        return redirect(url_for("transfer_detail", transfer_id=transfer.transfer_id))
+
+    return render_template("transfer_external_tracking.html", transfer=transfer)
+
+
 @app.route("/execution/transfers/<transfer_id>/detail")
 def transfer_detail(transfer_id):
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()

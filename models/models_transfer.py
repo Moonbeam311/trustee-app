@@ -46,6 +46,15 @@ class Transfer(db.Model):
     finalized_by = db.Column(db.String(255), nullable=True)
     finalized_capacity = db.Column(db.String(50), nullable=True)
 
+    # B: real-world external transfer tracking
+    external_institution = db.Column(db.String(255), nullable=True)
+    external_account_ref = db.Column(db.String(255), nullable=True)
+    external_transfer_method = db.Column(db.String(100), nullable=True)
+    external_transaction_id = db.Column(db.String(255), nullable=True)
+    external_verified = db.Column(db.Boolean, nullable=False, default=False)
+    external_verified_at = db.Column(db.DateTime, nullable=True)
+    external_proof_notes = db.Column(db.Text, nullable=True)
+
 
     actions = db.relationship(
         "TransferAction",
