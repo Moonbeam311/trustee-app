@@ -340,3 +340,55 @@
 .trust-callout p {
   margin: 6px 0 0;
 }
+
+/* Transfer dashboard status badges */
+.transfer-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+  align-items: center;
+}
+
+.transfer-status-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  border: 1px solid transparent;
+}
+
+.transfer-status-badge.ready {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.transfer-status-badge.warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.transfer-status-badge.muted {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.transfer-status-badge.danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+
+.transfer-row-card {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #ffffff;
+}
+

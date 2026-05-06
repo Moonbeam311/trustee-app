@@ -294,7 +294,7 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
 {% if transfers %}
   <ul>
     {% for t in transfers %}
-      <li style="margin-bottom: 12px;">
+      <li class="transfer-row-card">
         <strong>{{ t.transfer_id }}</strong>
         {% if t.status == "completed" %}
         [<a href="{{ url_for('transfer_certificate_pdf', transfer_id=t.transfer_id) }}" target="_blank"><strong>Certificate</strong></a>]
@@ -310,32 +310,33 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
         <br>
         <small>Last Updated: {{ t.updated_at or t.created_at }}</small>
         <br>
-          <small>
-            External Verified:
-            <strong>{% if t.external_verified %}Yes{% else %}No/Pending{% endif %}</strong>
-            {% if t.external_institution %} — Institution: {{ t.external_institution }}{% endif %}
-            {% if t.external_transaction_id %} — Txn: {{ t.external_transaction_id }}{% endif %}
-            — Proof Attached: <strong>{{ transfer_proof_counts.get(t.transfer_id, 0) if transfer_proof_counts else 0 }}</strong>
-          </small>
-          <br>
           {% set ledger_count = transfer_ledger_counts.get(t.transfer_id, 0) if transfer_ledger_counts else 0 %}
           {% set proof_count = transfer_proof_counts.get(t.transfer_id, 0) if transfer_proof_counts else 0 %}
           {% set ledger_ok = ledger_count > 0 %}
           {% set external_ok = t.external_verified %}
           {% set proof_ok = proof_count > 0 %}
+
+          <div class="transfer-status-row">
+            <span class="transfer-status-badge {% if ledger_ok %}ready{% else %}muted{% endif %}">
+              Ledger {% if ledger_ok %}Posted{% else %}Missing{% endif %}: {{ ledger_count }}
+            </span>
+
+            <span class="transfer-status-badge {% if external_ok %}ready{% else %}warning{% endif %}">
+              External {% if external_ok %}Verified{% else %}Pending{% endif %}
+            </span>
+
+            <span class="transfer-status-badge {% if proof_ok %}ready{% else %}warning{% endif %}">
+              Proof {{ proof_count }}
+            </span>
+
+            <span class="transfer-status-badge {% if ledger_ok and external_ok and proof_ok %}ready{% elif ledger_ok or external_ok or proof_ok %}warning{% else %}muted{% endif %}">
+              Hybrid {% if ledger_ok and external_ok and proof_ok %}Complete{% elif ledger_ok or external_ok or proof_ok %}Partial{% else %}Not Started{% endif %}
+            </span>
+          </div>
+
           <small>
-            Hybrid Status:
-            <strong>
-              {% if ledger_ok and external_ok and proof_ok %}
-                Complete
-              {% elif ledger_ok or external_ok or proof_ok %}
-                Partial
-              {% else %}
-                Not Started
-              {% endif %}
-            </strong>
-            — Ledger: {{ ledger_count }}
-            — Proof: {{ proof_count }}
+            {% if t.external_institution %}Institution: {{ t.external_institution }}{% endif %}
+            {% if t.external_transaction_id %}{% if t.external_institution %} — {% endif %}Txn: {{ t.external_transaction_id }}{% endif %}
           </small>
           <br>
         <small style="color:#92400e;">Template Inventory: additional handoff support docs still pending integration</small>
