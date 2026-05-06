@@ -314,6 +314,7 @@ def get_transfer_resume_endpoint(transfer):
 
 
 def mark_core_support_docs_included(transfer):
+
     core_keys = {"assignment", "schedule_a", "transfer_log", "minutes"}
 
     rows = TransferSupportDoc.query.filter_by(transfer_id_fk=transfer.id).all()
@@ -855,7 +856,7 @@ def add_universal_v3_letterhead(story, styles, preview_context, document_label):
     caf_number = branding.get("caf_number") or ""
     crid_number = branding.get("crid_number") or ""
 
-    title_style = styles["Title"]
+    title_style = title_style
     body_style = styles["BodyText"]
 
     # Universal trust-specific seal rendering.
@@ -909,11 +910,42 @@ def generate_declaration_of_trust_pdf(trust, preview_context):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
     styles = getSampleStyleSheet()
+
+    # === INSTRUMENT STYLE BLOCK ===
+    from reportlab.lib.styles import ParagraphStyle
+
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Title'],
+        alignment=1,
+        spaceAfter=12
+    )
+
+    header_style = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Heading2'],
+        spaceBefore=10,
+        spaceAfter=6
+    )
+
+    body_style = ParagraphStyle(
+        'BodyStyle',
+        parent=styles['Normal'],
+        spaceAfter=6
+    )
+
+    small_style = ParagraphStyle(
+        'SmallStyle',
+        parent=styles['Normal'],
+        fontSize=9,
+        spaceAfter=4
+    )
+
     story = []
 
     add_universal_v3_letterhead(story, styles, preview_context, "Declaration of Trust")
 
-    story.append(Paragraph("Declaration", styles["Heading2"]))
+    story.append(Paragraph("Declaration", header_style))
     story.append(Paragraph(
         "This Declaration of Trust summarizes the trust identity, foundational parties, governing jurisdiction, "
         "administrative purpose, and initial trust property currently recorded in the Trustee App system.",
@@ -921,7 +953,7 @@ def generate_declaration_of_trust_pdf(trust, preview_context):
     ))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -930,14 +962,14 @@ def generate_declaration_of_trust_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Foundational Parties", styles["Heading2"]))
+    story.append(Paragraph("Foundational Parties", header_style))
     story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Primary Beneficiary:</b> {preview_context.get('primary_beneficiary') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Purpose and Administration", styles["Heading2"]))
+    story.append(Paragraph("Purpose and Administration", header_style))
     story.append(Paragraph(
         preview_context.get("trust_purpose") or
         "The trust is established for the lawful holding, administration, protection, and orderly management of trust property and related records.",
@@ -945,13 +977,13 @@ def generate_declaration_of_trust_pdf(trust, preview_context):
     ))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Initial Trust Property", styles["Heading2"]))
+    story.append(Paragraph("Initial Trust Property", header_style))
     story.append(Paragraph(f"<b>Initial Corpus:</b> {preview_context.get('initial_corpus_description') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Property Mapping Timing:</b> {preview_context.get('property_mapping_timing') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Declaratory Statement", styles["Heading2"]))
+    story.append(Paragraph("Declaratory Statement", header_style))
     story.append(Paragraph(
         "The undersigned declares that the above trust record is maintained as a controlled internal trust administration record. "
         "This output is generated from the Trustee App data record and should be reviewed against the governing trust instrument, "
@@ -971,6 +1003,193 @@ def generate_declaration_of_trust_pdf(trust, preview_context):
     return buffer
 
 
+
+
+def generate_transfer_certificate_pdf(transfer, trust=None, asset=None):
+    """
+    Generate an internal PDF certificate for a completed transfer.
+
+    TOS-54:
+    - Uses existing transfer audit data.
+    - Does not mutate database state.
+    - Does not create routes.
+    - Designed for completed transfers only, with graceful fallback display.
+    """
+    from io import BytesIO
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+
+    styles = getSampleStyleSheet()
+
+    # === TOS-57 TRANSFER CERTIFICATE INSTRUMENT STYLE BLOCK ===
+    from reportlab.lib.styles import ParagraphStyle
+
+    title_style = ParagraphStyle(
+        "TransferCertificateTitle",
+        parent=styles["Title"],
+        alignment=1,
+        spaceAfter=12,
+    )
+
+    header_style = ParagraphStyle(
+        "TransferCertificateHeader",
+        parent=styles["Heading2"],
+        spaceBefore=10,
+        spaceAfter=6,
+    )
+
+    body_style = ParagraphStyle(
+        "TransferCertificateBody",
+        parent=styles["Normal"],
+        spaceAfter=6,
+    )
+
+    small_style = ParagraphStyle(
+        "TransferCertificateSmall",
+        parent=styles["Normal"],
+        fontSize=9,
+        spaceAfter=4,
+    )
+
+    story = []
+
+    # TOS-57 Seal + Authority Integration
+    try:
+        preview_context = dict(trust) if trust and hasattr(trust, "keys") else (trust or {})
+        add_universal_v3_letterhead(story, styles, preview_context, "Transfer Certificate")
+    except Exception:
+        pass
+
+
+    def safe_get(obj, key, default="Not recorded"):
+        if obj is None:
+            return default
+        if isinstance(obj, dict):
+            value = obj.get(key, default)
+        elif hasattr(obj, "keys") and key in obj.keys():
+            value = obj[key]
+        else:
+            value = getattr(obj, key, default)
+        return value if value not in [None, ""] else default
+
+    transfer_id = safe_get(transfer, "transfer_id")
+    status = safe_get(transfer, "status")
+    finalized_at = safe_get(transfer, "finalized_at")
+    finalized_by = safe_get(transfer, "finalized_by")
+    finalized_capacity = safe_get(transfer, "finalized_capacity")
+
+    # TOS-57 Certificate reference block
+    certificate_id = f"TCERT-{transfer_id}"
+    certificate_class = "Internal Fiduciary Transfer Completion Certificate"
+    certificate_status = "Issued from completed transfer record"
+
+    # TOS-59 ENRICHED DATA RESOLUTION
+
+    # Trust name resolution
+    trust_name = safe_get(trust, "trust_name", safe_get(transfer, "trust_id"))
+
+    # Asset resolution (PRIMARY SOURCE = transfer)
+    asset_name = safe_get(transfer, "asset_name", safe_get(asset, "name", safe_get(transfer, "asset_id")))
+    asset_type = safe_get(transfer, "asset_type", safe_get(asset, "asset_type", "Not recorded"))
+
+    story.append(Paragraph("<b>TRANSFER COMPLETION CERTIFICATE</b>", title_style))
+    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", small_style))
+    story.append(Paragraph(f"<b>Certificate Class:</b> {certificate_class}", small_style))
+    story.append(Paragraph(f"<b>Certificate Status:</b> {certificate_status}", small_style))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph(
+        "This certificate records the internal completion of a trust asset transfer "
+        "within the Trustee App execution workflow.",
+        body_style
+    ))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph(f"<b>Transfer ID:</b> {transfer_id}", body_style))
+    story.append(Paragraph(f"<b>Status:</b> {status}", body_style))
+    story.append(Paragraph(f"<b>Trust:</b> {trust_name}", body_style))
+    story.append(Paragraph(f"<b>Asset:</b> {asset_name}", body_style))
+    story.append(Paragraph(f"<b>Asset Type:</b> {asset_type}", body_style))
+    story.append(Spacer(1, 14))
+
+    story.append(Paragraph("<b>Finalization Audit Stamp</b>", header_style))
+    story.append(Paragraph(f"<b>Finalized At:</b> {finalized_at}", body_style))
+    story.append(Paragraph(f"<b>Finalized By:</b> {finalized_by}", body_style))
+    story.append(Paragraph(f"<b>Finalized Capacity:</b> {finalized_capacity}", body_style))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph(
+        "Certification Statement: The above transfer record is certified as an internal "
+        "administrative record of completion based on the Trustee App ledger, execution "
+        "status, and finalization audit stamp.",
+        body_style
+    ))
+
+    story.append(Spacer(1, 16))
+    story.append(Paragraph("<b>Authority Statement</b>", header_style))
+    story.append(Paragraph(
+        "The undersigned fiduciary affirms that this transfer was executed under the authority "
+        "granted by the governing trust instrument and in accordance with the fiduciary duties "
+        "associated with the trustee role.",
+        body_style
+    ))
+
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("<b>Asset Control Statement</b>", header_style))
+    story.append(Paragraph(
+        "The asset referenced herein is represented as having been placed under the control, "
+        "administration, or direction of the trust as reflected in the internal records of the "
+        "trust administration system.",
+        body_style
+    ))
+
+    story.append(Spacer(1, 12))
+    story.append(Paragraph("<b>Reliance Clause</b>", header_style))
+    story.append(Paragraph(
+        "This document may be relied upon as a record of internal trust administration. "
+        "Third parties may request additional documentation or verification as required "
+        "by their own policies or applicable procedures.",
+        body_style
+    ))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("<b>Execution Notes</b>", header_style))
+    story.append(Paragraph(
+        "This certificate does not replace any required wet signature, notarization, "
+        "external filing, title update, or third-party acceptance process. It serves as "
+        "an internal fiduciary record connected to the transfer workflow.",
+        styles["Italic"]
+    ))
+
+    story.append(Spacer(1, 24))
+    story.append(Paragraph("<b>Fiduciary Execution Block</b>", header_style))
+    story.append(Paragraph(
+        "Executed in representative fiduciary capacity only, and not in an individual capacity.",
+        body_style
+    ))
+    story.append(Spacer(1, 18))
+
+    story.append(Paragraph("Authorized Fiduciary Signature: ______________________________", body_style))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph(f"Printed Name / User: {finalized_by}", body_style))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph(f"Capacity: {finalized_capacity}", body_style))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("Execution Date: ______________________________", body_style))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
 def generate_certificate_of_trust_pdf(trust, preview_context):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
@@ -979,7 +1198,7 @@ def generate_certificate_of_trust_pdf(trust, preview_context):
 
     add_universal_v3_letterhead(story, styles, preview_context, "Certificate of Trust")
 
-    story.append(Paragraph("Certification Summary", styles["Heading2"]))
+    story.append(Paragraph("Certification Summary", header_style))
     story.append(Paragraph(
         "This Certificate of Trust summarizes selected trust information for administrative verification. "
         "It is intended as a bounded summary surface and does not replace the full Declaration of Trust, trust agreement, "
@@ -988,7 +1207,7 @@ def generate_certificate_of_trust_pdf(trust, preview_context):
     ))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -996,7 +1215,7 @@ def generate_certificate_of_trust_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Trustee Authority Summary", styles["Heading2"]))
+    story.append(Paragraph("Trustee Authority Summary", header_style))
     story.append(Paragraph(f"<b>Current Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(
@@ -1005,12 +1224,12 @@ def generate_certificate_of_trust_pdf(trust, preview_context):
     ))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Property / Corpus Summary", styles["Heading2"]))
+    story.append(Paragraph("Property / Corpus Summary", header_style))
     story.append(Paragraph(f"<b>Initial Corpus:</b> {preview_context.get('initial_corpus_description') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Reliance Limitation", styles["Heading2"]))
+    story.append(Paragraph("Reliance Limitation", header_style))
     story.append(Paragraph(
         "This certificate is an internal administrative summary generated from the Trustee App. "
         "Third-party reliance, filing use, or external presentation should be reviewed independently and matched to the executed governing instrument.",
@@ -1036,8 +1255,8 @@ def generate_articles_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Articles")
 
-    title_style = styles["Title"]
-    heading_style = styles["Heading2"]
+    title_style = title_style
+    heading_style = header_style
     body_style = styles["BodyText"]
 
     story.append(Paragraph("Articles of Trust", title_style))
@@ -1099,11 +1318,11 @@ def generate_trustee_acceptance_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Trustee Acceptance")
 
-    story.append(Paragraph("Trustee Acceptance of Appointment", styles["Title"]))
+    story.append(Paragraph("Trustee Acceptance of Appointment", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -1112,7 +1331,7 @@ def generate_trustee_acceptance_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Trustee Acceptance", styles["Heading2"]))
+    story.append(Paragraph("Trustee Acceptance", header_style))
     story.append(Paragraph(f"<b>Trustee Name:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(
         "The undersigned hereby accepts appointment as Trustee of the above-referenced trust and agrees to perform all duties in accordance with the trust’s governing instrument and applicable law.",
@@ -1136,11 +1355,11 @@ def generate_general_assignment_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "General Assignment")
 
-    story.append(Paragraph("General Assignment to Trust", styles["Title"]))
+    story.append(Paragraph("General Assignment to Trust", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -1149,7 +1368,7 @@ def generate_general_assignment_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Scope of Assignment", styles["Heading2"]))
+    story.append(Paragraph("Scope of Assignment", header_style))
     story.append(Paragraph(f"<b>Initial Corpus Description:</b> {preview_context.get('initial_corpus_description') or 'Initial trust property and assignable interests to be transferred into the trust structure.'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or 'Personal property, contractual rights, and other assignable interests.'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Property Mapping Timing:</b> {preview_context.get('property_mapping_timing') or 'To be assigned and documented through subsequent trust funding and transfer records.'}", styles["BodyText"]))
@@ -1173,11 +1392,11 @@ def generate_organizational_minutes_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Organizational Minutes")
 
-    story.append(Paragraph("Initial Trustee Resolution / Organizational Minutes", styles["Title"]))
+    story.append(Paragraph("Initial Trustee Resolution / Organizational Minutes", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -1186,7 +1405,7 @@ def generate_organizational_minutes_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Matters Considered", styles["Heading2"]))
+    story.append(Paragraph("Matters Considered", header_style))
     story.append(Paragraph(
         preview_context.get('trust_purpose') or
         "Review of the trust’s formation purpose, administration, and initial fiduciary organization.",
@@ -1210,11 +1429,11 @@ def generate_successor_trustee_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Successor Trustee")
 
-    story.append(Paragraph("Successor Trustee Acceptance / Appointment", styles["Title"]))
+    story.append(Paragraph("Successor Trustee Acceptance / Appointment", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Trust Identification", styles["Heading2"]))
+    story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -1223,7 +1442,7 @@ def generate_successor_trustee_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
-    story.append(Paragraph("Parties", styles["Heading2"]))
+    story.append(Paragraph("Parties", header_style))
     story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Current Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
@@ -1249,11 +1468,11 @@ def generate_packet_manifest_pdf(trust, preview_context):
 
     exported_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    story.append(Paragraph("Controlled Trust Packet Manifest", styles["Title"]))
+    story.append(Paragraph("Controlled Trust Packet Manifest", title_style))
     story.append(Paragraph("Cover Sheet / Export Index", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Packet Information", styles["Heading2"]))
+    story.append(Paragraph("Packet Information", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
@@ -1262,7 +1481,7 @@ def generate_packet_manifest_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Export Timestamp:</b> {exported_at}", styles["BodyText"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Included Documents", styles["Heading2"]))
+    story.append(Paragraph("Included Documents", header_style))
     included_docs = [
         "Declaration of Trust",
         "Certificate of Trust",
@@ -1276,7 +1495,7 @@ def generate_packet_manifest_pdf(trust, preview_context):
         story.append(Paragraph(f"• {item}", styles["BodyText"]))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Packet Notes", styles["Heading2"]))
+    story.append(Paragraph("Packet Notes", header_style))
     story.append(Paragraph(
         "This packet was generated through the controlled trust document system. "
         "The included files represent bounded final document surfaces exported as PDFs and bundled into a trust-specific packet.",
@@ -3310,21 +3529,21 @@ def trust_minute_certificate_pdf(minute_id):
     styles = getSampleStyleSheet()
     story = []
 
-    story.append(Paragraph("TRUST MINUTE EXECUTION CERTIFICATE", styles["Title"]))
+    story.append(Paragraph("TRUST MINUTE EXECUTION CERTIFICATE", title_style))
     story.append(Spacer(1, 18))
 
     certificate_id = minute["certificate_id"] if "certificate_id" in minute.keys() and minute["certificate_id"] else f"CERT-{minute_id}"
 
-    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Title:</b> {minute['title']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Status:</b> {minute['status']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Approved At:</b> {minute['approved_at'] or 'Not recorded'}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", body_style))
+    story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", body_style))
+    story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", body_style))
+    story.append(Paragraph(f"<b>Title:</b> {minute['title']}", body_style))
+    story.append(Paragraph(f"<b>Status:</b> {minute['status']}", body_style))
+    story.append(Paragraph(f"<b>Approved At:</b> {minute['approved_at'] or 'Not recorded'}", body_style))
+    story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", body_style))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Recorded Signer Records", styles["Heading2"]))
+    story.append(Paragraph("Recorded Signer Records", header_style))
 
     for idx in (1, 2, 3):
         name = minute[f"trustee_{idx}_name"]
@@ -3341,15 +3560,15 @@ def trust_minute_certificate_pdf(minute_id):
                     image_bytes = BytesIO(base64.b64decode(image_data))
                     story.append(Image(image_bytes, width=240, height=70))
                 except Exception:
-                    story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", styles["Normal"]))
+                    story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", body_style))
             else:
-                story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", styles["Normal"]))
+                story.append(Paragraph(f"<font name='Times-Italic' size='24'>{name}</font>", body_style))
 
             story.append(Spacer(1, 8))
-            story.append(Paragraph("______________________________", styles["Normal"]))
+            story.append(Paragraph("______________________________", body_style))
             story.append(Spacer(1, 6))
-            story.append(Paragraph(f"Role / Capacity: {capacity}", styles["Normal"]))
-            story.append(Paragraph(f"Signed Date: {signed_date or 'No date recorded'}", styles["Normal"]))
+            story.append(Paragraph(f"Role / Capacity: {capacity}", body_style))
+            story.append(Paragraph(f"Signed Date: {signed_date or 'No date recorded'}", body_style))
 
     story.append(Spacer(1, 24))
     story.append(Paragraph("This certificate reflects the internal governance record of the Trust Minute and does not replace any required wet signature, notarization, or external filing where applicable.", styles["Italic"]))
@@ -3395,29 +3614,29 @@ def trust_minute_execution_packet_pdf(minute_id):
     styles = getSampleStyleSheet()
     story = []
 
-    story.append(Paragraph("TRUST MINUTE EXECUTION PACKET", styles["Title"]))
+    story.append(Paragraph("TRUST MINUTE EXECUTION PACKET", title_style))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("<b>Packet Type:</b> Execution Packet", styles["Normal"]))
-    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Title:</b> {minute['title']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Status:</b> {minute['status']}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Approved At:</b> {minute['approved_at'] or 'Not recorded'}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", styles["Normal"]))
-    story.append(Paragraph(f"<b>Archived At:</b> {minute['archived_at'] or 'Not archived'}", styles["Normal"]))
+    story.append(Paragraph("<b>Packet Type:</b> Execution Packet", body_style))
+    story.append(Paragraph(f"<b>Certificate ID:</b> {certificate_id}", body_style))
+    story.append(Paragraph(f"<b>Minute ID:</b> {minute['minute_id']}", body_style))
+    story.append(Paragraph(f"<b>Trust ID:</b> {minute['trust_id']}", body_style))
+    story.append(Paragraph(f"<b>Title:</b> {minute['title']}", body_style))
+    story.append(Paragraph(f"<b>Status:</b> {minute['status']}", body_style))
+    story.append(Paragraph(f"<b>Approved At:</b> {minute['approved_at'] or 'Not recorded'}", body_style))
+    story.append(Paragraph(f"<b>Executed At:</b> {minute['executed_at'] or 'Not recorded'}", body_style))
+    story.append(Paragraph(f"<b>Archived At:</b> {minute['archived_at'] or 'Not archived'}", body_style))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Minute Substance", styles["Heading2"]))
-    story.append(Paragraph(f"<b>Purpose:</b> {minute['purpose'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph("Minute Substance", header_style))
+    story.append(Paragraph(f"<b>Purpose:</b> {minute['purpose'] or 'Not recorded'}", body_style))
     story.append(Spacer(1, 8))
-    story.append(Paragraph(f"<b>Resolutions:</b> {minute['resolutions'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Resolutions:</b> {minute['resolutions'] or 'Not recorded'}", body_style))
     story.append(Spacer(1, 8))
-    story.append(Paragraph(f"<b>Action Items:</b> {minute['action_items'] or 'Not recorded'}", styles["Normal"]))
+    story.append(Paragraph(f"<b>Action Items:</b> {minute['action_items'] or 'Not recorded'}", body_style))
     story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Signer Records", styles["Heading2"]))
+    story.append(Paragraph("Signer Records", header_style))
     for idx in (1, 2, 3):
         name = minute[f"trustee_{idx}_name"]
         capacity = minute[f"trustee_{idx}_capacity"] or ""
@@ -3425,24 +3644,24 @@ def trust_minute_execution_packet_pdf(minute_id):
         if name or signed_date:
             story.append(Paragraph(
                 f"<b>Signer {idx}:</b> {name or 'Not recorded'} | Role / Capacity: {capacity or 'Not recorded'} | Signed Date: {signed_date or 'Not recorded'}",
-                styles["Normal"]
+                body_style
             ))
 
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Audit Trail Summary", styles["Heading2"]))
+    story.append(Paragraph("Audit Trail Summary", header_style))
 
     if audit_logs:
         for log in audit_logs:
             story.append(Paragraph(
                 f"<b>{log['created_at']}</b> — {log['action']} — {log['note'] or ''}",
-                styles["Normal"]
+                body_style
             ))
             story.append(Spacer(1, 4))
     else:
-        story.append(Paragraph("No audit events recorded for this minute.", styles["Normal"]))
+        story.append(Paragraph("No audit events recorded for this minute.", body_style))
 
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Packet Control Statement", styles["Heading2"]))
+    story.append(Paragraph("Packet Control Statement", header_style))
     story.append(Paragraph(
         "This execution packet consolidates the internal trust minute, execution certificate reference, signer role summary, and audit trail excerpts for governance review and archive control.",
         styles["Italic"]
@@ -3732,6 +3951,54 @@ def backfill_certificate_ids_route():
         )
 
     return redirect(url_for("certificate_registry"))
+
+
+
+
+@app.route("/transfers/<transfer_id>/certificate.pdf")
+def transfer_certificate_pdf(transfer_id):
+    gate = gate_trust_access("GLOBAL", ["Admin", "Trustee"])
+    if gate:
+        return gate
+
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if transfer.status != "completed":
+        flash("Transfer certificate is only available after completion.", "error")
+        return redirect(url_for("transfer_review", transfer_id=transfer_id))
+
+    trust = None
+    asset = None
+
+    try:
+        trust = get_trust_by_id(transfer.trust_id)
+    except Exception:
+        trust = None
+
+    try:
+        asset = get_asset_by_id(transfer.asset_id)
+    except Exception:
+        asset = None
+
+    pdf_buffer = generate_transfer_certificate_pdf(
+        transfer=transfer,
+        trust=trust,
+        asset=asset,
+    )
+
+    log_change(
+        "transfer_certificate",
+        session.get("username") or "unknown",
+        "transfer_certificate_pdf_generated",
+        f"Transfer certificate PDF generated | Transfer ID: {transfer_id} | Status: {transfer.status}"
+    )
+
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name=f"{transfer_id}_transfer_certificate.pdf",
+        mimetype="application/pdf",
+    )
 
 
 @app.route("/certificates")
@@ -7396,6 +7663,21 @@ def transfer_review(transfer_id):
                 control_strength=calculate_control_strength(transfer.control_change_status),
             )
 
+        # LEDGER-A: enforce value before finalize
+        if not transfer.estimated_value or str(transfer.estimated_value).strip() == "":
+            flash("Transfer cannot be finalized without a value.", "error")
+            return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
+        # LEDGER-A: enforce accounting method before finalize
+        trust_record = get_trust_by_id(transfer.trust_id)
+        trust_accounting_method = ""
+        if trust_record and "accounting_method" in trust_record.keys():
+            trust_accounting_method = (trust_record["accounting_method"] or "").strip()
+
+        if not trust_accounting_method or trust_accounting_method == "Not Yet Selected":
+            flash("Transfer cannot be finalized until the trust accounting method is selected.", "error")
+            return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
+
         success, missing = finalize_transfer(
             transfer=transfer,
             performed_by=session.get("username") or "unknown",
@@ -7405,7 +7687,45 @@ def transfer_review(transfer_id):
 
         if success:
             mark_core_support_docs_included(transfer)
+
             ext_db.session.commit()
+            # LEDGER-A: auto-post finalized transfer as capital contribution
+            try:
+                ledger_description = f"Transfer {transfer.transfer_id} finalized - {transfer.asset_name or 'asset transfer'}"
+
+                existing_ledger_rows = get_ledger_by_trust(transfer.trust_id)
+                already_posted = any(
+                    (row["description"] or "") == ledger_description
+                    for row in existing_ledger_rows
+                )
+
+                if not already_posted:
+                    ledger_entry = {
+                        "entry_id": get_next_entry_id(),
+                        "trust_id": transfer.trust_id,
+                        "property_id": "",
+                        "account_id": "",
+                        "entry_type": "transfer",
+                        "amount": str(transfer.estimated_value).strip(),
+                        "entry_date": str(transfer.finalized_at or datetime.now(UTC)),
+                        "description": ledger_description,
+                        "entry_category": "capital_contribution",
+                        "accounting_method": trust_accounting_method,
+                        "recognition_date": str(transfer.finalized_at or datetime.now(UTC)),
+                        "due_date": "",
+                        "paid_date": str(transfer.finalized_at or datetime.now(UTC)),
+                        "chart_account": "1000",
+                    }
+                    create_ledger_entry(ledger_entry)
+                    log_change(
+                        "ledger_entry",
+                        ledger_entry["entry_id"],
+                        "auto_created_from_transfer",
+                        f"Transfer={transfer.transfer_id}"
+                    )
+            except Exception as e:
+                print("⚠️ Auto-ledger entry failed:", e)
+
             flash(f"Transfer {transfer.transfer_id} finalized.", "success")
 
             # === AUTO TRUST MINUTE FROM TRANSFER ===

@@ -297,6 +297,8 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
       <li style="margin-bottom: 12px;">
         <strong>{{ t.transfer_id }}</strong>
         {% if t.status == "completed" %}
+        [<a href="{{ url_for('transfer_certificate_pdf', transfer_id=t.transfer_id) }}" target="_blank"><strong>Certificate</strong></a>]
+
           <span style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; background:#dcfce7; color:#166534; font-size:12px;">Completed</span>
         {% else %}
           <span style="display:inline-block; margin-left:8px; padding:2px 8px; border-radius:999px; background:#fef3c7; color:#92400e; font-size:12px;">Open</span>

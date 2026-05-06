@@ -68,6 +68,14 @@
     <p><strong>Created At:</strong> {{ transfer.created_at or '' }}</p>
     <p><strong>Updated At:</strong> {{ transfer.updated_at or '' }}</p>
     <p><strong>Finalized At:</strong> {{ transfer.finalized_at or '' }}</p>
+
+    {% if transfer.status == "completed" %}
+      <p>
+        <a href="{{ url_for('transfer_certificate_pdf', transfer_id=transfer.transfer_id) }}" target="_blank">
+          <strong>Download Transfer Certificate</strong>
+        </a>
+      </p>
+    {% endif %}
   </div>
 
   <div class="section">
