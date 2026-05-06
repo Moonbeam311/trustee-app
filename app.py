@@ -7285,7 +7285,7 @@ def trust_articles_output_surface_pdf(trust_id):
 
 @app.route("/trust/<trust_id>/accounting-method", methods=["GET", "POST"])
 def trust_accounting_method_settings(trust_id):
-    gate = require_login()
+    gate = gate_trust_access(trust_id, ["Admin", "Trustee"])
     if gate:
         return gate
 
