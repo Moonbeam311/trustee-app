@@ -256,6 +256,31 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
   Open: {{ transfers|rejectattr('status', 'equalto', 'completed')|list|length }} |
   Simulation: {{ transfers|selectattr('mode', 'equalto', 'simulation')|list|length }} |
   Real: {{ transfers|selectattr('mode', 'equalto', 'real')|list|length }}
+
+
+    <div class="transfer-status-row" style="margin-top:10px;">
+      <span class="transfer-status-badge ready">
+        Hybrid Complete: {{ transfer_completion_summary.hybrid_complete if transfer_completion_summary else 0 }}
+      </span>
+      <span class="transfer-status-badge warning">
+        Hybrid Partial: {{ transfer_completion_summary.hybrid_partial if transfer_completion_summary else 0 }}
+      </span>
+      <span class="transfer-status-badge muted">
+        Hybrid Not Started: {{ transfer_completion_summary.hybrid_not_started if transfer_completion_summary else 0 }}
+      </span>
+    </div>
+
+    <div class="transfer-status-row">
+      <span class="transfer-status-badge ready">
+        Ledger Posted: {{ transfer_completion_summary.ledger_posted if transfer_completion_summary else 0 }}
+      </span>
+      <span class="transfer-status-badge ready">
+        External Verified: {{ transfer_completion_summary.external_verified if transfer_completion_summary else 0 }}
+      </span>
+      <span class="transfer-status-badge ready">
+        Proof Attached: {{ transfer_completion_summary.proof_attached if transfer_completion_summary else 0 }}
+      </span>
+    </div>
 </div>
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#fff; margin-bottom:16px;">
