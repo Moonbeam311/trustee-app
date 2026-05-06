@@ -31,6 +31,7 @@ from database.db import (
     create_ledger_entry,
     get_ledger_by_trust,
     get_ledger_entries_by_trust_id,
+    ensure_transfer_runtime_columns,
     get_ledger_by_property,
     seed_chart_of_accounts_for_trust,
     get_chart_of_accounts,
@@ -193,6 +194,12 @@ DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH.as_posix()}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 ext_db.init_app(app)
+
+# Runtime SQLite schema compatibility for deployed databases.
+try:
+    ensure_transfer_runtime_columns()
+except Exception as e:
+    print("⚠️ Transfer runtime schema migration failed:", e)
 
 
 LOGIN_ATTEMPTS_LIMIT = 5

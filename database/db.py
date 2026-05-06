@@ -12,6 +12,38 @@ def get_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+
+def ensure_transfer_runtime_columns():
+    """
+    Railway/runtime safety migration:
+    keeps existing SQLite transfer tables compatible with the SQLAlchemy Transfer model.
+    Safe to run repeatedly.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("PRAGMA table_info(transfers)")
+    existing = {row["name"] for row in cur.fetchall()}
+
+    columns = [
+        ("finalized_by", "VARCHAR(120)"),
+        ("finalized_capacity", "VARCHAR(50)"),
+        ("external_institution", "VARCHAR(255)"),
+        ("external_account_ref", "VARCHAR(255)"),
+        ("external_transfer_method", "VARCHAR(100)"),
+        ("external_transaction_id", "VARCHAR(255)"),
+        ("external_verified", "BOOLEAN DEFAULT 0"),
+        ("external_verified_at", "DATETIME"),
+        ("external_proof_notes", "TEXT"),
+    ]
+
+    for name, coltype in columns:
+        if name not in existing:
+            cur.execute(f"ALTER TABLE transfers ADD COLUMN {name} {coltype}")
+
+    conn.commit()
+    conn.close()
+
 def init_db():
     conn = get_connection()
     cur = conn.cursor()
