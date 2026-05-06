@@ -68,10 +68,28 @@
   </div>
 
   <div class="card">
+    <h2>External Proof / Evidence Attachment</h2>
+    <p class="muted">
+      Attach proof such as a receipt, statement excerpt, bank confirmation, title/account update,
+      screenshot, or signed third-party acknowledgment.
+    </p>
+
+    <p>
+      <a href="{{ url_for('media_upload') }}?trust_id={{ transfer.trust_id }}&entity_type=transfer&entity_id={{ transfer.transfer_id }}&category=external_transfer_proof&description=External proof for {{ transfer.transfer_id }}">
+        <strong>Attach External Proof</strong>
+      </a>
+      |
+      <a href="{{ url_for('evidence_by_entity', entity_type='transfer', entity_id=transfer.transfer_id) }}">
+        View Linked Proof
+      </a>
+    </p>
+  </div>
+
+  <div class="card">
     <h2>Operational Note</h2>
     <p class="muted">
-      This page records external transfer tracking metadata. It does not replace uploading evidence.
-      Proof upload will be connected in the next layer.
+      This page records external transfer tracking metadata. Evidence files are stored through the app's
+      existing media evidence system and linked to this transfer by entity type and transfer ID.
     </p>
   </div>
 </div>

@@ -5369,10 +5369,17 @@ def media_dashboard():
 @app.route("/media/upload", methods=["GET", "POST"])
 def media_upload():
     trusts = get_all_trusts()
+    media_prefill = {
+        "trust_id": request.args.get("trust_id", ""),
+        "entity_type": request.args.get("entity_type", ""),
+        "entity_id": request.args.get("entity_id", ""),
+        "category": request.args.get("category", ""),
+        "description": request.args.get("description", ""),
+    }
 
     if request.method == "POST":
         if not validate_csrf_token():
-            return render_template("media_form.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+            return render_template("media_form.html", trusts=trusts, media_prefill=media_prefill, error_message="Invalid or missing CSRF token.")
 
         file = request.files.get("file")
         if file:
@@ -5399,7 +5406,7 @@ def media_upload():
 
         return redirect(url_for("media_dashboard"))
 
-    return render_template("media_form.html", trusts=trusts)
+    return render_template("media_form.html", trusts=trusts, media_prefill=media_prefill)
 
 
 

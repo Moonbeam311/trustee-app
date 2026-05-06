@@ -28,15 +28,15 @@
     <select name="trust_id" required>
       <option value="">Select Trust</option>
       {% for trust in trusts %}
-      <option value="{{ trust['trust_id'] }}">{{ trust['trust_name'] }}</option>
+      <option value="{{ trust['trust_id'] }}"{% if media_prefill and media_prefill.trust_id == trust['trust_id'] %} selected{% endif %}>{{ trust['trust_name'] }}</option>
       {% endfor %}
     </select>
 
     <label>Related Entity Type</label>
-    <input type="text" name="entity_type" placeholder="e.g. trust, property, instrument">
+    <input type="text" name="entity_type" value="{{ media_prefill.entity_type if media_prefill else '' }}" placeholder="e.g. trust, property, instrument">
 
     <label>Related Entity ID</label>
-    <input type="text" name="entity_id" placeholder="e.g. T001, P001, INSTR-001">
+    <input type="text" name="entity_id" value="{{ media_prefill.entity_id if media_prefill else '' }}" placeholder="e.g. T001, P001, INSTR-001">
 
     <label>Media Type</label>
     <select name="media_type" required>
@@ -48,10 +48,10 @@
     </select>
 
     <label>Category</label>
-    <input type="text" name="category" placeholder="e.g. Affidavit, Photo, Recording">
+    <input type="text" name="category" value="{{ media_prefill.category if media_prefill else '' }}" placeholder="e.g. Affidavit, Photo, Recording">
 
     <label>Description</label>
-    <textarea name="description" rows="4" placeholder="Describe the evidence"></textarea>
+    <textarea name="description" rows="4" placeholder="Describe the evidence">{{ media_prefill.description if media_prefill else '' }}</textarea>
 
     <label>Choose File</label>
     <input type="file" name="file" required>
