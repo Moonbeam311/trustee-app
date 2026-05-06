@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="trust-page-wrap">
+  <div class="trust-panel">
+    <h1>Trust Accounting Method</h1>
+
+    <p class="trust-page-subtitle">
+      Select the accounting method required before finalized transfers can post to the trust ledger.
+    </p>
+
+    <p>
+      <strong>Trust ID:</strong> {{ trust['trust_id'] }}<br>
+      <strong>Trust Name:</strong> {{ trust['trust_name'] if 'trust_name' in trust.keys() else '' }}<br>
+      <strong>Current Accounting Method:</strong>
+      {{ trust['accounting_method'] if 'accounting_method' in trust.keys() and trust['accounting_method'] else 'Not Yet Selected' }}
+    </p>
+
+    <form method="post">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+      <label for="accounting_method"><strong>Accounting Method</strong></label><br>
+      <select name="accounting_method" id="accounting_method" required>
+        <option value="">Select accounting method</option>
+        <option value="cash" {% if 'accounting_method' in trust.keys() and trust['accounting_method'] == 'cash' %}selected{% endif %}>Cash</option>
+        <option value="accrual" {% if 'accounting_method' in trust.keys() and trust['accounting_method'] == 'accrual' %}selected{% endif %}>Accrual</option>
+      </select>
+
+      <p style="margin-top:14px;">
+        <button type="submit">Save Accounting Method</button>
+        <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Cancel</a>
+      </p>
+    </form>
+  </div>
+</div>
+{% endblock %}

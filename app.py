@@ -7281,6 +7281,42 @@ def trust_articles_output_surface_pdf(trust_id):
     )
 
 
+
+
+@app.route("/trust/<trust_id>/accounting-method", methods=["GET", "POST"])
+def trust_accounting_method_settings(trust_id):
+    gate = require_login()
+    if gate:
+        return gate
+
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        flash("Trust not found.", "error")
+        return redirect(url_for("admin_dashboard"))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return render_template("trust_accounting_method.html", trust=trust)
+
+        accounting_method = (request.form.get("accounting_method") or "").strip()
+        if accounting_method not in ["cash", "accrual"]:
+            flash("Select a valid accounting method: cash or accrual.", "error")
+            return render_template("trust_accounting_method.html", trust=trust)
+
+        update_trust_fields(trust_id, {"accounting_method": accounting_method})
+        log_change(
+            "trust",
+            trust_id,
+            "accounting_method_updated",
+            f"Accounting method set to {accounting_method} by {session.get('username') or 'unknown'}"
+        )
+        flash(f"Accounting method set to {accounting_method}.", "success")
+        return redirect(url_for("trust_execution_dashboard", trust_id=trust_id))
+
+    return render_template("trust_accounting_method.html", trust=trust)
+
+
 @app.route("/trust/<trust_id>/execution")
 def trust_execution_dashboard(trust_id):
     gate = deny_unassigned_trust_access(trust_id)
