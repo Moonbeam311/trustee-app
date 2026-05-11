@@ -359,7 +359,7 @@
  <tr>
  <td>
  <strong>{{ item.trust_name }}</strong><br>
- <small>{{ item.trust_id }}</small><br>
+ <small>{{ item.firm_trust_code or item.trust_id }}</small><br>
  <small class="admin-muted">Created: {{ item.created_at_display }} | Updated: {{ item.last_updated }}</small>
  </td>
  <td>{{ item.trust_type }}</td>
@@ -416,7 +416,7 @@
  <div class="trust-launch-card">
  <div class="trust-launch-title">
  <strong>{{ trust['trust_name'] or 'Unnamed Trust' }}</strong>
- <span class="badge">{{ trust['trust_id'] }}</span>
+ <span class="badge">{{ trust['firm_trust_code'] or trust['trust_id'] }}</span>
  </div>
  <div class="admin-actions">
  

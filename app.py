@@ -270,6 +270,13 @@ def operator_can_access_trust(trust_id):
     if not username:
         return False
 
+    # Tenant isolation rule:
+    # A non-master Admin may access any trust that belongs to the Admin's active firm.
+    # Trustee/Viewer access still depends on trust role assignment below.
+    if session.get("role") == "Admin":
+        trust = get_trust_by_id(trust_id)
+        return bool(trust)
+
     role_rows = get_roles_by_trust_id(trust_id)
     for row in role_rows:
         full_name = (row.get("full_name") or "").strip().lower()
@@ -1767,6 +1774,19 @@ def gate_trust_access(trust_id, allowed_roles):
         return render_template(
             "access_denied.html",
             reason=f"Role {current_role} is not allowed for this page."
+        )
+
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        log_change(
+            "security",
+            trust_id,
+            "firm_access_denied",
+            f"Trust not found in active firm scope. User={session.get('username')}; Firm={session.get('firm_id')}"
+        )
+        return render_template(
+            "access_denied.html",
+            reason="This trust record is not available within your assigned firm scope."
         )
 
     return None

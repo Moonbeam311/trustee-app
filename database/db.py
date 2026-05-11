@@ -7,6 +7,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_DB_PATH = BASE_DIR / "trustee_app.db"
 DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
 
+def get_current_firm_id():
+    """
+    Return the active tenant/firm scope for the current request.
+    Defaults to FIRM-001 only outside request context or legacy sessions.
+    """
+    try:
+        from flask import session, has_request_context
+        if has_request_context():
+            return session.get("firm_id") or "FIRM-001"
+    except Exception:
+        pass
+    return "FIRM-001"
+
+
 def get_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -215,6 +229,24 @@ def init_db():
     conn.commit()
     conn.close()
 
+def get_next_firm_trust_number(firm_id=None):
+    firm_id = firm_id or get_current_firm_id()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT COALESCE(MAX(firm_trust_number), 0) AS max_num FROM trusts WHERE firm_id = ?",
+        (firm_id,)
+    )
+    row = cur.fetchone()
+    conn.close()
+    return int(row["max_num"] or 0) + 1
+
+
+def get_next_firm_trust_code(firm_id=None):
+    number = get_next_firm_trust_number(firm_id)
+    return f"TR-{number:03d}"
+
+
 def get_next_trust_id():
     conn = get_connection()
     cur = conn.cursor()
@@ -224,6 +256,11 @@ def get_next_trust_id():
     return f"TR-{count + 1:03d}"
 
 def create_trust_record(trust_data):
+    trust_data = dict(trust_data)
+    trust_data.setdefault("firm_id", get_current_firm_id())
+    trust_data.setdefault("firm_trust_number", get_next_firm_trust_number(trust_data.get("firm_id")))
+    trust_data.setdefault("firm_trust_code", f"TR-{int(trust_data.get('firm_trust_number')):03d}")
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
@@ -233,8 +270,9 @@ def create_trust_record(trust_data):
             settlor_name, trustee_name, successor_trustee_name, beneficiary_name,
             record_visibility, workflow_mode_confirmed, ai_explanations,
             recommended_guidance, initial_corpus_description, property_mapping_timing,
-            asset_categories, generate_schedule_recommendations, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            asset_categories, generate_schedule_recommendations, status,
+            firm_id, firm_trust_number, firm_trust_code
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         trust_data["trust_id"], trust_data["trust_name"], trust_data["short_name"],
         trust_data["jurisdiction"], trust_data["effective_date"], trust_data["trust_type"],
@@ -244,22 +282,33 @@ def create_trust_record(trust_data):
         trust_data["ai_explanations"], trust_data["recommended_guidance"], trust_data["initial_corpus_description"],
         trust_data["property_mapping_timing"], trust_data["asset_categories"],
         trust_data["generate_schedule_recommendations"], trust_data["status"],
+        trust_data.get("firm_id"),
+        trust_data.get("firm_trust_number"),
+        trust_data.get("firm_trust_code"),
     ))
     conn.commit()
     conn.close()
 
 def get_all_trusts():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM trusts ORDER BY trust_id")
+    cur.execute(
+        "SELECT * FROM trusts WHERE firm_id = ? ORDER BY trust_id",
+        (firm_id,)
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_trust_by_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM trusts WHERE trust_id = ?", (trust_id,))
+    cur.execute(
+        "SELECT * FROM trusts WHERE trust_id = ? AND firm_id = ?",
+        (trust_id, firm_id)
+    )
     row = cur.fetchone()
     conn.close()
     return row
@@ -1536,9 +1585,13 @@ def get_instrument_status_counts(trust_id=None):
 
 
 def get_trust_count():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS count FROM trusts")
+    cur.execute(
+        "SELECT COUNT(*) AS count FROM trusts WHERE firm_id = ?",
+        (firm_id,)
+    )
     row = cur.fetchone()
     conn.close()
     return row["count"] if row else 0
@@ -2421,18 +2474,22 @@ def get_user_by_username(username):
 
 
 def create_app_user(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO app_users (
-            user_id, username, password_hash, role_name, status
-        ) VALUES (?, ?, ?, ?, ?)
+            user_id, username, password_hash, role_name, status, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?)
     """, (
         data["user_id"],
         data["username"],
         data["password_hash"],
         data["role_name"],
         data["status"],
+        data["firm_id"],
     ))
     conn.commit()
     conn.close()

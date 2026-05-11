@@ -82,7 +82,7 @@
     <h3>Existing Trusts</h3>
     <ul>
         {% for trust in trusts %}
-        <li><a href="/trust/{{ trust.trust_id }}">{{ trust.trust_id }} — {{ trust.trust_name }}</a></li>
+        <li><a href="/trust/{{ trust.trust_id }}">{{ trust.firm_trust_code or trust.trust_id }} — {{ trust.trust_name }}</a></li>
         {% endfor %}
     </ul>
 </div>
