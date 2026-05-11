@@ -9,6 +9,7 @@ class Transfer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     trust_id = db.Column(db.String(64), nullable=False, index=True)
     transfer_id = db.Column(db.String(32), nullable=False, unique=True, index=True)
+    firm_id = db.Column(db.String(64), nullable=True, index=True)
 
     mode = db.Column(db.String(20), nullable=False, default="simulation")
     status = db.Column(db.String(20), nullable=False, default="draft")

@@ -310,6 +310,25 @@ def validate_csrf_token():
     return False
 
 
+def get_transfer_for_active_firm_or_404(transfer_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
+    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+
+    if transfer.firm_id != firm_id:
+        log_change(
+            "security",
+            transfer_id,
+            "transfer_firm_access_denied",
+            f"Transfer outside active firm scope. User={session.get('username')}; Firm={firm_id}; TransferFirm={transfer.firm_id}"
+        )
+        return None, render_template(
+            "access_denied.html",
+            reason="This transfer record is not available within your assigned firm scope."
+        )
+
+    return transfer, None
+
+
 def get_transfer_resume_endpoint(transfer):
     if not transfer.asset_name:
         return url_for("transfer_asset", transfer_id=transfer.transfer_id)
@@ -3989,7 +4008,9 @@ def transfer_certificate_pdf(transfer_id):
     if gate:
         return gate
 
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if transfer.status != "completed":
         flash("Transfer certificate is only available after completion.", "error")
@@ -7477,6 +7498,7 @@ def transfer_start(trust_id):
         transfer = Transfer(
             trust_id=str(trust_id),
             transfer_id=generate_transfer_id(),
+            firm_id=session.get("firm_id") or "FIRM-001",
             mode=mode,
             status="draft",
             current_capacity=current_capacity,
@@ -7508,7 +7530,9 @@ def transfer_start(trust_id):
 
 @app.route("/execution/transfers/<transfer_id>/asset", methods=["GET", "POST"])
 def transfer_asset(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST" and transfer.status == "completed":
         flash("Completed transfers are read-only.", "warning")
@@ -7555,7 +7579,9 @@ def transfer_asset(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/classification", methods=["GET", "POST"])
 def transfer_classification(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST" and transfer.status == "completed":
         flash("Completed transfers are read-only.", "warning")
@@ -7598,7 +7624,9 @@ def transfer_classification(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/assignment", methods=["GET", "POST"])
 def transfer_assignment(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST" and transfer.status == "completed":
         flash("Completed transfers are read-only.", "warning")
@@ -7655,7 +7683,9 @@ def transfer_assignment(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/trustee_acceptance", methods=["GET", "POST"])
 def transfer_trustee_acceptance(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST" and transfer.status == "completed":
         flash("Completed transfers are read-only.", "warning")
@@ -7699,7 +7729,9 @@ def transfer_trustee_acceptance(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/control_evidence", methods=["GET", "POST"])
 def transfer_control_evidence(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST" and transfer.status == "completed":
         flash("Completed transfers are read-only.", "warning")
@@ -7743,7 +7775,9 @@ def transfer_control_evidence(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/records", methods=["GET", "POST"])
 def transfer_records(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST" and transfer.status == "completed":
         flash("Completed transfers are read-only.", "warning")
@@ -7798,7 +7832,9 @@ def transfer_records(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/review", methods=["GET", "POST"])
 def transfer_review(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     record_bundle = transfer.record_bundle
     allowed, missing = can_finalize_transfer(transfer)
 
@@ -7943,7 +7979,9 @@ def transfer_review(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/document-support-docs")
 def transfer_document_support_docs(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     return render_template(
         "transfer_document_support_docs.html",
         transfer=transfer,
@@ -7953,7 +7991,9 @@ def transfer_document_support_docs(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/personal-property-support-docs")
 def transfer_personal_property_support_docs(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     return render_template(
         "transfer_personal_property_support_docs.html",
         transfer=transfer,
@@ -7963,7 +8003,9 @@ def transfer_personal_property_support_docs(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/bank-support-docs")
 def transfer_bank_support_docs(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     return render_template(
         "transfer_bank_support_docs.html",
         transfer=transfer,
@@ -7973,7 +8015,9 @@ def transfer_bank_support_docs(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/recommended-support-docs")
 def transfer_recommended_support_docs(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     return render_template(
         "transfer_recommended_support_docs.html",
         transfer=transfer,
@@ -7983,7 +8027,9 @@ def transfer_recommended_support_docs(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/optional-support-docs")
 def transfer_optional_support_docs(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     return render_template(
         "transfer_optional_support_docs.html",
         transfer=transfer,
@@ -7993,7 +8039,9 @@ def transfer_optional_support_docs(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/template-center")
 def transfer_template_center(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     support_doc_map = {
         "universal_instructions": get_support_doc_by_category(transfer, "universal_instructions"),
@@ -8014,7 +8062,9 @@ def transfer_template_center(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/instructions")
 def transfer_instruction_template(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     return render_template(
         "transfer_instruction_template.html",
         transfer=transfer,
@@ -8024,7 +8074,9 @@ def transfer_instruction_template(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/support-docs/<int:support_doc_id>/edit", methods=["GET", "POST"])
 def transfer_support_doc_edit(transfer_id, support_doc_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     support_doc = TransferSupportDoc.query.get_or_404(support_doc_id)
 
     if support_doc.transfer_id_fk != transfer.id:
@@ -8051,7 +8103,9 @@ def transfer_support_doc_edit(transfer_id, support_doc_id):
 
 @app.route("/execution/transfers/<transfer_id>/external-tracking", methods=["GET", "POST"])
 def transfer_external_tracking(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
 
     if request.method == "POST":
         if not validate_csrf_token():
@@ -8085,7 +8139,9 @@ def transfer_external_tracking(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/detail")
 def transfer_detail(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     record_bundle = transfer.record_bundle
     actions = (
         TransferAction.query
@@ -8114,7 +8170,9 @@ def transfer_detail(transfer_id):
 
 @app.route("/execution/transfers/<transfer_id>/print")
 def transfer_print_view(transfer_id):
-    transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
     record_bundle = transfer.record_bundle
     return render_template(
         "transfer_print_view.html",
@@ -8332,12 +8390,18 @@ def reset_admin_once():
 
 @app.route("/resume")
 def resume_process():
-    transfer = Transfer.query.filter(Transfer.status != "completed") \
-        .order_by(Transfer.id.desc()) \
+    firm_id = session.get("firm_id") or "FIRM-001"
+
+    transfer = (
+        Transfer.query
+        .filter(Transfer.status != "completed")
+        .filter(Transfer.firm_id == firm_id)
+        .order_by(Transfer.id.desc())
         .first()
+    )
 
     if not transfer:
-        flash("No active transfer to resume.", "warning")
+        flash("No active transfer to resume for your assigned firm.", "warning")
         return redirect(url_for("execution_dashboard"))
 
     return redirect(get_transfer_resume_endpoint(transfer))
