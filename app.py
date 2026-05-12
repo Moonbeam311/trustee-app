@@ -8620,6 +8620,45 @@ def change_password():
     return render_template("change_password.html")
 
 
+
+@app.route("/admin/run-hosted-firm-scope-migration")
+def run_hosted_firm_scope_migration():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    if os.getenv("ALLOW_HOSTED_FIRM_MIGRATION") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted firm-scope migration is disabled. Set ALLOW_HOSTED_FIRM_MIGRATION=1 to run it."
+        )
+
+    import subprocess
+    import sys
+
+    script_path = Path(__file__).resolve().parent / "scripts" / "migrate_hosted_firm_scope.py"
+
+    if not script_path.exists():
+        return render_template(
+            "access_denied.html",
+            reason=f"Migration script not found: {script_path}"
+        )
+
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+
+    output = (result.stdout or "") + "\n" + (result.stderr or "")
+
+    if result.returncode != 0:
+        return "<pre>MIGRATION FAILED\n\n" + output + "</pre>", 500
+
+    return "<pre>MIGRATION COMPLETE\n\n" + output + "</pre>"
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
