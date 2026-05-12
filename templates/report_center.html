@@ -116,7 +116,7 @@
             <select name="trust_id" id="trust_id">
               <option value="">-- Select Trust --</option>
               {% for trust in trusts %}
-                <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
+                <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['firm_trust_code'] or trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
               {% endfor %}
             </select>
             <div class="hint">Required for Trust Summary, Ledger, K-1, and 1041 reports.</div>
@@ -139,7 +139,7 @@
             <select name="fiduciary_trust_id" id="fiduciary_trust_id">
               <option value="">All Trusts</option>
               {% for trust in trusts %}
-                <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
+                <option value="{{ trust['trust_id'] }}" {% if (prefill.trust_id if prefill is defined and prefill.trust_id is defined else prefill.get("trust_id", "") if prefill else "") == trust['trust_id'] %}selected{% endif %}>{{ trust['firm_trust_code'] or trust['trust_id'] }} — {{ trust['trust_name'] }}</option>
               {% endfor %}
             </select>
             <div class="hint">Optional filter for Fiduciary Report PDF. Leave blank to generate a system-wide fiduciary export. Leave blank to generate a system-wide fiduciary export.</div>

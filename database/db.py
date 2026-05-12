@@ -331,6 +331,9 @@ def get_next_property_id():
     return f"PR-{count + 1:03d}"
 
 def create_property_record(prop_data):
+    prop_data = dict(prop_data)
+    prop_data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
@@ -339,60 +342,69 @@ def create_property_record(prop_data):
             address_or_identifier, acquisition_date, title_notes,
             beneficial_notes, status, asset_class, asset_subtype,
             established_date, effective_date, review_date,
-            expiration_date, responsible_party, custodian
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            expiration_date, responsible_party, custodian, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         prop_data["property_id"], prop_data["trust_id"], prop_data["property_name"],
         prop_data["property_type"], prop_data["address_or_identifier"], prop_data["acquisition_date"],
         prop_data["title_notes"], prop_data["beneficial_notes"], prop_data["status"],
         prop_data.get("asset_class"), prop_data.get("asset_subtype"), prop_data.get("established_date"),
         prop_data.get("effective_date"), prop_data.get("review_date"), prop_data.get("expiration_date"),
-        prop_data.get("responsible_party"), prop_data.get("custodian"),
+        prop_data.get("responsible_party"), prop_data.get("custodian"), prop_data.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 def get_property_by_id(property_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM properties WHERE property_id = ?", (property_id,))
+    cur.execute(
+        "SELECT * FROM properties WHERE property_id = ? AND firm_id = ?",
+        (property_id, firm_id)
+    )
     row = cur.fetchone()
     conn.close()
     return row
 
 def get_properties_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM properties WHERE trust_id = ? AND owner_id = ? ORDER BY property_id",
-        (trust_id, "ADMIN_OWNER_001")
+        "SELECT * FROM properties WHERE trust_id = ? AND firm_id = ? ORDER BY property_id",
+        (trust_id, firm_id)
     )
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_all_assets():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT p.*, t.trust_name
         FROM properties p
         LEFT JOIN trusts t ON p.trust_id = t.trust_id
+        WHERE p.firm_id = ?
         ORDER BY p.property_id
-    """)
+    """, (firm_id,))
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_asset_class_counts():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT COALESCE(asset_class, property_type, 'unclassified') AS asset_class, COUNT(*) AS count
         FROM properties
+        WHERE firm_id = ?
         GROUP BY COALESCE(asset_class, property_type, 'unclassified')
         ORDER BY asset_class
-    """)
+    """, (firm_id,))
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -406,38 +418,43 @@ def get_next_account_id():
     return f"AC-{count + 1:03d}"
 
 def create_account_record(account_data):
+    account_data = dict(account_data)
+    account_data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO accounts (
             account_id, trust_id, property_id, account_type,
-            institution, account_label, masked_number, purpose
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            institution, account_label, masked_number, purpose, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         account_data["account_id"], account_data["trust_id"], account_data["property_id"],
         account_data["account_type"], account_data["institution"], account_data["account_label"],
-        account_data["masked_number"], account_data["purpose"],
+        account_data["masked_number"], account_data["purpose"], account_data.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 def get_accounts_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM accounts WHERE trust_id = ? AND owner_id = ? ORDER BY account_id",
-        (trust_id, "ADMIN_OWNER_001")
+        "SELECT * FROM accounts WHERE trust_id = ? AND firm_id = ? ORDER BY account_id",
+        (trust_id, firm_id)
     )
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_accounts_by_property_id(property_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM accounts WHERE property_id = ? AND owner_id = ? ORDER BY account_id",
-        (property_id, "ADMIN_OWNER_001")
+        "SELECT * FROM accounts WHERE property_id = ? AND firm_id = ? ORDER BY account_id",
+        (property_id, firm_id)
     )
     rows = cur.fetchall()
     conn.close()
@@ -898,18 +915,21 @@ def get_next_distribution_id():
 
 
 def create_beneficiary_record(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO beneficiaries (
             beneficiary_id, trust_id, full_name, tax_id, beneficiary_type,
-            email, address, allocation_method, fixed_percentage, is_active, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            email, address, allocation_method, fixed_percentage, is_active, notes, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["beneficiary_id"], data["trust_id"], data["full_name"], data.get("tax_id"),
         data.get("beneficiary_type"), data.get("email"), data.get("address"),
         data.get("allocation_method"), data.get("fixed_percentage"),
-        data.get("is_active", "Yes"), data.get("notes")
+        data.get("is_active", "Yes"), data.get("notes"), data.get("firm_id")
     ))
     conn.commit()
     conn.close()
@@ -926,37 +946,48 @@ def update_beneficiary_record(beneficiary_id, updates):
 
 
 def get_beneficiary_by_id(beneficiary_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM beneficiaries WHERE beneficiary_id = ?", (beneficiary_id,))
+    cur.execute(
+        "SELECT * FROM beneficiaries WHERE beneficiary_id = ? AND firm_id = ?",
+        (beneficiary_id, firm_id)
+    )
     row = cur.fetchone()
     conn.close()
     return row
 
 
 def get_beneficiaries_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM beneficiaries WHERE trust_id = ? ORDER BY full_name", (trust_id,))
+    cur.execute(
+        "SELECT * FROM beneficiaries WHERE trust_id = ? AND firm_id = ? ORDER BY full_name",
+        (trust_id, firm_id)
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
 
 
 def create_distribution_record(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO distributions (
             distribution_id, trust_id, beneficiary_id, tax_year, distribution_date,
             distribution_type, description, gross_amount, taxable_amount,
-            principal_amount, source_reference, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            principal_amount, source_reference, status, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["distribution_id"], data["trust_id"], data["beneficiary_id"], data["tax_year"],
         data["distribution_date"], data.get("distribution_type"), data.get("description"),
         data.get("gross_amount"), data.get("taxable_amount"), data.get("principal_amount"),
-        data.get("source_reference"), data.get("status", "recorded")
+        data.get("source_reference"), data.get("status", "recorded"), data.get("firm_id")
     ))
     conn.commit()
     conn.close()
@@ -973,15 +1004,20 @@ def update_distribution_record(distribution_id, updates):
 
 
 def get_distribution_by_id(distribution_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM distributions WHERE distribution_id = ?", (distribution_id,))
+    cur.execute(
+        "SELECT * FROM distributions WHERE distribution_id = ? AND firm_id = ?",
+        (distribution_id, firm_id)
+    )
     row = cur.fetchone()
     conn.close()
     return row
 
 
 def get_distributions_by_trust_id(trust_id, tax_year=None):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     if tax_year:
@@ -989,17 +1025,17 @@ def get_distributions_by_trust_id(trust_id, tax_year=None):
             SELECT d.*, b.full_name AS beneficiary_name, b.tax_id AS beneficiary_tax_id
             FROM distributions d
             LEFT JOIN beneficiaries b ON d.beneficiary_id = b.beneficiary_id
-            WHERE d.trust_id = ? AND d.tax_year = ?
+            WHERE d.trust_id = ? AND d.tax_year = ? AND d.firm_id = ?
             ORDER BY d.distribution_date DESC, d.distribution_id DESC
-        """, (trust_id, str(tax_year)))
+        """, (trust_id, str(tax_year), firm_id))
     else:
         cur.execute("""
             SELECT d.*, b.full_name AS beneficiary_name, b.tax_id AS beneficiary_tax_id
             FROM distributions d
             LEFT JOIN beneficiaries b ON d.beneficiary_id = b.beneficiary_id
-            WHERE d.trust_id = ?
+            WHERE d.trust_id = ? AND d.firm_id = ?
             ORDER BY d.distribution_date DESC, d.distribution_id DESC
-        """, (trust_id,))
+        """, (trust_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -1480,6 +1516,9 @@ def get_next_instrument_id():
 
 
 def create_instrument_record(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
@@ -1487,58 +1526,66 @@ def create_instrument_record(data):
             instrument_id, trust_id, instrument_number, instrument_type,
             issue_date, maturity_date, face_value, backing_type,
             backing_reference, status, affidavit_reference,
-            custody_reference, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            custody_reference, notes, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["instrument_id"], data["trust_id"], data["instrument_number"],
         data["instrument_type"], data.get("issue_date"), data.get("maturity_date"),
         data.get("face_value"), data.get("backing_type"), data.get("backing_reference"),
         data.get("status"), data.get("affidavit_reference"),
-        data.get("custody_reference"), data.get("notes")
+        data.get("custody_reference"), data.get("notes"), data.get("firm_id")
     ))
     conn.commit()
     conn.close()
 
 
 def update_instrument_record(instrument_id, updates):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     fields = ", ".join([f"{k} = ?" for k in updates.keys()])
-    values = list(updates.values()) + [instrument_id]
-    cur.execute(f"UPDATE instruments SET {fields} WHERE instrument_id = ?", values)
+    values = list(updates.values()) + [instrument_id, firm_id]
+    cur.execute(f"UPDATE instruments SET {fields} WHERE instrument_id = ? AND firm_id = ?", values)
     conn.commit()
     conn.close()
 
 
 def get_instrument_by_id(instrument_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM instruments WHERE instrument_id = ?", (instrument_id,))
+    cur.execute(
+        "SELECT * FROM instruments WHERE instrument_id = ? AND firm_id = ?",
+        (instrument_id, firm_id)
+    )
     row = cur.fetchone()
     conn.close()
     return row
 
 
 def get_instruments_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM instruments
-        WHERE trust_id = ?
+        WHERE trust_id = ? AND firm_id = ?
         ORDER BY issue_date DESC, instrument_id DESC
-    """, (trust_id,))
+    """, (trust_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
 
 
 def get_all_instruments():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM instruments
+        WHERE firm_id = ?
         ORDER BY issue_date DESC, instrument_id DESC
-    """)
+    """, (firm_id,))
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -1557,6 +1604,7 @@ def get_instrument_creation_guide():
 
 
 def get_instrument_status_counts(trust_id=None):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
 
@@ -1564,15 +1612,16 @@ def get_instrument_status_counts(trust_id=None):
         cur.execute("""
             SELECT status, COUNT(*) AS count
             FROM instruments
-            WHERE trust_id = ?
+            WHERE trust_id = ? AND firm_id = ?
             GROUP BY status
-        """, (trust_id,))
+        """, (trust_id, firm_id))
     else:
         cur.execute("""
             SELECT status, COUNT(*) AS count
             FROM instruments
+            WHERE firm_id = ?
             GROUP BY status
-        """)
+        """, (firm_id,))
 
     rows = cur.fetchall()
     conn.close()
@@ -1598,27 +1647,30 @@ def get_trust_count():
 
 
 def get_beneficiary_count():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS count FROM beneficiaries")
+    cur.execute("SELECT COUNT(*) AS count FROM beneficiaries WHERE firm_id = ?", (firm_id,))
     row = cur.fetchone()
     conn.close()
     return row["count"] if row else 0
 
 
 def get_distribution_count():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS count FROM distributions")
+    cur.execute("SELECT COUNT(*) AS count FROM distributions WHERE firm_id = ?", (firm_id,))
     row = cur.fetchone()
     conn.close()
     return row["count"] if row else 0
 
 
 def get_instrument_count():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT COUNT(*) AS count FROM instruments")
+    cur.execute("SELECT COUNT(*) AS count FROM instruments WHERE firm_id = ?", (firm_id,))
     row = cur.fetchone()
     conn.close()
     return row["count"] if row else 0
