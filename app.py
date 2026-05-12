@@ -5989,14 +5989,15 @@ def enforce_session_timeout():
         "static",
         "bootstrap_admin_once",
         "hosted_bootstrap_admin_once",
-        "hosted_firm_scope_migration_once"
+        "hosted_firm_scope_migration_once",
+        "hosted_reseed_permissions_once"
     }
 
     if request.endpoint not in public_endpoints:
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "reset_admin_once"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -6016,7 +6017,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "reset_admin_once"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -8858,6 +8859,20 @@ def hosted_firm_scope_migration_once():
         return "<pre>MIGRATION FAILED\n\n" + output + "</pre>", 500
 
     return "<pre>MIGRATION COMPLETE\n\n" + output + "</pre>"
+
+
+
+@app.route("/hosted-reseed-permissions-once")
+def hosted_reseed_permissions_once():
+    if os.getenv("ALLOW_HOSTED_PERMISSION_RESEED") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted permission reseed is disabled."
+        )
+
+    result = reseed_default_role_permissions()
+
+    return "<pre>PERMISSION RESEED COMPLETE\n\n" + str(result) + "</pre>"
 
 
 if __name__ == "__main__":
