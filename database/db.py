@@ -2402,12 +2402,15 @@ def get_next_role_id():
 
 
 def create_role_record(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO user_roles (
-            role_id, full_name, role_name, trust_id, status, notes
-        ) VALUES (?, ?, ?, ?, ?, ?)
+            role_id, full_name, role_name, trust_id, status, notes, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         data["role_id"],
         data.get("full_name"),
@@ -2415,27 +2418,33 @@ def create_role_record(data):
         data.get("trust_id"),
         data.get("status"),
         data.get("notes"),
+        data.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 
 def get_all_roles():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM user_roles ORDER BY full_name")
+    cur.execute(
+        "SELECT * FROM user_roles WHERE firm_id = ? ORDER BY full_name",
+        (firm_id,)
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_roles_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM user_roles
-        WHERE trust_id = ?
+        WHERE trust_id = ? AND firm_id = ?
         ORDER BY full_name
-    """, (trust_id,))
+    """, (trust_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
