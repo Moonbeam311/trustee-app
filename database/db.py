@@ -1714,45 +1714,51 @@ def log_change(entity_type, entity_id, action, note=""):
     conn.close()
 
 def get_audit_log(limit=100):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM audit_log
-        ORDER BY created_at DESC
+        WHERE firm_id = ?
+        ORDER BY id DESC
         LIMIT ?
-    """, (limit,))
+    """, (firm_id, limit))
     rows = cur.fetchall()
     conn.close()
     return rows
 
+
 def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
 
     if entity_type and entity_id:
         cur.execute("""
             SELECT * FROM audit_log
-            WHERE entity_type = ? AND entity_id = ?
-            ORDER BY created_at DESC
+            WHERE entity_type = ? AND entity_id = ? AND firm_id = ?
+            ORDER BY id DESC
             LIMIT ?
-        """, (entity_type, entity_id, limit))
+        """, (entity_type, entity_id, firm_id, limit))
     elif entity_type:
         cur.execute("""
             SELECT * FROM audit_log
-            WHERE entity_type = ?
-            ORDER BY created_at DESC
+            WHERE entity_type = ? AND firm_id = ?
+            ORDER BY id DESC
             LIMIT ?
-        """, (entity_type, limit))
+        """, (entity_type, firm_id, limit))
     else:
         cur.execute("""
             SELECT * FROM audit_log
-            ORDER BY created_at DESC
+            WHERE firm_id = ?
+            ORDER BY id DESC
             LIMIT ?
-        """, (limit,))
+        """, (firm_id, limit))
 
     rows = cur.fetchall()
     conn.close()
     return rows
+
 
 def verify_audit_log_chain(limit=None):
     import hashlib, json
