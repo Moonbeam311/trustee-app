@@ -210,8 +210,11 @@ SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
 APP_ENV = os.getenv("APP_ENV", "development").lower()
-FLASK_DEBUG = os.getenv("FLASK_DEBUG", "1")
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "0" if APP_ENV == "production" else "1")
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_TO_RANDOM_SECRET_KEY")
+
+if APP_ENV == "production" and SECRET_KEY == "CHANGE_THIS_TO_RANDOM_SECRET_KEY":
+    raise RuntimeError("SECRET_KEY must be set to a strong value in production.")
 
 app.secret_key = SECRET_KEY
 app.config["WTF_CSRF_FIELD_NAME"] = "_csrf_token"
