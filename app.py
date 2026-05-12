@@ -5991,14 +5991,15 @@ def enforce_session_timeout():
         "hosted_bootstrap_admin_once",
         "hosted_firm_scope_migration_once",
         "hosted_reseed_permissions_once",
-        "hosted_clear_login_lockout_once"
+        "hosted_clear_login_lockout_once",
+        "hosted_auth_diagnostic_once"
     }
 
     if request.endpoint not in public_endpoints:
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "reset_admin_once"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -6018,7 +6019,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "reset_admin_once"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -8889,6 +8890,64 @@ def hosted_clear_login_lockout_once():
     login_attempts.pop(username, None)
 
     return f"Login lockout cleared for {username}. Disable ALLOW_HOSTED_LOGIN_UNLOCK after login."
+
+
+
+@app.route("/hosted-auth-diagnostic-once")
+def hosted_auth_diagnostic_once():
+    if os.getenv("ALLOW_HOSTED_LOGIN_UNLOCK") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted auth diagnostic is disabled."
+        )
+
+    import sqlite3
+    from werkzeug.security import check_password_hash
+
+    username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
+    test_password = os.getenv("HOSTED_BOOTSTRAP_PASSWORD", "").strip()
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    output = []
+    output.append(f"DB_PATH={DB_PATH}")
+    output.append(f"USERNAME_ENV={username}")
+    output.append(f"PASSWORD_ENV_PRESENT={bool(test_password)}")
+    output.append(f"PASSWORD_ENV_LENGTH={len(test_password)}")
+
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='app_users'")
+    if not cur.fetchone():
+        output.append("APP_USERS_TABLE=missing")
+        conn.close()
+        return "<pre>" + "\n".join(output) + "</pre>"
+
+    cur.execute("PRAGMA table_info(app_users)")
+    output.append("APP_USERS_COLUMNS=" + ", ".join([row["name"] for row in cur.fetchall()]))
+
+    cur.execute("""
+        SELECT username, password_hash, role_name, status, firm_id
+        FROM app_users
+        WHERE username = ?
+    """, (username,))
+    row = cur.fetchone()
+
+    if not row:
+        output.append("USER_ROW=missing")
+    else:
+        password_hash = row["password_hash"] or ""
+        output.append("USER_ROW=present")
+        output.append(f"ROW_USERNAME={row['username']}")
+        output.append(f"ROW_ROLE={row['role_name']}")
+        output.append(f"ROW_STATUS={row['status']}")
+        output.append(f"ROW_FIRM_ID={row['firm_id']}")
+        output.append(f"HASH_PRESENT={bool(password_hash)}")
+        output.append(f"HASH_PREFIX={password_hash[:18] if password_hash else ''}")
+        output.append(f"CHECK_PASSWORD_MATCH={check_password_hash(password_hash, test_password) if password_hash and test_password else False}")
+
+    conn.close()
+    return "<pre>" + "\n".join(output) + "</pre>"
 
 
 if __name__ == "__main__":
