@@ -4964,29 +4964,37 @@ def get_discussion_categories():
     ]
 
 def get_all_workspaces():
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM workspaces
+        WHERE firm_id = ?
         ORDER BY created_at DESC, title
-    """).fetchall()
+    """, (firm_id,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 def get_workspace_by_id(workspace_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     row = conn.execute("""
         SELECT * FROM workspaces
         WHERE workspace_id = ?
-    """, (workspace_id,)).fetchone()
+          AND firm_id = ?
+    """, (workspace_id, firm_id)).fetchone()
     conn.close()
     return dict(row) if row else None
 
 def create_workspace(payload):
+    payload = dict(payload)
+    payload.setdefault("firm_id", session.get("firm_id") or "FIRM-001")
+    payload.setdefault("owner_id", get_current_owner())
+
     conn = _learning_conn()
     conn.execute("""
         INSERT INTO workspaces (
-            workspace_id, title, workspace_type, trust_type_focus, purpose, owner, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            workspace_id, title, workspace_type, trust_type_focus, purpose, owner, status, owner_id, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         payload.get("workspace_id"),
         payload.get("title"),
@@ -4995,11 +5003,14 @@ def create_workspace(payload):
         payload.get("purpose"),
         payload.get("owner"),
         payload.get("status"),
+        payload.get("owner_id"),
+        payload.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 def update_workspace(workspace_id, payload):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     conn.execute("""
         UPDATE workspaces
@@ -5011,6 +5022,7 @@ def update_workspace(workspace_id, payload):
             status = ?,
             updated_at = CURRENT_TIMESTAMP
         WHERE workspace_id = ?
+          AND firm_id = ?
     """, (
         payload.get("title"),
         payload.get("workspace_type"),
@@ -5019,31 +5031,38 @@ def update_workspace(workspace_id, payload):
         payload.get("owner"),
         payload.get("status"),
         workspace_id,
+        firm_id,
     ))
     conn.commit()
     conn.close()
 
 def get_workspace_notes(workspace_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM workspace_notes
         WHERE workspace_id = ?
+          AND firm_id = ?
         ORDER BY section_name, created_at
-    """, (workspace_id,)).fetchall()
+    """, (workspace_id, firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 def create_workspace_note(payload):
+    payload = dict(payload)
+    payload.setdefault("firm_id", session.get("firm_id") or "FIRM-001")
+
     conn = _learning_conn()
     conn.execute("""
         INSERT INTO workspace_notes (
-            note_id, workspace_id, section_name, content
-        ) VALUES (?, ?, ?, ?)
+            note_id, workspace_id, section_name, content, firm_id
+        ) VALUES (?, ?, ?, ?, ?)
     """, (
         payload.get("note_id"),
         payload.get("workspace_id"),
         payload.get("section_name"),
         payload.get("content"),
+        payload.get("firm_id"),
     ))
     conn.commit()
     conn.close()
@@ -6396,16 +6415,25 @@ def workspace_new():
 def workspace_detail(workspace_id):
     workspace = get_workspace_by_id(workspace_id)
     if not workspace:
-        return f"Workspace {workspace_id} not found", 404
-
-    if workspace.get("owner_id") != get_current_owner():
         return render_template(
             "access_denied.html",
-            reason="This workspace does not belong to the current owner context."
+            reason="This workspace is not available within your assigned firm scope."
         )
 
     notes = get_workspace_notes(workspace_id)
-    return render_template("workspace_detail.html", workspace=workspace, notes=notes)
+    tasks = get_execution_tasks_by_workspace(workspace_id)
+    documents = get_generated_documents_by_workspace(workspace_id)
+    threads = get_discussion_threads_by_workspace(workspace_id)
+
+    return render_template(
+        "workspace_detail.html",
+        workspace=workspace,
+        notes=notes,
+        tasks=tasks,
+        documents=documents,
+        threads=threads,
+        note_sections=get_workspace_note_sections()
+    )
 
 
 @app.route("/workspaces/<workspace_id>/edit", methods=["GET", "POST"])
