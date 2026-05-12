@@ -15,3 +15,14 @@ data/backups/
 # Runtime uploaded user files
 uploads/
 data/pdf_assets/
+
+# Local SQLite runtime databases
+database.db
+data/database.db
+*.db
+
+# Runtime backup/export artifacts
+data/backups/
+backups/
+*.sqlite
+*.sqlite3
