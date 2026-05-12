@@ -8741,6 +8741,88 @@ def hosted_bootstrap_admin():
     return f"Hosted admin bootstrap {action}: {username} / {firm_id}. Disable ALLOW_HOSTED_ADMIN_BOOTSTRAP after login."
 
 
+
+@app.route("/hosted-bootstrap-admin-once")
+def hosted_bootstrap_admin_once():
+    if os.getenv("ALLOW_HOSTED_ADMIN_BOOTSTRAP") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted admin bootstrap is disabled."
+        )
+
+    username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
+    password = os.getenv("HOSTED_BOOTSTRAP_PASSWORD", "").strip()
+    firm_id = os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-002").strip()
+
+    if not username or not password:
+        return render_template(
+            "access_denied.html",
+            reason="HOSTED_BOOTSTRAP_USERNAME and HOSTED_BOOTSTRAP_PASSWORD must be set."
+        )
+
+    from werkzeug.security import generate_password_hash
+    import sqlite3
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS app_users (
+            user_id TEXT PRIMARY KEY,
+            username TEXT UNIQUE,
+            password_hash TEXT,
+            role_name TEXT,
+            status TEXT,
+            owner_id TEXT,
+            firm_id TEXT
+        )
+    """)
+
+    cur.execute("PRAGMA table_info(app_users)")
+    cols = [r["name"] for r in cur.fetchall()]
+    for col, col_type in [
+        ("owner_id", "TEXT"),
+        ("firm_id", "TEXT"),
+        ("role_name", "TEXT"),
+        ("status", "TEXT"),
+    ]:
+        if col not in cols:
+            cur.execute(f"ALTER TABLE app_users ADD COLUMN {col} {col_type}")
+
+    cur.execute("SELECT user_id FROM app_users WHERE username = ?", (username,))
+    existing = cur.fetchone()
+
+    password_hash = generate_password_hash(password)
+
+    if existing:
+        cur.execute("""
+            UPDATE app_users
+            SET password_hash = ?,
+                role_name = 'Admin',
+                status = 'active',
+                owner_id = 'ADMIN_OWNER_001',
+                firm_id = ?
+            WHERE username = ?
+        """, (password_hash, firm_id, username))
+        action = "updated"
+    else:
+        cur.execute("SELECT COUNT(*) AS count FROM app_users")
+        count = cur.fetchone()["count"]
+        user_id = f"USER-{count + 1:03d}"
+        cur.execute("""
+            INSERT INTO app_users (
+                user_id, username, password_hash, role_name, status, owner_id, firm_id
+            ) VALUES (?, ?, ?, 'Admin', 'active', 'ADMIN_OWNER_001', ?)
+        """, (user_id, username, password_hash, firm_id))
+        action = "created"
+
+    conn.commit()
+    conn.close()
+
+    return f"Hosted admin bootstrap {action}: {username} / {firm_id}. Now log in, then disable ALLOW_HOSTED_ADMIN_BOOTSTRAP."
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
