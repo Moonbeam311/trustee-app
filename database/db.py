@@ -22,6 +22,13 @@ def get_current_firm_id():
 
 
 def get_connection():
+    # Ensure SQLite parent folder exists before connecting.
+    # Required for Railway/Render/Linux deployment where /app/data may not exist yet.
+    from pathlib import Path
+    db_path = Path(DB_PATH)
+    if db_path.parent and str(db_path.parent) not in ("", "."):
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
