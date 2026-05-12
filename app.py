@@ -4755,53 +4755,52 @@ def render_document_template(template_body, values):
     return content
 
 def get_all_execution_tasks():
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM execution_tasks
         WHERE owner_id = ?
-        ORDER BY
-            CASE priority
-                WHEN 'high' THEN 1
-                WHEN 'medium' THEN 2
-                ELSE 3
-            END,
-            created_at DESC
-    """, (get_current_owner(),)).fetchall()
+          AND firm_id = ?
+        ORDER BY created_at DESC, title
+    """, (get_current_owner(), firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 def get_execution_tasks_by_workspace(workspace_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM execution_tasks
         WHERE workspace_id = ?
-        ORDER BY
-            CASE priority
-                WHEN 'high' THEN 1
-                WHEN 'medium' THEN 2
-                ELSE 3
-            END,
-            created_at DESC
-    """, (workspace_id,)).fetchall()
+          AND owner_id = ?
+          AND firm_id = ?
+        ORDER BY created_at DESC, title
+    """, (workspace_id, get_current_owner(), firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 def get_execution_task_by_id(task_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     row = conn.execute("""
         SELECT * FROM execution_tasks
         WHERE task_id = ?
-    """, (task_id,)).fetchone()
+          AND firm_id = ?
+    """, (task_id, firm_id)).fetchone()
     conn.close()
     return dict(row) if row else None
 
 def create_execution_task(payload):
+    payload = dict(payload)
+    payload.setdefault("firm_id", session.get("firm_id") or "FIRM-001")
+
     conn = _learning_conn()
     conn.execute("""
         INSERT INTO execution_tasks (
             task_id, workspace_id, trust_id, title, task_type, description,
-            related_form, related_report, priority, status, due_date, assigned_to
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            related_form, related_report, priority, status, due_date,
+            assigned_to, owner_id, created_at, updated_at, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
     """, (
         payload.get("task_id"),
         payload.get("workspace_id"),
@@ -4814,19 +4813,22 @@ def create_execution_task(payload):
         payload.get("priority"),
         payload.get("status"),
         payload.get("due_date"),
-        payload.get("assigned_to"),
+        payload.get("assigned_to") or session.get("username") or "unknown",
+        get_current_owner(),
+        payload.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 def update_execution_task_status(task_id, status):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     conn.execute("""
         UPDATE execution_tasks
-        SET status = ?,
-            updated_at = CURRENT_TIMESTAMP
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
-    """, (status, task_id))
+          AND firm_id = ?
+    """, (status, task_id, firm_id))
     conn.commit()
     conn.close()
 
