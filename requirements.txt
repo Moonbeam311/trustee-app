@@ -1,8 +1,7 @@
 Flask
 Werkzeug
 gunicorn
-reportlab
+reportlab==4.2.5
 Flask-SQLAlchemy
 SQLAlchemy
-
 Flask-WTF==1.2.2
