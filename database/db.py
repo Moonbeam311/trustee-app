@@ -2044,13 +2044,16 @@ def get_next_fiduciary_id():
 
 
 def create_fiduciary_record(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO fiduciaries (
             fiduciary_id, full_name, role_title, authority_scope,
-            trust_id, appointment_date, effective_date, status, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            trust_id, appointment_date, effective_date, status, notes, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["fiduciary_id"],
         data.get("full_name"),
@@ -2061,31 +2064,35 @@ def create_fiduciary_record(data):
         data.get("effective_date"),
         data.get("status"),
         data.get("notes"),
+        data.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 
 def get_all_fiduciaries():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM fiduciaries
+        WHERE firm_id = ?
         ORDER BY full_name
-    """)
+    """, (firm_id,))
     rows = cur.fetchall()
     conn.close()
     return rows
 
 
 def get_fiduciaries_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM fiduciaries
-        WHERE trust_id = ?
+        WHERE trust_id = ? AND firm_id = ?
         ORDER BY full_name
-    """, (trust_id,))
+    """, (trust_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -2234,14 +2241,17 @@ def get_next_media_id():
 
 
 def create_media_record(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO media_records (
             media_id, trust_id, related_entity_type,
             related_entity_id, media_type, file_path,
-            category, description, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            category, description, created_at, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["media_id"],
         data.get("trust_id"),
@@ -2252,39 +2262,46 @@ def create_media_record(data):
         data.get("category"),
         data.get("description"),
         data.get("created_at"),
+        data.get("firm_id"),
     ))
     conn.commit()
     conn.close()
 
 
 def get_all_media():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM media_records ORDER BY created_at DESC")
+    cur.execute(
+        "SELECT * FROM media_records WHERE firm_id = ? ORDER BY created_at DESC",
+        (firm_id,)
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_media_by_entity(entity_type, entity_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM media_records
-        WHERE related_entity_type = ? AND related_entity_id = ?
+        WHERE related_entity_type = ? AND related_entity_id = ? AND firm_id = ?
         ORDER BY created_at DESC
-    """, (entity_type, entity_id))
+    """, (entity_type, entity_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
 
 def get_media_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM media_records
-        WHERE trust_id = ?
+        WHERE trust_id = ? AND firm_id = ?
         ORDER BY created_at DESC
-    """, (trust_id,))
+    """, (trust_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
@@ -3019,36 +3036,43 @@ def get_certificate_registry_records():
 
 
 def get_all_trust_minutes():
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT *
         FROM trust_minutes
+        WHERE firm_id = ?
         ORDER BY created_at DESC
-    """)
+    """, (firm_id,))
     rows = cur.fetchall()
     conn.close()
     return rows
 
 
 def get_trust_minutes_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT *
         FROM trust_minutes
-        WHERE trust_id = ?
+        WHERE trust_id = ? AND firm_id = ?
         ORDER BY created_at DESC
-    """, (trust_id,))
+    """, (trust_id, firm_id))
     rows = cur.fetchall()
     conn.close()
     return rows
 
 
 def get_trust_minute_by_id(minute_id):
+    firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM trust_minutes WHERE minute_id = ?", (minute_id,))
+    cur.execute(
+        "SELECT * FROM trust_minutes WHERE minute_id = ? AND firm_id = ?",
+        (minute_id, firm_id)
+    )
     row = cur.fetchone()
     conn.close()
     return row

@@ -247,6 +247,12 @@ def get_visible_trusts_for_current_operator():
     if is_master_admin():
         return trusts
 
+    # Tenant isolation rule:
+    # A non-master Admin may see all trusts inside the active firm.
+    # Trustee/Viewer visibility remains assignment-based.
+    if session.get("role") == "Admin":
+        return trusts
+
     username = (session.get("username") or "").strip().lower()
     if not username:
         return []
@@ -4684,41 +4690,50 @@ def get_document_template_by_id(template_id):
     return dict(row) if row else None
 
 def get_generated_documents():
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM generated_documents
         WHERE owner_id = ?
+          AND firm_id = ?
         ORDER BY created_at DESC, title
-    """, (get_current_owner(),)).fetchall()
+    """, (get_current_owner(), firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 def get_generated_documents_by_workspace(workspace_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM generated_documents
         WHERE workspace_id = ?
           AND owner_id = ?
+          AND firm_id = ?
         ORDER BY created_at DESC, title
-    """, (workspace_id, get_current_owner())).fetchall()
+    """, (workspace_id, get_current_owner(), firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
 def get_generated_document_by_id(document_id):
+    firm_id = session.get("firm_id") or "FIRM-001"
     conn = _learning_conn()
     row = conn.execute("""
         SELECT * FROM generated_documents
         WHERE document_id = ?
-    """, (document_id,)).fetchone()
+          AND firm_id = ?
+    """, (document_id, firm_id)).fetchone()
     conn.close()
     return dict(row) if row else None
 
 def create_generated_document(payload):
+    payload = dict(payload)
+    payload.setdefault("firm_id", session.get("firm_id") or "FIRM-001")
+
     conn = _learning_conn()
     conn.execute("""
         INSERT INTO generated_documents (
-            document_id, workspace_id, trust_id, template_id, title, content, status, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            document_id, workspace_id, trust_id, template_id, title, content, status, created_by, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         payload.get("document_id"),
         payload.get("workspace_id"),
@@ -4728,6 +4743,7 @@ def create_generated_document(payload):
         payload.get("content"),
         payload.get("status"),
         payload.get("created_by"),
+        payload.get("firm_id"),
     ))
     conn.commit()
     conn.close()
