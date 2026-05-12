@@ -5988,14 +5988,15 @@ def enforce_session_timeout():
         "logout",
         "static",
         "bootstrap_admin_once",
-        "hosted_bootstrap_admin_once"
+        "hosted_bootstrap_admin_once",
+        "hosted_firm_scope_migration_once"
     }
 
     if request.endpoint not in public_endpoints:
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "reset_admin_once"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -6015,7 +6016,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "reset_admin_once"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -8822,6 +8823,41 @@ def hosted_bootstrap_admin_once():
     conn.close()
 
     return f"Hosted admin bootstrap {action}: {username} / {firm_id}. Now log in, then disable ALLOW_HOSTED_ADMIN_BOOTSTRAP."
+
+
+
+@app.route("/hosted-firm-scope-migration-once")
+def hosted_firm_scope_migration_once():
+    if os.getenv("ALLOW_HOSTED_FIRM_MIGRATION") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted firm-scope migration is disabled."
+        )
+
+    import subprocess
+    import sys
+
+    script_path = Path(__file__).resolve().parent / "scripts" / "migrate_hosted_firm_scope.py"
+
+    if not script_path.exists():
+        return render_template(
+            "access_denied.html",
+            reason=f"Migration script not found: {script_path}"
+        )
+
+    result = subprocess.run(
+        [sys.executable, str(script_path)],
+        capture_output=True,
+        text=True,
+        timeout=90,
+    )
+
+    output = (result.stdout or "") + "\n" + (result.stderr or "")
+
+    if result.returncode != 0:
+        return "<pre>MIGRATION FAILED\n\n" + output + "</pre>", 500
+
+    return "<pre>MIGRATION COMPLETE\n\n" + output + "</pre>"
 
 
 if __name__ == "__main__":
