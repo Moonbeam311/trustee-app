@@ -178,7 +178,7 @@ from io import BytesIO
 
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 try:
     from PIL import Image as PILImage
@@ -896,7 +896,16 @@ def add_universal_v3_letterhead(story, styles, preview_context, document_label):
     caf_number = branding.get("caf_number") or ""
     crid_number = branding.get("crid_number") or ""
 
-    title_style = title_style
+    title_style = ParagraphStyle(
+        "UniversalV3Title",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
     body_style = styles["BodyText"]
 
     # Universal trust-specific seal rendering.
@@ -1238,6 +1247,17 @@ def generate_certificate_of_trust_pdf(trust, preview_context):
 
     add_universal_v3_letterhead(story, styles, preview_context, "Certificate of Trust")
 
+    header_style = ParagraphStyle(
+        "CertificateSectionHeader",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#111111"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
+
     story.append(Paragraph("Certification Summary", header_style))
     story.append(Paragraph(
         "This Certificate of Trust summarizes selected trust information for administrative verification. "
@@ -1295,8 +1315,26 @@ def generate_articles_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Articles")
 
-    title_style = title_style
-    heading_style = header_style
+    title_style = ParagraphStyle(
+        "ArticlesTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
+    heading_style = ParagraphStyle(
+        "ArticlesSectionHeader",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#111111"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
     body_style = styles["BodyText"]
 
     story.append(Paragraph("Articles of Trust", title_style))
@@ -1358,6 +1396,27 @@ def generate_trustee_acceptance_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Trustee Acceptance")
 
+    title_style = ParagraphStyle(
+        "TrusteeAcceptanceTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
+    header_style = ParagraphStyle(
+        "TrusteeAcceptanceHeader",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#111111"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
+
     story.append(Paragraph("Trustee Acceptance of Appointment", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
@@ -1394,6 +1453,27 @@ def generate_general_assignment_pdf(trust, preview_context):
     styles = getSampleStyleSheet()
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "General Assignment")
+
+    title_style = ParagraphStyle(
+        "GeneralAssignmentTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
+    header_style = ParagraphStyle(
+        "GeneralAssignmentHeader",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#111111"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
 
     story.append(Paragraph("General Assignment to Trust", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
@@ -1432,6 +1512,27 @@ def generate_organizational_minutes_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Organizational Minutes")
 
+    title_style = ParagraphStyle(
+        "OrganizationalMinutesTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
+    header_style = ParagraphStyle(
+        "OrganizationalMinutesHeader",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#111111"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
+
     story.append(Paragraph("Initial Trustee Resolution / Organizational Minutes", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
@@ -1469,6 +1570,27 @@ def generate_successor_trustee_pdf(trust, preview_context):
     story = []
     add_universal_v3_letterhead(story, styles, preview_context, "Successor Trustee")
 
+    title_style = ParagraphStyle(
+        "SuccessorTrusteeTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
+    header_style = ParagraphStyle(
+        "SuccessorTrusteeHeader",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=12,
+        leading=15,
+        textColor=colors.HexColor("#111111"),
+        spaceBefore=10,
+        spaceAfter=6,
+    )
+
     story.append(Paragraph("Successor Trustee Acceptance / Appointment", title_style))
     story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
     story.append(Spacer(1, 18))
@@ -1501,50 +1623,59 @@ def generate_successor_trustee_pdf(trust, preview_context):
 
 def generate_packet_manifest_pdf(trust, preview_context):
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=LETTER, rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54)
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER)
     styles = getSampleStyleSheet()
     story = []
+
     add_universal_v3_letterhead(story, styles, preview_context, "Packet Manifest")
 
-    exported_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    title_style = ParagraphStyle(
+        "PacketManifestTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
+
+    normal_style = styles["BodyText"]
+
+    trust_id = trust.get("trust_id") if isinstance(trust, dict) else trust["trust_id"]
+    trust_name = trust.get("trust_name") if isinstance(trust, dict) else trust["trust_name"]
 
     story.append(Paragraph("Controlled Trust Packet Manifest", title_style))
-    story.append(Paragraph("Cover Sheet / Export Index", styles["Heading3"]))
-    story.append(Spacer(1, 18))
+    story.append(Spacer(1, 12))
+    story.append(Paragraph(f"<b>Trust ID:</b> {trust_id}", normal_style))
+    story.append(Paragraph(f"<b>Trust Name:</b> {trust_name}", normal_style))
+    story.append(Paragraph("<b>Packet Type:</b> Controlled Trust Packet Export", normal_style))
+    story.append(Paragraph("<b>Status:</b> Generated for review/testing under current export policy.", normal_style))
+    story.append(Spacer(1, 12))
 
-    story.append(Paragraph("Packet Information", header_style))
-    story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Export Timestamp:</b> {exported_at}", styles["BodyText"]))
-    story.append(Spacer(1, 18))
-
-    story.append(Paragraph("Included Documents", header_style))
-    included_docs = [
-        "Declaration of Trust",
-        "Certificate of Trust",
-        "Articles of Trust",
-        "Trustee Acceptance of Appointment",
-        "General Assignment to Trust",
-        "Initial Trustee Resolution / Organizational Minutes",
-        "Successor Trustee Acceptance / Appointment",
+    story.append(Paragraph("<b>Included Packet Records</b>", normal_style))
+    included_items = [
+        "Packet Manifest",
+        "Trust Declaration / Summary",
+        "Articles / Support Records",
+        "Trustee Acceptance Records",
+        "General Assignment Records",
+        "Certificate / Registry Records where available",
     ]
-    for item in included_docs:
-        story.append(Paragraph(f"• {item}", styles["BodyText"]))
-    story.append(Spacer(1, 18))
 
-    story.append(Paragraph("Packet Notes", header_style))
+    for item in included_items:
+        story.append(Paragraph(f"• {item}", normal_style))
+
+    story.append(Spacer(1, 12))
     story.append(Paragraph(
-        "This packet was generated through the controlled trust document system. "
-        "The included files represent bounded final document surfaces exported as PDFs and bundled into a trust-specific packet.",
-        styles["BodyText"]
+        "This manifest was generated by the Trustee App controlled packet export workflow.",
+        normal_style
     ))
 
     doc.build(story)
     buffer.seek(0)
     return buffer
+
 
 def generate_controlled_trust_packet_zip(trust, preview_context):
     packet_buffer = BytesIO()
@@ -3000,6 +3131,22 @@ def build_generic_export_activity(export_label, permission_name, filename=None, 
         "timestamp": timestamp,
     }
 
+def require_active_firm_trust_or_deny(trust_id, reason_label="trust record"):
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        log_change(
+            "security",
+            trust_id,
+            "trust_export_scope_denied",
+            f"Attempted access to {reason_label} outside active firm scope. User={session.get('username')}; Firm={session.get('firm_id')}"
+        )
+        return None, render_template(
+            "access_denied.html",
+            reason="This trust record is not available within your assigned firm scope."
+        )
+    return trust, None
+
+
 def require_export_permission(permission_name, export_label):
     username = session.get("username") or "unknown"
 
@@ -3093,6 +3240,11 @@ def export_k1_live_csv(trust_id):
     gate = require_export_permission("manage_tax_reports", f"k1_live_csv:{trust_id}")
     if gate:
         return gate
+
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "K-1 CSV export")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
     attribution = build_export_attribution(f"k1_live_csv:{trust_id}")
     csv_text = export_k1_csv_text(trust_id, tax_year)
@@ -3113,6 +3265,11 @@ def export_1041_text(trust_id):
     gate = require_export_permission("manage_tax_reports", f"1041_text:{trust_id}")
     if gate:
         return gate
+
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "1041 text export")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
     dataset = get_1041_dataset(trust_id, tax_year)
 
@@ -4216,6 +4373,10 @@ def k1_edit_distribution(trust_id, distribution_id):
 
 @app.route("/k1/trust/<trust_id>/export.csv")
 def k1_export_csv(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "K-1 CSV export")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
     csv_text = export_k1_csv_text(trust_id, tax_year)
     response = make_response(csv_text)
@@ -4227,8 +4388,11 @@ def k1_export_csv(trust_id):
 
 @app.route("/exports/k1_summary/<trust_id>.txt")
 def export_k1_summary_report(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "K-1 summary export")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
-    trust = get_trust_by_id(trust_id)
     totals = get_distribution_totals_by_trust(trust_id, tax_year)
     beneficiary_totals = get_distribution_totals_by_beneficiary(trust_id, tax_year)
 
@@ -4265,8 +4429,11 @@ def export_k1_summary_report(trust_id):
 
 @app.route("/exports/1041_summary/<trust_id>.txt")
 def export_1041_summary_report(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "1041 summary export")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
-    trust = get_trust_by_id(trust_id)
     tax_logic = compute_dni_components(trust_id, tax_year)
     shares = compute_beneficiary_tax_shares(trust_id, tax_year)
 
@@ -7088,9 +7255,9 @@ def trust_successor_trustee_output_surface_pdf(trust_id):
 
 @app.route("/trust/<trust_id>/controlled-packet-export")
 def trust_controlled_packet_export(trust_id):
-    trust = get_trust_by_id(trust_id)
-    if not trust:
-        return f"Trust {trust_id} not found"
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "controlled packet export")
+    if gate:
+        return gate
     preview_context = build_trust_preview_context(trust)
     document_readiness = build_trust_document_readiness(preview_context)
     packet_readiness = build_trust_packet_readiness(document_readiness)
