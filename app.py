@@ -5992,14 +5992,15 @@ def enforce_session_timeout():
         "hosted_firm_scope_migration_once",
         "hosted_reseed_permissions_once",
         "hosted_clear_login_lockout_once",
-        "hosted_auth_diagnostic_once"
+        "hosted_auth_diagnostic_once",
+        "hosted_repair_admin_access_once"
     }
 
     if request.endpoint not in public_endpoints:
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "reset_admin_once"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -6019,7 +6020,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -8948,6 +8949,249 @@ def hosted_auth_diagnostic_once():
 
     conn.close()
     return "<pre>" + "\n".join(output) + "</pre>"
+
+
+
+@app.route("/hosted-repair-admin-access-once")
+def hosted_repair_admin_access_once():
+    """
+    One-time hosted recovery route.
+    Guarded by ALLOW_HOSTED_ADMIN_BOOTSTRAP=1 and ALLOW_HOSTED_PERMISSION_RESEED=1.
+    Repairs hosted admin login, role permissions, login lockout, and firm_id columns.
+    Disable all hosted recovery switches immediately after use.
+    """
+    if os.getenv("ALLOW_HOSTED_ADMIN_BOOTSTRAP") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted admin repair is disabled. Set ALLOW_HOSTED_ADMIN_BOOTSTRAP=1."
+        )
+
+    if os.getenv("ALLOW_HOSTED_PERMISSION_RESEED") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted permission repair is disabled. Set ALLOW_HOSTED_PERMISSION_RESEED=1."
+        )
+
+    import sqlite3
+    from werkzeug.security import generate_password_hash, check_password_hash
+
+    username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
+    password = os.getenv("HOSTED_BOOTSTRAP_PASSWORD", "").strip()
+    firm_id = os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-002").strip()
+
+    output = []
+    output.append(f"DB_PATH={DB_PATH}")
+    output.append(f"USERNAME={username!r}")
+    output.append(f"PASSWORD_PRESENT={bool(password)}")
+    output.append(f"PASSWORD_LENGTH={len(password)}")
+    output.append(f"FIRM_ID={firm_id!r}")
+
+    if not username or not password or not firm_id:
+        return "<pre>REPAIR FAILED: username, password, and firm_id are required.</pre>", 400
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # 1. Ensure app_users exists and has required columns.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS app_users (
+            user_id TEXT PRIMARY KEY,
+            username TEXT UNIQUE,
+            password_hash TEXT,
+            role_name TEXT,
+            status TEXT,
+            firm_id TEXT,
+            owner_id TEXT
+        )
+    """)
+
+    cur.execute("PRAGMA table_info(app_users)")
+    user_cols = [r["name"] for r in cur.fetchall()]
+    for col, col_type in [
+        ("password_hash", "TEXT"),
+        ("role_name", "TEXT"),
+        ("status", "TEXT"),
+        ("firm_id", "TEXT"),
+        ("owner_id", "TEXT"),
+    ]:
+        if col not in user_cols:
+            cur.execute(f"ALTER TABLE app_users ADD COLUMN {col} {col_type}")
+            output.append(f"ADDED app_users.{col}")
+
+    # 2. Create/update admin user.
+    password_hash = generate_password_hash(password)
+
+    cur.execute("SELECT user_id FROM app_users WHERE TRIM(LOWER(username)) = TRIM(LOWER(?))", (username,))
+    existing = cur.fetchone()
+
+    if existing:
+        cur.execute("""
+            UPDATE app_users
+            SET username = ?,
+                password_hash = ?,
+                role_name = 'Admin',
+                status = 'active',
+                firm_id = ?,
+                owner_id = 'ADMIN_OWNER_001'
+            WHERE user_id = ?
+        """, (username, password_hash, firm_id, existing["user_id"]))
+        output.append(f"USER_UPDATED={username}")
+    else:
+        cur.execute("SELECT COUNT(*) AS count FROM app_users")
+        count = cur.fetchone()["count"]
+        user_id = f"USER-{count + 1:03d}"
+        cur.execute("""
+            INSERT INTO app_users (
+                user_id, username, password_hash, role_name, status, firm_id, owner_id
+            ) VALUES (?, ?, ?, 'Admin', 'active', ?, 'ADMIN_OWNER_001')
+        """, (user_id, username, password_hash, firm_id))
+        output.append(f"USER_CREATED={username}")
+
+    conn.commit()
+
+    # 3. Ensure role permission tables and grant default Admin permissions.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS permissions (
+            permission_id TEXT PRIMARY KEY,
+            permission_name TEXT UNIQUE,
+            description TEXT
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS role_permissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role_name TEXT,
+            permission_name TEXT,
+            UNIQUE(role_name, permission_name)
+        )
+    """)
+
+    default_permissions = [
+        ("PERM-001", "view_dashboard", "View dashboards and core system pages"),
+        ("PERM-002", "create_trust", "Create trust records"),
+        ("PERM-003", "edit_trust", "Edit trust records"),
+        ("PERM-004", "view_documents", "View documents"),
+        ("PERM-005", "generate_documents", "Generate documents"),
+        ("PERM-006", "export_documents", "Export documents"),
+        ("PERM-007", "manage_tax_reports", "Manage tax reports"),
+        ("PERM-008", "view_audit", "View audit trail"),
+        ("PERM-009", "manage_users", "Manage users"),
+        ("PERM-010", "manage_roles", "Manage trust roles"),
+        ("PERM-011", "manage_permissions", "Manage permissions"),
+        ("PERM-012", "view_security", "View security dashboard"),
+    ]
+
+    for permission_id, permission_name, description in default_permissions:
+        cur.execute("""
+            INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)
+            VALUES (?, ?, ?)
+        """, (permission_id, permission_name, description))
+
+    admin_permissions = [
+        "view_dashboard",
+        "create_trust",
+        "edit_trust",
+        "view_documents",
+        "generate_documents",
+        "export_documents",
+        "manage_tax_reports",
+        "view_audit",
+        "manage_users",
+        "manage_roles",
+        "manage_permissions",
+        "view_security",
+    ]
+
+    for permission_name in admin_permissions:
+        cur.execute("""
+            INSERT OR IGNORE INTO role_permissions (role_name, permission_name)
+            VALUES ('Admin', ?)
+        """, (permission_name,))
+
+    conn.commit()
+    output.append("ADMIN_PERMISSIONS_RESEEDED=True")
+
+    # 4. Self-heal firm_id columns on common hosted tables.
+    firm_tables = [
+        "trusts",
+        "audit_log",
+        "transfers",
+        "trust_minutes",
+        "documents",
+        "generated_documents",
+        "media_records",
+        "workspaces",
+        "workspace_notes",
+        "execution_tasks",
+        "user_roles",
+        "fiduciaries",
+        "properties",
+        "accounts",
+        "beneficiaries",
+        "distributions",
+        "instruments",
+        "ledger_entries",
+    ]
+
+    for table in firm_tables:
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+        if not cur.fetchone():
+            output.append(f"SKIP_MISSING_TABLE={table}")
+            continue
+
+        cur.execute(f"PRAGMA table_info({table})")
+        cols = [r["name"] for r in cur.fetchall()]
+        if "firm_id" not in cols:
+            cur.execute(f"ALTER TABLE {table} ADD COLUMN firm_id TEXT")
+            output.append(f"ADDED_COLUMN={table}.firm_id")
+
+        cur.execute(f"""
+            UPDATE {table}
+            SET firm_id = ?
+            WHERE firm_id IS NULL OR TRIM(firm_id) = ''
+        """, (firm_id,))
+        output.append(f"{table}_DEFAULTED_ROWS={cur.rowcount}")
+
+    conn.commit()
+
+    # 5. Verify user row and password match.
+    cur.execute("""
+        SELECT username, password_hash, role_name, status, firm_id
+        FROM app_users
+        WHERE TRIM(LOWER(username)) = TRIM(LOWER(?))
+    """, (username,))
+    row = cur.fetchone()
+
+    if row:
+        output.append("USER_ROW=present")
+        output.append(f"ROW_USERNAME={row['username']}")
+        output.append(f"ROW_ROLE={row['role_name']}")
+        output.append(f"ROW_STATUS={row['status']}")
+        output.append(f"ROW_FIRM_ID={row['firm_id']}")
+        output.append(f"CHECK_PASSWORD_MATCH={check_password_hash(row['password_hash'], password)}")
+    else:
+        output.append("USER_ROW=missing")
+
+    cur.execute("""
+        SELECT permission_name
+        FROM role_permissions
+        WHERE role_name = 'Admin'
+        ORDER BY permission_name
+    """)
+    admin_perms = [r["permission_name"] for r in cur.fetchall()]
+    output.append("ADMIN_PERMISSIONS=" + ", ".join(admin_perms))
+    output.append(f"HAS_VIEW_DASHBOARD={'view_dashboard' in admin_perms}")
+
+    conn.close()
+
+    # Clear in-memory lockout for this worker.
+    login_attempts.pop(username, None)
+    output.append("LOGIN_LOCKOUT_CLEARED=True")
+    output.append("NEXT=Log in with username and HOSTED_BOOTSTRAP_PASSWORD, then disable hosted recovery variables.")
+
+    return "<pre>HOSTED ADMIN ACCESS REPAIR COMPLETE\n\n" + "\n".join(output) + "</pre>"
 
 
 if __name__ == "__main__":
