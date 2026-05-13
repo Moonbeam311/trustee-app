@@ -296,6 +296,36 @@ def create_trust_record(trust_data):
     conn.commit()
     conn.close()
 
+def ensure_table_firm_id_column(table_name, default_firm_id=None):
+    """
+    Hosted/legacy SQLite safety helper.
+    Ensures a table has firm_id before firm-scoped queries run.
+    """
+    firm_id = default_firm_id or get_current_firm_id()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+    if not cur.fetchone():
+        conn.close()
+        return False
+
+    cur.execute(f"PRAGMA table_info({table_name})")
+    cols = [row["name"] for row in cur.fetchall()]
+
+    if "firm_id" not in cols:
+        cur.execute(f"ALTER TABLE {table_name} ADD COLUMN firm_id TEXT")
+        cur.execute(f"""
+            UPDATE {table_name}
+            SET firm_id = ?
+            WHERE firm_id IS NULL OR TRIM(firm_id) = ''
+        """, (firm_id,))
+        conn.commit()
+
+    conn.close()
+    return True
+
+
 def get_all_trusts():
     firm_id = get_current_firm_id()
     conn = get_connection()
