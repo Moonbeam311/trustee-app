@@ -202,6 +202,207 @@ except Exception as e:
     print("⚠️ Transfer runtime schema migration failed:", e)
 
 
+
+def run_hosted_startup_self_heal():
+    """
+    Permanent hosted startup self-heal.
+
+    Purpose:
+    - Repair hosted SQLite schema drift after Railway deploy/restart.
+    - Ensure the hosted admin user exists when ENSURE_HOSTED_ADMIN=1.
+    - Ensure Admin role has required permissions such as view_dashboard.
+    - Ensure firm_id columns exist on key firm-scoped tables.
+
+    This avoids relying on public one-time repair routes for normal hosted operation.
+    """
+    if os.getenv("ENSURE_HOSTED_ADMIN") != "1":
+        return
+
+    import sqlite3
+    from werkzeug.security import generate_password_hash
+
+    username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
+    password = os.getenv("HOSTED_BOOTSTRAP_PASSWORD", "").strip()
+    firm_id = os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-002").strip()
+
+    if not username or not password or not firm_id:
+        print("⚠️ Hosted startup self-heal skipped: missing username/password/firm_id.")
+        return
+
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        # Core hosted user table.
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS app_users (
+                user_id TEXT PRIMARY KEY,
+                username TEXT UNIQUE,
+                password_hash TEXT,
+                role_name TEXT,
+                status TEXT,
+                firm_id TEXT,
+                owner_id TEXT
+            )
+        """)
+
+        cur.execute("PRAGMA table_info(app_users)")
+        app_user_cols = [r["name"] for r in cur.fetchall()]
+        for col, col_type in [
+            ("password_hash", "TEXT"),
+            ("role_name", "TEXT"),
+            ("status", "TEXT"),
+            ("firm_id", "TEXT"),
+            ("owner_id", "TEXT"),
+        ]:
+            if col not in app_user_cols:
+                cur.execute(f"ALTER TABLE app_users ADD COLUMN {col} {col_type}")
+
+        # Create/update hosted admin user every startup while ENSURE_HOSTED_ADMIN=1.
+        password_hash = generate_password_hash(password)
+
+        cur.execute(
+            "SELECT user_id FROM app_users WHERE TRIM(LOWER(username)) = TRIM(LOWER(?))",
+            (username,)
+        )
+        existing = cur.fetchone()
+
+        if existing:
+            cur.execute("""
+                UPDATE app_users
+                SET username = ?,
+                    password_hash = ?,
+                    role_name = 'Admin',
+                    status = 'active',
+                    firm_id = ?,
+                    owner_id = 'ADMIN_OWNER_001'
+                WHERE user_id = ?
+            """, (username, password_hash, firm_id, existing["user_id"]))
+            user_action = "updated"
+        else:
+            cur.execute("SELECT COUNT(*) AS count FROM app_users")
+            count = cur.fetchone()["count"]
+            user_id = f"USER-{count + 1:03d}"
+            cur.execute("""
+                INSERT INTO app_users (
+                    user_id, username, password_hash, role_name, status, firm_id, owner_id
+                ) VALUES (?, ?, ?, 'Admin', 'active', ?, 'ADMIN_OWNER_001')
+            """, (user_id, username, password_hash, firm_id))
+            user_action = "created"
+
+        # Permissions + role matrix.
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS permissions (
+                permission_id TEXT PRIMARY KEY,
+                permission_name TEXT UNIQUE,
+                description TEXT
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS role_permissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                role_name TEXT,
+                permission_name TEXT,
+                UNIQUE(role_name, permission_name)
+            )
+        """)
+
+        default_permissions = [
+            ("PERM-001", "view_dashboard", "View dashboards and core system pages"),
+            ("PERM-002", "create_trust", "Create trust records"),
+            ("PERM-003", "edit_trust", "Edit trust records"),
+            ("PERM-004", "view_documents", "View documents"),
+            ("PERM-005", "generate_documents", "Generate documents"),
+            ("PERM-006", "export_documents", "Export documents"),
+            ("PERM-007", "manage_tax_reports", "Manage tax reports"),
+            ("PERM-008", "view_audit", "View audit trail"),
+            ("PERM-009", "manage_users", "Manage users"),
+            ("PERM-010", "manage_roles", "Manage trust roles"),
+            ("PERM-011", "manage_permissions", "Manage permissions"),
+            ("PERM-012", "view_security", "View security dashboard"),
+        ]
+
+        for permission_id, permission_name, description in default_permissions:
+            cur.execute("""
+                INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)
+                VALUES (?, ?, ?)
+            """, (permission_id, permission_name, description))
+
+        admin_permissions = [
+            "view_dashboard",
+            "create_trust",
+            "edit_trust",
+            "view_documents",
+            "generate_documents",
+            "export_documents",
+            "manage_tax_reports",
+            "view_audit",
+            "manage_users",
+            "manage_roles",
+            "manage_permissions",
+            "view_security",
+        ]
+
+        for permission_name in admin_permissions:
+            cur.execute("""
+                INSERT OR IGNORE INTO role_permissions (role_name, permission_name)
+                VALUES ('Admin', ?)
+            """, (permission_name,))
+
+        # Firm-scoped table repair.
+        firm_tables = [
+            "trusts",
+            "audit_log",
+            "transfers",
+            "trust_minutes",
+            "documents",
+            "generated_documents",
+            "media_records",
+            "workspaces",
+            "workspace_notes",
+            "execution_tasks",
+            "user_roles",
+            "fiduciaries",
+            "properties",
+            "accounts",
+            "beneficiaries",
+            "distributions",
+            "instruments",
+            "ledger_entries",
+        ]
+
+        for table in firm_tables:
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
+            if not cur.fetchone():
+                continue
+
+            cur.execute(f"PRAGMA table_info({table})")
+            cols = [r["name"] for r in cur.fetchall()]
+            if "firm_id" not in cols:
+                cur.execute(f"ALTER TABLE {table} ADD COLUMN firm_id TEXT")
+
+            cur.execute(f"""
+                UPDATE {table}
+                SET firm_id = ?
+                WHERE firm_id IS NULL OR TRIM(firm_id) = ''
+            """, (firm_id,))
+
+        conn.commit()
+        conn.close()
+
+        login_attempts.pop(username, None)
+        print(f"✅ Hosted startup self-heal complete: user={username}; action={user_action}; firm={firm_id}")
+
+    except Exception as exc:
+        print("⚠️ Hosted startup self-heal failed:", exc)
+
+
+
+
 LOGIN_ATTEMPTS_LIMIT = 5
 LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
 
@@ -223,6 +424,13 @@ app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = APP_ENV == "production"
+
+# Permanent hosted startup self-heal.
+try:
+    run_hosted_startup_self_heal()
+except Exception as e:
+    print("⚠️ Hosted startup self-heal wrapper failed:", e)
+
 
 
 def generate_csrf_token():
