@@ -301,7 +301,7 @@ def get_all_trusts():
     conn = get_connection()
     cur = conn.cursor()
 
-    # Hosted/legacy DB safety: ensure firm_id exists before firm-scoped query.
+    # Hosted/legacy DB safety: ensure trusts.firm_id exists before scoped query.
     cur.execute("PRAGMA table_info(trusts)")
     trust_cols = [row["name"] for row in cur.fetchall()]
     if "firm_id" not in trust_cols:
@@ -320,6 +320,7 @@ def get_all_trusts():
     rows = cur.fetchall()
     conn.close()
     return rows
+
 
 def get_trust_by_id(trust_id):
     firm_id = get_current_firm_id()
