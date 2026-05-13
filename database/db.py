@@ -300,6 +300,19 @@ def get_all_trusts():
     firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
+
+    # Hosted/legacy DB safety: ensure firm_id exists before firm-scoped query.
+    cur.execute("PRAGMA table_info(trusts)")
+    trust_cols = [row["name"] for row in cur.fetchall()]
+    if "firm_id" not in trust_cols:
+        cur.execute("ALTER TABLE trusts ADD COLUMN firm_id TEXT")
+        cur.execute("""
+            UPDATE trusts
+            SET firm_id = ?
+            WHERE firm_id IS NULL OR TRIM(firm_id) = ''
+        """, (firm_id,))
+        conn.commit()
+
     cur.execute(
         "SELECT * FROM trusts WHERE firm_id = ? ORDER BY trust_id",
         (firm_id,)
