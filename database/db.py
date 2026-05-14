@@ -1699,6 +1699,8 @@ def get_trust_count():
 
 def get_beneficiary_count():
     firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("beneficiaries", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) AS count FROM beneficiaries WHERE firm_id = ?", (firm_id,))
@@ -1706,9 +1708,10 @@ def get_beneficiary_count():
     conn.close()
     return row["count"] if row else 0
 
-
 def get_distribution_count():
     firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("distributions", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) AS count FROM distributions WHERE firm_id = ?", (firm_id,))
@@ -1716,9 +1719,10 @@ def get_distribution_count():
     conn.close()
     return row["count"] if row else 0
 
-
 def get_instrument_count():
     firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("instruments", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) AS count FROM instruments WHERE firm_id = ?", (firm_id,))
