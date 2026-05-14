@@ -6196,20 +6196,13 @@ def enforce_session_timeout():
         "logout",
         "static",
         "bootstrap_admin_once",
-        "hosted_bootstrap_admin_once",
-        "hosted_firm_scope_migration_once",
-        "hosted_reseed_permissions_once",
-        "hosted_clear_login_lockout_once",
-        "hosted_auth_diagnostic_once",
-        "hosted_trust_diagnostic_once",
-        "hosted_repair_admin_access_once"
     }
 
     if request.endpoint not in public_endpoints:
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_trust_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -6229,7 +6222,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_trust_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "reset_admin_once"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
