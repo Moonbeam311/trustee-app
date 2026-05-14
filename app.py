@@ -6201,6 +6201,7 @@ def enforce_session_timeout():
         "hosted_reseed_permissions_once",
         "hosted_clear_login_lockout_once",
         "hosted_auth_diagnostic_once",
+        "hosted_trust_diagnostic_once",
         "hosted_repair_admin_access_once"
     }
 
@@ -6208,7 +6209,7 @@ def enforce_session_timeout():
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
+    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_trust_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -6228,7 +6229,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "hosted_bootstrap_admin_once", "hosted_firm_scope_migration_once", "hosted_reseed_permissions_once", "hosted_clear_login_lockout_once", "hosted_auth_diagnostic_once", "hosted_trust_diagnostic_once", "hosted_repair_admin_access_once", "reset_admin_once"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -9400,6 +9401,78 @@ def hosted_repair_admin_access_once():
     output.append("NEXT=Log in with username and HOSTED_BOOTSTRAP_PASSWORD, then disable hosted recovery variables.")
 
     return "<pre>HOSTED ADMIN ACCESS REPAIR COMPLETE\n\n" + "\n".join(output) + "</pre>"
+
+
+
+@app.route("/hosted-trust-diagnostic-once")
+def hosted_trust_diagnostic_once():
+    if os.getenv("ENSURE_HOSTED_ADMIN") != "1":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted trust diagnostic is disabled."
+        )
+
+    import sqlite3
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    output = []
+    output.append(f"DB_PATH={DB_PATH}")
+    output.append(f"SESSION_USERNAME={session.get('username')}")
+    output.append(f"SESSION_ROLE={session.get('role')}")
+    output.append(f"SESSION_FIRM_ID={session.get('firm_id')}")
+    output.append(f"ENV_FIRM_ID={os.getenv('HOSTED_BOOTSTRAP_FIRM_ID', '')}")
+
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='trusts'")
+    if not cur.fetchone():
+        output.append("TRUSTS_TABLE=missing")
+        conn.close()
+        return "<pre>" + "\n".join(output) + "</pre>"
+
+    cur.execute("PRAGMA table_info(trusts)")
+    cols = [row["name"] for row in cur.fetchall()]
+    output.append("TRUSTS_COLUMNS=" + ", ".join(cols))
+
+    for col_name, col_type in [
+        ("firm_id", "TEXT"),
+        ("firm_trust_number", "INTEGER"),
+        ("firm_trust_code", "TEXT"),
+        ("owner_id", "TEXT"),
+    ]:
+        if col_name not in cols:
+            cur.execute(f"ALTER TABLE trusts ADD COLUMN {col_name} {col_type}")
+            output.append(f"ADDED_COLUMN=trusts.{col_name}")
+
+    conn.commit()
+
+    cur.execute("SELECT COUNT(*) AS count FROM trusts")
+    output.append(f"TRUSTS_TOTAL={cur.fetchone()['count']}")
+
+    cur.execute("""
+        SELECT trust_id, trust_name, firm_id, firm_trust_number, firm_trust_code, owner_id, status
+        FROM trusts
+        ORDER BY trust_id
+    """)
+    rows = cur.fetchall()
+
+    output.append("TRUST_ROWS:")
+    for row in rows:
+        output.append(str(dict(row)))
+
+    cur.execute("""
+        SELECT firm_id, COUNT(*) AS count
+        FROM trusts
+        GROUP BY firm_id
+        ORDER BY firm_id
+    """)
+    output.append("TRUST_COUNTS_BY_FIRM:")
+    for row in cur.fetchall():
+        output.append(str(dict(row)))
+
+    conn.close()
+    return "<pre>" + "\n".join(output) + "</pre>"
 
 
 if __name__ == "__main__":
