@@ -236,10 +236,31 @@ def init_db():
     conn.commit()
     conn.close()
 
-def get_next_firm_trust_number(firm_id=None):
+def get_next_firm_trust_number(firm_id):
     firm_id = firm_id or get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
+
+    # Hosted/legacy DB safety: ensure firm trust columns exist before MAX query.
+    cur.execute("PRAGMA table_info(trusts)")
+    trust_cols = [row["name"] for row in cur.fetchall()]
+    for col_name, col_type in [
+        ("firm_id", "TEXT"),
+        ("firm_trust_number", "INTEGER"),
+        ("firm_trust_code", "TEXT"),
+        ("owner_id", "TEXT"),
+    ]:
+        if col_name not in trust_cols:
+            cur.execute(f"ALTER TABLE trusts ADD COLUMN {col_name} {col_type}")
+            trust_cols.append(col_name)
+
+    cur.execute("""
+        UPDATE trusts
+        SET firm_id = ?
+        WHERE firm_id IS NULL OR TRIM(firm_id) = ''
+    """, (firm_id,))
+    conn.commit()
+
     cur.execute(
         "SELECT COALESCE(MAX(firm_trust_number), 0) AS max_num FROM trusts WHERE firm_id = ?",
         (firm_id,)
@@ -247,7 +268,6 @@ def get_next_firm_trust_number(firm_id=None):
     row = cur.fetchone()
     conn.close()
     return int(row["max_num"] or 0) + 1
-
 
 def get_next_firm_trust_code(firm_id=None):
     number = get_next_firm_trust_number(firm_id)
