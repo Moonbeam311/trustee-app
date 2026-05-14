@@ -433,6 +433,192 @@ except Exception as e:
 
 
 
+
+def run_hosted_test_trust_seed():
+    """
+    Permanent hosted FIRM-002 test trust seed.
+
+    Runs only when ENSURE_HOSTED_TEST_TRUST=1.
+    Provides one stable hosted trust record for Report Center, firewall testing,
+    and Trust Summary PDF validation.
+    """
+    if os.getenv("ENSURE_HOSTED_TEST_TRUST") != "1":
+        return
+
+    import sqlite3
+
+    firm_id = os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-002").strip() or "FIRM-002"
+    username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip() or "admin123"
+
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS trusts (
+                trust_id TEXT PRIMARY KEY,
+                trust_name TEXT,
+                short_name TEXT,
+                jurisdiction TEXT,
+                effective_date TEXT,
+                trust_type TEXT,
+                trust_purpose TEXT,
+                accounting_method TEXT,
+                workflow_mode TEXT,
+                settlor_name TEXT,
+                trustee_name TEXT,
+                successor_trustee_name TEXT,
+                beneficiary_name TEXT,
+                record_visibility TEXT,
+                workflow_mode_confirmed TEXT,
+                ai_explanations TEXT,
+                recommended_guidance TEXT,
+                initial_corpus_description TEXT,
+                property_mapping_timing TEXT,
+                asset_categories TEXT,
+                generate_schedule_recommendations TEXT,
+                status TEXT
+            )
+        """)
+
+        cur.execute("PRAGMA table_info(trusts)")
+        cols = [r["name"] for r in cur.fetchall()]
+        for col_name, col_type in [
+            ("grantor_name", "TEXT"),
+            ("grantor_type", "TEXT"),
+            ("grantor_contact", "TEXT"),
+            ("seal_path", "TEXT"),
+            ("caf_number", "TEXT"),
+            ("crid_number", "TEXT"),
+            ("trust_motto", "TEXT"),
+            ("foundation_scripture", "TEXT"),
+            ("prepared_by", "TEXT"),
+            ("return_to", "TEXT"),
+            ("branding_style", "TEXT DEFAULT 'v3_minimal'"),
+            ("owner_id", "TEXT"),
+            ("firm_id", "TEXT"),
+            ("firm_trust_number", "INTEGER"),
+            ("firm_trust_code", "TEXT"),
+        ]:
+            if col_name not in cols:
+                cur.execute(f"ALTER TABLE trusts ADD COLUMN {col_name} {col_type}")
+                cols.append(col_name)
+
+        trust_id = "TR-001"
+
+        cur.execute("SELECT trust_id FROM trusts WHERE trust_id = ?", (trust_id,))
+        existing = cur.fetchone()
+
+        values = {
+            "trust_id": trust_id,
+            "trust_name": "Redirect Test Trust 2",
+            "short_name": "Hosted Test",
+            "jurisdiction": "NEW JERSEY",
+            "effective_date": "2026-05-14",
+            "trust_type": "revocable",
+            "trust_purpose": "property_holding",
+            "accounting_method": "accrual",
+            "workflow_mode": "private_office",
+            "settlor_name": "",
+            "trustee_name": "QA TRUSTEE",
+            "successor_trustee_name": "QA SUCCESOR",
+            "beneficiary_name": "QA BENE",
+            "record_visibility": "private",
+            "workflow_mode_confirmed": "yes",
+            "ai_explanations": "enabled",
+            "recommended_guidance": "enabled",
+            "initial_corpus_description": "",
+            "property_mapping_timing": "post_creation",
+            "asset_categories": "property",
+            "generate_schedule_recommendations": "yes",
+            "status": "Finalized",
+            "owner_id": username,
+            "firm_id": firm_id,
+            "firm_trust_number": 1,
+            "firm_trust_code": "TR-001",
+        }
+
+        if existing:
+            cur.execute("""
+                UPDATE trusts
+                SET trust_name = ?,
+                    short_name = ?,
+                    jurisdiction = ?,
+                    effective_date = ?,
+                    trust_type = ?,
+                    trust_purpose = ?,
+                    accounting_method = ?,
+                    workflow_mode = ?,
+                    settlor_name = ?,
+                    trustee_name = ?,
+                    successor_trustee_name = ?,
+                    beneficiary_name = ?,
+                    record_visibility = ?,
+                    workflow_mode_confirmed = ?,
+                    ai_explanations = ?,
+                    recommended_guidance = ?,
+                    initial_corpus_description = ?,
+                    property_mapping_timing = ?,
+                    asset_categories = ?,
+                    generate_schedule_recommendations = ?,
+                    status = ?,
+                    owner_id = ?,
+                    firm_id = ?,
+                    firm_trust_number = ?,
+                    firm_trust_code = ?
+                WHERE trust_id = ?
+            """, (
+                values["trust_name"], values["short_name"], values["jurisdiction"],
+                values["effective_date"], values["trust_type"], values["trust_purpose"],
+                values["accounting_method"], values["workflow_mode"], values["settlor_name"],
+                values["trustee_name"], values["successor_trustee_name"], values["beneficiary_name"],
+                values["record_visibility"], values["workflow_mode_confirmed"],
+                values["ai_explanations"], values["recommended_guidance"],
+                values["initial_corpus_description"], values["property_mapping_timing"],
+                values["asset_categories"], values["generate_schedule_recommendations"],
+                values["status"], values["owner_id"], values["firm_id"],
+                values["firm_trust_number"], values["firm_trust_code"], values["trust_id"]
+            ))
+            action = "updated"
+        else:
+            cur.execute("""
+                INSERT INTO trusts (
+                    trust_id, trust_name, short_name, jurisdiction, effective_date,
+                    trust_type, trust_purpose, accounting_method, workflow_mode,
+                    settlor_name, trustee_name, successor_trustee_name, beneficiary_name,
+                    record_visibility, workflow_mode_confirmed, ai_explanations,
+                    recommended_guidance, initial_corpus_description, property_mapping_timing,
+                    asset_categories, generate_schedule_recommendations, status,
+                    owner_id, firm_id, firm_trust_number, firm_trust_code
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                values["trust_id"], values["trust_name"], values["short_name"], values["jurisdiction"],
+                values["effective_date"], values["trust_type"], values["trust_purpose"],
+                values["accounting_method"], values["workflow_mode"], values["settlor_name"],
+                values["trustee_name"], values["successor_trustee_name"], values["beneficiary_name"],
+                values["record_visibility"], values["workflow_mode_confirmed"],
+                values["ai_explanations"], values["recommended_guidance"],
+                values["initial_corpus_description"], values["property_mapping_timing"],
+                values["asset_categories"], values["generate_schedule_recommendations"],
+                values["status"], values["owner_id"], values["firm_id"],
+                values["firm_trust_number"], values["firm_trust_code"]
+            ))
+            action = "created"
+
+        conn.commit()
+        conn.close()
+
+        print(f"✅ Hosted test trust seed complete: trust={trust_id}; action={action}; firm={firm_id}")
+
+    except Exception as exc:
+        print("⚠️ Hosted test trust seed failed:", exc)
+
+
+
+
 def generate_csrf_token():
     token = session.get("_csrf_token")
     if not token:
