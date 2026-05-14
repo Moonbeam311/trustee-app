@@ -455,6 +455,8 @@ def get_property_by_id(property_id):
 
 def get_properties_by_trust_id(trust_id):
     firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("properties", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -524,6 +526,8 @@ def create_account_record(account_data):
 
 def get_accounts_by_trust_id(trust_id):
     firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("accounts", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
@@ -572,11 +576,14 @@ def create_document_record(doc_data):
     conn.close()
 
 def get_documents_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("documents", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM documents WHERE trust_id = ? AND owner_id = ? ORDER BY document_id",
-        (trust_id, "ADMIN_OWNER_001")
+        "SELECT * FROM documents WHERE trust_id = ? AND firm_id = ? ORDER BY document_id",
+        (trust_id, firm_id)
     )
     rows = cur.fetchall()
     conn.close()
@@ -1276,17 +1283,18 @@ def export_k1_csv_text(trust_id, tax_year):
     return output.getvalue()
 
 def get_ledger_entries_by_trust_id(trust_id):
+    firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("ledger_entries", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("""
-        SELECT * FROM ledger_entries
-        WHERE trust_id = ?
-        ORDER BY entry_date DESC, entry_id DESC
-    """, (trust_id,))
+    cur.execute(
+        "SELECT * FROM ledger_entries WHERE trust_id = ? AND firm_id = ? ORDER BY entry_date, entry_id",
+        (trust_id, firm_id)
+    )
     rows = cur.fetchall()
     conn.close()
     return rows
-
 
 def get_1041_dataset(trust_id, tax_year):
     trust = get_trust_by_id(trust_id)
