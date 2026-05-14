@@ -1552,16 +1552,19 @@ def get_instruments_by_trust_id(trust_id):
 
 
 def get_all_instruments():
+    firm_id = get_current_firm_id()
+    ensure_table_firm_id_column("instruments", firm_id)
+
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("""
         SELECT * FROM instruments
+        WHERE firm_id = ?
         ORDER BY issue_date DESC, instrument_id DESC
-    """)
+    """, (firm_id,))
     rows = cur.fetchall()
     conn.close()
     return rows
-
 
 def get_instrument_creation_guide():
     return [
