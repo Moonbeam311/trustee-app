@@ -267,9 +267,23 @@ def create_trust_record(trust_data):
     trust_data.setdefault("firm_id", get_current_firm_id())
     trust_data.setdefault("firm_trust_number", get_next_firm_trust_number(trust_data.get("firm_id")))
     trust_data.setdefault("firm_trust_code", f"TR-{int(trust_data.get('firm_trust_number')):03d}")
+    trust_data.setdefault("owner_id", get_current_owner() if "get_current_owner" in globals() else None)
 
     conn = get_connection()
     cur = conn.cursor()
+
+    # Hosted/legacy DB safety: ensure required trust scope columns exist before insert.
+    cur.execute("PRAGMA table_info(trusts)")
+    trust_cols = [row["name"] for row in cur.fetchall()]
+    for col_name, col_type in [
+        ("firm_id", "TEXT"),
+        ("firm_trust_number", "INTEGER"),
+        ("firm_trust_code", "TEXT"),
+        ("owner_id", "TEXT"),
+    ]:
+        if col_name not in trust_cols:
+            cur.execute(f"ALTER TABLE trusts ADD COLUMN {col_name} {col_type}")
+
     cur.execute("""
         INSERT INTO trusts (
             trust_id, trust_name, short_name, jurisdiction, effective_date,
@@ -278,8 +292,8 @@ def create_trust_record(trust_data):
             record_visibility, workflow_mode_confirmed, ai_explanations,
             recommended_guidance, initial_corpus_description, property_mapping_timing,
             asset_categories, generate_schedule_recommendations, status,
-            firm_id, firm_trust_number, firm_trust_code
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            firm_id, firm_trust_number, firm_trust_code, owner_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         trust_data["trust_id"], trust_data["trust_name"], trust_data["short_name"],
         trust_data["jurisdiction"], trust_data["effective_date"], trust_data["trust_type"],
@@ -292,6 +306,7 @@ def create_trust_record(trust_data):
         trust_data.get("firm_id"),
         trust_data.get("firm_trust_number"),
         trust_data.get("firm_trust_code"),
+        trust_data.get("owner_id"),
     ))
     conn.commit()
     conn.close()
