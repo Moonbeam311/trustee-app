@@ -619,6 +619,13 @@ def run_hosted_test_trust_seed():
 
 
 
+# Permanent hosted test trust seed.
+try:
+    run_hosted_test_trust_seed()
+except Exception as e:
+    print("⚠️ Hosted test trust seed wrapper failed:", e)
+
+
 def generate_csrf_token():
     token = session.get("_csrf_token")
     if not token:
