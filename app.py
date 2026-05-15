@@ -626,6 +626,245 @@ except Exception as e:
     print("⚠️ Hosted test trust seed wrapper failed:", e)
 
 
+
+def run_hosted_portfolio_seed():
+    """
+    Permanent hosted FIRM-002 portfolio seed.
+
+    Seeds one property, account, document, and ledger entry
+    for TR-001 under FIRM-002.
+    """
+    if os.getenv("ENSURE_HOSTED_PORTFOLIO_SEED") != "1":
+        return
+
+    import sqlite3
+    from datetime import datetime
+
+    trust_id = "TR-001"
+    firm_id = "FIRM-002"
+    owner_id = "admin123"
+
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        # =========================
+        # PROPERTIES
+        # =========================
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS properties (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                property_id TEXT,
+                trust_id TEXT,
+                property_name TEXT,
+                property_type TEXT,
+                estimated_value TEXT
+            )
+        """)
+
+        cur.execute("PRAGMA table_info(properties)")
+        cols = [r["name"] for r in cur.fetchall()]
+
+        for col_name, col_type in [
+            ("firm_id", "TEXT"),
+            ("owner_id", "TEXT")
+        ]:
+            if col_name not in cols:
+                cur.execute(f"ALTER TABLE properties ADD COLUMN {col_name} {col_type}")
+
+        cur.execute("""
+            SELECT property_id FROM properties
+            WHERE property_id = 'PROP-001' AND firm_id = ?
+        """, (firm_id,))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO properties (
+                    property_id,
+                    trust_id,
+                    property_name,
+                    property_type,
+                    estimated_value,
+                    firm_id,
+                    owner_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                "PROP-001",
+                trust_id,
+                "Hosted Test Property",
+                "Real Estate",
+                "$250,000",
+                firm_id,
+                owner_id
+            ))
+
+        # =========================
+        # ACCOUNTS
+        # =========================
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS accounts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id TEXT,
+                trust_id TEXT,
+                institution_name TEXT,
+                account_type TEXT,
+                balance TEXT
+            )
+        """)
+
+        cur.execute("PRAGMA table_info(accounts)")
+        cols = [r["name"] for r in cur.fetchall()]
+
+        for col_name, col_type in [
+            ("firm_id", "TEXT"),
+            ("owner_id", "TEXT")
+        ]:
+            if col_name not in cols:
+                cur.execute(f"ALTER TABLE accounts ADD COLUMN {col_name} {col_type}")
+
+        cur.execute("""
+            SELECT account_id FROM accounts
+            WHERE account_id = 'ACCT-001' AND firm_id = ?
+        """, (firm_id,))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO accounts (
+                    account_id,
+                    trust_id,
+                    institution_name,
+                    account_type,
+                    balance,
+                    firm_id,
+                    owner_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                "ACCT-001",
+                trust_id,
+                "Hosted Trust Bank",
+                "Checking",
+                "$15,000",
+                firm_id,
+                owner_id
+            ))
+
+        # =========================
+        # DOCUMENTS
+        # =========================
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                document_id TEXT,
+                trust_id TEXT,
+                document_name TEXT,
+                document_type TEXT
+            )
+        """)
+
+        cur.execute("PRAGMA table_info(documents)")
+        cols = [r["name"] for r in cur.fetchall()]
+
+        for col_name, col_type in [
+            ("firm_id", "TEXT"),
+            ("owner_id", "TEXT")
+        ]:
+            if col_name not in cols:
+                cur.execute(f"ALTER TABLE documents ADD COLUMN {col_name} {col_type}")
+
+        cur.execute("""
+            SELECT document_id FROM documents
+            WHERE document_id = 'DOC-001' AND firm_id = ?
+        """, (firm_id,))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO documents (
+                    document_id,
+                    trust_id,
+                    document_name,
+                    document_type,
+                    firm_id,
+                    owner_id
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                "DOC-001",
+                trust_id,
+                "Hosted Portfolio Seed Document",
+                "Trust Record",
+                firm_id,
+                owner_id
+            ))
+
+        # =========================
+        # LEDGER ENTRIES
+        # =========================
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS ledger_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                entry_id TEXT,
+                trust_id TEXT,
+                entry_type TEXT,
+                amount TEXT,
+                description TEXT,
+                entry_date TEXT
+            )
+        """)
+
+        cur.execute("PRAGMA table_info(ledger_entries)")
+        cols = [r["name"] for r in cur.fetchall()]
+
+        for col_name, col_type in [
+            ("firm_id", "TEXT"),
+            ("owner_id", "TEXT")
+        ]:
+            if col_name not in cols:
+                cur.execute(f"ALTER TABLE ledger_entries ADD COLUMN {col_name} {col_type}")
+
+        cur.execute("""
+            SELECT entry_id FROM ledger_entries
+            WHERE entry_id = 'LEDGER-001' AND firm_id = ?
+        """, (firm_id,))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO ledger_entries (
+                    entry_id,
+                    trust_id,
+                    entry_type,
+                    amount,
+                    description,
+                    entry_date,
+                    firm_id,
+                    owner_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                "LEDGER-001",
+                trust_id,
+                "Asset",
+                "$15,000",
+                "Hosted portfolio seed ledger entry",
+                datetime.utcnow().strftime("%Y-%m-%d"),
+                firm_id,
+                owner_id
+            ))
+
+        conn.commit()
+        conn.close()
+
+        print("✅ Hosted portfolio seed complete: property/account/document/ledger created")
+
+    except Exception as exc:
+        print("⚠️ Hosted portfolio seed failed:", exc)
+
+
+
+
+# Permanent hosted portfolio seed.
+try:
+    run_hosted_portfolio_seed()
+except Exception as e:
+    print("⚠️ Hosted portfolio seed wrapper failed:", e)
+
+
 def generate_csrf_token():
     token = session.get("_csrf_token")
     if not token:
