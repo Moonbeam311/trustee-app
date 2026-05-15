@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>Hosted Production Health</h2>
+
+    <p>
+        Safe hosted production validation dashboard.
+        No raw diagnostics, session dumps, passwords, or secrets exposed.
+    </p>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Check</th>
+                <th>Status</th>
+                <th>Detail</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for check in checks %}
+            <tr>
+                <td>{{ check.category }}</td>
+                <td>{{ check.name }}</td>
+                <td>
+                    {% if check.status == "PASS" %}
+                        ✅ PASS
+                    {% elif check.status == "WARN" %}
+                        ⚠️ WARN
+                    {% else %}
+                        ❌ FAIL
+                    {% endif %}
+                </td>
+                <td>{{ check.detail }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

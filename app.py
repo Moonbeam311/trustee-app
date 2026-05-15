@@ -6810,6 +6810,136 @@ def instrument_detail_pdf(instrument_id):
     return build_pdf_response(f"instrument_detail_{instrument_id}.pdf", story)
 
 @app.route("/reports", methods=["GET", "POST"])
+
+
+@app.route("/hosted-production-health")
+@login_required
+@require_permission("view_dashboard")
+def hosted_production_health():
+    """
+    Safe authenticated hosted production health dashboard.
+
+    No raw DB/session dumps.
+    No secrets.
+    No repair actions.
+    """
+
+    import sqlite3
+
+    checks = []
+
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        def add_check(category, name, passed, detail, warn=False):
+            checks.append({
+                "category": category,
+                "name": name,
+                "status": "PASS" if passed else ("WARN" if warn else "FAIL"),
+                "detail": detail
+            })
+
+        add_check(
+            "Environment",
+            "ENSURE_HOSTED_ADMIN",
+            os.getenv("ENSURE_HOSTED_ADMIN") == "1",
+            "Hosted startup self-heal variable present",
+            warn=True
+        )
+
+        add_check(
+            "Environment",
+            "ENSURE_HOSTED_TEST_TRUST",
+            os.getenv("ENSURE_HOSTED_TEST_TRUST") == "1",
+            "Hosted trust seed variable present",
+            warn=True
+        )
+
+        add_check(
+            "Environment",
+            "ENSURE_HOSTED_PORTFOLIO_SEED",
+            os.getenv("ENSURE_HOSTED_PORTFOLIO_SEED") == "1",
+            "Hosted portfolio seed variable present",
+            warn=True
+        )
+
+        add_check(
+            "Environment",
+            "APP_ENV",
+            os.getenv("APP_ENV") == "production",
+            "Production environment expected",
+            warn=True
+        )
+
+        cur.execute("""
+            SELECT trust_name, firm_id
+            FROM trusts
+            WHERE trust_id = 'TR-001'
+            LIMIT 1
+        """)
+        trust = cur.fetchone()
+
+        add_check(
+            "Seed Trust",
+            "TR-001",
+            bool(trust),
+            f"{trust['trust_name']} ({trust['firm_id']})" if trust else "Seed trust missing"
+        )
+
+        portfolio_tables = [
+            ("properties", "Properties"),
+            ("accounts", "Accounts"),
+            ("documents", "Documents"),
+            ("ledger_entries", "Ledger Entries")
+        ]
+
+        for table_name, label in portfolio_tables:
+            try:
+                cur.execute(f"""
+                    SELECT COUNT(*) AS count
+                    FROM {table_name}
+                    WHERE trust_id = 'TR-001'
+                      AND firm_id = 'FIRM-002'
+                """)
+                row = cur.fetchone()
+                count = row["count"] if row else 0
+
+                add_check(
+                    "Portfolio",
+                    label,
+                    count >= 1,
+                    f"{count} record(s)",
+                    warn=True
+                )
+
+            except Exception:
+                add_check(
+                    "Portfolio",
+                    label,
+                    False,
+                    "Table/query unavailable"
+                )
+
+        conn.close()
+
+    except Exception as exc:
+        checks.append({
+            "category": "System",
+            "name": "Health Route",
+            "status": "FAIL",
+            "detail": "Health check failed without exposing raw diagnostics"
+        })
+
+    return render_template(
+        "hosted_production_health.html",
+        checks=checks
+    )
+
+
+
+
 def report_center():
     trusts = get_all_trusts()
 
