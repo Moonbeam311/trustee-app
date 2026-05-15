@@ -885,7 +885,8 @@ def get_current_owner():
 
 
 def get_visible_trusts_for_current_operator():
-    trusts = get_all_trusts()
+    # G-8B firm-scoped trust source
+    trusts = get_visible_trusts_for_current_operator()
 
     if is_master_admin():
         return trusts
