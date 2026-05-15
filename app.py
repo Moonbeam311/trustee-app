@@ -9592,80 +9592,10 @@ def hosted_repair_admin_access_once():
 
 @app.route("/hosted-trust-diagnostic-once")
 def hosted_trust_diagnostic_once():
-    if os.getenv("APP_ENV", "production") == "production":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted trust diagnostic is disabled in production."
-        )
-
-    if os.getenv("ENSURE_HOSTED_ADMIN") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted trust diagnostic is disabled."
-        )
-
-    import sqlite3
-
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-
-    output = []
-    output.append(f"DB_PATH={DB_PATH}")
-    output.append(f"SESSION_USERNAME={session.get('username')}")
-    output.append(f"SESSION_ROLE={session.get('role')}")
-    output.append(f"SESSION_FIRM_ID={session.get('firm_id')}")
-    output.append(f"ENV_FIRM_ID={os.getenv('HOSTED_BOOTSTRAP_FIRM_ID', '')}")
-
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='trusts'")
-    if not cur.fetchone():
-        output.append("TRUSTS_TABLE=missing")
-        conn.close()
-        return "<pre>" + "\n".join(output) + "</pre>"
-
-    cur.execute("PRAGMA table_info(trusts)")
-    cols = [row["name"] for row in cur.fetchall()]
-    output.append("TRUSTS_COLUMNS=" + ", ".join(cols))
-
-    for col_name, col_type in [
-        ("firm_id", "TEXT"),
-        ("firm_trust_number", "INTEGER"),
-        ("firm_trust_code", "TEXT"),
-        ("owner_id", "TEXT"),
-    ]:
-        if col_name not in cols:
-            cur.execute(f"ALTER TABLE trusts ADD COLUMN {col_name} {col_type}")
-            output.append(f"ADDED_COLUMN=trusts.{col_name}")
-
-    conn.commit()
-
-    cur.execute("SELECT COUNT(*) AS count FROM trusts")
-    output.append(f"TRUSTS_TOTAL={cur.fetchone()['count']}")
-
-    cur.execute("""
-        SELECT trust_id, trust_name, firm_id, firm_trust_number, firm_trust_code, owner_id, status
-        FROM trusts
-        ORDER BY trust_id
-    """)
-    rows = cur.fetchall()
-
-    output.append("TRUST_ROWS:")
-    for row in rows:
-        output.append(str(dict(row)))
-
-    cur.execute("""
-        SELECT firm_id, COUNT(*) AS count
-        FROM trusts
-        GROUP BY firm_id
-        ORDER BY firm_id
-    """)
-    output.append("TRUST_COUNTS_BY_FIRM:")
-    for row in cur.fetchall():
-        output.append(str(dict(row)))
-
-    conn.close()
-    return "<pre>" + "\n".join(output) + "</pre>"
-
+    return render_template(
+        "access_denied.html",
+        reason="Hosted trust diagnostic has been permanently disabled."
+    )
 
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
