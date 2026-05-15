@@ -9592,6 +9592,12 @@ def hosted_repair_admin_access_once():
 
 @app.route("/hosted-trust-diagnostic-once")
 def hosted_trust_diagnostic_once():
+    if os.getenv("APP_ENV", "production") == "production":
+        return render_template(
+            "access_denied.html",
+            reason="Hosted trust diagnostic is disabled in production."
+        )
+
     if os.getenv("ENSURE_HOSTED_ADMIN") != "1":
         return render_template(
             "access_denied.html",
