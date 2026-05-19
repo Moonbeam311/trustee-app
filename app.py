@@ -158,7 +158,8 @@ from services.services_articles import (
     get_all_trust_articles,
     get_trust_article,
     assign_article_to_trust,
-    get_articles_for_trust
+    get_articles_for_trust,
+    build_dynamic_declaration
 )
 
 from services.services_transfer import (
@@ -9976,14 +9977,14 @@ def hosted_trust_diagnostic_once():
 # ===================================================
 
 @app.route("/admin/articles")
-@require_permission("manage_users")
+@require_permission("view_dashboard")
 def admin_articles():
     articles = get_all_trust_articles()
     return render_template("admin_articles.html", articles=articles)
 
 
 @app.route("/admin/articles/new", methods=["GET", "POST"])
-@require_permission("manage_users")
+@require_permission("view_dashboard")
 def admin_articles_new():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
@@ -10012,12 +10013,32 @@ def admin_articles_new():
 
 
 
+
+
+@app.route("/trust/<trust_id>/dynamic-declaration")
+@require_permission("view_dashboard")
+def trust_dynamic_declaration(trust_id):
+    trust = get_trust_by_id(trust_id)
+
+    if not trust:
+        flash("Trust not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    dynamic_document = build_dynamic_declaration(trust)
+
+    return render_template(
+        "trust_dynamic_declaration.html",
+        trust=trust,
+        dynamic_document=dynamic_document
+    )
+
+
 # ===================================================
 # ARE-1 TRUST ARTICLE ASSIGNMENT ROUTES
 # ===================================================
 
 @app.route("/trust/<trust_id>/article-assignments")
-@require_permission("manage_users")
+@require_permission("view_dashboard")
 def trust_article_assignments(trust_id):
 
     trust = get_trust_by_id(trust_id)
@@ -10048,7 +10069,7 @@ def trust_article_assignments(trust_id):
 
 
 @app.route("/trust/<trust_id>/article-assignments/add", methods=["POST"])
-@require_permission("manage_users")
+@require_permission("view_dashboard")
 def trust_article_assignment_add(trust_id):
 
     article_id = request.form.get("article_id")

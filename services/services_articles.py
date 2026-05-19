@@ -141,3 +141,72 @@ def get_articles_for_trust(trust_id):
     conn.close()
 
     return rows
+
+
+# ---------------------------------------------------
+# DYNAMIC DECLARATION COMPOSITION ENGINE
+# ---------------------------------------------------
+
+def build_dynamic_declaration(trust):
+
+    trust_id = trust["trust_id"]
+
+    assigned_articles = get_articles_for_trust(trust_id)
+
+    sections = []
+
+    trust_name = trust.get("trust_name") or trust_id
+
+    trust_type = trust.get("trust_type") or "Trust"
+
+    intro = f"""
+DECLARATION OF TRUST
+
+Trust Name:
+{trust_name}
+
+Trust Type:
+{trust_type}
+
+Trust ID:
+{trust_id}
+"""
+
+    sections.append(intro.strip())
+
+    for idx, article in enumerate(assigned_articles, start=1):
+
+        title = article.get("title") or "Untitled Article"
+
+        content = article.get("content") or ""
+
+        category = article.get("category") or "General"
+
+        article_block = f"""
+--------------------------------------------------
+ARTICLE {idx}
+{title}
+Category: {category}
+--------------------------------------------------
+
+{content}
+"""
+
+        sections.append(article_block.strip())
+
+    if not assigned_articles:
+
+        sections.append("""
+NO ARTICLES HAVE BEEN ASSIGNED TO THIS TRUST.
+
+Use the ARE-1 Assignment Engine to attach governance articles.
+""".strip())
+
+    final_document = "\n\n".join(sections)
+
+    return {
+        "trust": trust,
+        "assigned_articles": assigned_articles,
+        "document_text": final_document
+    }
+

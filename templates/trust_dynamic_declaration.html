@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Dynamic Declaration Composition</h1>
+
+<p>
+    <strong>Trust:</strong>
+    {{ trust["trust_name"] or trust["trust_id"] }}
+</p>
+
+<p>
+    <a href="{{ url_for('trust_article_assignments', trust_id=trust['trust_id']) }}">Article Assignments</a> |
+    <a href="{{ url_for('trust_declaration_output_surface', trust_id=trust['trust_id']) }}">Legacy Declaration</a> |
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a>
+</p>
+
+<hr>
+
+<h2>Assigned Article Count</h2>
+<p>{{ dynamic_document["assigned_articles"]|length }}</p>
+
+<hr>
+
+<h2>Composed Declaration Text</h2>
+
+<pre style="white-space: pre-wrap; border: 1px solid #ccc; padding: 15px; background: #fafafa;">
+{{ dynamic_document["document_text"] }}
+</pre>
+
+{% endblock %}
