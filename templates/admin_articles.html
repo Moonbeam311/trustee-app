@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Article Registry</h1>
+
+<p>Manage reusable trust articles for dynamic trust assembly.</p>
+
+<p>
+    <a href="{{ url_for('admin_articles_new') }}">Create New Article</a>
+</p>
+
+<table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Article ID</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in articles %}
+        <tr>
+            <td>{{ article["article_id"] }}</td>
+            <td>{{ article["title"] }}</td>
+            <td>{{ article["category"] }}</td>
+            <td>{{ article["article_type"] }}</td>
+            <td>{{ "Yes" if article["is_required"] else "No" }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5">No articles have been created yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

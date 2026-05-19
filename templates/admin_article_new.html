@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Create Trust Article</h1>
+
+<form method="POST">
+    <p>
+        <label>Title</label><br>
+        <input type="text" name="title" style="width: 100%;" required>
+    </p>
+
+    <p>
+        <label>Category</label><br>
+        <input type="text" name="category" style="width: 100%;">
+    </p>
+
+    <p>
+        <label>Article Type</label><br>
+        <input type="text" name="article_type" style="width: 100%;">
+    </p>
+
+    <p>
+        <label>Content</label><br>
+        <textarea name="content" rows="14" style="width: 100%;" required></textarea>
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="is_required">
+            Required Article
+        </label>
+    </p>
+
+    <button type="submit">Create Article</button>
+</form>
+
+<p>
+    <a href="{{ url_for('admin_articles') }}">Back to Article Registry</a>
+</p>
+{% endblock %}

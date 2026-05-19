@@ -9929,6 +9929,49 @@ def hosted_trust_diagnostic_once():
         reason="Hosted trust diagnostic has been permanently disabled."
     )
 
+
+
+# ===================================================
+# ARE-1 ARTICLE REGISTRY ROUTES
+# ===================================================
+
+@app.route("/admin/articles")
+@login_required
+@admin_required
+def admin_articles():
+    articles = get_all_trust_articles()
+    return render_template("admin_articles.html", articles=articles)
+
+
+@app.route("/admin/articles/new", methods=["GET", "POST"])
+@login_required
+@admin_required
+def admin_articles_new():
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        category = request.form.get("category", "").strip()
+        article_type = request.form.get("article_type", "").strip()
+        content = request.form.get("content", "").strip()
+        is_required = 1 if request.form.get("is_required") == "on" else 0
+
+        if not title or not content:
+            flash("Article title and content are required.", "danger")
+            return render_template("admin_article_new.html")
+
+        article_id = create_trust_article(
+            title=title,
+            content=content,
+            category=category,
+            article_type=article_type,
+            is_required=is_required
+        )
+
+        flash(f"Article created: {article_id}", "success")
+        return redirect(url_for("admin_articles"))
+
+    return render_template("admin_article_new.html")
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
