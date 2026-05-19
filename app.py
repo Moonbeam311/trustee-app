@@ -10033,6 +10033,108 @@ def trust_dynamic_declaration(trust_id):
     )
 
 
+
+
+# ===================================================
+# ARE-1 DYNAMIC DECLARATION PDF ENGINE
+# ===================================================
+
+def generate_dynamic_declaration_pdf(dynamic_document):
+
+    from io import BytesIO
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "DynamicTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=18
+    )
+
+    body_style = ParagraphStyle(
+        "DynamicBody",
+        parent=styles["BodyText"],
+        fontSize=11,
+        leading=16,
+        spaceAfter=10
+    )
+
+    story = []
+
+    story.append(
+        Paragraph(
+            "Dynamic Declaration of Trust",
+            title_style
+        )
+    )
+
+    text_lines = dynamic_document["document_text"].splitlines()
+
+    for line in text_lines:
+
+        clean_line = line.strip()
+
+        if not clean_line:
+            story.append(Spacer(1, 8))
+            continue
+
+        safe_line = (
+            clean_line
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+
+        story.append(
+            Paragraph(
+                safe_line,
+                body_style
+            )
+        )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/trust/<trust_id>/dynamic-declaration/pdf")
+@require_permission("view_dashboard")
+def trust_dynamic_declaration_pdf(trust_id):
+
+    trust = get_trust_by_id(trust_id)
+
+    if not trust:
+        flash("Trust not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    dynamic_document = build_dynamic_declaration(trust)
+
+    pdf_buffer = generate_dynamic_declaration_pdf(dynamic_document)
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{trust_id}_Dynamic_Declaration.pdf"
+    )
+
+
+
 # ===================================================
 # ARE-1 TRUST ARTICLE ASSIGNMENT ROUTES
 # ===================================================

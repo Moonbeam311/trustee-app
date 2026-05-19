@@ -12,6 +12,8 @@
     <a href="{{ url_for('trust_article_assignments', trust_id=trust['trust_id']) }}">Article Assignments</a> |
     <a href="{{ url_for('trust_declaration_output_surface', trust_id=trust['trust_id']) }}">Legacy Declaration</a> |
     <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a>
+
+| <a href="{{ url_for('trust_dynamic_declaration_pdf', trust_id=trust['trust_id']) }}">Download Dynamic PDF</a>
 </p>
 
 <hr>

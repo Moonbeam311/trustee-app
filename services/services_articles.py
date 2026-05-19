@@ -149,15 +149,21 @@ def get_articles_for_trust(trust_id):
 
 def build_dynamic_declaration(trust):
 
-    trust_id = trust["trust_id"]
+    # SQLite rows do not support .get(), so normalize to dict first.
+    trust_data = dict(trust)
 
-    assigned_articles = get_articles_for_trust(trust_id)
+    trust_id = trust_data["trust_id"]
+
+    assigned_articles = [
+        dict(article)
+        for article in get_articles_for_trust(trust_id)
+    ]
 
     sections = []
 
-    trust_name = trust.get("trust_name") or trust_id
+    trust_name = trust_data.get("trust_name") or trust_id
 
-    trust_type = trust.get("trust_type") or "Trust"
+    trust_type = trust_data.get("trust_type") or "Trust"
 
     intro = f"""
 DECLARATION OF TRUST
@@ -205,7 +211,7 @@ Use the ARE-1 Assignment Engine to attach governance articles.
     final_document = "\n\n".join(sections)
 
     return {
-        "trust": trust,
+        "trust": trust_data,
         "assigned_articles": assigned_articles,
         "document_text": final_document
     }
