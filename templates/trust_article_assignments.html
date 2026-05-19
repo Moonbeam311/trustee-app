@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Trust Article Assignments</h1>
+
+<p>
+    <strong>Trust:</strong>
+    {{ trust["trust_name"] or trust["trust_id"] }}
+</p>
+
+<p>
+    <a href="{{ url_for('admin_articles') }}">Article Registry</a> |
+    <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a> |
+    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Execution Dashboard</a>
+</p>
+
+<hr>
+
+<h2>Assigned Articles</h2>
+
+<table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Order</th>
+            <th>Article ID</th>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Required</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for article in assigned_articles %}
+        <tr>
+            <td>{{ article["sort_order"] }}</td>
+            <td>{{ article["article_id"] }}</td>
+            <td>{{ article["title"] }}</td>
+            <td>{{ article["category"] }}</td>
+            <td>{{ article["article_type"] }}</td>
+            <td>{{ "Yes" if article["is_required"] else "No" }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="6">No articles assigned to this trust yet.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
+
+<h2>Add Article to Trust</h2>
+
+{% if available_articles %}
+<form method="POST" action="{{ url_for('trust_article_assignment_add', trust_id=trust['trust_id']) }}">
+
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <p>
+        <label>Select Article</label><br>
+        <select name="article_id" required>
+            <option value="">-- Select Article --</option>
+            {% for article in available_articles %}
+            <option value="{{ article['article_id'] }}">
+                {{ article["title"] }} — {{ article["category"] or "Uncategorized" }}
+            </option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <button type="submit">Assign Article</button>
+</form>
+{% else %}
+<p>All available articles have already been assigned to this trust.</p>
+{% endif %}
+{% endblock %}

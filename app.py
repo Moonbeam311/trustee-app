@@ -194,6 +194,47 @@ except Exception:
     PILImage = None
 
 app = Flask(__name__)
+
+# ===================================================
+# PERMISSION DECORATOR ENGINE
+# ===================================================
+
+from functools import wraps
+
+def require_permission(permission_name):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+
+            username = session.get("username")
+
+            if not username:
+                flash("Login required.", "danger")
+                return redirect(url_for("login"))
+
+            if not user_has_effective_permission(username, permission_name):
+
+                log_change(
+                    "security",
+                    username,
+                    "permission_denied",
+                    f"Permission required: {permission_name}"
+                )
+
+                flash(
+                    f"Permission required: {permission_name}",
+                    "danger"
+                )
+
+                return redirect(url_for("dashboard"))
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
 STRICT_PACKET_EXPORT = True
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent / "trustee_app.db"
@@ -893,8 +934,8 @@ def get_current_owner():
 
 
 def get_visible_trusts_for_current_operator():
-    # G-8B firm-scoped trust source
-    trusts = get_visible_trusts_for_current_operator()
+    # G-1 stability patch: pull from firm-scoped DB source, not itself.
+    trusts = get_all_trusts()
 
     if is_master_admin():
         return trusts
@@ -6820,7 +6861,6 @@ def instrument_detail_pdf(instrument_id):
 
 
 @app.route("/hosted-production-health")
-@login_required
 @require_permission("view_dashboard")
 def hosted_production_health():
     """
@@ -9968,6 +10008,79 @@ def admin_articles_new():
         return redirect(url_for("admin_articles"))
 
     return render_template("admin_article_new.html")
+
+
+
+
+# ===================================================
+# ARE-1 TRUST ARTICLE ASSIGNMENT ROUTES
+# ===================================================
+
+@app.route("/trust/<trust_id>/article-assignments")
+@require_permission("manage_users")
+def trust_article_assignments(trust_id):
+
+    trust = get_trust_by_id(trust_id)
+
+    if not trust:
+        flash("Trust not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    assigned_articles = get_articles_for_trust(trust_id)
+    all_articles = get_all_trust_articles()
+
+    assigned_ids = {
+        row["article_id"]
+        for row in assigned_articles
+    }
+
+    available_articles = [
+        article for article in all_articles
+        if article["article_id"] not in assigned_ids
+    ]
+
+    return render_template(
+        "trust_article_assignments.html",
+        trust=trust,
+        assigned_articles=assigned_articles,
+        available_articles=available_articles
+    )
+
+
+@app.route("/trust/<trust_id>/article-assignments/add", methods=["POST"])
+@require_permission("manage_users")
+def trust_article_assignment_add(trust_id):
+
+    article_id = request.form.get("article_id")
+
+    if not article_id:
+        flash("No article selected.", "danger")
+        return redirect(
+            url_for(
+                "trust_article_assignments",
+                trust_id=trust_id
+            )
+        )
+
+    existing = get_articles_for_trust(trust_id)
+
+    sort_order = len(existing) + 1
+
+    assign_article_to_trust(
+        trust_id=trust_id,
+        article_id=article_id,
+        sort_order=sort_order
+    )
+
+    flash("Article assigned successfully.", "success")
+
+    return redirect(
+        url_for(
+            "trust_article_assignments",
+            trust_id=trust_id
+        )
+    )
+
 
 
 if __name__ == "__main__":
