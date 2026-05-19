@@ -153,8 +153,16 @@ from extensions import db as ext_db
 # --- Transfer Engine v1 imports ---
 from models.models_transfer import Transfer, TransferAction, TransferRecord
 from models.models_transfer_support import TransferSupportDoc
+from services.services_articles import (
+    create_trust_article,
+    get_all_trust_articles,
+    get_trust_article,
+    assign_article_to_trust,
+    get_articles_for_trust
+)
+
 from services.services_transfer import (
-    generate_transfer_id,
+generate_transfer_id,
     add_transfer_action,
     get_transfer_progress,
     validate_capacity_for_step,
@@ -6809,7 +6817,6 @@ def instrument_detail_pdf(instrument_id):
     )
     return build_pdf_response(f"instrument_detail_{instrument_id}.pdf", story)
 
-@app.route("/reports", methods=["GET", "POST"])
 
 
 @app.route("/hosted-production-health")
@@ -6841,37 +6848,10 @@ def hosted_production_health():
                 "detail": detail
             })
 
-        add_check(
-            "Environment",
-            "ENSURE_HOSTED_ADMIN",
-            os.getenv("ENSURE_HOSTED_ADMIN") == "1",
-            "Hosted startup self-heal variable present",
-            warn=True
-        )
-
-        add_check(
-            "Environment",
-            "ENSURE_HOSTED_TEST_TRUST",
-            os.getenv("ENSURE_HOSTED_TEST_TRUST") == "1",
-            "Hosted trust seed variable present",
-            warn=True
-        )
-
-        add_check(
-            "Environment",
-            "ENSURE_HOSTED_PORTFOLIO_SEED",
-            os.getenv("ENSURE_HOSTED_PORTFOLIO_SEED") == "1",
-            "Hosted portfolio seed variable present",
-            warn=True
-        )
-
-        add_check(
-            "Environment",
-            "APP_ENV",
-            os.getenv("APP_ENV") == "production",
-            "Production environment expected",
-            warn=True
-        )
+        add_check("Environment", "ENSURE_HOSTED_ADMIN", os.getenv("ENSURE_HOSTED_ADMIN") == "1", "Hosted startup self-heal variable present", warn=True)
+        add_check("Environment", "ENSURE_HOSTED_TEST_TRUST", os.getenv("ENSURE_HOSTED_TEST_TRUST") == "1", "Hosted trust seed variable present", warn=True)
+        add_check("Environment", "ENSURE_HOSTED_PORTFOLIO_SEED", os.getenv("ENSURE_HOSTED_PORTFOLIO_SEED") == "1", "Hosted portfolio seed variable present", warn=True)
+        add_check("Environment", "APP_ENV", os.getenv("APP_ENV") == "production", "Production environment expected", warn=True)
 
         cur.execute("""
             SELECT trust_name, firm_id
@@ -6888,14 +6868,12 @@ def hosted_production_health():
             f"{trust['trust_name']} ({trust['firm_id']})" if trust else "Seed trust missing"
         )
 
-        portfolio_tables = [
+        for table_name, label in [
             ("properties", "Properties"),
             ("accounts", "Accounts"),
             ("documents", "Documents"),
-            ("ledger_entries", "Ledger Entries")
-        ]
-
-        for table_name, label in portfolio_tables:
+            ("ledger_entries", "Ledger Entries"),
+        ]:
             try:
                 cur.execute(f"""
                     SELECT COUNT(*) AS count
@@ -6905,26 +6883,13 @@ def hosted_production_health():
                 """)
                 row = cur.fetchone()
                 count = row["count"] if row else 0
-
-                add_check(
-                    "Portfolio",
-                    label,
-                    count >= 1,
-                    f"{count} record(s)",
-                    warn=True
-                )
-
+                add_check("Portfolio", label, count >= 1, f"{count} record(s)", warn=True)
             except Exception:
-                add_check(
-                    "Portfolio",
-                    label,
-                    False,
-                    "Table/query unavailable"
-                )
+                add_check("Portfolio", label, False, "Table/query unavailable")
 
         conn.close()
 
-    except Exception as exc:
+    except Exception:
         checks.append({
             "category": "System",
             "name": "Health Route",
@@ -6932,14 +6897,11 @@ def hosted_production_health():
             "detail": "Health check failed without exposing raw diagnostics"
         })
 
-    return render_template(
-        "hosted_production_health.html",
-        checks=checks
-    )
+    return render_template("hosted_production_health.html", checks=checks)
 
 
 
-
+@app.route("/reports", methods=["GET", "POST"])
 def report_center():
     trusts = get_all_trusts()
 
