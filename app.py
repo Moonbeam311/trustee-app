@@ -9936,16 +9936,14 @@ def hosted_trust_diagnostic_once():
 # ===================================================
 
 @app.route("/admin/articles")
-@login_required
-@admin_required
+@require_permission("manage_users")
 def admin_articles():
     articles = get_all_trust_articles()
     return render_template("admin_articles.html", articles=articles)
 
 
 @app.route("/admin/articles/new", methods=["GET", "POST"])
-@login_required
-@admin_required
+@require_permission("manage_users")
 def admin_articles_new():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
