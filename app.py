@@ -3846,6 +3846,24 @@ def generate_custody_log_pdf(prop, trust=None, custody_events=None):
             label_value("Acting Capacity", event_data.get("acting_capacity"))
             label_value("Location Reference", event_data.get("location_reference"))
             label_value("Supporting Document Reference", event_data.get("supporting_document_reference"))
+
+            evidence_item = resolve_evidence_reference(
+                prop_data.get("property_id"),
+                event_data.get("supporting_document_reference")
+            )
+
+            if evidence_item:
+                resolved_label = (
+                    f"{evidence_item.get('source_type', '').title()} "
+                    f"{evidence_item.get('evidence_id')} — "
+                    f"{evidence_item.get('title') or evidence_item.get('filename') or 'Untitled evidence item'}"
+                )
+                label_value("Resolved Evidence", resolved_label)
+                label_value("Evidence Category", evidence_item.get("category"))
+                label_value("Evidence Notes", evidence_item.get("notes"))
+            else:
+                label_value("Resolved Evidence", "No linked evidence match found")
+
             label_value("Recorded By", event_data.get("recorded_by"))
             label_value("Notes", event_data.get("notes"))
 
