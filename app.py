@@ -3405,9 +3405,14 @@ def generate_continuity_asset_dashboard_pdf(assets, total_asset_count, filters=N
             story.append(Paragraph(f"<b>Sacred / Protected:</b> {'Yes' if asset.get('sacred_status') else 'No'}", body_style))
             story.append(Paragraph(f"<b>Restricted Access:</b> {safe(asset.get('restricted_access_level'))}", body_style))
             evidence_profile = build_property_evidence_profile(asset.get("property_id"))
+            timeline_summary = summarize_property_evidence_custody_timeline(asset.get("property_id"))
 
             story.append(Paragraph(f"<b>Readiness:</b> {safe(readiness.get('score'))}% · {safe(readiness.get('status'))}", body_style))
             story.append(Paragraph(f"<b>Evidence Items:</b> {safe(evidence_profile.get('evidence_count'))}", body_style))
+            story.append(Paragraph(f"<b>Timeline Items:</b> {safe(timeline_summary.get('timeline_count'))}", body_style))
+            story.append(Paragraph(f"<b>Custody Events:</b> {safe(timeline_summary.get('custody_event_count'))}", body_style))
+            story.append(Paragraph(f"<b>Resolved References:</b> {safe(timeline_summary.get('resolved_references'))}", body_style))
+            story.append(Paragraph(f"<b>Unresolved References:</b> {safe(timeline_summary.get('unresolved_references'))}", body_style))
             story.append(Paragraph(f"<b>Missing Readiness Items:</b> {safe('; '.join(readiness.get('missing') or []) or 'No missing readiness items')}", body_style))
 
             if evidence_profile.get("evidence_items"):
