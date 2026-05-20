@@ -141,3 +141,99 @@ def get_continuity_assets_by_trust(trust_id):
     conn.close()
 
     return rows
+
+
+# ===================================================
+# AC-1 CONTINUITY CUSTODY LOG HELPERS
+# ===================================================
+
+def get_next_custody_event_id():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) AS count FROM continuity_custody_log")
+    count = cur.fetchone()["count"]
+
+    conn.close()
+
+    return f"CCL-{count + 1:04d}"
+
+
+def create_continuity_custody_event(event_data):
+    event_data = dict(event_data)
+
+    event_data.setdefault("custody_event_id", get_next_custody_event_id())
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO continuity_custody_log (
+            custody_event_id,
+            property_id,
+            trust_id,
+            event_date,
+            custody_action,
+            from_party,
+            to_party,
+            acting_capacity,
+            location_reference,
+            supporting_document_reference,
+            notes,
+            recorded_by,
+            firm_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event_data.get("custody_event_id"),
+        event_data.get("property_id"),
+        event_data.get("trust_id"),
+        event_data.get("event_date"),
+        event_data.get("custody_action"),
+        event_data.get("from_party"),
+        event_data.get("to_party"),
+        event_data.get("acting_capacity"),
+        event_data.get("location_reference"),
+        event_data.get("supporting_document_reference"),
+        event_data.get("notes"),
+        event_data.get("recorded_by"),
+        event_data.get("firm_id"),
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return event_data.get("custody_event_id")
+
+
+def get_custody_events_for_property(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM continuity_custody_log
+        WHERE property_id = ?
+        ORDER BY event_date DESC, id DESC
+    """, (property_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows
+
+
+def get_custody_event_by_id(custody_event_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM continuity_custody_log
+        WHERE custody_event_id = ?
+    """, (custody_event_id,))
+
+    row = cur.fetchone()
+    conn.close()
+
+    return row
