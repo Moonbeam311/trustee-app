@@ -3369,10 +3369,17 @@ def generate_continuity_asset_dashboard_pdf(assets, total_asset_count, filters=N
             story.append(Paragraph(f"<b>Trust:</b> {safe(asset.get('trust_name') or asset.get('trust_id'))}", body_style))
             story.append(Paragraph(f"<b>Continuity Class:</b> {nice(asset.get('continuity_classification'))}", body_style))
             story.append(Paragraph(f"<b>Custody Class:</b> {nice(asset.get('custody_classification'))}", body_style))
+            readiness = asset.get("readiness") or score_continuity_asset_readiness(
+                asset,
+                get_custody_events_for_property(asset.get("property_id"))
+            )
+
             story.append(Paragraph(f"<b>Priority:</b> {safe(asset.get('continuity_priority') or 0)}", body_style))
             story.append(Paragraph(f"<b>Memorial:</b> {'Yes' if asset.get('memorial_status') else 'No'}", body_style))
             story.append(Paragraph(f"<b>Sacred / Protected:</b> {'Yes' if asset.get('sacred_status') else 'No'}", body_style))
             story.append(Paragraph(f"<b>Restricted Access:</b> {safe(asset.get('restricted_access_level'))}", body_style))
+            story.append(Paragraph(f"<b>Readiness:</b> {safe(readiness.get('score'))}% · {safe(readiness.get('status'))}", body_style))
+            story.append(Paragraph(f"<b>Missing Readiness Items:</b> {safe('; '.join(readiness.get('missing') or []) or 'No missing readiness items')}", body_style))
             story.append(Spacer(1, 8))
 
     story.append(Spacer(1, 12))
@@ -3493,6 +3500,9 @@ def generate_continuity_asset_pdf(prop, trust=None):
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
 
+    custody_events = get_custody_events_for_property(prop_data.get("property_id"))
+    readiness = score_continuity_asset_readiness(prop_data, custody_events)
+
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
@@ -3571,6 +3581,13 @@ def generate_continuity_asset_pdf(prop, trust=None):
     label_value("Continuity Priority", prop_data.get("continuity_priority"))
     label_value("Restricted Access Level", prop_data.get("restricted_access_level"))
     label_value("Lineage Association", prop_data.get("lineage_association"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Readiness Audit", section_style))
+    label_value("Readiness Score", f"{readiness.get('score')}%")
+    label_value("Readiness Status", readiness.get("status"))
+    label_value("Missing Readiness Items", "; ".join(readiness.get("missing") or []) or "No missing readiness items")
 
     story.append(Spacer(1, 8))
 
@@ -3710,6 +3727,15 @@ def generate_custody_log_pdf(prop, trust=None, custody_events=None):
     label_value("Trust ID", prop_data.get("trust_id"))
     label_value("Trust Name", trust_data.get("trust_name"))
     label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    readiness = score_continuity_asset_readiness(prop_data, custody_events)
+
+    story.append(Paragraph("Readiness Audit", section_style))
+    label_value("Readiness Score", f"{readiness.get('score')}%")
+    label_value("Readiness Status", readiness.get("status"))
+    label_value("Missing Readiness Items", "; ".join(readiness.get("missing") or []) or "No missing readiness items")
 
     story.append(Spacer(1, 8))
 
