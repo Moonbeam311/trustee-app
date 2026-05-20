@@ -426,3 +426,67 @@ def build_property_evidence_profile(property_id):
 def has_property_evidence(property_id):
     profile = build_property_evidence_profile(property_id)
     return profile["evidence_count"] > 0
+
+
+
+# ===================================================
+# AC-1 CUSTODY EVENT EVIDENCE RESOLUTION
+# ===================================================
+
+def resolve_evidence_reference(property_id, reference):
+    """
+    Resolve a custody event supporting_document_reference such as:
+    DOCUMENT:DOC-001
+    MEDIA:MED-001
+
+    Returns a friendly evidence item dict or None.
+    """
+    if not reference:
+        return None
+
+    ref = str(reference).strip()
+
+    if ":" not in ref:
+        return None
+
+    ref_type, ref_id = ref.split(":", 1)
+    ref_type = ref_type.strip().lower()
+    ref_id = ref_id.strip()
+
+    profile = build_property_evidence_profile(property_id)
+
+    for item in profile.get("evidence_items", []):
+        if (
+            item.get("source_type") == ref_type
+            and str(item.get("evidence_id")) == ref_id
+        ):
+            return item
+
+    return None
+
+
+def enrich_custody_events_with_evidence(property_id, custody_events):
+    enriched = []
+
+    for event in custody_events:
+        event_data = dict(event)
+
+        evidence_item = resolve_evidence_reference(
+            property_id,
+            event_data.get("supporting_document_reference")
+        )
+
+        event_data["supporting_evidence"] = evidence_item
+
+        if evidence_item:
+            event_data["supporting_evidence_label"] = (
+                f"{evidence_item.get('source_type', '').title()} "
+                f"{evidence_item.get('evidence_id')} — "
+                f"{evidence_item.get('title') or evidence_item.get('filename') or 'Untitled evidence item'}"
+            )
+        else:
+            event_data["supporting_evidence_label"] = None
+
+        enriched.append(event_data)
+
+    return enriched

@@ -163,7 +163,8 @@ from services.services_continuity_assets import (
     get_custody_events_for_property,
     get_custody_event_by_id,
     score_continuity_asset_readiness,
-    build_property_evidence_profile
+    build_property_evidence_profile,
+    enrich_custody_events_with_evidence
 )
 
 from services.services_articles import (
@@ -3943,6 +3944,11 @@ def property_custody_log(property_id):
         dict(event)
         for event in get_custody_events_for_property(property_id)
     ]
+
+    custody_events = enrich_custody_events_with_evidence(
+        property_id,
+        custody_events
+    )
 
     linked_trust = get_trust_by_id(prop_data.get("trust_id"))
     evidence_profile = build_property_evidence_profile(property_id)

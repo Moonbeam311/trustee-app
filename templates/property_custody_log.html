@@ -173,7 +173,13 @@
             <td>{{ event["to_party"] or "Not entered" }}</td>
             <td>{{ event["acting_capacity"] or "Not entered" }}</td>
             <td>{{ event["location_reference"] or "Not entered" }}</td>
-            <td>{{ event["supporting_document_reference"] or "Not entered" }}</td>
+            <td>
+                {{ event["supporting_document_reference"] or "Not entered" }}
+                {% if event.get("supporting_evidence_label") %}
+                <br>
+                <strong>Resolved:</strong> {{ event["supporting_evidence_label"] }}
+                {% endif %}
+            </td>
             <td>{{ event["recorded_by"] or "unknown" }}</td>
         </tr>
         {% if event["notes"] %}
