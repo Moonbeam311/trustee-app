@@ -99,6 +99,11 @@
             Open Chain-of-Custody Log
         </a>
         <br>
+
+        <a href="{{ url_for('property_custody_log_pdf', property_id=prop['property_id']) }}">
+            Download Custody Log PDF
+        </a>
+        <br>
         <a href="/property/{{ prop.property_id }}/continuity">
             Edit Continuity Asset Profile
         </a>

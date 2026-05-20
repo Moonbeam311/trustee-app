@@ -3424,6 +3424,169 @@ def property_continuity_profile_pdf(property_id):
 
 
 
+
+
+# ===================================================
+# AC-1 CONTINUITY CUSTODY LOG PDF REPORT
+# ===================================================
+
+def generate_custody_log_pdf(prop, trust=None, custody_events=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    custody_events = custody_events or []
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "CustodyLogTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "CustodyLogSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "CustodyLogBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("Continuity Chain-of-Custody Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Custody History", section_style))
+
+    if not custody_events:
+        story.append(Paragraph("No custody events recorded.", body_style))
+    else:
+        for event in custody_events:
+            event_data = dict(event)
+
+            story.append(
+                Paragraph(
+                    f"<b>{safe(event_data.get('custody_event_id'))}</b>",
+                    body_style
+                )
+            )
+
+            label_value("Event Date", event_data.get("event_date"))
+            label_value("Custody Action", (event_data.get("custody_action") or "").replace("_", " ").title())
+            label_value("From Party", event_data.get("from_party"))
+            label_value("To Party", event_data.get("to_party"))
+            label_value("Acting Capacity", event_data.get("acting_capacity"))
+            label_value("Location Reference", event_data.get("location_reference"))
+            label_value("Supporting Document Reference", event_data.get("supporting_document_reference"))
+            label_value("Recorded By", event_data.get("recorded_by"))
+            label_value("Notes", event_data.get("notes"))
+
+            story.append(Spacer(1, 8))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Custody Doctrine Reminder", section_style))
+    story.append(
+        Paragraph(
+            "Heritage, memorial, sacred, lineage, archival, and biological keepsake records "
+            "should maintain a documented chain of custody and should be handled as stewardship "
+            "or custody records, not ordinary commercial property.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/custody-log/pdf")
+@require_permission("view_dashboard")
+def property_custody_log_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+
+    custody_events = [
+        dict(event)
+        for event in get_custody_events_for_property(property_id)
+    ]
+
+    pdf_buffer = generate_custody_log_pdf(
+        prop_data,
+        linked_trust,
+        custody_events
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_Continuity_Custody_Log.pdf"
+    )
+
+
 @app.route("/property/<property_id>/custody-log", methods=["GET", "POST"])
 @require_permission("view_dashboard")
 def property_custody_log(property_id):
