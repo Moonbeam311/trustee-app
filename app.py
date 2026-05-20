@@ -4010,9 +4010,22 @@ def generate_evidence_custody_timeline_pdf(prop, trust=None, timeline_profile=No
     story.append(Spacer(1, 8))
 
     story.append(Paragraph("Timeline Summary", section_style))
-    label_value("Total Timeline Items", timeline_profile.get("timeline_count"))
+    label_value("Visible Timeline Items", timeline_profile.get("timeline_count"))
+    label_value("Total Timeline Items", timeline_profile.get("unfiltered_count") or timeline_profile.get("timeline_count"))
     label_value("Evidence Items", timeline_profile.get("evidence_count"))
     label_value("Custody Events", timeline_profile.get("custody_event_count"))
+
+    active_filters = timeline_profile.get("active_filters") or {}
+    filter_lines = []
+
+    for key, value in active_filters.items():
+        if value:
+            filter_lines.append(f"{key.replace('_', ' ').title()}: {str(value).replace('_', ' ').title()}")
+
+    if filter_lines:
+        label_value("Active Filters", "; ".join(filter_lines))
+    else:
+        label_value("Active Filters", "None")
 
     story.append(Spacer(1, 10))
 
@@ -4078,10 +4091,56 @@ def property_evidence_custody_timeline_pdf(property_id):
     linked_trust = get_trust_by_id(prop_data.get("trust_id"))
     timeline_profile = build_property_evidence_custody_timeline(property_id)
 
+    selected_type = (request.args.get("type") or "").strip()
+    selected_resolved = (request.args.get("resolved") or "").strip()
+    selected_action = (request.args.get("action") or "").strip()
+    start_date = (request.args.get("start_date") or "").strip()
+    end_date = (request.args.get("end_date") or "").strip()
+
+    timeline = timeline_profile.get("timeline", [])
+    filtered_timeline = []
+
+    for item in timeline:
+        if selected_type and item.get("timeline_type") != selected_type:
+            continue
+
+        if selected_resolved == "yes" and not item.get("resolved_evidence_label"):
+            continue
+
+        if selected_resolved == "no" and item.get("resolved_evidence_label"):
+            continue
+
+        if selected_action and item.get("timeline_type") == "custody_event":
+            if item.get("title") != selected_action.replace("_", " ").title():
+                continue
+
+        item_date = item.get("sort_date") or ""
+
+        if start_date and item_date and item_date < start_date:
+            continue
+
+        if end_date and item_date and item_date > end_date:
+            continue
+
+        filtered_timeline.append(item)
+
+    filtered_profile = dict(timeline_profile)
+    filtered_profile["timeline"] = filtered_timeline
+    filtered_profile["timeline_count"] = len(filtered_timeline)
+    filtered_profile["filtered_count"] = len(filtered_timeline)
+    filtered_profile["unfiltered_count"] = len(timeline)
+    filtered_profile["active_filters"] = {
+        "type": selected_type,
+        "resolved": selected_resolved,
+        "action": selected_action,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
     pdf_buffer = generate_evidence_custody_timeline_pdf(
         prop_data,
         linked_trust,
-        timeline_profile
+        filtered_profile
     )
 
     return send_file(

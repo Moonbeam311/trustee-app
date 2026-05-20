@@ -22,7 +22,15 @@
     |
     <a href="{{ url_for('property_continuity_profile', property_id=prop['property_id']) }}">Continuity Profile</a>
     |
-    <a href="{{ url_for('property_evidence_custody_timeline_pdf', property_id=prop['property_id']) }}">Download Timeline PDF</a>
+    <a href="{{ url_for(
+        'property_evidence_custody_timeline_pdf',
+        property_id=prop['property_id'],
+        type=selected_type,
+        resolved=selected_resolved,
+        action=selected_action,
+        start_date=start_date,
+        end_date=end_date
+    ) }}">Download Timeline PDF</a>
 </p>
 
 
