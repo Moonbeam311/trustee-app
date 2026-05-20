@@ -4712,6 +4712,15 @@ def generate_archive_packet_manifest_pdf(prop, trust=None, archive_packet=None):
 
     story.append(Spacer(1, 8))
 
+    story.append(Paragraph("Finalization Status", section_style))
+    label_value("Finalization Status", archive_packet.get("finalization_status"))
+    label_value("Finalization ID", archive_packet.get("finalization_id"))
+    label_value("Finalized By", archive_packet.get("finalized_by"))
+    label_value("Finalized At", archive_packet.get("finalized_at"))
+    label_value("Finalization Notes", archive_packet.get("finalization_notes"))
+
+    story.append(Spacer(1, 8))
+
     story.append(Paragraph("Packet Summary", section_style))
     label_value("Packet Report Count", archive_packet.get("packet_item_count"))
     label_value("Evidence Item Count", archive_packet.get("evidence_count"))
@@ -4817,6 +4826,11 @@ def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
         "archive_badge": archive_packet.get("archive_badge"),
         "resolution_status": archive_packet.get("resolution_status"),
         "resolution_archive_badge": archive_packet.get("resolution_archive_badge"),
+        "finalization_status": archive_packet.get("finalization_status"),
+        "finalization_id": archive_packet.get("finalization_id"),
+        "finalized_by": archive_packet.get("finalized_by"),
+        "finalized_at": archive_packet.get("finalized_at"),
+        "finalization_notes": archive_packet.get("finalization_notes"),
         "packet_item_count": archive_packet.get("packet_item_count"),
         "evidence_count": archive_packet.get("evidence_count"),
         "custody_event_count": archive_packet.get("custody_event_count"),
@@ -4839,6 +4853,13 @@ def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
         f"Archive Badge: {safe_text(archive_packet.get('archive_badge'))}",
         f"Resolution Status: {safe_text(archive_packet.get('resolution_status'))}",
         f"Resolution Archive Badge: {safe_text(archive_packet.get('resolution_archive_badge'))}",
+        "",
+        "Finalization:",
+        f"Finalization Status: {safe_text(archive_packet.get('finalization_status'))}",
+        f"Finalization ID: {safe_text(archive_packet.get('finalization_id'))}",
+        f"Finalized By: {safe_text(archive_packet.get('finalized_by'))}",
+        f"Finalized At: {safe_text(archive_packet.get('finalized_at'))}",
+        f"Finalization Notes: {safe_text(archive_packet.get('finalization_notes'))}",
         "",
         f"Packet Reports: {safe_text(archive_packet.get('packet_item_count'))}",
         f"Evidence Items: {safe_text(archive_packet.get('evidence_count'))}",

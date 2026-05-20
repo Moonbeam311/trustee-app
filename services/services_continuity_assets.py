@@ -731,6 +731,9 @@ def build_asset_continuity_archive_packet(property_id):
 
     unresolved_count = queue_profile.get("unresolved_count", 0)
 
+    latest_finalization = get_latest_archive_finalization(property_id)
+    latest_finalization_data = dict(latest_finalization) if latest_finalization else None
+
     return {
         "property_id": property_id,
         "packet_status": "Archive Ready" if unresolved_count == 0 else "Archive Pending Cleanup",
@@ -745,6 +748,12 @@ def build_asset_continuity_archive_packet(property_id):
         "unresolved_references": timeline_summary.get("unresolved_references", 0),
         "resolution_status": queue_profile.get("resolution_status"),
         "resolution_archive_badge": queue_profile.get("archive_badge"),
+        "latest_finalization": latest_finalization_data,
+        "finalization_status": latest_finalization_data.get("finalized_status") if latest_finalization_data else "Not Finalized",
+        "finalization_id": latest_finalization_data.get("finalization_id") if latest_finalization_data else None,
+        "finalized_by": latest_finalization_data.get("finalized_by") if latest_finalization_data else None,
+        "finalized_at": latest_finalization_data.get("finalized_at") if latest_finalization_data else None,
+        "finalization_notes": latest_finalization_data.get("notes") if latest_finalization_data else None,
     }
 
 

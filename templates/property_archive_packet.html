@@ -92,6 +92,16 @@
     </div>
 </div>
 
+
+<h2>Manifest Finalization Metadata</h2>
+
+<p><strong>Finalization Status:</strong> {{ archive_packet.finalization_status }}</p>
+<p><strong>Finalization ID:</strong> {{ archive_packet.finalization_id or "No finalization record found" }}</p>
+<p><strong>Finalized By:</strong> {{ archive_packet.finalized_by or "Not entered" }}</p>
+<p><strong>Finalized At:</strong> {{ archive_packet.finalized_at or "Not entered" }}</p>
+<p><strong>Finalization Notes:</strong> {{ archive_packet.finalization_notes or "Not entered" }}</p>
+
+<hr>
 <h2>Archive Packet Manifest</h2>
 
 <table border="1" cellpadding="8" cellspacing="0" style="width:100%;">
