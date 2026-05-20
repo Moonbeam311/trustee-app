@@ -164,7 +164,8 @@ from services.services_continuity_assets import (
     get_custody_event_by_id,
     score_continuity_asset_readiness,
     build_property_evidence_profile,
-    enrich_custody_events_with_evidence
+    enrich_custody_events_with_evidence,
+    resolve_evidence_reference
 )
 
 from services.services_articles import (
