@@ -158,7 +158,10 @@ from services.services_continuity_assets import (
     get_custody_classifications,
     get_property_continuity_profile,
     update_property_continuity_profile,
-    get_continuity_assets_by_trust
+    get_continuity_assets_by_trust,
+    create_continuity_custody_event,
+    get_custody_events_for_property,
+    get_custody_event_by_id
 )
 
 from services.services_articles import (
@@ -3416,6 +3419,61 @@ def property_continuity_profile_pdf(property_id):
         mimetype="application/pdf",
         as_attachment=True,
         download_name=f"{property_id}_Continuity_Asset_Report.pdf"
+    )
+
+
+
+
+@app.route("/property/<property_id>/custody-log", methods=["GET", "POST"])
+@require_permission("view_dashboard")
+def property_custody_log(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+
+    if request.method == "POST":
+        event_data = {
+            "property_id": property_id,
+            "trust_id": prop_data.get("trust_id"),
+            "event_date": request.form.get("event_date"),
+            "custody_action": request.form.get("custody_action"),
+            "from_party": request.form.get("from_party"),
+            "to_party": request.form.get("to_party"),
+            "acting_capacity": request.form.get("acting_capacity"),
+            "location_reference": request.form.get("location_reference"),
+            "supporting_document_reference": request.form.get("supporting_document_reference"),
+            "notes": request.form.get("notes"),
+            "recorded_by": session.get("username") or "unknown",
+            "firm_id": prop_data.get("firm_id"),
+        }
+
+        custody_event_id = create_continuity_custody_event(event_data)
+
+        flash(f"Custody event recorded: {custody_event_id}", "success")
+
+        return redirect(
+            url_for(
+                "property_custody_log",
+                property_id=property_id
+            )
+        )
+
+    custody_events = [
+        dict(event)
+        for event in get_custody_events_for_property(property_id)
+    ]
+
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+
+    return render_template(
+        "property_custody_log.html",
+        prop=prop_data,
+        linked_trust=linked_trust,
+        custody_events=custody_events
     )
 
 

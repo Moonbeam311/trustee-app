@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Continuity Chain-of-Custody Log</h1>
+
+<p>
+    <strong>Property:</strong>
+    {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Property ID:</strong> {{ prop["property_id"] }}
+    {% if linked_trust %}
+    |
+    <strong>Trust:</strong> {{ linked_trust["trust_name"] or linked_trust["trust_id"] }}
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('property_detail', property_id=prop['property_id']) }}">Back to Property Detail</a>
+    |
+    <a href="{{ url_for('property_continuity_profile', property_id=prop['property_id']) }}">Continuity Profile</a>
+</p>
+
+<hr>
+
+<h2>Record Custody Event</h2>
+
+<form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <p>
+        <label>Event Date</label><br>
+        <input type="date" name="event_date" style="width:100%; padding:10px;">
+    </p>
+
+    <p>
+        <label>Custody Action</label><br>
+        <select name="custody_action" style="width:100%; padding:10px;">
+            <option value="">-- Select Action --</option>
+            <option value="initial_record">Initial Record</option>
+            <option value="custody_received">Custody Received</option>
+            <option value="custody_transferred">Custody Transferred</option>
+            <option value="location_changed">Location Changed</option>
+            <option value="preservation_review">Preservation Review</option>
+            <option value="restricted_access_review">Restricted Access Review</option>
+            <option value="supporting_document_added">Supporting Document Added</option>
+            <option value="custody_note">Custody Note</option>
+        </select>
+    </p>
+
+    <p>
+        <label>From Party</label><br>
+        <input type="text" name="from_party" style="width:100%; padding:10px;">
+    </p>
+
+    <p>
+        <label>To Party</label><br>
+        <input type="text" name="to_party" style="width:100%; padding:10px;">
+    </p>
+
+    <p>
+        <label>Acting Capacity</label><br>
+        <input type="text" name="acting_capacity" style="width:100%; padding:10px;" placeholder="Trustee, Custodian, Memorial Steward, Archivist, etc.">
+    </p>
+
+    <p>
+        <label>Location Reference</label><br>
+        <input type="text" name="location_reference" style="width:100%; padding:10px;" placeholder="Vault, archive box, family custodian, digital repository, etc.">
+    </p>
+
+    <p>
+        <label>Supporting Document Reference</label><br>
+        <input type="text" name="supporting_document_reference" style="width:100%; padding:10px;" placeholder="Document ID, receipt, photo record, certificate, archive reference, etc.">
+    </p>
+
+    <p>
+        <label>Notes</label><br>
+        <textarea name="notes" rows="5" style="width:100%; padding:10px;"></textarea>
+    </p>
+
+    <button type="submit">Record Custody Event</button>
+</form>
+
+<hr>
+
+<h2>Custody History</h2>
+
+{% if custody_events %}
+<table border="1" cellpadding="8" cellspacing="0" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Event ID</th>
+            <th>Date</th>
+            <th>Action</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Capacity</th>
+            <th>Location</th>
+            <th>Document Ref.</th>
+            <th>Recorded By</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in custody_events %}
+        <tr>
+            <td>{{ event["custody_event_id"] }}</td>
+            <td>{{ event["event_date"] or "Not entered" }}</td>
+            <td>{{ (event["custody_action"] or "Not entered").replace("_", " ").title() }}</td>
+            <td>{{ event["from_party"] or "Not entered" }}</td>
+            <td>{{ event["to_party"] or "Not entered" }}</td>
+            <td>{{ event["acting_capacity"] or "Not entered" }}</td>
+            <td>{{ event["location_reference"] or "Not entered" }}</td>
+            <td>{{ event["supporting_document_reference"] or "Not entered" }}</td>
+            <td>{{ event["recorded_by"] or "unknown" }}</td>
+        </tr>
+        {% if event["notes"] %}
+        <tr>
+            <td colspan="9">
+                <strong>Notes:</strong> {{ event["notes"] }}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No custody events recorded yet.</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>Custody Doctrine Reminder:</strong>
+    Heritage, memorial, sacred, lineage, archival, and biological keepsake records should maintain a documented chain of custody.
+</p>
+{% endblock %}
