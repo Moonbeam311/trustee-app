@@ -590,11 +590,19 @@ def get_documents_by_trust_id(trust_id):
     return rows
 
 def get_documents_by_property_id(property_id):
+    """
+    Return documents linked directly to a property/asset record.
+
+    AC-1 alignment:
+    The continuity evidence bridge links documents through documents.property_id.
+    Do not restrict by legacy owner_id here, because older document rows and
+    evidence uploads may not have owner_id populated consistently.
+    """
     conn = get_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM documents WHERE property_id = ? AND owner_id = ? ORDER BY document_id",
-        (property_id, "ADMIN_OWNER_001")
+        "SELECT * FROM documents WHERE property_id = ? ORDER BY document_id",
+        (property_id,)
     )
     rows = cur.fetchall()
     conn.close()
