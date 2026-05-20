@@ -4609,6 +4609,193 @@ def generate_ac1_completion_report_pdf(prop, trust=None):
 
 
 
+
+
+# ===================================================
+# AC-2 ARCHIVE PACKET MANIFEST PDF
+# ===================================================
+
+def generate_archive_packet_manifest_pdf(prop, trust=None, archive_packet=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    archive_packet = archive_packet or build_asset_continuity_archive_packet(prop_data.get("property_id"))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ArchiveManifestTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "ArchiveManifestSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ArchiveManifestBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("AC-2 Asset Continuity Archive Packet Manifest", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+    label_value("Status", prop_data.get("status"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Archive Packet Status", section_style))
+    label_value("Packet Status", archive_packet.get("packet_status"))
+    label_value("Archive Badge", archive_packet.get("archive_badge"))
+    label_value("Resolution Status", archive_packet.get("resolution_status"))
+    label_value("Resolution Archive Badge", archive_packet.get("resolution_archive_badge"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Packet Summary", section_style))
+    label_value("Packet Report Count", archive_packet.get("packet_item_count"))
+    label_value("Evidence Item Count", archive_packet.get("evidence_count"))
+    label_value("Custody Event Count", archive_packet.get("custody_event_count"))
+    label_value("Timeline Item Count", archive_packet.get("timeline_count"))
+    label_value("Resolved Evidence References", archive_packet.get("resolved_references"))
+    label_value("Unresolved Manual References", archive_packet.get("unresolved_references"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Archive Packet Manifest Items", section_style))
+
+    for item in archive_packet.get("packet_items") or []:
+        story.append(
+            Paragraph(
+                f"<b>{safe(item.get('packet_item_id'))} — {safe(item.get('title'))}</b>",
+                body_style
+            )
+        )
+        label_value("Section", item.get("packet_section"))
+        label_value("Description", item.get("description"))
+        label_value("Status", item.get("status"))
+        label_value("Route", item.get("route"))
+        story.append(Spacer(1, 6))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Evidence Inventory", section_style))
+
+    evidence_items = archive_packet.get("evidence_items") or []
+
+    if not evidence_items:
+        story.append(Paragraph("No evidence items are currently linked to this archive packet.", body_style))
+    else:
+        for evidence in evidence_items:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(evidence.get('source_type')).title()} {safe(evidence.get('evidence_id'))}</b> — "
+                    f"{safe(evidence.get('title'))}",
+                    body_style
+                )
+            )
+            label_value("Category", evidence.get("category"))
+            label_value("Notes", evidence.get("notes"))
+            label_value("File Path", evidence.get("file_path"))
+            story.append(Spacer(1, 6))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("AC-2 Packet Assembly Note", section_style))
+    story.append(
+        Paragraph(
+            "This manifest identifies the reports and evidence records that should be assembled into the final "
+            "asset continuity archive packet. Later AC-2 steps may bundle these reports and evidence files into "
+            "a ZIP or other export package.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/archive-packet/manifest/pdf")
+@require_permission("view_dashboard")
+def property_archive_packet_manifest_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+
+    pdf_buffer = generate_archive_packet_manifest_pdf(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_AC2_Archive_Packet_Manifest.pdf"
+    )
+
+
 @app.route("/property/<property_id>/archive-packet")
 @require_permission("view_dashboard")
 def property_archive_packet(property_id):
