@@ -27,6 +27,37 @@
 
 <hr>
 
+<h2>Continuity Evidence & Supporting Documents</h2>
+
+<p>
+    <strong>Evidence Items Linked to Asset:</strong>
+    {{ evidence_profile.evidence_count if evidence_profile else 0 }}
+</p>
+
+{% if evidence_profile and evidence_profile.evidence_items %}
+<ul>
+    {% for item in evidence_profile.evidence_items %}
+    <li>
+        <strong>{{ item.source_type|title }}:</strong>
+        {{ item.evidence_id or 'No ID' }}
+        —
+        {{ item.title or item.filename or 'Untitled evidence item' }}
+        {% if item.category %}
+        <br><em>Category:</em> {{ item.category }}
+        {% endif %}
+        {% if item.notes %}
+        <br><em>Notes:</em> {{ item.notes }}
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No linked evidence documents or media records found for this asset.</p>
+{% endif %}
+
+
+<hr>
+
 <h2>Record Custody Event</h2>
 
 <form method="POST">

@@ -162,7 +162,8 @@ from services.services_continuity_assets import (
     create_continuity_custody_event,
     get_custody_events_for_property,
     get_custody_event_by_id,
-    score_continuity_asset_readiness
+    score_continuity_asset_readiness,
+    build_property_evidence_profile
 )
 
 from services.services_articles import (
@@ -3197,6 +3198,7 @@ def property_detail(property_id):
     linked_accounts = get_accounts_by_property_id(property_id)
     linked_documents = get_documents_by_property_id(property_id)
     linked_ledger = get_ledger_by_property(property_id)
+    evidence_profile = build_property_evidence_profile(property_id)
 
     return render_template(
         "property_detail.html",
@@ -3204,7 +3206,8 @@ def property_detail(property_id):
         linked_trust=linked_trust,
         linked_accounts=linked_accounts,
         linked_documents=linked_documents,
-        linked_ledger=linked_ledger
+        linked_ledger=linked_ledger,
+        evidence_profile=evidence_profile
     )
 
 
