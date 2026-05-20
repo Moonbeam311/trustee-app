@@ -2978,6 +2978,10 @@ def link_account():
 @app.route("/upload_document", methods=["GET", "POST"])
 def upload_document():
     trusts = get_all_trusts()
+    prefill_property_id = (request.args.get("property_id") or "").strip()
+    prefill_trust_id = (request.args.get("trust_id") or "").strip()
+    evidence_mode = (request.args.get("evidence") or "").strip()
+
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("upload_document.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
@@ -3013,7 +3017,13 @@ def upload_document():
         if document["property_id"]:
             return redirect(url_for("property_detail", property_id=document["property_id"]))
         return redirect(url_for("trust_detail", trust_id=document["trust_id"]))
-    return render_template("upload_document.html", trusts=trusts)
+    return render_template(
+        "upload_document.html",
+        trusts=trusts,
+        prefill_property_id=prefill_property_id,
+        prefill_trust_id=prefill_trust_id,
+        evidence_mode=evidence_mode
+    )
 
 @app.route("/ledger_entry", methods=["GET", "POST"])
 def ledger_entry():

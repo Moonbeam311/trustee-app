@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Upload Document</h2>
+<h2>{% if evidence_mode %}Upload Supporting Evidence{% else %}Upload Document{% endif %}</h2>
+
+{% if evidence_mode %}
+<div style="margin-bottom:15px; padding:12px; background:#fff4e5; border-radius:6px; border:1px solid #f4c27a;">
+    <strong>Continuity Evidence Upload</strong><br>
+    This document will be linked to the selected continuity asset/property record.
+</div>
+{% endif %}
 
 <div style="margin-bottom:15px; padding:12px; background:#f0f4f8; border-radius:6px; border:1px solid #d9e2ec;">
     <strong>Accepted file types</strong><br>
@@ -14,14 +21,14 @@
     <select name="trust_id" required>
         <option value="">Select Existing Trust</option>
         {% for trust in trusts %}
-        <option value="{{ trust.trust_id }}">
+        <option value="{{ trust.trust_id }}" {% if prefill_trust_id == trust.trust_id %}selected{% endif %}>
             {{ trust.trust_id }} - {{ trust.trust_name }} ({{ trust.trust_type }})
         </option>
         {% endfor %}
     </select>
 
     <label>Linked Property (Optional)</label>
-    <input name="property_id" placeholder="e.g. PR-001">
+    <input name="property_id" placeholder="e.g. PR-001" value="{{ prefill_property_id or '' }}">
 
     <label>Linked Account (Optional)</label>
     <input name="account_id" placeholder="e.g. AC-001">
@@ -31,7 +38,9 @@
         <option value="">Select Category</option>
         <option value="trust_declaration">Trust Declaration</option>
         <option value="trustee_acceptance">Trustee Acceptance</option>
-        <option value="property_record">Property Record</option>
+        <option value="property_record" {% if evidence_mode %}selected{% endif %}>Property Record</option>
+        <option value="continuity_evidence">Continuity Evidence</option>
+        <option value="custody_support">Custody Support</option>
         <option value="account_record">Account Record</option>
         <option value="ucc_filing">UCC Filing</option>
         <option value="tax_form">Tax Form</option>
@@ -42,7 +51,7 @@
     </select>
 
     <label>Document Title</label>
-    <input name="document_title" required>
+    <input name="document_title" required value="{% if evidence_mode %}Supporting Evidence for {{ prefill_property_id }}{% endif %}">
 
     <label>Choose File</label>
     <input type="file" name="document_file" accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png" required>

@@ -160,7 +160,9 @@
     {% endif %}
 
     <p>
-        <a href="/upload_document">Upload / Link Supporting Document</a>
+        <a href="{{ url_for('upload_document', property_id=prop['property_id'], trust_id=prop['trust_id'], evidence='1') }}">
+            Upload Supporting Evidence
+        </a>
     </p>
 </div>
 
