@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Continuity Asset Profile</h1>
+
+<p>
+    <strong>Property:</strong>
+    {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <a href="{{ url_for('property_detail', property_id=prop['property_id']) }}">Back to Property Detail</a>
+</p>
+
+<hr>
+
+<form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <p>
+        <label>Continuity Classification</label><br>
+        <select name="continuity_classification">
+            <option value="">-- Select --</option>
+            {% for item in continuity_classifications %}
+            <option value="{{ item }}" {% if profile and profile["continuity_classification"] == item %}selected{% endif %}>
+                {{ item.replace("_", " ").title() }}
+            </option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <p>
+        <label>Custody Classification</label><br>
+        <select name="custody_classification">
+            <option value="">-- Select --</option>
+            {% for item in custody_classifications %}
+            <option value="{{ item }}" {% if profile and profile["custody_classification"] == item %}selected{% endif %}>
+                {{ item.replace("_", " ").title() }}
+            </option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <p>
+        <label>Continuity Priority</label><br>
+        <input type="number" name="continuity_priority" value="{{ profile['continuity_priority'] if profile else 0 }}">
+    </p>
+
+    <p>
+        <label>Heritage Significance</label><br>
+        <textarea name="heritage_significance" rows="4" style="width: 100%;">{{ profile["heritage_significance"] if profile else "" }}</textarea>
+    </p>
+
+    <p>
+        <label>Preservation Requirements</label><br>
+        <textarea name="preservation_requirements" rows="4" style="width: 100%;">{{ profile["preservation_requirements"] if profile else "" }}</textarea>
+    </p>
+
+    <p>
+        <label>Restricted Access Level</label><br>
+        <input type="text" name="restricted_access_level" value="{{ profile['restricted_access_level'] if profile else '' }}">
+    </p>
+
+    <p>
+        <label>Lineage Association</label><br>
+        <input type="text" name="lineage_association" value="{{ profile['lineage_association'] if profile else '' }}">
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="memorial_status" {% if profile and profile["memorial_status"] %}checked{% endif %}>
+            Memorial Custody Item
+        </label>
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" name="sacred_status" {% if profile and profile["sacred_status"] %}checked{% endif %}>
+            Sacred / Protected Heritage Property
+        </label>
+    </p>
+
+    <p>
+        <label>Continuity Notes</label><br>
+        <textarea name="continuity_notes" rows="5" style="width: 100%;">{{ profile["continuity_notes"] if profile else "" }}</textarea>
+    </p>
+
+    <button type="submit">Save Continuity Profile</button>
+</form>
+{% endblock %}

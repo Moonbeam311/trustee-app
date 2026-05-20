@@ -153,6 +153,14 @@ from extensions import db as ext_db
 # --- Transfer Engine v1 imports ---
 from models.models_transfer import Transfer, TransferAction, TransferRecord
 from models.models_transfer_support import TransferSupportDoc
+from services.services_continuity_assets import (
+    get_continuity_classifications,
+    get_custody_classifications,
+    get_property_continuity_profile,
+    update_property_continuity_profile,
+    get_continuity_assets_by_trust
+)
+
 from services.services_articles import (
     create_trust_article,
     get_all_trust_articles,
@@ -3189,6 +3197,53 @@ def property_detail(property_id):
         linked_documents=linked_documents,
         linked_ledger=linked_ledger
     )
+
+
+
+@app.route("/property/<property_id>/continuity", methods=["GET", "POST"])
+@require_permission("view_dashboard")
+def property_continuity_profile(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    if request.method == "POST":
+        profile_data = {
+            "continuity_classification": request.form.get("continuity_classification"),
+            "custody_classification": request.form.get("custody_classification"),
+            "continuity_priority": request.form.get("continuity_priority") or 0,
+            "heritage_significance": request.form.get("heritage_significance"),
+            "preservation_requirements": request.form.get("preservation_requirements"),
+            "restricted_access_level": request.form.get("restricted_access_level"),
+            "lineage_association": request.form.get("lineage_association"),
+            "memorial_status": 1 if request.form.get("memorial_status") == "on" else 0,
+            "sacred_status": 1 if request.form.get("sacred_status") == "on" else 0,
+            "continuity_notes": request.form.get("continuity_notes"),
+        }
+
+        update_property_continuity_profile(property_id, profile_data)
+
+        flash("Continuity asset profile updated.", "success")
+
+        return redirect(
+            url_for(
+                "property_continuity_profile",
+                property_id=property_id
+            )
+        )
+
+    profile = get_property_continuity_profile(property_id)
+
+    return render_template(
+        "property_continuity_profile.html",
+        prop=prop,
+        profile=profile,
+        continuity_classifications=get_continuity_classifications(),
+        custody_classifications=get_custody_classifications()
+    )
+
 
 @app.route("/k1")
 def k1_dashboard():
