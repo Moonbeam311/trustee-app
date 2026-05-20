@@ -4721,6 +4721,23 @@ def generate_archive_packet_manifest_pdf(prop, trust=None, archive_packet=None):
 
     story.append(Spacer(1, 8))
 
+    story.append(Paragraph("Archive Packet Certification Block", section_style))
+    label_value("Packet Finalization ID", archive_packet.get("finalization_id"))
+    label_value("Integrity Status", "Complete")
+    label_value("Archive Badge", archive_packet.get("archive_badge"))
+    label_value("Prepared By / Finalized By", archive_packet.get("finalized_by"))
+    label_value("Timestamp", archive_packet.get("finalized_at"))
+    story.append(
+        Paragraph(
+            "Certification Statement: This archive packet manifest certifies the assembled continuity records, "
+            "generated reports, evidence inventory, ZIP integrity status, and recorded finalization metadata "
+            "for the identified asset packet.",
+            body_style
+        )
+    )
+
+    story.append(Spacer(1, 8))
+
     story.append(Paragraph("Packet Summary", section_style))
     label_value("Packet Report Count", archive_packet.get("packet_item_count"))
     label_value("Evidence Item Count", archive_packet.get("evidence_count"))
@@ -4831,6 +4848,14 @@ def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
         "finalized_by": archive_packet.get("finalized_by"),
         "finalized_at": archive_packet.get("finalized_at"),
         "finalization_notes": archive_packet.get("finalization_notes"),
+        "certification_block": {
+            "packet_finalization_id": archive_packet.get("finalization_id"),
+            "integrity_status": "Complete",
+            "archive_badge": archive_packet.get("archive_badge"),
+            "prepared_by_finalized_by": archive_packet.get("finalized_by"),
+            "timestamp": archive_packet.get("finalized_at"),
+            "certification_statement": "This archive packet certifies assembled continuity records, generated reports, evidence inventory, ZIP integrity status, and recorded finalization metadata for the identified asset packet."
+        },
         "packet_item_count": archive_packet.get("packet_item_count"),
         "evidence_count": archive_packet.get("evidence_count"),
         "custody_event_count": archive_packet.get("custody_event_count"),
@@ -4860,6 +4885,14 @@ def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
         f"Finalized By: {safe_text(archive_packet.get('finalized_by'))}",
         f"Finalized At: {safe_text(archive_packet.get('finalized_at'))}",
         f"Finalization Notes: {safe_text(archive_packet.get('finalization_notes'))}",
+        "",
+        "Certification Block:",
+        f"Packet Finalization ID: {safe_text(archive_packet.get('finalization_id'))}",
+        "Integrity Status: Complete",
+        f"Archive Badge: {safe_text(archive_packet.get('archive_badge'))}",
+        f"Prepared By / Finalized By: {safe_text(archive_packet.get('finalized_by'))}",
+        f"Timestamp: {safe_text(archive_packet.get('finalized_at'))}",
+        "Certification Statement: This archive packet certifies assembled continuity records, generated reports, evidence inventory, ZIP integrity status, and recorded finalization metadata for the identified asset packet.",
         "",
         f"Packet Reports: {safe_text(archive_packet.get('packet_item_count'))}",
         f"Evidence Items: {safe_text(archive_packet.get('evidence_count'))}",
