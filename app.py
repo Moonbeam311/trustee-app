@@ -3205,6 +3205,74 @@ def property_detail(property_id):
 
 
 
+
+
+@app.route("/continuity-assets")
+@require_permission("view_dashboard")
+def continuity_asset_dashboard():
+    trusts = get_visible_trusts_for_current_operator()
+
+    selected_continuity_class = (request.args.get("continuity_class") or "").strip()
+    selected_custody_class = (request.args.get("custody_class") or "").strip()
+    selected_memorial = (request.args.get("memorial") or "").strip()
+    selected_sacred = (request.args.get("sacred") or "").strip()
+    selected_restricted = (request.args.get("restricted") or "").strip()
+
+    dashboard_rows = []
+
+    for trust in trusts:
+        trust_id = trust["trust_id"]
+        assets = get_continuity_assets_by_trust(trust_id)
+
+        for asset in assets:
+            asset_data = dict(asset)
+            asset_data["trust_name"] = trust["trust_name"]
+            dashboard_rows.append(asset_data)
+
+    filtered_rows = []
+
+    for asset in dashboard_rows:
+        if selected_continuity_class and asset.get("continuity_classification") != selected_continuity_class:
+            continue
+
+        if selected_custody_class and asset.get("custody_classification") != selected_custody_class:
+            continue
+
+        if selected_memorial == "yes" and not asset.get("memorial_status"):
+            continue
+
+        if selected_memorial == "no" and asset.get("memorial_status"):
+            continue
+
+        if selected_sacred == "yes" and not asset.get("sacred_status"):
+            continue
+
+        if selected_sacred == "no" and asset.get("sacred_status"):
+            continue
+
+        if selected_restricted == "yes" and not asset.get("restricted_access_level"):
+            continue
+
+        if selected_restricted == "no" and asset.get("restricted_access_level"):
+            continue
+
+        filtered_rows.append(asset)
+
+    return render_template(
+        "continuity_asset_dashboard.html",
+        assets=filtered_rows,
+        asset_count=len(filtered_rows),
+        total_asset_count=len(dashboard_rows),
+        continuity_classifications=get_continuity_classifications(),
+        custody_classifications=get_custody_classifications(),
+        selected_continuity_class=selected_continuity_class,
+        selected_custody_class=selected_custody_class,
+        selected_memorial=selected_memorial,
+        selected_sacred=selected_sacred,
+        selected_restricted=selected_restricted
+    )
+
+
 @app.route("/property/<property_id>/continuity", methods=["GET", "POST"])
 @require_permission("view_dashboard")
 def property_continuity_profile(property_id):

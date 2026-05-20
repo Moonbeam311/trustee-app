@@ -164,9 +164,74 @@
         <div class="continuity-stats">
             <div class="continuity-stat-card">
                 Total Continuity Assets
-                <strong>{{ asset_count }}</strong>
+                <strong>{{ asset_count }}</strong><div class="continuity-muted">Filtered from {{ total_asset_count or asset_count }} total</div>
             </div>
         </div>
+    </section>
+
+
+    <section class="continuity-card">
+        <h2>Filters</h2>
+
+        <form method="GET" action="{{ url_for('continuity_asset_dashboard') }}">
+            <div class="continuity-grid">
+                <div>
+                    <div class="continuity-field-label">Continuity Class</div>
+                    <select name="continuity_class" style="width:100%; padding:10px;">
+                        <option value="">All continuity classes</option>
+                        {% for item in continuity_classifications %}
+                        <option value="{{ item }}" {% if selected_continuity_class == item %}selected{% endif %}>
+                            {{ item.replace("_", " ").title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Custody Class</div>
+                    <select name="custody_class" style="width:100%; padding:10px;">
+                        <option value="">All custody classes</option>
+                        {% for item in custody_classifications %}
+                        <option value="{{ item }}" {% if selected_custody_class == item %}selected{% endif %}>
+                            {{ item.replace("_", " ").title() }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Memorial Custody</div>
+                    <select name="memorial" style="width:100%; padding:10px;">
+                        <option value="">All</option>
+                        <option value="yes" {% if selected_memorial == "yes" %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if selected_memorial == "no" %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Sacred / Protected</div>
+                    <select name="sacred" style="width:100%; padding:10px;">
+                        <option value="">All</option>
+                        <option value="yes" {% if selected_sacred == "yes" %}selected{% endif %}>Yes</option>
+                        <option value="no" {% if selected_sacred == "no" %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Restricted Access</div>
+                    <select name="restricted" style="width:100%; padding:10px;">
+                        <option value="">All</option>
+                        <option value="yes" {% if selected_restricted == "yes" %}selected{% endif %}>Has restricted access value</option>
+                        <option value="no" {% if selected_restricted == "no" %}selected{% endif %}>No restricted access value</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="continuity-actions">
+                <button type="submit">Apply Filters</button>
+                <a href="{{ url_for('continuity_asset_dashboard') }}">Clear Filters</a>
+            </div>
+        </form>
     </section>
 
     {% if assets %}
