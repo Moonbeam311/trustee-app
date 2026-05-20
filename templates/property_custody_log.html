@@ -163,6 +163,7 @@
             <th>Location</th>
             <th>Document Ref.</th>
             <th>Recorded By</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -183,10 +184,19 @@
                 {% endif %}
             </td>
             <td>{{ event["recorded_by"] or "unknown" }}</td>
+            <td>
+                <a href="{{ url_for(
+                    'resolve_custody_event_evidence',
+                    property_id=prop['property_id'],
+                    custody_event_id=event['custody_event_id']
+                ) }}">
+                    Resolve Evidence
+                </a>
+            </td>
         </tr>
         {% if event["notes"] %}
         <tr>
-            <td colspan="9">
+            <td colspan="10">
                 <strong>Notes:</strong> {{ event["notes"] }}
             </td>
         </tr>
