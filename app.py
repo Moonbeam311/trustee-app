@@ -4769,6 +4769,200 @@ def generate_archive_packet_manifest_pdf(prop, trust=None, archive_packet=None):
     return buffer
 
 
+
+
+# ===================================================
+# AC-2 ARCHIVE PACKET ZIP EXPORT FOUNDATION
+# ===================================================
+
+def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
+
+    from io import BytesIO
+    import json
+    import zipfile
+    from pathlib import Path
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    property_id = prop_data.get("property_id")
+    archive_packet = archive_packet or build_asset_continuity_archive_packet(property_id)
+
+    zip_buffer = BytesIO()
+
+    def write_pdf_to_zip(zip_file, zip_path, pdf_buffer):
+        pdf_buffer.seek(0)
+        zip_file.writestr(zip_path, pdf_buffer.read())
+
+    def safe_text(value):
+        if value is None:
+            return ""
+        return str(value)
+
+    manifest = {
+        "packet_type": "AC-2 Asset Continuity Archive Packet",
+        "property_id": property_id,
+        "property_name": prop_data.get("property_name"),
+        "trust_id": prop_data.get("trust_id"),
+        "trust_name": trust_data.get("trust_name"),
+        "packet_status": archive_packet.get("packet_status"),
+        "archive_badge": archive_packet.get("archive_badge"),
+        "resolution_status": archive_packet.get("resolution_status"),
+        "resolution_archive_badge": archive_packet.get("resolution_archive_badge"),
+        "packet_item_count": archive_packet.get("packet_item_count"),
+        "evidence_count": archive_packet.get("evidence_count"),
+        "custody_event_count": archive_packet.get("custody_event_count"),
+        "timeline_count": archive_packet.get("timeline_count"),
+        "resolved_references": archive_packet.get("resolved_references"),
+        "unresolved_references": archive_packet.get("unresolved_references"),
+        "packet_items": archive_packet.get("packet_items") or [],
+        "evidence_items": archive_packet.get("evidence_items") or [],
+    }
+
+    manifest_txt_lines = [
+        "AC-2 Asset Continuity Archive Packet",
+        "====================================",
+        f"Property ID: {safe_text(property_id)}",
+        f"Property Name: {safe_text(prop_data.get('property_name'))}",
+        f"Trust ID: {safe_text(prop_data.get('trust_id'))}",
+        f"Trust Name: {safe_text(trust_data.get('trust_name'))}",
+        "",
+        f"Packet Status: {safe_text(archive_packet.get('packet_status'))}",
+        f"Archive Badge: {safe_text(archive_packet.get('archive_badge'))}",
+        f"Resolution Status: {safe_text(archive_packet.get('resolution_status'))}",
+        f"Resolution Archive Badge: {safe_text(archive_packet.get('resolution_archive_badge'))}",
+        "",
+        f"Packet Reports: {safe_text(archive_packet.get('packet_item_count'))}",
+        f"Evidence Items: {safe_text(archive_packet.get('evidence_count'))}",
+        f"Custody Events: {safe_text(archive_packet.get('custody_event_count'))}",
+        f"Timeline Items: {safe_text(archive_packet.get('timeline_count'))}",
+        f"Resolved References: {safe_text(archive_packet.get('resolved_references'))}",
+        f"Unresolved References: {safe_text(archive_packet.get('unresolved_references'))}",
+        "",
+        "Packet Items:",
+    ]
+
+    for item in archive_packet.get("packet_items") or []:
+        manifest_txt_lines.append(
+            f"- {safe_text(item.get('packet_item_id'))}: {safe_text(item.get('title'))} | {safe_text(item.get('route'))}"
+        )
+
+    manifest_txt_lines.append("")
+    manifest_txt_lines.append("Evidence Items:")
+
+    for item in archive_packet.get("evidence_items") or []:
+        manifest_txt_lines.append(
+            f"- {safe_text(item.get('source_type')).title()} {safe_text(item.get('evidence_id'))}: "
+            f"{safe_text(item.get('title'))} | {safe_text(item.get('file_path'))}"
+        )
+
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        zip_file.writestr(
+            "manifest/AC2_archive_manifest.json",
+            json.dumps(manifest, indent=2, default=str)
+        )
+
+        zip_file.writestr(
+            "manifest/AC2_archive_manifest.txt",
+            "\\n".join(manifest_txt_lines)
+        )
+
+        # Generated reports
+        write_pdf_to_zip(
+            zip_file,
+            "reports/AC2_Archive_Packet_Manifest.pdf",
+            generate_archive_packet_manifest_pdf(prop_data, trust_data, archive_packet)
+        )
+
+        write_pdf_to_zip(
+            zip_file,
+            "reports/AC1_Completion_Report.pdf",
+            generate_ac1_completion_report_pdf(prop_data, trust_data)
+        )
+
+        write_pdf_to_zip(
+            zip_file,
+            "reports/Continuity_Asset_Detail_Report.pdf",
+            generate_continuity_asset_pdf(prop_data, trust_data)
+        )
+
+        custody_events = [
+            dict(event)
+            for event in get_custody_events_for_property(property_id)
+        ]
+
+        write_pdf_to_zip(
+            zip_file,
+            "reports/Continuity_Custody_Log_Report.pdf",
+            generate_custody_log_pdf(prop_data, trust_data, custody_events)
+        )
+
+        timeline_profile = build_property_evidence_custody_timeline(property_id)
+
+        write_pdf_to_zip(
+            zip_file,
+            "reports/Evidence_Custody_Timeline_Report.pdf",
+            generate_evidence_custody_timeline_pdf(prop_data, trust_data, timeline_profile)
+        )
+
+        queue_profile = build_property_resolution_queue(property_id)
+
+        write_pdf_to_zip(
+            zip_file,
+            "reports/Evidence_Resolution_Queue_Report.pdf",
+            generate_resolution_queue_pdf(prop_data, trust_data, queue_profile)
+        )
+
+        # Best-effort linked evidence file inclusion
+        for item in archive_packet.get("evidence_items") or []:
+            file_path = item.get("file_path")
+
+            if not file_path:
+                continue
+
+            source_path = Path(file_path)
+
+            if not source_path.exists():
+                continue
+
+            evidence_id = safe_text(item.get("evidence_id")) or "evidence"
+            original_name = source_path.name
+            zip_file.write(
+                source_path,
+                f"evidence/{evidence_id}_{original_name}"
+            )
+
+    zip_buffer.seek(0)
+
+    return zip_buffer
+
+
+@app.route("/property/<property_id>/archive-packet/zip")
+@require_permission("view_dashboard")
+def property_archive_packet_zip(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+
+    zip_buffer = generate_archive_packet_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+
+    return send_file(
+        zip_buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"{property_id}_AC2_Continuity_Archive_Packet.zip"
+    )
+
+
 @app.route("/property/<property_id>/archive-packet/manifest/pdf")
 @require_permission("view_dashboard")
 def property_archive_packet_manifest_pdf(property_id):
