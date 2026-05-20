@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Asset Continuity Archive Packet</h1>
+
+<p>
+    <strong>Property:</strong> {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Property ID:</strong> {{ prop["property_id"] }}
+    {% if linked_trust %}
+    |
+    <strong>Trust:</strong> {{ linked_trust["trust_name"] or linked_trust["trust_id"] }}
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('property_detail', property_id=prop['property_id']) }}">Back to Property Detail</a>
+    |
+    <a href="{{ url_for('property_ac1_completion_report_pdf', property_id=prop['property_id']) }}">AC-1 Completion Report</a>
+    |
+    <a href="{{ url_for('property_resolution_queue', property_id=prop['property_id']) }}">Resolution Queue</a>
+</p>
+
+<hr>
+
+<div style="border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:18px;
+            background:{% if archive_packet.packet_status == 'Archive Ready' %}#e8f8ec{% else %}#fff4e5{% endif %};">
+    <h2 style="margin-top:0;">{{ archive_packet.packet_status }}</h2>
+    <p><strong>Archive Badge:</strong> {{ archive_packet.archive_badge }}</p>
+    <p><strong>Resolution Status:</strong> {{ archive_packet.resolution_status }}</p>
+    <p><strong>Resolution Archive Badge:</strong> {{ archive_packet.resolution_archive_badge }}</p>
+</div>
+
+<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Packet Reports</strong><br>
+        {{ archive_packet.packet_item_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Evidence Items</strong><br>
+        {{ archive_packet.evidence_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Custody Events</strong><br>
+        {{ archive_packet.custody_event_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Timeline Items</strong><br>
+        {{ archive_packet.timeline_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Resolved / Unresolved</strong><br>
+        {{ archive_packet.resolved_references }} / {{ archive_packet.unresolved_references }}
+    </div>
+</div>
+
+<h2>Archive Packet Manifest</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Item ID</th>
+            <th>Section</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Status</th>
+            <th>Open</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in archive_packet.packet_items %}
+        <tr>
+            <td>{{ item.packet_item_id }}</td>
+            <td>{{ item.packet_section }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.status }}</td>
+            <td><a href="{{ item.route }}">Open PDF</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
+
+<h2>Evidence Inventory for Packet</h2>
+
+{% if archive_packet.evidence_items %}
+<ul>
+    {% for item in archive_packet.evidence_items %}
+    <li>
+        <strong>{{ item.source_type|title }} {{ item.evidence_id }}:</strong>
+        {{ item.title }}
+        {% if item.category %}
+        <br><em>Category:</em> {{ item.category }}
+        {% endif %}
+        {% if item.notes %}
+        <br><em>Notes:</em> {{ item.notes }}
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No evidence items are currently linked to this archive packet.</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>AC-2 Foundation Note:</strong>
+    This page establishes the archive packet manifest. The next AC-2 step should generate a formal manifest PDF,
+    followed by a ZIP/export bundle containing the listed packet reports and evidence files.
+</p>
+{% endblock %}

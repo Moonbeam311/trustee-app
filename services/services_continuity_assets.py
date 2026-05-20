@@ -656,3 +656,93 @@ def build_property_resolution_queue(property_id):
         "resolution_status": "Clean" if unresolved_count == 0 else "Cleanup Needed",
         "archive_badge": "Resolution Archive Ready" if unresolved_count == 0 else "Resolution Cleanup Open",
     }
+
+
+
+# ===================================================
+# AC-2 ASSET CONTINUITY ARCHIVE / PACKET FOUNDATION
+# ===================================================
+
+def build_asset_continuity_archive_packet(property_id):
+    evidence_profile = build_property_evidence_profile(property_id)
+    timeline_profile = build_property_evidence_custody_timeline(property_id)
+    timeline_summary = summarize_property_evidence_custody_timeline(property_id)
+    queue_profile = build_property_resolution_queue(property_id)
+
+    custody_events = [
+        dict(event)
+        for event in get_custody_events_for_property(property_id)
+    ]
+
+    packet_items = [
+        {
+            "packet_item_id": "AC2-001",
+            "title": "Continuity Asset Detail Report",
+            "description": "Continuity classification, custody classification, preservation notes, and readiness audit.",
+            "route": f"/property/{property_id}/continuity/pdf",
+            "status": "available",
+            "packet_section": "Core Reports",
+        },
+        {
+            "packet_item_id": "AC2-002",
+            "title": "Continuity Chain-of-Custody Report",
+            "description": "Custody event history and evidence resolution details.",
+            "route": f"/property/{property_id}/custody-log/pdf",
+            "status": "available",
+            "packet_section": "Core Reports",
+        },
+        {
+            "packet_item_id": "AC2-003",
+            "title": "Evidence / Custody Timeline Report",
+            "description": "Combined timeline of evidence records and custody events.",
+            "route": f"/property/{property_id}/timeline/pdf",
+            "status": "available",
+            "packet_section": "Core Reports",
+        },
+        {
+            "packet_item_id": "AC2-004",
+            "title": "Evidence Resolution Queue Report",
+            "description": "Unresolved/manual custody references and available evidence options.",
+            "route": f"/property/{property_id}/resolution-queue/pdf",
+            "status": "available",
+            "packet_section": "Resolution Reports",
+        },
+        {
+            "packet_item_id": "AC2-005",
+            "title": "AC-1 Final Audit Snapshot / Completion Report",
+            "description": "Final AC-1 readiness, evidence, custody, timeline, and completion assessment.",
+            "route": f"/property/{property_id}/ac1-completion-report/pdf",
+            "status": "available",
+            "packet_section": "Final Audit",
+        },
+    ]
+
+    evidence_items = []
+
+    for item in evidence_profile.get("evidence_items", []):
+        evidence_items.append({
+            "evidence_id": item.get("evidence_id"),
+            "source_type": item.get("source_type"),
+            "title": item.get("title") or item.get("filename") or "Untitled evidence item",
+            "category": item.get("category"),
+            "notes": item.get("notes"),
+            "file_path": item.get("file_path"),
+        })
+
+    unresolved_count = queue_profile.get("unresolved_count", 0)
+
+    return {
+        "property_id": property_id,
+        "packet_status": "Archive Ready" if unresolved_count == 0 else "Archive Pending Cleanup",
+        "archive_badge": "Ready for AC-2 Packet Assembly" if unresolved_count == 0 else "Cleanup Required Before Final Archive",
+        "packet_items": packet_items,
+        "packet_item_count": len(packet_items),
+        "evidence_items": evidence_items,
+        "evidence_count": evidence_profile.get("evidence_count", 0),
+        "custody_event_count": len(custody_events),
+        "timeline_count": timeline_summary.get("timeline_count", 0),
+        "resolved_references": timeline_summary.get("resolved_references", 0),
+        "unresolved_references": timeline_summary.get("unresolved_references", 0),
+        "resolution_status": queue_profile.get("resolution_status"),
+        "resolution_archive_badge": queue_profile.get("archive_badge"),
+    }

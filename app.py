@@ -169,7 +169,8 @@ from services.services_continuity_assets import (
     build_property_evidence_custody_timeline,
     summarize_property_evidence_custody_timeline,
     update_custody_event_supporting_reference,
-    build_property_resolution_queue
+    build_property_resolution_queue,
+    build_asset_continuity_archive_packet
 )
 
 from services.services_articles import (
@@ -4604,6 +4605,29 @@ def generate_ac1_completion_report_pdf(prop, trust=None):
     buffer.seek(0)
 
     return buffer
+
+
+
+
+@app.route("/property/<property_id>/archive-packet")
+@require_permission("view_dashboard")
+def property_archive_packet(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+
+    return render_template(
+        "property_archive_packet.html",
+        prop=prop_data,
+        linked_trust=linked_trust,
+        archive_packet=archive_packet
+    )
 
 
 @app.route("/property/<property_id>/ac1-completion-report/pdf")
