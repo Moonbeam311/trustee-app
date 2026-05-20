@@ -3412,8 +3412,13 @@ def generate_continuity_asset_dashboard_pdf(assets, total_asset_count, filters=N
             story.append(Paragraph(f"<b>Evidence Items:</b> {safe(evidence_profile.get('evidence_count'))}", body_style))
             story.append(Paragraph(f"<b>Timeline Items:</b> {safe(timeline_summary.get('timeline_count'))}", body_style))
             story.append(Paragraph(f"<b>Custody Events:</b> {safe(timeline_summary.get('custody_event_count'))}", body_style))
-            story.append(Paragraph(f"<b>Resolved References:</b> {safe(timeline_summary.get('resolved_references'))}", body_style))
-            story.append(Paragraph(f"<b>Unresolved References:</b> {safe(timeline_summary.get('unresolved_references'))}", body_style))
+            resolved_count = timeline_summary.get("resolved_references") or 0
+            unresolved_count = timeline_summary.get("unresolved_references") or 0
+            resolution_status = "Clean" if unresolved_count == 0 else "Cleanup Needed"
+
+            story.append(Paragraph(f"<b>Resolved References:</b> {safe(resolved_count)}", body_style))
+            story.append(Paragraph(f"<b>Unresolved / Manual References:</b> {safe(unresolved_count)}", body_style))
+            story.append(Paragraph(f"<b>Resolution Status:</b> {safe(resolution_status)}", body_style))
             story.append(Paragraph(f"<b>Missing Readiness Items:</b> {safe('; '.join(readiness.get('missing') or []) or 'No missing readiness items')}", body_style))
 
             if evidence_profile.get("evidence_items"):
@@ -4028,6 +4033,29 @@ def generate_evidence_custody_timeline_pdf(prop, trust=None, timeline_profile=No
     label_value("Evidence Items", timeline_profile.get("evidence_count"))
     label_value("Custody Events", timeline_profile.get("custody_event_count"))
 
+    resolved_references = 0
+    unresolved_references = 0
+
+    for timeline_item in timeline_profile.get("timeline") or []:
+        if timeline_item.get("timeline_type") != "custody_event":
+            continue
+
+        reference = timeline_item.get("reference")
+
+        if not reference:
+            continue
+
+        if timeline_item.get("resolved_evidence_label"):
+            resolved_references += 1
+        else:
+            unresolved_references += 1
+
+    resolution_status = "Clean" if unresolved_references == 0 else "Cleanup Needed"
+
+    label_value("Resolved References", resolved_references)
+    label_value("Unresolved / Manual References", unresolved_references)
+    label_value("Resolution Status", resolution_status)
+
     active_filters = timeline_profile.get("active_filters") or {}
     filter_lines = []
 
@@ -4067,6 +4095,15 @@ def generate_evidence_custody_timeline_pdf(prop, trust=None, timeline_profile=No
 
             label_value("Location", item.get("location_reference"))
             label_value("Supporting Reference", item.get("reference"))
+
+            if item.get("timeline_type") == "custody_event":
+                if item.get("reference") and item.get("resolved_evidence_label"):
+                    label_value("Resolution Status", "Resolved Evidence Reference")
+                elif item.get("reference"):
+                    label_value("Resolution Status", "Unresolved Manual Reference — Cleanup Needed")
+                else:
+                    label_value("Resolution Status", "No Supporting Reference Entered")
+
             label_value("Resolved Evidence", item.get("resolved_evidence_label"))
             label_value("Notes", item.get("description"))
             label_value("Recorded By", item.get("recorded_by"))
