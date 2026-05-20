@@ -3273,6 +3273,152 @@ def continuity_asset_dashboard():
     )
 
 
+
+
+# ===================================================
+# AC-1 CONTINUITY ASSET PDF REPORT
+# ===================================================
+
+def generate_continuity_asset_pdf(prop, trust=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ContinuityAssetTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "ContinuityAssetSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ContinuityAssetBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("Continuity Asset Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+    label_value("Identifier / Address / URL", prop_data.get("address_or_identifier"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Continuity Classification", section_style))
+    label_value("Continuity Classification", (prop_data.get("continuity_classification") or "").replace("_", " ").title())
+    label_value("Custody Classification", (prop_data.get("custody_classification") or "").replace("_", " ").title())
+    label_value("Continuity Priority", prop_data.get("continuity_priority"))
+    label_value("Restricted Access Level", prop_data.get("restricted_access_level"))
+    label_value("Lineage Association", prop_data.get("lineage_association"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Custody / Stewardship Flags", section_style))
+    label_value("Memorial Custody Item", "Yes" if prop_data.get("memorial_status") else "No")
+    label_value("Sacred / Protected Heritage Property", "Yes" if prop_data.get("sacred_status") else "No")
+    label_value("Custodian / Manager", prop_data.get("custodian"))
+    label_value("Responsible Party", prop_data.get("responsible_party"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Preservation Doctrine", section_style))
+    label_value("Heritage Significance", prop_data.get("heritage_significance"))
+    label_value("Preservation Requirements", prop_data.get("preservation_requirements"))
+    label_value("Continuity Notes", prop_data.get("continuity_notes"))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Classification Reminder", section_style))
+    story.append(
+        Paragraph(
+            "Heritage, memorial, sacred, lineage, and biological keepsake records should be handled "
+            "as stewardship or custody records, not ordinary commercial property.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/continuity/pdf")
+@require_permission("view_dashboard")
+def property_continuity_profile_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    linked_trust = get_trust_by_id(prop["trust_id"])
+
+    pdf_buffer = generate_continuity_asset_pdf(prop, linked_trust)
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_Continuity_Asset_Report.pdf"
+    )
+
+
 @app.route("/property/<property_id>/continuity", methods=["GET", "POST"])
 @require_permission("view_dashboard")
 def property_continuity_profile(property_id):

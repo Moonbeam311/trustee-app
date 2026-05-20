@@ -89,6 +89,11 @@
     <p><strong>Continuity Notes:</strong> {{ prop.continuity_notes or 'Not entered' }}</p>
 
     <p>
+        
+        <a href="{{ url_for('property_continuity_profile_pdf', property_id=prop['property_id']) }}">
+            Download Continuity Report PDF
+        </a>
+        <br>
         <a href="/property/{{ prop.property_id }}/continuity">
             Edit Continuity Asset Profile
         </a>

@@ -10,6 +10,8 @@
 
 <p>
     <a href="{{ url_for('property_detail', property_id=prop['property_id']) }}">Back to Property Detail</a>
+    |
+    <a href="{{ url_for('property_continuity_profile_pdf', property_id=prop['property_id']) }}">Download Continuity Report PDF</a>
 </p>
 
 <hr>
