@@ -301,6 +301,13 @@
                 </div>
 
                 <div>
+                    <div class="continuity-field-label">Evidence Items</div>
+                    <div class="continuity-field-value">
+                        {{ asset["evidence_count"] or 0 }}
+                    </div>
+                </div>
+
+                <div>
                     <div class="continuity-field-label">Readiness Missing Items</div>
                     <div class="continuity-field-value">
                         {% if readiness["missing"] %}

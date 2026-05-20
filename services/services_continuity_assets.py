@@ -243,9 +243,11 @@ def get_custody_event_by_id(custody_event_id):
 # AC-1 CONTINUITY ASSET READINESS SCORING
 # ===================================================
 
-def score_continuity_asset_readiness(asset, custody_events=None):
+def score_continuity_asset_readiness(asset, custody_events=None, evidence_profile=None):
     asset = dict(asset)
     custody_events = custody_events or []
+    evidence_profile = evidence_profile or build_property_evidence_profile(asset.get("property_id"))
+    evidence_count = evidence_profile.get("evidence_count", 0)
 
     checks = [
         {
@@ -289,6 +291,12 @@ def score_continuity_asset_readiness(asset, custody_events=None):
             "label": "At least one custody event recorded",
             "passed": len(custody_events) > 0,
             "weight": 15,
+        },
+        {
+            "key": "supporting_evidence",
+            "label": "At least one supporting evidence document or media record linked",
+            "passed": evidence_count > 0,
+            "weight": 10,
         },
         {
             "key": "continuity_notes",

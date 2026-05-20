@@ -3239,7 +3239,13 @@ def get_filtered_continuity_asset_rows():
             asset_data = dict(asset)
             asset_data["trust_name"] = trust["trust_name"]
             custody_events = get_custody_events_for_property(asset_data["property_id"])
-            asset_data["readiness"] = score_continuity_asset_readiness(asset_data, custody_events)
+            evidence_profile = build_property_evidence_profile(asset_data["property_id"])
+            asset_data["evidence_count"] = evidence_profile.get("evidence_count", 0)
+            asset_data["readiness"] = score_continuity_asset_readiness(
+                asset_data,
+                custody_events,
+                evidence_profile
+            )
             dashboard_rows.append(asset_data)
 
     filtered_rows = []
@@ -3443,7 +3449,13 @@ def continuity_asset_dashboard():
             asset_data = dict(asset)
             asset_data["trust_name"] = trust["trust_name"]
             custody_events = get_custody_events_for_property(asset_data["property_id"])
-            asset_data["readiness"] = score_continuity_asset_readiness(asset_data, custody_events)
+            evidence_profile = build_property_evidence_profile(asset_data["property_id"])
+            asset_data["evidence_count"] = evidence_profile.get("evidence_count", 0)
+            asset_data["readiness"] = score_continuity_asset_readiness(
+                asset_data,
+                custody_events,
+                evidence_profile
+            )
             dashboard_rows.append(asset_data)
 
     filtered_rows = []
