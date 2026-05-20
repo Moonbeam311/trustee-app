@@ -4105,11 +4105,62 @@ def property_evidence_custody_timeline(property_id):
     linked_trust = get_trust_by_id(prop_data.get("trust_id"))
     timeline_profile = build_property_evidence_custody_timeline(property_id)
 
+    selected_type = (request.args.get("type") or "").strip()
+    selected_resolved = (request.args.get("resolved") or "").strip()
+    selected_action = (request.args.get("action") or "").strip()
+    start_date = (request.args.get("start_date") or "").strip()
+    end_date = (request.args.get("end_date") or "").strip()
+
+    timeline = timeline_profile.get("timeline", [])
+
+    filtered_timeline = []
+
+    for item in timeline:
+        if selected_type and item.get("timeline_type") != selected_type:
+            continue
+
+        if selected_resolved == "yes" and not item.get("resolved_evidence_label"):
+            continue
+
+        if selected_resolved == "no" and item.get("resolved_evidence_label"):
+            continue
+
+        if selected_action and item.get("timeline_type") == "custody_event":
+            if item.get("title") != selected_action.replace("_", " ").title():
+                continue
+
+        item_date = item.get("sort_date") or ""
+
+        if start_date and item_date and item_date < start_date:
+            continue
+
+        if end_date and item_date and item_date > end_date:
+            continue
+
+        filtered_timeline.append(item)
+
+    action_options = sorted({
+        item.get("title")
+        for item in timeline
+        if item.get("timeline_type") == "custody_event" and item.get("title")
+    })
+
+    filtered_profile = dict(timeline_profile)
+    filtered_profile["timeline"] = filtered_timeline
+    filtered_profile["filtered_count"] = len(filtered_timeline)
+    filtered_profile["unfiltered_count"] = len(timeline)
+
     return render_template(
         "property_evidence_custody_timeline.html",
         prop=prop_data,
         linked_trust=linked_trust,
-        timeline_profile=timeline_profile
+        timeline_profile=filtered_profile,
+        selected_type=selected_type,
+        selected_resolved=selected_resolved,
+        selected_action=selected_action,
+        start_date=start_date,
+        end_date=end_date,
+        action_options=action_options
     )
 
 

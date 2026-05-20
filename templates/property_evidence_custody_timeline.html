@@ -25,12 +25,71 @@
     <a href="{{ url_for('property_evidence_custody_timeline_pdf', property_id=prop['property_id']) }}">Download Timeline PDF</a>
 </p>
 
+
+<hr>
+
+<h2>Timeline Filters</h2>
+
+<form method="GET" action="{{ url_for('property_evidence_custody_timeline', property_id=prop['property_id']) }}"
+      style="border:1px solid #ddd; padding:14px; border-radius:8px; background:#fafafa; margin-bottom:18px;">
+
+    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px;">
+
+        <div>
+            <label><strong>Timeline Type</strong></label><br>
+            <select name="type" style="width:100%; padding:8px;">
+                <option value="">All Items</option>
+                <option value="evidence" {% if selected_type == "evidence" %}selected{% endif %}>Evidence Only</option>
+                <option value="custody_event" {% if selected_type == "custody_event" %}selected{% endif %}>Custody Events Only</option>
+            </select>
+        </div>
+
+        <div>
+            <label><strong>Evidence Resolution</strong></label><br>
+            <select name="resolved" style="width:100%; padding:8px;">
+                <option value="">All</option>
+                <option value="yes" {% if selected_resolved == "yes" %}selected{% endif %}>Resolved Evidence Only</option>
+                <option value="no" {% if selected_resolved == "no" %}selected{% endif %}>Unresolved / Manual References</option>
+            </select>
+        </div>
+
+        <div>
+            <label><strong>Custody Action</strong></label><br>
+            <select name="action" style="width:100%; padding:8px;">
+                <option value="">All Actions</option>
+                {% for action in action_options %}
+                <option value="{{ action.replace(' ', '_').lower() }}" {% if selected_action == action.replace(' ', '_').lower() %}selected{% endif %}>
+                    {{ action }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            <label><strong>Start Date</strong></label><br>
+            <input type="date" name="start_date" value="{{ start_date or '' }}" style="width:100%; padding:8px;">
+        </div>
+
+        <div>
+            <label><strong>End Date</strong></label><br>
+            <input type="date" name="end_date" value="{{ end_date or '' }}" style="width:100%; padding:8px;">
+        </div>
+    </div>
+
+    <p style="margin-top:12px;">
+        <button type="submit">Apply Timeline Filters</button>
+        <a href="{{ url_for('property_evidence_custody_timeline', property_id=prop['property_id']) }}">Clear Filters</a>
+    </p>
+</form>
+
 <hr>
 
 <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
     <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
-        <strong>Total Timeline Items</strong><br>
-        {{ timeline_profile.timeline_count }}
+        <strong>Visible Timeline Items</strong><br>
+        {{ timeline_profile.filtered_count if timeline_profile.filtered_count is defined else timeline_profile.timeline_count }}
+        <br>
+        <small>of {{ timeline_profile.unfiltered_count if timeline_profile.unfiltered_count is defined else timeline_profile.timeline_count }} total</small>
     </div>
     <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
         <strong>Evidence Items</strong><br>
