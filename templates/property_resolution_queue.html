@@ -21,6 +21,8 @@
     <a href="{{ url_for('property_custody_log', property_id=prop['property_id']) }}">Chain-of-Custody Log</a>
     |
     <a href="{{ url_for('property_evidence_custody_timeline', property_id=prop['property_id'], resolved='no') }}">Filtered Timeline Queue</a>
+    |
+    <a href="{{ url_for('property_resolution_queue_pdf', property_id=prop['property_id']) }}">Download Queue PDF</a>
 </p>
 
 <hr>

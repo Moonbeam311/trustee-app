@@ -4204,6 +4204,191 @@ def property_evidence_custody_timeline_pdf(property_id):
 
 
 
+
+
+# ===================================================
+# AC-1 RESOLUTION QUEUE PDF EXPORT
+# ===================================================
+
+def generate_resolution_queue_pdf(prop, trust=None, queue_profile=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    queue_profile = queue_profile or build_property_resolution_queue(prop_data.get("property_id"))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ResolutionQueueTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "ResolutionQueueSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ResolutionQueueBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("Evidence Resolution Queue Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Queue Summary", section_style))
+    label_value("Unresolved Custody Events", queue_profile.get("unresolved_count"))
+    label_value("Linked Evidence Items", queue_profile.get("evidence_count"))
+
+    if queue_profile.get("unresolved_count", 0) == 0:
+        label_value("Resolution Status", "Clean")
+    else:
+        label_value("Resolution Status", "Cleanup Needed")
+
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Unresolved Custody Events", section_style))
+
+    unresolved_events = queue_profile.get("unresolved_events") or []
+
+    if not unresolved_events:
+        story.append(Paragraph("No unresolved manual custody references remain for this asset.", body_style))
+    else:
+        for event in unresolved_events:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(event.get('custody_event_id'))}</b>",
+                    body_style
+                )
+            )
+            label_value("Event Date", event.get("event_date"))
+            label_value("Custody Action", (event.get("custody_action") or "").replace("_", " ").title())
+            label_value("Manual Reference", event.get("supporting_document_reference"))
+            label_value("Acting Capacity", event.get("acting_capacity"))
+            label_value("Location Reference", event.get("location_reference"))
+            label_value("Recorded By", event.get("recorded_by"))
+            label_value("Cleanup Action", "Resolve manual reference into linked evidence")
+            story.append(Spacer(1, 8))
+
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Available Evidence Options", section_style))
+
+    evidence_items = queue_profile.get("evidence_items") or []
+
+    if not evidence_items:
+        story.append(Paragraph("No linked evidence items are available for this property.", body_style))
+    else:
+        for item in evidence_items:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(item.get('source_type')).title()} {safe(item.get('evidence_id'))}</b> — "
+                    f"{safe(item.get('title') or item.get('filename') or 'Untitled evidence item')}",
+                    body_style
+                )
+            )
+            label_value("Category", item.get("category"))
+            label_value("Notes", item.get("notes"))
+            story.append(Spacer(1, 6))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Resolution Queue Purpose", section_style))
+    story.append(
+        Paragraph(
+            "This report isolates custody events with manual or unresolved references so they can be converted "
+            "into linked evidence references.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/resolution-queue/pdf")
+@require_permission("view_dashboard")
+def property_resolution_queue_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    queue_profile = build_property_resolution_queue(property_id)
+
+    pdf_buffer = generate_resolution_queue_pdf(
+        prop_data,
+        linked_trust,
+        queue_profile
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_Evidence_Resolution_Queue.pdf"
+    )
+
+
 @app.route("/property/<property_id>/resolution-queue")
 @require_permission("view_dashboard")
 def property_resolution_queue(property_id):
