@@ -617,3 +617,38 @@ def update_custody_event_supporting_reference(custody_event_id, supporting_docum
     conn.close()
 
     return updated > 0
+
+
+
+# ===================================================
+# AC-1 RESOLUTION QUEUE HELPERS
+# ===================================================
+
+def build_property_resolution_queue(property_id):
+    custody_events = enrich_custody_events_with_evidence(
+        property_id,
+        get_custody_events_for_property(property_id)
+    )
+
+    unresolved = []
+
+    for event in custody_events:
+        reference = event.get("supporting_document_reference")
+
+        if not reference:
+            continue
+
+        if event.get("supporting_evidence_label"):
+            continue
+
+        unresolved.append(event)
+
+    evidence_profile = build_property_evidence_profile(property_id)
+
+    return {
+        "property_id": property_id,
+        "unresolved_events": unresolved,
+        "unresolved_count": len(unresolved),
+        "evidence_count": evidence_profile.get("evidence_count", 0),
+        "evidence_items": evidence_profile.get("evidence_items", []),
+    }

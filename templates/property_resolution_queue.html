@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Evidence Resolution Queue</h1>
+
+<p>
+    <strong>Property:</strong> {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Property ID:</strong> {{ prop["property_id"] }}
+    {% if linked_trust %}
+    |
+    <strong>Trust:</strong> {{ linked_trust["trust_name"] or linked_trust["trust_id"] }}
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('property_detail', property_id=prop['property_id']) }}">Back to Property Detail</a>
+    |
+    <a href="{{ url_for('property_custody_log', property_id=prop['property_id']) }}">Chain-of-Custody Log</a>
+    |
+    <a href="{{ url_for('property_evidence_custody_timeline', property_id=prop['property_id'], resolved='no') }}">Filtered Timeline Queue</a>
+</p>
+
+<hr>
+
+<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Unresolved Custody Events</strong><br>
+        {{ queue_profile.unresolved_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Linked Evidence Items</strong><br>
+        {{ queue_profile.evidence_count }}
+    </div>
+</div>
+
+{% if queue_profile.unresolved_events %}
+<table border="1" cellpadding="8" cellspacing="0" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Event ID</th>
+            <th>Date</th>
+            <th>Action</th>
+            <th>Manual Reference</th>
+            <th>Capacity</th>
+            <th>Location</th>
+            <th>Recorded By</th>
+            <th>Resolve</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for event in queue_profile.unresolved_events %}
+        <tr>
+            <td>{{ event["custody_event_id"] }}</td>
+            <td>{{ event["event_date"] or "Not entered" }}</td>
+            <td>{{ (event["custody_action"] or "Not entered").replace("_", " ").title() }}</td>
+            <td>{{ event["supporting_document_reference"] or "Not entered" }}</td>
+            <td>{{ event["acting_capacity"] or "Not entered" }}</td>
+            <td>{{ event["location_reference"] or "Not entered" }}</td>
+            <td>{{ event["recorded_by"] or "unknown" }}</td>
+            <td>
+                <a href="{{ url_for(
+                    'resolve_custody_event_evidence',
+                    property_id=prop['property_id'],
+                    custody_event_id=event['custody_event_id']
+                ) }}">
+                    Resolve Evidence
+                </a>
+            </td>
+        </tr>
+        {% if event["notes"] %}
+        <tr>
+            <td colspan="8">
+                <strong>Notes:</strong> {{ event["notes"] }}
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No unresolved manual custody references remain for this asset.</p>
+{% endif %}
+
+<hr>
+
+<h2>Available Evidence</h2>
+
+{% if queue_profile.evidence_items %}
+<ul>
+    {% for item in queue_profile.evidence_items %}
+    <li>
+        <strong>{{ item.source_type|title }} {{ item.evidence_id }}:</strong>
+        {{ item.title or item.filename or "Untitled evidence item" }}
+        {% if item.category %}
+        <br><em>Category:</em> {{ item.category }}
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No linked evidence items are available yet.</p>
+<p>
+    <a href="{{ url_for('upload_document', property_id=prop['property_id'], trust_id=prop['trust_id'], evidence='1') }}">
+        Upload Supporting Evidence
+    </a>
+</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>Resolution Queue Purpose:</strong>
+    This page isolates custody events with manual or unresolved references so they can be converted into linked evidence references.
+</p>
+{% endblock %}

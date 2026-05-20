@@ -168,7 +168,8 @@ from services.services_continuity_assets import (
     resolve_evidence_reference,
     build_property_evidence_custody_timeline,
     summarize_property_evidence_custody_timeline,
-    update_custody_event_supporting_reference
+    update_custody_event_supporting_reference,
+    build_property_resolution_queue
 )
 
 from services.services_articles import (
@@ -4198,6 +4199,29 @@ def property_evidence_custody_timeline_pdf(property_id):
         mimetype="application/pdf",
         as_attachment=True,
         download_name=f"{property_id}_Evidence_Custody_Timeline.pdf"
+    )
+
+
+
+
+@app.route("/property/<property_id>/resolution-queue")
+@require_permission("view_dashboard")
+def property_resolution_queue(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    queue_profile = build_property_resolution_queue(property_id)
+
+    return render_template(
+        "property_resolution_queue.html",
+        prop=prop_data,
+        linked_trust=linked_trust,
+        queue_profile=queue_profile
     )
 
 
