@@ -5283,6 +5283,213 @@ def generate_archive_finalization_certificate_pdf(prop, trust=None, archive_pack
     return buffer
 
 
+
+
+# ===================================================
+# AC-2 FINALIZATION HISTORY REPORT PDF
+# ===================================================
+
+def generate_archive_finalization_history_pdf(prop, trust=None, finalizations=None, archive_packet=None, integrity_profile=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    property_id = prop_data.get("property_id")
+
+    archive_packet = archive_packet or build_asset_continuity_archive_packet(property_id)
+    integrity_profile = integrity_profile or build_archive_integrity_from_generated_zip(
+        prop_data,
+        trust_data,
+        archive_packet
+    )
+
+    finalizations = finalizations or []
+    finalizations = [dict(item) for item in finalizations]
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ArchiveFinalizationHistoryTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "ArchiveFinalizationHistorySection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ArchiveFinalizationHistoryBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("AC-2 Archive Finalization History Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Current Packet Conditions", section_style))
+    label_value("Packet Status", archive_packet.get("packet_status"))
+    label_value("Archive Badge", archive_packet.get("archive_badge"))
+    label_value("Resolution Status", archive_packet.get("resolution_status"))
+    label_value("Integrity Status", integrity_profile.get("integrity_status"))
+    label_value("Expected ZIP Items", integrity_profile.get("expected_count"))
+    label_value("Included Expected ZIP Items", integrity_profile.get("included_count"))
+    label_value("Missing ZIP Items", integrity_profile.get("missing_count"))
+    label_value("Resolved Evidence References", archive_packet.get("resolved_references"))
+    label_value("Unresolved Manual References", archive_packet.get("unresolved_references"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Finalization Record Summary", section_style))
+    label_value("Finalization Record Count", len(finalizations))
+
+    latest = finalizations[0] if finalizations else None
+
+    if latest:
+        label_value("Latest Finalization ID", latest.get("finalization_id"))
+        label_value("Latest Finalized Status", latest.get("finalized_status"))
+        label_value("Latest Finalized By", latest.get("finalized_by"))
+        label_value("Latest Finalized At", latest.get("finalized_at"))
+    else:
+        label_value("Latest Finalization ID", "No finalization record found")
+        label_value("Latest Finalized Status", "Not Finalized")
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Finalization History", section_style))
+
+    if not finalizations:
+        story.append(
+            Paragraph(
+                "No archive finalization records have been created for this packet.",
+                body_style
+            )
+        )
+    else:
+        for item in finalizations:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(item.get('finalization_id'))}</b>",
+                    body_style
+                )
+            )
+            label_value("Finalized Status", item.get("finalized_status"))
+            label_value("Packet Status", item.get("packet_status"))
+            label_value("Integrity Status", item.get("integrity_status"))
+            label_value("Resolution Status", item.get("resolution_status"))
+            label_value("Archive Badge", item.get("archive_badge"))
+            label_value("Finalized By", item.get("finalized_by"))
+            label_value("Finalized At", item.get("finalized_at"))
+            label_value("Notes", item.get("notes"))
+            story.append(Spacer(1, 8))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Finalization History Note", section_style))
+    story.append(
+        Paragraph(
+            "This report records archive packet lock/finalization decisions over time. "
+            "Use it with the finalization certificate, archive integrity report, archive manifest, and archive ZIP.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/archive-packet/finalization-history/pdf")
+@require_permission("view_dashboard")
+def property_archive_finalization_history_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+    integrity_profile = build_archive_integrity_from_generated_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+    finalizations = [
+        dict(row)
+        for row in get_archive_finalizations_for_property(property_id)
+    ]
+
+    pdf_buffer = generate_archive_finalization_history_pdf(
+        prop_data,
+        linked_trust,
+        finalizations,
+        archive_packet,
+        integrity_profile
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_AC2_Finalization_History_Report.pdf"
+    )
+
+
 @app.route("/property/<property_id>/archive-packet/finalization-certificate/pdf")
 @require_permission("view_dashboard")
 def property_archive_finalization_certificate_pdf(property_id):

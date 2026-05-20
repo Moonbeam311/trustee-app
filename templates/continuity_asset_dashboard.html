@@ -358,6 +358,10 @@
                             <a href="{{ url_for('property_archive_finalization_certificate_pdf', property_id=asset['property_id']) }}">
                                 Download Finalization Certificate
                             </a>
+                            <br>
+                            <a href="{{ url_for('property_archive_finalization_history_pdf', property_id=asset['property_id']) }}">
+                                Download Finalization History
+                            </a>
                         {% else %}
                             <strong>Cleanup Action:</strong> No cleanup needed<br>
                             <strong>Archive Badge:</strong> Resolution Archive Ready<br>
