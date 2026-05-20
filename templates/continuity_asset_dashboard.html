@@ -311,10 +311,20 @@
                     <div class="continuity-field-label">Timeline Summary</div>
                     <div class="continuity-field-value">
                         {% set ts = asset.get("timeline_summary") or {} %}
+                        {% set unresolved_count = ts.get("unresolved_references", 0) %}
+                        {% set resolved_count = ts.get("resolved_references", 0) %}
+                        {% set resolution_status = "Clean" if unresolved_count == 0 else "Cleanup Needed" %}
+
                         Timeline Items: {{ ts.get("timeline_count", 0) }}<br>
                         Custody Events: {{ ts.get("custody_event_count", 0) }}<br>
-                        Resolved References: {{ ts.get("resolved_references", 0) }}<br>
-                        Unresolved References: {{ ts.get("unresolved_references", 0) }}
+                        Resolved Evidence References: {{ resolved_count }}<br>
+                        Unresolved Manual References: {{ unresolved_count }}<br>
+                        <strong>Resolution Status:</strong> {{ resolution_status }}<br>
+                        {% if unresolved_count > 0 %}
+                            <strong>Cleanup Action:</strong> Resolve remaining manual references
+                        {% else %}
+                            <strong>Cleanup Action:</strong> No cleanup needed
+                        {% endif %}
                     </div>
                 </div>
 
