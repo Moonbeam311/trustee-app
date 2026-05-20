@@ -4292,11 +4292,8 @@ def generate_resolution_queue_pdf(prop, trust=None, queue_profile=None):
     story.append(Paragraph("Queue Summary", section_style))
     label_value("Unresolved Custody Events", queue_profile.get("unresolved_count"))
     label_value("Linked Evidence Items", queue_profile.get("evidence_count"))
-
-    if queue_profile.get("unresolved_count", 0) == 0:
-        label_value("Resolution Status", "Clean")
-    else:
-        label_value("Resolution Status", "Cleanup Needed")
+    label_value("Resolution Status", queue_profile.get("resolution_status"))
+    label_value("Archive Badge", queue_profile.get("archive_badge"))
 
     story.append(Spacer(1, 10))
 

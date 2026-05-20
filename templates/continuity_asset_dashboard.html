@@ -322,6 +322,7 @@
                         <strong>Resolution Status:</strong> {{ resolution_status }}<br>
                         {% if unresolved_count > 0 %}
                             <strong>Cleanup Action:</strong> Resolve remaining manual references<br>
+                            <strong>Archive Badge:</strong> Resolution Cleanup Open<br>
                             <a href="{{ url_for('property_resolution_queue', property_id=asset['property_id']) }}">
                                 Open Resolution Queue
                             </a>
@@ -330,7 +331,11 @@
                                 Download Queue PDF
                             </a>
                         {% else %}
-                            <strong>Cleanup Action:</strong> No cleanup needed
+                            <strong>Cleanup Action:</strong> No cleanup needed<br>
+                            <strong>Archive Badge:</strong> Resolution Archive Ready<br>
+                            <a href="{{ url_for('property_resolution_queue', property_id=asset['property_id']) }}">
+                                View Clean Queue
+                            </a>
                         {% endif %}
                     </div>
                 </div>

@@ -27,6 +27,26 @@
 
 <hr>
 
+
+<div style="border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:18px;
+            background:{% if queue_profile.resolution_status == 'Clean' %}#e8f8ec{% else %}#fff4e5{% endif %};">
+    <h2 style="margin-top:0;">
+        {% if queue_profile.resolution_status == 'Clean' %}
+            ✅ Resolution Queue Clean
+        {% else %}
+            ⚠ Resolution Cleanup Needed
+        {% endif %}
+    </h2>
+    <p><strong>Status:</strong> {{ queue_profile.resolution_status }}</p>
+    <p><strong>Archive Badge:</strong> {{ queue_profile.archive_badge }}</p>
+
+    {% if queue_profile.resolution_status == 'Clean' %}
+    <p>No unresolved manual custody references remain. This asset’s evidence/custody resolution queue is ready for archive review.</p>
+    {% else %}
+    <p>Manual or unresolved custody references remain. Use the Resolve Evidence links below to clean the queue.</p>
+    {% endif %}
+</div>
+
 <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
     <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
         <strong>Unresolved Custody Events</strong><br>

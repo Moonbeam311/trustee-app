@@ -645,10 +645,14 @@ def build_property_resolution_queue(property_id):
 
     evidence_profile = build_property_evidence_profile(property_id)
 
+    unresolved_count = len(unresolved)
+
     return {
         "property_id": property_id,
         "unresolved_events": unresolved,
-        "unresolved_count": len(unresolved),
+        "unresolved_count": unresolved_count,
         "evidence_count": evidence_profile.get("evidence_count", 0),
         "evidence_items": evidence_profile.get("evidence_items", []),
+        "resolution_status": "Clean" if unresolved_count == 0 else "Cleanup Needed",
+        "archive_badge": "Resolution Archive Ready" if unresolved_count == 0 else "Resolution Cleanup Open",
     }
