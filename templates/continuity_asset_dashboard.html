@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .continuity-shell {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .continuity-hero {
+        border: 1px solid #ddd;
+        background: #fafafa;
+        border-radius: 10px;
+        padding: 18px;
+        margin-bottom: 18px;
+    }
+
+    .continuity-hero h1 {
+        margin-top: 0;
+        margin-bottom: 8px;
+    }
+
+    .continuity-muted {
+        color: #555;
+        line-height: 1.5;
+    }
+
+    .continuity-stats {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 16px 0;
+    }
+
+    .continuity-stat-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        padding: 12px 14px;
+        min-width: 180px;
+    }
+
+    .continuity-stat-card strong {
+        display: block;
+        font-size: 22px;
+        margin-top: 4px;
+    }
+
+    .continuity-card {
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 14px;
+    }
+
+    .continuity-card-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .continuity-title {
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .continuity-subtitle {
+        color: #555;
+        margin-top: 4px;
+    }
+
+    .continuity-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px 18px;
+        margin-top: 10px;
+    }
+
+    .continuity-field-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .continuity-field-value {
+        margin-top: 3px;
+        font-weight: 600;
+    }
+
+    .continuity-badge {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 999px;
+        border: 1px solid #ccc;
+        background: #f7f7f7;
+        font-size: 12px;
+        margin: 2px;
+    }
+
+    .continuity-badge.yes {
+        background: #e6f4ea;
+        border-color: #b7dfc2;
+    }
+
+    .continuity-badge.no {
+        background: #f5f5f5;
+        border-color: #ddd;
+        color: #666;
+    }
+
+    .continuity-actions {
+        margin-top: 12px;
+    }
+
+    .continuity-actions a {
+        display: inline-block;
+        margin-right: 8px;
+        margin-top: 6px;
+        padding: 8px 10px;
+        border: 1px solid #222;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #222;
+        background: #fff;
+    }
+
+    .continuity-empty {
+        border: 1px dashed #bbb;
+        background: #fafafa;
+        padding: 18px;
+        border-radius: 10px;
+    }
+
+    .continuity-reminder {
+        border-left: 4px solid #222;
+        background: #fafafa;
+        padding: 12px 14px;
+        margin-top: 18px;
+    }
+
+    @media (max-width: 700px) {
+        .continuity-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="continuity-shell">
+
+    <section class="continuity-hero">
+        <h1>Continuity Asset Dashboard</h1>
+
+        <p class="continuity-muted">
+            Central view of continuity-classified, heritage, memorial, sacred, lineage,
+            archival, biological keepsake, and restricted-access property records.
+        </p>
+
+        <div class="continuity-stats">
+            <div class="continuity-stat-card">
+                Total Continuity Assets
+                <strong>{{ asset_count }}</strong>
+            </div>
+        </div>
+    </section>
+
+    {% if assets %}
+        {% for asset in assets %}
+        <section class="continuity-card">
+            <div class="continuity-card-header">
+                <div>
+                    <div class="continuity-title">
+                        {{ asset["property_name"] or "Unnamed Property" }}
+                    </div>
+                    <div class="continuity-subtitle">
+                        {{ asset["property_id"] }} · {{ asset["trust_name"] or asset["trust_id"] }}
+                    </div>
+                </div>
+
+                <div>
+                    <span class="continuity-badge {% if asset['memorial_status'] %}yes{% else %}no{% endif %}">
+                        Memorial: {% if asset["memorial_status"] %}Yes{% else %}No{% endif %}
+                    </span>
+
+                    <span class="continuity-badge {% if asset['sacred_status'] %}yes{% else %}no{% endif %}">
+                        Sacred / Protected: {% if asset["sacred_status"] %}Yes{% else %}No{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="continuity-grid">
+                <div>
+                    <div class="continuity-field-label">Continuity Classification</div>
+                    <div class="continuity-field-value">
+                        {{ (asset["continuity_classification"] or "Not classified").replace("_", " ").title() }}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Custody Classification</div>
+                    <div class="continuity-field-value">
+                        {{ (asset["custody_classification"] or "Not classified").replace("_", " ").title() }}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Priority</div>
+                    <div class="continuity-field-value">
+                        {{ asset["continuity_priority"] or 0 }}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Restricted Access</div>
+                    <div class="continuity-field-value">
+                        {{ asset["restricted_access_level"] or "Not entered" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="continuity-actions">
+                <a href="{{ url_for('property_detail', property_id=asset['property_id']) }}">Open Asset Detail</a>
+                <a href="{{ url_for('property_continuity_profile', property_id=asset['property_id']) }}">Edit Continuity Profile</a>
+            </div>
+        </section>
+        {% endfor %}
+    {% else %}
+        <div class="continuity-empty">
+            <strong>No continuity assets found yet.</strong>
+            <p>
+                Create or classify a property record to begin AC-1 continuity tracking.
+            </p>
+        </div>
+    {% endif %}
+
+    <div class="continuity-reminder">
+        <strong>Classification reminder:</strong>
+        Heritage, memorial, sacred, lineage, and biological keepsake records should be handled
+        as stewardship or custody records, not ordinary commercial property.
+    </div>
+
+</div>
+{% endblock %}
