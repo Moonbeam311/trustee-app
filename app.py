@@ -3263,9 +3263,11 @@ def get_filtered_continuity_asset_rows():
             custody_events = get_custody_events_for_property(asset_data["property_id"])
             evidence_profile = build_property_evidence_profile(asset_data["property_id"])
             timeline_summary = summarize_property_evidence_custody_timeline(asset_data["property_id"])
+            latest_finalization = get_latest_archive_finalization(asset_data["property_id"])
 
             asset_data["evidence_count"] = evidence_profile.get("evidence_count", 0)
             asset_data["timeline_summary"] = timeline_summary
+            asset_data["latest_finalization"] = dict(latest_finalization) if latest_finalization else None
             asset_data["readiness"] = score_continuity_asset_readiness(
                 asset_data,
                 custody_events,
@@ -3501,9 +3503,11 @@ def continuity_asset_dashboard():
             custody_events = get_custody_events_for_property(asset_data["property_id"])
             evidence_profile = build_property_evidence_profile(asset_data["property_id"])
             timeline_summary = summarize_property_evidence_custody_timeline(asset_data["property_id"])
+            latest_finalization = get_latest_archive_finalization(asset_data["property_id"])
 
             asset_data["evidence_count"] = evidence_profile.get("evidence_count", 0)
             asset_data["timeline_summary"] = timeline_summary
+            asset_data["latest_finalization"] = dict(latest_finalization) if latest_finalization else None
             asset_data["readiness"] = score_continuity_asset_readiness(
                 asset_data,
                 custody_events,
@@ -5714,12 +5718,14 @@ def property_archive_packet(property_id):
     prop_data = dict(prop)
     linked_trust = get_trust_by_id(prop_data.get("trust_id"))
     archive_packet = build_asset_continuity_archive_packet(property_id)
+    latest_finalization = get_latest_archive_finalization(property_id)
 
     return render_template(
         "property_archive_packet.html",
         prop=prop_data,
         linked_trust=linked_trust,
-        archive_packet=archive_packet
+        archive_packet=archive_packet,
+        latest_finalization=dict(latest_finalization) if latest_finalization else None
     )
 
 

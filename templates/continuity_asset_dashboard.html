@@ -308,6 +308,22 @@
                 </div>
 
                 <div>
+                    <div class="continuity-field-label">Archive Finalization</div>
+                    <div class="continuity-field-value">
+                        {% set fin = asset.get("latest_finalization") %}
+                        {% if fin %}
+                            Finalization ID: {{ fin.get("finalization_id") }}<br>
+                            Finalized Status: {{ fin.get("finalized_status") }}<br>
+                            Finalized By: {{ fin.get("finalized_by") }}<br>
+                            Finalized At: {{ fin.get("finalized_at") }}
+                        {% else %}
+                            Finalized Status: Not Finalized<br>
+                            Archive Lock Badge: No finalization record
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
                     <div class="continuity-field-label">Timeline Summary</div>
                     <div class="continuity-field-value">
                         {% set ts = asset.get("timeline_summary") or {} %}

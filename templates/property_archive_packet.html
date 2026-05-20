@@ -39,6 +39,28 @@
 
 <hr>
 
+
+<div style="border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:18px;
+            background:{% if latest_finalization %}#e8f8ec{% else %}#fff4e5{% endif %};">
+    <h2 style="margin-top:0;">Archive Finalization Status</h2>
+
+    {% if latest_finalization %}
+        <p><strong>Finalization ID:</strong> {{ latest_finalization.finalization_id }}</p>
+        <p><strong>Finalized Status:</strong> {{ latest_finalization.finalized_status }}</p>
+        <p><strong>Finalized By:</strong> {{ latest_finalization.finalized_by }}</p>
+        <p><strong>Finalized At:</strong> {{ latest_finalization.finalized_at }}</p>
+        <p><strong>Notes:</strong> {{ latest_finalization.notes or "Not entered" }}</p>
+    {% else %}
+        <p><strong>Finalized Status:</strong> Not Finalized</p>
+        <p><strong>Badge:</strong> No archive lock record has been created yet.</p>
+        <p>
+            <a href="{{ url_for('property_archive_packet_finalize', property_id=prop['property_id']) }}">
+                Finalize / Lock Packet
+            </a>
+        </p>
+    {% endif %}
+</div>
+
 <div style="border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:18px;
             background:{% if archive_packet.packet_status == 'Archive Ready' %}#e8f8ec{% else %}#fff4e5{% endif %};">
     <h2 style="margin-top:0;">{{ archive_packet.packet_status }}</h2>
