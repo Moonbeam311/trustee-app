@@ -230,6 +230,14 @@
             <div class="continuity-actions">
                 <button type="submit">Apply Filters</button>
                 <a href="{{ url_for('continuity_asset_dashboard') }}">Clear Filters</a>
+                <a href="{{ url_for(
+                    'continuity_asset_dashboard_pdf',
+                    continuity_class=selected_continuity_class,
+                    custody_class=selected_custody_class,
+                    memorial=selected_memorial,
+                    sacred=selected_sacred,
+                    restricted=selected_restricted
+                ) }}">Download Dashboard PDF</a>
             </div>
         </form>
     </section>

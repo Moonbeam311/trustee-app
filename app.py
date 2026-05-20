@@ -3210,6 +3210,205 @@ def property_detail(property_id):
 
 
 
+
+
+# ===================================================
+# AC-1 CONTINUITY ASSET DASHBOARD PDF EXPORT
+# ===================================================
+
+def get_filtered_continuity_asset_rows():
+    trusts = get_visible_trusts_for_current_operator()
+
+    selected_continuity_class = (request.args.get("continuity_class") or "").strip()
+    selected_custody_class = (request.args.get("custody_class") or "").strip()
+    selected_memorial = (request.args.get("memorial") or "").strip()
+    selected_sacred = (request.args.get("sacred") or "").strip()
+    selected_restricted = (request.args.get("restricted") or "").strip()
+
+    dashboard_rows = []
+
+    for trust in trusts:
+        trust_id = trust["trust_id"]
+        assets = get_continuity_assets_by_trust(trust_id)
+
+        for asset in assets:
+            asset_data = dict(asset)
+            asset_data["trust_name"] = trust["trust_name"]
+            dashboard_rows.append(asset_data)
+
+    filtered_rows = []
+
+    for asset in dashboard_rows:
+        if selected_continuity_class and asset.get("continuity_classification") != selected_continuity_class:
+            continue
+
+        if selected_custody_class and asset.get("custody_classification") != selected_custody_class:
+            continue
+
+        if selected_memorial == "yes" and not asset.get("memorial_status"):
+            continue
+
+        if selected_memorial == "no" and asset.get("memorial_status"):
+            continue
+
+        if selected_sacred == "yes" and not asset.get("sacred_status"):
+            continue
+
+        if selected_sacred == "no" and asset.get("sacred_status"):
+            continue
+
+        if selected_restricted == "yes" and not asset.get("restricted_access_level"):
+            continue
+
+        if selected_restricted == "no" and asset.get("restricted_access_level"):
+            continue
+
+        filtered_rows.append(asset)
+
+    filters = {
+        "continuity_class": selected_continuity_class,
+        "custody_class": selected_custody_class,
+        "memorial": selected_memorial,
+        "sacred": selected_sacred,
+        "restricted": selected_restricted,
+    }
+
+    return filtered_rows, dashboard_rows, filters
+
+
+def generate_continuity_asset_dashboard_pdf(assets, total_asset_count, filters=None):
+
+    from io import BytesIO
+
+    filters = filters or {}
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ContinuityDashboardTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "ContinuityDashboardSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ContinuityDashboardBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def nice(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("_", " ").title()
+
+    story = []
+
+    story.append(Paragraph("Continuity Asset Dashboard Report", title_style))
+
+    story.append(Paragraph("Report Summary", section_style))
+    story.append(Paragraph(f"<b>Filtered Assets:</b> {len(assets)}", body_style))
+    story.append(Paragraph(f"<b>Total Continuity Assets:</b> {total_asset_count}", body_style))
+
+    active_filters = [
+        f"{key.replace('_', ' ').title()}: {nice(value)}"
+        for key, value in filters.items()
+        if value
+    ]
+
+    if active_filters:
+        story.append(Paragraph("<b>Active Filters:</b> " + "; ".join(active_filters), body_style))
+    else:
+        story.append(Paragraph("<b>Active Filters:</b> None", body_style))
+
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Continuity Asset Records", section_style))
+
+    if not assets:
+        story.append(Paragraph("No continuity assets matched the selected filters.", body_style))
+    else:
+        for asset in assets:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(asset.get('property_id'))} — {safe(asset.get('property_name'))}</b>",
+                    body_style
+                )
+            )
+            story.append(Paragraph(f"<b>Trust:</b> {safe(asset.get('trust_name') or asset.get('trust_id'))}", body_style))
+            story.append(Paragraph(f"<b>Continuity Class:</b> {nice(asset.get('continuity_classification'))}", body_style))
+            story.append(Paragraph(f"<b>Custody Class:</b> {nice(asset.get('custody_classification'))}", body_style))
+            story.append(Paragraph(f"<b>Priority:</b> {safe(asset.get('continuity_priority') or 0)}", body_style))
+            story.append(Paragraph(f"<b>Memorial:</b> {'Yes' if asset.get('memorial_status') else 'No'}", body_style))
+            story.append(Paragraph(f"<b>Sacred / Protected:</b> {'Yes' if asset.get('sacred_status') else 'No'}", body_style))
+            story.append(Paragraph(f"<b>Restricted Access:</b> {safe(asset.get('restricted_access_level'))}", body_style))
+            story.append(Spacer(1, 8))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Classification Reminder", section_style))
+    story.append(
+        Paragraph(
+            "Heritage, memorial, sacred, lineage, archival, and biological keepsake records "
+            "should be handled as stewardship or custody records, not ordinary commercial property.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/continuity-assets/pdf")
+@require_permission("view_dashboard")
+def continuity_asset_dashboard_pdf():
+    filtered_rows, dashboard_rows, filters = get_filtered_continuity_asset_rows()
+
+    pdf_buffer = generate_continuity_asset_dashboard_pdf(
+        filtered_rows,
+        len(dashboard_rows),
+        filters
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name="Continuity_Asset_Dashboard_Report.pdf"
+    )
+
+
 @app.route("/continuity-assets")
 @require_permission("view_dashboard")
 def continuity_asset_dashboard():
