@@ -588,3 +588,32 @@ def summarize_property_evidence_custody_timeline(property_id):
         "resolved_references": resolved_references,
         "unresolved_references": unresolved_references,
     }
+
+
+
+# ===================================================
+# AC-1 CUSTODY EVENT REFERENCE UPDATE HELPER
+# ===================================================
+
+def update_custody_event_supporting_reference(custody_event_id, supporting_document_reference):
+    """
+    Update an existing custody event so a manual reference can be converted
+    into a linked evidence reference such as DOCUMENT:DOC-001 or MEDIA:MED-001.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE continuity_custody_log
+        SET supporting_document_reference = ?
+        WHERE custody_event_id = ?
+    """, (
+        supporting_document_reference,
+        custody_event_id
+    ))
+
+    conn.commit()
+    updated = cur.rowcount
+    conn.close()
+
+    return updated > 0
