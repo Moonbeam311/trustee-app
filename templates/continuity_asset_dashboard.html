@@ -321,7 +321,14 @@
                         Unresolved Manual References: {{ unresolved_count }}<br>
                         <strong>Resolution Status:</strong> {{ resolution_status }}<br>
                         {% if unresolved_count > 0 %}
-                            <strong>Cleanup Action:</strong> Resolve remaining manual references
+                            <strong>Cleanup Action:</strong> Resolve remaining manual references<br>
+                            <a href="{{ url_for(
+                                'property_evidence_custody_timeline',
+                                property_id=asset['property_id'],
+                                resolved='no'
+                            ) }}">
+                                Open Resolution Queue
+                            </a>
                         {% else %}
                             <strong>Cleanup Action:</strong> No cleanup needed
                         {% endif %}
