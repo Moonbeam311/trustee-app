@@ -3387,8 +3387,23 @@ def generate_continuity_asset_dashboard_pdf(assets, total_asset_count, filters=N
             story.append(Paragraph(f"<b>Memorial:</b> {'Yes' if asset.get('memorial_status') else 'No'}", body_style))
             story.append(Paragraph(f"<b>Sacred / Protected:</b> {'Yes' if asset.get('sacred_status') else 'No'}", body_style))
             story.append(Paragraph(f"<b>Restricted Access:</b> {safe(asset.get('restricted_access_level'))}", body_style))
+            evidence_profile = build_property_evidence_profile(asset.get("property_id"))
+
             story.append(Paragraph(f"<b>Readiness:</b> {safe(readiness.get('score'))}% · {safe(readiness.get('status'))}", body_style))
+            story.append(Paragraph(f"<b>Evidence Items:</b> {safe(evidence_profile.get('evidence_count'))}", body_style))
             story.append(Paragraph(f"<b>Missing Readiness Items:</b> {safe('; '.join(readiness.get('missing') or []) or 'No missing readiness items')}", body_style))
+
+            if evidence_profile.get("evidence_items"):
+                for item in evidence_profile.get("evidence_items"):
+                    story.append(
+                        Paragraph(
+                            f"<b>Evidence:</b> {safe(item.get('source_type')).title()} "
+                            f"{safe(item.get('evidence_id'))} — "
+                            f"{safe(item.get('title') or item.get('filename') or 'Untitled evidence item')}",
+                            body_style
+                        )
+                    )
+
             story.append(Spacer(1, 8))
 
     story.append(Spacer(1, 12))
@@ -3619,6 +3634,28 @@ def generate_continuity_asset_pdf(prop, trust=None):
     label_value("Preservation Requirements", prop_data.get("preservation_requirements"))
     label_value("Continuity Notes", prop_data.get("continuity_notes"))
 
+    story.append(Spacer(1, 8))
+
+    evidence_profile = build_property_evidence_profile(prop_data.get("property_id"))
+
+    story.append(Paragraph("Supporting Evidence", section_style))
+    label_value("Evidence Item Count", evidence_profile.get("evidence_count"))
+
+    if evidence_profile.get("evidence_items"):
+        for item in evidence_profile.get("evidence_items"):
+            story.append(
+                Paragraph(
+                    f"<b>{safe(item.get('source_type')).title()} {safe(item.get('evidence_id'))}</b> — "
+                    f"{safe(item.get('title') or item.get('filename') or 'Untitled evidence item')}",
+                    body_style
+                )
+            )
+            label_value("Category", item.get("category"))
+            label_value("Notes", item.get("notes"))
+            story.append(Spacer(1, 6))
+    else:
+        story.append(Paragraph("No linked evidence documents or media records found.", body_style))
+
     story.append(Spacer(1, 12))
 
     story.append(Paragraph("Classification Reminder", section_style))
@@ -3751,6 +3788,28 @@ def generate_custody_log_pdf(prop, trust=None, custody_events=None):
     label_value("Readiness Score", f"{readiness.get('score')}%")
     label_value("Readiness Status", readiness.get("status"))
     label_value("Missing Readiness Items", "; ".join(readiness.get("missing") or []) or "No missing readiness items")
+
+    story.append(Spacer(1, 8))
+
+    evidence_profile = build_property_evidence_profile(prop_data.get("property_id"))
+
+    story.append(Paragraph("Supporting Evidence", section_style))
+    label_value("Evidence Item Count", evidence_profile.get("evidence_count"))
+
+    if evidence_profile.get("evidence_items"):
+        for item in evidence_profile.get("evidence_items"):
+            story.append(
+                Paragraph(
+                    f"<b>{safe(item.get('source_type')).title()} {safe(item.get('evidence_id'))}</b> — "
+                    f"{safe(item.get('title') or item.get('filename') or 'Untitled evidence item')}",
+                    body_style
+                )
+            )
+            label_value("Category", item.get("category"))
+            label_value("Notes", item.get("notes"))
+            story.append(Spacer(1, 6))
+    else:
+        story.append(Paragraph("No linked evidence documents or media records found.", body_style))
 
     story.append(Spacer(1, 8))
 
