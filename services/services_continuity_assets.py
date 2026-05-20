@@ -330,3 +330,91 @@ def score_continuity_asset_readiness(asset, custody_events=None):
         "checks": checks,
         "missing": missing,
     }
+
+
+# ===================================================
+# AC-1 CONTINUITY ASSET EVIDENCE BRIDGE HELPERS
+# ===================================================
+
+def get_evidence_documents_for_property(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM documents
+        WHERE property_id = ?
+        ORDER BY document_id ASC
+    """, (property_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows
+
+
+def get_evidence_media_for_property(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM media_records
+        WHERE related_entity_type = 'property'
+        AND related_entity_id = ?
+        ORDER BY created_at DESC
+    """, (property_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows
+
+
+def build_property_evidence_profile(property_id):
+    documents = [
+        dict(row)
+        for row in get_evidence_documents_for_property(property_id)
+    ]
+
+    media = [
+        dict(row)
+        for row in get_evidence_media_for_property(property_id)
+    ]
+
+    evidence_items = []
+
+    for doc in documents:
+        evidence_items.append({
+            "source_type": "document",
+            "evidence_id": doc.get("document_id"),
+            "title": doc.get("document_title"),
+            "category": doc.get("document_category"),
+            "filename": doc.get("original_filename") or doc.get("stored_filename"),
+            "notes": doc.get("notes"),
+            "file_path": doc.get("file_path"),
+        })
+
+    for item in media:
+        evidence_items.append({
+            "source_type": "media",
+            "evidence_id": item.get("media_id"),
+            "title": item.get("description"),
+            "category": item.get("category") or item.get("media_type"),
+            "filename": item.get("file_path"),
+            "notes": item.get("description"),
+            "file_path": item.get("file_path"),
+        })
+
+    return {
+        "property_id": property_id,
+        "documents": documents,
+        "media": media,
+        "evidence_items": evidence_items,
+        "evidence_count": len(evidence_items),
+    }
+
+
+def has_property_evidence(property_id):
+    profile = build_property_evidence_profile(property_id)
+    return profile["evidence_count"] > 0
