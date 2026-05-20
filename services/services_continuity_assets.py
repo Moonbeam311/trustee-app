@@ -552,3 +552,39 @@ def build_property_evidence_custody_timeline(property_id):
         "evidence_count": evidence_profile.get("evidence_count", 0),
         "custody_event_count": len(custody_events),
     }
+
+
+
+# ===================================================
+# AC-1 TIMELINE DASHBOARD SUMMARY HELPERS
+# ===================================================
+
+def summarize_property_evidence_custody_timeline(property_id):
+    profile = build_property_evidence_custody_timeline(property_id)
+
+    timeline = profile.get("timeline", [])
+
+    resolved_references = 0
+    unresolved_references = 0
+
+    for item in timeline:
+        if item.get("timeline_type") != "custody_event":
+            continue
+
+        reference = item.get("reference")
+
+        if not reference:
+            continue
+
+        if item.get("resolved_evidence_label"):
+            resolved_references += 1
+        else:
+            unresolved_references += 1
+
+    return {
+        "timeline_count": profile.get("timeline_count", 0),
+        "evidence_count": profile.get("evidence_count", 0),
+        "custody_event_count": profile.get("custody_event_count", 0),
+        "resolved_references": resolved_references,
+        "unresolved_references": unresolved_references,
+    }

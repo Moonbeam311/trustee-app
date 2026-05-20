@@ -308,6 +308,17 @@
                 </div>
 
                 <div>
+                    <div class="continuity-field-label">Timeline Summary</div>
+                    <div class="continuity-field-value">
+                        {% set ts = asset.get("timeline_summary") or {} %}
+                        Timeline Items: {{ ts.get("timeline_count", 0) }}<br>
+                        Custody Events: {{ ts.get("custody_event_count", 0) }}<br>
+                        Resolved References: {{ ts.get("resolved_references", 0) }}<br>
+                        Unresolved References: {{ ts.get("unresolved_references", 0) }}
+                    </div>
+                </div>
+
+                <div>
                     <div class="continuity-field-label">Readiness Missing Items</div>
                     <div class="continuity-field-value">
                         {% if readiness["missing"] %}
