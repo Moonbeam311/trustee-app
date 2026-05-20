@@ -165,7 +165,8 @@ from services.services_continuity_assets import (
     score_continuity_asset_readiness,
     build_property_evidence_profile,
     enrich_custody_events_with_evidence,
-    resolve_evidence_reference
+    resolve_evidence_reference,
+    build_property_evidence_custody_timeline
 )
 
 from services.services_articles import (
@@ -3918,6 +3919,29 @@ def property_custody_log_pdf(property_id):
         mimetype="application/pdf",
         as_attachment=True,
         download_name=f"{property_id}_Continuity_Custody_Log.pdf"
+    )
+
+
+
+
+@app.route("/property/<property_id>/timeline")
+@require_permission("view_dashboard")
+def property_evidence_custody_timeline(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    timeline_profile = build_property_evidence_custody_timeline(property_id)
+
+    return render_template(
+        "property_evidence_custody_timeline.html",
+        prop=prop_data,
+        linked_trust=linked_trust,
+        timeline_profile=timeline_profile
     )
 
 

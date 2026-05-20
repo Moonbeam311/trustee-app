@@ -490,3 +490,65 @@ def enrich_custody_events_with_evidence(property_id, custody_events):
         enriched.append(event_data)
 
     return enriched
+
+
+
+# ===================================================
+# AC-1 EVIDENCE / CUSTODY TIMELINE HELPERS
+# ===================================================
+
+def build_property_evidence_custody_timeline(property_id):
+    evidence_profile = build_property_evidence_profile(property_id)
+
+    custody_events = enrich_custody_events_with_evidence(
+        property_id,
+        get_custody_events_for_property(property_id)
+    )
+
+    timeline = []
+
+    for item in evidence_profile.get("evidence_items", []):
+        timeline.append({
+            "timeline_type": "evidence",
+            "timeline_date": "Not dated",
+            "sort_date": "",
+            "title": item.get("title") or item.get("filename") or "Untitled evidence item",
+            "subtitle": f"{item.get('source_type', '').title()} {item.get('evidence_id')}",
+            "category": item.get("category"),
+            "description": item.get("notes"),
+            "reference": item.get("evidence_id"),
+        })
+
+    for event in custody_events:
+        timeline.append({
+            "timeline_type": "custody_event",
+            "timeline_date": event.get("event_date") or "Not dated",
+            "sort_date": event.get("event_date") or "",
+            "title": (event.get("custody_action") or "Custody Event").replace("_", " ").title(),
+            "subtitle": event.get("custody_event_id"),
+            "category": event.get("acting_capacity"),
+            "description": event.get("notes"),
+            "reference": event.get("supporting_document_reference"),
+            "resolved_evidence_label": event.get("supporting_evidence_label"),
+            "from_party": event.get("from_party"),
+            "to_party": event.get("to_party"),
+            "location_reference": event.get("location_reference"),
+            "recorded_by": event.get("recorded_by"),
+        })
+
+    timeline.sort(
+        key=lambda item: (
+            item.get("sort_date") or "",
+            item.get("timeline_type") or "",
+            item.get("subtitle") or ""
+        ),
+        reverse=True
+    )
+
+    return {
+        "property_id": property_id,
+        "timeline": timeline,
+        "timeline_count": len(timeline),
+        "evidence_count": evidence_profile.get("evidence_count", 0),
+        "custody_event_count": len(custody_events),
+    }

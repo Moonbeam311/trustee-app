@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Evidence / Custody Timeline</h1>
+
+<p>
+    <strong>Property:</strong> {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Property ID:</strong> {{ prop["property_id"] }}
+    {% if linked_trust %}
+    |
+    <strong>Trust:</strong> {{ linked_trust["trust_name"] or linked_trust["trust_id"] }}
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('property_detail', property_id=prop['property_id']) }}">Back to Property Detail</a>
+    |
+    <a href="{{ url_for('property_custody_log', property_id=prop['property_id']) }}">Chain-of-Custody Log</a>
+    |
+    <a href="{{ url_for('property_continuity_profile', property_id=prop['property_id']) }}">Continuity Profile</a>
+</p>
+
+<hr>
+
+<div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px;">
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Total Timeline Items</strong><br>
+        {{ timeline_profile.timeline_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Evidence Items</strong><br>
+        {{ timeline_profile.evidence_count }}
+    </div>
+    <div style="border:1px solid #ddd; padding:12px; border-radius:8px; background:#fafafa;">
+        <strong>Custody Events</strong><br>
+        {{ timeline_profile.custody_event_count }}
+    </div>
+</div>
+
+{% if timeline_profile.timeline %}
+    {% for item in timeline_profile.timeline %}
+    <div style="border-left:4px solid #222; padding:12px 16px; margin-bottom:14px; background:#fff; border-radius:6px; border-top:1px solid #ddd; border-right:1px solid #ddd; border-bottom:1px solid #ddd;">
+        <p style="margin:0 0 6px 0;">
+            <strong>{{ item.timeline_date }}</strong>
+            —
+            {{ item.timeline_type.replace("_", " ").title() }}
+        </p>
+
+        <h3 style="margin:4px 0;">{{ item.title }}</h3>
+
+        {% if item.subtitle %}
+        <p><strong>Reference:</strong> {{ item.subtitle }}</p>
+        {% endif %}
+
+        {% if item.category %}
+        <p><strong>Category / Capacity:</strong> {{ item.category }}</p>
+        {% endif %}
+
+        {% if item.from_party or item.to_party %}
+        <p>
+            <strong>From:</strong> {{ item.from_party or "Not entered" }}
+            |
+            <strong>To:</strong> {{ item.to_party or "Not entered" }}
+        </p>
+        {% endif %}
+
+        {% if item.location_reference %}
+        <p><strong>Location:</strong> {{ item.location_reference }}</p>
+        {% endif %}
+
+        {% if item.reference %}
+        <p><strong>Supporting Reference:</strong> {{ item.reference }}</p>
+        {% endif %}
+
+        {% if item.resolved_evidence_label %}
+        <p><strong>Resolved Evidence:</strong> {{ item.resolved_evidence_label }}</p>
+        {% endif %}
+
+        {% if item.description %}
+        <p><strong>Notes:</strong> {{ item.description }}</p>
+        {% endif %}
+
+        {% if item.recorded_by %}
+        <p><strong>Recorded By:</strong> {{ item.recorded_by }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+{% else %}
+<p>No evidence or custody events found for this asset.</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>Timeline Doctrine Reminder:</strong>
+    A continuity asset record should show what evidence exists, when custody actions occurred,
+    who acted, in what capacity, and what supporting record verifies the event.
+</p>
+{% endblock %}
