@@ -746,3 +746,92 @@ def build_asset_continuity_archive_packet(property_id):
         "resolution_status": queue_profile.get("resolution_status"),
         "resolution_archive_badge": queue_profile.get("archive_badge"),
     }
+
+
+
+# ===================================================
+# AC-2 ARCHIVE ZIP INTEGRITY HELPERS
+# ===================================================
+
+def build_archive_zip_integrity_profile(archive_packet, zip_file_names):
+    zip_file_names = set(zip_file_names or [])
+
+    expected_reports = [
+        "reports/AC2_Archive_Packet_Manifest.pdf",
+        "reports/AC1_Completion_Report.pdf",
+        "reports/Continuity_Asset_Detail_Report.pdf",
+        "reports/Continuity_Custody_Log_Report.pdf",
+        "reports/Evidence_Custody_Timeline_Report.pdf",
+        "reports/Evidence_Resolution_Queue_Report.pdf",
+    ]
+
+    expected_manifest_files = [
+        "manifest/AC2_archive_manifest.json",
+        "manifest/AC2_archive_manifest.txt",
+    ]
+
+    expected_evidence = []
+
+    for item in archive_packet.get("evidence_items") or []:
+        evidence_id = item.get("evidence_id")
+        file_path = item.get("file_path")
+
+        if not evidence_id or not file_path:
+            continue
+
+        from pathlib import Path
+        source_name = Path(file_path).name
+        expected_evidence.append(f"evidence/{evidence_id}_{source_name}")
+
+    checks = []
+
+    for expected in expected_manifest_files:
+        checks.append({
+            "category": "Manifest",
+            "path": expected,
+            "present": expected in zip_file_names,
+        })
+
+    for expected in expected_reports:
+        checks.append({
+            "category": "Report",
+            "path": expected,
+            "present": expected in zip_file_names,
+        })
+
+    for expected in expected_evidence:
+        checks.append({
+            "category": "Evidence",
+            "path": expected,
+            "present": expected in zip_file_names,
+        })
+
+    missing_items = [
+        check
+        for check in checks
+        if not check.get("present")
+    ]
+
+    included_items = [
+        check
+        for check in checks
+        if check.get("present")
+    ]
+
+    extra_items = sorted([
+        name for name in zip_file_names
+        if name not in {check.get("path") for check in checks}
+    ])
+
+    return {
+        "expected_count": len(checks),
+        "included_count": len(included_items),
+        "missing_count": len(missing_items),
+        "extra_count": len(extra_items),
+        "integrity_status": "Complete" if not missing_items else "Incomplete",
+        "checks": checks,
+        "missing_items": missing_items,
+        "included_items": included_items,
+        "extra_items": extra_items,
+        "zip_file_names": sorted(zip_file_names),
+    }

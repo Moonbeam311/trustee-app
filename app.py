@@ -170,7 +170,8 @@ from services.services_continuity_assets import (
     summarize_property_evidence_custody_timeline,
     update_custody_event_supporting_reference,
     build_property_resolution_queue,
-    build_asset_continuity_archive_packet
+    build_asset_continuity_archive_packet,
+    build_archive_zip_integrity_profile
 )
 
 from services.services_articles import (
@@ -4934,6 +4935,224 @@ def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
     zip_buffer.seek(0)
 
     return zip_buffer
+
+
+
+
+# ===================================================
+# AC-2 ARCHIVE ZIP INTEGRITY REPORT
+# ===================================================
+
+def build_archive_integrity_from_generated_zip(prop_data, linked_trust=None, archive_packet=None):
+    import zipfile
+
+    property_id = prop_data.get("property_id")
+    archive_packet = archive_packet or build_asset_continuity_archive_packet(property_id)
+
+    zip_buffer = generate_archive_packet_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+
+    zip_buffer.seek(0)
+
+    with zipfile.ZipFile(zip_buffer, "r") as zip_file:
+        zip_file_names = zip_file.namelist()
+
+    return build_archive_zip_integrity_profile(
+        archive_packet,
+        zip_file_names
+    )
+
+
+def generate_archive_integrity_report_pdf(prop, trust=None, archive_packet=None, integrity_profile=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    property_id = prop_data.get("property_id")
+    archive_packet = archive_packet or build_asset_continuity_archive_packet(property_id)
+    integrity_profile = integrity_profile or build_archive_integrity_from_generated_zip(
+        prop_data,
+        trust_data,
+        archive_packet
+    )
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ArchiveIntegrityTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "ArchiveIntegritySection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ArchiveIntegrityBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("AC-2 Archive ZIP Integrity Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Integrity Summary", section_style))
+    label_value("Integrity Status", integrity_profile.get("integrity_status"))
+    label_value("Expected Items", integrity_profile.get("expected_count"))
+    label_value("Included Expected Items", integrity_profile.get("included_count"))
+    label_value("Missing Items", integrity_profile.get("missing_count"))
+    label_value("Extra ZIP Items", integrity_profile.get("extra_count"))
+    label_value("Packet Status", archive_packet.get("packet_status"))
+    label_value("Archive Badge", archive_packet.get("archive_badge"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Required Archive Items", section_style))
+
+    for check in integrity_profile.get("checks") or []:
+        status = "Included" if check.get("present") else "Missing"
+        story.append(
+            Paragraph(
+                f"<b>{safe(status)}</b> — {safe(check.get('category'))}: {safe(check.get('path'))}",
+                body_style
+            )
+        )
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Extra ZIP Contents", section_style))
+
+    extra_items = integrity_profile.get("extra_items") or []
+
+    if not extra_items:
+        story.append(Paragraph("No extra ZIP items detected.", body_style))
+    else:
+        for item in extra_items:
+            story.append(Paragraph(safe(item), body_style))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Integrity Note", section_style))
+    story.append(
+        Paragraph(
+            "This report verifies that the generated archive ZIP contains the expected manifest files, "
+            "generated reports, and linked evidence files where those source evidence files are available on disk.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/archive-packet/integrity")
+@require_permission("view_dashboard")
+def property_archive_packet_integrity(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+    integrity_profile = build_archive_integrity_from_generated_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+
+    return render_template(
+        "property_archive_integrity.html",
+        prop=prop_data,
+        linked_trust=linked_trust,
+        archive_packet=archive_packet,
+        integrity_profile=integrity_profile
+    )
+
+
+@app.route("/property/<property_id>/archive-packet/integrity/pdf")
+@require_permission("view_dashboard")
+def property_archive_packet_integrity_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+    integrity_profile = build_archive_integrity_from_generated_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+
+    pdf_buffer = generate_archive_integrity_report_pdf(
+        prop_data,
+        linked_trust,
+        archive_packet,
+        integrity_profile
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_AC2_Archive_Integrity_Report.pdf"
+    )
 
 
 @app.route("/property/<property_id>/archive-packet/zip")

@@ -346,6 +346,10 @@
                             <a href="{{ url_for('property_archive_packet_zip', property_id=asset['property_id']) }}">
                                 Download Archive ZIP
                             </a>
+                            <br>
+                            <a href="{{ url_for('property_archive_packet_integrity', property_id=asset['property_id']) }}">
+                                Verify ZIP Integrity
+                            </a>
                         {% else %}
                             <strong>Cleanup Action:</strong> No cleanup needed<br>
                             <strong>Archive Badge:</strong> Resolution Archive Ready<br>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Archive ZIP Integrity Report</h1>
+
+<p>
+    <strong>Property:</strong> {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Property ID:</strong> {{ prop["property_id"] }}
+    {% if linked_trust %}
+    |
+    <strong>Trust:</strong> {{ linked_trust["trust_name"] or linked_trust["trust_id"] }}
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('property_archive_packet', property_id=prop['property_id']) }}">Back to Archive Packet</a>
+    |
+    <a href="{{ url_for('property_archive_packet_zip', property_id=prop['property_id']) }}">Download Archive ZIP</a>
+    |
+    <a href="{{ url_for('property_archive_packet_integrity_pdf', property_id=prop['property_id']) }}">Download Integrity PDF</a>
+</p>
+
+<hr>
+
+<div style="border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:18px;
+            background:{% if integrity_profile.integrity_status == 'Complete' %}#e8f8ec{% else %}#fff4e5{% endif %};">
+    <h2 style="margin-top:0;">Integrity Status: {{ integrity_profile.integrity_status }}</h2>
+    <p><strong>Expected Items:</strong> {{ integrity_profile.expected_count }}</p>
+    <p><strong>Included Expected Items:</strong> {{ integrity_profile.included_count }}</p>
+    <p><strong>Missing Items:</strong> {{ integrity_profile.missing_count }}</p>
+    <p><strong>Extra ZIP Items:</strong> {{ integrity_profile.extra_count }}</p>
+</div>
+
+<h2>Required Archive Items</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Path</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for check in integrity_profile.checks %}
+        <tr>
+            <td>{{ check.category }}</td>
+            <td>{{ check.path }}</td>
+            <td>{% if check.present %}Included{% else %}Missing{% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<hr>
+
+<h2>Extra ZIP Contents</h2>
+
+{% if integrity_profile.extra_items %}
+<ul>
+    {% for item in integrity_profile.extra_items %}
+    <li>{{ item }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>No extra ZIP items detected.</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>Integrity Note:</strong>
+    This page verifies the generated ZIP archive against expected manifest files, generated reports,
+    and linked evidence files that are available from stored file paths.
+</p>
+{% endblock %}
