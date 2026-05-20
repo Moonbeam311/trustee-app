@@ -4386,6 +4386,251 @@ def property_resolution_queue_pdf(property_id):
     )
 
 
+
+
+# ===================================================
+# AC-1 FINAL AUDIT SNAPSHOT / COMPLETION REPORT
+# ===================================================
+
+def generate_ac1_completion_report_pdf(prop, trust=None):
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+
+    property_id = prop_data.get("property_id")
+
+    evidence_profile = build_property_evidence_profile(property_id)
+    custody_events = [
+        dict(event)
+        for event in get_custody_events_for_property(property_id)
+    ]
+    enriched_events = enrich_custody_events_with_evidence(property_id, custody_events)
+    timeline_profile = build_property_evidence_custody_timeline(property_id)
+    timeline_summary = summarize_property_evidence_custody_timeline(property_id)
+    queue_profile = build_property_resolution_queue(property_id)
+    readiness = score_continuity_asset_readiness(
+        prop_data,
+        custody_events,
+        evidence_profile
+    )
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "AC1CompletionTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "AC1CompletionSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "AC1CompletionBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("AC-1 Final Audit Snapshot / Completion Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+    label_value("Status", prop_data.get("status"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Continuity Classification", section_style))
+    label_value("Continuity Classification", (prop_data.get("continuity_classification") or "").replace("_", " ").title())
+    label_value("Custody Classification", (prop_data.get("custody_classification") or "").replace("_", " ").title())
+    label_value("Continuity Priority", prop_data.get("continuity_priority"))
+    label_value("Memorial Custody", "Yes" if prop_data.get("memorial_status") else "No")
+    label_value("Sacred / Protected Heritage", "Yes" if prop_data.get("sacred_status") else "No")
+    label_value("Restricted Access Level", prop_data.get("restricted_access_level"))
+    label_value("Lineage Association", prop_data.get("lineage_association"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Readiness Audit", section_style))
+    label_value("Readiness Score", f"{readiness.get('score')}%")
+    label_value("Readiness Status", readiness.get("status"))
+    label_value("Missing Readiness Items", "; ".join(readiness.get("missing") or []) or "No missing readiness items")
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Evidence / Custody Summary", section_style))
+    label_value("Evidence Items", evidence_profile.get("evidence_count"))
+    label_value("Custody Events", len(custody_events))
+    label_value("Timeline Items", timeline_summary.get("timeline_count"))
+    label_value("Resolved Evidence References", timeline_summary.get("resolved_references"))
+    label_value("Unresolved / Manual References", timeline_summary.get("unresolved_references"))
+    label_value("Resolution Queue Status", queue_profile.get("resolution_status"))
+    label_value("Archive Badge", queue_profile.get("archive_badge"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Reports / Available Exports", section_style))
+    label_value("Continuity Asset Detail PDF", f"/property/{property_id}/continuity/pdf")
+    label_value("Custody Log PDF", f"/property/{property_id}/custody-log/pdf")
+    label_value("Timeline PDF", f"/property/{property_id}/timeline/pdf")
+    label_value("Resolution Queue PDF", f"/property/{property_id}/resolution-queue/pdf")
+    label_value("Continuity Dashboard PDF", "/continuity-assets/pdf")
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Evidence Records", section_style))
+    evidence_items = evidence_profile.get("evidence_items") or []
+
+    if evidence_items:
+        for item in evidence_items:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(item.get('source_type')).title()} {safe(item.get('evidence_id'))}</b> — "
+                    f"{safe(item.get('title') or item.get('filename') or 'Untitled evidence item')}",
+                    body_style
+                )
+            )
+            label_value("Category", item.get("category"))
+            label_value("Notes", item.get("notes"))
+            story.append(Spacer(1, 6))
+    else:
+        story.append(Paragraph("No evidence records linked to this continuity asset.", body_style))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Custody Event Resolution Status", section_style))
+
+    if enriched_events:
+        for event in enriched_events:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(event.get('custody_event_id'))}</b>",
+                    body_style
+                )
+            )
+            label_value("Event Date", event.get("event_date"))
+            label_value("Custody Action", (event.get("custody_action") or "").replace("_", " ").title())
+            label_value("Supporting Reference", event.get("supporting_document_reference"))
+            label_value("Resolved Evidence", event.get("supporting_evidence_label"))
+
+            if event.get("supporting_document_reference") and event.get("supporting_evidence_label"):
+                label_value("Resolution Status", "Resolved Evidence Reference")
+            elif event.get("supporting_document_reference"):
+                label_value("Resolution Status", "Unresolved Manual Reference — Cleanup Needed")
+            else:
+                label_value("Resolution Status", "No Supporting Reference Entered")
+
+            label_value("Recorded By", event.get("recorded_by"))
+            story.append(Spacer(1, 6))
+    else:
+        story.append(Paragraph("No custody events recorded for this continuity asset.", body_style))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("AC-1 Completion Assessment", section_style))
+
+    unresolved_count = queue_profile.get("unresolved_count", 0)
+
+    if readiness.get("score") == 100 and unresolved_count == 0:
+        assessment = "AC-1 is complete, clean, and archive-ready for this asset."
+    elif readiness.get("score", 0) >= 85:
+        assessment = "AC-1 is operational and substantially complete, with remaining cleanup items noted above."
+    else:
+        assessment = "AC-1 remains incomplete and requires additional evidence, custody, or classification work."
+
+    label_value("Completion Assessment", assessment)
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Recommended Next Module", section_style))
+    label_value("Next Recommended Module", "AC-2 — Asset Continuity Archive / Packet Assembly")
+    story.append(
+        Paragraph(
+            "AC-2 should package the continuity profile, evidence records, custody log, timeline, resolution queue, "
+            "and final completion report into a controlled archive packet for export, review, or long-term preservation.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/ac1-completion-report/pdf")
+@require_permission("view_dashboard")
+def property_ac1_completion_report_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+
+    pdf_buffer = generate_ac1_completion_report_pdf(
+        prop_data,
+        linked_trust
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_AC1_Completion_Report.pdf"
+    )
+
+
 @app.route("/property/<property_id>/resolution-queue")
 @require_permission("view_dashboard")
 def property_resolution_queue(property_id):

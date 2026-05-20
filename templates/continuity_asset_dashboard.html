@@ -330,6 +330,10 @@
                             <a href="{{ url_for('property_resolution_queue_pdf', property_id=asset['property_id']) }}">
                                 Download Queue PDF
                             </a>
+                            <br>
+                            <a href="{{ url_for('property_ac1_completion_report_pdf', property_id=asset['property_id']) }}">
+                                Download AC-1 Completion Report
+                            </a>
                         {% else %}
                             <strong>Cleanup Action:</strong> No cleanup needed<br>
                             <strong>Archive Badge:</strong> Resolution Archive Ready<br>
