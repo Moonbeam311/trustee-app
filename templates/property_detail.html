@@ -11,6 +11,12 @@
     <a href="/link_account" style="text-decoration:none;"><button type="button">Link Account</button></a>
     <a href="/upload_document" style="text-decoration:none;"><button type="button">Upload Document</button></a>
     <a href="/ledger_entry" style="text-decoration:none;"><button type="button">Add Ledger Entry</button></a>
+
+    <a href="/property/{{ prop.property_id }}/continuity" style="text-decoration:none;">
+        <button type="button">
+            Continuity Asset Profile
+        </button>
+    </a>
 </div>
 
 <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
@@ -68,6 +74,27 @@
     <p><strong>Legal Title Notes:</strong> {{ prop.title_notes or 'Not entered' }}</p>
     <p><strong>Beneficial / Equitable Notes:</strong> {{ prop.beneficial_notes or 'Not entered' }}</p>
 </div>
+
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Continuity Asset Profile</h3>
+    <p><strong>Continuity Classification:</strong> {{ prop.continuity_classification or 'Not classified' }}</p>
+    <p><strong>Custody Classification:</strong> {{ prop.custody_classification or 'Not classified' }}</p>
+    <p><strong>Continuity Priority:</strong> {{ prop.continuity_priority or 0 }}</p>
+    <p><strong>Lineage Association:</strong> {{ prop.lineage_association or 'Not entered' }}</p>
+    <p><strong>Memorial Custody:</strong> {% if prop.memorial_status %}Yes{% else %}No{% endif %}</p>
+    <p><strong>Sacred / Protected Heritage:</strong> {% if prop.sacred_status %}Yes{% else %}No{% endif %}</p>
+    <p><strong>Restricted Access Level:</strong> {{ prop.restricted_access_level or 'Not entered' }}</p>
+    <p><strong>Heritage Significance:</strong> {{ prop.heritage_significance or 'Not entered' }}</p>
+    <p><strong>Preservation Requirements:</strong> {{ prop.preservation_requirements or 'Not entered' }}</p>
+    <p><strong>Continuity Notes:</strong> {{ prop.continuity_notes or 'Not entered' }}</p>
+
+    <p>
+        <a href="/property/{{ prop.property_id }}/continuity">
+            Edit Continuity Asset Profile
+        </a>
+    </p>
+</div>
+
 
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
     <h3>Linked Trust</h3>

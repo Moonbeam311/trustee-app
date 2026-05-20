@@ -3178,20 +3178,25 @@ def property_detail(property_id):
     if not prop:
         return f"Property {property_id} not found"
 
-    if prop.get("owner_id") != get_current_owner():
+    prop_data = dict(prop)
+
+    prop_owner = prop_data.get("owner_id")
+    current_owner = get_current_owner()
+
+    if prop_owner and prop_owner != current_owner:
         return render_template(
             "access_denied.html",
             reason="This property record does not belong to the current owner context."
         )
 
-    linked_trust = get_trust_by_id(prop["trust_id"])
+    linked_trust = get_trust_by_id(prop_data["trust_id"])
     linked_accounts = get_accounts_by_property_id(property_id)
     linked_documents = get_documents_by_property_id(property_id)
     linked_ledger = get_ledger_by_property(property_id)
 
     return render_template(
         "property_detail.html",
-        prop=prop,
+        prop=prop_data,
         linked_trust=linked_trust,
         linked_accounts=linked_accounts,
         linked_documents=linked_documents,
