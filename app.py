@@ -161,7 +161,8 @@ from services.services_continuity_assets import (
     get_continuity_assets_by_trust,
     create_continuity_custody_event,
     get_custody_events_for_property,
-    get_custody_event_by_id
+    get_custody_event_by_id,
+    score_continuity_asset_readiness
 )
 
 from services.services_articles import (
@@ -3234,6 +3235,8 @@ def get_filtered_continuity_asset_rows():
         for asset in assets:
             asset_data = dict(asset)
             asset_data["trust_name"] = trust["trust_name"]
+            custody_events = get_custody_events_for_property(asset_data["property_id"])
+            asset_data["readiness"] = score_continuity_asset_readiness(asset_data, custody_events)
             dashboard_rows.append(asset_data)
 
     filtered_rows = []
@@ -3429,6 +3432,8 @@ def continuity_asset_dashboard():
         for asset in assets:
             asset_data = dict(asset)
             asset_data["trust_name"] = trust["trust_name"]
+            custody_events = get_custody_events_for_property(asset_data["property_id"])
+            asset_data["readiness"] = score_continuity_asset_readiness(asset_data, custody_events)
             dashboard_rows.append(asset_data)
 
     filtered_rows = []

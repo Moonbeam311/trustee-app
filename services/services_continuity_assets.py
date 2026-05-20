@@ -237,3 +237,96 @@ def get_custody_event_by_id(custody_event_id):
     conn.close()
 
     return row
+
+
+# ===================================================
+# AC-1 CONTINUITY ASSET READINESS SCORING
+# ===================================================
+
+def score_continuity_asset_readiness(asset, custody_events=None):
+    asset = dict(asset)
+    custody_events = custody_events or []
+
+    checks = [
+        {
+            "key": "continuity_classification",
+            "label": "Continuity classification entered",
+            "passed": bool(asset.get("continuity_classification")),
+            "weight": 15,
+        },
+        {
+            "key": "custody_classification",
+            "label": "Custody classification entered",
+            "passed": bool(asset.get("custody_classification")),
+            "weight": 15,
+        },
+        {
+            "key": "heritage_significance",
+            "label": "Heritage significance documented",
+            "passed": bool(asset.get("heritage_significance")),
+            "weight": 10,
+        },
+        {
+            "key": "preservation_requirements",
+            "label": "Preservation requirements documented",
+            "passed": bool(asset.get("preservation_requirements")),
+            "weight": 10,
+        },
+        {
+            "key": "custodian",
+            "label": "Custodian / manager identified",
+            "passed": bool(asset.get("custodian")),
+            "weight": 10,
+        },
+        {
+            "key": "responsible_party",
+            "label": "Responsible party identified",
+            "passed": bool(asset.get("responsible_party")),
+            "weight": 10,
+        },
+        {
+            "key": "custody_log",
+            "label": "At least one custody event recorded",
+            "passed": len(custody_events) > 0,
+            "weight": 15,
+        },
+        {
+            "key": "continuity_notes",
+            "label": "Continuity notes entered",
+            "passed": bool(asset.get("continuity_notes")),
+            "weight": 5,
+        },
+        {
+            "key": "lineage_or_restriction",
+            "label": "Lineage or restricted-access handling addressed",
+            "passed": bool(asset.get("lineage_association") or asset.get("restricted_access_level")),
+            "weight": 10,
+        },
+    ]
+
+    earned = sum(item["weight"] for item in checks if item["passed"])
+    total = sum(item["weight"] for item in checks)
+
+    score = round((earned / total) * 100) if total else 0
+
+    missing = [
+        item["label"]
+        for item in checks
+        if not item["passed"]
+    ]
+
+    if score >= 85:
+        status = "Ready"
+    elif score >= 60:
+        status = "Needs Review"
+    else:
+        status = "Incomplete"
+
+    return {
+        "score": score,
+        "status": status,
+        "earned": earned,
+        "total": total,
+        "checks": checks,
+        "missing": missing,
+    }

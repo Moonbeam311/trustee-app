@@ -244,6 +244,7 @@
 
     {% if assets %}
         {% for asset in assets %}
+        {% set readiness = asset.get("readiness") or {"score": 0, "status": "Not Scored", "missing": ["Readiness score not available"]} %}
         <section class="continuity-card">
             <div class="continuity-card-header">
                 <div>
@@ -262,6 +263,10 @@
 
                     <span class="continuity-badge {% if asset['sacred_status'] %}yes{% else %}no{% endif %}">
                         Sacred / Protected: {% if asset["sacred_status"] %}Yes{% else %}No{% endif %}
+                    </span>
+
+                    <span class="continuity-badge {% if readiness['status'] == 'Ready' %}yes{% elif readiness['status'] == 'Incomplete' %}no{% else %}{% endif %}">
+                        Readiness: {{ readiness["score"] }}% · {{ readiness["status"] }}
                     </span>
                 </div>
             </div>
@@ -292,6 +297,17 @@
                     <div class="continuity-field-label">Restricted Access</div>
                     <div class="continuity-field-value">
                         {{ asset["restricted_access_level"] or "Not entered" }}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="continuity-field-label">Readiness Missing Items</div>
+                    <div class="continuity-field-value">
+                        {% if readiness["missing"] %}
+                            {{ readiness["missing"]|join("; ") }}
+                        {% else %}
+                            No missing readiness items
+                        {% endif %}
                     </div>
                 </div>
             </div>
