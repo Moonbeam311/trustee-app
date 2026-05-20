@@ -19,7 +19,7 @@
 
     <p>
         <label>Continuity Classification</label><br>
-        <select name="continuity_classification">
+        <select name="continuity_classification" style="width:100%; padding:10px; margin-top:8px; margin-bottom:16px;">
             <option value="">-- Select --</option>
             {% for item in continuity_classifications %}
             <option value="{{ item }}" {% if profile and profile["continuity_classification"] == item %}selected{% endif %}>
@@ -31,7 +31,7 @@
 
     <p>
         <label>Custody Classification</label><br>
-        <select name="custody_classification">
+        <select name="custody_classification" style="width:100%; padding:10px; margin-top:8px; margin-bottom:16px;">
             <option value="">-- Select --</option>
             {% for item in custody_classifications %}
             <option value="{{ item }}" {% if profile and profile["custody_classification"] == item %}selected{% endif %}>
