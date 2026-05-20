@@ -5101,6 +5101,223 @@ def generate_archive_integrity_report_pdf(prop, trust=None, archive_packet=None,
 
 
 
+
+
+# ===================================================
+# AC-2 ARCHIVE FINALIZATION CERTIFICATE PDF
+# ===================================================
+
+def generate_archive_finalization_certificate_pdf(prop, trust=None, archive_packet=None, integrity_profile=None, latest_finalization=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    property_id = prop_data.get("property_id")
+
+    archive_packet = archive_packet or build_asset_continuity_archive_packet(property_id)
+    integrity_profile = integrity_profile or build_archive_integrity_from_generated_zip(
+        prop_data,
+        trust_data,
+        archive_packet
+    )
+
+    latest_finalization = dict(latest_finalization) if latest_finalization else None
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ArchiveFinalizationCertificateTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16,
+        alignment=1
+    )
+
+    section_style = ParagraphStyle(
+        "ArchiveFinalizationCertificateSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "ArchiveFinalizationCertificateBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    cert_style = ParagraphStyle(
+        "ArchiveFinalizationCertificateStatement",
+        parent=styles["BodyText"],
+        fontSize=12,
+        leading=17,
+        spaceBefore=12,
+        spaceAfter=12,
+        alignment=1
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("ARCHIVE PACKET FINALIZATION CERTIFICATE", title_style))
+
+    if latest_finalization:
+        certificate_status = latest_finalization.get("finalized_status")
+        finalization_id = latest_finalization.get("finalization_id")
+        finalized_by = latest_finalization.get("finalized_by")
+        finalized_at = latest_finalization.get("finalized_at")
+        notes = latest_finalization.get("notes")
+    else:
+        certificate_status = "Not Finalized"
+        finalization_id = "No finalization record found"
+        finalized_by = "Not entered"
+        finalized_at = "Not entered"
+        notes = "No archive finalization record has been created for this packet."
+
+    story.append(
+        Paragraph(
+            f"This certifies the recorded archive packet status for property <b>{safe(property_id)}</b> "
+            f"as: <b>{safe(certificate_status)}</b>.",
+            cert_style
+        )
+    )
+
+    story.append(Paragraph("Certificate Identity", section_style))
+    label_value("Certificate Type", "AC-2 Archive Packet Finalization Certificate")
+    label_value("Finalization ID", finalization_id)
+    label_value("Finalized Status", certificate_status)
+    label_value("Finalized By", finalized_by)
+    label_value("Finalized At", finalized_at)
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+    label_value("Property Status", prop_data.get("status"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Archive Packet Conditions", section_style))
+    label_value("Packet Status", archive_packet.get("packet_status"))
+    label_value("Archive Badge", archive_packet.get("archive_badge"))
+    label_value("Resolution Status", archive_packet.get("resolution_status"))
+    label_value("Resolution Archive Badge", archive_packet.get("resolution_archive_badge"))
+    label_value("Integrity Status", integrity_profile.get("integrity_status"))
+    label_value("Expected ZIP Items", integrity_profile.get("expected_count"))
+    label_value("Included Expected ZIP Items", integrity_profile.get("included_count"))
+    label_value("Missing ZIP Items", integrity_profile.get("missing_count"))
+    label_value("Evidence Items", archive_packet.get("evidence_count"))
+    label_value("Custody Events", archive_packet.get("custody_event_count"))
+    label_value("Timeline Items", archive_packet.get("timeline_count"))
+    label_value("Resolved Evidence References", archive_packet.get("resolved_references"))
+    label_value("Unresolved Manual References", archive_packet.get("unresolved_references"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Finalization Notes", section_style))
+    label_value("Notes", notes)
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Certification Statement", section_style))
+    story.append(
+        Paragraph(
+            "This certificate reflects the latest recorded archive packet finalization status in the Trustee App. "
+            "It should be reviewed together with the AC-2 archive manifest, ZIP integrity report, archive ZIP, "
+            "and AC-1 completion report.",
+            body_style
+        )
+    )
+
+    story.append(Spacer(1, 24))
+
+    story.append(Paragraph("Authorized Review / Signature", section_style))
+    label_value("Name", finalized_by)
+    label_value("Capacity", "Archive Packet Finalization Operator")
+    label_value("Date", finalized_at)
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/archive-packet/finalization-certificate/pdf")
+@require_permission("view_dashboard")
+def property_archive_finalization_certificate_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+    integrity_profile = build_archive_integrity_from_generated_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+    latest_finalization = get_latest_archive_finalization(property_id)
+
+    pdf_buffer = generate_archive_finalization_certificate_pdf(
+        prop_data,
+        linked_trust,
+        archive_packet,
+        integrity_profile,
+        latest_finalization
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_AC2_Finalization_Certificate.pdf"
+    )
+
+
 @app.route("/property/<property_id>/archive-packet/finalize", methods=["GET", "POST"])
 @require_permission("view_dashboard")
 def property_archive_packet_finalize(property_id):
