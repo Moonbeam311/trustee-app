@@ -167,7 +167,8 @@ from services.services_continuity_assets import (
     enrich_custody_events_with_evidence,
     resolve_evidence_reference,
     build_property_evidence_custody_timeline,
-    summarize_property_evidence_custody_timeline
+    summarize_property_evidence_custody_timeline,
+    update_custody_event_supporting_reference
 )
 
 from services.services_articles import (
@@ -4232,6 +4233,71 @@ def property_evidence_custody_timeline(property_id):
         start_date=start_date,
         end_date=end_date,
         action_options=action_options
+    )
+
+
+
+
+@app.route("/property/<property_id>/custody-log/<custody_event_id>/resolve", methods=["GET", "POST"])
+@require_permission("view_dashboard")
+def resolve_custody_event_evidence(property_id, custody_event_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    custody_event = get_custody_event_by_id(custody_event_id)
+
+    if not custody_event:
+        flash("Custody event not found.", "danger")
+        return redirect(url_for("property_custody_log", property_id=property_id))
+
+    custody_event = dict(custody_event)
+
+    if custody_event.get("property_id") != property_id:
+        flash("Custody event does not belong to this property.", "danger")
+        return redirect(url_for("property_custody_log", property_id=property_id))
+
+    evidence_profile = build_property_evidence_profile(property_id)
+
+    if request.method == "POST":
+        supporting_reference = (request.form.get("supporting_document_reference") or "").strip()
+
+        if not supporting_reference:
+            flash("Select a supporting evidence reference before saving.", "warning")
+            return redirect(
+                url_for(
+                    "resolve_custody_event_evidence",
+                    property_id=property_id,
+                    custody_event_id=custody_event_id
+                )
+            )
+
+        updated = update_custody_event_supporting_reference(
+            custody_event_id,
+            supporting_reference
+        )
+
+        if updated:
+            flash(f"Custody event {custody_event_id} evidence reference updated.", "success")
+        else:
+            flash("Custody event could not be updated.", "danger")
+
+        return redirect(url_for("property_custody_log", property_id=property_id))
+
+    current_evidence = resolve_evidence_reference(
+        property_id,
+        custody_event.get("supporting_document_reference")
+    )
+
+    return render_template(
+        "resolve_custody_event_evidence.html",
+        prop=prop_data,
+        custody_event=custody_event,
+        evidence_profile=evidence_profile,
+        current_evidence=current_evidence
     )
 
 

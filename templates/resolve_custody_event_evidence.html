@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Resolve Custody Event Evidence</h1>
+
+<p>
+    <strong>Property:</strong> {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Custody Event:</strong> {{ custody_event["custody_event_id"] }}
+</p>
+
+<p>
+    <a href="{{ url_for('property_custody_log', property_id=prop['property_id']) }}">Back to Chain-of-Custody Log</a>
+    |
+    <a href="{{ url_for('property_evidence_custody_timeline', property_id=prop['property_id']) }}">Evidence / Custody Timeline</a>
+</p>
+
+<hr>
+
+<h2>Current Reference</h2>
+
+<p>
+    <strong>Supporting Document Reference:</strong>
+    {{ custody_event["supporting_document_reference"] or "Not entered" }}
+</p>
+
+{% if current_evidence %}
+<p>
+    <strong>Currently Resolved As:</strong>
+    {{ current_evidence.source_type|title }}
+    {{ current_evidence.evidence_id }}
+    —
+    {{ current_evidence.title or current_evidence.filename or "Untitled evidence item" }}
+</p>
+{% else %}
+<p>
+    <strong>Currently Resolved As:</strong>
+    No linked evidence match found.
+</p>
+{% endif %}
+
+<hr>
+
+<h2>Select Linked Evidence</h2>
+
+{% if evidence_profile and evidence_profile.evidence_items %}
+<form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <p>
+        <label>Supporting Evidence Reference</label><br>
+        <select name="supporting_document_reference" style="width:100%; padding:10px;" required>
+            <option value="">-- Select Linked Evidence --</option>
+            {% for item in evidence_profile.evidence_items %}
+            {% set reference_value = item.source_type|upper ~ ":" ~ item.evidence_id %}
+            <option value="{{ reference_value }}"
+                {% if custody_event["supporting_document_reference"] == reference_value %}selected{% endif %}>
+                {{ reference_value }} —
+                {{ item.title or item.filename or "Untitled evidence item" }}
+            </option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <button type="submit">Update Custody Event Evidence Reference</button>
+</form>
+{% else %}
+<p>No linked evidence is available for this property yet.</p>
+
+<p>
+    <a href="{{ url_for('upload_document', property_id=prop['property_id'], trust_id=prop['trust_id'], evidence='1') }}">
+        Upload Supporting Evidence
+    </a>
+</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>Purpose:</strong>
+    This screen converts manual references such as “Receipt” into a linked evidence reference such as
+    DOCUMENT:DOC-001.
+</p>
+{% endblock %}
