@@ -3924,6 +3924,174 @@ def property_custody_log_pdf(property_id):
 
 
 
+
+
+# ===================================================
+# AC-1 EVIDENCE / CUSTODY TIMELINE PDF EXPORT
+# ===================================================
+
+def generate_evidence_custody_timeline_pdf(prop, trust=None, timeline_profile=None):
+
+    from io import BytesIO
+
+    prop_data = dict(prop)
+    trust_data = dict(trust) if trust else {}
+    timeline_profile = timeline_profile or build_property_evidence_custody_timeline(prop_data.get("property_id"))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=LETTER,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "TimelineTitle",
+        parent=styles["Heading1"],
+        fontSize=18,
+        leading=22,
+        spaceAfter=16
+    )
+
+    section_style = ParagraphStyle(
+        "TimelineSection",
+        parent=styles["Heading2"],
+        fontSize=13,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=8
+    )
+
+    body_style = ParagraphStyle(
+        "TimelineBody",
+        parent=styles["BodyText"],
+        fontSize=10.5,
+        leading=15,
+        spaceAfter=7
+    )
+
+    def safe(value):
+        if value is None or value == "":
+            return "Not entered"
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def label_value(label, value):
+        story.append(
+            Paragraph(
+                f"<b>{safe(label)}:</b> {safe(value)}",
+                body_style
+            )
+        )
+
+    story = []
+
+    story.append(Paragraph("Evidence / Custody Timeline Report", title_style))
+
+    story.append(Paragraph("Asset Identity", section_style))
+    label_value("Property ID", prop_data.get("property_id"))
+    label_value("Property Name", prop_data.get("property_name"))
+    label_value("Property Type", prop_data.get("property_type"))
+    label_value("Asset Class", prop_data.get("asset_class"))
+    label_value("Asset Subtype", prop_data.get("asset_subtype"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Linked Trust", section_style))
+    label_value("Trust ID", prop_data.get("trust_id"))
+    label_value("Trust Name", trust_data.get("trust_name"))
+    label_value("Trust Type", trust_data.get("trust_type"))
+
+    story.append(Spacer(1, 8))
+
+    story.append(Paragraph("Timeline Summary", section_style))
+    label_value("Total Timeline Items", timeline_profile.get("timeline_count"))
+    label_value("Evidence Items", timeline_profile.get("evidence_count"))
+    label_value("Custody Events", timeline_profile.get("custody_event_count"))
+
+    story.append(Spacer(1, 10))
+
+    story.append(Paragraph("Timeline Entries", section_style))
+
+    timeline = timeline_profile.get("timeline") or []
+
+    if not timeline:
+        story.append(Paragraph("No evidence or custody events found for this asset.", body_style))
+    else:
+        for item in timeline:
+            story.append(
+                Paragraph(
+                    f"<b>{safe(item.get('timeline_date'))} — {safe(str(item.get('timeline_type') or '').replace('_', ' ').title())}</b>",
+                    body_style
+                )
+            )
+
+            label_value("Title", item.get("title"))
+            label_value("Reference", item.get("subtitle") or item.get("reference"))
+            label_value("Category / Capacity", item.get("category"))
+
+            if item.get("from_party") or item.get("to_party"):
+                label_value("From Party", item.get("from_party"))
+                label_value("To Party", item.get("to_party"))
+
+            label_value("Location", item.get("location_reference"))
+            label_value("Supporting Reference", item.get("reference"))
+            label_value("Resolved Evidence", item.get("resolved_evidence_label"))
+            label_value("Notes", item.get("description"))
+            label_value("Recorded By", item.get("recorded_by"))
+
+            story.append(Spacer(1, 8))
+
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph("Timeline Doctrine Reminder", section_style))
+    story.append(
+        Paragraph(
+            "A continuity asset timeline should show what evidence exists, when custody actions occurred, "
+            "who acted, in what capacity, and what supporting record verifies the event.",
+            body_style
+        )
+    )
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    return buffer
+
+
+@app.route("/property/<property_id>/timeline/pdf")
+@require_permission("view_dashboard")
+def property_evidence_custody_timeline_pdf(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    timeline_profile = build_property_evidence_custody_timeline(property_id)
+
+    pdf_buffer = generate_evidence_custody_timeline_pdf(
+        prop_data,
+        linked_trust,
+        timeline_profile
+    )
+
+    return send_file(
+        pdf_buffer,
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=f"{property_id}_Evidence_Custody_Timeline.pdf"
+    )
+
+
 @app.route("/property/<property_id>/timeline")
 @require_permission("view_dashboard")
 def property_evidence_custody_timeline(property_id):

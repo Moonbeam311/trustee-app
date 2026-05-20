@@ -105,6 +105,11 @@
         </a>
         <br>
 
+        <a href="{{ url_for('property_evidence_custody_timeline_pdf', property_id=prop['property_id']) }}">
+            Download Timeline PDF
+        </a>
+        <br>
+
         <a href="{{ url_for('property_custody_log_pdf', property_id=prop['property_id']) }}">
             Download Custody Log PDF
         </a>
