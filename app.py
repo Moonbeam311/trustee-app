@@ -3945,12 +3945,14 @@ def property_custody_log(property_id):
     ]
 
     linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    evidence_profile = build_property_evidence_profile(property_id)
 
     return render_template(
         "property_custody_log.html",
         prop=prop_data,
         linked_trust=linked_trust,
-        custody_events=custody_events
+        custody_events=custody_events,
+        evidence_profile=evidence_profile
     )
 
 
