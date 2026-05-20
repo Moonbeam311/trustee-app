@@ -835,3 +835,99 @@ def build_archive_zip_integrity_profile(archive_packet, zip_file_names):
         "extra_items": extra_items,
         "zip_file_names": sorted(zip_file_names),
     }
+
+
+
+# ===================================================
+# AC-2 ARCHIVE PACKET FINALIZATION HELPERS
+# ===================================================
+
+def get_next_archive_finalization_id():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) AS count FROM archive_packet_finalization")
+    count = cur.fetchone()["count"]
+
+    conn.close()
+
+    return f"AC2-FIN-{count + 1:04d}"
+
+
+def create_archive_packet_finalization(finalization_data):
+    finalization_data = dict(finalization_data)
+    finalization_data.setdefault("finalization_id", get_next_archive_finalization_id())
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO archive_packet_finalization (
+            finalization_id,
+            property_id,
+            trust_id,
+            packet_status,
+            integrity_status,
+            resolution_status,
+            archive_badge,
+            finalized_status,
+            finalized_by,
+            notes,
+            firm_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        finalization_data.get("finalization_id"),
+        finalization_data.get("property_id"),
+        finalization_data.get("trust_id"),
+        finalization_data.get("packet_status"),
+        finalization_data.get("integrity_status"),
+        finalization_data.get("resolution_status"),
+        finalization_data.get("archive_badge"),
+        finalization_data.get("finalized_status"),
+        finalization_data.get("finalized_by"),
+        finalization_data.get("notes"),
+        finalization_data.get("firm_id"),
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return finalization_data.get("finalization_id")
+
+
+def get_archive_finalizations_for_property(property_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM archive_packet_finalization
+        WHERE property_id = ?
+        ORDER BY finalized_at DESC, id DESC
+    """, (property_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return rows
+
+
+def get_latest_archive_finalization(property_id):
+    rows = get_archive_finalizations_for_property(property_id)
+    if not rows:
+        return None
+    return rows[0]
+
+
+def determine_archive_finalized_status(archive_packet, integrity_profile):
+    integrity_status = integrity_profile.get("integrity_status")
+    unresolved_references = archive_packet.get("unresolved_references") or 0
+
+    if integrity_status == "Complete" and unresolved_references == 0:
+        return "Finalized / Locked"
+
+    if integrity_status == "Complete" and unresolved_references > 0:
+        return "Finalized with Cleanup Pending"
+
+    return "Not Finalized"

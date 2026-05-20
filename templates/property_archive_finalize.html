@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Archive Packet Finalization / Lock Status</h1>
+
+<p>
+    <strong>Property:</strong> {{ prop["property_name"] or prop["property_id"] }}
+</p>
+
+<p>
+    <strong>Property ID:</strong> {{ prop["property_id"] }}
+    {% if linked_trust %}
+    |
+    <strong>Trust:</strong> {{ linked_trust["trust_name"] or linked_trust["trust_id"] }}
+    {% endif %}
+</p>
+
+<p>
+    <a href="{{ url_for('property_archive_packet', property_id=prop['property_id']) }}">Back to Archive Packet</a>
+    |
+    <a href="{{ url_for('property_archive_packet_integrity', property_id=prop['property_id']) }}">ZIP Integrity</a>
+    |
+    <a href="{{ url_for('property_archive_packet_zip', property_id=prop['property_id']) }}">Download Archive ZIP</a>
+</p>
+
+<hr>
+
+<div style="border:1px solid #ddd; padding:14px; border-radius:8px; margin-bottom:18px;
+            background:{% if recommended_status == 'Finalized / Locked' %}#e8f8ec{% elif recommended_status == 'Finalized with Cleanup Pending' %}#fff4e5{% else %}#ffecec{% endif %};">
+    <h2 style="margin-top:0;">Recommended Finalization Status: {{ recommended_status }}</h2>
+    <p><strong>Packet Status:</strong> {{ archive_packet.packet_status }}</p>
+    <p><strong>Integrity Status:</strong> {{ integrity_profile.integrity_status }}</p>
+    <p><strong>Resolution Status:</strong> {{ archive_packet.resolution_status }}</p>
+    <p><strong>Archive Badge:</strong> {{ archive_packet.archive_badge }}</p>
+    <p><strong>Unresolved Manual References:</strong> {{ archive_packet.unresolved_references }}</p>
+</div>
+
+{% if latest_finalization %}
+<h2>Latest Finalization Record</h2>
+<p><strong>Finalization ID:</strong> {{ latest_finalization.finalization_id }}</p>
+<p><strong>Status:</strong> {{ latest_finalization.finalized_status }}</p>
+<p><strong>Finalized By:</strong> {{ latest_finalization.finalized_by }}</p>
+<p><strong>Finalized At:</strong> {{ latest_finalization.finalized_at }}</p>
+<p><strong>Notes:</strong> {{ latest_finalization.notes or "Not entered" }}</p>
+<hr>
+{% endif %}
+
+<h2>Record Finalization / Lock Status</h2>
+
+<form method="POST">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <p>
+        <label><strong>Finalized Status</strong></label><br>
+        <select name="finalized_status" style="width:100%; padding:10px;">
+            <option value="{{ recommended_status }}">{{ recommended_status }} — Recommended</option>
+            <option value="Finalized / Locked">Finalized / Locked</option>
+            <option value="Finalized with Cleanup Pending">Finalized with Cleanup Pending</option>
+            <option value="Not Finalized">Not Finalized</option>
+        </select>
+    </p>
+
+    <p>
+        <label><strong>Notes</strong></label><br>
+        <textarea name="notes" rows="5" style="width:100%; padding:10px;"
+                  placeholder="Explain finalization decision, remaining cleanup, review notes, or archive lock conditions."></textarea>
+    </p>
+
+    <button type="submit">Record Archive Finalization</button>
+</form>
+
+<hr>
+
+<h2>Finalization History</h2>
+
+{% if finalizations %}
+<table border="1" cellpadding="8" cellspacing="0" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Finalization ID</th>
+            <th>Status</th>
+            <th>Integrity</th>
+            <th>Resolution</th>
+            <th>Finalized By</th>
+            <th>Finalized At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in finalizations %}
+        <tr>
+            <td>{{ item.finalization_id }}</td>
+            <td>{{ item.finalized_status }}</td>
+            <td>{{ item.integrity_status }}</td>
+            <td>{{ item.resolution_status }}</td>
+            <td>{{ item.finalized_by }}</td>
+            <td>{{ item.finalized_at }}</td>
+        </tr>
+        {% if item.notes %}
+        <tr>
+            <td colspan="6"><strong>Notes:</strong> {{ item.notes }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No archive finalization records have been created yet.</p>
+{% endif %}
+
+<hr>
+
+<p>
+    <strong>Finalization Doctrine:</strong>
+    Finalization records the operational lock status of the archive packet. A packet may be finalized with cleanup
+    pending when integrity is complete but unresolved manual references remain.
+</p>
+{% endblock %}

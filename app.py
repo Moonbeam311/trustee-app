@@ -171,7 +171,11 @@ from services.services_continuity_assets import (
     update_custody_event_supporting_reference,
     build_property_resolution_queue,
     build_asset_continuity_archive_packet,
-    build_archive_zip_integrity_profile
+    build_archive_zip_integrity_profile,
+    create_archive_packet_finalization,
+    get_archive_finalizations_for_property,
+    get_latest_archive_finalization,
+    determine_archive_finalized_status
 )
 
 from services.services_articles import (
@@ -5093,6 +5097,71 @@ def generate_archive_integrity_report_pdf(prop, trust=None, archive_packet=None,
     buffer.seek(0)
 
     return buffer
+
+
+
+
+@app.route("/property/<property_id>/archive-packet/finalize", methods=["GET", "POST"])
+@require_permission("view_dashboard")
+def property_archive_packet_finalize(property_id):
+    prop = get_property_by_id(property_id)
+
+    if not prop:
+        flash("Property not found.", "danger")
+        return redirect(url_for("admin_index"))
+
+    prop_data = dict(prop)
+    linked_trust = get_trust_by_id(prop_data.get("trust_id"))
+    archive_packet = build_asset_continuity_archive_packet(property_id)
+    integrity_profile = build_archive_integrity_from_generated_zip(
+        prop_data,
+        linked_trust,
+        archive_packet
+    )
+
+    recommended_status = determine_archive_finalized_status(
+        archive_packet,
+        integrity_profile
+    )
+
+    finalizations = [
+        dict(row)
+        for row in get_archive_finalizations_for_property(property_id)
+    ]
+
+    latest_finalization = finalizations[0] if finalizations else None
+
+    if request.method == "POST":
+        finalized_status = request.form.get("finalized_status") or recommended_status
+        notes = request.form.get("notes")
+
+        finalization_id = create_archive_packet_finalization({
+            "property_id": property_id,
+            "trust_id": prop_data.get("trust_id"),
+            "packet_status": archive_packet.get("packet_status"),
+            "integrity_status": integrity_profile.get("integrity_status"),
+            "resolution_status": archive_packet.get("resolution_status"),
+            "archive_badge": archive_packet.get("archive_badge"),
+            "finalized_status": finalized_status,
+            "finalized_by": session.get("username") or "unknown",
+            "notes": notes,
+            "firm_id": prop_data.get("firm_id"),
+        })
+
+        flash(f"Archive packet finalization recorded: {finalization_id}", "success")
+
+        return redirect(url_for("property_archive_packet_finalize", property_id=property_id))
+
+    return render_template(
+        "property_archive_finalize.html",
+        prop=prop_data,
+        linked_trust=linked_trust,
+        archive_packet=archive_packet,
+        integrity_profile=integrity_profile,
+        recommended_status=recommended_status,
+        latest_finalization=latest_finalization,
+        finalizations=finalizations
+    )
 
 
 @app.route("/property/<property_id>/archive-packet/integrity")
