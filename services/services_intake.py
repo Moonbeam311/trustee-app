@@ -3946,7 +3946,7 @@ def save_document_recommendations(intake_id, recommendations, created_by=None):
             continue
 
         cur.execute("""
-            SELECT id
+            SELECT id, status
             FROM intake_document_recommendations
             WHERE intake_id = ? AND workflow_key = ?
             LIMIT 1
@@ -3954,41 +3954,40 @@ def save_document_recommendations(intake_id, recommendations, created_by=None):
         existing = cur.fetchone()
 
         if existing:
+            existing_id = existing[0]
+            existing_status = existing[1] or "recommended"
+
+            preserved_status = existing_status if existing_status in {
+                "accepted",
+                "deferred",
+                "rejected",
+                "launch_prepared",
+            } else rec.get("status", "recommended")
+
             cur.execute("""
-                # Preserve user-selected status when refreshing recommendation data.
-                # Do not overwrite accepted/deferred/rejected/launch_prepared back to recommended.
-                cur.execute("""
-                    SELECT status
-                    FROM intake_document_recommendations
-                    WHERE id = ?
-                """, (existing[0],))
-                status_row = cur.fetchone()
-                existing_status = status_row[0] if status_row else "recommended"
-
-                preserved_status = existing_status if existing_status in {
-                    "accepted",
-                    "deferred",
-                    "rejected",
-                    "launch_prepared",
-                } else rec.get("status", "recommended")
-
-                cur.execute("""
-                    UPDATE intake_document_recommendations
-                    SET title = ?, workflow_type = ?, priority = ?, confidence = ?,
-                        reason = ?, source = ?, status = ?, updated_at = ?, created_by = ?
-                    WHERE id = ?
-                """, (
-                    rec.get("title"),
-                    rec.get("workflow_type"),
-                    rec.get("priority"),
-                    int(rec.get("confidence", 0)),
-                    rec.get("reason"),
-                    rec.get("source"),
-                    preserved_status,
-                    now,
-                    created_by,
-                    existing[0],
-                ))
+                UPDATE intake_document_recommendations
+                SET title = ?,
+                    workflow_type = ?,
+                    priority = ?,
+                    confidence = ?,
+                    reason = ?,
+                    source = ?,
+                    status = ?,
+                    updated_at = ?,
+                    created_by = ?
+                WHERE id = ?
+            """, (
+                rec.get("title"),
+                rec.get("workflow_type"),
+                rec.get("priority"),
+                int(rec.get("confidence", 0)),
+                rec.get("reason"),
+                rec.get("source"),
+                preserved_status,
+                now,
+                created_by,
+                existing_id,
+            ))
         else:
             cur.execute("""
                 INSERT INTO intake_document_recommendations (
@@ -4015,7 +4014,6 @@ def save_document_recommendations(intake_id, recommendations, created_by=None):
 
     conn.commit()
     conn.close()
-
 
 def list_saved_document_recommendations(intake_id):
     ensure_intake_document_recommendation_tables()
