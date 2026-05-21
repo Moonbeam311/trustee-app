@@ -13086,14 +13086,6 @@ def trust_article_assignment_add(trust_id):
         )
     )
 
-
-
-if __name__ == "__main__":
-    app.run(debug=FLASK_DEBUG == "1")
-
-app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
-
-
 # -------------------------------------------------------------------
 # INT-1A — Intake Lane Map
 # -------------------------------------------------------------------
@@ -13118,3 +13110,7 @@ def intake_start():
 
     return render_template("intake/start.html", lanes=lanes)
 
+if __name__ == "__main__":
+    app.run(debug=FLASK_DEBUG == "1")
+
+app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
