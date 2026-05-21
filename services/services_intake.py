@@ -3729,7 +3729,7 @@ def _make_document_recommendation(workflow_key, reason, priority=None, confidenc
     }
 
 
-def build_document_recommendations(intake_id):
+def build_document_recommendations_base_before_instruments(intake_id):
     """
     Converts intake snapshot data into recommended next document workflows.
     This does not generate documents. It only recommends the next workflow path.
@@ -3930,6 +3930,16 @@ def ensure_intake_document_recommendation_tables():
     conn.commit()
     conn.close()
 
+
+
+def build_document_recommendations(intake_id, *args, **kwargs):
+    """
+    INT-2C-INSTRUMENTS wrapper:
+    preserves the existing recommendation engine, then appends visible trust
+    instrument workflows such as Certificate of Trust and Trust Articles.
+    """
+    recommendations = build_document_recommendations_base_before_instruments(intake_id, *args, **kwargs)
+    return merge_trust_instrument_recommendations(recommendations)
 
 def save_document_recommendations(intake_id, recommendations, created_by=None):
     ensure_intake_document_recommendation_tables()
@@ -8932,4 +8942,112 @@ def build_final_draft_completion_gate_context(intake_id, workflow_key, document_
         "already_completed": gate.get("gate_status") == "completed_preparation",
         "notice": "This completion gate records preparation completion only. It does not authorize signing, filing, execution, transfer, or final legal use.",
     }
+
+
+# -------------------------------------------------------------------
+# INT-2C-INSTRUMENTS — Trust Instrument Recommendation Menu
+# -------------------------------------------------------------------
+
+TRUST_INSTRUMENT_RECOMMENDATIONS = [
+    {
+        "title": "Certificate of Trust",
+        "workflow_key": "certificate_of_trust",
+        "workflow_type": "Trust Instrument",
+        "priority": "High",
+        "confidence": 94,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "A Certificate of Trust can summarize trust existence, authority, trustees, and limited certification details without exposing the full trust instrument."
+    },
+    {
+        "title": "Trust Articles / Article Builder",
+        "workflow_key": "trust_articles_builder",
+        "workflow_type": "Trust Instrument",
+        "priority": "High",
+        "confidence": 93,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "Trust articles allow controlled drafting of governing provisions, powers, limitations, fiduciary terms, and administrative structure."
+    },
+    {
+        "title": "Declaration of Trust",
+        "workflow_key": "declaration_of_trust",
+        "workflow_type": "Trust Instrument",
+        "priority": "High",
+        "confidence": 92,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "A Declaration of Trust can organize the trust name, settlor/grantor role, trustee authority, trust purpose, property, beneficiaries, and administration terms."
+    },
+    {
+        "title": "Trustee Acceptance",
+        "workflow_key": "trustee_acceptance",
+        "workflow_type": "Trust Instrument",
+        "priority": "Normal",
+        "confidence": 90,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "Trustee acceptance records formal acceptance of appointment and fiduciary responsibilities."
+    },
+    {
+        "title": "Trust Minutes / Resolution",
+        "workflow_key": "trust_minutes_resolution",
+        "workflow_type": "Trust Governance",
+        "priority": "Normal",
+        "confidence": 89,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "Trust minutes and resolutions document trustee decisions, approvals, appointments, authority, and administrative actions."
+    },
+    {
+        "title": "Schedule A / Asset Schedule",
+        "workflow_key": "schedule_a_asset_schedule",
+        "workflow_type": "Trust Funding",
+        "priority": "High",
+        "confidence": 91,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "A Schedule A or asset schedule organizes initial trust property, later contributions, asset descriptions, supporting records, and transfer readiness."
+    },
+    {
+        "title": "Execution / Notary / Witness Packet",
+        "workflow_key": "execution_notary_witness_packet",
+        "workflow_type": "Execution",
+        "priority": "High",
+        "confidence": 91,
+        "status": "recommended",
+        "source": "instrument_menu",
+        "reason": "Execution packets organize signature blocks, witness sections, jurat/notary language, execution checklist, and completion controls."
+    },
+]
+
+
+def get_trust_instrument_recommendation_menu():
+    """
+    Return the visible trust-instrument workflow menu.
+
+    These are preparation workflows only. They do not determine legal sufficiency
+    or create final signed/executed instruments.
+    """
+    return [dict(item) for item in TRUST_INSTRUMENT_RECOMMENDATIONS]
+
+
+def merge_trust_instrument_recommendations(recommendations):
+    """
+    Add trust instrument workflows to the recommendation list without duplicating
+    existing workflow keys.
+    """
+    recommendations = list(recommendations or [])
+
+    existing_keys = {
+        rec.get("workflow_key") or rec.get("source") or rec.get("title")
+        for rec in recommendations
+    }
+
+    for item in get_trust_instrument_recommendation_menu():
+        key = item.get("workflow_key")
+        if key not in existing_keys:
+            recommendations.append(item)
+
+    return recommendations
 

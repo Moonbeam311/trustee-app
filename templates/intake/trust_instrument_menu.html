@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.instrument-wrap {
+    max-width: 1120px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.instrument-hero,
+.instrument-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.instrument-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.instrument-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.instrument-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.instrument-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.instrument-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.instrument-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.instrument-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="instrument-wrap">
+    <div class="instrument-hero">
+        <h1 style="margin-top:0;">Trust Instrument Recommendation Menu</h1>
+        <p>Intake ID: <strong>{{ intake_id }}</strong></p>
+        <p class="instrument-muted">
+            These are controlled preparation workflows only. They do not generate final signed, filed, executed, transferred, or legally final documents.
+        </p>
+
+        <div class="instrument-actions">
+            <a href="{{ url_for('intake_document_recommendations', intake_id=intake_id) }}">Back to recommendations</a>
+            <a href="{{ url_for('intake_snapshot', intake_id=intake_id) }}">Snapshot</a>
+            <a href="{{ url_for('intake_dashboard') }}">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="instrument-grid">
+        {% for item in instruments %}
+            <div class="instrument-card">
+                <h2>{{ item.title }}</h2>
+
+                <p>
+                    <span class="instrument-pill">{{ item.workflow_type }}</span>
+                    <span class="instrument-pill">Priority: {{ item.priority }}</span>
+                    <span class="instrument-pill">Confidence: {{ item.confidence }}%</span>
+                </p>
+
+                <p>{{ item.reason }}</p>
+                <p><strong>Workflow Key:</strong> {{ item.workflow_key }}</p>
+
+                <div class="instrument-actions">
+                    <a href="{{ url_for('intake_workflow_launch_prep', intake_id=intake_id, workflow_key=item.workflow_key) }}">Prepare Launch</a>
+                    <a href="{{ url_for('intake_workflow_bridge', intake_id=intake_id, workflow_key=item.workflow_key) }}">Bridge</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

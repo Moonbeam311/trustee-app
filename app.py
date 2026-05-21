@@ -6,6 +6,7 @@ import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
+from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from services.services_intake import build_client_snapshot
 from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, ensure_intake_snapshot_tables
@@ -14083,6 +14084,16 @@ def intake_final_draft_completion_gate(intake_id, workflow_key, document_key):
     return render_template(
         "intake/final_draft_completion_gate.html",
         context=context
+    )
+
+
+@app.route("/intake/<intake_id>/trust-instruments")
+def intake_trust_instrument_menu(intake_id):
+    instruments = get_trust_instrument_recommendation_menu()
+    return render_template(
+        "intake/trust_instrument_menu.html",
+        intake_id=intake_id,
+        instruments=instruments
     )
 
 
