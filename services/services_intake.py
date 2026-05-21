@@ -4500,7 +4500,7 @@ def get_document_recommendation(intake_id, workflow_key):
     }
 
 
-def build_workflow_launch_prep(intake_id, workflow_key):
+def build_workflow_launch_prep_base_before_instrument_bridges(intake_id, workflow_key):
     """
     Prepares the selected recommendation for workflow launch.
     This does not generate the final document.
@@ -9537,4 +9537,24 @@ def apply_trust_instrument_bridge_definition(launch):
     launch["workflow_key"] = workflow_key
 
     return launch
+
+
+def build_workflow_launch_prep(intake_id, workflow_key, *args, **kwargs):
+    """
+    INT-2D-INSTRUMENT-BRIDGES wrapper:
+    preserves the original launch-prep builder, then applies instrument-specific
+    bridge definitions for trust instrument workflows.
+    """
+    launch = build_workflow_launch_prep_base_before_instrument_bridges(
+        intake_id,
+        workflow_key,
+        *args,
+        **kwargs
+    )
+
+    if isinstance(launch, dict):
+        launch["workflow_key"] = launch.get("workflow_key") or workflow_key
+        launch["selected_workflow"] = launch.get("selected_workflow") or workflow_key
+
+    return apply_trust_instrument_bridge_definition(launch)
 
