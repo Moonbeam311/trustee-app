@@ -9558,3 +9558,48 @@ def build_workflow_launch_prep(intake_id, workflow_key, *args, **kwargs):
 
     return apply_trust_instrument_bridge_definition(launch)
 
+
+# -------------------------------------------------------------------
+# INT-2D-BRIDGE-CONTROLLER — Force Instrument Bridge Context
+# -------------------------------------------------------------------
+
+def build_instrument_workflow_bridge_context(intake_id, workflow_key):
+    """
+    Build a workflow_bridge.html-compatible context for trust instrument workflows.
+    This bypasses generic bridge assumptions that redirect unknown workflow keys
+    back to recommendations.
+    """
+    definition = get_trust_instrument_bridge_definition(workflow_key)
+    if not definition:
+        return None
+
+    launch = build_workflow_launch_prep(intake_id, workflow_key)
+    if not isinstance(launch, dict):
+        launch = {}
+
+    launch["workflow_key"] = workflow_key
+    launch["selected_workflow"] = workflow_key
+    launch["title"] = definition.get("title")
+    launch["description"] = definition.get("description")
+    launch["bridge_title"] = definition.get("title")
+    launch["bridge_description"] = definition.get("description")
+    launch["bridge_questions"] = definition.get("questions", [])
+    launch["instrument_bridge"] = True
+
+    existing_answers = {}
+    try:
+        existing_answers = get_workflow_bridge_answers(intake_id, workflow_key) or {}
+    except Exception:
+        existing_answers = {}
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "launch": launch,
+        "answers": existing_answers,
+        "instrument_bridge": True,
+        "bridge_title": definition.get("title"),
+        "bridge_description": definition.get("description"),
+        "bridge_questions": definition.get("questions", []),
+    }
+

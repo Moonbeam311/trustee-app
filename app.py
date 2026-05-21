@@ -1,3 +1,4 @@
+from services.services_intake import build_instrument_workflow_bridge_context, is_trust_instrument_workflow
 import json
 import zipfile
 import os
@@ -13480,6 +13481,52 @@ def intake_workflow_launch_prep(intake_id, workflow_key):
 
 @app.route("/intake/<intake_id>/recommendations/<workflow_key>/bridge", methods=["GET", "POST"])
 def intake_workflow_bridge(intake_id, workflow_key):
+    # INT-2D-BRIDGE-CONTROLLER instrument bridge bypass
+    if is_trust_instrument_workflow(workflow_key):
+        context = build_instrument_workflow_bridge_context(intake_id, workflow_key)
+
+        if not context:
+            flash("Instrument bridge context could not be built.", "warning")
+            return redirect(url_for("intake_document_recommendations", intake_id=intake_id))
+
+        if request.method == "POST":
+            if not validate_csrf_token():
+                flash("Invalid or missing CSRF token.", "warning")
+                return redirect(url_for("intake_workflow_bridge", intake_id=intake_id, workflow_key=workflow_key))
+
+            answers = {}
+            for q in context.get("bridge_questions", []):
+                key = q.get("key")
+                qtype = q.get("type")
+                if not key:
+                    continue
+                if qtype == "checkbox":
+                    answers[key] = request.form.getlist(key)
+                else:
+                    answers[key] = request.form.get(key) or ""
+
+            try:
+                save_workflow_bridge_answers(
+                    intake_id=intake_id,
+                    workflow_key=workflow_key,
+                    answers=answers,
+                    created_by=session.get("username") if "session" in globals() else None,
+                )
+                flash("Instrument workflow bridge saved.", "success")
+                return redirect(url_for("intake_workflow_bridge_summary", intake_id=intake_id, workflow_key=workflow_key))
+            except Exception as exc:
+                flash(f"Instrument workflow bridge could not be saved: {exc}", "warning")
+                return redirect(url_for("intake_workflow_bridge", intake_id=intake_id, workflow_key=workflow_key))
+
+        return render_template(
+            "intake/workflow_bridge.html",
+            launch=context.get("launch"),
+            answers=context.get("answers") or {},
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+        )
+
+
     ensure_workflow_bridge_tables()
 
     definition = get_workflow_bridge_definition(workflow_key)
