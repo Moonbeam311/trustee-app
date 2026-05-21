@@ -8369,6 +8369,10 @@ def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, cre
 
     return str(out_path)
 
+# -------------------------------------------------------------------
+# INT-2Q — Final-Draft Export History + Version Register
+# -------------------------------------------------------------------
+
 def ensure_final_draft_version_register_tables():
     ensure_final_draft_section_tables()
 
