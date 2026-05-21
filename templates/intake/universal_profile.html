@@ -100,9 +100,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
-        {% if csrf_token is defined %}
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
-        {% endif %}
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
         {% for q_key, question in questions.items() %}
             <section class="intake-question-card">

@@ -87,9 +87,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('intake_start') }}">
-        {% if csrf_token is defined %}
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
-        {% endif %}
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
         <h2>Step 1 — What brings you here today?</h2>
         <p style="line-height:1.55;">
