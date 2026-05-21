@@ -27,6 +27,7 @@ from services.services_intake import get_workflow_bridge_definition, save_workfl
 from services.services_intake import build_workflow_draft_packet
 from services.services_intake import generate_workflow_draft_packet_docx, upsert_draft_readiness_record, list_draft_readiness_records
 from services.services_intake import get_document_draft_types_for_workflow, get_document_draft_type, get_document_draft_questions, save_document_draft_answers, build_document_draft_preview, ensure_document_draft_questionnaire_tables
+from services.services_intake import build_nonfinal_draft_document
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13639,6 +13640,25 @@ def intake_document_draft_preview(intake_id, workflow_key, document_key):
     return render_template(
         "intake/document_draft_preview.html",
         preview=preview
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/nonfinal")
+def intake_nonfinal_draft_document(intake_id, workflow_key, document_key):
+    document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
+
+    if not document:
+        flash("Non-final draft document could not be generated.", "warning")
+        return redirect(url_for(
+            "intake_document_draft_preview",
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key
+        ))
+
+    return render_template(
+        "intake/nonfinal_draft_document.html",
+        document=document
     )
 
 

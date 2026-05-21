@@ -110,6 +110,7 @@
             <a href="{{ url_for('intake_document_draft_choose', intake_id=preview.intake_id, workflow_key=preview.workflow_key) }}">Choose draft type</a>
             <a href="{{ url_for('intake_workflow_draft_packet', intake_id=preview.intake_id, workflow_key=preview.workflow_key) }}">Draft packet</a>
             <a href="#" onclick="window.print(); return false;">Print preview</a>
+            <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Generate non-final draft</a>
         </div>
     </div>
 

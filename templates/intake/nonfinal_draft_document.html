@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.nonfinal-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.nonfinal-hero,
+.nonfinal-card,
+.nonfinal-section {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.nonfinal-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.nonfinal-card,
+.nonfinal-section {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.nonfinal-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.nonfinal-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.nonfinal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.nonfinal-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.nonfinal-body {
+    white-space: pre-line;
+    line-height: 1.55;
+}
+
+.nonfinal-muted {
+    opacity: 0.75;
+}
+
+.nonfinal-warning {
+    border: 1px solid rgba(0,0,0,0.18);
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+@media print {
+    nav,
+    .nonfinal-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .nonfinal-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .nonfinal-hero,
+    .nonfinal-card,
+    .nonfinal-section,
+    .nonfinal-warning {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="nonfinal-wrap">
+    <div class="nonfinal-hero">
+        <h1 style="margin-top:0;">{{ document.title }}</h1>
+        <p>{{ document.description }}</p>
+        <p class="nonfinal-muted">
+            Intake ID: <strong>{{ document.intake_id }}</strong> |
+            Workflow: <strong>{{ document.workflow_key }}</strong> |
+            Document Key: <strong>{{ document.document_key }}</strong>
+        </p>
+        <p><strong>{{ document.notice }}</strong></p>
+
+        <div class="nonfinal-actions">
+            <a href="{{ url_for('intake_document_draft_preview', intake_id=document.intake_id, workflow_key=document.workflow_key, document_key=document.document_key) }}">Controlled preview</a>
+            <a href="{{ url_for('intake_document_draft_questionnaire', intake_id=document.intake_id, workflow_key=document.workflow_key, document_key=document.document_key) }}">Edit questionnaire</a>
+            <a href="{{ url_for('intake_workflow_draft_packet', intake_id=document.intake_id, workflow_key=document.workflow_key) }}">Draft packet</a>
+            <a href="#" onclick="window.print(); return false;">Print non-final draft</a>
+        </div>
+    </div>
+
+    <div class="nonfinal-grid">
+        <div class="nonfinal-card">
+            <h3>Status</h3>
+            <span class="nonfinal-pill">{{ document.document_status }}</span>
+        </div>
+        <div class="nonfinal-card">
+            <h3>Draft Readiness</h3>
+            <span class="nonfinal-pill">{{ document.readiness }}</span>
+        </div>
+        <div class="nonfinal-card">
+            <h3>Preview Status</h3>
+            <span class="nonfinal-pill">{{ document.preview.preview_status }}</span>
+        </div>
+        <div class="nonfinal-card">
+            <h3>Answered</h3>
+            <span class="nonfinal-pill">{{ document.preview.answered_count }} / {{ document.preview.total_count }}</span>
+        </div>
+    </div>
+
+    {% if document.missing_answers %}
+        <div class="nonfinal-warning">
+            <h2 style="margin-top:0;">Missing Questionnaire Answers</h2>
+            <ul>
+                {% for item in document.missing_answers %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% for section in document.sections %}
+        <div class="nonfinal-section">
+            <h2>{{ section.heading }}</h2>
+            <div class="nonfinal-body">{{ section.body }}</div>
+        </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

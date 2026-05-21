@@ -6208,3 +6208,160 @@ def build_document_draft_preview(intake_id, workflow_key, document_key):
         "notice": "This is a non-final draft preview generated from controlled questionnaire answers. It is not a final legal, fiduciary, tax, property, or business document.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2H — Non-Final Draft Document Generator
+# -------------------------------------------------------------------
+
+def _answers_for_question(preview, question_key):
+    for item in preview.get("question_summaries", []) or []:
+        if item.get("question_key") == question_key:
+            return [a.get("answer_label") for a in item.get("answers", []) or [] if a.get("answer_label")]
+    return []
+
+
+def _first_answer(preview, question_key, default="Not provided"):
+    answers = _answers_for_question(preview, question_key)
+    return answers[0] if answers else default
+
+
+def build_nonfinal_draft_sections(preview):
+    workflow_key = preview.get("workflow_key")
+    document_key = preview.get("document_key")
+    draft_packet = preview.get("draft_packet", {}) or {}
+
+    sections = []
+
+    sections.append({
+        "heading": "Purpose / Scope",
+        "body": (
+            f"This non-final draft organizes information for {preview.get('document_type', {}).get('title', 'the selected document')} "
+            f"under workflow {workflow_key}. It is prepared from intake data, bridge answers, and controlled draft-questionnaire responses."
+        ),
+    })
+
+    gathered_lines = []
+    for item in preview.get("question_summaries", []) or []:
+        label = item.get("label")
+        answers = [a.get("answer_label") for a in item.get("answers", []) or [] if a.get("answer_label")]
+        if answers:
+            gathered_lines.append(f"{label}: " + "; ".join(answers))
+        else:
+            gathered_lines.append(f"{label}: Not provided")
+
+    sections.append({
+        "heading": "Information Gathered",
+        "body": "\n".join(gathered_lines) if gathered_lines else "No controlled questionnaire answers were recorded.",
+    })
+
+    if workflow_key == "business_continuity_packet":
+        business_name = _first_answer(preview, "business_name")
+        current_operator = _first_answer(preview, "current_operator")
+        successor_contact = _first_answer(preview, "successor_contact")
+        continuity_priority = _first_answer(preview, "continuity_priority")
+
+        sections.append({
+            "heading": "Business Authority / Continuity Notes",
+            "body": (
+                f"Business / DBA: {business_name}\n"
+                f"Current Operator / Control Party: {current_operator}\n"
+                f"Successor or Backup Contact: {successor_contact}\n"
+                f"Continuity Priority: {continuity_priority}\n\n"
+                "This section is a preliminary continuity summary only. Authority, ownership, insurance, and business records "
+                "must be verified before this draft is used for final action."
+            ),
+        })
+
+    elif workflow_key == "professional_review_checklist":
+        sections.append({
+            "heading": "Professional Review Issue Notes",
+            "body": "This draft should separate legal, tax, court, creditor, business, or family-risk issues before any final action.",
+        })
+
+    elif workflow_key == "real_property_review":
+        sections.append({
+            "heading": "Property Ownership / Records Notes",
+            "body": "This draft should be supported by deed/title records, property tax records, mortgage/lien information, and insurance documents.",
+        })
+
+    elif workflow_key == "asset_inventory_packet":
+        sections.append({
+            "heading": "Asset Inventory Notes",
+            "body": "This draft should be supported by ownership records, asset statements, titles, deeds, insurance records, and registration evidence.",
+        })
+
+    open_issues = draft_packet.get("open_issues", []) or []
+    sections.append({
+        "heading": "Open Issues",
+        "body": "\n".join(open_issues) if open_issues else "No open issues were detected from the draft packet.",
+    })
+
+    documents = draft_packet.get("documents", []) or []
+    sections.append({
+        "heading": "Required Documents",
+        "body": "\n".join([f"[ ] {doc}" for doc in documents]) if documents else "No document checklist was available.",
+    })
+
+    next_steps = [
+        "Review missing questionnaire answers.",
+        "Confirm all required documents are collected.",
+        "Resolve open issues before final drafting.",
+        "Confirm whether outside professional review is needed.",
+        "Move to final-draft preparation only after review gates are cleared.",
+    ]
+
+    if preview.get("preview_status") == "Draft Preview Ready":
+        next_steps.insert(0, "Controlled questionnaire is complete; proceed to review-gate evaluation.")
+    else:
+        next_steps.insert(0, "Controlled questionnaire is incomplete; complete missing answers before final drafting.")
+
+    sections.append({
+        "heading": "Recommended Next Steps",
+        "body": "\n".join([f"- {step}" for step in next_steps]),
+    })
+
+    sections.append({
+        "heading": "Review Notice",
+        "body": (
+            "NON-FINAL DRAFT PREVIEW ONLY. This document is generated for intake, organization, and preparation. "
+            "It is not legal advice, tax advice, fiduciary advice, property-transfer advice, or a final enforceable document. "
+            "Review and approval gates must be completed before any formal use."
+        ),
+    })
+
+    return sections
+
+
+def build_nonfinal_draft_document(intake_id, workflow_key, document_key):
+    preview = build_document_draft_preview(intake_id, workflow_key, document_key)
+    if not preview:
+        return None
+
+    sections = build_nonfinal_draft_sections(preview)
+
+    missing_answers = []
+    for item in preview.get("question_summaries", []) or []:
+        if not item.get("answers"):
+            missing_answers.append(item.get("label"))
+
+    if missing_answers:
+        document_status = "Non-Final Draft — Incomplete Questionnaire"
+    elif preview.get("draft_packet", {}).get("open_issues"):
+        document_status = "Non-Final Draft — Review Required"
+    else:
+        document_status = "Non-Final Draft — Ready for Review Gate"
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "title": preview.get("document_type", {}).get("title", "Non-Final Draft Document"),
+        "description": preview.get("document_type", {}).get("description", ""),
+        "preview": preview,
+        "sections": sections,
+        "missing_answers": missing_answers,
+        "document_status": document_status,
+        "readiness": preview.get("draft_packet", {}).get("readiness"),
+        "notice": "This is a non-final draft document generated from controlled intake data. It is not a final document.",
+    }
+
