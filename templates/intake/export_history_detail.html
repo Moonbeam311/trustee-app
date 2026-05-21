@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.export-history-wrap {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.export-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    padding: 20px;
+    margin-bottom: 18px;
+}
+
+.export-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.export-table th,
+.export-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.export-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.export-actions a {
+    padding: 8px 11px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 9px;
+    text-decoration: none;
+}
+</style>
+
+<div class="export-history-wrap">
+    <div class="export-card">
+        <h1 style="margin-top:0;">Export History: {{ intake_id }}</h1>
+        <p>Review versioned export attempts for this intake.</p>
+
+        <div class="export-actions">
+            <a href="{{ url_for('intake_export_history') }}">All exports</a>
+            <a href="{{ url_for('intake_saved_snapshot', intake_id=intake_id) }}">Snapshot</a>
+            <a href="{{ url_for('intake_followup_packet', intake_id=intake_id) }}">Packet</a>
+            <a href="{{ url_for('intake_dashboard') }}">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="export-card">
+        <table class="export-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Version</th>
+                    <th>Status</th>
+                    <th>Packet</th>
+                    <th>Created</th>
+                    <th>By</th>
+                    <th>File</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td>{{ log.export_type.upper() if log.export_type else '—' }}</td>
+                        <td>v{{ log.version_number }}</td>
+                        <td>{{ log.export_status.title() if log.export_status else '—' }}</td>
+                        <td>{{ log.packet_type.replace('_', ' ').title() if log.packet_type else '—' }}</td>
+                        <td>{{ log.created_at }}</td>
+                        <td>{{ log.created_by }}</td>
+                        <td>{{ log.file_path or '—' }}</td>
+                        <td>{{ log.message or '' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="8">No export logs found for this intake.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

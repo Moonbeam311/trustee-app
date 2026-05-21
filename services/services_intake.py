@@ -3074,3 +3074,292 @@ def generate_followup_packet_pdf_logged(intake_id, created_by=None):
         )
         return None
 
+
+# -------------------------------------------------------------------
+# INT-1N — Intake Export History Dashboard + Packet Versioning
+# -------------------------------------------------------------------
+
+def ensure_intake_export_version_columns():
+    ensure_intake_export_log_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("PRAGMA table_info(intake_export_logs)")
+    columns = {row[1] for row in cur.fetchall()}
+
+    if "version_number" not in columns:
+        cur.execute("ALTER TABLE intake_export_logs ADD COLUMN version_number INTEGER DEFAULT 1")
+
+    if "packet_type" not in columns:
+        cur.execute("ALTER TABLE intake_export_logs ADD COLUMN packet_type TEXT DEFAULT 'follow_up_packet'")
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_export_version(intake_id, export_type, packet_type="follow_up_packet"):
+    ensure_intake_export_version_columns()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT COALESCE(MAX(version_number), 0)
+        FROM intake_export_logs
+        WHERE intake_id = ?
+          AND export_type = ?
+          AND packet_type = ?
+          AND export_status IN ('success', 'failed', 'error')
+    """, (intake_id, export_type, packet_type))
+
+    row = cur.fetchone()
+    conn.close()
+
+    current = row[0] if row and row[0] is not None else 0
+    return int(current) + 1
+
+
+def log_intake_export_versioned(
+    intake_id,
+    export_type,
+    export_status,
+    file_path=None,
+    message=None,
+    created_by=None,
+    packet_type="follow_up_packet",
+    version_number=None
+):
+    ensure_intake_export_version_columns()
+
+    if version_number is None:
+        version_number = get_next_export_version(intake_id, export_type, packet_type)
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_export_logs (
+            intake_id, firm_id, export_type, export_status,
+            file_path, message, created_at, created_by,
+            version_number, packet_type
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        firm_id,
+        export_type,
+        export_status,
+        file_path,
+        message,
+        now,
+        created_by,
+        version_number,
+        packet_type,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "export_type": export_type,
+        "export_status": export_status,
+        "file_path": file_path,
+        "message": message,
+        "created_at": now,
+        "created_by": created_by,
+        "version_number": version_number,
+        "packet_type": packet_type,
+    }
+
+
+def list_all_intake_export_logs(limit=100):
+    ensure_intake_export_version_columns()
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, export_type, export_status, file_path, message,
+               created_at, created_by, version_number, packet_type
+        FROM intake_export_logs
+        WHERE firm_id = ?
+        ORDER BY id DESC
+        LIMIT ?
+    """, (firm_id, limit))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "export_type": row[1],
+            "export_status": row[2],
+            "file_path": row[3],
+            "message": row[4],
+            "created_at": format_intake_timestamp(row[5]),
+            "created_by": row[6] or "—",
+            "version_number": row[7] or 1,
+            "packet_type": row[8] or "follow_up_packet",
+        }
+        for row in rows
+    ]
+
+
+def list_intake_export_logs_versioned(intake_id):
+    ensure_intake_export_version_columns()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT export_type, export_status, file_path, message,
+               created_at, created_by, version_number, packet_type
+        FROM intake_export_logs
+        WHERE intake_id = ?
+        ORDER BY id DESC
+        LIMIT 100
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": intake_id,
+            "export_type": row[0],
+            "export_status": row[1],
+            "file_path": row[2],
+            "message": row[3],
+            "created_at": format_intake_timestamp(row[4]),
+            "created_by": row[5] or "—",
+            "version_number": row[6] or 1,
+            "packet_type": row[7] or "follow_up_packet",
+        }
+        for row in rows
+    ]
+
+
+def get_intake_export_summary(limit=100):
+    logs = list_all_intake_export_logs(limit=limit)
+
+    summary = {
+        "total": len(logs),
+        "success": 0,
+        "failed": 0,
+        "error": 0,
+        "docx": 0,
+        "pdf": 0,
+        "other": 0,
+    }
+
+    for log in logs:
+        status = log.get("export_status")
+        export_type = log.get("export_type")
+
+        if status in summary:
+            summary[status] += 1
+
+        if export_type == "docx":
+            summary["docx"] += 1
+        elif export_type == "pdf":
+            summary["pdf"] += 1
+        else:
+            summary["other"] += 1
+
+    return summary
+
+
+def generate_followup_packet_docx_logged_versioned(intake_id, created_by=None):
+    version = get_next_export_version(intake_id, "docx", "follow_up_packet")
+
+    try:
+        path = generate_followup_packet_docx(intake_id)
+        if path:
+            log_intake_export_versioned(
+                intake_id=intake_id,
+                export_type="docx",
+                export_status="success",
+                file_path=path,
+                message=f"DOCX follow-up packet generated successfully. Version {version}.",
+                created_by=created_by,
+                packet_type="follow_up_packet",
+                version_number=version,
+            )
+            return path
+
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="docx",
+            export_status="failed",
+            file_path=None,
+            message=f"DOCX follow-up packet could not be generated. Version {version}.",
+            created_by=created_by,
+            packet_type="follow_up_packet",
+            version_number=version,
+        )
+        return None
+
+    except Exception as exc:
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="docx",
+            export_status="error",
+            file_path=None,
+            message=f"{exc} Version {version}.",
+            created_by=created_by,
+            packet_type="follow_up_packet",
+            version_number=version,
+        )
+        return None
+
+
+def generate_followup_packet_pdf_logged_versioned(intake_id, created_by=None):
+    version = get_next_export_version(intake_id, "pdf", "follow_up_packet")
+
+    try:
+        path = generate_followup_packet_pdf(intake_id)
+        if path:
+            log_intake_export_versioned(
+                intake_id=intake_id,
+                export_type="pdf",
+                export_status="success",
+                file_path=path,
+                message=f"PDF follow-up packet generated successfully. Version {version}.",
+                created_by=created_by,
+                packet_type="follow_up_packet",
+                version_number=version,
+            )
+            return path
+
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="pdf",
+            export_status="failed",
+            file_path=None,
+            message=f"Automatic PDF generation unavailable. Use Print packet → Save as PDF or install LibreOffice / pywin32 + Word. Version {version}.",
+            created_by=created_by,
+            packet_type="follow_up_packet",
+            version_number=version,
+        )
+        return None
+
+    except Exception as exc:
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="pdf",
+            export_status="error",
+            file_path=None,
+            message=f"{exc} Version {version}.",
+            created_by=created_by,
+            packet_type="follow_up_packet",
+            version_number=version,
+        )
+        return None
+

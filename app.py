@@ -17,6 +17,7 @@ from services.services_intake import summarize_followup_tasks, group_followup_ta
 from services.services_intake import build_intake_followup_packet, get_packet_readiness_label
 from services.services_intake import generate_followup_packet_docx, generate_followup_packet_pdf
 from services.services_intake import generate_followup_packet_docx_logged, generate_followup_packet_pdf_logged, list_intake_export_logs, ensure_intake_export_log_tables
+from services.services_intake import ensure_intake_export_version_columns, list_all_intake_export_logs, list_intake_export_logs_versioned, get_intake_export_summary, generate_followup_packet_docx_logged_versioned, generate_followup_packet_pdf_logged_versioned
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13247,7 +13248,7 @@ def intake_export_prep(intake_id):
         flash("Snapshot export preparation could not find that intake.", "warning")
         return redirect(url_for("intake_dashboard"))
 
-    export_logs = list_intake_export_logs(intake_id)
+    export_logs = list_intake_export_logs_versioned(intake_id)
     return render_template(
         "intake/export_prep.html",
         export_data=export_data,
@@ -13327,7 +13328,7 @@ def intake_followup_packet(intake_id):
 
 @app.route("/intake/<intake_id>/packet/docx")
 def intake_followup_packet_docx(intake_id):
-    path = generate_followup_packet_docx_logged(
+    path = generate_followup_packet_docx_logged_versioned(
         intake_id,
         created_by=session.get("username") if "session" in globals() else None
     )
@@ -13341,7 +13342,7 @@ def intake_followup_packet_docx(intake_id):
 
 @app.route("/intake/<intake_id>/packet/pdf")
 def intake_followup_packet_pdf(intake_id):
-    path = generate_followup_packet_pdf_logged(
+    path = generate_followup_packet_pdf_logged_versioned(
         intake_id,
         created_by=session.get("username") if "session" in globals() else None
     )
@@ -13354,6 +13355,29 @@ def intake_followup_packet_pdf(intake_id):
         return redirect(url_for("intake_followup_packet", intake_id=intake_id))
 
     return send_file(path, as_attachment=True)
+
+
+@app.route("/intake/exports")
+def intake_export_history():
+    ensure_intake_export_version_columns()
+    logs = list_all_intake_export_logs(limit=200)
+    summary = get_intake_export_summary(limit=200)
+    return render_template(
+        "intake/export_history.html",
+        logs=logs,
+        summary=summary
+    )
+
+
+@app.route("/intake/<intake_id>/exports")
+def intake_export_history_detail(intake_id):
+    ensure_intake_export_version_columns()
+    logs = list_intake_export_logs_versioned(intake_id)
+    return render_template(
+        "intake/export_history_detail.html",
+        intake_id=intake_id,
+        logs=logs
+    )
 
 
 if __name__ == "__main__":

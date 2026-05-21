@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.export-history-wrap {
+    max-width: 1220px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.export-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    padding: 20px;
+    margin-bottom: 18px;
+}
+
+.export-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.export-stat {
+    border: 1px solid rgba(0,0,0,0.13);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+}
+
+.export-stat strong {
+    display: block;
+    font-size: 1.35rem;
+}
+
+.export-table-wrap {
+    overflow-x: auto;
+}
+
+.export-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.export-table th,
+.export-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.export-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.export-actions a {
+    padding: 8px 11px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 9px;
+    text-decoration: none;
+}
+</style>
+
+<div class="export-history-wrap">
+    <div class="export-card">
+        <h1 style="margin-top:0;">Intake Export History</h1>
+        <p>Review DOCX/PDF export attempts across all intake sessions.</p>
+
+        <div class="export-actions">
+            <a href="{{ url_for('intake_dashboard') }}">Back to intake dashboard</a>
+        </div>
+    </div>
+
+    <div class="export-card">
+        <h2>Export Summary</h2>
+        <div class="export-grid">
+            <div class="export-stat"><strong>{{ summary.total }}</strong>Total</div>
+            <div class="export-stat"><strong>{{ summary.success }}</strong>Success</div>
+            <div class="export-stat"><strong>{{ summary.failed }}</strong>Failed</div>
+            <div class="export-stat"><strong>{{ summary.error }}</strong>Error</div>
+            <div class="export-stat"><strong>{{ summary.docx }}</strong>DOCX</div>
+            <div class="export-stat"><strong>{{ summary.pdf }}</strong>PDF</div>
+        </div>
+    </div>
+
+    <div class="export-card export-table-wrap">
+        <h2>Recent Export Logs</h2>
+        <table class="export-table">
+            <thead>
+                <tr>
+                    <th>Intake</th>
+                    <th>Type</th>
+                    <th>Version</th>
+                    <th>Status</th>
+                    <th>Packet</th>
+                    <th>Created</th>
+                    <th>By</th>
+                    <th>Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('intake_export_history_detail', intake_id=log.intake_id) }}">{{ log.intake_id }}</a>
+                        </td>
+                        <td>{{ log.export_type.upper() if log.export_type else '—' }}</td>
+                        <td>v{{ log.version_number }}</td>
+                        <td>{{ log.export_status.title() if log.export_status else '—' }}</td>
+                        <td>{{ log.packet_type.replace('_', ' ').title() if log.packet_type else '—' }}</td>
+                        <td>{{ log.created_at }}</td>
+                        <td>{{ log.created_by }}</td>
+                        <td>{{ log.message or '' }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="8">No export logs found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
