@@ -168,6 +168,7 @@
                                     <a href="{{ url_for('intake_saved_snapshot', intake_id=item.intake_id) }}">View snapshot</a>
                                     <a href="{{ url_for('intake_export_prep', intake_id=item.intake_id) }}">Export prep</a>
                                     <a href="{{ url_for('intake_followup_packet', intake_id=item.intake_id) }}">Packet</a>
+                                    <a href="{{ url_for('intake_document_recommendations', intake_id=item.intake_id) }}">Recommendations</a>
                                 {% else %}
                                     <a href="{{ url_for('intake_resume', intake_id=item.intake_id) }}">Continue intake</a>
                                 {% endif %}

@@ -551,6 +551,7 @@
         <a href="#" onclick="window.print(); return false;">Print snapshot</a>
         <a href="{{ url_for('intake_export_prep', intake_id=snapshot.intake_id) }}">Export prep</a>
         <a href="{{ url_for('intake_followup_packet', intake_id=snapshot.intake_id) }}">Follow-up packet</a>
+        <a href="{{ url_for('intake_document_recommendations', intake_id=snapshot.intake_id) }}">Document recommendations</a>
 
         <a href="#" onclick="document.getElementById('technicalSnapshot').style.display = document.getElementById('technicalSnapshot').style.display === 'none' ? 'block' : 'none'; return false;">
             Show technical snapshot

@@ -20,6 +20,7 @@ from services.services_intake import generate_followup_packet_docx_logged, gener
 from services.services_intake import ensure_intake_export_version_columns, list_all_intake_export_logs, list_intake_export_logs_versioned, get_intake_export_summary, generate_followup_packet_docx_logged_versioned, generate_followup_packet_pdf_logged_versioned
 from services.services_intake import list_intake_export_logs_dashboard
 from services.services_intake import seed_default_intake_module_ledger, list_intake_module_ledger, summarize_intake_module_ledger
+from services.services_intake import build_document_recommendations, save_document_recommendations, list_saved_document_recommendations, ensure_intake_document_recommendation_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13394,6 +13395,31 @@ def intake_module_ledger():
         "intake/module_ledger.html",
         modules=modules,
         summary=summary
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations")
+def intake_document_recommendations(intake_id):
+    ensure_intake_document_recommendation_tables()
+
+    recommendation_result = build_document_recommendations(intake_id)
+    if not recommendation_result:
+        flash("Document recommendations could not be built for that intake.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    save_document_recommendations(
+        intake_id=intake_id,
+        recommendations=recommendation_result["recommendations"],
+        created_by=session.get("username") if "session" in globals() else None
+    )
+
+    saved_recommendations = list_saved_document_recommendations(intake_id)
+
+    return render_template(
+        "intake/document_recommendations.html",
+        intake_id=intake_id,
+        recommendation_result=recommendation_result,
+        recommendations=saved_recommendations
     )
 
 

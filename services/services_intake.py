@@ -3620,3 +3620,425 @@ def summarize_intake_module_ledger(modules):
 
     return summary
 
+
+# -------------------------------------------------------------------
+# INT-2A — Intake-to-Document Recommendation Engine
+# -------------------------------------------------------------------
+
+DOCUMENT_WORKFLOW_CATALOG = {
+    "foundational_estate_package": {
+        "title": "Foundational Estate Planning Package",
+        "description": "Start a basic planning package covering family structure, decision-makers, asset overview, and core estate documents.",
+        "workflow_type": "planning",
+        "default_priority": "high",
+    },
+    "document_audit": {
+        "title": "Existing Document Audit",
+        "description": "Review existing wills, trusts, powers of attorney, deeds, beneficiary forms, insurance policies, and related documents.",
+        "workflow_type": "review",
+        "default_priority": "high",
+    },
+    "trust_document_review": {
+        "title": "Trust Document Review",
+        "description": "Review existing trust documents, trustee authority, beneficiaries, amendments, funding status, and execution readiness.",
+        "workflow_type": "review",
+        "default_priority": "high",
+    },
+    "real_property_review": {
+        "title": "Real Property Review",
+        "description": "Review deeds, ownership, mortgages, insurance, tax bills, property type, transfer readiness, and funding risks.",
+        "workflow_type": "asset",
+        "default_priority": "high",
+    },
+    "business_continuity_packet": {
+        "title": "Business Continuity Packet",
+        "description": "Review entity documents, operating agreements, EIN records, business authority, succession planning, and liability exposure.",
+        "workflow_type": "business",
+        "default_priority": "high",
+    },
+    "fiduciary_authority_review": {
+        "title": "Fiduciary Authority Review",
+        "description": "Confirm trustee, executor, agent, or administrator authority before fiduciary action is taken.",
+        "workflow_type": "fiduciary",
+        "default_priority": "high",
+    },
+    "professional_review_checklist": {
+        "title": "Professional Review Checklist",
+        "description": "Prepare issues that may require legal, tax, court, creditor, or professional review before documents or transfers proceed.",
+        "workflow_type": "professional_review",
+        "default_priority": "urgent",
+    },
+    "beneficiary_guardian_planning": {
+        "title": "Beneficiary / Guardian Planning",
+        "description": "Review beneficiaries, minor children, guardianship considerations, special-needs concerns, and distribution objectives.",
+        "workflow_type": "family",
+        "default_priority": "high",
+    },
+    "asset_inventory_packet": {
+        "title": "Asset Inventory Packet",
+        "description": "Build a structured inventory of assets, documents, ownership records, account information, and supporting evidence.",
+        "workflow_type": "inventory",
+        "default_priority": "normal",
+    },
+    "next_session_agenda": {
+        "title": "Next Session Agenda",
+        "description": "Prepare a focused agenda for the next follow-up meeting based on the intake snapshot and task list.",
+        "workflow_type": "session",
+        "default_priority": "normal",
+    },
+}
+
+
+def _recommendation_unique(recommendations):
+    seen = set()
+    output = []
+
+    for item in recommendations:
+        key = item.get("workflow_key")
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        output.append(item)
+
+    priority_order = {
+        "urgent": 1,
+        "high": 2,
+        "normal": 3,
+        "low": 4,
+    }
+
+    output.sort(key=lambda r: (priority_order.get(r.get("priority"), 5), -int(r.get("confidence", 0))))
+    return output
+
+
+def _make_document_recommendation(workflow_key, reason, priority=None, confidence=75, source="engine"):
+    workflow = DOCUMENT_WORKFLOW_CATALOG.get(workflow_key)
+    if not workflow:
+        return None
+
+    return {
+        "workflow_key": workflow_key,
+        "title": workflow["title"],
+        "description": workflow["description"],
+        "workflow_type": workflow["workflow_type"],
+        "priority": priority or workflow["default_priority"],
+        "confidence": confidence,
+        "reason": reason,
+        "source": source,
+        "status": "recommended",
+    }
+
+
+def build_document_recommendations(intake_id):
+    """
+    Converts intake snapshot data into recommended next document workflows.
+    This does not generate documents. It only recommends the next workflow path.
+    """
+    packet = build_intake_followup_packet(intake_id)
+    if not packet:
+        return None
+
+    snapshot = packet.get("snapshot", {}) or {}
+    result = packet.get("result", {}) or {}
+    summary = result.get("summary", {}) or {}
+    scores = result.get("scores", {}) or {}
+
+    categories = set(summary.get("system_categories", []) or [])
+    meanings = set(summary.get("system_meanings", []) or [])
+    module_triggers = set(summary.get("module_triggers", []) or [])
+    documents = set(summary.get("document_requests", []) or [])
+    next_sessions = set(summary.get("next_sessions", []) or [])
+    risk_flags = set(summary.get("risk_flags", []) or [])
+
+    recommendations = []
+
+    def add(key, reason, priority=None, confidence=75, source="engine"):
+        rec = _make_document_recommendation(
+            workflow_key=key,
+            reason=reason,
+            priority=priority,
+            confidence=confidence,
+            source=source,
+        )
+        if rec:
+            recommendations.append(rec)
+
+    # Professional review / risk-first logic
+    high_risk_flags = {
+        "urgent_or_legal_review_flag",
+        "tax_review_flag",
+        "creditor_pressure_flag",
+        "incapacity_planning_needed",
+        "family_conflict_risk",
+        "business_liability_possible",
+    }
+
+    if risk_flags.intersection(high_risk_flags) or scores.get("urgency_level") == "High":
+        add(
+            "professional_review_checklist",
+            "High urgency or review flags were detected during intake.",
+            priority="urgent",
+            confidence=95,
+        )
+
+    # Foundational planning
+    if "DOCUMENT_STATUS" in categories and ("documentation_gap" in risk_flags or "no_documents_available" in meanings):
+        add(
+            "foundational_estate_package",
+            "The intake indicates missing or limited documents and foundational planning may be needed.",
+            priority="high",
+            confidence=88,
+        )
+
+    if "foundational_planning_review" in next_sessions:
+        add(
+            "foundational_estate_package",
+            "The recommended next session points toward foundational planning.",
+            priority="high",
+            confidence=85,
+        )
+
+    # Document audit
+    if "document_audit" in module_triggers or "document_audit_session" in next_sessions or "review_documents" in meanings:
+        add(
+            "document_audit",
+            "Existing documents or document review objectives were detected.",
+            priority="high",
+            confidence=88,
+        )
+
+    if documents.intersection({"will", "existing_will", "trust_document", "power_of_attorney", "health_directive", "beneficiary_forms"}):
+        add(
+            "document_audit",
+            "Estate, authority, or beneficiary documents were listed for review.",
+            priority="high",
+            confidence=82,
+        )
+
+    # Trust review
+    if "trust_exists" in meanings or "trust_audit" in module_triggers or "trust_document_review" in next_sessions:
+        add(
+            "trust_document_review",
+            "Trust documents or trust review triggers were detected.",
+            priority="high",
+            confidence=90,
+        )
+
+    if "FIDUCIARY_CONTEXT" in categories or "authority_review_needed" in risk_flags:
+        add(
+            "fiduciary_authority_review",
+            "The intake indicates fiduciary authority, trust/estate administration, or authority review concerns.",
+            priority="high",
+            confidence=90,
+        )
+
+    # Real property
+    if "ASSET_PROFILE" in categories and (
+        "real_property_review" in module_triggers
+        or "real_property_deep_dive" in next_sessions
+        or documents.intersection({"deed", "deeds", "mortgage_statement", "property_tax_bill", "tax_bill"})
+    ):
+        add(
+            "real_property_review",
+            "Real property assets or property documents were identified.",
+            priority="high",
+            confidence=92,
+        )
+
+    # Business continuity
+    if "BUSINESS_PROFILE" in categories or "business_continuity" in module_triggers or "business_continuity_review" in next_sessions:
+        add(
+            "business_continuity_packet",
+            "Business ownership, business assets, or business continuity concerns were identified.",
+            priority="high",
+            confidence=90,
+        )
+
+    # Beneficiary / guardian planning
+    beneficiary_triggers = {
+        "minor_children_flag",
+        "special_needs_flag",
+        "guardian_review",
+        "minor_beneficiary_controls",
+        "children_guardian_review",
+        "beneficiary_planning_review",
+    }
+
+    if "BENEFICIARY_PROFILE" in categories or risk_flags.intersection(beneficiary_triggers) or module_triggers.intersection(beneficiary_triggers) or next_sessions.intersection(beneficiary_triggers):
+        add(
+            "beneficiary_guardian_planning",
+            "Beneficiary, child, guardian, or family planning issues were detected.",
+            priority="high",
+            confidence=86,
+        )
+
+    # Asset inventory
+    if "ASSET_PROFILE" in categories or "asset_inventory" in module_triggers or "asset_document_deep_dive" in next_sessions:
+        add(
+            "asset_inventory_packet",
+            "Assets and supporting records need to be organized before deeper review.",
+            priority="normal",
+            confidence=80,
+        )
+
+    # Always recommend next-session agenda once a packet exists.
+    if packet.get("recommended_next_session"):
+        add(
+            "next_session_agenda",
+            "A recommended next session was generated from the intake snapshot.",
+            priority="normal",
+            confidence=78,
+        )
+
+    recommendations = _recommendation_unique(recommendations)
+
+    return {
+        "intake_id": intake_id,
+        "packet": packet,
+        "recommendations": recommendations,
+        "recommendation_count": len(recommendations),
+        "scores": scores,
+        "summary": summary,
+    }
+
+
+def ensure_intake_document_recommendation_tables():
+    ensure_intake_module_ledger_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_document_recommendations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            workflow_key TEXT NOT NULL,
+            title TEXT,
+            workflow_type TEXT,
+            priority TEXT,
+            confidence INTEGER,
+            reason TEXT,
+            source TEXT,
+            status TEXT DEFAULT 'recommended',
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def save_document_recommendations(intake_id, recommendations, created_by=None):
+    ensure_intake_document_recommendation_tables()
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    for rec in recommendations or []:
+        workflow_key = rec.get("workflow_key")
+        if not workflow_key:
+            continue
+
+        cur.execute("""
+            SELECT id
+            FROM intake_document_recommendations
+            WHERE intake_id = ? AND workflow_key = ?
+            LIMIT 1
+        """, (intake_id, workflow_key))
+        existing = cur.fetchone()
+
+        if existing:
+            cur.execute("""
+                UPDATE intake_document_recommendations
+                SET title = ?, workflow_type = ?, priority = ?, confidence = ?,
+                    reason = ?, source = ?, status = ?, updated_at = ?, created_by = ?
+                WHERE id = ?
+            """, (
+                rec.get("title"),
+                rec.get("workflow_type"),
+                rec.get("priority"),
+                int(rec.get("confidence", 0)),
+                rec.get("reason"),
+                rec.get("source"),
+                rec.get("status", "recommended"),
+                now,
+                created_by,
+                existing[0],
+            ))
+        else:
+            cur.execute("""
+                INSERT INTO intake_document_recommendations (
+                    intake_id, firm_id, workflow_key, title, workflow_type,
+                    priority, confidence, reason, source, status,
+                    created_at, updated_at, created_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                intake_id,
+                firm_id,
+                workflow_key,
+                rec.get("title"),
+                rec.get("workflow_type"),
+                rec.get("priority"),
+                int(rec.get("confidence", 0)),
+                rec.get("reason"),
+                rec.get("source"),
+                rec.get("status", "recommended"),
+                now,
+                now,
+                created_by,
+            ))
+
+    conn.commit()
+    conn.close()
+
+
+def list_saved_document_recommendations(intake_id):
+    ensure_intake_document_recommendation_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT workflow_key, title, workflow_type, priority, confidence,
+               reason, source, status, created_at, updated_at, created_by
+        FROM intake_document_recommendations
+        WHERE intake_id = ?
+        ORDER BY
+            CASE priority
+                WHEN 'urgent' THEN 1
+                WHEN 'high' THEN 2
+                WHEN 'normal' THEN 3
+                WHEN 'low' THEN 4
+                ELSE 5
+            END,
+            confidence DESC,
+            id ASC
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "workflow_key": row[0],
+            "title": row[1],
+            "workflow_type": row[2],
+            "priority": row[3],
+            "confidence": row[4],
+            "reason": row[5],
+            "source": row[6],
+            "status": row[7],
+            "created_at": format_intake_timestamp(row[8]),
+            "updated_at": format_intake_timestamp(row[9]),
+            "created_by": row[10] or "—",
+        }
+        for row in rows
+    ]
+
