@@ -3935,11 +3935,29 @@ def ensure_intake_document_recommendation_tables():
 def build_document_recommendations(intake_id, *args, **kwargs):
     """
     INT-2C-INSTRUMENTS wrapper:
-    preserves the existing recommendation engine, then appends visible trust
-    instrument workflows such as Certificate of Trust and Trust Articles.
+    preserves the original recommendation engine return shape.
+
+    If the original engine returns:
+    - dict with recommendations/list: merge into that list and return dict.
+    - list: merge into list and return list.
+    - anything else: return original object untouched.
     """
-    recommendations = build_document_recommendations_base_before_instruments(intake_id, *args, **kwargs)
-    return merge_trust_instrument_recommendations(recommendations)
+    result = build_document_recommendations_base_before_instruments(intake_id, *args, **kwargs)
+
+    if isinstance(result, dict):
+        for key in ("recommendations", "items", "workflows", "document_recommendations"):
+            if isinstance(result.get(key), list):
+                result[key] = merge_trust_instrument_recommendations(result.get(key))
+                return result
+
+        # If no list exists, add a standard recommendations list without destroying metadata.
+        result["recommendations"] = merge_trust_instrument_recommendations([])
+        return result
+
+    if isinstance(result, list):
+        return merge_trust_instrument_recommendations(result)
+
+    return result
 
 def save_document_recommendations(intake_id, recommendations, created_by=None):
     ensure_intake_document_recommendation_tables()
