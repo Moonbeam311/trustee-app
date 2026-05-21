@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.launch-wrap {
+    max-width: 1180px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.launch-hero,
+.launch-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.launch-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.launch-hero h1 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.launch-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.launch-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.launch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.launch-card {
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.launch-card h2,
+.launch-card h3 {
+    margin-top: 0;
+}
+
+.launch-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.launch-list li {
+    padding: 10px 12px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+}
+
+.launch-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    margin-right: 6px;
+}
+
+.launch-muted {
+    opacity: 0.75;
+}
+
+@media print {
+    nav,
+    .launch-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .launch-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .launch-hero,
+    .launch-card,
+    .launch-list li {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="launch-wrap">
+    <div class="launch-hero">
+        <h1>Workflow Launch Prep</h1>
+        <p>
+            Intake ID: <strong>{{ launch.intake_id }}</strong>
+        </p>
+        <p class="launch-muted">
+            This page prepares the selected workflow. It does not generate the final document yet.
+        </p>
+
+        <div class="launch-actions">
+            <a href="{{ url_for('intake_document_recommendations', intake_id=launch.intake_id) }}">Back to recommendations</a>
+            <a href="{{ url_for('intake_followup_packet', intake_id=launch.intake_id) }}">Packet</a>
+            <a href="{{ url_for('intake_saved_snapshot', intake_id=launch.intake_id) }}">Snapshot</a>
+            <a href="#" onclick="window.print(); return false;">Print launch prep</a>
+        </div>
+    </div>
+
+    <div class="launch-grid">
+        <div class="launch-card">
+            <h3>Selected Workflow</h3>
+            <strong>{{ launch.recommendation.title }}</strong>
+        </div>
+
+        <div class="launch-card">
+            <h3>Priority</h3>
+            <span class="launch-pill">{{ launch.recommendation.priority.title() }}</span>
+        </div>
+
+        <div class="launch-card">
+            <h3>Confidence</h3>
+            <span class="launch-pill">{{ launch.recommendation.confidence }}%</span>
+        </div>
+
+        <div class="launch-card">
+            <h3>Status</h3>
+            <span class="launch-pill">{{ launch.launch_status }}</span>
+        </div>
+    </div>
+
+    <div class="launch-card">
+        <h2>Why This Workflow Was Selected</h2>
+        <p>{{ launch.recommendation.reason }}</p>
+    </div>
+
+    <div class="launch-card">
+        <h2>Required Workflow Inputs</h2>
+        <ul class="launch-list">
+            {% for item in launch.workflow_inputs %}
+                <li>☐ {{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="launch-card">
+        <h2>Pre-Launch Checks</h2>
+        <ul class="launch-list">
+            {% for item in launch.workflow_checks %}
+                <li>☐ {{ item }}</li>
+            {% else %}
+                <li>No workflow-specific checks generated.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if launch.workflow_warnings %}
+    <div class="launch-card">
+        <h2>Review Warnings</h2>
+        <ul class="launch-list">
+            {% for item in launch.workflow_warnings %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="launch-card">
+        <h2>Documents From Intake Packet</h2>
+        <ul class="launch-list">
+            {% for item in launch.documents %}
+                <li>☐ {{ item }}</li>
+            {% else %}
+                <li>No document checklist found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="launch-card">
+        <h2>Open Tasks</h2>
+        <ul class="launch-list">
+            {% for task in launch.open_tasks %}
+                <li>
+                    ☐ <strong>{{ task.title }}</strong><br>
+                    <span class="launch-muted">{{ task.task_type_label }} | {{ task.status_label }} | Priority: {{ task.priority_label }}</span>
+                </li>
+            {% else %}
+                <li>No open tasks.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="launch-card">
+        <h2>Completed Tasks</h2>
+        <ul class="launch-list">
+            {% for task in launch.completed_tasks %}
+                <li>
+                    ☑ <strong>{{ task.title }}</strong><br>
+                    <span class="launch-muted">{{ task.task_type_label }} | {{ task.status_label }}</span>
+                </li>
+            {% else %}
+                <li>No completed tasks.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="launch-card">
+        <h2>Important</h2>
+        <p>
+            Workflow launch prep is a routing and preparation step only. It does not create final legal,
+            fiduciary, tax, property, or business documents.
+        </p>
+    </div>
+</div>
+
+{% endblock %}

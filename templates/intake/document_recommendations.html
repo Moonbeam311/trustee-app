@@ -112,6 +112,29 @@
         border: 1px solid #999 !important;
     }
 }
+
+.recommend-control-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-top: 14px;
+}
+
+.recommend-control-row select {
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.recommend-control-row button,
+.recommend-control-row a {
+    padding: 8px 11px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 9px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
 </style>
 
 <div class="recommend-wrap">
@@ -173,6 +196,29 @@
             <p class="recommend-muted">
                 {{ rec.workflow_key }}
             </p>
+
+            <div class="recommend-control-row">
+                <form method="POST" action="{{ url_for('intake_update_recommendation_status', intake_id=intake_id, workflow_key=rec.workflow_key) }}">
+                    {% if csrf_token is defined %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+                    {% endif %}
+                    <label>
+                        Recommendation Status
+                        <select name="status">
+                            <option value="recommended" {% if rec.status == "recommended" %}selected{% endif %}>Recommended</option>
+                            <option value="accepted" {% if rec.status == "accepted" %}selected{% endif %}>Accepted</option>
+                            <option value="deferred" {% if rec.status == "deferred" %}selected{% endif %}>Deferred</option>
+                            <option value="rejected" {% if rec.status == "rejected" %}selected{% endif %}>Rejected</option>
+                            <option value="launch_prepared" {% if rec.status == "launch_prepared" %}selected{% endif %}>Launch Prepared</option>
+                        </select>
+                    </label>
+                    <button type="submit">Update Status</button>
+                </form>
+
+                <a href="{{ url_for('intake_workflow_launch_prep', intake_id=intake_id, workflow_key=rec.workflow_key) }}">
+                    Prepare Launch
+                </a>
+            </div>
         </div>
     {% else %}
         <div class="recommend-card">

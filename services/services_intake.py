@@ -4370,3 +4370,247 @@ def build_document_recommendations_tuned(intake_id):
         return None
     return expand_document_recommendations(base)
 
+
+# -------------------------------------------------------------------
+# INT-2C — Recommendation Selection + Workflow Launch Prep
+# -------------------------------------------------------------------
+
+VALID_RECOMMENDATION_STATUSES = {
+    "recommended": "Recommended",
+    "accepted": "Accepted",
+    "deferred": "Deferred",
+    "rejected": "Rejected",
+    "launch_prepared": "Launch Prepared",
+}
+
+
+def update_document_recommendation_status(
+    intake_id,
+    workflow_key,
+    status,
+    updated_by=None
+):
+    ensure_intake_document_recommendation_tables()
+
+    if status not in VALID_RECOMMENDATION_STATUSES:
+        raise ValueError("Invalid recommendation status.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE intake_document_recommendations
+        SET status = ?, updated_at = ?, created_by = ?
+        WHERE intake_id = ? AND workflow_key = ?
+    """, (
+        status,
+        now,
+        updated_by,
+        intake_id,
+        workflow_key,
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def get_document_recommendation(intake_id, workflow_key):
+    ensure_intake_document_recommendation_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT workflow_key, title, workflow_type, priority, confidence,
+               reason, source, status, created_at, updated_at, created_by
+        FROM intake_document_recommendations
+        WHERE intake_id = ? AND workflow_key = ?
+        LIMIT 1
+    """, (intake_id, workflow_key))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "workflow_key": row[0],
+        "title": row[1],
+        "workflow_type": row[2],
+        "priority": row[3],
+        "confidence": row[4],
+        "reason": row[5],
+        "source": row[6],
+        "status": row[7],
+        "created_at": format_intake_timestamp(row[8]),
+        "updated_at": format_intake_timestamp(row[9]),
+        "created_by": row[10] or "—",
+        "status_label": VALID_RECOMMENDATION_STATUSES.get(row[7], row[7]),
+    }
+
+
+def build_workflow_launch_prep(intake_id, workflow_key):
+    """
+    Prepares the selected recommendation for workflow launch.
+    This does not generate the final document.
+    """
+    recommendation = get_document_recommendation(intake_id, workflow_key)
+
+    if not recommendation:
+        # Try rebuilding and saving recommendations if the row does not exist yet.
+        result = build_document_recommendations_tuned(intake_id)
+        if result:
+            save_document_recommendations(intake_id, result.get("recommendations", []), created_by="system")
+            recommendation = get_document_recommendation(intake_id, workflow_key)
+
+    if not recommendation:
+        return None
+
+    packet = build_intake_followup_packet(intake_id)
+    if not packet:
+        return None
+
+    workflow_key = recommendation.get("workflow_key")
+
+    workflow_inputs = []
+    workflow_checks = []
+    workflow_warnings = []
+
+    documents = packet.get("documents", []) or []
+    review_flags = packet.get("review_flags", []) or []
+    tasks = packet.get("tasks", []) or []
+
+    # Generic inputs
+    workflow_inputs.append("Confirm client identity / planning party.")
+    workflow_inputs.append("Review intake snapshot and follow-up packet.")
+    workflow_inputs.append("Confirm whether client-facing or internal-only workflow is being launched.")
+
+    # Workflow-specific prep
+    if workflow_key == "professional_review_checklist":
+        workflow_inputs.extend([
+            "Collect tax notices, court notices, claim letters, creditor letters, or urgent correspondence.",
+            "Separate legal, tax, and administrative issues before document drafting.",
+            "Identify whether outside professional review is required before action.",
+        ])
+        workflow_checks.extend([
+            "Do not finalize documents until high-risk issues are reviewed.",
+            "Confirm whether the issue is legal, tax, creditor, court, or administrative.",
+        ])
+
+    elif workflow_key == "business_continuity_packet":
+        workflow_inputs.extend([
+            "Collect operating agreement, EIN letter, business license, insurance policies, and bank authority records.",
+            "Identify owners, partners, managers, authorized signers, and successor operators.",
+            "Review business liability and continuity risks.",
+        ])
+        workflow_checks.extend([
+            "Confirm entity type and current authority before preparing business documents.",
+            "Separate business assets from personal/family assets where needed.",
+        ])
+
+    elif workflow_key == "real_property_review":
+        workflow_inputs.extend([
+            "Collect deed, mortgage statement, tax bill, insurance declaration, lease, and title records.",
+            "Confirm owner name, vesting, liens, co-owners, and transfer restrictions.",
+            "Identify whether the property is personal residence, rental, inherited, business, or trust-related.",
+        ])
+        workflow_checks.extend([
+            "Do not treat property as fundable until title and authority are verified.",
+            "Check for mortgage, lien, co-owner, or tax restrictions.",
+        ])
+
+    elif workflow_key == "foundational_estate_package":
+        workflow_inputs.extend([
+            "Confirm planning parties, family structure, beneficiaries, decision-makers, and primary assets.",
+            "Determine whether will, trust, POA, health directive, or beneficiary updates are needed.",
+            "Collect any existing estate or authority documents.",
+        ])
+        workflow_checks.extend([
+            "Confirm whether this is new planning or revision of existing documents.",
+            "Do not skip authority and beneficiary review.",
+        ])
+
+    elif workflow_key == "document_audit":
+        workflow_inputs.extend([
+            "Collect all existing wills, trusts, POAs, health directives, deeds, beneficiary forms, insurance policies, and entity documents.",
+            "Sort documents by type, date, signer, notary/witness status, and current relevance.",
+            "Identify missing signatures, outdated provisions, or conflicting documents.",
+        ])
+        workflow_checks.extend([
+            "Do not assume older documents are revoked or valid without review.",
+            "Flag unsigned, undated, incomplete, or conflicting documents.",
+        ])
+
+    elif workflow_key == "beneficiary_guardian_planning":
+        workflow_inputs.extend([
+            "Confirm beneficiaries, minors, guardians, dependents, special-needs concerns, and distribution preferences.",
+            "Collect beneficiary designation forms and any guardian/care documents.",
+            "Identify potential conflict, dependency, or incapacity issues.",
+        ])
+        workflow_checks.extend([
+            "Do not finalize beneficiary planning without confirming current family structure.",
+            "Flag minor-child or special-needs matters for careful review.",
+        ])
+
+    elif workflow_key == "asset_inventory_packet":
+        workflow_inputs.extend([
+            "Build an asset list with ownership, estimated value, supporting documents, and transfer readiness.",
+            "Collect statements, titles, deeds, insurance, business records, and account registration information.",
+            "Separate assets by personal, trust, business, heritage, digital, and financial category.",
+        ])
+        workflow_checks.extend([
+            "Do not recommend transfer until ownership and restrictions are verified.",
+            "Track missing documents as follow-up tasks.",
+        ])
+
+    elif workflow_key == "fiduciary_authority_review":
+        workflow_inputs.extend([
+            "Collect trustee, executor, agent, POA, letters testamentary, or appointment documents.",
+            "Confirm who currently has authority and in what capacity.",
+            "Review whether authority is current, limited, revoked, or conditional.",
+        ])
+        workflow_checks.extend([
+            "Do not act as fiduciary without authority evidence.",
+            "Verify signatures, dates, scope, and applicable limitations.",
+        ])
+
+    elif workflow_key == "next_session_agenda":
+        workflow_inputs.extend([
+            "Use the recommended next session as the agenda anchor.",
+            "Pull open tasks, document requests, review flags, and internal notes into the agenda.",
+            "Set the next meeting purpose and required documents.",
+        ])
+        workflow_checks.extend([
+            "Keep the next session focused and avoid expanding into final document drafting too early.",
+        ])
+
+    else:
+        workflow_inputs.extend([
+            "Review packet and select appropriate workflow questions.",
+            "Gather required documents and open tasks.",
+        ])
+
+    if review_flags:
+        workflow_warnings.extend(review_flags)
+
+    open_tasks = [task for task in tasks if task.get("status") != "completed"]
+    completed_tasks = [task for task in tasks if task.get("status") == "completed"]
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "recommendation": recommendation,
+        "packet": packet,
+        "documents": documents,
+        "review_flags": review_flags,
+        "open_tasks": open_tasks,
+        "completed_tasks": completed_tasks,
+        "workflow_inputs": workflow_inputs,
+        "workflow_checks": workflow_checks,
+        "workflow_warnings": workflow_warnings,
+        "launch_status": "Prepared",
+    }
+

@@ -22,6 +22,7 @@ from services.services_intake import list_intake_export_logs_dashboard
 from services.services_intake import seed_default_intake_module_ledger, list_intake_module_ledger, summarize_intake_module_ledger
 from services.services_intake import build_document_recommendations, save_document_recommendations, list_saved_document_recommendations, ensure_intake_document_recommendation_tables
 from services.services_intake import build_document_recommendations_tuned
+from services.services_intake import update_document_recommendation_status, build_workflow_launch_prep
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13421,6 +13422,43 @@ def intake_document_recommendations(intake_id):
         intake_id=intake_id,
         recommendation_result=recommendation_result,
         recommendations=saved_recommendations
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/status", methods=["POST"])
+def intake_update_recommendation_status(intake_id, workflow_key):
+    try:
+        update_document_recommendation_status(
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            status=request.form.get("status", "recommended"),
+            updated_by=session.get("username") if "session" in globals() else None,
+        )
+        flash("Recommendation status updated.", "success")
+    except Exception as exc:
+        flash(f"Recommendation status could not be updated: {exc}", "warning")
+
+    return redirect(url_for("intake_document_recommendations", intake_id=intake_id))
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/launch-prep")
+def intake_workflow_launch_prep(intake_id, workflow_key):
+    launch = build_workflow_launch_prep(intake_id, workflow_key)
+
+    if not launch:
+        flash("Workflow launch prep could not be built.", "warning")
+        return redirect(url_for("intake_document_recommendations", intake_id=intake_id))
+
+    update_document_recommendation_status(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        status="launch_prepared",
+        updated_by=session.get("username") if "session" in globals() else None,
+    )
+
+    return render_template(
+        "intake/workflow_launch_prep.html",
+        launch=launch
     )
 
 
