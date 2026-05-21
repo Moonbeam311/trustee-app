@@ -5394,3 +5394,283 @@ def build_workflow_draft_packet(intake_id, workflow_key):
         "notice": "This draft packet is a preparation layer only. It does not generate final legal, fiduciary, tax, property, or business documents.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2F — Draft Packet Export + Draft Readiness Ledger
+# -------------------------------------------------------------------
+
+def ensure_draft_readiness_tables():
+    ensure_intake_export_log_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_draft_readiness_ledger (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            draft_packet_type TEXT,
+            readiness TEXT,
+            open_issue_count INTEGER DEFAULT 0,
+            open_task_count INTEGER DEFAULT 0,
+            completed_task_count INTEGER DEFAULT 0,
+            document_count INTEGER DEFAULT 0,
+            drafting_question_count INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'prepared',
+            created_at TEXT,
+            updated_at TEXT,
+            updated_by TEXT,
+            notes TEXT,
+            UNIQUE(intake_id, workflow_key)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def upsert_draft_readiness_record(intake_id, workflow_key, draft_packet, updated_by=None):
+    ensure_draft_readiness_tables()
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    readiness = draft_packet.get("readiness")
+    open_issue_count = len(draft_packet.get("open_issues", []) or [])
+    open_task_count = len(draft_packet.get("open_tasks", []) or [])
+    completed_task_count = len(draft_packet.get("completed_tasks", []) or [])
+    document_count = len(draft_packet.get("documents", []) or [])
+    drafting_question_count = len(draft_packet.get("drafting_questions", []) or [])
+
+    status = "blocked" if "Major Open Issues" in str(readiness) else "prepared"
+    if readiness == "Draft Prep Ready":
+        status = "ready"
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_draft_readiness_ledger (
+            intake_id, workflow_key, firm_id, draft_packet_type, readiness,
+            open_issue_count, open_task_count, completed_task_count,
+            document_count, drafting_question_count, status,
+            created_at, updated_at, updated_by, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(intake_id, workflow_key) DO UPDATE SET
+            draft_packet_type = excluded.draft_packet_type,
+            readiness = excluded.readiness,
+            open_issue_count = excluded.open_issue_count,
+            open_task_count = excluded.open_task_count,
+            completed_task_count = excluded.completed_task_count,
+            document_count = excluded.document_count,
+            drafting_question_count = excluded.drafting_question_count,
+            status = excluded.status,
+            updated_at = excluded.updated_at,
+            updated_by = excluded.updated_by,
+            notes = excluded.notes
+    """, (
+        intake_id,
+        workflow_key,
+        firm_id,
+        draft_packet.get("draft_packet_type"),
+        readiness,
+        open_issue_count,
+        open_task_count,
+        completed_task_count,
+        document_count,
+        drafting_question_count,
+        status,
+        now,
+        now,
+        updated_by,
+        "Auto-updated from INT-2F draft packet readiness.",
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def list_draft_readiness_records(intake_id=None):
+    ensure_draft_readiness_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if intake_id:
+        cur.execute("""
+            SELECT intake_id, workflow_key, draft_packet_type, readiness,
+                   open_issue_count, open_task_count, completed_task_count,
+                   document_count, drafting_question_count, status,
+                   created_at, updated_at, updated_by, notes
+            FROM intake_draft_readiness_ledger
+            WHERE intake_id = ?
+            ORDER BY updated_at DESC
+        """, (intake_id,))
+    else:
+        cur.execute("""
+            SELECT intake_id, workflow_key, draft_packet_type, readiness,
+                   open_issue_count, open_task_count, completed_task_count,
+                   document_count, drafting_question_count, status,
+                   created_at, updated_at, updated_by, notes
+            FROM intake_draft_readiness_ledger
+            ORDER BY updated_at DESC
+            LIMIT 200
+        """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "workflow_key": row[1],
+            "draft_packet_type": row[2],
+            "readiness": row[3],
+            "open_issue_count": row[4],
+            "open_task_count": row[5],
+            "completed_task_count": row[6],
+            "document_count": row[7],
+            "drafting_question_count": row[8],
+            "status": row[9],
+            "created_at": format_intake_timestamp(row[10]) if row[10] else "",
+            "updated_at": format_intake_timestamp(row[11]) if row[11] else "",
+            "updated_by": row[12] or "—",
+            "notes": row[13] or "",
+        }
+        for row in rows
+    ]
+
+
+def ensure_draft_packet_export_dir():
+    from pathlib import Path
+
+    export_dir = Path("exports/draft_packets")
+    export_dir.mkdir(parents=True, exist_ok=True)
+    return export_dir
+
+
+def generate_workflow_draft_packet_docx(intake_id, workflow_key, created_by=None):
+    from docx import Document
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
+    if not draft_packet:
+        return None
+
+    upsert_draft_readiness_record(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        draft_packet=draft_packet,
+        updated_by=created_by,
+    )
+
+    export_dir = ensure_draft_packet_export_dir()
+    filename = f"{safe_export_filename(intake_id)}_{safe_export_filename(workflow_key)}_Draft_Packet.docx"
+    out_path = export_dir / filename
+
+    doc = Document()
+
+    styles = doc.styles
+    styles["Normal"].font.name = "Arial"
+    styles["Normal"].font.size = Pt(10)
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = title.add_run(draft_packet.get("draft_packet_type") or "Workflow Draft Packet")
+    run.bold = True
+    run.font.size = Pt(16)
+
+    subtitle = doc.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle.add_run(f"Intake ID: {intake_id} | Workflow: {workflow_key}")
+
+    doc.add_paragraph("")
+
+    def add_heading(text):
+        p = doc.add_paragraph()
+        r = p.add_run(text)
+        r.bold = True
+        r.font.size = Pt(13)
+        return p
+
+    def add_bullet(text):
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Pt(18)
+        p.add_run(f"- {text}")
+
+    add_heading("Draft Packet Summary")
+    table = doc.add_table(rows=0, cols=2)
+    table.style = "Table Grid"
+
+    rows = [
+        ("Readiness", draft_packet.get("readiness")),
+        ("Recommendation", draft_packet.get("recommendation", {}).get("title")),
+        ("Priority", draft_packet.get("recommendation", {}).get("priority")),
+        ("Confidence", f"{draft_packet.get('recommendation', {}).get('confidence')}%"),
+    ]
+
+    for label, value in rows:
+        cells = table.add_row().cells
+        cells[0].text = str(label)
+        cells[1].text = str(value or "")
+
+    doc.add_paragraph("")
+
+    add_heading("Workflow Bridge Answers")
+    for item in draft_packet.get("question_summaries", []) or []:
+        add_bullet(item.get("label") or "")
+        answers = item.get("answers", []) or []
+        if answers:
+            for answer in answers:
+                add_bullet(f"    {answer.get('answer_label')}")
+        else:
+            add_bullet("    No answer recorded.")
+
+    add_heading("Drafting Questions")
+    for item in draft_packet.get("drafting_questions", []) or []:
+        add_bullet(f"[ ] {item}")
+
+    add_heading("Open Issues Before Drafting")
+    for item in draft_packet.get("open_issues", []) or []:
+        add_bullet(item)
+    if not draft_packet.get("open_issues"):
+        add_bullet("No open issues detected.")
+
+    add_heading("Documents Needed")
+    for item in draft_packet.get("documents", []) or []:
+        add_bullet(f"[ ] {item}")
+
+    add_heading("Open Tasks")
+    for task in draft_packet.get("open_tasks", []) or []:
+        add_bullet(f"[ ] {task.get('title')}")
+        add_bullet(f"    {task.get('task_type_label')} | {task.get('status_label')} | Priority: {task.get('priority_label')}")
+
+    add_heading("Completed Tasks")
+    for task in draft_packet.get("completed_tasks", []) or []:
+        add_bullet(f"[x] {task.get('title')}")
+        add_bullet(f"    {task.get('task_type_label')} | {task.get('status_label')}")
+
+    add_heading("Important Notice")
+    doc.add_paragraph(draft_packet.get("notice") or "This is a draft-preparation packet only.")
+
+    doc.save(out_path)
+
+    try:
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="draft_docx",
+            export_status="success",
+            file_path=str(out_path),
+            message=f"Draft packet DOCX generated for {workflow_key}.",
+            created_by=created_by,
+            packet_type="draft_packet",
+        )
+    except Exception:
+        pass
+
+    return str(out_path)
+

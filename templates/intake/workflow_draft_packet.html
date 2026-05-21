@@ -112,6 +112,8 @@
             <a href="{{ url_for('intake_workflow_launch_prep', intake_id=draft_packet.intake_id, workflow_key=draft_packet.workflow_key) }}">Launch prep</a>
             <a href="{{ url_for('intake_document_recommendations', intake_id=draft_packet.intake_id) }}">Recommendations</a>
             <a href="#" onclick="window.print(); return false;">Print draft packet</a>
+            <a href="{{ url_for('intake_workflow_draft_packet_docx', intake_id=draft_packet.intake_id, workflow_key=draft_packet.workflow_key) }}">Download DOCX</a>
+            <a href="{{ url_for('intake_draft_readiness_ledger_detail', intake_id=draft_packet.intake_id) }}">Draft readiness ledger</a>
         </div>
     </div>
 

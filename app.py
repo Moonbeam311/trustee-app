@@ -25,6 +25,7 @@ from services.services_intake import build_document_recommendations_tuned
 from services.services_intake import update_document_recommendation_status, build_workflow_launch_prep
 from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
 from services.services_intake import build_workflow_draft_packet
+from services.services_intake import generate_workflow_draft_packet_docx, upsert_draft_readiness_record, list_draft_readiness_records
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13521,9 +13522,51 @@ def intake_workflow_draft_packet(intake_id, workflow_key):
         flash("Draft packet could not be built. Complete the workflow bridge first.", "warning")
         return redirect(url_for("intake_workflow_bridge", intake_id=intake_id, workflow_key=workflow_key))
 
+    upsert_draft_readiness_record(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        draft_packet=draft_packet,
+        updated_by=session.get("username") if "session" in globals() else None,
+    )
+
     return render_template(
         "intake/workflow_draft_packet.html",
         draft_packet=draft_packet
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/draft-packet/docx")
+def intake_workflow_draft_packet_docx(intake_id, workflow_key):
+    path = generate_workflow_draft_packet_docx(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        created_by=session.get("username") if "session" in globals() else None,
+    )
+
+    if not path:
+        flash("Draft packet DOCX could not be generated.", "warning")
+        return redirect(url_for("intake_workflow_draft_packet", intake_id=intake_id, workflow_key=workflow_key))
+
+    return send_file(path, as_attachment=True)
+
+
+@app.route("/intake/draft-readiness")
+def intake_draft_readiness_ledger():
+    records = list_draft_readiness_records()
+    return render_template(
+        "intake/draft_readiness_ledger.html",
+        records=records,
+        intake_id=None
+    )
+
+
+@app.route("/intake/<intake_id>/draft-readiness")
+def intake_draft_readiness_ledger_detail(intake_id):
+    records = list_draft_readiness_records(intake_id=intake_id)
+    return render_template(
+        "intake/draft_readiness_ledger.html",
+        records=records,
+        intake_id=intake_id
     )
 
 

@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.readiness-wrap {
+    max-width: 1220px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.readiness-hero,
+.readiness-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.readiness-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.readiness-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.readiness-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.readiness-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.readiness-table-wrap {
+    overflow-x: auto;
+}
+
+.readiness-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1050px;
+}
+
+.readiness-table th,
+.readiness-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.readiness-table th {
+    background: rgba(255,255,255,0.06);
+    font-weight: 700;
+}
+
+.readiness-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+}
+</style>
+
+<div class="readiness-wrap">
+    <div class="readiness-hero">
+        <h1 style="margin-top:0;">Draft Readiness Ledger</h1>
+        {% if intake_id %}
+            <p>Readiness records for Intake ID: <strong>{{ intake_id }}</strong></p>
+        {% else %}
+            <p>Readiness records across draft-prep workflows.</p>
+        {% endif %}
+
+        <div class="readiness-actions">
+            <a href="{{ url_for('intake_dashboard') }}">Intake dashboard</a>
+            <a href="{{ url_for('intake_export_history') }}">Export history</a>
+        </div>
+    </div>
+
+    <div class="readiness-card">
+        <div class="readiness-table-wrap">
+            <table class="readiness-table">
+                <thead>
+                    <tr>
+                        <th>Intake</th>
+                        <th>Workflow</th>
+                        <th>Draft Packet</th>
+                        <th>Readiness</th>
+                        <th>Status</th>
+                        <th>Open Issues</th>
+                        <th>Open Tasks</th>
+                        <th>Documents</th>
+                        <th>Questions</th>
+                        <th>Updated</th>
+                        <th>By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in records %}
+                        <tr>
+                            <td>{{ row.intake_id }}</td>
+                            <td>{{ row.workflow_key }}</td>
+                            <td>{{ row.draft_packet_type }}</td>
+                            <td><span class="readiness-pill">{{ row.readiness }}</span></td>
+                            <td><span class="readiness-pill">{{ row.status }}</span></td>
+                            <td>{{ row.open_issue_count }}</td>
+                            <td>{{ row.open_task_count }}</td>
+                            <td>{{ row.document_count }}</td>
+                            <td>{{ row.drafting_question_count }}</td>
+                            <td>{{ row.updated_at }}</td>
+                            <td>{{ row.updated_by }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="11">No draft readiness records found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
