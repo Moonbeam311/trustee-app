@@ -3955,22 +3955,40 @@ def save_document_recommendations(intake_id, recommendations, created_by=None):
 
         if existing:
             cur.execute("""
-                UPDATE intake_document_recommendations
-                SET title = ?, workflow_type = ?, priority = ?, confidence = ?,
-                    reason = ?, source = ?, status = ?, updated_at = ?, created_by = ?
-                WHERE id = ?
-            """, (
-                rec.get("title"),
-                rec.get("workflow_type"),
-                rec.get("priority"),
-                int(rec.get("confidence", 0)),
-                rec.get("reason"),
-                rec.get("source"),
-                rec.get("status", "recommended"),
-                now,
-                created_by,
-                existing[0],
-            ))
+                # Preserve user-selected status when refreshing recommendation data.
+                # Do not overwrite accepted/deferred/rejected/launch_prepared back to recommended.
+                cur.execute("""
+                    SELECT status
+                    FROM intake_document_recommendations
+                    WHERE id = ?
+                """, (existing[0],))
+                status_row = cur.fetchone()
+                existing_status = status_row[0] if status_row else "recommended"
+
+                preserved_status = existing_status if existing_status in {
+                    "accepted",
+                    "deferred",
+                    "rejected",
+                    "launch_prepared",
+                } else rec.get("status", "recommended")
+
+                cur.execute("""
+                    UPDATE intake_document_recommendations
+                    SET title = ?, workflow_type = ?, priority = ?, confidence = ?,
+                        reason = ?, source = ?, status = ?, updated_at = ?, created_by = ?
+                    WHERE id = ?
+                """, (
+                    rec.get("title"),
+                    rec.get("workflow_type"),
+                    rec.get("priority"),
+                    int(rec.get("confidence", 0)),
+                    rec.get("reason"),
+                    rec.get("source"),
+                    preserved_status,
+                    now,
+                    created_by,
+                    existing[0],
+                ))
         else:
             cur.execute("""
                 INSERT INTO intake_document_recommendations (
