@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.intake-dashboard-wrap {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.dashboard-hero,
+.dashboard-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.dashboard-hero {
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+.dashboard-table-wrap {
+    overflow-x: auto;
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+    padding: 11px 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.dashboard-table th {
+    font-weight: 700;
+}
+
+.dashboard-pill {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dashboard-actions a {
+    padding: 8px 11px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 9px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+</style>
+
+<div class="intake-dashboard-wrap">
+    <div class="dashboard-hero">
+        <h1 style="margin-top:0;">Intake Dashboard</h1>
+        <p style="line-height:1.6; margin-bottom:0;">
+            Review saved intake sessions, scoring levels, readiness status, and reopen client-facing snapshots.
+        </p>
+    </div>
+
+    <div class="dashboard-actions" style="margin-bottom:18px;">
+        <a href="{{ url_for('intake_start') }}">Start new intake</a>
+    </div>
+
+    <div class="dashboard-card dashboard-table-wrap">
+        <table class="dashboard-table">
+            <thead>
+                <tr>
+                    <th>Intake ID</th>
+                    <th>Lane</th>
+                    <th>Status</th>
+                    <th>Complexity</th>
+                    <th>Urgency</th>
+                    <th>Readiness</th>
+                    <th>Updated</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td><strong>{{ item.intake_id }}</strong></td>
+                        <td>{{ item.intake_lane.replace('_', ' ').title() if item.intake_lane else '—' }}</td>
+                        <td><span class="dashboard-pill">{{ item.status.replace('_', ' ').title() if item.status else '—' }}</span></td>
+                        <td>{{ item.complexity_level }}</td>
+                        <td>{{ item.urgency_level }}</td>
+                        <td>{{ item.readiness_level }}</td>
+                        <td>{{ item.updated_at or item.created_at or '—' }}</td>
+                        <td>
+                            <div class="dashboard-actions">
+                                <a href="{{ url_for('intake_saved_snapshot', intake_id=item.intake_id) }}">View snapshot</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8">No intake sessions found yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

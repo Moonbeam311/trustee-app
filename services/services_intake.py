@@ -1550,3 +1550,289 @@ def build_client_snapshot(result):
         "technical_result": result,
     }
 
+
+# -------------------------------------------------------------------
+# INT-1E — Save Snapshot + Intake Dashboard List
+# -------------------------------------------------------------------
+
+def ensure_intake_snapshot_tables():
+    ensure_intake_scoring_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT UNIQUE NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            snapshot_json TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def save_client_snapshot(intake_id, snapshot, created_by=None):
+    ensure_intake_snapshot_tables()
+
+    import json
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    # Keep stored JSON compact and avoid recursive technical payload bloat.
+    stored_snapshot = dict(snapshot)
+    stored_snapshot.pop("technical_result", None)
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_snapshots (
+            intake_id, firm_id, snapshot_json, created_at, updated_at, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(intake_id) DO UPDATE SET
+            snapshot_json = excluded.snapshot_json,
+            updated_at = excluded.updated_at,
+            created_by = excluded.created_by
+    """, (
+        intake_id,
+        firm_id,
+        json.dumps(stored_snapshot),
+        now,
+        now,
+        created_by,
+    ))
+
+    cur.execute("""
+        UPDATE intake_sessions
+        SET status = ?, updated_at = ?
+        WHERE intake_id = ?
+    """, ("snapshot_saved", now, intake_id))
+
+    conn.commit()
+    conn.close()
+
+    return stored_snapshot
+
+
+def get_latest_intake_score_map():
+    ensure_intake_scoring_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT s1.intake_id,
+               s1.complexity_score, s1.complexity_level,
+               s1.urgency_score, s1.urgency_level,
+               s1.readiness_score, s1.readiness_level
+        FROM intake_scores s1
+        INNER JOIN (
+            SELECT intake_id, MAX(id) AS max_id
+            FROM intake_scores
+            GROUP BY intake_id
+        ) latest
+        ON s1.id = latest.max_id
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    score_map = {}
+    for row in rows:
+        score_map[row[0]] = {
+            "complexity_score": row[1],
+            "complexity_level": row[2],
+            "urgency_score": row[3],
+            "urgency_level": row[4],
+            "readiness_score": row[5],
+            "readiness_level": row[6],
+        }
+    return score_map
+
+
+def list_intake_dashboard(limit=50):
+    ensure_intake_snapshot_tables()
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, intake_lane, user_posture, default_depth, risk_posture,
+               professional_review_recommended, automation_limits, next_screen,
+               status, created_at, updated_at
+        FROM intake_sessions
+        WHERE firm_id = ?
+        ORDER BY id DESC
+        LIMIT ?
+    """, (firm_id, limit))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    scores = get_latest_intake_score_map()
+
+    items = []
+    for row in rows:
+        intake_id = row[0]
+        score = scores.get(intake_id, {})
+
+        items.append({
+            "intake_id": intake_id,
+            "intake_lane": row[1],
+            "user_posture": row[2],
+            "default_depth": row[3],
+            "risk_posture": row[4],
+            "professional_review_recommended": bool(row[5]),
+            "automation_limits": row[6],
+            "next_screen": row[7],
+            "status": row[8],
+            "created_at": row[9],
+            "updated_at": row[10],
+            "complexity_level": score.get("complexity_level", "—"),
+            "urgency_level": score.get("urgency_level", "—"),
+            "readiness_level": score.get("readiness_level", "—"),
+        })
+
+    return items
+
+
+def get_intake_answers(intake_id):
+    ensure_intake_translation_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT question_key, answer_key, answer_label
+        FROM intake_answers
+        WHERE intake_id = ?
+        ORDER BY id ASC
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "question_key": row[0],
+            "answer_key": row[1],
+            "answer_label": row[2],
+        }
+        for row in rows
+    ]
+
+
+def get_intake_translations_for_snapshot(intake_id):
+    ensure_intake_translation_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT source_key, system_category, system_meaning,
+               module_trigger, document_request, next_session, risk_flag
+        FROM intake_translations
+        WHERE intake_id = ?
+        ORDER BY id ASC
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "source_key": row[0],
+            "system_category": row[1],
+            "system_meaning": row[2],
+            "module_trigger": row[3],
+            "document_request": row[4],
+            "next_session": row[5],
+            "risk_flag": row[6],
+        }
+        for row in rows
+    ]
+
+
+def get_latest_intake_scores(intake_id):
+    ensure_intake_scoring_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT complexity_score, complexity_level,
+               urgency_score, urgency_level,
+               readiness_score, readiness_level,
+               scoring_notes
+        FROM intake_scores
+        WHERE intake_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (intake_id,))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return {}
+
+    return {
+        "complexity_score": row[0],
+        "complexity_level": row[1],
+        "urgency_score": row[2],
+        "urgency_level": row[3],
+        "readiness_score": row[4],
+        "readiness_level": row[5],
+        "scoring_notes": row[6],
+    }
+
+
+def rebuild_intake_result(intake_id):
+    translations = get_intake_translations_for_snapshot(intake_id)
+    scores = get_latest_intake_scores(intake_id)
+
+    return {
+        "intake_id": intake_id,
+        "answers": get_intake_answers(intake_id),
+        "translations": translations,
+        "summary": summarize_intake_translations(translations),
+        "scores": scores,
+    }
+
+
+def get_saved_client_snapshot(intake_id):
+    ensure_intake_snapshot_tables()
+
+    import json
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT snapshot_json
+        FROM intake_snapshots
+        WHERE intake_id = ?
+        LIMIT 1
+    """, (intake_id,))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row and row[0]:
+        saved = json.loads(row[0])
+        technical_result = rebuild_intake_result(intake_id)
+        saved["technical_result"] = technical_result
+        return saved, technical_result
+
+    # Fallback: rebuild from stored translations/scores if no snapshot row exists.
+    technical_result = rebuild_intake_result(intake_id)
+    if not technical_result.get("translations"):
+        return None, None
+
+    snapshot = build_client_snapshot(technical_result)
+    snapshot["technical_result"] = technical_result
+    return snapshot, technical_result
+

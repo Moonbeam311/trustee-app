@@ -8,6 +8,7 @@ from flask import session, Flask, request, render_template, redirect, url_for, m
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from services.services_intake import build_client_snapshot
+from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, ensure_intake_snapshot_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13135,6 +13136,11 @@ def intake_universal_profile(intake_id):
             created_by=session.get("username") if "session" in globals() else None
         )
         client_snapshot = build_client_snapshot(result)
+        save_client_snapshot(
+            intake_id=result["intake_id"],
+            snapshot=client_snapshot,
+            created_by=session.get("username") if "session" in globals() else None
+        )
         return render_template(
             "intake/client_snapshot.html",
             snapshot=client_snapshot,
@@ -13145,6 +13151,32 @@ def intake_universal_profile(intake_id):
         "intake/universal_profile.html",
         intake=intake,
         questions=questions
+    )
+
+
+
+# -------------------------------------------------------------------
+# INT-1E — Intake Dashboard + Saved Snapshot View
+# -------------------------------------------------------------------
+@app.route("/intake/dashboard")
+def intake_dashboard():
+    ensure_intake_snapshot_tables()
+    items = list_intake_dashboard(limit=100)
+    return render_template("intake/dashboard.html", items=items)
+
+
+@app.route("/intake/<intake_id>/snapshot")
+def intake_saved_snapshot(intake_id):
+    snapshot, result = get_saved_client_snapshot(intake_id)
+
+    if not snapshot:
+        flash("Saved intake snapshot not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    return render_template(
+        "intake/client_snapshot.html",
+        snapshot=snapshot,
+        result=result
     )
 
 
