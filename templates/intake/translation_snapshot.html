@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container" style="max-width: 1100px; margin: 30px auto;">
+    <h1>Intake Translation Snapshot</h1>
+
+    <div style="padding: 16px; border: 1px solid #ddd; border-radius: 10px; margin: 20px 0;">
+        <strong>Intake ID:</strong> {{ result.intake_id }}<br>
+        <strong>Status:</strong> Universal profile translated.<br>
+        <strong>Important:</strong> This is a routing and preparation map. It is not final legal, tax, or asset-transfer advice.
+    </div>
+
+    <h2>System Categories</h2>
+    <ul>
+        {% for item in result.summary.system_categories %}
+            <li>{{ item.replace('_', ' ').title() }}</li>
+        {% else %}
+            <li>No categories generated.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Module Triggers</h2>
+    <ul>
+        {% for item in result.summary.module_triggers %}
+            <li>{{ item.replace('_', ' ').title() }}</li>
+        {% else %}
+            <li>No modules triggered.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Document Requests</h2>
+    <ul>
+        {% for item in result.summary.document_requests %}
+            <li>{{ item.replace('_', ' ').title() }}</li>
+        {% else %}
+            <li>No document requests generated.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Recommended Next Sessions</h2>
+    <ul>
+        {% for item in result.summary.next_sessions %}
+            <li>{{ item.replace('_', ' ').title() }}</li>
+        {% else %}
+            <li>No next sessions generated.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Risk / Review Flags</h2>
+    <ul>
+        {% for item in result.summary.risk_flags %}
+            <li>{{ item.replace('_', ' ').title() }}</li>
+        {% else %}
+            <li>No risk flags generated.</li>
+        {% endfor %}
+    </ul>
+
+    <details style="margin-top: 24px;">
+        <summary><strong>Show Raw Translation Details</strong></summary>
+        <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+            <thead>
+                <tr>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Source</th>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Category</th>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Meaning</th>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Module</th>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Document</th>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Next Session</th>
+                    <th style="border-bottom:1px solid #ccc; text-align:left;">Flag</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in result.translations %}
+                    <tr>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.source_key }}</td>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.system_category }}</td>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.system_meaning }}</td>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.module_trigger or "" }}</td>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.document_request or "" }}</td>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.next_session or "" }}</td>
+                        <td style="padding:6px; border-bottom:1px solid #eee;">{{ t.risk_flag or "" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </details>
+
+    <p style="margin-top:24px;">
+        <a href="{{ url_for('intake_start') }}">Start another intake</a>
+    </p>
+</div>
+
+{% endblock %}

@@ -203,3 +203,818 @@ def create_intake_session(lane_key, client_id=None, created_by=None):
         "automation_limits": lane["automation_limits"],
         "next_screen": lane["next_screen"],
     }
+
+
+# -------------------------------------------------------------------
+# INT-1B — Intake Translation Map
+# -------------------------------------------------------------------
+
+UNIVERSAL_INTAKE_QUESTIONS = {
+    "planning_context": {
+        "label": "Who are we planning for?",
+        "input_type": "single",
+        "options": {
+            "just_me": "Just me",
+            "me_and_spouse": "Me and my spouse or partner",
+            "family": "My family",
+            "parent_or_elder": "A parent or elder",
+            "business": "A business",
+            "existing_trust_or_estate": "A trust or estate already created",
+            "other": "Other / not sure",
+        },
+    },
+    "main_goals": {
+        "label": "What are your main goals?",
+        "input_type": "multi",
+        "options": {
+            "protect_family": "Protect family",
+            "avoid_probate": "Avoid probate or court confusion",
+            "organize_assets": "Organize assets",
+            "reduce_conflict": "Reduce confusion or family conflict",
+            "choose_decision_makers": "Choose decision-makers",
+            "business_continuity": "Protect or continue a business",
+            "plan_for_children": "Plan for children",
+            "incapacity_planning": "Plan for incapacity",
+            "privacy": "Preserve privacy",
+            "legacy_charitable": "Support legacy, charitable, or community goals",
+            "review_documents": "Review existing documents",
+        },
+    },
+    "asset_snapshot": {
+        "label": "Which of these do you own, manage, or expect to inherit?",
+        "input_type": "multi",
+        "options": {
+            "home": "Home",
+            "rental_property": "Rental property",
+            "land": "Land",
+            "bank_accounts": "Bank accounts",
+            "vehicles": "Vehicles",
+            "business": "Business",
+            "retirement_accounts": "Retirement accounts",
+            "life_insurance": "Life insurance",
+            "investments": "Stocks, investments, or brokerage accounts",
+            "digital_assets": "Digital assets",
+            "intellectual_property": "Intellectual property",
+            "collectibles_heirlooms": "Collectibles, heirlooms, or heritage property",
+            "trust_estate_assets": "Trust or estate assets",
+            "none_not_sure": "None / not sure",
+        },
+    },
+    "people_dependents": {
+        "label": "Who depends on you or may need to be included?",
+        "input_type": "multi",
+        "options": {
+            "spouse_partner": "Spouse or partner",
+            "minor_children": "Minor children",
+            "adult_children": "Adult children",
+            "parent_elder": "Parent or elder",
+            "special_needs_person": "Disabled or special-needs person",
+            "business_partner": "Business partner",
+            "charitable_beneficiary": "Charitable, community, or legacy beneficiary",
+            "no_dependents": "No dependents",
+            "not_sure": "Not sure",
+        },
+    },
+    "concerns": {
+        "label": "Do any of these concerns apply?",
+        "input_type": "multi",
+        "options": {
+            "family_conflict": "Family conflict",
+            "lawsuit_concern": "Lawsuit concern",
+            "debt_creditor": "Debt or creditor concern",
+            "tax_concern": "Tax concern",
+            "business_liability": "Business liability",
+            "divorce_remarriage": "Divorce or remarriage concern",
+            "multi_state_property": "Property in more than one state",
+            "medical_incapacity": "Medical or incapacity concern",
+            "no_trusted_successor": "No trusted successor",
+            "missing_documents": "Missing documents",
+            "not_sure": "Not sure",
+        },
+    },
+    "existing_documents": {
+        "label": "Which documents do you already have?",
+        "input_type": "multi",
+        "options": {
+            "will": "Will",
+            "trust": "Trust",
+            "power_of_attorney": "Power of attorney",
+            "health_directive": "Health directive",
+            "deed": "Deed",
+            "mortgage_statement": "Mortgage statement",
+            "business_documents": "Business documents",
+            "insurance_policies": "Insurance policies",
+            "beneficiary_forms": "Retirement / beneficiary forms",
+            "tax_filings": "Tax filings",
+            "court_documents": "Court documents",
+            "none": "None",
+            "not_sure": "Not sure",
+        },
+    },
+}
+
+
+TRANSLATION_RULES = {
+    # Planning context
+    "planning_context.just_me": {
+        "system_category": "PERSON_PROFILE",
+        "system_meaning": "individual_planning",
+        "module_triggers": ["foundational_profile"],
+        "document_requests": [],
+        "next_sessions": ["initial_structure_review"],
+        "risk_flags": [],
+    },
+    "planning_context.me_and_spouse": {
+        "system_category": "FAMILY_STRUCTURE",
+        "system_meaning": "spousal_or_partner_planning",
+        "module_triggers": ["spousal_profile", "beneficiary_review"],
+        "document_requests": [],
+        "next_sessions": ["family_structure_review"],
+        "risk_flags": [],
+    },
+    "planning_context.family": {
+        "system_category": "FAMILY_STRUCTURE",
+        "system_meaning": "family_planning",
+        "module_triggers": ["family_profile", "beneficiary_review"],
+        "document_requests": [],
+        "next_sessions": ["family_structure_review"],
+        "risk_flags": [],
+    },
+    "planning_context.parent_or_elder": {
+        "system_category": "DEPENDENCY_PROFILE",
+        "system_meaning": "elder_or_parent_planning",
+        "module_triggers": ["elder_planning", "authority_document_review"],
+        "document_requests": ["power_of_attorney", "health_directive", "existing_care_documents"],
+        "next_sessions": ["elder_authority_review"],
+        "risk_flags": ["possible_incapacity_or_care_issue"],
+    },
+    "planning_context.business": {
+        "system_category": "BUSINESS_PROFILE",
+        "system_meaning": "business_planning_context",
+        "module_triggers": ["business_continuity"],
+        "document_requests": ["operating_agreement", "ein_letter", "business_license"],
+        "next_sessions": ["business_continuity_review"],
+        "risk_flags": ["business_continuity_needed"],
+    },
+    "planning_context.existing_trust_or_estate": {
+        "system_category": "FIDUCIARY_CONTEXT",
+        "system_meaning": "existing_trust_or_estate_matter",
+        "module_triggers": ["trust_audit", "fiduciary_administration"],
+        "document_requests": ["trust_document", "letters_testamentary_or_authority", "asset_inventory"],
+        "next_sessions": ["fiduciary_authority_review"],
+        "risk_flags": ["authority_review_needed"],
+    },
+
+    # Goals
+    "main_goals.protect_family": {
+        "system_category": "OBJECTIVE_PROFILE",
+        "system_meaning": "family_protection_objective",
+        "module_triggers": ["beneficiary_planning", "successor_planning"],
+        "document_requests": [],
+        "next_sessions": ["beneficiary_planning_review"],
+        "risk_flags": [],
+    },
+    "main_goals.avoid_probate": {
+        "system_category": "OBJECTIVE_PROFILE",
+        "system_meaning": "probate_avoidance_objective",
+        "module_triggers": ["trust_planning", "funding_checklist"],
+        "document_requests": ["existing_will", "deed", "beneficiary_forms"],
+        "next_sessions": ["probate_avoidance_review"],
+        "risk_flags": [],
+    },
+    "main_goals.organize_assets": {
+        "system_category": "OBJECTIVE_PROFILE",
+        "system_meaning": "asset_organization_objective",
+        "module_triggers": ["asset_inventory"],
+        "document_requests": ["asset_statements", "titles", "deeds"],
+        "next_sessions": ["asset_document_deep_dive"],
+        "risk_flags": [],
+    },
+    "main_goals.reduce_conflict": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "conflict_reduction_objective",
+        "module_triggers": ["governance_controls", "decision_authority_review"],
+        "document_requests": ["existing_will", "existing_trust", "family_agreements"],
+        "next_sessions": ["governance_conflict_review"],
+        "risk_flags": ["family_conflict_risk"],
+    },
+    "main_goals.choose_decision_makers": {
+        "system_category": "FIDUCIARY_READINESS",
+        "system_meaning": "decision_maker_selection_needed",
+        "module_triggers": ["trustee_selection", "agent_selection"],
+        "document_requests": [],
+        "next_sessions": ["fiduciary_selection_review"],
+        "risk_flags": [],
+    },
+    "main_goals.business_continuity": {
+        "system_category": "BUSINESS_PROFILE",
+        "system_meaning": "business_continuity_objective",
+        "module_triggers": ["business_continuity", "succession_planning"],
+        "document_requests": ["operating_agreement", "business_license", "bank_authority_records"],
+        "next_sessions": ["business_continuity_review"],
+        "risk_flags": ["business_continuity_needed"],
+    },
+    "main_goals.plan_for_children": {
+        "system_category": "BENEFICIARY_PROFILE",
+        "system_meaning": "children_planning_objective",
+        "module_triggers": ["beneficiary_planning", "guardian_review"],
+        "document_requests": [],
+        "next_sessions": ["children_guardian_review"],
+        "risk_flags": [],
+    },
+    "main_goals.incapacity_planning": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "incapacity_planning_objective",
+        "module_triggers": ["poa_review", "health_directive_review"],
+        "document_requests": ["power_of_attorney", "health_directive"],
+        "next_sessions": ["incapacity_authority_review"],
+        "risk_flags": ["incapacity_planning_needed"],
+    },
+    "main_goals.privacy": {
+        "system_category": "OBJECTIVE_PROFILE",
+        "system_meaning": "privacy_preference",
+        "module_triggers": ["privacy_review", "disclosure_control"],
+        "document_requests": [],
+        "next_sessions": ["privacy_preferences_review"],
+        "risk_flags": [],
+    },
+    "main_goals.legacy_charitable": {
+        "system_category": "LEGACY_PROFILE",
+        "system_meaning": "legacy_or_charitable_objective",
+        "module_triggers": ["legacy_planning", "charitable_intent_review"],
+        "document_requests": [],
+        "next_sessions": ["legacy_objectives_review"],
+        "risk_flags": [],
+    },
+    "main_goals.review_documents": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "document_review_objective",
+        "module_triggers": ["document_audit"],
+        "document_requests": ["existing_documents"],
+        "next_sessions": ["document_audit_session"],
+        "risk_flags": [],
+    },
+
+    # Assets
+    "asset_snapshot.home": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "primary_residence",
+        "module_triggers": ["real_property_review", "funding_checklist"],
+        "document_requests": ["deed", "mortgage_statement", "property_tax_bill", "homeowners_insurance"],
+        "next_sessions": ["real_property_deep_dive"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.rental_property": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "rental_real_property",
+        "module_triggers": ["real_property_review", "liability_review", "income_property_review"],
+        "document_requests": ["deed", "lease", "insurance", "mortgage_statement"],
+        "next_sessions": ["real_property_deep_dive"],
+        "risk_flags": ["liability_exposure_possible"],
+    },
+    "asset_snapshot.land": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "land_or_real_estate",
+        "module_triggers": ["real_property_review"],
+        "document_requests": ["deed", "tax_bill", "survey_if_available"],
+        "next_sessions": ["real_property_deep_dive"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.bank_accounts": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "financial_accounts",
+        "module_triggers": ["account_inventory", "beneficiary_review"],
+        "document_requests": ["bank_statement", "account_registration_info"],
+        "next_sessions": ["financial_account_review"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.vehicles": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "vehicle_assets",
+        "module_triggers": ["title_review", "insurance_review"],
+        "document_requests": ["vehicle_title", "registration", "insurance"],
+        "next_sessions": ["vehicle_title_review"],
+        "risk_flags": ["liability_exposure_possible"],
+    },
+    "asset_snapshot.business": {
+        "system_category": "BUSINESS_PROFILE",
+        "system_meaning": "business_asset_or_operating_entity",
+        "module_triggers": ["business_continuity", "entity_review"],
+        "document_requests": ["operating_agreement", "ein_letter", "business_license", "bank_authority_records"],
+        "next_sessions": ["business_continuity_review"],
+        "risk_flags": ["business_liability_possible"],
+    },
+    "asset_snapshot.retirement_accounts": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "retirement_assets",
+        "module_triggers": ["beneficiary_designation_review"],
+        "document_requests": ["retirement_statement", "beneficiary_designation_form"],
+        "next_sessions": ["beneficiary_designation_review"],
+        "risk_flags": ["transfer_restriction_review_needed"],
+    },
+    "asset_snapshot.life_insurance": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "life_insurance_policy",
+        "module_triggers": ["beneficiary_designation_review", "insurance_review"],
+        "document_requests": ["policy_declaration_page", "beneficiary_designation_form"],
+        "next_sessions": ["insurance_beneficiary_review"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.investments": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "investment_assets",
+        "module_triggers": ["investment_account_review", "beneficiary_review"],
+        "document_requests": ["brokerage_statement", "account_registration_info"],
+        "next_sessions": ["investment_account_review"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.digital_assets": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "digital_assets",
+        "module_triggers": ["digital_asset_inventory"],
+        "document_requests": ["digital_asset_list"],
+        "next_sessions": ["digital_asset_review"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.intellectual_property": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "intellectual_property",
+        "module_triggers": ["ip_inventory"],
+        "document_requests": ["ip_registration_records", "licensing_agreements"],
+        "next_sessions": ["intellectual_property_review"],
+        "risk_flags": [],
+    },
+    "asset_snapshot.collectibles_heirlooms": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "collectibles_heirlooms_heritage_property",
+        "module_triggers": ["heritage_asset_ledger", "special_property_inventory"],
+        "document_requests": ["photos", "appraisals", "provenance_records"],
+        "next_sessions": ["heritage_asset_review"],
+        "risk_flags": ["special_custody_or_heritage_flag"],
+    },
+    "asset_snapshot.trust_estate_assets": {
+        "system_category": "FIDUCIARY_CONTEXT",
+        "system_meaning": "existing_trust_or_estate_assets",
+        "module_triggers": ["fiduciary_inventory", "ledger_readiness"],
+        "document_requests": ["trust_document", "estate_authority_document", "asset_inventory"],
+        "next_sessions": ["fiduciary_inventory_review"],
+        "risk_flags": ["authority_review_needed"],
+    },
+
+    # People
+    "people_dependents.spouse_partner": {
+        "system_category": "FAMILY_STRUCTURE",
+        "system_meaning": "spouse_or_partner_involved",
+        "module_triggers": ["spousal_planning"],
+        "document_requests": [],
+        "next_sessions": ["family_structure_review"],
+        "risk_flags": [],
+    },
+    "people_dependents.minor_children": {
+        "system_category": "BENEFICIARY_PROFILE",
+        "system_meaning": "minor_children_involved",
+        "module_triggers": ["guardian_review", "minor_beneficiary_controls"],
+        "document_requests": [],
+        "next_sessions": ["children_guardian_review"],
+        "risk_flags": ["minor_children_flag"],
+    },
+    "people_dependents.adult_children": {
+        "system_category": "BENEFICIARY_PROFILE",
+        "system_meaning": "adult_children_involved",
+        "module_triggers": ["beneficiary_planning"],
+        "document_requests": [],
+        "next_sessions": ["beneficiary_planning_review"],
+        "risk_flags": [],
+    },
+    "people_dependents.parent_elder": {
+        "system_category": "DEPENDENCY_PROFILE",
+        "system_meaning": "elder_dependency",
+        "module_triggers": ["elder_planning"],
+        "document_requests": ["poa_if_available", "health_directive_if_available"],
+        "next_sessions": ["elder_authority_review"],
+        "risk_flags": ["elder_dependency_flag"],
+    },
+    "people_dependents.special_needs_person": {
+        "system_category": "BENEFICIARY_PROFILE",
+        "system_meaning": "special_needs_person_involved",
+        "module_triggers": ["special_needs_review"],
+        "document_requests": ["benefits_information_if_available"],
+        "next_sessions": ["special_needs_planning_review"],
+        "risk_flags": ["special_needs_flag"],
+    },
+    "people_dependents.business_partner": {
+        "system_category": "BUSINESS_PROFILE",
+        "system_meaning": "business_partner_involved",
+        "module_triggers": ["business_governance_review"],
+        "document_requests": ["operating_agreement", "partnership_agreement"],
+        "next_sessions": ["business_governance_review"],
+        "risk_flags": ["co_owner_or_partner_flag"],
+    },
+    "people_dependents.charitable_beneficiary": {
+        "system_category": "LEGACY_PROFILE",
+        "system_meaning": "charitable_or_legacy_beneficiary",
+        "module_triggers": ["legacy_planning", "charitable_intent_review"],
+        "document_requests": [],
+        "next_sessions": ["legacy_objectives_review"],
+        "risk_flags": [],
+    },
+
+    # Concerns
+    "concerns.family_conflict": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "family_conflict_concern",
+        "module_triggers": ["governance_controls", "conflict_review"],
+        "document_requests": ["existing_will", "existing_trust", "family_agreements"],
+        "next_sessions": ["governance_conflict_review"],
+        "risk_flags": ["family_conflict_risk"],
+    },
+    "concerns.lawsuit_concern": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "lawsuit_concern",
+        "module_triggers": ["risk_review"],
+        "document_requests": ["court_documents", "claim_letters_if_available"],
+        "next_sessions": ["risk_triage_review"],
+        "risk_flags": ["urgent_or_legal_review_flag"],
+    },
+    "concerns.debt_creditor": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "debt_or_creditor_concern",
+        "module_triggers": ["liability_review"],
+        "document_requests": ["debt_statements", "creditor_letters_if_available"],
+        "next_sessions": ["liability_review"],
+        "risk_flags": ["creditor_pressure_flag"],
+    },
+    "concerns.tax_concern": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "tax_concern",
+        "module_triggers": ["tax_professional_review"],
+        "document_requests": ["tax_notices", "tax_filings"],
+        "next_sessions": ["tax_review_referral"],
+        "risk_flags": ["tax_review_flag"],
+    },
+    "concerns.business_liability": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "business_liability_concern",
+        "module_triggers": ["business_liability_review"],
+        "document_requests": ["operating_agreement", "insurance_policies"],
+        "next_sessions": ["business_liability_review"],
+        "risk_flags": ["business_liability_possible"],
+    },
+    "concerns.divorce_remarriage": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "divorce_or_remarriage_concern",
+        "module_triggers": ["family_structure_review", "beneficiary_review"],
+        "document_requests": ["divorce_decree_if_available", "prenuptial_or_postnuptial_if_available"],
+        "next_sessions": ["family_structure_review"],
+        "risk_flags": ["family_status_complexity"],
+    },
+    "concerns.multi_state_property": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "multi_state_property_concern",
+        "module_triggers": ["multi_jurisdiction_review", "real_property_review"],
+        "document_requests": ["deeds", "property_tax_bills"],
+        "next_sessions": ["multi_jurisdiction_property_review"],
+        "risk_flags": ["multi_jurisdiction_flag"],
+    },
+    "concerns.medical_incapacity": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "medical_or_incapacity_concern",
+        "module_triggers": ["poa_review", "health_directive_review"],
+        "document_requests": ["power_of_attorney", "health_directive", "medical_authority_documents"],
+        "next_sessions": ["incapacity_authority_review"],
+        "risk_flags": ["incapacity_planning_needed"],
+    },
+    "concerns.no_trusted_successor": {
+        "system_category": "FIDUCIARY_READINESS",
+        "system_meaning": "no_trusted_successor_identified",
+        "module_triggers": ["successor_selection"],
+        "document_requests": [],
+        "next_sessions": ["fiduciary_selection_review"],
+        "risk_flags": ["successor_gap_flag"],
+    },
+    "concerns.missing_documents": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "missing_documents_concern",
+        "module_triggers": ["document_collection"],
+        "document_requests": ["document_checklist"],
+        "next_sessions": ["document_collection_review"],
+        "risk_flags": ["documentation_gap"],
+    },
+
+    # Existing docs
+    "existing_documents.will": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "will_exists",
+        "module_triggers": ["document_audit"],
+        "document_requests": ["will"],
+        "next_sessions": ["document_audit_session"],
+        "risk_flags": [],
+    },
+    "existing_documents.trust": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "trust_exists",
+        "module_triggers": ["trust_audit"],
+        "document_requests": ["trust_document"],
+        "next_sessions": ["trust_document_review"],
+        "risk_flags": [],
+    },
+    "existing_documents.power_of_attorney": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "poa_exists",
+        "module_triggers": ["authority_document_review"],
+        "document_requests": ["power_of_attorney"],
+        "next_sessions": ["authority_document_review"],
+        "risk_flags": [],
+    },
+    "existing_documents.health_directive": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "health_directive_exists",
+        "module_triggers": ["health_directive_review"],
+        "document_requests": ["health_directive"],
+        "next_sessions": ["authority_document_review"],
+        "risk_flags": [],
+    },
+    "existing_documents.deed": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "deed_available",
+        "module_triggers": ["real_property_review"],
+        "document_requests": ["deed"],
+        "next_sessions": ["real_property_deep_dive"],
+        "risk_flags": [],
+    },
+    "existing_documents.mortgage_statement": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "mortgage_statement_available",
+        "module_triggers": ["real_property_review"],
+        "document_requests": ["mortgage_statement"],
+        "next_sessions": ["real_property_deep_dive"],
+        "risk_flags": [],
+    },
+    "existing_documents.business_documents": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "business_documents_exist",
+        "module_triggers": ["business_document_audit"],
+        "document_requests": ["business_documents"],
+        "next_sessions": ["business_continuity_review"],
+        "risk_flags": [],
+    },
+    "existing_documents.insurance_policies": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "insurance_documents_exist",
+        "module_triggers": ["insurance_review"],
+        "document_requests": ["insurance_policies"],
+        "next_sessions": ["insurance_beneficiary_review"],
+        "risk_flags": [],
+    },
+    "existing_documents.beneficiary_forms": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "beneficiary_forms_exist",
+        "module_triggers": ["beneficiary_designation_review"],
+        "document_requests": ["beneficiary_forms"],
+        "next_sessions": ["beneficiary_designation_review"],
+        "risk_flags": [],
+    },
+    "existing_documents.tax_filings": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "tax_filings_available",
+        "module_triggers": ["tax_professional_review"],
+        "document_requests": ["tax_filings"],
+        "next_sessions": ["tax_review_referral"],
+        "risk_flags": ["tax_review_flag"],
+    },
+    "existing_documents.court_documents": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "court_documents_available",
+        "module_triggers": ["risk_review"],
+        "document_requests": ["court_documents"],
+        "next_sessions": ["risk_triage_review"],
+        "risk_flags": ["urgent_or_legal_review_flag"],
+    },
+    "existing_documents.none": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "no_documents_available",
+        "module_triggers": ["foundational_estate_package", "document_collection"],
+        "document_requests": ["document_checklist"],
+        "next_sessions": ["foundational_planning_review"],
+        "risk_flags": ["documentation_gap"],
+    },
+}
+
+
+def ensure_intake_translation_tables():
+    ensure_intake_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_answers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            question_key TEXT NOT NULL,
+            answer_key TEXT NOT NULL,
+            answer_label TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_translations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            source_key TEXT NOT NULL,
+            system_category TEXT,
+            system_meaning TEXT,
+            module_trigger TEXT,
+            document_request TEXT,
+            next_session TEXT,
+            risk_flag TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_universal_intake_questions():
+    return UNIVERSAL_INTAKE_QUESTIONS
+
+
+def get_translation_rules():
+    return TRANSLATION_RULES
+
+
+def _normalize_answer_values(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(v) for v in value if str(v).strip()]
+    if isinstance(value, tuple):
+        return [str(v) for v in value if str(v).strip()]
+    if str(value).strip():
+        return [str(value).strip()]
+    return []
+
+
+def translate_answer(question_key, answer_key):
+    source_key = f"{question_key}.{answer_key}"
+    return TRANSLATION_RULES.get(source_key)
+
+
+def save_universal_profile_answers(intake_id, form_data, created_by=None):
+    ensure_intake_translation_tables()
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    saved_answers = []
+    translations = []
+
+    for question_key, question in UNIVERSAL_INTAKE_QUESTIONS.items():
+        if question["input_type"] == "multi":
+            values = form_data.getlist(question_key) if hasattr(form_data, "getlist") else _normalize_answer_values(form_data.get(question_key))
+        else:
+            values = _normalize_answer_values(form_data.get(question_key))
+
+        for answer_key in values:
+            answer_label = question["options"].get(answer_key, answer_key)
+            source_key = f"{question_key}.{answer_key}"
+            rule = TRANSLATION_RULES.get(source_key)
+
+            cur.execute("""
+                INSERT INTO intake_answers (
+                    intake_id, firm_id, question_key, answer_key, answer_label,
+                    created_at, created_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                intake_id,
+                firm_id,
+                question_key,
+                answer_key,
+                answer_label,
+                now,
+                created_by,
+            ))
+
+            saved_answers.append({
+                "question_key": question_key,
+                "answer_key": answer_key,
+                "answer_label": answer_label,
+            })
+
+            if rule:
+                module_triggers = rule.get("module_triggers") or [None]
+                document_requests = rule.get("document_requests") or [None]
+                next_sessions = rule.get("next_sessions") or [None]
+                risk_flags = rule.get("risk_flags") or [None]
+
+                max_len = max(len(module_triggers), len(document_requests), len(next_sessions), len(risk_flags))
+
+                for idx in range(max_len):
+                    module_trigger = module_triggers[idx] if idx < len(module_triggers) else None
+                    document_request = document_requests[idx] if idx < len(document_requests) else None
+                    next_session = next_sessions[idx] if idx < len(next_sessions) else None
+                    risk_flag = risk_flags[idx] if idx < len(risk_flags) else None
+
+                    cur.execute("""
+                        INSERT INTO intake_translations (
+                            intake_id, firm_id, source_key, system_category,
+                            system_meaning, module_trigger, document_request,
+                            next_session, risk_flag, created_at, created_by
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        intake_id,
+                        firm_id,
+                        source_key,
+                        rule.get("system_category"),
+                        rule.get("system_meaning"),
+                        module_trigger,
+                        document_request,
+                        next_session,
+                        risk_flag,
+                        now,
+                        created_by,
+                    ))
+
+                    translations.append({
+                        "source_key": source_key,
+                        "system_category": rule.get("system_category"),
+                        "system_meaning": rule.get("system_meaning"),
+                        "module_trigger": module_trigger,
+                        "document_request": document_request,
+                        "next_session": next_session,
+                        "risk_flag": risk_flag,
+                    })
+
+    cur.execute("""
+        UPDATE intake_sessions
+        SET status = ?, updated_at = ?
+        WHERE intake_id = ?
+    """, ("universal_profile_completed", now, intake_id))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "answers": saved_answers,
+        "translations": translations,
+        "summary": summarize_intake_translations(translations),
+    }
+
+
+def summarize_intake_translations(translations):
+    def ordered_unique(values):
+        seen = set()
+        output = []
+        for value in values:
+            if value and value not in seen:
+                seen.add(value)
+                output.append(value)
+        return output
+
+    return {
+        "system_categories": ordered_unique(t.get("system_category") for t in translations),
+        "system_meanings": ordered_unique(t.get("system_meaning") for t in translations),
+        "module_triggers": ordered_unique(t.get("module_trigger") for t in translations),
+        "document_requests": ordered_unique(t.get("document_request") for t in translations),
+        "next_sessions": ordered_unique(t.get("next_session") for t in translations),
+        "risk_flags": ordered_unique(t.get("risk_flag") for t in translations),
+    }
+
+
+def get_intake_session(intake_id):
+    ensure_intake_tables()
+    conn = get_connection()
+    conn.row_factory = None
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, intake_lane, user_posture, default_depth, risk_posture,
+               professional_review_recommended, automation_limits, next_screen,
+               status, created_at, updated_at
+        FROM intake_sessions
+        WHERE intake_id = ?
+    """, (intake_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    keys = [
+        "intake_id", "intake_lane", "user_posture", "default_depth",
+        "risk_posture", "professional_review_recommended", "automation_limits",
+        "next_screen", "status", "created_at", "updated_at"
+    ]
+    return dict(zip(keys, row))
+

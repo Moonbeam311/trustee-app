@@ -6,6 +6,7 @@ import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
+from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13106,9 +13107,40 @@ def intake_start():
             created_by=session.get("username") if "session" in globals() else None
         )
 
-        return render_template("intake/orientation.html", session_data=session_data)
+        return redirect(url_for("intake_universal_profile", intake_id=session_data["intake_id"]))
 
     return render_template("intake/start.html", lanes=lanes)
+
+
+
+# -------------------------------------------------------------------
+# INT-1B — Intake Translation Map
+# -------------------------------------------------------------------
+@app.route("/intake/<intake_id>/universal-profile", methods=["GET", "POST"])
+def intake_universal_profile(intake_id):
+    ensure_intake_translation_tables()
+    intake = get_intake_session(intake_id)
+
+    if not intake:
+        flash("Intake session not found.", "warning")
+        return redirect(url_for("intake_start"))
+
+    questions = get_universal_intake_questions()
+
+    if request.method == "POST":
+        result = save_universal_profile_answers(
+            intake_id=intake_id,
+            form_data=request.form,
+            created_by=session.get("username") if "session" in globals() else None
+        )
+        return render_template("intake/translation_snapshot.html", result=result)
+
+    return render_template(
+        "intake/universal_profile.html",
+        intake=intake,
+        questions=questions
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")

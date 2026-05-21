@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container" style="max-width: 980px; margin: 30px auto;">
+    <h1>Initial Intake: Universal Profile</h1>
+
+    <div style="padding: 16px; border: 1px solid #ddd; border-radius: 10px; margin: 20px 0;">
+        <strong>Intake ID:</strong> {{ intake.intake_id }}<br>
+        <strong>Path:</strong> {{ intake.intake_lane.replace('_', ' ').title() }}<br>
+        <strong>Purpose:</strong> Answer these plain-language questions so the system can build the first fiduciary map.
+    </div>
+
+    <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
+
+        {% for q_key, question in questions.items() %}
+            <fieldset style="border:1px solid #ccc; border-radius:10px; padding:16px; margin:20px 0;">
+                <legend style="font-weight:bold;">{{ question.label }}</legend>
+
+                {% for opt_key, opt_label in question.options.items() %}
+                    <label style="display:block; margin:10px 0; cursor:pointer;">
+                        {% if question.input_type == "multi" %}
+                            <input type="checkbox" name="{{ q_key }}" value="{{ opt_key }}">
+                        {% else %}
+                            <input type="radio" name="{{ q_key }}" value="{{ opt_key }}" required>
+                        {% endif %}
+                        {{ opt_label }}
+                    </label>
+                {% endfor %}
+            </fieldset>
+        {% endfor %}
+
+        <button type="submit" style="margin-top: 18px; padding: 12px 20px; border-radius: 8px;">
+            Generate Intake Translation Snapshot
+        </button>
+    </form>
+</div>
+
+{% endblock %}
