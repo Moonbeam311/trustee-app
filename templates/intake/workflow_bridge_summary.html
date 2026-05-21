@@ -98,6 +98,7 @@
         <div class="bridge-actions">
             <a href="{{ url_for('intake_workflow_bridge', intake_id=summary.intake_id, workflow_key=summary.workflow_key) }}">Edit bridge</a>
             <a href="{{ url_for('intake_workflow_launch_prep', intake_id=summary.intake_id, workflow_key=summary.workflow_key) }}">Launch prep</a>
+            <a href="{{ url_for('intake_workflow_draft_packet', intake_id=summary.intake_id, workflow_key=summary.workflow_key) }}">Draft packet</a>
             <a href="{{ url_for('intake_document_recommendations', intake_id=summary.intake_id) }}">Recommendations</a>
             <a href="#" onclick="window.print(); return false;">Print bridge summary</a>
         </div>

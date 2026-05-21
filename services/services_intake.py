@@ -5188,3 +5188,209 @@ def build_workflow_bridge_summary(intake_id, workflow_key):
         "bridge_status": "Prepared" if answers else "Not Completed",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2E — Bridge-to-Draft Packet Generator
+# -------------------------------------------------------------------
+
+DRAFT_PACKET_TYPE_MAP = {
+    "professional_review_checklist": "Professional Review Draft Packet",
+    "business_continuity_packet": "Business Continuity Draft Packet",
+    "real_property_review": "Real Property Review Draft Packet",
+    "foundational_estate_package": "Foundational Estate Planning Draft Packet",
+    "document_audit": "Existing Document Audit Draft Packet",
+    "beneficiary_guardian_planning": "Beneficiary / Guardian Planning Draft Packet",
+    "asset_inventory_packet": "Asset Inventory Draft Packet",
+    "fiduciary_authority_review": "Fiduciary Authority Review Draft Packet",
+    "next_session_agenda": "Next Session Agenda Draft Packet",
+}
+
+
+def _bridge_answer_labels(summary):
+    labels = []
+    for item in summary.get("question_summaries", []) or []:
+        for answer in item.get("answers", []) or []:
+            labels.append(str(answer.get("answer_label") or ""))
+    return labels
+
+
+def _bridge_answer_text(summary):
+    return " ".join(_bridge_answer_labels(summary)).lower()
+
+
+def build_draft_packet_questions(workflow_key, bridge_summary):
+    text = _bridge_answer_text(bridge_summary)
+    questions = []
+
+    # Universal drafting questions
+    questions.extend([
+        "Who is the primary planning party or client for this workflow?",
+        "Should this draft be client-facing, internal-only, or both?",
+        "Which documents must be collected before a draft can be finalized?",
+    ])
+
+    if workflow_key == "business_continuity_packet":
+        questions.extend([
+            "What is the exact business name and DBA/entity name?",
+            "Who currently has authority to operate or bind the business?",
+            "Who should serve as backup operator, manager, or successor contact?",
+            "Which business records prove authority, ownership, or continuity?",
+        ])
+
+        if "sole proprietorship" in text or "dba" in text:
+            questions.append("Should the continuity packet treat this as a sole-proprietor/DBA continuity plan?")
+        if "liability" in text or "insurance" in text:
+            questions.append("What insurance, liability, or risk documents must be reviewed before drafting?")
+        if "records missing" in text:
+            questions.append("Which missing records must be requested before the packet is finalized?")
+
+    elif workflow_key == "professional_review_checklist":
+        questions.extend([
+            "What professional review issue must be separated first: legal, tax, court, creditor, or administrative?",
+            "Is there a response deadline or notice date?",
+            "Which documents should be copied into the professional review packet?",
+        ])
+
+    elif workflow_key == "real_property_review":
+        questions.extend([
+            "What is the property address or parcel identifier?",
+            "Who is listed on the deed or title record?",
+            "Are there liens, mortgages, co-owners, or transfer restrictions?",
+            "Which title/property records must be collected before any transfer recommendation?",
+        ])
+
+    elif workflow_key == "foundational_estate_package":
+        questions.extend([
+            "Which foundational documents are most likely needed first?",
+            "Who are the proposed decision-makers and successors?",
+            "Are there minor children, guardianship issues, blended-family issues, or special-needs considerations?",
+        ])
+
+    elif workflow_key == "document_audit":
+        questions.extend([
+            "Which documents should be audited first?",
+            "Are any documents unsigned, undated, unnotarized, outdated, or inconsistent?",
+            "Which documents should be marked as active, superseded, incomplete, or uncertain?",
+        ])
+
+    elif workflow_key == "beneficiary_guardian_planning":
+        questions.extend([
+            "Who are the intended beneficiaries?",
+            "Are any beneficiaries minors, dependents, or special-needs beneficiaries?",
+            "Should distributions be equal, customized, staged, restricted, or reviewed further?",
+        ])
+
+    elif workflow_key == "asset_inventory_packet":
+        questions.extend([
+            "Which asset category should be inventoried first?",
+            "What ownership evidence exists for each asset?",
+            "Which assets are ready for review and which require missing documents?",
+        ])
+
+    elif workflow_key == "fiduciary_authority_review":
+        questions.extend([
+            "What document grants fiduciary authority?",
+            "Who is the fiduciary, agent, trustee, executor, or administrator?",
+            "What limitations, dates, signatures, or conditions affect authority?",
+        ])
+
+    elif workflow_key == "next_session_agenda":
+        questions.extend([
+            "What is the primary goal of the next session?",
+            "Who needs to attend?",
+            "Which documents or decisions must be ready before that session?",
+        ])
+
+    return questions
+
+
+def build_draft_packet_open_issues(workflow_key, bridge_summary):
+    issues = []
+
+    launch = bridge_summary.get("launch", {}) or {}
+    packet = launch.get("packet", {}) or {}
+
+    open_tasks = launch.get("open_tasks", []) or []
+    review_flags = launch.get("review_flags", []) or []
+    documents = launch.get("documents", []) or []
+
+    if open_tasks:
+        issues.append(f"{len(open_tasks)} open follow-up task(s) remain before final drafting.")
+
+    if review_flags:
+        for flag in review_flags:
+            issues.append(f"Review flag: {flag}")
+
+    if documents:
+        issues.append("Document checklist must be confirmed before final document generation.")
+
+    text = _bridge_answer_text(bridge_summary)
+
+    if "not sure" in text:
+        issues.append("One or more bridge answers indicate uncertainty that must be clarified.")
+
+    if "none yet" in text:
+        issues.append("One or more required document categories may not be available yet.")
+
+    if workflow_key == "business_continuity_packet":
+        if "liability" in text or "insurance" in text:
+            issues.append("Business liability/insurance concern requires review before final drafting.")
+        if "sole proprietorship" in text or "dba" in text:
+            issues.append("Sole proprietor/DBA continuity authority should be handled carefully.")
+
+    return issues
+
+
+def build_draft_packet_readiness(bridge_summary):
+    answers = bridge_summary.get("answers", []) or []
+    open_issues = build_draft_packet_open_issues(
+        bridge_summary.get("workflow_key"),
+        bridge_summary,
+    )
+
+    if not answers:
+        return "Bridge Not Completed"
+
+    if len(open_issues) >= 4:
+        return "Draft Prep With Major Open Issues"
+
+    if open_issues:
+        return "Draft Prep With Open Issues"
+
+    return "Draft Prep Ready"
+
+
+def build_workflow_draft_packet(intake_id, workflow_key):
+    bridge_summary = build_workflow_bridge_summary(intake_id, workflow_key)
+    if not bridge_summary:
+        return None
+
+    launch = bridge_summary.get("launch", {}) or {}
+    recommendation = launch.get("recommendation", {}) or {}
+
+    draft_packet_type = DRAFT_PACKET_TYPE_MAP.get(
+        workflow_key,
+        "Workflow Draft Packet",
+    )
+
+    drafting_questions = build_draft_packet_questions(workflow_key, bridge_summary)
+    open_issues = build_draft_packet_open_issues(workflow_key, bridge_summary)
+    readiness = build_draft_packet_readiness(bridge_summary)
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "draft_packet_type": draft_packet_type,
+        "readiness": readiness,
+        "bridge_summary": bridge_summary,
+        "launch": launch,
+        "recommendation": recommendation,
+        "drafting_questions": drafting_questions,
+        "open_issues": open_issues,
+        "documents": launch.get("documents", []) or [],
+        "open_tasks": launch.get("open_tasks", []) or [],
+        "completed_tasks": launch.get("completed_tasks", []) or [],
+        "question_summaries": bridge_summary.get("question_summaries", []) or [],
+        "notice": "This draft packet is a preparation layer only. It does not generate final legal, fiduciary, tax, property, or business documents.",
+    }
+

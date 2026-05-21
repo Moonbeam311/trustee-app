@@ -24,6 +24,7 @@ from services.services_intake import build_document_recommendations, save_docume
 from services.services_intake import build_document_recommendations_tuned
 from services.services_intake import update_document_recommendation_status, build_workflow_launch_prep
 from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
+from services.services_intake import build_workflow_draft_packet
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13509,6 +13510,20 @@ def intake_workflow_bridge_summary(intake_id, workflow_key):
     return render_template(
         "intake/workflow_bridge_summary.html",
         summary=summary
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/draft-packet")
+def intake_workflow_draft_packet(intake_id, workflow_key):
+    draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
+
+    if not draft_packet:
+        flash("Draft packet could not be built. Complete the workflow bridge first.", "warning")
+        return redirect(url_for("intake_workflow_bridge", intake_id=intake_id, workflow_key=workflow_key))
+
+    return render_template(
+        "intake/workflow_draft_packet.html",
+        draft_packet=draft_packet
     )
 
 

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.draft-wrap {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.draft-hero,
+.draft-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.draft-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.draft-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.draft-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.draft-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.draft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.draft-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.draft-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.draft-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+}
+
+.draft-muted {
+    opacity: 0.75;
+}
+
+@media print {
+    nav,
+    .draft-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .draft-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .draft-hero,
+    .draft-card,
+    .draft-list li {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="draft-wrap">
+    <div class="draft-hero">
+        <h1 style="margin-top:0;">{{ draft_packet.draft_packet_type }}</h1>
+        <p>
+            Intake ID: <strong>{{ draft_packet.intake_id }}</strong> |
+            Workflow: <strong>{{ draft_packet.workflow_key }}</strong>
+        </p>
+        <p class="draft-muted">{{ draft_packet.notice }}</p>
+
+        <div class="draft-actions">
+            <a href="{{ url_for('intake_workflow_bridge_summary', intake_id=draft_packet.intake_id, workflow_key=draft_packet.workflow_key) }}">Bridge summary</a>
+            <a href="{{ url_for('intake_workflow_launch_prep', intake_id=draft_packet.intake_id, workflow_key=draft_packet.workflow_key) }}">Launch prep</a>
+            <a href="{{ url_for('intake_document_recommendations', intake_id=draft_packet.intake_id) }}">Recommendations</a>
+            <a href="#" onclick="window.print(); return false;">Print draft packet</a>
+        </div>
+    </div>
+
+    <div class="draft-grid">
+        <div class="draft-card">
+            <h3>Readiness</h3>
+            <span class="draft-pill">{{ draft_packet.readiness }}</span>
+        </div>
+
+        <div class="draft-card">
+            <h3>Recommendation</h3>
+            <strong>{{ draft_packet.recommendation.title }}</strong>
+        </div>
+
+        <div class="draft-card">
+            <h3>Priority</h3>
+            <span class="draft-pill">{{ draft_packet.recommendation.priority.title() if draft_packet.recommendation.priority else '—' }}</span>
+        </div>
+
+        <div class="draft-card">
+            <h3>Confidence</h3>
+            <span class="draft-pill">{{ draft_packet.recommendation.confidence }}%</span>
+        </div>
+    </div>
+
+    <div class="draft-card">
+        <h2>Workflow Bridge Answers</h2>
+        {% for item in draft_packet.question_summaries %}
+            <h3>{{ loop.index }}. {{ item.label }}</h3>
+            <ul class="draft-list">
+                {% for answer in item.answers %}
+                    <li>{{ answer.answer_label }}</li>
+                {% else %}
+                    <li class="draft-muted">No answer recorded.</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    </div>
+
+    <div class="draft-card">
+        <h2>Drafting Questions</h2>
+        <ul class="draft-list">
+            {% for item in draft_packet.drafting_questions %}
+                <li>☐ {{ item }}</li>
+            {% else %}
+                <li>No drafting questions generated.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="draft-card">
+        <h2>Open Issues Before Drafting</h2>
+        <ul class="draft-list">
+            {% for item in draft_packet.open_issues %}
+                <li>{{ item }}</li>
+            {% else %}
+                <li>No open issues detected.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="draft-card">
+        <h2>Documents Needed</h2>
+        <ul class="draft-list">
+            {% for item in draft_packet.documents %}
+                <li>☐ {{ item }}</li>
+            {% else %}
+                <li>No document checklist found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="draft-card">
+        <h2>Open Tasks</h2>
+        <ul class="draft-list">
+            {% for task in draft_packet.open_tasks %}
+                <li>
+                    ☐ <strong>{{ task.title }}</strong><br>
+                    <span class="draft-muted">{{ task.task_type_label }} | {{ task.status_label }} | Priority: {{ task.priority_label }}</span>
+                </li>
+            {% else %}
+                <li>No open tasks.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="draft-card">
+        <h2>Completed Tasks</h2>
+        <ul class="draft-list">
+            {% for task in draft_packet.completed_tasks %}
+                <li>
+                    ☑ <strong>{{ task.title }}</strong><br>
+                    <span class="draft-muted">{{ task.task_type_label }} | {{ task.status_label }}</span>
+                </li>
+            {% else %}
+                <li>No completed tasks.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="draft-card">
+        <h2>Next Step</h2>
+        <p>
+            This draft packet can now be used to build the workflow-specific questionnaire or controlled document draft layer.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
