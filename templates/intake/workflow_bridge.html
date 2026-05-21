@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.bridge-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.bridge-hero,
+.bridge-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.bridge-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.bridge-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.bridge-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.bridge-actions a,
+.bridge-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.bridge-options {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.bridge-option {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.bridge-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="bridge-wrap">
+    <div class="bridge-hero">
+        <h1 style="margin-top:0;">{{ definition.title }}</h1>
+        <p>{{ definition.purpose }}</p>
+        <p class="bridge-muted">
+            Intake ID: {{ intake_id }} | Workflow: {{ workflow_key }}
+        </p>
+
+        <div class="bridge-actions">
+            <a href="{{ url_for('intake_workflow_launch_prep', intake_id=intake_id, workflow_key=workflow_key) }}">Launch prep</a>
+            <a href="{{ url_for('intake_document_recommendations', intake_id=intake_id) }}">Recommendations</a>
+            <a href="{{ url_for('intake_followup_packet', intake_id=intake_id) }}">Packet</a>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('intake_workflow_bridge', intake_id=intake_id, workflow_key=workflow_key) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        {% for question in definition.questions %}
+            <div class="bridge-card">
+                <h2>{{ loop.index }}. {{ question.label }}</h2>
+
+                <div class="bridge-options">
+                    {% for key, label in question.options.items() %}
+                        <label class="bridge-option">
+                            {% if question.input_type == "radio" %}
+                                <input type="radio" name="{{ question.key }}" value="{{ key }}">
+                            {% else %}
+                                <input type="checkbox" name="{{ question.key }}" value="{{ key }}">
+                            {% endif %}
+                            {{ label }}
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="bridge-actions">
+            <button type="submit">Save Workflow Bridge</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

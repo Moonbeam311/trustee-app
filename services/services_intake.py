@@ -4630,3 +4630,548 @@ def build_workflow_launch_prep(intake_id, workflow_key):
         "launch_status": "Prepared",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2D — Workflow-Specific Intake Bridge
+# -------------------------------------------------------------------
+
+WORKFLOW_BRIDGE_QUESTION_BANK = {
+    "professional_review_checklist": {
+        "title": "Professional Review Checklist Bridge",
+        "purpose": "Clarify high-risk legal, tax, creditor, court, or professional review issues before document drafting.",
+        "questions": [
+            {
+                "key": "review_issue_type",
+                "label": "What type of professional review issue is present?",
+                "input_type": "checkbox",
+                "options": {
+                    "tax": "Tax / IRS / filing issue",
+                    "legal": "Legal or court issue",
+                    "creditor": "Creditor, claim, or collection issue",
+                    "business_liability": "Business liability issue",
+                    "family_conflict": "Family conflict issue",
+                    "not_sure": "Not sure",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "deadline_pressure",
+                "label": "Is there a deadline, notice date, court date, or urgent response window?",
+                "input_type": "radio",
+                "options": {
+                    "yes": "Yes",
+                    "no": "No",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "documents_available",
+                "label": "Which urgent documents are available?",
+                "input_type": "checkbox",
+                "options": {
+                    "tax_notice": "Tax notice",
+                    "court_notice": "Court document",
+                    "claim_letter": "Claim or creditor letter",
+                    "termination_notice": "Termination or adverse-action notice",
+                    "insurance_letter": "Insurance letter",
+                    "none": "None yet",
+                    "other": "Other / not listed",
+                },
+            },
+        ],
+    },
+
+    "business_continuity_packet": {
+        "title": "Business Continuity Packet Bridge",
+        "purpose": "Clarify business authority, documents, ownership, liability, and succession before preparing business continuity documents.",
+        "questions": [
+            {
+                "key": "business_structure",
+                "label": "What type of business structure is involved?",
+                "input_type": "radio",
+                "options": {
+                    "sole_prop": "Sole proprietorship / DBA",
+                    "llc": "LLC",
+                    "corporation": "Corporation",
+                    "partnership": "Partnership",
+                    "trust_owned": "Trust-owned or estate-connected business",
+                    "not_sure": "Not sure",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "business_documents",
+                "label": "Which business documents are available?",
+                "input_type": "checkbox",
+                "options": {
+                    "ein_letter": "EIN letter",
+                    "operating_agreement": "Operating agreement",
+                    "business_license": "Business license / registration",
+                    "bank_records": "Bank authority records",
+                    "insurance": "Insurance policy",
+                    "contracts": "Contracts",
+                    "none": "None yet",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "continuity_risk",
+                "label": "What continuity risks need review?",
+                "input_type": "checkbox",
+                "options": {
+                    "owner_unavailable": "Owner/operator unavailable",
+                    "successor_needed": "Successor manager needed",
+                    "partner_dispute": "Partner/co-owner dispute",
+                    "liability": "Liability or insurance concern",
+                    "records_missing": "Records missing or disorganized",
+                    "not_sure": "Not sure",
+                    "other": "Other / not listed",
+                },
+            },
+        ],
+    },
+
+    "real_property_review": {
+        "title": "Real Property Review Bridge",
+        "purpose": "Clarify title, ownership, liens, co-owners, insurance, and transfer readiness before property documents are prepared.",
+        "questions": [
+            {
+                "key": "property_type",
+                "label": "What type of property is involved?",
+                "input_type": "radio",
+                "options": {
+                    "primary_residence": "Primary residence",
+                    "rental": "Rental / investment property",
+                    "inherited": "Inherited property",
+                    "business": "Business property",
+                    "land": "Land / vacant property",
+                    "not_sure": "Not sure",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "property_documents",
+                "label": "Which property documents are available?",
+                "input_type": "checkbox",
+                "options": {
+                    "deed": "Deed",
+                    "tax_bill": "Tax bill",
+                    "mortgage_statement": "Mortgage statement",
+                    "insurance": "Insurance declaration",
+                    "survey": "Survey",
+                    "lease": "Lease",
+                    "none": "None yet",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "property_risks",
+                "label": "Which property issues need review?",
+                "input_type": "checkbox",
+                "options": {
+                    "mortgage": "Mortgage or lien",
+                    "co_owner": "Co-owner",
+                    "tax_issue": "Tax issue",
+                    "insurance_issue": "Insurance issue",
+                    "transfer_question": "Transfer/funding question",
+                    "not_sure": "Not sure",
+                    "other": "Other / not listed",
+                },
+            },
+        ],
+    },
+
+    "foundational_estate_package": {
+        "title": "Foundational Estate Planning Bridge",
+        "purpose": "Clarify the core people, documents, authority roles, and planning purpose before foundational estate documents are prepared.",
+        "questions": [
+            {
+                "key": "planning_documents_needed",
+                "label": "Which foundational documents may be needed?",
+                "input_type": "checkbox",
+                "options": {
+                    "will": "Will",
+                    "trust": "Trust",
+                    "poa": "Power of attorney",
+                    "health_directive": "Health directive",
+                    "beneficiary_update": "Beneficiary update",
+                    "not_sure": "Not sure",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "decision_makers",
+                "label": "Have decision-makers been identified?",
+                "input_type": "radio",
+                "options": {
+                    "yes": "Yes",
+                    "partial": "Partially",
+                    "no": "No",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "family_complexity",
+                "label": "Are there family circumstances that may affect planning?",
+                "input_type": "checkbox",
+                "options": {
+                    "minor_children": "Minor children",
+                    "blended_family": "Blended family",
+                    "special_needs": "Special-needs concern",
+                    "family_conflict": "Family conflict",
+                    "elder_care": "Elder care concern",
+                    "none": "None of these",
+                    "not_sure": "Not sure",
+                },
+            },
+        ],
+    },
+
+    "document_audit": {
+        "title": "Existing Document Audit Bridge",
+        "purpose": "Clarify which documents exist, whether they are signed/current, and which may conflict or require deeper review.",
+        "questions": [
+            {
+                "key": "document_types",
+                "label": "Which documents should be audited?",
+                "input_type": "checkbox",
+                "options": {
+                    "will": "Will",
+                    "trust": "Trust",
+                    "poa": "Power of attorney",
+                    "health_directive": "Health directive",
+                    "deed": "Deed",
+                    "beneficiary_form": "Beneficiary form",
+                    "business_document": "Business document",
+                    "court_document": "Court document",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "execution_status",
+                "label": "Do the documents appear signed/witnessed/notarized where needed?",
+                "input_type": "radio",
+                "options": {
+                    "yes": "Yes",
+                    "some": "Some documents",
+                    "no": "No",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "audit_concerns",
+                "label": "What concerns should the audit look for?",
+                "input_type": "checkbox",
+                "options": {
+                    "outdated": "Outdated document",
+                    "conflict": "Conflicting documents",
+                    "missing_signature": "Missing signature/notary/witness",
+                    "wrong_name": "Wrong name or outdated party",
+                    "missing_assets": "Assets not addressed",
+                    "not_sure": "Not sure",
+                },
+            },
+        ],
+    },
+
+    "beneficiary_guardian_planning": {
+        "title": "Beneficiary / Guardian Planning Bridge",
+        "purpose": "Clarify beneficiaries, guardian choices, dependents, and distribution concerns before beneficiary planning proceeds.",
+        "questions": [
+            {
+                "key": "beneficiary_group",
+                "label": "Who needs to be considered in beneficiary planning?",
+                "input_type": "checkbox",
+                "options": {
+                    "spouse": "Spouse",
+                    "children": "Children",
+                    "minor_children": "Minor children",
+                    "grandchildren": "Grandchildren",
+                    "parents": "Parents",
+                    "charity": "Charity/community purpose",
+                    "business_successor": "Business successor",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "guardian_status",
+                "label": "Has a guardian or backup caregiver been identified for minors/dependents?",
+                "input_type": "radio",
+                "options": {
+                    "yes": "Yes",
+                    "partial": "Partially",
+                    "no": "No",
+                    "not_applicable": "Not applicable",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "distribution_concerns",
+                "label": "Are there distribution concerns?",
+                "input_type": "checkbox",
+                "options": {
+                    "minor_controls": "Minor beneficiary controls",
+                    "special_needs": "Special-needs planning",
+                    "spendthrift": "Spendthrift or creditor concern",
+                    "conflict": "Family conflict",
+                    "equal_vs_custom": "Equal vs. custom distribution",
+                    "none": "None of these",
+                    "not_sure": "Not sure",
+                },
+            },
+        ],
+    },
+
+    "asset_inventory_packet": {
+        "title": "Asset Inventory Packet Bridge",
+        "purpose": "Clarify assets, ownership records, supporting documents, and transfer readiness before inventory documents are prepared.",
+        "questions": [
+            {
+                "key": "asset_categories",
+                "label": "Which asset categories should be inventoried?",
+                "input_type": "checkbox",
+                "options": {
+                    "real_property": "Real property",
+                    "bank_accounts": "Bank accounts",
+                    "vehicles": "Vehicles / titled property",
+                    "business": "Business interests",
+                    "insurance": "Insurance",
+                    "retirement": "Retirement / investment accounts",
+                    "digital": "Digital assets",
+                    "heritage": "Heritage / legacy assets",
+                    "other": "Other / not listed",
+                },
+            },
+            {
+                "key": "ownership_clarity",
+                "label": "Is ownership clear for the main assets?",
+                "input_type": "radio",
+                "options": {
+                    "yes": "Yes",
+                    "some": "Some assets",
+                    "no": "No",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "inventory_documents",
+                "label": "Which inventory records are available?",
+                "input_type": "checkbox",
+                "options": {
+                    "statements": "Statements",
+                    "titles": "Titles",
+                    "deeds": "Deeds",
+                    "insurance": "Insurance records",
+                    "registrations": "Account registrations",
+                    "appraisals": "Appraisals/valuations",
+                    "none": "None yet",
+                    "other": "Other / not listed",
+                },
+            },
+        ],
+    },
+
+    "next_session_agenda": {
+        "title": "Next Session Agenda Bridge",
+        "purpose": "Convert the recommended next session into a focused agenda with documents, decisions, and follow-up topics.",
+        "questions": [
+            {
+                "key": "next_session_focus",
+                "label": "What should the next session focus on first?",
+                "input_type": "radio",
+                "options": {
+                    "documents": "Documents to gather/review",
+                    "assets": "Asset organization",
+                    "family_roles": "Family roles and beneficiaries",
+                    "risk": "Risk/professional review",
+                    "business": "Business continuity",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "session_attendees",
+                "label": "Who should attend the next session?",
+                "input_type": "checkbox",
+                "options": {
+                    "client": "Client/planning party",
+                    "spouse": "Spouse/partner",
+                    "trustee": "Trustee/fiduciary",
+                    "business_partner": "Business partner",
+                    "advisor": "Professional advisor",
+                    "family_member": "Family member",
+                    "not_sure": "Not sure",
+                },
+            },
+            {
+                "key": "session_readiness",
+                "label": "What must be ready before the next session?",
+                "input_type": "checkbox",
+                "options": {
+                    "documents": "Documents gathered",
+                    "asset_list": "Asset list drafted",
+                    "questions": "Questions prepared",
+                    "decision_makers": "Decision-makers identified",
+                    "professional_review": "Professional review item identified",
+                    "not_sure": "Not sure",
+                },
+            },
+        ],
+    },
+}
+
+
+def get_workflow_bridge_definition(workflow_key):
+    return WORKFLOW_BRIDGE_QUESTION_BANK.get(workflow_key)
+
+
+def ensure_workflow_bridge_tables():
+    ensure_intake_document_recommendation_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_workflow_bridge_answers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            question_key TEXT NOT NULL,
+            answer_key TEXT,
+            answer_label TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def save_workflow_bridge_answers(intake_id, workflow_key, form_data, created_by=None):
+    ensure_workflow_bridge_tables()
+
+    definition = get_workflow_bridge_definition(workflow_key)
+    if not definition:
+        raise ValueError("Unknown workflow bridge.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # Replace current bridge answers for this workflow/intake.
+    cur.execute("""
+        DELETE FROM intake_workflow_bridge_answers
+        WHERE intake_id = ? AND workflow_key = ?
+    """, (intake_id, workflow_key))
+
+    for question in definition.get("questions", []):
+        qkey = question.get("key")
+        options = question.get("options", {})
+        input_type = question.get("input_type")
+
+        if input_type == "checkbox":
+            values = form_data.getlist(qkey) if hasattr(form_data, "getlist") else []
+        else:
+            value = form_data.get(qkey) if hasattr(form_data, "get") else None
+            values = [value] if value else []
+
+        for answer_key in values:
+            if not answer_key:
+                continue
+
+            answer_label = options.get(answer_key, answer_key)
+
+            cur.execute("""
+                INSERT INTO intake_workflow_bridge_answers (
+                    intake_id, workflow_key, firm_id, question_key,
+                    answer_key, answer_label, created_at, updated_at, created_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                intake_id,
+                workflow_key,
+                firm_id,
+                qkey,
+                answer_key,
+                answer_label,
+                now,
+                now,
+                created_by,
+            ))
+
+    update_document_recommendation_status(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        status="launch_prepared",
+        updated_by=created_by,
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def list_workflow_bridge_answers(intake_id, workflow_key):
+    ensure_workflow_bridge_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT question_key, answer_key, answer_label, created_at, updated_at, created_by
+        FROM intake_workflow_bridge_answers
+        WHERE intake_id = ? AND workflow_key = ?
+        ORDER BY id ASC
+    """, (intake_id, workflow_key))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "question_key": row[0],
+            "answer_key": row[1],
+            "answer_label": row[2],
+            "created_at": format_intake_timestamp(row[3]),
+            "updated_at": format_intake_timestamp(row[4]),
+            "created_by": row[5] or "—",
+        }
+        for row in rows
+    ]
+
+
+def build_workflow_bridge_summary(intake_id, workflow_key):
+    definition = get_workflow_bridge_definition(workflow_key)
+    launch = build_workflow_launch_prep(intake_id, workflow_key)
+
+    if not definition or not launch:
+        return None
+
+    answers = list_workflow_bridge_answers(intake_id, workflow_key)
+
+    answers_by_question = {}
+    for answer in answers:
+        answers_by_question.setdefault(answer["question_key"], []).append(answer)
+
+    question_summaries = []
+    for question in definition.get("questions", []):
+        qkey = question.get("key")
+        question_summaries.append({
+            "question_key": qkey,
+            "label": question.get("label"),
+            "answers": answers_by_question.get(qkey, []),
+        })
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "definition": definition,
+        "launch": launch,
+        "answers": answers,
+        "question_summaries": question_summaries,
+        "bridge_status": "Prepared" if answers else "Not Completed",
+    }
+

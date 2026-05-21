@@ -216,6 +216,9 @@
                 <a href="{{ url_for('intake_workflow_launch_prep', intake_id=intake_id, workflow_key=rec.workflow_key) }}">
                     Prepare Launch
                 </a>
+                <a href="{{ url_for('intake_workflow_bridge', intake_id=intake_id, workflow_key=rec.workflow_key) }}">
+                    Start Bridge
+                </a>
             </div>
         </div>
     {% else %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.bridge-summary-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.bridge-hero,
+.bridge-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.bridge-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.bridge-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.bridge-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.bridge-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.bridge-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.bridge-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.bridge-muted {
+    opacity: 0.75;
+}
+
+@media print {
+    nav,
+    .bridge-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .bridge-summary-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .bridge-hero,
+    .bridge-card,
+    .bridge-list li {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="bridge-summary-wrap">
+    <div class="bridge-hero">
+        <h1 style="margin-top:0;">Workflow Bridge Summary</h1>
+        <p>
+            {{ summary.definition.title }}
+        </p>
+        <p class="bridge-muted">
+            Intake ID: {{ summary.intake_id }} |
+            Workflow: {{ summary.workflow_key }} |
+            Status: {{ summary.bridge_status }}
+        </p>
+
+        <div class="bridge-actions">
+            <a href="{{ url_for('intake_workflow_bridge', intake_id=summary.intake_id, workflow_key=summary.workflow_key) }}">Edit bridge</a>
+            <a href="{{ url_for('intake_workflow_launch_prep', intake_id=summary.intake_id, workflow_key=summary.workflow_key) }}">Launch prep</a>
+            <a href="{{ url_for('intake_document_recommendations', intake_id=summary.intake_id) }}">Recommendations</a>
+            <a href="#" onclick="window.print(); return false;">Print bridge summary</a>
+        </div>
+    </div>
+
+    {% for item in summary.question_summaries %}
+        <div class="bridge-card">
+            <h2>{{ loop.index }}. {{ item.label }}</h2>
+            <ul class="bridge-list">
+                {% for answer in item.answers %}
+                    <li>{{ answer.answer_label }}</li>
+                {% else %}
+                    <li class="bridge-muted">No answer recorded.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+
+    <div class="bridge-card">
+        <h2>Next Step</h2>
+        <p>
+            The workflow-specific bridge is prepared. The next build layer can convert this bridge into a draft workflow packet or document questionnaire.
+        </p>
+    </div>
+</div>
+
+{% endblock %}

@@ -23,6 +23,7 @@ from services.services_intake import seed_default_intake_module_ledger, list_int
 from services.services_intake import build_document_recommendations, save_document_recommendations, list_saved_document_recommendations, ensure_intake_document_recommendation_tables
 from services.services_intake import build_document_recommendations_tuned
 from services.services_intake import update_document_recommendation_status, build_workflow_launch_prep
+from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13459,6 +13460,55 @@ def intake_workflow_launch_prep(intake_id, workflow_key):
     return render_template(
         "intake/workflow_launch_prep.html",
         launch=launch
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/bridge", methods=["GET", "POST"])
+def intake_workflow_bridge(intake_id, workflow_key):
+    ensure_workflow_bridge_tables()
+
+    definition = get_workflow_bridge_definition(workflow_key)
+    launch = build_workflow_launch_prep(intake_id, workflow_key)
+
+    if not definition or not launch:
+        flash("Workflow bridge could not be built.", "warning")
+        return redirect(url_for("intake_document_recommendations", intake_id=intake_id))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return redirect(url_for("intake_workflow_bridge", intake_id=intake_id, workflow_key=workflow_key))
+
+        save_workflow_bridge_answers(
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            form_data=request.form,
+            created_by=session.get("username") if "session" in globals() else None,
+        )
+
+        flash("Workflow bridge answers saved.", "success")
+        return redirect(url_for("intake_workflow_bridge_summary", intake_id=intake_id, workflow_key=workflow_key))
+
+    return render_template(
+        "intake/workflow_bridge.html",
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        definition=definition,
+        launch=launch
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/bridge-summary")
+def intake_workflow_bridge_summary(intake_id, workflow_key):
+    summary = build_workflow_bridge_summary(intake_id, workflow_key)
+
+    if not summary:
+        flash("Workflow bridge summary could not be built.", "warning")
+        return redirect(url_for("intake_document_recommendations", intake_id=intake_id))
+
+    return render_template(
+        "intake/workflow_bridge_summary.html",
+        summary=summary
     )
 
 

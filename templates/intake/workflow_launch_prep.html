@@ -122,6 +122,7 @@
 
         <div class="launch-actions">
             <a href="{{ url_for('intake_document_recommendations', intake_id=launch.intake_id) }}">Back to recommendations</a>
+            <a href="{{ url_for('intake_workflow_bridge', intake_id=launch.intake_id, workflow_key=launch.workflow_key) }}">Workflow bridge</a>
             <a href="{{ url_for('intake_followup_packet', intake_id=launch.intake_id) }}">Packet</a>
             <a href="{{ url_for('intake_saved_snapshot', intake_id=launch.intake_id) }}">Snapshot</a>
             <a href="#" onclick="window.print(); return false;">Print launch prep</a>
