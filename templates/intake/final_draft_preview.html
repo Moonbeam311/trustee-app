@@ -112,6 +112,7 @@
             <a href="{{ url_for('intake_final_draft_workspace', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Workspace</a>
             <a href="#" onclick="window.print(); return false;">Print preview</a>
             <a href="{{ url_for('intake_final_draft_preview_docx', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Download DOCX</a>
+            <a href="{{ url_for('intake_final_draft_version_register_detail', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Version register</a>
         </div>
     </div>
 

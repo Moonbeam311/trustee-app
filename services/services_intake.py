@@ -8349,3 +8349,211 @@ def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, cre
 
     return str(out_path)
 
+
+# -------------------------------------------------------------------
+# INT-2Q — Final-Draft Export History + Version Register
+# -------------------------------------------------------------------
+
+def ensure_final_draft_version_register_tables():
+    ensure_final_draft_section_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_version_register (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            version_label TEXT,
+            export_type TEXT DEFAULT 'docx',
+            file_path TEXT,
+            preview_status TEXT,
+            ready_count INTEGER DEFAULT 0,
+            total_sections INTEGER DEFAULT 0,
+            preparation_classification TEXT DEFAULT 'preparation_draft_only',
+            finality_status TEXT DEFAULT 'not_signed_not_executed',
+            created_at TEXT,
+            created_by TEXT,
+            notes TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_next_final_draft_version_label(intake_id, workflow_key, document_key):
+    ensure_final_draft_version_register_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM intake_final_draft_version_register
+        WHERE intake_id = ?
+          AND workflow_key = ?
+          AND document_key = ?
+    """, (intake_id, workflow_key, document_key))
+
+    count = cur.fetchone()[0] or 0
+    conn.close()
+
+    return f"v{count + 1}"
+
+
+def record_final_draft_version_export(
+    intake_id,
+    workflow_key,
+    document_key,
+    file_path,
+    preview_status,
+    ready_count,
+    total_sections,
+    export_type="docx",
+    created_by=None,
+    notes=""
+):
+    ensure_final_draft_version_register_tables()
+
+    version_label = get_next_final_draft_version_label(intake_id, workflow_key, document_key)
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_final_draft_version_register (
+            intake_id, workflow_key, document_key, firm_id,
+            version_label, export_type, file_path,
+            preview_status, ready_count, total_sections,
+            preparation_classification, finality_status,
+            created_at, created_by, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        workflow_key,
+        document_key,
+        firm_id,
+        version_label,
+        export_type,
+        file_path,
+        preview_status,
+        int(ready_count or 0),
+        int(total_sections or 0),
+        "preparation_draft_only",
+        "not_signed_not_executed",
+        now,
+        created_by,
+        notes,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "version_label": version_label,
+        "export_type": export_type,
+        "file_path": file_path,
+        "preview_status": preview_status,
+        "ready_count": int(ready_count or 0),
+        "total_sections": int(total_sections or 0),
+        "preparation_classification": "preparation_draft_only",
+        "finality_status": "not_signed_not_executed",
+        "created_at": now,
+        "created_by": created_by,
+        "notes": notes,
+    }
+
+
+def list_final_draft_version_register(intake_id=None, workflow_key=None, document_key=None):
+    ensure_final_draft_version_register_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT intake_id, workflow_key, document_key,
+               version_label, export_type, file_path,
+               preview_status, ready_count, total_sections,
+               preparation_classification, finality_status,
+               created_at, created_by, notes
+        FROM intake_final_draft_version_register
+    """
+
+    filters = []
+    params = []
+
+    if intake_id:
+        filters.append("intake_id = ?")
+        params.append(intake_id)
+    if workflow_key:
+        filters.append("workflow_key = ?")
+        params.append(workflow_key)
+    if document_key:
+        filters.append("document_key = ?")
+        params.append(document_key)
+
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+
+    query += " ORDER BY id DESC LIMIT 300"
+
+    cur.execute(query, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "workflow_key": row[1],
+            "document_key": row[2],
+            "version_label": row[3],
+            "export_type": row[4],
+            "file_path": row[5],
+            "preview_status": row[6],
+            "ready_count": int(row[7] or 0),
+            "total_sections": int(row[8] or 0),
+            "preparation_classification": row[9],
+            "finality_status": row[10],
+            "created_at": format_intake_timestamp(row[11]) if row[11] else "",
+            "created_by": row[12] or "—",
+            "notes": row[13] or "",
+        }
+        for row in rows
+    ]
+
+
+def summarize_final_draft_versions(intake_id=None, workflow_key=None, document_key=None):
+    records = list_final_draft_version_register(intake_id, workflow_key, document_key)
+
+    return {
+        "total_versions": len(records),
+        "docx_versions": len([r for r in records if r.get("export_type") == "docx"]),
+        "ready_exports": len([r for r in records if r.get("preview_status") == "Final-Draft Preview Ready"]),
+        "incomplete_exports": len([r for r in records if r.get("preview_status") != "Final-Draft Preview Ready"]),
+        "latest_version": records[0].get("version_label") if records else "—",
+    }
+
+
+def build_final_draft_version_register_context(intake_id=None, workflow_key=None, document_key=None):
+    records = list_final_draft_version_register(intake_id, workflow_key, document_key)
+    summary = summarize_final_draft_versions(intake_id, workflow_key, document_key)
+
+    return {
+        "records": records,
+        "summary": summary,
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "notice": "Version records track preparation exports only. They do not prove signing, filing, execution, transfer, or final legal use.",
+    }
+

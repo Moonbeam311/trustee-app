@@ -36,6 +36,7 @@ from services.services_intake import build_final_draft_admin_approval_context, r
 from services.services_intake import build_final_draft_workspace_context
 from services.services_intake import build_final_draft_section_editor_context, get_final_draft_section, update_final_draft_section, build_final_draft_preview_context
 from services.services_intake import generate_final_draft_preview_docx
+from services.services_intake import build_final_draft_version_register_context
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -14018,6 +14019,37 @@ def intake_final_draft_preview_docx(intake_id, workflow_key, document_key):
         ))
 
     return send_file(path, as_attachment=True)
+
+
+@app.route("/intake/final-draft-version-register")
+def intake_final_draft_version_register_all():
+    context = build_final_draft_version_register_context()
+    return render_template(
+        "intake/final_draft_version_register.html",
+        context=context
+    )
+
+
+@app.route("/intake/<intake_id>/final-draft-version-register")
+def intake_final_draft_version_register_intake(intake_id):
+    context = build_final_draft_version_register_context(intake_id=intake_id)
+    return render_template(
+        "intake/final_draft_version_register.html",
+        context=context
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-version-register")
+def intake_final_draft_version_register_detail(intake_id, workflow_key, document_key):
+    context = build_final_draft_version_register_context(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+    )
+    return render_template(
+        "intake/final_draft_version_register.html",
+        context=context
+    )
 
 
 if __name__ == "__main__":

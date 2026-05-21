@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.version-wrap {
+    max-width: 1240px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.version-hero,
+.version-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.version-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.version-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.version-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.version-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.version-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.version-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.version-table-wrap {
+    overflow-x: auto;
+}
+
+.version-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1250px;
+}
+
+.version-table th,
+.version-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.version-table th {
+    background: rgba(255,255,255,0.06);
+}
+
+.version-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="version-wrap">
+    <div class="version-hero">
+        <h1 style="margin-top:0;">Final-Draft Export Version Register</h1>
+
+        {% if context.document_key %}
+            <p>
+                Intake ID: <strong>{{ context.intake_id }}</strong> |
+                Workflow: <strong>{{ context.workflow_key }}</strong> |
+                Document: <strong>{{ context.document_key }}</strong>
+            </p>
+        {% elif context.intake_id %}
+            <p>Version register for Intake ID: <strong>{{ context.intake_id }}</strong></p>
+        {% else %}
+            <p>Version register across all final-draft preview exports.</p>
+        {% endif %}
+
+        <p class="version-muted">{{ context.notice }}</p>
+
+        <div class="version-actions">
+            <a href="{{ url_for('intake_dashboard') }}">Intake dashboard</a>
+            <a href="{{ url_for('intake_export_history') }}">Export history</a>
+            {% if context.document_key %}
+                <a href="{{ url_for('intake_final_draft_preview', intake_id=context.intake_id, workflow_key=context.workflow_key, document_key=context.document_key) }}">Final-draft preview</a>
+                <a href="{{ url_for('intake_final_draft_workspace', intake_id=context.intake_id, workflow_key=context.workflow_key, document_key=context.document_key) }}">Workspace</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="version-grid">
+        <div class="version-card">
+            <h3>Total Versions</h3>
+            <span class="version-pill">{{ context.summary.total_versions }}</span>
+        </div>
+        <div class="version-card">
+            <h3>DOCX Versions</h3>
+            <span class="version-pill">{{ context.summary.docx_versions }}</span>
+        </div>
+        <div class="version-card">
+            <h3>Ready Exports</h3>
+            <span class="version-pill">{{ context.summary.ready_exports }}</span>
+        </div>
+        <div class="version-card">
+            <h3>Incomplete Exports</h3>
+            <span class="version-pill">{{ context.summary.incomplete_exports }}</span>
+        </div>
+        <div class="version-card">
+            <h3>Latest Version</h3>
+            <span class="version-pill">{{ context.summary.latest_version }}</span>
+        </div>
+    </div>
+
+    <div class="version-card version-table-wrap">
+        <table class="version-table">
+            <thead>
+                <tr>
+                    <th>Version</th>
+                    <th>Intake</th>
+                    <th>Workflow</th>
+                    <th>Document</th>
+                    <th>Type</th>
+                    <th>Preview Status</th>
+                    <th>Ready</th>
+                    <th>Classification</th>
+                    <th>Finality</th>
+                    <th>Created</th>
+                    <th>By</th>
+                    <th>File</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in context.records %}
+                    <tr>
+                        <td>{{ row.version_label }}</td>
+                        <td>{{ row.intake_id }}</td>
+                        <td>{{ row.workflow_key }}</td>
+                        <td>{{ row.document_key }}</td>
+                        <td>{{ row.export_type }}</td>
+                        <td>{{ row.preview_status }}</td>
+                        <td>{{ row.ready_count }} / {{ row.total_sections }}</td>
+                        <td>{{ row.preparation_classification }}</td>
+                        <td>{{ row.finality_status }}</td>
+                        <td>{{ row.created_at }}</td>
+                        <td>{{ row.created_by }}</td>
+                        <td>{{ row.file_path }}</td>
+                        <td>{{ row.notes }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="13">No final-draft version records found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="version-card">
+        <h2>Important Boundary</h2>
+        <p>
+            Version records document preparation exports only. They do not mean the document was signed,
+            filed, executed, transferred, or made legally final.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
