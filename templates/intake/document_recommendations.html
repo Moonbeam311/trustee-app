@@ -199,9 +199,7 @@
 
             <div class="recommend-control-row">
                 <form method="POST" action="{{ url_for('intake_update_recommendation_status', intake_id=intake_id, workflow_key=rec.workflow_key) }}">
-                    {% if csrf_token is defined %}
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
-                    {% endif %}
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                     <label>
                         Recommendation Status
                         <select name="status">
