@@ -6889,3 +6889,366 @@ def resolve_review_gate_action(
         "created_by": created_by,
     }
 
+
+# -------------------------------------------------------------------
+# INT-2K — Final-Draft Preparation Gate
+# -------------------------------------------------------------------
+
+def ensure_final_draft_prep_gate_tables():
+    ensure_review_gate_resolution_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_prep_gate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            gate_status TEXT DEFAULT 'blocked',
+            gate_reason TEXT,
+            questionnaire_complete INTEGER DEFAULT 0,
+            open_issues_reviewed INTEGER DEFAULT 0,
+            open_tasks_reviewed INTEGER DEFAULT 0,
+            professional_review_recorded INTEGER DEFAULT 0,
+            required_documents_acknowledged INTEGER DEFAULT 0,
+            admin_approved INTEGER DEFAULT 0,
+            approval_note TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            updated_by TEXT,
+            UNIQUE(intake_id, workflow_key, document_key)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def evaluate_final_draft_prep_gate(intake_id, workflow_key, document_key):
+    document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
+    review_gate = get_review_gate_record(intake_id, workflow_key, document_key)
+    actions = list_review_gate_actions(intake_id, workflow_key, document_key)
+
+    if not document or not review_gate:
+        return None
+
+    preview = document.get("preview", {}) or {}
+    draft_packet = preview.get("draft_packet", {}) or {}
+
+    missing_answers = document.get("missing_answers", []) or []
+    open_issues = draft_packet.get("open_issues", []) or []
+    open_tasks = draft_packet.get("open_tasks", []) or []
+    documents = draft_packet.get("documents", []) or []
+
+    action_keys = {a.get("action_key") for a in actions}
+    resulting_statuses = {a.get("resulting_status") for a in actions}
+
+    questionnaire_complete = 1 if len(missing_answers) == 0 else 0
+
+    open_issues_reviewed = 1 if (
+        len(open_issues) == 0
+        or "open_issues_reviewed" in action_keys
+        or "approved_for_final_draft_prep" in action_keys
+    ) else 0
+
+    open_tasks_reviewed = 1 if (
+        len(open_tasks) == 0
+        or "open_issues_reviewed" in action_keys
+        or "approved_for_final_draft_prep" in action_keys
+    ) else 0
+
+    professional_review_recorded = 1 if (
+        "professional_review_required" in action_keys
+        or "approved_for_final_draft_prep" in action_keys
+        or review_gate.get("gate_status") in {
+            "professional_review_required",
+            "approved_for_final_draft_prep",
+            "ready_for_review",
+        }
+    ) else 0
+
+    # Required documents are acknowledged if the document list is empty, or if
+    # review-gate action history shows an issue review / approval action.
+    required_documents_acknowledged = 1 if (
+        len(documents) == 0
+        or "open_issues_reviewed" in action_keys
+        or "approved_for_final_draft_prep" in action_keys
+    ) else 0
+
+    hard_blocks = []
+
+    if not questionnaire_complete:
+        hard_blocks.append("Controlled questionnaire has missing answers.")
+
+    if not open_issues_reviewed:
+        hard_blocks.append("Open issues have not been reviewed or accepted.")
+
+    if not open_tasks_reviewed:
+        hard_blocks.append("Open tasks have not been reviewed or accepted.")
+
+    if not professional_review_recorded:
+        hard_blocks.append("Professional review status has not been recorded.")
+
+    if not required_documents_acknowledged:
+        hard_blocks.append("Required document checklist has not been acknowledged.")
+
+    if hard_blocks:
+        gate_status = "blocked"
+        gate_reason = " ".join(hard_blocks)
+    else:
+        gate_status = "ready_for_admin_approval"
+        gate_reason = "All pre-approval review conditions are satisfied. Admin approval is still required."
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "document": document,
+        "review_gate": review_gate,
+        "actions": actions,
+        "questionnaire_complete": questionnaire_complete,
+        "open_issues_reviewed": open_issues_reviewed,
+        "open_tasks_reviewed": open_tasks_reviewed,
+        "professional_review_recorded": professional_review_recorded,
+        "required_documents_acknowledged": required_documents_acknowledged,
+        "admin_approved": 0,
+        "gate_status": gate_status,
+        "gate_reason": gate_reason,
+        "missing_answers": missing_answers,
+        "open_issues": open_issues,
+        "open_tasks": open_tasks,
+        "required_documents": documents,
+    }
+
+
+def upsert_final_draft_prep_gate(intake_id, workflow_key, document_key, updated_by=None):
+    ensure_final_draft_prep_gate_tables()
+
+    evaluation = evaluate_final_draft_prep_gate(intake_id, workflow_key, document_key)
+    if not evaluation:
+        return None
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # Preserve admin approval if already approved, unless the evaluation is blocked.
+    cur.execute("""
+        SELECT admin_approved, approval_note
+        FROM intake_final_draft_prep_gate
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key))
+    existing = cur.fetchone()
+
+    existing_admin_approved = int(existing[0]) if existing else 0
+    existing_note = existing[1] if existing else ""
+
+    admin_approved = existing_admin_approved if evaluation["gate_status"] != "blocked" else 0
+
+    if evaluation["gate_status"] == "blocked":
+        final_status = "blocked"
+    elif admin_approved:
+        final_status = "approved_for_final_draft_preparation"
+    else:
+        final_status = evaluation["gate_status"]
+
+    final_reason = (
+        "Approved for final-draft preparation. This still does not authorize signing, filing, execution, transfer, or legal finalization."
+        if final_status == "approved_for_final_draft_preparation"
+        else evaluation["gate_reason"]
+    )
+
+    cur.execute("""
+        INSERT INTO intake_final_draft_prep_gate (
+            intake_id, workflow_key, document_key, firm_id,
+            gate_status, gate_reason,
+            questionnaire_complete, open_issues_reviewed, open_tasks_reviewed,
+            professional_review_recorded, required_documents_acknowledged,
+            admin_approved, approval_note, created_at, updated_at, updated_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(intake_id, workflow_key, document_key) DO UPDATE SET
+            gate_status = excluded.gate_status,
+            gate_reason = excluded.gate_reason,
+            questionnaire_complete = excluded.questionnaire_complete,
+            open_issues_reviewed = excluded.open_issues_reviewed,
+            open_tasks_reviewed = excluded.open_tasks_reviewed,
+            professional_review_recorded = excluded.professional_review_recorded,
+            required_documents_acknowledged = excluded.required_documents_acknowledged,
+            admin_approved = excluded.admin_approved,
+            approval_note = excluded.approval_note,
+            updated_at = excluded.updated_at,
+            updated_by = excluded.updated_by
+    """, (
+        intake_id,
+        workflow_key,
+        document_key,
+        firm_id,
+        final_status,
+        final_reason,
+        evaluation["questionnaire_complete"],
+        evaluation["open_issues_reviewed"],
+        evaluation["open_tasks_reviewed"],
+        evaluation["professional_review_recorded"],
+        evaluation["required_documents_acknowledged"],
+        admin_approved,
+        existing_note,
+        now,
+        now,
+        updated_by,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return get_final_draft_prep_gate(intake_id, workflow_key, document_key)
+
+
+def get_final_draft_prep_gate(intake_id, workflow_key, document_key):
+    ensure_final_draft_prep_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, workflow_key, document_key,
+               gate_status, gate_reason,
+               questionnaire_complete, open_issues_reviewed, open_tasks_reviewed,
+               professional_review_recorded, required_documents_acknowledged,
+               admin_approved, approval_note,
+               created_at, updated_at, updated_by
+        FROM intake_final_draft_prep_gate
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "intake_id": row[0],
+        "workflow_key": row[1],
+        "document_key": row[2],
+        "gate_status": row[3],
+        "gate_reason": row[4],
+        "questionnaire_complete": int(row[5] or 0),
+        "open_issues_reviewed": int(row[6] or 0),
+        "open_tasks_reviewed": int(row[7] or 0),
+        "professional_review_recorded": int(row[8] or 0),
+        "required_documents_acknowledged": int(row[9] or 0),
+        "admin_approved": int(row[10] or 0),
+        "approval_note": row[11] or "",
+        "created_at": format_intake_timestamp(row[12]) if row[12] else "",
+        "updated_at": format_intake_timestamp(row[13]) if row[13] else "",
+        "updated_by": row[14] or "—",
+    }
+
+
+def approve_final_draft_prep_gate(intake_id, workflow_key, document_key, approval_note="", approved_by=None):
+    ensure_final_draft_prep_gate_tables()
+
+    gate = upsert_final_draft_prep_gate(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=approved_by,
+    )
+
+    if not gate:
+        raise ValueError("Final-draft preparation gate could not be evaluated.")
+
+    if gate.get("gate_status") == "blocked":
+        raise ValueError("Gate is blocked. Resolve required conditions before approval.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE intake_final_draft_prep_gate
+        SET gate_status = ?,
+            gate_reason = ?,
+            admin_approved = 1,
+            approval_note = ?,
+            updated_at = ?,
+            updated_by = ?
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+    """, (
+        "approved_for_final_draft_preparation",
+        "Approved for final-draft preparation. This still does not authorize signing, filing, execution, transfer, or legal finalization.",
+        approval_note,
+        now,
+        approved_by,
+        intake_id,
+        workflow_key,
+        document_key,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return get_final_draft_prep_gate(intake_id, workflow_key, document_key)
+
+
+def list_final_draft_prep_gates(intake_id=None):
+    ensure_final_draft_prep_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if intake_id:
+        cur.execute("""
+            SELECT intake_id, workflow_key, document_key,
+                   gate_status, gate_reason,
+                   questionnaire_complete, open_issues_reviewed, open_tasks_reviewed,
+                   professional_review_recorded, required_documents_acknowledged,
+                   admin_approved, approval_note, updated_at, updated_by
+            FROM intake_final_draft_prep_gate
+            WHERE intake_id = ?
+            ORDER BY updated_at DESC
+        """, (intake_id,))
+    else:
+        cur.execute("""
+            SELECT intake_id, workflow_key, document_key,
+                   gate_status, gate_reason,
+                   questionnaire_complete, open_issues_reviewed, open_tasks_reviewed,
+                   professional_review_recorded, required_documents_acknowledged,
+                   admin_approved, approval_note, updated_at, updated_by
+            FROM intake_final_draft_prep_gate
+            ORDER BY updated_at DESC
+            LIMIT 200
+        """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "workflow_key": row[1],
+            "document_key": row[2],
+            "gate_status": row[3],
+            "gate_reason": row[4],
+            "questionnaire_complete": int(row[5] or 0),
+            "open_issues_reviewed": int(row[6] or 0),
+            "open_tasks_reviewed": int(row[7] or 0),
+            "professional_review_recorded": int(row[8] or 0),
+            "required_documents_acknowledged": int(row[9] or 0),
+            "admin_approved": int(row[10] or 0),
+            "approval_note": row[11] or "",
+            "updated_at": format_intake_timestamp(row[12]) if row[12] else "",
+            "updated_by": row[13] or "—",
+        }
+        for row in rows
+    ]
+

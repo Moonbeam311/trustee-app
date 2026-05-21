@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.finalgate-wrap {
+    max-width: 1220px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.finalgate-hero,
+.finalgate-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.finalgate-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.finalgate-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.finalgate-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.finalgate-actions a,
+.finalgate-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.finalgate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.finalgate-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.finalgate-check {
+    padding: 10px 12px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.finalgate-table-wrap {
+    overflow-x: auto;
+}
+
+.finalgate-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1150px;
+}
+
+.finalgate-table th,
+.finalgate-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.finalgate-table th {
+    background: rgba(255,255,255,0.06);
+}
+
+.finalgate-card textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.finalgate-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="finalgate-wrap">
+    <div class="finalgate-hero">
+        <h1 style="margin-top:0;">Final-Draft Preparation Gate</h1>
+
+        {% if gate %}
+            <p>
+                Intake ID: <strong>{{ gate.intake_id }}</strong> |
+                Workflow: <strong>{{ gate.workflow_key }}</strong> |
+                Document: <strong>{{ gate.document_key }}</strong>
+            </p>
+        {% elif intake_id %}
+            <p>Final-draft preparation gate records for Intake ID: <strong>{{ intake_id }}</strong></p>
+        {% else %}
+            <p>Final-draft preparation gate records across intakes.</p>
+        {% endif %}
+
+        <p class="finalgate-muted">
+            This gate only authorizes preparation of a final draft. It does not authorize signing, filing, execution, transfer, or final legal use.
+        </p>
+
+        <div class="finalgate-actions">
+            <a href="{{ url_for('intake_dashboard') }}">Intake dashboard</a>
+            <a href="{{ url_for('intake_review_gate_ledger') }}">Review gate ledger</a>
+            {% if gate %}
+                <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Non-final draft</a>
+                <a href="{{ url_for('intake_review_gate_detail', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Review gate detail</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if gate %}
+        <div class="finalgate-grid">
+            <div class="finalgate-card">
+                <h3>Status</h3>
+                <span class="finalgate-pill">{{ gate.gate_status }}</span>
+            </div>
+            <div class="finalgate-card">
+                <h3>Admin Approved</h3>
+                <span class="finalgate-pill">{{ "Yes" if gate.admin_approved else "No" }}</span>
+            </div>
+            <div class="finalgate-card">
+                <h3>Updated</h3>
+                <span class="finalgate-pill">{{ gate.updated_at }}</span>
+            </div>
+            <div class="finalgate-card">
+                <h3>By</h3>
+                <span class="finalgate-pill">{{ gate.updated_by }}</span>
+            </div>
+        </div>
+
+        <div class="finalgate-card">
+            <h2>Gate Reason</h2>
+            <p>{{ gate.gate_reason }}</p>
+        </div>
+
+        <div class="finalgate-card">
+            <h2>Required Conditions</h2>
+
+            <div class="finalgate-check">
+                {{ "☑" if gate.questionnaire_complete else "☐" }}
+                Controlled questionnaire complete
+            </div>
+
+            <div class="finalgate-check">
+                {{ "☑" if gate.open_issues_reviewed else "☐" }}
+                Open issues reviewed or accepted
+            </div>
+
+            <div class="finalgate-check">
+                {{ "☑" if gate.open_tasks_reviewed else "☐" }}
+                Open tasks reviewed or accepted
+            </div>
+
+            <div class="finalgate-check">
+                {{ "☑" if gate.professional_review_recorded else "☐" }}
+                Professional review status recorded
+            </div>
+
+            <div class="finalgate-check">
+                {{ "☑" if gate.required_documents_acknowledged else "☐" }}
+                Required documents acknowledged
+            </div>
+
+            <div class="finalgate-check">
+                {{ "☑" if gate.admin_approved else "☐" }}
+                Admin intentionally approved final-draft preparation
+            </div>
+        </div>
+
+        <div class="finalgate-card">
+            <h2>Admin Approval</h2>
+
+            {% if gate.gate_status == "blocked" %}
+                <p>
+                    This gate is currently blocked. Resolve the listed conditions before approval.
+                </p>
+            {% elif gate.admin_approved %}
+                <p>
+                    Final-draft preparation has been approved.
+                </p>
+                {% if gate.approval_note %}
+                    <p><strong>Approval Note:</strong> {{ gate.approval_note }}</p>
+                {% endif %}
+            {% else %}
+                <form method="POST" action="{{ url_for('intake_final_draft_gate_approve', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <label>
+                        Approval Note
+                        <textarea name="approval_note" rows="5" placeholder="Record why this is approved for final-draft preparation."></textarea>
+                    </label>
+                    <div class="finalgate-actions">
+                        <button type="submit">Approve Final-Draft Preparation</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+
+    {% else %}
+        <div class="finalgate-card finalgate-table-wrap">
+            <table class="finalgate-table">
+                <thead>
+                    <tr>
+                        <th>Intake</th>
+                        <th>Workflow</th>
+                        <th>Document</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th>Questionnaire</th>
+                        <th>Issues</th>
+                        <th>Tasks</th>
+                        <th>Professional</th>
+                        <th>Docs</th>
+                        <th>Admin</th>
+                        <th>Updated</th>
+                        <th>By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in records %}
+                        <tr>
+                            <td>{{ row.intake_id }}</td>
+                            <td>{{ row.workflow_key }}</td>
+                            <td>
+                                {{ row.document_key }}<br>
+                                <a href="{{ url_for('intake_final_draft_gate_detail', intake_id=row.intake_id, workflow_key=row.workflow_key, document_key=row.document_key) }}">Gate Detail</a>
+                            </td>
+                            <td>{{ row.gate_status }}</td>
+                            <td>{{ row.gate_reason }}</td>
+                            <td>{{ "Yes" if row.questionnaire_complete else "No" }}</td>
+                            <td>{{ "Yes" if row.open_issues_reviewed else "No" }}</td>
+                            <td>{{ "Yes" if row.open_tasks_reviewed else "No" }}</td>
+                            <td>{{ "Yes" if row.professional_review_recorded else "No" }}</td>
+                            <td>{{ "Yes" if row.required_documents_acknowledged else "No" }}</td>
+                            <td>{{ "Yes" if row.admin_approved else "No" }}</td>
+                            <td>{{ row.updated_at }}</td>
+                            <td>{{ row.updated_by }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="13">No final-draft preparation gate records found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

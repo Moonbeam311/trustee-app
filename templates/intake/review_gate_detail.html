@@ -119,6 +119,7 @@
         <div class="gate-actions">
             <a href="{{ url_for('intake_review_gate_ledger_detail', intake_id=gate.intake_id) }}">Gate ledger</a>
             <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Non-final draft</a>
+            <a href="{{ url_for('intake_final_draft_gate_detail', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Final-draft prep gate</a>
             <a href="{{ url_for('intake_document_draft_preview', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Controlled preview</a>
             <a href="#" onclick="window.print(); return false;">Print gate detail</a>
         </div>

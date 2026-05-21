@@ -30,6 +30,7 @@ from services.services_intake import get_document_draft_types_for_workflow, get_
 from services.services_intake import build_nonfinal_draft_document
 from services.services_intake import generate_nonfinal_draft_docx, upsert_review_gate_record, list_review_gate_records
 from services.services_intake import get_review_gate_record, list_review_gate_actions, resolve_review_gate_action, VALID_REVIEW_GATE_ACTIONS
+from services.services_intake import upsert_final_draft_prep_gate, get_final_draft_prep_gate, approve_final_draft_prep_gate, list_final_draft_prep_gates
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13751,6 +13752,70 @@ def intake_review_gate_resolve(intake_id, workflow_key, document_key):
         flash(f"Review gate action could not be recorded: {exc}", "warning")
 
     return redirect(url_for("intake_review_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+
+@app.route("/intake/<intake_id>/final-draft-gate")
+def intake_final_draft_gate_ledger_detail(intake_id):
+    records = list_final_draft_prep_gates(intake_id=intake_id)
+    return render_template(
+        "intake/final_draft_prep_gate.html",
+        records=records,
+        gate=None,
+        intake_id=intake_id
+    )
+
+
+@app.route("/intake/final-draft-gate")
+def intake_final_draft_gate_ledger():
+    records = list_final_draft_prep_gates()
+    return render_template(
+        "intake/final_draft_prep_gate.html",
+        records=records,
+        gate=None,
+        intake_id=None
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-gate")
+def intake_final_draft_gate_detail(intake_id, workflow_key, document_key):
+    gate = upsert_final_draft_prep_gate(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=session.get("username") if "session" in globals() else None,
+    )
+
+    if not gate:
+        flash("Final-draft preparation gate could not be evaluated.", "warning")
+        return redirect(url_for("intake_nonfinal_draft_document", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/final_draft_prep_gate.html",
+        gate=gate,
+        records=[],
+        intake_id=intake_id
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-gate/approve", methods=["POST"])
+def intake_final_draft_gate_approve(intake_id, workflow_key, document_key):
+    if not validate_csrf_token():
+        flash("Invalid or missing CSRF token.", "warning")
+        return redirect(url_for("intake_final_draft_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    try:
+        approve_final_draft_prep_gate(
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key,
+            approval_note=request.form.get("approval_note") or "",
+            approved_by=session.get("username") if "session" in globals() else None,
+        )
+        flash("Final-draft preparation gate approved.", "success")
+    except Exception as exc:
+        flash(f"Final-draft preparation gate could not be approved: {exc}", "warning")
+
+    return redirect(url_for("intake_final_draft_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
 
 
 if __name__ == "__main__":
