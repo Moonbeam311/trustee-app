@@ -9084,3 +9084,457 @@ def merge_trust_instrument_recommendations(recommendations):
             recommendations.append(item)
 
     return recommendations
+
+
+# -------------------------------------------------------------------
+# INT-2D-INSTRUMENT-BRIDGES — Instrument-Specific Bridge Questions
+# -------------------------------------------------------------------
+
+TRUST_INSTRUMENT_BRIDGE_QUESTIONS = {
+    "certificate_of_trust": {
+        "title": "Certificate of Trust Bridge",
+        "description": "Clarify trust identity, trustee authority, certification scope, reliance limits, and whether full trust terms remain withheld.",
+        "questions": [
+            {
+                "key": "trust_name",
+                "label": "What is the exact legal name of the trust?",
+                "type": "text",
+                "options": [],
+            },
+            {
+                "key": "trust_date",
+                "label": "What is the trust date or effective date?",
+                "type": "text",
+                "options": [],
+            },
+            {
+                "key": "trustee_names",
+                "label": "Who are the trustee(s) or authorized fiduciary representatives?",
+                "type": "textarea",
+                "options": [],
+            },
+            {
+                "key": "certification_purpose",
+                "label": "What is the certificate being used to verify?",
+                "type": "checkbox",
+                "options": [
+                    "Existence of trust",
+                    "Trustee authority",
+                    "Power to hold property",
+                    "Power to open account",
+                    "Power to transfer or manage assets",
+                    "Limited third-party reliance",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "full_terms_withheld",
+                "label": "Should the certificate avoid disclosing full private trust terms?",
+                "type": "radio",
+                "options": [
+                    "Yes, disclose only limited certification facts",
+                    "No, attach broader supporting terms",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "execution_needs",
+                "label": "What execution features are needed?",
+                "type": "checkbox",
+                "options": [
+                    "Trustee signature",
+                    "Witness section",
+                    "Notary acknowledgment",
+                    "Jurat",
+                    "Seal / certification block",
+                    "Prepared by / return to footer",
+                ],
+            },
+        ],
+    },
+
+    "trust_articles_builder": {
+        "title": "Trust Articles / Article Builder Bridge",
+        "description": "Clarify which governing articles, powers, limitations, fiduciary duties, and administrative provisions need drafting.",
+        "questions": [
+            {
+                "key": "article_scope",
+                "label": "Which article category is being drafted or revised?",
+                "type": "checkbox",
+                "options": [
+                    "Purpose and authority",
+                    "Trustee powers",
+                    "Trustee limitations",
+                    "Beneficiary provisions",
+                    "Asset administration",
+                    "Business operations",
+                    "Records and accounting",
+                    "Amendment / correction procedure",
+                    "Execution / attestation",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "article_priority",
+                "label": "What is the highest priority for these articles?",
+                "type": "radio",
+                "options": [
+                    "Clarify authority",
+                    "Reduce ambiguity",
+                    "Prepare execution-ready language",
+                    "Add missing article sections",
+                    "Review existing articles",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "existing_articles",
+                "label": "Do existing articles already exist?",
+                "type": "radio",
+                "options": [
+                    "Yes, existing articles need review",
+                    "Yes, but missing sections exist",
+                    "No, new articles are needed",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "article_notes",
+                "label": "What article language, powers, restrictions, or concerns should be preserved?",
+                "type": "textarea",
+                "options": [],
+            },
+        ],
+    },
+
+    "declaration_of_trust": {
+        "title": "Declaration of Trust Bridge",
+        "description": "Clarify trust identity, parties, purpose, property, fiduciary structure, and execution readiness before drafting a declaration.",
+        "questions": [
+            {
+                "key": "trust_name",
+                "label": "What is the exact trust name?",
+                "type": "text",
+                "options": [],
+            },
+            {
+                "key": "trust_type",
+                "label": "What type of trust declaration is being prepared?",
+                "type": "radio",
+                "options": [
+                    "Revocable living trust",
+                    "Irrevocable trust",
+                    "Family trust",
+                    "Business / asset holding trust",
+                    "Charitable or mission trust",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "trust_parties",
+                "label": "Who are the settlor/grantor, trustee(s), successor trustee(s), and beneficiaries if known?",
+                "type": "textarea",
+                "options": [],
+            },
+            {
+                "key": "trust_purpose",
+                "label": "What is the trust purpose?",
+                "type": "checkbox",
+                "options": [
+                    "Family estate planning",
+                    "Asset management",
+                    "Business continuity",
+                    "Minor child planning",
+                    "Legacy preservation",
+                    "Charitable / educational purpose",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "initial_property",
+                "label": "Is initial property or Schedule A information available?",
+                "type": "radio",
+                "options": [
+                    "Yes, asset schedule is ready",
+                    "Some information is available",
+                    "No, still gathering",
+                    "Not sure",
+                ],
+            },
+        ],
+    },
+
+    "trustee_acceptance": {
+        "title": "Trustee Acceptance Bridge",
+        "description": "Clarify appointment, fiduciary capacity, acceptance language, and execution requirements.",
+        "questions": [
+            {
+                "key": "trustee_name",
+                "label": "Who is accepting appointment as trustee or fiduciary?",
+                "type": "text",
+                "options": [],
+            },
+            {
+                "key": "trust_name",
+                "label": "Which trust is the appointment connected to?",
+                "type": "text",
+                "options": [],
+            },
+            {
+                "key": "appointment_type",
+                "label": "What type of appointment is being accepted?",
+                "type": "radio",
+                "options": [
+                    "Initial trustee",
+                    "Successor trustee",
+                    "Co-trustee",
+                    "Special trustee",
+                    "Administrative fiduciary",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "acceptance_scope",
+                "label": "What duties or limitations should be acknowledged?",
+                "type": "checkbox",
+                "options": [
+                    "Duty to administer trust",
+                    "Duty to keep records",
+                    "Duty to preserve property",
+                    "Duty to avoid conflicts",
+                    "Limited-purpose authority",
+                    "No compensation decision yet",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "execution_needs",
+                "label": "What execution features are needed?",
+                "type": "checkbox",
+                "options": [
+                    "Signature only",
+                    "Witnesses",
+                    "Notary acknowledgment",
+                    "Jurat",
+                    "Seal / certification block",
+                ],
+            },
+        ],
+    },
+
+    "trust_minutes_resolution": {
+        "title": "Trust Minutes / Resolution Bridge",
+        "description": "Clarify the meeting/resolution context, action approved, parties present, and supporting documents.",
+        "questions": [
+            {
+                "key": "resolution_title",
+                "label": "What is the title or subject of the trust resolution?",
+                "type": "text",
+                "options": [],
+            },
+            {
+                "key": "action_type",
+                "label": "What type of action is being recorded?",
+                "type": "checkbox",
+                "options": [
+                    "Approve trust document",
+                    "Approve asset schedule",
+                    "Approve trustee appointment",
+                    "Approve business authority",
+                    "Approve account opening",
+                    "Approve transfer or funding action",
+                    "Ratify prior action",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "meeting_type",
+                "label": "How is the action being approved?",
+                "type": "radio",
+                "options": [
+                    "Meeting minutes",
+                    "Written consent without meeting",
+                    "Trustee resolution",
+                    "Ratification",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "persons_present",
+                "label": "Who was present or who is approving the action?",
+                "type": "textarea",
+                "options": [],
+            },
+            {
+                "key": "supporting_records",
+                "label": "What supporting records should be referenced?",
+                "type": "checkbox",
+                "options": [
+                    "Trust agreement",
+                    "Certificate of trust",
+                    "Schedule A",
+                    "Asset title/deed",
+                    "Bank/account documents",
+                    "Insurance record",
+                    "Prior minutes",
+                    "Other / not listed",
+                ],
+            },
+        ],
+    },
+
+    "schedule_a_asset_schedule": {
+        "title": "Schedule A / Asset Schedule Bridge",
+        "description": "Clarify asset categories, descriptions, ownership records, valuation/supporting documents, and transfer readiness.",
+        "questions": [
+            {
+                "key": "asset_categories",
+                "label": "What asset categories need to be listed?",
+                "type": "checkbox",
+                "options": [
+                    "Real property",
+                    "Bank / financial accounts",
+                    "Business interests",
+                    "Vehicles",
+                    "Equipment",
+                    "Household goods / personal property",
+                    "Intellectual property",
+                    "Digital assets",
+                    "Insurance / policy interests",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "asset_detail_level",
+                "label": "How detailed should the schedule be at this stage?",
+                "type": "radio",
+                "options": [
+                    "High-level preliminary inventory",
+                    "Detailed asset-by-asset schedule",
+                    "Transfer-ready schedule",
+                    "Not sure",
+                ],
+            },
+            {
+                "key": "supporting_documents",
+                "label": "Which supporting records are available?",
+                "type": "checkbox",
+                "options": [
+                    "Titles",
+                    "Deeds",
+                    "Statements",
+                    "Receipts",
+                    "Insurance policies",
+                    "Operating agreement",
+                    "Appraisal / valuation",
+                    "None yet",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "transfer_status",
+                "label": "What is the current transfer/funding status?",
+                "type": "radio",
+                "options": [
+                    "Not transferred yet",
+                    "Partially transferred",
+                    "Transfer documents prepared",
+                    "Already transferred",
+                    "Not sure",
+                ],
+            },
+        ],
+    },
+
+    "execution_notary_witness_packet": {
+        "title": "Execution / Notary / Witness Packet Bridge",
+        "description": "Clarify execution method, signature parties, witness/notary needs, jurat language, and completion controls.",
+        "questions": [
+            {
+                "key": "execution_document_type",
+                "label": "Which document is being prepared for execution?",
+                "type": "checkbox",
+                "options": [
+                    "Certificate of Trust",
+                    "Declaration of Trust",
+                    "Trust Articles",
+                    "Trustee Acceptance",
+                    "Trust Resolution",
+                    "Schedule A",
+                    "Affidavit / Certification",
+                    "Other / not listed",
+                ],
+            },
+            {
+                "key": "signature_parties",
+                "label": "Who needs to sign?",
+                "type": "textarea",
+                "options": [],
+            },
+            {
+                "key": "execution_features",
+                "label": "Which execution features are required?",
+                "type": "checkbox",
+                "options": [
+                    "Signature block",
+                    "Witness section",
+                    "Notary acknowledgment",
+                    "Jurat",
+                    "Seal block",
+                    "Date/location block",
+                    "Prepared by / return to footer",
+                    "Page numbering",
+                ],
+            },
+            {
+                "key": "execution_status",
+                "label": "What is the current execution status?",
+                "type": "radio",
+                "options": [
+                    "Draft only",
+                    "Ready for review",
+                    "Ready for signing after review",
+                    "Signed but not fully witnessed/notarized",
+                    "Not sure",
+                ],
+            },
+        ],
+    },
+}
+
+
+def is_trust_instrument_workflow(workflow_key):
+    return workflow_key in TRUST_INSTRUMENT_BRIDGE_QUESTIONS
+
+
+def get_trust_instrument_bridge_definition(workflow_key):
+    return TRUST_INSTRUMENT_BRIDGE_QUESTIONS.get(workflow_key)
+
+
+def apply_trust_instrument_bridge_definition(launch):
+    """
+    Replace generic bridge questions with instrument-specific bridge questions
+    when the selected workflow is one of the trust instrument workflows.
+    """
+    if not isinstance(launch, dict):
+        return launch
+
+    workflow_key = launch.get("workflow_key") or launch.get("selected_workflow") or launch.get("key")
+    definition = get_trust_instrument_bridge_definition(workflow_key)
+
+    if not definition:
+        return launch
+
+    launch["title"] = definition.get("title")
+    launch["description"] = definition.get("description")
+    launch["bridge_title"] = definition.get("title")
+    launch["bridge_description"] = definition.get("description")
+    launch["required_inputs"] = [
+        q.get("label") for q in definition.get("questions", []) if q.get("label")
+    ]
+    launch["bridge_questions"] = definition.get("questions", [])
+    launch["instrument_bridge"] = True
+    launch["workflow_key"] = workflow_key
+
+    return launch
+
