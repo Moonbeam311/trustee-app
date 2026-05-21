@@ -4042,3 +4042,331 @@ def list_saved_document_recommendations(intake_id):
         for row in rows
     ]
 
+
+# -------------------------------------------------------------------
+# INT-2B — Recommendation Rule Expansion + Confidence Tuning
+# -------------------------------------------------------------------
+
+def _text_signal_contains(text_values, keywords):
+    combined = " ".join(str(v or "").lower() for v in text_values)
+    return any(keyword.lower() in combined for keyword in keywords)
+
+
+def _collect_recommendation_signal_text(packet):
+    values = []
+
+    for key in ["documents", "priorities", "review_flags"]:
+        values.extend(packet.get(key, []) or [])
+
+    for task in packet.get("tasks", []) or []:
+        values.append(task.get("title"))
+        values.append(task.get("description"))
+        values.append(task.get("task_type_label"))
+        values.append(task.get("status_label"))
+
+    for note in packet.get("notes", []) or []:
+        values.append(note.get("note_body"))
+        values.append(note.get("note_type_label"))
+
+    snapshot = packet.get("snapshot", {}) or {}
+    values.extend(snapshot.get("documents_to_gather", []) or [])
+    values.extend(snapshot.get("top_priorities", []) or [])
+    values.extend(snapshot.get("review_flags", []) or [])
+    values.append(snapshot.get("recommended_next_session"))
+
+    return values
+
+
+def tune_recommendation_confidence(base_confidence, scores, signal_strength=0):
+    confidence = int(base_confidence or 75)
+
+    urgency = (scores or {}).get("urgency_level")
+    complexity = (scores or {}).get("complexity_level")
+    readiness = (scores or {}).get("readiness_level")
+
+    if urgency == "High":
+        confidence += 5
+    elif urgency == "Medium":
+        confidence += 2
+
+    if complexity in ["Advanced", "Complex"]:
+        confidence += 4
+    elif complexity == "Moderate":
+        confidence += 2
+
+    if readiness == "Not Ready":
+        confidence += 3
+    elif readiness == "Partially Ready":
+        confidence += 1
+
+    confidence += int(signal_strength or 0)
+
+    if confidence > 99:
+        confidence = 99
+    if confidence < 50:
+        confidence = 50
+
+    return confidence
+
+
+def expand_document_recommendations(recommendation_result):
+    """
+    Adds additional recommendations based on task text, packet contents,
+    document requests, review flags, and score tuning.
+    """
+    if not recommendation_result:
+        return None
+
+    intake_id = recommendation_result.get("intake_id")
+    packet = recommendation_result.get("packet", {}) or {}
+    summary = recommendation_result.get("summary", {}) or {}
+    scores = recommendation_result.get("scores", {}) or {}
+
+    categories = set(summary.get("system_categories", []) or [])
+    meanings = set(summary.get("system_meanings", []) or [])
+    module_triggers = set(summary.get("module_triggers", []) or [])
+    documents = set(summary.get("document_requests", []) or [])
+    next_sessions = set(summary.get("next_sessions", []) or [])
+    risk_flags = set(summary.get("risk_flags", []) or [])
+
+    signal_text = _collect_recommendation_signal_text(packet)
+
+    recommendations = list(recommendation_result.get("recommendations", []) or [])
+
+    def existing_keys():
+        return {r.get("workflow_key") for r in recommendations}
+
+    def add(key, reason, priority=None, confidence=75, signal_strength=0, source="engine_tuned"):
+        if key in existing_keys():
+            # Tune existing recommendation upward if this rule strengthens it.
+            for rec in recommendations:
+                if rec.get("workflow_key") == key:
+                    tuned = tune_recommendation_confidence(confidence, scores, signal_strength=signal_strength)
+                    if tuned > int(rec.get("confidence", 0)):
+                        rec["confidence"] = tuned
+                        rec["reason"] = rec.get("reason") + " Additional signal: " + reason
+                        if priority == "urgent" or (priority == "high" and rec.get("priority") not in ["urgent"]):
+                            rec["priority"] = priority
+                    return
+
+        rec = _make_document_recommendation(
+            workflow_key=key,
+            reason=reason,
+            priority=priority,
+            confidence=tune_recommendation_confidence(confidence, scores, signal_strength=signal_strength),
+            source=source,
+        )
+        if rec:
+            recommendations.append(rec)
+
+    # ------------------------------------------------------------
+    # Business continuity expansion
+    # ------------------------------------------------------------
+    business_keywords = [
+        "business", "operating agreement", "ein", "business license",
+        "liability", "partner", "partnership", "company", "entity",
+        "bank authority", "succession"
+    ]
+
+    if (
+        "BUSINESS_PROFILE" in categories
+        or "business_liability_possible" in risk_flags
+        or "business_continuity_needed" in risk_flags
+        or "business_continuity" in module_triggers
+        or "business_governance_review" in next_sessions
+        or documents.intersection({"operating_agreement", "business_license", "ein_letter", "partnership_agreement", "bank_authority_records"})
+        or _text_signal_contains(signal_text, business_keywords)
+    ):
+        add(
+            "business_continuity_packet",
+            "Business-related documents, liability signals, partner/entity references, or business continuity tasks were detected.",
+            priority="high",
+            confidence=88,
+            signal_strength=4,
+        )
+
+    # ------------------------------------------------------------
+    # Real property expansion
+    # ------------------------------------------------------------
+    property_keywords = [
+        "deed", "title", "mortgage", "property", "tax bill", "lease",
+        "land", "real property", "insurance policy"
+    ]
+
+    if (
+        "real_property_review" in module_triggers
+        or "real_property_deep_dive" in next_sessions
+        or documents.intersection({"deed", "deeds", "mortgage_statement", "property_tax_bill", "tax_bill", "lease"})
+        or _text_signal_contains(signal_text, property_keywords)
+    ):
+        add(
+            "real_property_review",
+            "Property documents or real-property task signals were detected.",
+            priority="high",
+            confidence=90,
+            signal_strength=3,
+        )
+
+    # ------------------------------------------------------------
+    # Tax/professional review expansion
+    # ------------------------------------------------------------
+    tax_keywords = [
+        "tax", "irs", "notice", "filing", "court", "legal", "creditor",
+        "lawsuit", "claim", "professional review"
+    ]
+
+    if (
+        "tax_review_flag" in risk_flags
+        or "urgent_or_legal_review_flag" in risk_flags
+        or "tax_review_referral" in next_sessions
+        or documents.intersection({"tax_notices", "tax_filings", "court_documents", "claim_letters_if_available"})
+        or _text_signal_contains(signal_text, tax_keywords)
+    ):
+        add(
+            "professional_review_checklist",
+            "Tax, legal, court, creditor, or professional-review signals were detected.",
+            priority="urgent",
+            confidence=94,
+            signal_strength=5,
+        )
+
+    # ------------------------------------------------------------
+    # Document audit expansion
+    # ------------------------------------------------------------
+    doc_audit_keywords = [
+        "will", "trust", "power of attorney", "health directive",
+        "beneficiary", "insurance", "existing document", "document checklist",
+        "document follow-up"
+    ]
+
+    if (
+        "DOCUMENT_STATUS" in categories
+        or "document_audit" in module_triggers
+        or "document_collection_review" in next_sessions
+        or "documentation_gap" in risk_flags
+        or _text_signal_contains(signal_text, doc_audit_keywords)
+    ):
+        add(
+            "document_audit",
+            "Document gaps, existing document references, or document follow-up tasks were detected.",
+            priority="high",
+            confidence=84,
+            signal_strength=3,
+        )
+
+    # ------------------------------------------------------------
+    # Foundational estate package expansion
+    # ------------------------------------------------------------
+    foundational_keywords = [
+        "not ready", "missing", "family structure", "decision-maker",
+        "guardian", "beneficiary", "foundational", "initial planning"
+    ]
+
+    if (
+        scores.get("readiness_level") == "Not Ready"
+        or "documentation_gap" in risk_flags
+        or "foundational_planning_review" in next_sessions
+        or _text_signal_contains(signal_text, foundational_keywords)
+    ):
+        add(
+            "foundational_estate_package",
+            "Readiness is low or foundational planning/document gaps were detected.",
+            priority="high",
+            confidence=86,
+            signal_strength=3,
+        )
+
+    # ------------------------------------------------------------
+    # Fiduciary authority expansion
+    # ------------------------------------------------------------
+    fiduciary_keywords = [
+        "trustee", "executor", "fiduciary", "authority", "poa",
+        "power of attorney", "administrator", "letters testamentary"
+    ]
+
+    if (
+        "FIDUCIARY_CONTEXT" in categories
+        or "authority_review_needed" in risk_flags
+        or "fiduciary_authority_review" in next_sessions
+        or documents.intersection({"power_of_attorney", "letters_testamentary_or_authority", "estate_authority_document"})
+        or _text_signal_contains(signal_text, fiduciary_keywords)
+    ):
+        add(
+            "fiduciary_authority_review",
+            "Fiduciary authority, trustee/executor, or power-of-attorney signals were detected.",
+            priority="high",
+            confidence=87,
+            signal_strength=3,
+        )
+
+    # ------------------------------------------------------------
+    # Beneficiary / guardian expansion
+    # ------------------------------------------------------------
+    family_keywords = [
+        "minor child", "guardian", "children", "beneficiary",
+        "special-needs", "dependent", "spouse", "family"
+    ]
+
+    if (
+        "BENEFICIARY_PROFILE" in categories
+        or "minor_children_flag" in risk_flags
+        or "special_needs_flag" in risk_flags
+        or "children_guardian_review" in next_sessions
+        or "beneficiary_planning_review" in next_sessions
+        or _text_signal_contains(signal_text, family_keywords)
+    ):
+        add(
+            "beneficiary_guardian_planning",
+            "Beneficiary, child, guardian, dependent, or family-planning signals were detected.",
+            priority="high",
+            confidence=86,
+            signal_strength=3,
+        )
+
+    # ------------------------------------------------------------
+    # Asset inventory expansion
+    # ------------------------------------------------------------
+    asset_keywords = [
+        "asset", "inventory", "account", "bank", "vehicle", "insurance",
+        "title", "statement", "property", "business"
+    ]
+
+    if (
+        "ASSET_PROFILE" in categories
+        or "asset_document_deep_dive" in next_sessions
+        or "asset_inventory" in module_triggers
+        or _text_signal_contains(signal_text, asset_keywords)
+    ):
+        add(
+            "asset_inventory_packet",
+            "Asset, account, title, statement, or inventory signals were detected.",
+            priority="normal",
+            confidence=82,
+            signal_strength=2,
+        )
+
+    # Always keep next-session agenda if a recommended next session exists.
+    if packet.get("recommended_next_session"):
+        add(
+            "next_session_agenda",
+            "Recommended next session exists and should be converted into a working agenda.",
+            priority="normal",
+            confidence=78,
+            signal_strength=1,
+        )
+
+    recommendations = _recommendation_unique(recommendations)
+
+    recommendation_result["recommendations"] = recommendations
+    recommendation_result["recommendation_count"] = len(recommendations)
+    recommendation_result["tuning_applied"] = True
+
+    return recommendation_result
+
+
+def build_document_recommendations_tuned(intake_id):
+    base = build_document_recommendations(intake_id)
+    if not base:
+        return None
+    return expand_document_recommendations(base)
+

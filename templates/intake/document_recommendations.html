@@ -124,6 +124,9 @@
             These are recommended next workflows based on intake categories, scores, review flags, tasks, and packet output.
             This does not generate documents yet.
         </p>
+        {% if recommendation_result.tuning_applied %}
+            <p class="recommend-muted"><strong>Rule tuning applied:</strong> recommendations include task text, packet contents, risk flags, and score profile.</p>
+        {% endif %}
 
         <div class="recommend-actions">
             <a href="{{ url_for('intake_saved_snapshot', intake_id=intake_id) }}">Snapshot</a>

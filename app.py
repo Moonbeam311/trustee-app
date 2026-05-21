@@ -21,6 +21,7 @@ from services.services_intake import ensure_intake_export_version_columns, list_
 from services.services_intake import list_intake_export_logs_dashboard
 from services.services_intake import seed_default_intake_module_ledger, list_intake_module_ledger, summarize_intake_module_ledger
 from services.services_intake import build_document_recommendations, save_document_recommendations, list_saved_document_recommendations, ensure_intake_document_recommendation_tables
+from services.services_intake import build_document_recommendations_tuned
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13402,7 +13403,7 @@ def intake_module_ledger():
 def intake_document_recommendations(intake_id):
     ensure_intake_document_recommendation_tables()
 
-    recommendation_result = build_document_recommendations(intake_id)
+    recommendation_result = build_document_recommendations_tuned(intake_id)
     if not recommendation_result:
         flash("Document recommendations could not be built for that intake.", "warning")
         return redirect(url_for("intake_dashboard"))
