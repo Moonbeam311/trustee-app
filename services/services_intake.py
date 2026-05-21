@@ -1259,3 +1259,237 @@ def score_and_save_intake(intake_id, translations, created_by=None):
     save_intake_scores(intake_id, scores, created_by=created_by)
     return scores
 
+
+# -------------------------------------------------------------------
+# INT-1D — Client-Facing Initial Fiduciary Snapshot
+# -------------------------------------------------------------------
+
+CLIENT_PRIORITY_LABELS = {
+    "family_structure_review": "Review family structure and decision-maker roles",
+    "fiduciary_selection_review": "Choose or confirm trusted decision-makers",
+    "real_property_deep_dive": "Review real property ownership and supporting documents",
+    "financial_account_review": "Review financial accounts and how they are titled",
+    "business_continuity_review": "Review business continuity and operating authority",
+    "beneficiary_planning_review": "Review beneficiary planning and distribution intentions",
+    "business_governance_review": "Review business ownership, partners, and governance",
+    "governance_conflict_review": "Address family conflict or governance concerns early",
+    "risk_triage_review": "Complete a risk-focused review before taking major action",
+    "tax_review_referral": "Gather tax records for qualified tax review",
+    "foundational_planning_review": "Begin foundational estate and trust planning",
+    "children_guardian_review": "Review minor child planning and guardian choices",
+    "elder_authority_review": "Review elder, parent, or incapacity authority documents",
+    "special_needs_planning_review": "Review special-needs planning before final documents",
+    "insurance_beneficiary_review": "Review insurance ownership and beneficiary designations",
+    "beneficiary_designation_review": "Review beneficiary designations on non-trust assets",
+    "investment_account_review": "Review investment accounts and registration details",
+    "digital_asset_review": "Prepare a digital asset inventory",
+    "intellectual_property_review": "Review intellectual property ownership and records",
+    "heritage_asset_review": "Document heritage, heirloom, or special family property",
+    "fiduciary_inventory_review": "Build or verify trust/estate inventory records",
+    "document_collection_review": "Gather missing documents before deeper review",
+    "authority_document_review": "Review authority documents such as POA or health directive",
+    "privacy_preferences_review": "Clarify privacy and disclosure preferences",
+    "legacy_objectives_review": "Clarify legacy, charitable, or community goals",
+    "probate_avoidance_review": "Review probate-avoidance objectives and document gaps",
+    "asset_document_deep_dive": "Organize assets and supporting records",
+    "multi_jurisdiction_property_review": "Review property located in more than one state",
+    "business_liability_review": "Review business liability and insurance concerns",
+    "liability_review": "Review debt, creditor, or liability concerns",
+    "incapacity_authority_review": "Review incapacity planning and authority documents",
+    "document_audit_session": "Audit existing estate, trust, or authority documents",
+    "trust_document_review": "Review existing trust documents",
+}
+
+CLIENT_DOCUMENT_LABELS = {
+    "deed": "Deed or title record",
+    "deeds": "Deeds or title records",
+    "mortgage_statement": "Mortgage statement",
+    "property_tax_bill": "Property tax bill",
+    "tax_bill": "Property tax bill",
+    "survey_if_available": "Survey, if available",
+    "homeowners_insurance": "Homeowners insurance declarations",
+    "insurance": "Insurance policy or declarations",
+    "insurance_policies": "Insurance policies",
+    "policy_declaration_page": "Insurance policy declaration page",
+    "beneficiary_designation_form": "Beneficiary designation form",
+    "beneficiary_forms": "Beneficiary designation forms",
+    "bank_statement": "Bank or financial account statement",
+    "asset_statements": "Asset statements",
+    "account_registration_info": "Account registration information",
+    "retirement_statement": "Retirement account statement",
+    "brokerage_statement": "Brokerage or investment statement",
+    "operating_agreement": "Operating agreement",
+    "partnership_agreement": "Partnership agreement",
+    "ein_letter": "EIN letter",
+    "business_license": "Business license",
+    "business_documents": "Business documents",
+    "bank_authority_records": "Business bank authority records",
+    "existing_will": "Existing will",
+    "will": "Will",
+    "existing_trust": "Existing trust",
+    "trust_document": "Trust document",
+    "power_of_attorney": "Power of attorney",
+    "poa_if_available": "Power of attorney, if available",
+    "health_directive": "Health directive",
+    "health_directive_if_available": "Health directive, if available",
+    "medical_authority_documents": "Medical authority documents",
+    "family_agreements": "Family agreements, if any",
+    "court_documents": "Court documents",
+    "claim_letters_if_available": "Claim letters, if available",
+    "tax_notices": "Tax notices",
+    "tax_filings": "Tax filings",
+    "debt_statements": "Debt statements",
+    "creditor_letters_if_available": "Creditor letters, if available",
+    "divorce_decree_if_available": "Divorce decree, if available",
+    "prenuptial_or_postnuptial_if_available": "Prenuptial or postnuptial agreement, if available",
+    "document_checklist": "Basic document checklist",
+    "digital_asset_list": "Digital asset list",
+    "ip_registration_records": "IP registration records",
+    "licensing_agreements": "Licensing agreements",
+    "photos": "Photos or visual inventory",
+    "appraisals": "Appraisals",
+    "provenance_records": "Provenance or history records",
+    "trust_document": "Trust document",
+    "estate_authority_document": "Estate authority document",
+    "letters_testamentary_or_authority": "Letters testamentary or authority document",
+    "asset_inventory": "Asset inventory",
+    "existing_documents": "Existing documents",
+    "existing_care_documents": "Existing care documents",
+    "benefits_information_if_available": "Benefits information, if available",
+}
+
+CLIENT_RISK_LABELS = {
+    "urgent_or_legal_review_flag": "Legal, court, or urgent review may be needed",
+    "creditor_pressure_flag": "Debt or creditor pressure may require careful review",
+    "tax_review_flag": "Tax records should be reviewed by a qualified professional",
+    "incapacity_planning_needed": "Incapacity planning may need attention",
+    "authority_review_needed": "Authority documents should be verified",
+    "family_conflict_risk": "Family conflict risk should be addressed early",
+    "business_continuity_needed": "Business continuity planning should be prioritized",
+    "business_liability_possible": "Business liability should be reviewed",
+    "successor_gap_flag": "A successor decision-maker gap may exist",
+    "documentation_gap": "Important documents may be missing",
+    "minor_children_flag": "Minor child planning should be reviewed",
+    "special_needs_flag": "Special-needs planning should be reviewed carefully",
+    "elder_dependency_flag": "Elder or parent support planning may be involved",
+    "multi_jurisdiction_flag": "Property in multiple jurisdictions may need extra review",
+    "liability_exposure_possible": "Possible liability exposure should be reviewed",
+    "transfer_restriction_review_needed": "Some assets may have transfer restrictions",
+    "co_owner_or_partner_flag": "Co-owner or partner interests should be reviewed",
+    "family_status_complexity": "Family status changes may affect planning",
+    "special_custody_or_heritage_flag": "Special custody or heritage property should be documented",
+}
+
+PLANNING_TYPE_LABELS = {
+    "FAMILY_STRUCTURE": "Family Planning",
+    "ASSET_PROFILE": "Asset Organization",
+    "BUSINESS_PROFILE": "Business Continuity",
+    "BENEFICIARY_PROFILE": "Beneficiary Planning",
+    "FIDUCIARY_READINESS": "Decision-Maker Planning",
+    "FIDUCIARY_CONTEXT": "Trust or Estate Administration",
+    "RISK_PROFILE": "Risk Review",
+    "DOCUMENT_STATUS": "Document Readiness",
+    "DEPENDENCY_PROFILE": "Elder / Dependency Planning",
+    "LEGACY_PROFILE": "Legacy or Charitable Planning",
+    "PERSON_PROFILE": "Individual Planning",
+    "OBJECTIVE_PROFILE": "Planning Objectives",
+}
+
+
+def _client_unique(values, limit=None):
+    seen = set()
+    output = []
+    for value in values:
+        if value and value not in seen:
+            seen.add(value)
+            output.append(value)
+    if limit:
+        return output[:limit]
+    return output
+
+
+def _label_items(values, labels, limit=None):
+    labeled = []
+    for value in values:
+        if not value:
+            continue
+        labeled.append(labels.get(value, value.replace("_", " ").title()))
+    return _client_unique(labeled, limit=limit)
+
+
+def determine_primary_next_session(summary):
+    sessions = summary.get("next_sessions", []) or []
+    priority_order = [
+        "risk_triage_review",
+        "tax_review_referral",
+        "governance_conflict_review",
+        "business_continuity_review",
+        "real_property_deep_dive",
+        "asset_document_deep_dive",
+        "fiduciary_selection_review",
+        "children_guardian_review",
+        "beneficiary_planning_review",
+        "document_collection_review",
+        "foundational_planning_review",
+    ]
+
+    for item in priority_order:
+        if item in sessions:
+            return CLIENT_PRIORITY_LABELS.get(item, item.replace("_", " ").title())
+
+    if sessions:
+        first = sessions[0]
+        return CLIENT_PRIORITY_LABELS.get(first, first.replace("_", " ").title())
+
+    return "Initial structure review"
+
+
+def build_client_snapshot(result):
+    summary = result.get("summary", {}) or {}
+    scores = result.get("scores", {}) or {}
+
+    categories = summary.get("system_categories", []) or []
+    next_sessions = summary.get("next_sessions", []) or []
+    document_requests = summary.get("document_requests", []) or []
+    risk_flags = summary.get("risk_flags", []) or []
+
+    planning_types = _label_items(categories, PLANNING_TYPE_LABELS, limit=5)
+    top_priorities = _label_items(next_sessions, CLIENT_PRIORITY_LABELS, limit=6)
+    documents_to_gather = _label_items(document_requests, CLIENT_DOCUMENT_LABELS, limit=12)
+    review_flags = _label_items(risk_flags, CLIENT_RISK_LABELS, limit=6)
+
+    if not top_priorities:
+        top_priorities = ["Complete a deeper review of family, assets, documents, and decision-makers"]
+
+    if not documents_to_gather:
+        documents_to_gather = ["Any existing estate, trust, property, business, insurance, or account documents"]
+
+    next_session = determine_primary_next_session(summary)
+
+    complexity_level = scores.get("complexity_level", "Not Yet Rated")
+    urgency_level = scores.get("urgency_level", "Not Yet Rated")
+    readiness_level = scores.get("readiness_level", "Not Yet Rated")
+
+    if urgency_level == "High":
+        review_priority = "High"
+    elif complexity_level in ["Advanced", "Complex"]:
+        review_priority = "Elevated"
+    elif urgency_level == "Medium":
+        review_priority = "Moderate"
+    else:
+        review_priority = "Standard"
+
+    return {
+        "intake_id": result.get("intake_id"),
+        "planning_types": planning_types,
+        "complexity_level": complexity_level,
+        "urgency_level": urgency_level,
+        "readiness_level": readiness_level,
+        "review_priority": review_priority,
+        "top_priorities": top_priorities,
+        "documents_to_gather": documents_to_gather,
+        "review_flags": review_flags,
+        "recommended_next_session": next_session,
+        "technical_result": result,
+    }
+

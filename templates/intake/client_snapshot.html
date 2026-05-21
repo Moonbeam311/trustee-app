@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.client-snapshot-wrap {
+    max-width: 1080px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.snapshot-hero,
+.snapshot-card,
+.snapshot-note {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.snapshot-hero {
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.snapshot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+}
+
+.snapshot-card {
+    padding: 18px;
+}
+
+.snapshot-card h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.snapshot-value {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.snapshot-section {
+    margin: 24px 0;
+}
+
+.snapshot-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.snapshot-list li {
+    padding: 12px 14px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+}
+
+.snapshot-note {
+    padding: 16px 18px;
+    margin-top: 20px;
+}
+
+.snapshot-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.snapshot-actions a {
+    padding: 11px 16px;
+    border: 1px solid rgba(0,0,0,0.18);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.snapshot-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="client-snapshot-wrap">
+    <div class="snapshot-hero">
+        <h1 style="margin-top:0;">Your Initial Fiduciary Snapshot</h1>
+        <p style="font-size:1.05rem; line-height:1.6; margin-bottom:0;">
+            This snapshot summarizes the first intake. It is designed to show where deeper review is needed,
+            what documents should be gathered, and which next session makes the most sense.
+        </p>
+        <p class="snapshot-muted" style="margin-bottom:0;">
+            Intake ID: {{ snapshot.intake_id }}
+        </p>
+    </div>
+
+    <div class="snapshot-grid">
+        <div class="snapshot-card">
+            <h3>Planning Type</h3>
+            <div class="snapshot-value">
+                {% if snapshot.planning_types %}
+                    {{ snapshot.planning_types | join(" + ") }}
+                {% else %}
+                    Initial Planning
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="snapshot-card">
+            <h3>Overall Complexity</h3>
+            <div class="snapshot-value">{{ snapshot.complexity_level }}</div>
+        </div>
+
+        <div class="snapshot-card">
+            <h3>Review Priority</h3>
+            <div class="snapshot-value">{{ snapshot.review_priority }}</div>
+        </div>
+
+        <div class="snapshot-card">
+            <h3>Readiness</h3>
+            <div class="snapshot-value">{{ snapshot.readiness_level }}</div>
+        </div>
+    </div>
+
+    <div class="snapshot-section">
+        <h2>Top Priorities</h2>
+        <ul class="snapshot-list">
+            {% for item in snapshot.top_priorities %}
+                <li>{{ loop.index }}. {{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="snapshot-section">
+        <h2>Documents to Gather</h2>
+        <ul class="snapshot-list">
+            {% for item in snapshot.documents_to_gather %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if snapshot.review_flags %}
+    <div class="snapshot-section">
+        <h2>Review Notes</h2>
+        <ul class="snapshot-list">
+            {% for item in snapshot.review_flags %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="snapshot-card">
+        <h2 style="margin-top:0;">Recommended Next Session</h2>
+        <div class="snapshot-value">{{ snapshot.recommended_next_session }}</div>
+        <p class="snapshot-muted">
+            This is the next best review area based on the first intake answers.
+        </p>
+    </div>
+
+    <div class="snapshot-note">
+        <strong>Important:</strong>
+        This is an intake-routing snapshot. It does not finalize legal, tax, fiduciary, or asset-transfer decisions.
+        More detailed review may be needed before documents are signed, assets are transferred, or formal action is taken.
+    </div>
+
+    <div class="snapshot-actions">
+        <a href="{{ url_for('intake_start') }}">Start another intake</a>
+
+        <a href="#" onclick="document.getElementById('technicalSnapshot').style.display = document.getElementById('technicalSnapshot').style.display === 'none' ? 'block' : 'none'; return false;">
+            Show technical snapshot
+        </a>
+    </div>
+
+    <div id="technicalSnapshot" style="display:none; margin-top: 24px;">
+        {% include "intake/translation_snapshot.html" %}
+    </div>
+</div>
+
+{% endblock %}

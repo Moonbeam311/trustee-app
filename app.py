@@ -7,6 +7,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
+from services.services_intake import build_client_snapshot
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13133,7 +13134,12 @@ def intake_universal_profile(intake_id):
             form_data=request.form,
             created_by=session.get("username") if "session" in globals() else None
         )
-        return render_template("intake/translation_snapshot.html", result=result)
+        client_snapshot = build_client_snapshot(result)
+        return render_template(
+            "intake/client_snapshot.html",
+            snapshot=client_snapshot,
+            result=result
+        )
 
     return render_template(
         "intake/universal_profile.html",
