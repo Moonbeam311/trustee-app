@@ -122,6 +122,7 @@
                 <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Non-final draft</a>
                 <a href="{{ url_for('intake_review_gate_detail', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Review gate detail</a>
                 <a href="{{ url_for('intake_final_draft_gate_resolution', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Resolve gate conditions</a>
+                <a href="{{ url_for('intake_final_draft_admin_approval', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Admin approval</a>
             {% endif %}
         </div>
     </div>

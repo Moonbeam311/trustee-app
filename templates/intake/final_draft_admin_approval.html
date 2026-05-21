@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.approval-wrap {
+    max-width: 1120px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.approval-hero,
+.approval-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.approval-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.approval-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.approval-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.approval-actions a,
+.approval-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.approval-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.approval-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.approval-card textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.approval-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.approval-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.approval-table-wrap {
+    overflow-x: auto;
+}
+
+.approval-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+}
+
+.approval-table th,
+.approval-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.approval-table th {
+    background: rgba(255,255,255,0.06);
+}
+
+.approval-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="approval-wrap">
+    <div class="approval-hero">
+        <h1 style="margin-top:0;">Admin Approval for Final-Draft Preparation</h1>
+
+        {% if context %}
+            <p>
+                Intake ID: <strong>{{ context.gate.intake_id }}</strong> |
+                Workflow: <strong>{{ context.gate.workflow_key }}</strong> |
+                Document: <strong>{{ context.gate.document_key }}</strong>
+            </p>
+            <p class="approval-muted">{{ context.notice }}</p>
+
+            <div class="approval-actions">
+                <a href="{{ url_for('intake_final_draft_gate_detail', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Final-draft gate</a>
+                <a href="{{ url_for('intake_final_draft_gate_resolution', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Resolve gate</a>
+                <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Non-final draft</a>
+            </div>
+        {% else %}
+            {% if intake_id %}
+                <p>Approval ledger for Intake ID: <strong>{{ intake_id }}</strong></p>
+            {% else %}
+                <p>Approval ledger across intakes.</p>
+            {% endif %}
+            <div class="approval-actions">
+                <a href="{{ url_for('intake_dashboard') }}">Intake dashboard</a>
+                <a href="{{ url_for('intake_final_draft_gate_ledger') }}">Final-draft gate ledger</a>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if context %}
+        <div class="approval-grid">
+            <div class="approval-card">
+                <h3>Gate Status</h3>
+                <span class="approval-pill">{{ context.gate.gate_status.replace('_', ' ') }}</span>
+            </div>
+            <div class="approval-card">
+                <h3>Admin Approved</h3>
+                <span class="approval-pill">{{ "Yes" if context.gate.admin_approved else "No" }}</span>
+            </div>
+            <div class="approval-card">
+                <h3>Questionnaire</h3>
+                <span class="approval-pill">{{ "Complete / Acknowledged" if context.gate.questionnaire_complete else "Open" }}</span>
+            </div>
+            <div class="approval-card">
+                <h3>Documents</h3>
+                <span class="approval-pill">{{ "Acknowledged" if context.gate.required_documents_acknowledged else "Open" }}</span>
+            </div>
+        </div>
+
+        <div class="approval-card">
+            <h2>Gate Reason</h2>
+            <p>{{ context.gate.gate_reason }}</p>
+        </div>
+
+        {% if context.already_approved %}
+            <div class="approval-card">
+                <h2>Already Approved</h2>
+                <p>
+                    Final-draft preparation has already been approved for this document.
+                </p>
+                {% if context.gate.approval_note %}
+                    <p><strong>Approval Note:</strong> {{ context.gate.approval_note }}</p>
+                {% endif %}
+            </div>
+        {% elif context.can_approve %}
+            <div class="approval-card">
+                <h2>Record Admin Approval</h2>
+                <p>
+                    Approval requires a written note. This approval only permits final-draft preparation.
+                    It does not authorize signing, filing, execution, transfer, or final legal use.
+                </p>
+
+                <form method="POST" action="{{ url_for('intake_final_draft_admin_approval', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+                    <label>
+                        <strong>Required Approval Note</strong>
+                        <textarea name="approval_note" rows="5" required placeholder="Record why this document is approved for final-draft preparation only."></textarea>
+                    </label>
+
+                    <div class="approval-actions">
+                        <button type="submit">Approve Final-Draft Preparation</button>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <div class="approval-card">
+                <h2>Approval Not Available</h2>
+                <p>
+                    This gate is not ready for admin approval. Resolve the preparation conditions first.
+                </p>
+            </div>
+        {% endif %}
+
+        <div class="approval-card">
+            <h2>Approval History</h2>
+            <ul class="approval-list">
+                {% for item in context.approvals %}
+                    <li>
+                        <strong>{{ item.approval_status.replace('_', ' ') }}</strong> —
+                        {{ item.created_at }} —
+                        By: {{ item.created_by }}<br>
+                        Gate: {{ item.gate_status_before }} → {{ item.gate_status_after }}<br>
+                        {{ item.approval_note }}
+                    </li>
+                {% else %}
+                    <li>No admin approvals recorded yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+    {% else %}
+        <div class="approval-card approval-table-wrap">
+            <table class="approval-table">
+                <thead>
+                    <tr>
+                        <th>Intake</th>
+                        <th>Workflow</th>
+                        <th>Document</th>
+                        <th>Status</th>
+                        <th>Gate Before</th>
+                        <th>Gate After</th>
+                        <th>Approved</th>
+                        <th>By</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in approvals %}
+                        <tr>
+                            <td>{{ item.intake_id }}</td>
+                            <td>{{ item.workflow_key }}</td>
+                            <td>{{ item.document_key }}</td>
+                            <td>{{ item.approval_status }}</td>
+                            <td>{{ item.gate_status_before }}</td>
+                            <td>{{ item.gate_status_after }}</td>
+                            <td>{{ item.created_at }}</td>
+                            <td>{{ item.created_by }}</td>
+                            <td>{{ item.approval_note }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9">No admin approvals found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

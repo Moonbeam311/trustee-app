@@ -32,6 +32,7 @@ from services.services_intake import generate_nonfinal_draft_docx, upsert_review
 from services.services_intake import get_review_gate_record, list_review_gate_actions, resolve_review_gate_action, VALID_REVIEW_GATE_ACTIONS
 from services.services_intake import upsert_final_draft_prep_gate, get_final_draft_prep_gate, approve_final_draft_prep_gate, list_final_draft_prep_gates
 from services.services_intake import build_final_draft_resolution_context, record_final_draft_resolution_actions, upsert_final_draft_prep_gate_with_resolutions
+from services.services_intake import build_final_draft_admin_approval_context, record_final_draft_admin_approval, list_final_draft_admin_approvals
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13861,6 +13862,60 @@ def intake_final_draft_gate_resolution(intake_id, workflow_key, document_key):
     return render_template(
         "intake/final_draft_gate_resolution.html",
         context=context
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/admin-approval", methods=["GET", "POST"])
+def intake_final_draft_admin_approval(intake_id, workflow_key, document_key):
+    context = build_final_draft_admin_approval_context(intake_id, workflow_key, document_key)
+
+    if not context:
+        flash("Admin approval context could not be built.", "warning")
+        return redirect(url_for("intake_final_draft_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return redirect(url_for("intake_final_draft_admin_approval", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+        try:
+            record_final_draft_admin_approval(
+                intake_id=intake_id,
+                workflow_key=workflow_key,
+                document_key=document_key,
+                approval_note=request.form.get("approval_note") or "",
+                approved_by=session.get("username") if "session" in globals() else None,
+            )
+            flash("Admin approval for final-draft preparation recorded.", "success")
+        except Exception as exc:
+            flash(f"Admin approval could not be recorded: {exc}", "warning")
+
+        return redirect(url_for("intake_final_draft_admin_approval", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/final_draft_admin_approval.html",
+        context=context
+    )
+
+
+@app.route("/intake/final-draft-approvals")
+def intake_final_draft_admin_approval_ledger():
+    approvals = list_final_draft_admin_approvals()
+    return render_template(
+        "intake/final_draft_admin_approval.html",
+        context=None,
+        approvals=approvals
+    )
+
+
+@app.route("/intake/<intake_id>/final-draft-approvals")
+def intake_final_draft_admin_approval_ledger_detail(intake_id):
+    approvals = list_final_draft_admin_approvals(intake_id=intake_id)
+    return render_template(
+        "intake/final_draft_admin_approval.html",
+        context=None,
+        approvals=approvals,
+        intake_id=intake_id
     )
 
 

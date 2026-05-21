@@ -7563,3 +7563,200 @@ def build_final_draft_resolution_context(intake_id, workflow_key, document_key):
         "required_documents": document.get("preview", {}).get("draft_packet", {}).get("documents", []) if document else [],
     }
 
+
+# -------------------------------------------------------------------
+# INT-2M — Admin Approval for Final-Draft Preparation
+# -------------------------------------------------------------------
+
+def ensure_final_draft_admin_approval_tables():
+    ensure_final_draft_resolution_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_admin_approvals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            approval_status TEXT DEFAULT 'approved_for_final_draft_preparation',
+            approval_note TEXT NOT NULL,
+            gate_status_before TEXT,
+            gate_status_after TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def record_final_draft_admin_approval(
+    intake_id,
+    workflow_key,
+    document_key,
+    approval_note,
+    approved_by=None
+):
+    ensure_final_draft_admin_approval_tables()
+
+    approval_note = (approval_note or "").strip()
+    if not approval_note:
+        raise ValueError("Approval note is required.")
+
+    gate_before = upsert_final_draft_prep_gate_with_resolutions(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=approved_by,
+    )
+
+    if not gate_before:
+        raise ValueError("Final-draft preparation gate could not be evaluated.")
+
+    if gate_before.get("gate_status") == "blocked":
+        raise ValueError("Gate is blocked. Resolve required conditions before admin approval.")
+
+    approved_gate = approve_final_draft_prep_gate(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        approval_note=approval_note,
+        approved_by=approved_by,
+    )
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_final_draft_admin_approvals (
+            intake_id, workflow_key, document_key, firm_id,
+            approval_status, approval_note,
+            gate_status_before, gate_status_after,
+            created_at, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        workflow_key,
+        document_key,
+        firm_id,
+        "approved_for_final_draft_preparation",
+        approval_note,
+        gate_before.get("gate_status"),
+        approved_gate.get("gate_status") if approved_gate else None,
+        now,
+        approved_by,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "approval_status": "approved_for_final_draft_preparation",
+        "approval_note": approval_note,
+        "gate_status_before": gate_before.get("gate_status"),
+        "gate_status_after": approved_gate.get("gate_status") if approved_gate else None,
+        "created_at": now,
+        "created_by": approved_by,
+        "gate": approved_gate,
+    }
+
+
+def list_final_draft_admin_approvals(intake_id=None, workflow_key=None, document_key=None):
+    ensure_final_draft_admin_approval_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT intake_id, workflow_key, document_key,
+               approval_status, approval_note,
+               gate_status_before, gate_status_after,
+               created_at, created_by
+        FROM intake_final_draft_admin_approvals
+    """
+
+    filters = []
+    params = []
+
+    if intake_id:
+        filters.append("intake_id = ?")
+        params.append(intake_id)
+    if workflow_key:
+        filters.append("workflow_key = ?")
+        params.append(workflow_key)
+    if document_key:
+        filters.append("document_key = ?")
+        params.append(document_key)
+
+    if filters:
+        query += " WHERE " + " AND ".join(filters)
+
+    query += " ORDER BY id DESC LIMIT 200"
+
+    cur.execute(query, tuple(params))
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "workflow_key": row[1],
+            "document_key": row[2],
+            "approval_status": row[3],
+            "approval_note": row[4],
+            "gate_status_before": row[5],
+            "gate_status_after": row[6],
+            "created_at": format_intake_timestamp(row[7]) if row[7] else "",
+            "created_by": row[8] or "—",
+        }
+        for row in rows
+    ]
+
+
+def build_final_draft_admin_approval_context(intake_id, workflow_key, document_key):
+    gate = upsert_final_draft_prep_gate_with_resolutions(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=None,
+    )
+
+    if not gate:
+        return None
+
+    approvals = list_final_draft_admin_approvals(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+    )
+
+    document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
+
+    can_approve = (
+        gate.get("gate_status") in {
+            "ready_for_admin_approval",
+            "approved_for_final_draft_preparation",
+        }
+        and not gate.get("admin_approved")
+    )
+
+    return {
+        "gate": gate,
+        "document": document,
+        "approvals": approvals,
+        "can_approve": can_approve,
+        "already_approved": bool(gate.get("admin_approved")),
+        "notice": "Admin approval only authorizes final-draft preparation. It does not authorize signing, filing, execution, transfer, or final legal use.",
+    }
+
