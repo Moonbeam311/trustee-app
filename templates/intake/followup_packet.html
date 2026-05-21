@@ -126,6 +126,8 @@
             <a href="{{ url_for('intake_dashboard') }}">Back to dashboard</a>
             <a href="#" onclick="window.print(); return false;">Print packet</a>
             <a href="{{ url_for('intake_export_prep', intake_id=packet.intake_id) }}">Export prep</a>
+            <a href="{{ url_for('intake_followup_packet_docx', intake_id=packet.intake_id) }}">Download DOCX</a>
+            <a href="{{ url_for('intake_followup_packet_pdf', intake_id=packet.intake_id) }}">Download PDF</a>
         </div>
     </div>
 

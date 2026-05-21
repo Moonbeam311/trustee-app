@@ -15,6 +15,7 @@ from services.services_intake import create_intake_review_note, list_intake_revi
 from services.services_intake import auto_generate_followup_tasks_from_snapshot, list_intake_followup_tasks, create_intake_followup_task, update_intake_followup_task_status, get_followup_task_form_options, list_intake_dashboard_with_tasks, ensure_intake_followup_task_tables
 from services.services_intake import summarize_followup_tasks, group_followup_tasks
 from services.services_intake import build_intake_followup_packet, get_packet_readiness_label
+from services.services_intake import generate_followup_packet_docx, generate_followup_packet_pdf
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13316,6 +13317,28 @@ def intake_followup_packet(intake_id):
         packet=packet,
         packet_readiness=packet_readiness
     )
+
+
+@app.route("/intake/<intake_id>/packet/docx")
+def intake_followup_packet_docx(intake_id):
+    path = generate_followup_packet_docx(intake_id)
+
+    if not path:
+        flash("DOCX packet could not be generated.", "warning")
+        return redirect(url_for("intake_followup_packet", intake_id=intake_id))
+
+    return send_file(path, as_attachment=True)
+
+
+@app.route("/intake/<intake_id>/packet/pdf")
+def intake_followup_packet_pdf(intake_id):
+    path = generate_followup_packet_pdf(intake_id)
+
+    if not path:
+        flash("PDF packet could not be generated.", "warning")
+        return redirect(url_for("intake_followup_packet", intake_id=intake_id))
+
+    return send_file(path, as_attachment=True)
 
 
 if __name__ == "__main__":

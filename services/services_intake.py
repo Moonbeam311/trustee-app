@@ -2649,3 +2649,190 @@ def get_packet_readiness_label(packet):
         return "Action Items Open"
     return "Prepared"
 
+
+# -------------------------------------------------------------------
+# INT-1L — Follow-Up Packet PDF/DOCX Export
+# -------------------------------------------------------------------
+
+def ensure_intake_export_dir():
+    from pathlib import Path
+
+    export_dir = Path("exports/intake_packets")
+    export_dir.mkdir(parents=True, exist_ok=True)
+    return export_dir
+
+
+def safe_export_filename(value):
+    value = str(value or "intake").strip()
+    keep = []
+    for ch in value:
+        if ch.isalnum() or ch in ["-", "_"]:
+            keep.append(ch)
+        else:
+            keep.append("_")
+    return "".join(keep)
+
+
+def generate_followup_packet_docx(intake_id):
+    from pathlib import Path
+    from docx import Document
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    packet = build_intake_followup_packet(intake_id)
+    if not packet:
+        return None
+
+    export_dir = ensure_intake_export_dir()
+    filename = f"{safe_export_filename(intake_id)}_Follow_Up_Packet.docx"
+    out_path = export_dir / filename
+
+    doc = Document()
+
+    styles = doc.styles
+    styles["Normal"].font.name = "Arial"
+    styles["Normal"].font.size = Pt(10)
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = title.add_run("Initial Intake Follow-Up Packet")
+    run.bold = True
+    run.font.size = Pt(16)
+
+    subtitle = doc.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle.add_run(f"Intake ID: {packet['intake_id']} | Packet Status: {packet['packet_status']}")
+
+    doc.add_paragraph("")
+
+    def add_heading(text):
+        p = doc.add_paragraph()
+        r = p.add_run(text)
+        r.bold = True
+        r.font.size = Pt(13)
+        return p
+
+    def add_bullet(text):
+        p = doc.add_paragraph(style=None)
+        p.style = doc.styles["Normal"]
+        p.paragraph_format.left_indent = Pt(18)
+        p.add_run(f"- {text}")
+
+    add_heading("Snapshot Summary")
+    table = doc.add_table(rows=0, cols=2)
+    table.style = "Table Grid"
+
+    rows = [
+        ("Planning Type", " + ".join(packet["snapshot"].get("planning_types", [])) or "Initial Planning"),
+        ("Complexity", packet["snapshot"].get("complexity_level", "")),
+        ("Priority", packet["snapshot"].get("review_priority", "")),
+        ("Readiness", packet["snapshot"].get("readiness_level", "")),
+        ("Recommended Next Session", packet.get("recommended_next_session") or "Initial structure review"),
+    ]
+
+    for label, value in rows:
+        cells = table.add_row().cells
+        cells[0].text = label
+        cells[1].text = str(value)
+
+    doc.add_paragraph("")
+
+    add_heading("Top Priorities")
+    for idx, item in enumerate(packet.get("priorities", []) or [], start=1):
+        add_bullet(f"{idx}. {item}")
+    if not packet.get("priorities"):
+        add_bullet("No priorities generated.")
+
+    add_heading("Document Checklist")
+    for item in packet.get("documents", []) or []:
+        add_bullet(f"[ ] {item}")
+    if not packet.get("documents"):
+        add_bullet("No document checklist generated.")
+
+    if packet.get("review_flags"):
+        add_heading("Review Flags")
+        for item in packet.get("review_flags", []):
+            add_bullet(item)
+
+    add_heading("Follow-Up Task Summary")
+    task_summary = packet.get("task_summary", {}) or {}
+    summary_rows = [
+        ("Total", task_summary.get("total", 0)),
+        ("Open", task_summary.get("open", 0)),
+        ("Pending Client", task_summary.get("pending_client", 0)),
+        ("Pending Staff", task_summary.get("pending_staff", 0)),
+        ("Pending Professional", task_summary.get("pending_professional", 0)),
+        ("Completed", task_summary.get("completed", 0)),
+    ]
+
+    task_table = doc.add_table(rows=0, cols=2)
+    task_table.style = "Table Grid"
+
+    for label, value in summary_rows:
+        cells = task_table.add_row().cells
+        cells[0].text = label
+        cells[1].text = str(value)
+
+    doc.add_paragraph("")
+
+    add_heading("Follow-Up Task Checklist")
+    for task in packet.get("tasks", []) or []:
+        check = "[x]" if task.get("status") == "completed" else "[ ]"
+        add_bullet(f"{check} {task.get('title')}")
+        meta = f"{task.get('task_type_label')} | Priority: {task.get('priority_label')} | Status: {task.get('status_label')} | Source: {task.get('source')}"
+        add_bullet(f"    {meta}")
+        if task.get("description"):
+            add_bullet(f"    {task.get('description')}")
+
+    if not packet.get("tasks"):
+        add_bullet("No follow-up tasks generated.")
+
+    add_heading("Internal Review Notes")
+    for note in packet.get("notes", []) or []:
+        meta = f"{note.get('note_type_label')} | Priority: {note.get('priority_label')} | Status: {note.get('followup_status_label')} | By: {note.get('created_by')} | {note.get('created_at')}"
+        add_bullet(meta)
+        add_bullet(f"    {note.get('note_body')}")
+    if not packet.get("notes"):
+        add_bullet("No internal review notes added.")
+
+    add_heading("Important Notice")
+    doc.add_paragraph(
+        "This follow-up packet is an intake preparation tool. It does not finalize legal, tax, fiduciary, "
+        "or asset-transfer decisions. Additional review may be needed before documents are signed, assets are "
+        "transferred, or formal action is taken."
+    )
+
+    doc.save(out_path)
+    return str(out_path)
+
+
+def generate_followup_packet_pdf(intake_id):
+    import subprocess
+    from pathlib import Path
+
+    docx_path = generate_followup_packet_docx(intake_id)
+    if not docx_path:
+        return None
+
+    docx_path = Path(docx_path)
+    export_dir = docx_path.parent
+
+    cmd = [
+        "python",
+        "/home/oai/skills/pdfs/scripts/lo_convert_to_pdf.py",
+        str(docx_path),
+        "--out_dir",
+        str(export_dir),
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except Exception:
+        return None
+
+    pdf_path = export_dir / f"{docx_path.stem}.pdf"
+    if pdf_path.exists():
+        return str(pdf_path)
+
+    return None
+
