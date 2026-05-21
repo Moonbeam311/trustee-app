@@ -2596,3 +2596,56 @@ def group_followup_tasks(tasks):
 
     return groups
 
+
+# -------------------------------------------------------------------
+# INT-1K — Intake Follow-Up Packet / Checklist Export Prep
+# -------------------------------------------------------------------
+
+def build_intake_followup_packet(intake_id):
+    snapshot, result = get_saved_client_snapshot(intake_id)
+    if not snapshot:
+        return None
+
+    tasks = list_intake_followup_tasks(intake_id)
+    notes = list_intake_review_notes(intake_id)
+    task_summary = summarize_followup_tasks(tasks)
+    task_groups = group_followup_tasks(tasks)
+
+    documents = snapshot.get("documents_to_gather", []) or []
+    priorities = snapshot.get("top_priorities", []) or []
+    review_flags = snapshot.get("review_flags", []) or []
+
+    packet = {
+        "intake_id": intake_id,
+        "snapshot": snapshot,
+        "result": result,
+        "documents": documents,
+        "priorities": priorities,
+        "review_flags": review_flags,
+        "recommended_next_session": snapshot.get("recommended_next_session"),
+        "tasks": tasks,
+        "task_summary": task_summary,
+        "task_groups": task_groups,
+        "notes": notes,
+        "packet_status": "Prepared",
+        "packet_type": "Initial Follow-Up Packet",
+        "export_ready": True,
+    }
+
+    return packet
+
+
+def get_packet_readiness_label(packet):
+    if not packet:
+        return "Not Available"
+
+    task_summary = packet.get("task_summary", {}) or {}
+    open_count = task_summary.get("open", 0)
+    documents = packet.get("documents", []) or []
+
+    if open_count == 0 and documents:
+        return "Ready for Review"
+    if open_count > 0:
+        return "Action Items Open"
+    return "Prepared"
+

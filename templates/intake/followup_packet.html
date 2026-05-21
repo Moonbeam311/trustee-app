@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.packet-wrap {
+    max-width: 1120px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.packet-hero,
+.packet-card,
+.packet-note {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.packet-hero {
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+.packet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 18px 0;
+}
+
+.packet-card {
+    padding: 18px;
+    margin-bottom: 18px;
+}
+
+.packet-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.packet-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.packet-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.packet-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.packet-actions a {
+    padding: 10px 14px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.packet-muted {
+    opacity: 0.75;
+}
+
+.packet-task-meta,
+.packet-note-meta {
+    font-size: 0.9rem;
+    opacity: 0.78;
+    margin-bottom: 6px;
+}
+
+.packet-section-title {
+    margin-top: 0;
+}
+
+@media print {
+    nav,
+    .packet-actions,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .packet-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .packet-hero,
+    .packet-card,
+    .packet-note,
+    .packet-list li {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="packet-wrap">
+    <div class="packet-hero">
+        <h1 style="margin-top:0;">Initial Intake Follow-Up Packet</h1>
+        <p style="line-height:1.6;">
+            This packet organizes the initial intake result into a practical checklist for the next review session.
+        </p>
+        <p class="packet-muted">
+            Intake ID: {{ packet.intake_id }} |
+            Packet Status: {{ packet.packet_status }} |
+            Readiness: {{ packet_readiness }}
+        </p>
+
+        <div class="packet-actions">
+            <a href="{{ url_for('intake_saved_snapshot', intake_id=packet.intake_id) }}">Back to snapshot</a>
+            <a href="{{ url_for('intake_dashboard') }}">Back to dashboard</a>
+            <a href="#" onclick="window.print(); return false;">Print packet</a>
+            <a href="{{ url_for('intake_export_prep', intake_id=packet.intake_id) }}">Export prep</a>
+        </div>
+    </div>
+
+    <div class="packet-grid">
+        <div class="packet-card">
+            <h3>Planning Type</h3>
+            <div class="packet-value">
+                {{ packet.snapshot.planning_types | join(" + ") if packet.snapshot.planning_types else "Initial Planning" }}
+            </div>
+        </div>
+
+        <div class="packet-card">
+            <h3>Complexity</h3>
+            <div class="packet-value">{{ packet.snapshot.complexity_level }}</div>
+        </div>
+
+        <div class="packet-card">
+            <h3>Priority</h3>
+            <div class="packet-value">{{ packet.snapshot.review_priority }}</div>
+        </div>
+
+        <div class="packet-card">
+            <h3>Readiness</h3>
+            <div class="packet-value">{{ packet.snapshot.readiness_level }}</div>
+        </div>
+    </div>
+
+    <div class="packet-card">
+        <h2 class="packet-section-title">Recommended Next Session</h2>
+        <div class="packet-value">{{ packet.recommended_next_session or "Initial structure review" }}</div>
+        <p class="packet-muted">Use this as the agenda anchor for the next client or internal review session.</p>
+    </div>
+
+    <div class="packet-card">
+        <h2 class="packet-section-title">Top Priorities</h2>
+        <ul class="packet-list">
+            {% for item in packet.priorities %}
+                <li>{{ loop.index }}. {{ item }}</li>
+            {% else %}
+                <li>No priorities generated.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="packet-card">
+        <h2 class="packet-section-title">Document Checklist</h2>
+        <ul class="packet-list">
+            {% for item in packet.documents %}
+                <li>☐ {{ item }}</li>
+            {% else %}
+                <li>No document checklist generated.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if packet.review_flags %}
+    <div class="packet-card">
+        <h2 class="packet-section-title">Review Flags</h2>
+        <ul class="packet-list">
+            {% for item in packet.review_flags %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <div class="packet-card">
+        <h2 class="packet-section-title">Follow-Up Task Summary</h2>
+        <div class="packet-grid">
+            <div>
+                <strong>Total:</strong> {{ packet.task_summary.total }}
+            </div>
+            <div>
+                <strong>Open:</strong> {{ packet.task_summary.open }}
+            </div>
+            <div>
+                <strong>Pending Client:</strong> {{ packet.task_summary.pending_client }}
+            </div>
+            <div>
+                <strong>Pending Staff:</strong> {{ packet.task_summary.pending_staff }}
+            </div>
+            <div>
+                <strong>Pending Professional:</strong> {{ packet.task_summary.pending_professional }}
+            </div>
+            <div>
+                <strong>Completed:</strong> {{ packet.task_summary.completed }}
+            </div>
+        </div>
+    </div>
+
+    <div class="packet-card">
+        <h2 class="packet-section-title">Follow-Up Task Checklist</h2>
+
+        {% if packet.tasks %}
+            <ul class="packet-list">
+                {% for task in packet.tasks %}
+                    <li>
+                        {% if task.status == "completed" %}☑{% else %}☐{% endif %}
+                        <strong>{{ task.title }}</strong><br>
+                        <span class="packet-task-meta">
+                            {{ task.task_type_label }} |
+                            Priority: {{ task.priority_label }} |
+                            Status: {{ task.status_label }} |
+                            Source: {{ task.source }}
+                        </span>
+                        {% if task.description %}
+                            <br>{{ task.description }}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="packet-muted">No follow-up tasks generated.</p>
+        {% endif %}
+    </div>
+
+    <div class="packet-card">
+        <h2 class="packet-section-title">Internal Review Notes</h2>
+
+        {% if packet.notes %}
+            <ul class="packet-list">
+                {% for note in packet.notes %}
+                    <li>
+                        <div class="packet-note-meta">
+                            {{ note.note_type_label }} |
+                            Priority: {{ note.priority_label }} |
+                            Status: {{ note.followup_status_label }} |
+                            By: {{ note.created_by }} |
+                            {{ note.created_at }}
+                        </div>
+                        {{ note.note_body }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="packet-muted">No internal review notes added.</p>
+        {% endif %}
+    </div>
+
+    <div class="packet-note packet-card">
+        <strong>Important:</strong>
+        This follow-up packet is an intake preparation tool. It does not finalize legal, tax, fiduciary,
+        or asset-transfer decisions. Additional review may be needed before documents are signed,
+        assets are transferred, or formal action is taken.
+    </div>
+</div>
+
+{% endblock %}

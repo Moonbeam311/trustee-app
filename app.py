@@ -14,6 +14,7 @@ from services.services_intake import list_intake_dashboard_polished, prepare_sna
 from services.services_intake import create_intake_review_note, list_intake_review_notes, list_intake_dashboard_with_review_notes, get_review_note_form_options, ensure_intake_review_note_tables
 from services.services_intake import auto_generate_followup_tasks_from_snapshot, list_intake_followup_tasks, create_intake_followup_task, update_intake_followup_task_status, get_followup_task_form_options, list_intake_dashboard_with_tasks, ensure_intake_followup_task_tables
 from services.services_intake import summarize_followup_tasks, group_followup_tasks
+from services.services_intake import build_intake_followup_packet, get_packet_readiness_label
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13298,6 +13299,23 @@ def intake_update_followup_task_status(intake_id, task_id):
         flash(f"Follow-up task could not be updated: {exc}", "warning")
 
     return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+
+
+@app.route("/intake/<intake_id>/packet")
+def intake_followup_packet(intake_id):
+    packet = build_intake_followup_packet(intake_id)
+
+    if not packet:
+        flash("Follow-up packet could not be prepared for that intake.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    packet_readiness = get_packet_readiness_label(packet)
+
+    return render_template(
+        "intake/followup_packet.html",
+        packet=packet,
+        packet_readiness=packet_readiness
+    )
 
 
 if __name__ == "__main__":
