@@ -7794,3 +7794,144 @@ def build_final_draft_admin_approval_context(intake_id, workflow_key, document_k
         "already_approved": bool(gate.get("admin_approved") or approvals),
         "notice": "Admin approval only authorizes final-draft preparation. It does not authorize signing, filing, execution, transfer, or final legal use.",
     }
+
+
+# -------------------------------------------------------------------
+# INT-2N — Final-Draft Preparation Workspace
+# -------------------------------------------------------------------
+
+def build_final_draft_workspace_sections(document):
+    sections = []
+
+    for section in document.get("sections", []) or []:
+        heading = section.get("heading")
+        body = section.get("body") or ""
+
+        sections.append({
+            "heading": heading,
+            "source": "non_final_draft",
+            "body": body,
+            "prep_status": "ready_for_editing" if body.strip() else "needs_content",
+            "instruction": "Review, refine, and prepare this section for controlled final-draft drafting."
+        })
+
+    if not sections:
+        sections.append({
+            "heading": "Draft Body",
+            "source": "workspace_generated",
+            "body": "",
+            "prep_status": "needs_content",
+            "instruction": "No non-final draft sections were available. Build draft body from questionnaire and packet data."
+        })
+
+    return sections
+
+
+def build_final_draft_preparation_checklist(context):
+    gate = context.get("gate", {}) or {}
+    document = context.get("document", {}) or {}
+    preview = document.get("preview", {}) or {}
+    draft_packet = preview.get("draft_packet", {}) or {}
+
+    checklist = [
+        {
+            "label": "Admin approval for final-draft preparation recorded",
+            "complete": bool(gate.get("admin_approved")),
+        },
+        {
+            "label": "Final-draft preparation gate approved",
+            "complete": gate.get("gate_status") == "approved_for_final_draft_preparation",
+        },
+        {
+            "label": "Controlled questionnaire reviewed / acknowledged",
+            "complete": bool(gate.get("questionnaire_complete")),
+        },
+        {
+            "label": "Required documents acknowledged",
+            "complete": bool(gate.get("required_documents_acknowledged")),
+        },
+        {
+            "label": "Professional review status recorded",
+            "complete": bool(gate.get("professional_review_recorded")),
+        },
+        {
+            "label": "Open issues reviewed / accepted",
+            "complete": bool(gate.get("open_issues_reviewed")),
+        },
+        {
+            "label": "Open tasks reviewed / accepted",
+            "complete": bool(gate.get("open_tasks_reviewed")),
+        },
+        {
+            "label": "Non-final draft document available",
+            "complete": bool(document and document.get("sections")),
+        },
+        {
+            "label": "Draft packet context available",
+            "complete": bool(draft_packet),
+        },
+    ]
+
+    return checklist
+
+
+def build_final_draft_workspace_context(intake_id, workflow_key, document_key):
+    approval_context = build_final_draft_admin_approval_context(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+    )
+
+    if not approval_context:
+        return None
+
+    gate = approval_context.get("gate", {}) or {}
+
+    if not gate.get("admin_approved") or gate.get("gate_status") != "approved_for_final_draft_preparation":
+        return {
+            "access_granted": False,
+            "reason": "Final-draft preparation workspace is locked until admin approval is recorded.",
+            "approval_context": approval_context,
+            "intake_id": intake_id,
+            "workflow_key": workflow_key,
+            "document_key": document_key,
+        }
+
+    document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
+    review_gate = get_review_gate_record(intake_id, workflow_key, document_key)
+    review_actions = list_review_gate_actions(intake_id, workflow_key, document_key)
+    final_resolution_actions = list_final_draft_resolution_actions(intake_id, workflow_key, document_key)
+    approvals = list_final_draft_admin_approvals(intake_id, workflow_key, document_key)
+
+    preview = document.get("preview", {}) if document else {}
+    draft_packet = preview.get("draft_packet", {}) if preview else {}
+
+    workspace_sections = build_final_draft_workspace_sections(document or {})
+    checklist = build_final_draft_preparation_checklist({
+        "gate": gate,
+        "document": document,
+    })
+
+    return {
+        "access_granted": True,
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "approval_context": approval_context,
+        "gate": gate,
+        "document": document,
+        "review_gate": review_gate,
+        "review_actions": review_actions,
+        "final_resolution_actions": final_resolution_actions,
+        "approvals": approvals,
+        "draft_packet": draft_packet,
+        "workspace_sections": workspace_sections,
+        "checklist": checklist,
+        "documents": draft_packet.get("documents", []) if draft_packet else [],
+        "open_tasks": draft_packet.get("open_tasks", []) if draft_packet else [],
+        "completed_tasks": draft_packet.get("completed_tasks", []) if draft_packet else [],
+        "open_issues": draft_packet.get("open_issues", []) if draft_packet else [],
+        "workspace_status": "Final-Draft Preparation Workspace Open",
+        "notice": "This workspace prepares a final draft only. It does not authorize signing, filing, execution, transfer, or final legal use.",
+    }
+

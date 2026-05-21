@@ -33,6 +33,7 @@ from services.services_intake import get_review_gate_record, list_review_gate_ac
 from services.services_intake import upsert_final_draft_prep_gate, get_final_draft_prep_gate, approve_final_draft_prep_gate, list_final_draft_prep_gates
 from services.services_intake import build_final_draft_resolution_context, record_final_draft_resolution_actions, upsert_final_draft_prep_gate_with_resolutions
 from services.services_intake import build_final_draft_admin_approval_context, record_final_draft_admin_approval, list_final_draft_admin_approvals
+from services.services_intake import build_final_draft_workspace_context
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13916,6 +13917,20 @@ def intake_final_draft_admin_approval_ledger_detail(intake_id):
         context=None,
         approvals=approvals,
         intake_id=intake_id
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-workspace")
+def intake_final_draft_workspace(intake_id, workflow_key, document_key):
+    workspace = build_final_draft_workspace_context(intake_id, workflow_key, document_key)
+
+    if not workspace:
+        flash("Final-draft preparation workspace could not be built.", "warning")
+        return redirect(url_for("intake_final_draft_admin_approval", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/final_draft_workspace.html",
+        workspace=workspace
     )
 
 
