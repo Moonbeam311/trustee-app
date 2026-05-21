@@ -7607,6 +7607,10 @@ def record_final_draft_admin_approval(
     if not approval_note:
         raise ValueError("Approval note is required.")
 
+    # IMPORTANT:
+    # Use the INT-2L resolution-aware gate evaluator.
+    # The older INT-2K approval function re-evaluates without resolution actions
+    # and can incorrectly reset the gate back to blocked.
     gate_before = upsert_final_draft_prep_gate_with_resolutions(
         intake_id=intake_id,
         workflow_key=workflow_key,
@@ -7620,43 +7624,60 @@ def record_final_draft_admin_approval(
     if gate_before.get("gate_status") == "blocked":
         raise ValueError("Gate is blocked. Resolve required conditions before admin approval.")
 
-    approved_gate = approve_final_draft_prep_gate(
-        intake_id=intake_id,
-        workflow_key=workflow_key,
-        document_key=document_key,
-        approval_note=approval_note,
-        approved_by=approved_by,
-    )
-
     now = datetime.utcnow().isoformat(timespec="seconds")
     firm_id = get_current_firm_id()
 
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        INSERT INTO intake_final_draft_admin_approvals (
-            intake_id, workflow_key, document_key, firm_id,
-            approval_status, approval_note,
-            gate_status_before, gate_status_after,
-            created_at, created_by
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        intake_id,
-        workflow_key,
-        document_key,
-        firm_id,
-        "approved_for_final_draft_preparation",
-        approval_note,
-        gate_before.get("gate_status"),
-        approved_gate.get("gate_status") if approved_gate else None,
-        now,
-        approved_by,
-    ))
+    try:
+        cur.execute("""
+            UPDATE intake_final_draft_prep_gate
+            SET gate_status = ?,
+                gate_reason = ?,
+                admin_approved = 1,
+                approval_note = ?,
+                updated_at = ?,
+                updated_by = ?
+            WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        """, (
+            "approved_for_final_draft_preparation",
+            "Approved for final-draft preparation. This still does not authorize signing, filing, execution, transfer, or legal finalization.",
+            approval_note,
+            now,
+            approved_by,
+            intake_id,
+            workflow_key,
+            document_key,
+        ))
 
-    conn.commit()
-    conn.close()
+        cur.execute("""
+            INSERT INTO intake_final_draft_admin_approvals (
+                intake_id, workflow_key, document_key, firm_id,
+                approval_status, approval_note,
+                gate_status_before, gate_status_after,
+                created_at, created_by
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            intake_id,
+            workflow_key,
+            document_key,
+            firm_id,
+            "approved_for_final_draft_preparation",
+            approval_note,
+            gate_before.get("gate_status"),
+            "approved_for_final_draft_preparation",
+            now,
+            approved_by,
+        ))
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    approved_gate = get_final_draft_prep_gate(intake_id, workflow_key, document_key)
 
     return {
         "intake_id": intake_id,
@@ -7665,13 +7686,11 @@ def record_final_draft_admin_approval(
         "approval_status": "approved_for_final_draft_preparation",
         "approval_note": approval_note,
         "gate_status_before": gate_before.get("gate_status"),
-        "gate_status_after": approved_gate.get("gate_status") if approved_gate else None,
+        "gate_status_after": "approved_for_final_draft_preparation",
         "created_at": now,
         "created_by": approved_by,
         "gate": approved_gate,
     }
-
-
 def list_final_draft_admin_approvals(intake_id=None, workflow_key=None, document_key=None):
     ensure_final_draft_admin_approval_tables()
 
