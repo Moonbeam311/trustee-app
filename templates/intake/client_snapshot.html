@@ -148,6 +148,49 @@
     margin-bottom: 6px;
 }
 
+
+.followup-tasks-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    padding: 18px;
+    margin-top: 24px;
+}
+
+.followup-task-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.followup-task-form-grid select,
+.followup-task-form-grid input,
+.followup-tasks-card textarea {
+    width: 100%;
+    padding: 9px;
+    border-radius: 8px;
+}
+
+.followup-task-item {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.followup-task-meta {
+    font-size: 0.9rem;
+    opacity: 0.78;
+    margin-bottom: 6px;
+}
+
+@media print {
+    .followup-tasks-card {
+        display: none !important;
+    }
+}
+
 </style>
 
 <div class="client-snapshot-wrap">
@@ -231,6 +274,100 @@
         <strong>Important:</strong>
         This is an intake-routing snapshot. It does not finalize legal, tax, fiduciary, or asset-transfer decisions.
         More detailed review may be needed before documents are signed, assets are transferred, or formal action is taken.
+    </div>
+
+
+
+    <div class="followup-tasks-card no-print">
+        <h2 style="margin-top:0;">Follow-Up Tasks</h2>
+        <p class="snapshot-muted">
+            These tasks help turn intake results into document requests, staff actions, professional review items, and next-session preparation.
+        </p>
+
+        <form method="POST" action="{{ url_for('intake_add_followup_task', intake_id=snapshot.intake_id) }}">
+            {% if csrf_token is defined %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+            {% endif %}
+            <div class="followup-task-form-grid">
+                <label>
+                    Task Type
+                    <select name="task_type">
+                        {% for key, label in task_options.task_types.items() %}
+                            <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Priority
+                    <select name="priority">
+                        {% for key, label in task_options.priorities.items() %}
+                            <option value="{{ key }}" {% if key == "normal" %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Status
+                    <select name="status">
+                        {% for key, label in task_options.statuses.items() %}
+                            <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+
+            <label>
+                Task Title
+                <input type="text" name="title" required placeholder="Example: Gather current deed and insurance policy">
+            </label>
+
+            <label>
+                Task Description
+                <textarea name="description" rows="3" placeholder="Optional task details, deadline, or context..."></textarea>
+            </label>
+
+            <div class="snapshot-actions" style="margin-top:12px;">
+                <button type="submit" style="padding: 10px 14px; border-radius: 10px;">Add Follow-Up Task</button>
+            </div>
+        </form>
+
+        <h3>Task List</h3>
+        {% if tasks %}
+            {% for task in tasks %}
+                <div class="followup-task-item">
+                    <div class="followup-task-meta">
+                        <strong>{{ task.task_type_label }}</strong> |
+                        Priority: {{ task.priority_label }} |
+                        Status: {{ task.status_label }} |
+                        Source: {{ task.source }} |
+                        Created: {{ task.created_at }}
+                    </div>
+
+                    <div><strong>{{ task.title }}</strong></div>
+                    {% if task.description %}
+                        <div style="margin-top:6px;">{{ task.description }}</div>
+                    {% endif %}
+
+                    <form method="POST" action="{{ url_for('intake_update_followup_task_status', intake_id=snapshot.intake_id, task_id=task.id) }}" style="margin-top:10px;">
+                        {% if csrf_token is defined %}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+                        {% endif %}
+                        <label>
+                            Update Status
+                            <select name="status">
+                                {% for key, label in task_options.statuses.items() %}
+                                    <option value="{{ key }}" {% if key == task.status %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button type="submit" style="padding: 8px 12px; border-radius: 8px; margin-top:8px;">Update Task</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="snapshot-muted">No follow-up tasks yet.</p>
+        {% endif %}
     </div>
 
 

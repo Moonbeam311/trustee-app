@@ -12,6 +12,7 @@ from services.services_intake import save_client_snapshot, list_intake_dashboard
 from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
 from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
 from services.services_intake import create_intake_review_note, list_intake_review_notes, list_intake_dashboard_with_review_notes, get_review_note_form_options, ensure_intake_review_note_tables
+from services.services_intake import auto_generate_followup_tasks_from_snapshot, list_intake_followup_tasks, create_intake_followup_task, update_intake_followup_task_status, get_followup_task_form_options, list_intake_dashboard_with_tasks, ensure_intake_followup_task_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13144,10 +13145,24 @@ def intake_universal_profile(intake_id):
             snapshot=client_snapshot,
             created_by=session.get("username") if "session" in globals() else None
         )
+        auto_generate_followup_tasks_from_snapshot(
+            intake_id=result["intake_id"],
+            snapshot=client_snapshot,
+            created_by=session.get("username") if "session" in globals() else None
+        )
+        notes = []
+        note_options = get_review_note_form_options()
+        tasks = list_intake_followup_tasks(result["intake_id"])
+        task_options = get_followup_task_form_options()
+
         return render_template(
             "intake/client_snapshot.html",
             snapshot=client_snapshot,
-            result=result
+            result=result,
+            notes=notes,
+            note_options=note_options,
+            tasks=tasks,
+            task_options=task_options
         )
 
     return render_template(
@@ -13177,15 +13192,24 @@ def intake_saved_snapshot(intake_id):
         flash("Saved intake snapshot not found.", "warning")
         return redirect(url_for("intake_dashboard"))
 
+    auto_generate_followup_tasks_from_snapshot(
+        intake_id=intake_id,
+        snapshot=snapshot,
+        created_by=session.get("username") if "session" in globals() else None
+    )
     notes = list_intake_review_notes(intake_id)
     note_options = get_review_note_form_options()
+    tasks = list_intake_followup_tasks(intake_id)
+    task_options = get_followup_task_form_options()
 
     return render_template(
         "intake/client_snapshot.html",
         snapshot=snapshot,
         result=result,
         notes=notes,
-        note_options=note_options
+        note_options=note_options,
+        tasks=tasks,
+        task_options=task_options
     )
 
 
@@ -13228,6 +13252,41 @@ def intake_add_review_note(intake_id):
         flash("Review note added.", "success")
     except Exception as exc:
         flash(f"Review note could not be added: {exc}", "warning")
+
+    return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+
+
+@app.route("/intake/<intake_id>/tasks/add", methods=["POST"])
+def intake_add_followup_task(intake_id):
+    try:
+        create_intake_followup_task(
+            intake_id=intake_id,
+            title=request.form.get("title", ""),
+            description=request.form.get("description", ""),
+            task_type=request.form.get("task_type", "staff_action"),
+            priority=request.form.get("priority", "normal"),
+            status=request.form.get("status", "open"),
+            source="manual",
+            created_by=session.get("username") if "session" in globals() else None,
+        )
+        flash("Follow-up task added.", "success")
+    except Exception as exc:
+        flash(f"Follow-up task could not be added: {exc}", "warning")
+
+    return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+
+
+@app.route("/intake/<intake_id>/tasks/<int:task_id>/status", methods=["POST"])
+def intake_update_followup_task_status(intake_id, task_id):
+    try:
+        update_intake_followup_task_status(
+            task_id=task_id,
+            status=request.form.get("status", "open"),
+            updated_by=session.get("username") if "session" in globals() else None,
+        )
+        flash("Follow-up task updated.", "success")
+    except Exception as exc:
+        flash(f"Follow-up task could not be updated: {exc}", "warning")
 
     return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
 

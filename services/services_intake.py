@@ -2187,3 +2187,366 @@ def get_review_note_form_options():
         "followup_statuses": VALID_FOLLOWUP_STATUSES,
     }
 
+
+# -------------------------------------------------------------------
+# INT-1I — Intake Follow-Up Task Builder
+# -------------------------------------------------------------------
+
+VALID_FOLLOWUP_TASK_TYPES = {
+    "document": "Document Request",
+    "client_followup": "Client Follow-Up",
+    "professional_review": "Professional Review",
+    "staff_action": "Staff Action",
+    "next_session": "Next Session Prep",
+}
+
+VALID_FOLLOWUP_TASK_PRIORITIES = {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent",
+}
+
+VALID_FOLLOWUP_TASK_STATUSES = {
+    "open": "Open",
+    "pending_client": "Pending Client",
+    "pending_staff": "Pending Staff",
+    "pending_professional": "Pending Professional Review",
+    "completed": "Completed",
+    "deferred": "Deferred",
+}
+
+
+def ensure_intake_followup_task_tables():
+    ensure_intake_review_note_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_followup_tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            task_type TEXT DEFAULT 'staff_action',
+            priority TEXT DEFAULT 'normal',
+            status TEXT DEFAULT 'open',
+            title TEXT NOT NULL,
+            description TEXT,
+            source TEXT DEFAULT 'manual',
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT,
+            completed_at TEXT,
+            completed_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def create_intake_followup_task(
+    intake_id,
+    title,
+    description="",
+    task_type="staff_action",
+    priority="normal",
+    status="open",
+    source="manual",
+    created_by=None
+):
+    ensure_intake_followup_task_tables()
+
+    title = (title or "").strip()
+    description = (description or "").strip()
+
+    if not title:
+        raise ValueError("Task title cannot be blank.")
+
+    if task_type not in VALID_FOLLOWUP_TASK_TYPES:
+        task_type = "staff_action"
+
+    if priority not in VALID_FOLLOWUP_TASK_PRIORITIES:
+        priority = "normal"
+
+    if status not in VALID_FOLLOWUP_TASK_STATUSES:
+        status = "open"
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_followup_tasks (
+            intake_id, firm_id, task_type, priority, status, title,
+            description, source, created_at, updated_at, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        firm_id,
+        task_type,
+        priority,
+        status,
+        title,
+        description,
+        source,
+        now,
+        now,
+        created_by,
+    ))
+
+    cur.execute("""
+        UPDATE intake_sessions
+        SET updated_at = ?
+        WHERE intake_id = ?
+    """, (now, intake_id))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "task_type": task_type,
+        "priority": priority,
+        "status": status,
+        "title": title,
+        "description": description,
+        "source": source,
+        "created_at": now,
+        "created_by": created_by,
+    }
+
+
+def list_intake_followup_tasks(intake_id):
+    ensure_intake_followup_task_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, intake_id, task_type, priority, status, title,
+               description, source, created_at, updated_at, created_by,
+               completed_at, completed_by
+        FROM intake_followup_tasks
+        WHERE intake_id = ?
+        ORDER BY
+            CASE status
+                WHEN 'open' THEN 1
+                WHEN 'pending_client' THEN 2
+                WHEN 'pending_staff' THEN 3
+                WHEN 'pending_professional' THEN 4
+                WHEN 'deferred' THEN 5
+                WHEN 'completed' THEN 6
+                ELSE 7
+            END,
+            CASE priority
+                WHEN 'urgent' THEN 1
+                WHEN 'high' THEN 2
+                WHEN 'normal' THEN 3
+                WHEN 'low' THEN 4
+                ELSE 5
+            END,
+            id ASC
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": row[0],
+            "intake_id": row[1],
+            "task_type": row[2],
+            "task_type_label": VALID_FOLLOWUP_TASK_TYPES.get(row[2], row[2]),
+            "priority": row[3],
+            "priority_label": VALID_FOLLOWUP_TASK_PRIORITIES.get(row[3], row[3]),
+            "status": row[4],
+            "status_label": VALID_FOLLOWUP_TASK_STATUSES.get(row[4], row[4]),
+            "title": row[5],
+            "description": row[6],
+            "source": row[7],
+            "created_at": format_intake_timestamp(row[8]),
+            "updated_at": format_intake_timestamp(row[9]),
+            "created_by": row[10] or "—",
+            "completed_at": format_intake_timestamp(row[11]) if row[11] else "",
+            "completed_by": row[12] or "",
+        }
+        for row in rows
+    ]
+
+
+def get_intake_followup_task_counts():
+    ensure_intake_followup_task_tables()
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id,
+               COUNT(*) AS total_count,
+               SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_count,
+               SUM(CASE WHEN status != 'completed' THEN 1 ELSE 0 END) AS open_count
+        FROM intake_followup_tasks
+        WHERE firm_id = ?
+        GROUP BY intake_id
+    """, (firm_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    output = {}
+    for row in rows:
+        output[row[0]] = {
+            "task_count": row[1] or 0,
+            "completed_task_count": row[2] or 0,
+            "open_task_count": row[3] or 0,
+        }
+    return output
+
+
+def task_exists(intake_id, title, task_type=None, source=None):
+    ensure_intake_followup_task_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    query = """
+        SELECT COUNT(*)
+        FROM intake_followup_tasks
+        WHERE intake_id = ? AND title = ?
+    """
+    params = [intake_id, title]
+
+    if task_type:
+        query += " AND task_type = ?"
+        params.append(task_type)
+
+    if source:
+        query += " AND source = ?"
+        params.append(source)
+
+    cur.execute(query, tuple(params))
+    row = cur.fetchone()
+    conn.close()
+
+    return bool(row and row[0])
+
+
+def auto_generate_followup_tasks_from_snapshot(intake_id, snapshot, created_by=None):
+    """
+    Idempotently generates follow-up tasks from the client snapshot.
+    It will not duplicate the same generated task title/source pair.
+    """
+    ensure_intake_followup_task_tables()
+
+    created = []
+
+    # Document requests become client-facing document tasks.
+    for doc in snapshot.get("documents_to_gather", []) or []:
+        title = f"Gather document: {doc}"
+        if not task_exists(intake_id, title, task_type="document", source="auto_snapshot"):
+            created.append(create_intake_followup_task(
+                intake_id=intake_id,
+                title=title,
+                description="Client or staff should gather this item before the deeper review session.",
+                task_type="document",
+                priority="normal",
+                status="pending_client",
+                source="auto_snapshot",
+                created_by=created_by,
+            ))
+
+    # Review flags become review tasks.
+    for flag in snapshot.get("review_flags", []) or []:
+        title = f"Review flag: {flag}"
+        priority = "high" if "tax" in flag.lower() or "legal" in flag.lower() or "liability" in flag.lower() else "normal"
+        status = "pending_professional" if "tax" in flag.lower() or "legal" in flag.lower() else "pending_staff"
+
+        if not task_exists(intake_id, title, source="auto_snapshot"):
+            created.append(create_intake_followup_task(
+                intake_id=intake_id,
+                title=title,
+                description="This item was flagged by the intake translation/scoring engine and should be reviewed before final action.",
+                task_type="professional_review" if status == "pending_professional" else "staff_action",
+                priority=priority,
+                status=status,
+                source="auto_snapshot",
+                created_by=created_by,
+            ))
+
+    # Recommended next session becomes a next-session prep task.
+    next_session = snapshot.get("recommended_next_session")
+    if next_session:
+        title = f"Prepare next session: {next_session}"
+        if not task_exists(intake_id, title, task_type="next_session", source="auto_snapshot"):
+            created.append(create_intake_followup_task(
+                intake_id=intake_id,
+                title=title,
+                description="Prepare agenda, documents, and follow-up questions for the recommended next review session.",
+                task_type="next_session",
+                priority="high" if snapshot.get("review_priority") in ["High", "Elevated"] else "normal",
+                status="pending_staff",
+                source="auto_snapshot",
+                created_by=created_by,
+            ))
+
+    return created
+
+
+def update_intake_followup_task_status(task_id, status, updated_by=None):
+    ensure_intake_followup_task_tables()
+
+    if status not in VALID_FOLLOWUP_TASK_STATUSES:
+        raise ValueError("Invalid task status.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    completed_at = now if status == "completed" else None
+    completed_by = updated_by if status == "completed" else None
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE intake_followup_tasks
+        SET status = ?,
+            updated_at = ?,
+            completed_at = ?,
+            completed_by = ?
+        WHERE id = ?
+    """, (
+        status,
+        now,
+        completed_at,
+        completed_by,
+        task_id,
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def get_followup_task_form_options():
+    return {
+        "task_types": VALID_FOLLOWUP_TASK_TYPES,
+        "priorities": VALID_FOLLOWUP_TASK_PRIORITIES,
+        "statuses": VALID_FOLLOWUP_TASK_STATUSES,
+    }
+
+
+def list_intake_dashboard_with_tasks(limit=100, status_filter="all"):
+    items = list_intake_dashboard_with_review_notes(limit=limit, status_filter=status_filter)
+    counts = get_intake_followup_task_counts()
+
+    for item in items:
+        data = counts.get(item["intake_id"], {})
+        item["task_count"] = data.get("task_count", 0)
+        item["open_task_count"] = data.get("open_task_count", 0)
+        item["completed_task_count"] = data.get("completed_task_count", 0)
+        item["has_tasks"] = item["task_count"] > 0
+
+    return items
+
