@@ -1,38 +1,142 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="container" style="max-width: 980px; margin: 30px auto;">
+<style>
+.intake-wrap {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.intake-context-card,
+.intake-question-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+}
+
+.intake-context-card {
+    padding: 18px 20px;
+    margin-bottom: 22px;
+}
+
+.intake-question-card {
+    padding: 18px 20px;
+    margin: 18px 0;
+}
+
+.intake-question-title {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.intake-question-number {
+    font-weight: 700;
+    opacity: 0.72;
+}
+
+.intake-question-label {
+    font-size: 1.12rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.intake-option-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.intake-option {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+    padding: 11px 12px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.intake-option:hover {
+    border-color: rgba(170,130,40,0.75);
+}
+
+.intake-option input {
+    margin-top: 3px;
+}
+
+.intake-option-text {
+    line-height: 1.35;
+}
+
+.intake-help {
+    font-size: 0.92rem;
+    opacity: 0.75;
+    margin-top: 6px;
+}
+
+.intake-actions {
+    margin-top: 24px;
+}
+
+.intake-primary-btn {
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+</style>
+
+<div class="intake-wrap">
     <h1>Initial Intake: Universal Profile</h1>
 
-    <div style="padding: 16px; border: 1px solid #ddd; border-radius: 10px; margin: 20px 0;">
+    <div class="intake-context-card">
         <strong>Intake ID:</strong> {{ intake.intake_id }}<br>
-        <strong>Path:</strong> {{ intake.intake_lane.replace('_', ' ').title() }}<br>
-        <strong>Purpose:</strong> Answer these plain-language questions so the system can build the first fiduciary map.
+        <strong>Selected Path:</strong> {{ intake.intake_lane.replace('_', ' ').title() }}<br>
+        <strong>Purpose:</strong> These plain-language answers create the first fiduciary map.
     </div>
 
     <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        {% if csrf_token is defined %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+        {% endif %}
 
         {% for q_key, question in questions.items() %}
-            <fieldset style="border:1px solid #ccc; border-radius:10px; padding:16px; margin:20px 0;">
-                <legend style="font-weight:bold;">{{ question.label }}</legend>
+            <section class="intake-question-card">
+                <div class="intake-question-title">
+                    <span class="intake-question-number">Question {{ loop.index }}</span>
+                    <span class="intake-question-label">{{ question.label }}</span>
+                </div>
 
-                {% for opt_key, opt_label in question.options.items() %}
-                    <label style="display:block; margin:10px 0; cursor:pointer;">
-                        {% if question.input_type == "multi" %}
-                            <input type="checkbox" name="{{ q_key }}" value="{{ opt_key }}">
-                        {% else %}
-                            <input type="radio" name="{{ q_key }}" value="{{ opt_key }}" required>
-                        {% endif %}
-                        {{ opt_label }}
-                    </label>
-                {% endfor %}
-            </fieldset>
+                {% if question.input_type == "multi" %}
+                    <div class="intake-help">Select all that apply.</div>
+                {% else %}
+                    <div class="intake-help">Select one.</div>
+                {% endif %}
+
+                <div class="intake-option-list">
+                    {% for opt_key, opt_label in question.options.items() %}
+                        <label class="intake-option">
+                            {% if question.input_type == "multi" %}
+                                <input type="checkbox" name="{{ q_key }}" value="{{ opt_key }}">
+                            {% else %}
+                                <input type="radio" name="{{ q_key }}" value="{{ opt_key }}" required>
+                            {% endif %}
+                            <span class="intake-option-text">{{ opt_label }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </section>
         {% endfor %}
 
-        <button type="submit" style="margin-top: 18px; padding: 12px 20px; border-radius: 8px;">
-            Generate Intake Translation Snapshot
-        </button>
+        <div class="intake-actions">
+            <button type="submit" class="intake-primary-btn">
+                Generate Intake Translation Snapshot
+            </button>
+        </div>
     </form>
 </div>
 
