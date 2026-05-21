@@ -8227,6 +8227,7 @@ def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, cre
     This is a preparation draft only. It is not signed, filed, executed,
     transferred, or legally final.
     """
+    from pathlib import Path
     from docx import Document
     from docx.shared import Pt
     from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -8244,7 +8245,7 @@ def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, cre
         f"{safe_export_filename(document_key)}_FINAL_DRAFT_PREVIEW.docx"
     )
 
-    out_path = export_dir / filename
+    out_path = Path(export_dir) / filename
 
     doc = Document()
 
@@ -8334,6 +8335,7 @@ def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, cre
 
     doc.save(out_path)
 
+    # General intake export log.
     try:
         log_intake_export_versioned(
             intake_id=intake_id,
@@ -8344,15 +8346,28 @@ def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, cre
             created_by=created_by,
             packet_type="final_draft_preview",
         )
-    except Exception:
-        pass
+    except Exception as exc:
+        print("NOTICE: intake export log failed:", exc)
+
+    # INT-2Q version register log.
+    try:
+        record_final_draft_version_export(
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key,
+            file_path=str(out_path),
+            preview_status=preview.get("preview_status"),
+            ready_count=preview.get("ready_count"),
+            total_sections=preview.get("total_sections"),
+            export_type="docx",
+            created_by=created_by,
+            notes="INT-2Q version register record for final-draft preview DOCX export.",
+        )
+    except Exception as exc:
+        print("ERROR: final draft version register log failed:", exc)
+        raise
 
     return str(out_path)
-
-
-# -------------------------------------------------------------------
-# INT-2Q — Final-Draft Export History + Version Register
-# -------------------------------------------------------------------
 
 def ensure_final_draft_version_register_tables():
     ensure_final_draft_section_tables()
