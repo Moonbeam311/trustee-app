@@ -285,6 +285,7 @@
         </p>
 
         <form method="POST" action="{{ url_for('intake_add_followup_task', intake_id=snapshot.intake_id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
             <div class="followup-task-form-grid">
                 <label>
@@ -348,6 +349,7 @@
                     {% endif %}
 
                     <form method="POST" action="{{ url_for('intake_update_followup_task_status', intake_id=snapshot.intake_id, task_id=task.id) }}" style="margin-top:10px;">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                         {% if csrf_token is defined %}
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
                         {% endif %}
