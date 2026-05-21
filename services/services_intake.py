@@ -2550,3 +2550,49 @@ def list_intake_dashboard_with_tasks(limit=100, status_filter="all"):
 
     return items
 
+
+# -------------------------------------------------------------------
+# INT-1J — Intake Task Filters + Follow-Up Workflow Polish
+# -------------------------------------------------------------------
+
+def summarize_followup_tasks(tasks):
+    summary = {
+        "total": len(tasks or []),
+        "open": 0,
+        "pending_client": 0,
+        "pending_staff": 0,
+        "pending_professional": 0,
+        "completed": 0,
+        "deferred": 0,
+    }
+
+    for task in tasks or []:
+        status = task.get("status")
+        if status in summary:
+            summary[status] += 1
+
+        if status != "completed":
+            summary["open"] += 1
+
+    return summary
+
+
+def group_followup_tasks(tasks):
+    groups = {
+        "pending_client": [],
+        "pending_staff": [],
+        "pending_professional": [],
+        "open": [],
+        "deferred": [],
+        "completed": [],
+    }
+
+    for task in tasks or []:
+        status = task.get("status") or "open"
+        if status in groups:
+            groups[status].append(task)
+        else:
+            groups["open"].append(task)
+
+    return groups
+

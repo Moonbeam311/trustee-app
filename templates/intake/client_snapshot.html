@@ -191,6 +191,68 @@
     }
 }
 
+
+.task-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin: 14px 0 18px 0;
+}
+
+.task-summary-pill {
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+}
+
+.task-summary-number {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.task-filter-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 14px 0;
+}
+
+.task-filter-links a {
+    padding: 8px 10px;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 999px;
+    text-decoration: none;
+}
+
+.task-bucket {
+    margin-top: 14px;
+}
+
+.task-bucket summary {
+    cursor: pointer;
+    font-weight: 700;
+    padding: 10px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+}
+
+.followup-task-item.completed-task {
+    opacity: 0.72;
+}
+
+.task-status-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: end;
+    margin-top: 10px;
+}
+
+.task-status-row select {
+    min-width: 210px;
+}
+
 </style>
 
 <div class="client-snapshot-wrap">
@@ -281,12 +343,40 @@
     <div class="followup-tasks-card no-print">
         <h2 style="margin-top:0;">Follow-Up Tasks</h2>
         <p class="snapshot-muted">
-            These tasks help turn intake results into document requests, staff actions, professional review items, and next-session preparation.
+            These tasks convert intake results into document requests, staff actions, professional review items, and next-session preparation.
         </p>
 
+        <div class="task-summary-grid">
+            <div class="task-summary-pill">
+                <div class="task-summary-number">{{ task_summary.total if task_summary else tasks|length }}</div>
+                <div>Total</div>
+            </div>
+            <div class="task-summary-pill">
+                <div class="task-summary-number">{{ task_summary.open if task_summary else 0 }}</div>
+                <div>Open</div>
+            </div>
+            <div class="task-summary-pill">
+                <div class="task-summary-number">{{ task_summary.pending_client if task_summary else 0 }}</div>
+                <div>Client</div>
+            </div>
+            <div class="task-summary-pill">
+                <div class="task-summary-number">{{ task_summary.pending_staff if task_summary else 0 }}</div>
+                <div>Staff</div>
+            </div>
+            <div class="task-summary-pill">
+                <div class="task-summary-number">{{ task_summary.pending_professional if task_summary else 0 }}</div>
+                <div>Professional</div>
+            </div>
+            <div class="task-summary-pill">
+                <div class="task-summary-number">{{ task_summary.completed if task_summary else 0 }}</div>
+                <div>Completed</div>
+            </div>
+        </div>
+
         <form method="POST" action="{{ url_for('intake_add_followup_task', intake_id=snapshot.intake_id) }}">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+            {% if csrf_token is defined %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+            {% endif %}
             <div class="followup-task-form-grid">
                 <label>
                     Task Type
@@ -332,44 +422,65 @@
         </form>
 
         <h3>Task List</h3>
-        {% if tasks %}
-            {% for task in tasks %}
-                <div class="followup-task-item">
-                    <div class="followup-task-meta">
-                        <strong>{{ task.task_type_label }}</strong> |
-                        Priority: {{ task.priority_label }} |
-                        Status: {{ task.status_label }} |
-                        Source: {{ task.source }} |
-                        Created: {{ task.created_at }}
-                    </div>
 
-                    <div><strong>{{ task.title }}</strong></div>
-                    {% if task.description %}
-                        <div style="margin-top:6px;">{{ task.description }}</div>
+        {% set bucket_labels = {
+            "pending_client": "Pending Client",
+            "pending_staff": "Pending Staff",
+            "pending_professional": "Pending Professional Review",
+            "open": "Open",
+            "deferred": "Deferred",
+            "completed": "Completed"
+        } %}
+
+        {% if task_groups %}
+            {% for bucket_key, bucket_label in bucket_labels.items() %}
+                {% set bucket_tasks = task_groups.get(bucket_key, []) %}
+                <details class="task-bucket" {% if bucket_key != "completed" and bucket_tasks %}open{% endif %}>
+                    <summary>{{ bucket_label }} — {{ bucket_tasks|length }}</summary>
+
+                    {% if bucket_tasks %}
+                        {% for task in bucket_tasks %}
+                            <div class="followup-task-item {% if task.status == 'completed' %}completed-task{% endif %}">
+                                <div class="followup-task-meta">
+                                    <strong>{{ task.task_type_label }}</strong> |
+                                    Priority: {{ task.priority_label }} |
+                                    Status: {{ task.status_label }} |
+                                    Source: {{ task.source }} |
+                                    Created: {{ task.created_at }}
+                                </div>
+
+                                <div><strong>{{ task.title }}</strong></div>
+                                {% if task.description %}
+                                    <div style="margin-top:6px;">{{ task.description }}</div>
+                                {% endif %}
+
+                                <form method="POST" action="{{ url_for('intake_update_followup_task_status', intake_id=snapshot.intake_id, task_id=task.id) }}" style="margin-top:10px;">
+                                    {% if csrf_token is defined %}
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
+                                    {% endif %}
+                                    <div class="task-status-row">
+                                        <label>
+                                            Update Status
+                                            <select name="status">
+                                                {% for key, label in task_options.statuses.items() %}
+                                                    <option value="{{ key }}" {% if key == task.status %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+                                        <button type="submit" style="padding: 8px 12px; border-radius: 8px;">Update Task</button>
+                                    </div>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="snapshot-muted">No tasks in this bucket.</p>
                     {% endif %}
-
-                    <form method="POST" action="{{ url_for('intake_update_followup_task_status', intake_id=snapshot.intake_id, task_id=task.id) }}" style="margin-top:10px;">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                        {% if csrf_token is defined %}
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token is callable else csrf_token }}">
-                        {% endif %}
-                        <label>
-                            Update Status
-                            <select name="status">
-                                {% for key, label in task_options.statuses.items() %}
-                                    <option value="{{ key }}" {% if key == task.status %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <button type="submit" style="padding: 8px 12px; border-radius: 8px; margin-top:8px;">Update Task</button>
-                    </form>
-                </div>
+                </details>
             {% endfor %}
         {% else %}
             <p class="snapshot-muted">No follow-up tasks yet.</p>
         {% endif %}
     </div>
-
 
     <div class="staff-notes-card no-print">
         <h2 style="margin-top:0;">Internal Review Notes</h2>

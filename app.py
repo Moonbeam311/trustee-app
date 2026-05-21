@@ -13,6 +13,7 @@ from services.services_intake import list_intake_dashboard_with_controls, get_in
 from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
 from services.services_intake import create_intake_review_note, list_intake_review_notes, list_intake_dashboard_with_review_notes, get_review_note_form_options, ensure_intake_review_note_tables
 from services.services_intake import auto_generate_followup_tasks_from_snapshot, list_intake_followup_tasks, create_intake_followup_task, update_intake_followup_task_status, get_followup_task_form_options, list_intake_dashboard_with_tasks, ensure_intake_followup_task_tables
+from services.services_intake import summarize_followup_tasks, group_followup_tasks
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13154,6 +13155,8 @@ def intake_universal_profile(intake_id):
         note_options = get_review_note_form_options()
         tasks = list_intake_followup_tasks(result["intake_id"])
         task_options = get_followup_task_form_options()
+        task_summary = summarize_followup_tasks(tasks)
+        task_groups = group_followup_tasks(tasks)
 
         return render_template(
             "intake/client_snapshot.html",
@@ -13162,7 +13165,9 @@ def intake_universal_profile(intake_id):
             notes=notes,
             note_options=note_options,
             tasks=tasks,
-            task_options=task_options
+            task_options=task_options,
+            task_summary=task_summary,
+            task_groups=task_groups
         )
 
     return render_template(
@@ -13201,6 +13206,8 @@ def intake_saved_snapshot(intake_id):
     note_options = get_review_note_form_options()
     tasks = list_intake_followup_tasks(intake_id)
     task_options = get_followup_task_form_options()
+    task_summary = summarize_followup_tasks(tasks)
+    task_groups = group_followup_tasks(tasks)
 
     return render_template(
         "intake/client_snapshot.html",
@@ -13209,7 +13216,9 @@ def intake_saved_snapshot(intake_id):
         notes=notes,
         note_options=note_options,
         tasks=tasks,
-        task_options=task_options
+        task_options=task_options,
+        task_summary=task_summary,
+        task_groups=task_groups
     )
 
 
