@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container" style="max-width: 900px; margin: 30px auto;">
+    <h1>Intake Path Selected</h1>
+
+    <div style="padding: 18px; border: 1px solid #ddd; border-radius: 10px; margin: 20px 0;">
+        <p><strong>Intake ID:</strong> {{ session_data.intake_id }}</p>
+        <p><strong>Selected Path:</strong> {{ session_data.intake_lane.replace('_', ' ').title() }}</p>
+        <p><strong>User Posture:</strong> {{ session_data.user_posture.replace('_', ' ').title() }}</p>
+        <p><strong>Depth:</strong> {{ session_data.default_depth.replace('_', ' ').title() }}</p>
+        <p><strong>Risk Posture:</strong> {{ session_data.risk_posture.title() }}</p>
+        <p><strong>Next Screen:</strong> {{ session_data.next_screen.replace('_', ' ').title() }}</p>
+    </div>
+
+    {% if session_data.professional_review_recommended %}
+        <div style="padding: 16px; border: 1px solid #b36b00; border-radius: 10px; margin: 20px 0;">
+            <strong>Professional Review Recommended:</strong>
+            This path may involve urgency, conflict, deadlines, court, tax, creditor, death, incapacity,
+            or other elevated concerns. The system should slow down and avoid final document execution
+            until appropriate review occurs.
+        </div>
+    {% endif %}
+
+    <div style="padding: 16px; border: 1px solid #ccc; border-radius: 10px; margin: 20px 0;">
+        <strong>Orientation:</strong>
+        This first intake creates a starting map. It does not finalize legal, tax, or asset-transfer decisions.
+        More detailed review may be needed before documents are signed, assets are transferred, or fiduciary
+        actions are taken.
+    </div>
+
+    <p>
+        INT-1A is now active. The next build step is INT-1B: Intake Translation Map.
+    </p>
+
+    <a href="{{ url_for('intake_start') }}">Start another intake</a>
+</div>
+
+{% endblock %}

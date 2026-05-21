@@ -5,6 +5,7 @@ import base64
 import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
+from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13091,3 +13092,29 @@ if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
 app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
+
+
+# -------------------------------------------------------------------
+# INT-1A — Intake Lane Map
+# -------------------------------------------------------------------
+@app.route("/intake", methods=["GET", "POST"])
+@app.route("/intake/start", methods=["GET", "POST"])
+def intake_start():
+    ensure_intake_tables()
+    lanes = get_intake_lanes()
+
+    if request.method == "POST":
+        lane_key = request.form.get("intake_lane")
+        if not lane_key or lane_key not in lanes:
+            flash("Please select a valid intake path.", "warning")
+            return render_template("intake/start.html", lanes=lanes)
+
+        session_data = create_intake_session(
+            lane_key=lane_key,
+            created_by=session.get("username") if "session" in globals() else None
+        )
+
+        return render_template("intake/orientation.html", session_data=session_data)
+
+    return render_template("intake/start.html", lanes=lanes)
+

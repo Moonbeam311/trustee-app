@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container" style="max-width: 980px; margin: 30px auto;">
+    <h1>Initial Intake</h1>
+    <p style="font-size: 1.05rem; line-height: 1.6;">
+        This first step helps classify the right intake path before deeper questions begin.
+        The goal is to keep the first session focused, calm, and useful.
+    </p>
+
+    <div style="padding: 16px; border: 1px solid #ddd; border-radius: 10px; margin: 20px 0;">
+        <strong>Estimated time:</strong> 15–20 minutes for the initial intake.<br>
+        This does not complete the full planning, review, funding, or administration process.
+    </div>
+
+    <form method="POST" action="{{ url_for('intake_start') }}">
+        <h2>What brings you here today?</h2>
+
+        {% for key, lane in lanes.items() %}
+            <label style="display:block; padding:14px; margin:12px 0; border:1px solid #ccc; border-radius:10px; cursor:pointer;">
+                <input type="radio" name="intake_lane" value="{{ key }}" required>
+                <strong>{{ lane.label }}</strong>
+                <br>
+                <span style="font-size:0.9rem; opacity:0.8;">
+                    Path: {{ key.replace('_', ' ').title() }}
+                </span>
+            </label>
+        {% endfor %}
+
+        <button type="submit" style="margin-top: 18px; padding: 12px 20px; border-radius: 8px;">
+            Continue
+        </button>
+    </form>
+</div>
+
+{% endblock %}
