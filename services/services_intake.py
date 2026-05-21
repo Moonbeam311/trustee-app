@@ -6660,3 +6660,232 @@ def generate_nonfinal_draft_docx(intake_id, workflow_key, document_key, created_
 
     return str(out_path)
 
+
+# -------------------------------------------------------------------
+# INT-2J — Review Gate Resolution Controls
+# -------------------------------------------------------------------
+
+VALID_REVIEW_GATE_ACTIONS = {
+    "missing_answers_resolved": "Missing Answers Resolved",
+    "open_issues_reviewed": "Open Issues Reviewed",
+    "professional_review_required": "Professional Review Required",
+    "approved_for_final_draft_prep": "Approved for Final-Draft Preparation",
+    "blocked_hold": "Blocked / Hold",
+}
+
+VALID_REVIEW_GATE_STATUSES = {
+    "blocked": "Blocked",
+    "review_required": "Review Required",
+    "professional_review_required": "Professional Review Required",
+    "approved_for_final_draft_prep": "Approved for Final-Draft Preparation",
+    "hold": "Hold",
+    "ready_for_review": "Ready for Review",
+}
+
+
+def ensure_review_gate_resolution_tables():
+    ensure_review_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_review_gate_actions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            gate_name TEXT DEFAULT 'non_final_draft_review_gate',
+            firm_id TEXT DEFAULT 'FIRM-001',
+            action_key TEXT,
+            action_label TEXT,
+            resulting_status TEXT,
+            note TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def get_review_gate_record(intake_id, workflow_key, document_key, gate_name="non_final_draft_review_gate"):
+    ensure_review_gate_resolution_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, workflow_key, document_key, gate_name,
+               gate_status, gate_reason, missing_answer_count,
+               open_issue_count, open_task_count, document_status,
+               created_at, updated_at, updated_by, notes
+        FROM intake_review_gate_ledger
+        WHERE intake_id = ?
+          AND workflow_key = ?
+          AND document_key = ?
+          AND gate_name = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key, gate_name))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "intake_id": row[0],
+        "workflow_key": row[1],
+        "document_key": row[2],
+        "gate_name": row[3],
+        "gate_status": row[4],
+        "gate_status_label": VALID_REVIEW_GATE_STATUSES.get(row[4], row[4]),
+        "gate_reason": row[5],
+        "missing_answer_count": row[6],
+        "open_issue_count": row[7],
+        "open_task_count": row[8],
+        "document_status": row[9],
+        "created_at": format_intake_timestamp(row[10]) if row[10] else "",
+        "updated_at": format_intake_timestamp(row[11]) if row[11] else "",
+        "updated_by": row[12] or "—",
+        "notes": row[13] or "",
+    }
+
+
+def list_review_gate_actions(intake_id, workflow_key, document_key, gate_name="non_final_draft_review_gate"):
+    ensure_review_gate_resolution_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT action_key, action_label, resulting_status, note, created_at, created_by
+        FROM intake_review_gate_actions
+        WHERE intake_id = ?
+          AND workflow_key = ?
+          AND document_key = ?
+          AND gate_name = ?
+        ORDER BY id DESC
+    """, (intake_id, workflow_key, document_key, gate_name))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "action_key": row[0],
+            "action_label": row[1],
+            "resulting_status": row[2],
+            "resulting_status_label": VALID_REVIEW_GATE_STATUSES.get(row[2], row[2]),
+            "note": row[3] or "",
+            "created_at": format_intake_timestamp(row[4]) if row[4] else "",
+            "created_by": row[5] or "—",
+        }
+        for row in rows
+    ]
+
+
+def resolve_review_gate_action(
+    intake_id,
+    workflow_key,
+    document_key,
+    action_key,
+    note="",
+    created_by=None,
+    gate_name="non_final_draft_review_gate"
+):
+    ensure_review_gate_resolution_tables()
+
+    if action_key not in VALID_REVIEW_GATE_ACTIONS:
+        raise ValueError("Invalid review gate action.")
+
+    action_label = VALID_REVIEW_GATE_ACTIONS[action_key]
+
+    if action_key == "missing_answers_resolved":
+        resulting_status = "review_required"
+        reason = "Missing answers marked resolved; remaining issues require review."
+    elif action_key == "open_issues_reviewed":
+        resulting_status = "ready_for_review"
+        reason = "Open issues marked reviewed; gate is ready for review."
+    elif action_key == "professional_review_required":
+        resulting_status = "professional_review_required"
+        reason = "Professional review required before final-draft preparation."
+    elif action_key == "approved_for_final_draft_prep":
+        resulting_status = "approved_for_final_draft_prep"
+        reason = "Approved for final-draft preparation. Final execution is still not authorized."
+    elif action_key == "blocked_hold":
+        resulting_status = "hold"
+        reason = "Gate placed on hold / blocked."
+    else:
+        resulting_status = "review_required"
+        reason = "Gate action recorded."
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            INSERT INTO intake_review_gate_actions (
+                intake_id, workflow_key, document_key, gate_name, firm_id,
+                action_key, action_label, resulting_status, note,
+                created_at, created_by
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            intake_id,
+            workflow_key,
+            document_key,
+            gate_name,
+            firm_id,
+            action_key,
+            action_label,
+            resulting_status,
+            note,
+            now,
+            created_by,
+        ))
+
+        cur.execute("""
+            UPDATE intake_review_gate_ledger
+            SET gate_status = ?,
+                gate_reason = ?,
+                updated_at = ?,
+                updated_by = ?,
+                notes = ?
+            WHERE intake_id = ?
+              AND workflow_key = ?
+              AND document_key = ?
+              AND gate_name = ?
+        """, (
+            resulting_status,
+            reason,
+            now,
+            created_by,
+            note,
+            intake_id,
+            workflow_key,
+            document_key,
+            gate_name,
+        ))
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    return {
+        "action_key": action_key,
+        "action_label": action_label,
+        "resulting_status": resulting_status,
+        "resulting_status_label": VALID_REVIEW_GATE_STATUSES.get(resulting_status, resulting_status),
+        "reason": reason,
+        "note": note,
+        "created_at": now,
+        "created_by": created_by,
+    }
+

@@ -29,6 +29,7 @@ from services.services_intake import generate_workflow_draft_packet_docx, upsert
 from services.services_intake import get_document_draft_types_for_workflow, get_document_draft_type, get_document_draft_questions, save_document_draft_answers, build_document_draft_preview, ensure_document_draft_questionnaire_tables
 from services.services_intake import build_nonfinal_draft_document
 from services.services_intake import generate_nonfinal_draft_docx, upsert_review_gate_record, list_review_gate_records
+from services.services_intake import get_review_gate_record, list_review_gate_actions, resolve_review_gate_action, VALID_REVIEW_GATE_ACTIONS
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13710,6 +13711,46 @@ def intake_review_gate_ledger_detail(intake_id):
         records=records,
         intake_id=intake_id
     )
+
+
+@app.route("/intake/<intake_id>/review-gates/<workflow_key>/<document_key>")
+def intake_review_gate_detail(intake_id, workflow_key, document_key):
+    gate = get_review_gate_record(intake_id, workflow_key, document_key)
+
+    if not gate:
+        flash("Review gate record not found.", "warning")
+        return redirect(url_for("intake_review_gate_ledger_detail", intake_id=intake_id))
+
+    actions = list_review_gate_actions(intake_id, workflow_key, document_key)
+
+    return render_template(
+        "intake/review_gate_detail.html",
+        gate=gate,
+        actions=actions,
+        action_options=VALID_REVIEW_GATE_ACTIONS
+    )
+
+
+@app.route("/intake/<intake_id>/review-gates/<workflow_key>/<document_key>/resolve", methods=["POST"])
+def intake_review_gate_resolve(intake_id, workflow_key, document_key):
+    if not validate_csrf_token():
+        flash("Invalid or missing CSRF token.", "warning")
+        return redirect(url_for("intake_review_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    try:
+        resolve_review_gate_action(
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key,
+            action_key=request.form.get("action_key"),
+            note=request.form.get("note") or "",
+            created_by=session.get("username") if "session" in globals() else None,
+        )
+        flash("Review gate action recorded.", "success")
+    except Exception as exc:
+        flash(f"Review gate action could not be recorded: {exc}", "warning")
+
+    return redirect(url_for("intake_review_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
 
 
 if __name__ == "__main__":

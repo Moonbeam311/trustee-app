@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.gate-detail-wrap {
+    max-width: 1050px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.gate-hero,
+.gate-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.gate-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.gate-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.gate-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.gate-actions a,
+.gate-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.gate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.gate-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.gate-card select,
+.gate-card textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.gate-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.gate-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.gate-muted {
+    opacity: 0.75;
+}
+
+@media print {
+    nav,
+    .gate-actions,
+    form {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .gate-detail-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .gate-hero,
+    .gate-card,
+    .gate-list li {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="gate-detail-wrap">
+    <div class="gate-hero">
+        <h1 style="margin-top:0;">Review Gate Detail</h1>
+        <p>
+            Intake ID: <strong>{{ gate.intake_id }}</strong> |
+            Workflow: <strong>{{ gate.workflow_key }}</strong> |
+            Document: <strong>{{ gate.document_key }}</strong>
+        </p>
+
+        <div class="gate-actions">
+            <a href="{{ url_for('intake_review_gate_ledger_detail', intake_id=gate.intake_id) }}">Gate ledger</a>
+            <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Non-final draft</a>
+            <a href="{{ url_for('intake_document_draft_preview', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">Controlled preview</a>
+            <a href="#" onclick="window.print(); return false;">Print gate detail</a>
+        </div>
+    </div>
+
+    <div class="gate-grid">
+        <div class="gate-card">
+            <h3>Status</h3>
+            <span class="gate-pill">{{ gate.gate_status_label }}</span>
+        </div>
+        <div class="gate-card">
+            <h3>Missing Answers</h3>
+            <span class="gate-pill">{{ gate.missing_answer_count }}</span>
+        </div>
+        <div class="gate-card">
+            <h3>Open Issues</h3>
+            <span class="gate-pill">{{ gate.open_issue_count }}</span>
+        </div>
+        <div class="gate-card">
+            <h3>Open Tasks</h3>
+            <span class="gate-pill">{{ gate.open_task_count }}</span>
+        </div>
+    </div>
+
+    <div class="gate-card">
+        <h2>Current Gate Reason</h2>
+        <p>{{ gate.gate_reason }}</p>
+        <p class="gate-muted">Document Status: {{ gate.document_status }}</p>
+        {% if gate.notes %}
+            <p><strong>Latest Note:</strong> {{ gate.notes }}</p>
+        {% endif %}
+    </div>
+
+    <div class="gate-card">
+        <h2>Record Review Gate Action</h2>
+        <form method="POST" action="{{ url_for('intake_review_gate_resolve', intake_id=gate.intake_id, workflow_key=gate.workflow_key, document_key=gate.document_key) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+            <label>
+                Action
+                <select name="action_key" required>
+                    {% for key, label in action_options.items() %}
+                        <option value="{{ key }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <br><br>
+
+            <label>
+                Resolution / Review Note
+                <textarea name="note" rows="5" placeholder="Record what was reviewed, resolved, deferred, or why this gate is approved/held."></textarea>
+            </label>
+
+            <div class="gate-actions">
+                <button type="submit">Save Gate Action</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="gate-card">
+        <h2>Gate Action History</h2>
+        <ul class="gate-list">
+            {% for action in actions %}
+                <li>
+                    <strong>{{ action.action_label }}</strong> —
+                    Result: {{ action.resulting_status_label }} —
+                    {{ action.created_at }} —
+                    By: {{ action.created_by }}
+                    {% if action.note %}
+                        <br>{{ action.note }}
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>No gate actions recorded yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="gate-card">
+        <h2>Important</h2>
+        <p>
+            A review gate action does not execute, sign, file, transfer, or finalize any document.
+            It only records readiness for the next drafting phase.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
