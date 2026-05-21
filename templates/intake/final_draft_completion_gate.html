@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.completion-wrap { max-width: 1180px; margin: 30px auto; padding: 0 16px; }
+.completion-hero, .completion-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+.completion-hero { padding: 24px; margin-bottom: 18px; }
+.completion-card { padding: 18px; margin-bottom: 16px; }
+.completion-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+.completion-actions a, .completion-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+.completion-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.completion-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+.completion-list { list-style: none; padding-left: 0; display: grid; gap: 8px; }
+.completion-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+.completion-card textarea { width: 100%; padding: 10px; border-radius: 10px; }
+.completion-muted { opacity: 0.75; }
+</style>
+
+<div class="completion-wrap">
+    <div class="completion-hero">
+        <h1 style="margin-top:0;">Final-Draft Completion Gate</h1>
+
+        <p>
+            Intake ID: <strong>{{ context.gate.intake_id }}</strong> |
+            Workflow: <strong>{{ context.gate.workflow_key }}</strong> |
+            Document: <strong>{{ context.gate.document_key }}</strong>
+        </p>
+
+        <p class="completion-muted">{{ context.notice }}</p>
+
+        <div class="completion-actions">
+            <a href="{{ url_for('intake_final_draft_section_editor', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Section editor</a>
+            <a href="{{ url_for('intake_final_draft_preview', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Final-draft preview</a>
+            <a href="{{ url_for('intake_final_draft_version_register_detail', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Version register</a>
+            <a href="{{ url_for('intake_final_draft_workspace', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Workspace</a>
+        </div>
+    </div>
+
+    <div class="completion-grid">
+        <div class="completion-card">
+            <h3>Gate Status</h3>
+            <span class="completion-pill">{{ context.gate.gate_status.replace('_', ' ') }}</span>
+        </div>
+        <div class="completion-card">
+            <h3>Ready Sections</h3>
+            <span class="completion-pill">{{ context.gate.ready_sections }} / {{ context.gate.total_sections }}</span>
+        </div>
+        <div class="completion-card">
+            <h3>Not Ready</h3>
+            <span class="completion-pill">{{ context.gate.not_ready_sections }}</span>
+        </div>
+        <div class="completion-card">
+            <h3>Latest Version</h3>
+            <span class="completion-pill">{{ context.gate.latest_version_label }}</span>
+        </div>
+    </div>
+
+    <div class="completion-card">
+        <h2>Gate Reason</h2>
+        <p>{{ context.gate.gate_reason }}</p>
+    </div>
+
+    <div class="completion-card">
+        <h2>Section Readiness</h2>
+        <ul class="completion-list">
+            {% for section in context.editor.sections %}
+                <li>
+                    {{ "☑" if section.section_status == "ready_for_final_preview" else "☐" }}
+                    <strong>{{ section.section_order }}. {{ section.section_heading }}</strong><br>
+                    Status: {{ section.section_status_label }}
+                </li>
+            {% else %}
+                <li>No sections found.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    {% if context.already_completed %}
+        <div class="completion-card">
+            <h2>Preparation Completion Recorded</h2>
+            <p><strong>Completed:</strong> {{ context.gate.completed_at }} — By: {{ context.gate.completed_by }}</p>
+            <p><strong>Completion Note:</strong> {{ context.gate.completion_note }}</p>
+        </div>
+    {% elif context.can_complete %}
+        <div class="completion-card">
+            <h2>Record Preparation Completion</h2>
+            <form method="POST" action="{{ url_for('intake_final_draft_completion_gate', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <label>
+                    <strong>Required Completion Note</strong>
+                    <textarea name="completion_note" rows="5" required placeholder="Record why final-draft preparation is complete only."></textarea>
+                </label>
+                <div class="completion-actions">
+                    <button type="submit">Record Final-Draft Preparation Completion</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="completion-card">
+            <h2>Completion Not Available</h2>
+            <p>
+                The completion gate is not ready. All final-draft sections must be marked Ready for Final Preview and a versioned preparation export must exist.
+            </p>
+        </div>
+    {% endif %}
+
+    <div class="completion-card">
+        <h2>Completion History</h2>
+        <ul class="completion-list">
+            {% for action in context.actions %}
+                <li>
+                    <strong>{{ action.action_status.replace('_', ' ') }}</strong><br>
+                    {{ action.created_at }} — By: {{ action.created_by }}<br>
+                    {{ action.note }}
+                </li>
+            {% else %}
+                <li>No completion actions recorded yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="completion-card">
+        <h2>Important Boundary</h2>
+        <p>
+            This page records final-draft preparation completion only. It does not create a signed, filed,
+            executed, transferred, or legally final document.
+        </p>
+    </div>
+</div>
+
+{% endblock %}

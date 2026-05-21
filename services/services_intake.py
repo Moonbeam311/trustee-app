@@ -8576,3 +8576,360 @@ def build_final_draft_version_register_context(intake_id=None, workflow_key=None
         "notice": "Version records track preparation exports only. They do not prove signing, filing, execution, transfer, or final legal use.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2R — Final-Draft Completion Gate
+# -------------------------------------------------------------------
+
+def ensure_final_draft_completion_gate_tables():
+    ensure_final_draft_version_register_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_completion_gate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            gate_status TEXT DEFAULT 'blocked',
+            gate_reason TEXT,
+            total_sections INTEGER DEFAULT 0,
+            ready_sections INTEGER DEFAULT 0,
+            not_ready_sections INTEGER DEFAULT 0,
+            latest_version_label TEXT,
+            completion_note TEXT,
+            completed_at TEXT,
+            completed_by TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            updated_by TEXT,
+            UNIQUE(intake_id, workflow_key, document_key)
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_completion_actions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            action_status TEXT,
+            note TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def evaluate_final_draft_completion_gate(intake_id, workflow_key, document_key):
+    ensure_final_draft_completion_gate_tables()
+
+    editor = build_final_draft_section_editor_context(intake_id, workflow_key, document_key)
+    if not editor or not editor.get("access_granted"):
+        return None
+
+    sections = editor.get("sections", []) or []
+    total_sections = len(sections)
+    ready_sections = len([s for s in sections if s.get("section_status") == "ready_for_final_preview"])
+    not_ready_sections = total_sections - ready_sections
+
+    versions_context = build_final_draft_version_register_context(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+    )
+
+    latest_version_label = (
+        versions_context.get("summary", {}).get("latest_version", "—")
+        if versions_context else "—"
+    )
+
+    if total_sections == 0:
+        gate_status = "blocked"
+        gate_reason = "No final-draft sections are available for completion review."
+    elif not_ready_sections > 0:
+        gate_status = "blocked"
+        gate_reason = f"{not_ready_sections} final-draft section(s) are not marked Ready for Final Preview."
+    elif latest_version_label == "—":
+        gate_status = "ready_for_export"
+        gate_reason = "All sections are ready, but no versioned final-draft preview export has been recorded."
+    else:
+        gate_status = "ready_for_completion"
+        gate_reason = "All final-draft sections are ready and a versioned preparation export exists. Completion can be recorded for preparation only."
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "gate_status": gate_status,
+        "gate_reason": gate_reason,
+        "total_sections": total_sections,
+        "ready_sections": ready_sections,
+        "not_ready_sections": not_ready_sections,
+        "latest_version_label": latest_version_label,
+        "sections": sections,
+        "versions_context": versions_context,
+    }
+
+
+def get_final_draft_completion_gate(intake_id, workflow_key, document_key):
+    ensure_final_draft_completion_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, workflow_key, document_key,
+               gate_status, gate_reason,
+               total_sections, ready_sections, not_ready_sections,
+               latest_version_label, completion_note, completed_at, completed_by,
+               created_at, updated_at, updated_by
+        FROM intake_final_draft_completion_gate
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "intake_id": row[0],
+        "workflow_key": row[1],
+        "document_key": row[2],
+        "gate_status": row[3],
+        "gate_reason": row[4],
+        "total_sections": int(row[5] or 0),
+        "ready_sections": int(row[6] or 0),
+        "not_ready_sections": int(row[7] or 0),
+        "latest_version_label": row[8] or "—",
+        "completion_note": row[9] or "",
+        "completed_at": format_intake_timestamp(row[10]) if row[10] else "",
+        "completed_by": row[11] or "—",
+        "created_at": format_intake_timestamp(row[12]) if row[12] else "",
+        "updated_at": format_intake_timestamp(row[13]) if row[13] else "",
+        "updated_by": row[14] or "—",
+    }
+
+
+def upsert_final_draft_completion_gate(intake_id, workflow_key, document_key, updated_by=None):
+    ensure_final_draft_completion_gate_tables()
+
+    evaluation = evaluate_final_draft_completion_gate(intake_id, workflow_key, document_key)
+    if not evaluation:
+        return None
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT gate_status, completion_note, completed_at, completed_by
+        FROM intake_final_draft_completion_gate
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key))
+    existing = cur.fetchone()
+
+    existing_status = existing[0] if existing else None
+    completion_note = existing[1] if existing else ""
+    completed_at = existing[2] if existing else None
+    completed_by = existing[3] if existing else None
+
+    if existing_status == "completed_preparation" and evaluation["gate_status"] == "ready_for_completion":
+        gate_status = "completed_preparation"
+        gate_reason = "Final-draft preparation completion has been recorded. This still does not authorize signing, filing, execution, transfer, or final legal use."
+    else:
+        gate_status = evaluation["gate_status"]
+        gate_reason = evaluation["gate_reason"]
+        if gate_status != "ready_for_completion":
+            completed_at = None
+            completed_by = None
+            completion_note = ""
+
+    cur.execute("""
+        INSERT INTO intake_final_draft_completion_gate (
+            intake_id, workflow_key, document_key, firm_id,
+            gate_status, gate_reason,
+            total_sections, ready_sections, not_ready_sections,
+            latest_version_label, completion_note, completed_at, completed_by,
+            created_at, updated_at, updated_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(intake_id, workflow_key, document_key) DO UPDATE SET
+            gate_status = excluded.gate_status,
+            gate_reason = excluded.gate_reason,
+            total_sections = excluded.total_sections,
+            ready_sections = excluded.ready_sections,
+            not_ready_sections = excluded.not_ready_sections,
+            latest_version_label = excluded.latest_version_label,
+            completion_note = excluded.completion_note,
+            completed_at = excluded.completed_at,
+            completed_by = excluded.completed_by,
+            updated_at = excluded.updated_at,
+            updated_by = excluded.updated_by
+    """, (
+        intake_id,
+        workflow_key,
+        document_key,
+        firm_id,
+        gate_status,
+        gate_reason,
+        evaluation["total_sections"],
+        evaluation["ready_sections"],
+        evaluation["not_ready_sections"],
+        evaluation["latest_version_label"],
+        completion_note,
+        completed_at,
+        completed_by,
+        now,
+        now,
+        updated_by,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return get_final_draft_completion_gate(intake_id, workflow_key, document_key)
+
+
+def list_final_draft_completion_actions(intake_id, workflow_key, document_key):
+    ensure_final_draft_completion_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT action_status, note, created_at, created_by
+        FROM intake_final_draft_completion_actions
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        ORDER BY id DESC
+    """, (intake_id, workflow_key, document_key))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "action_status": row[0],
+            "note": row[1] or "",
+            "created_at": format_intake_timestamp(row[2]) if row[2] else "",
+            "created_by": row[3] or "—",
+        }
+        for row in rows
+    ]
+
+
+def record_final_draft_completion(intake_id, workflow_key, document_key, completion_note, completed_by=None):
+    ensure_final_draft_completion_gate_tables()
+
+    completion_note = (completion_note or "").strip()
+    if not completion_note:
+        raise ValueError("Completion note is required.")
+
+    gate = upsert_final_draft_completion_gate(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=completed_by,
+    )
+
+    if not gate:
+        raise ValueError("Completion gate could not be evaluated.")
+
+    if gate.get("gate_status") != "ready_for_completion":
+        raise ValueError("Completion gate is not ready. All sections must be ready and a versioned export must exist.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            UPDATE intake_final_draft_completion_gate
+            SET gate_status = ?,
+                gate_reason = ?,
+                completion_note = ?,
+                completed_at = ?,
+                completed_by = ?,
+                updated_at = ?,
+                updated_by = ?
+            WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        """, (
+            "completed_preparation",
+            "Final-draft preparation completion has been recorded. This still does not authorize signing, filing, execution, transfer, or final legal use.",
+            completion_note,
+            now,
+            completed_by,
+            now,
+            completed_by,
+            intake_id,
+            workflow_key,
+            document_key,
+        ))
+
+        cur.execute("""
+            INSERT INTO intake_final_draft_completion_actions (
+                intake_id, workflow_key, document_key, firm_id,
+                action_status, note, created_at, created_by
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            intake_id,
+            workflow_key,
+            document_key,
+            firm_id,
+            "completed_preparation",
+            completion_note,
+            now,
+            completed_by,
+        ))
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    return get_final_draft_completion_gate(intake_id, workflow_key, document_key)
+
+
+def build_final_draft_completion_gate_context(intake_id, workflow_key, document_key):
+    gate = upsert_final_draft_completion_gate(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=None,
+    )
+
+    if not gate:
+        return None
+
+    editor = build_final_draft_section_editor_context(intake_id, workflow_key, document_key)
+    preview = build_final_draft_preview_context(intake_id, workflow_key, document_key)
+    versions = build_final_draft_version_register_context(intake_id, workflow_key, document_key)
+    actions = list_final_draft_completion_actions(intake_id, workflow_key, document_key)
+
+    return {
+        "gate": gate,
+        "editor": editor,
+        "preview": preview,
+        "versions": versions,
+        "actions": actions,
+        "can_complete": gate.get("gate_status") == "ready_for_completion",
+        "already_completed": gate.get("gate_status") == "completed_preparation",
+        "notice": "This completion gate records preparation completion only. It does not authorize signing, filing, execution, transfer, or final legal use.",
+    }
+

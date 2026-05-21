@@ -37,6 +37,7 @@ from services.services_intake import build_final_draft_workspace_context
 from services.services_intake import build_final_draft_section_editor_context, get_final_draft_section, update_final_draft_section, build_final_draft_preview_context
 from services.services_intake import generate_final_draft_preview_docx
 from services.services_intake import build_final_draft_version_register_context
+from services.services_intake import build_final_draft_completion_gate_context, record_final_draft_completion
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -14048,6 +14049,39 @@ def intake_final_draft_version_register_detail(intake_id, workflow_key, document
     )
     return render_template(
         "intake/final_draft_version_register.html",
+        context=context
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-completion-gate", methods=["GET", "POST"])
+def intake_final_draft_completion_gate(intake_id, workflow_key, document_key):
+    context = build_final_draft_completion_gate_context(intake_id, workflow_key, document_key)
+
+    if not context:
+        flash("Final-draft completion gate could not be built.", "warning")
+        return redirect(url_for("intake_final_draft_section_editor", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return redirect(url_for("intake_final_draft_completion_gate", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+        try:
+            record_final_draft_completion(
+                intake_id=intake_id,
+                workflow_key=workflow_key,
+                document_key=document_key,
+                completion_note=request.form.get("completion_note") or "",
+                completed_by=session.get("username") if "session" in globals() else None,
+            )
+            flash("Final-draft preparation completion recorded.", "success")
+        except Exception as exc:
+            flash(f"Completion could not be recorded: {exc}", "warning")
+
+        return redirect(url_for("intake_final_draft_completion_gate", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/final_draft_completion_gate.html",
         context=context
     )
 
