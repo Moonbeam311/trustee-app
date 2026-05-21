@@ -7741,6 +7741,21 @@ def build_final_draft_admin_approval_context(intake_id, workflow_key, document_k
         document_key=document_key,
     )
 
+    # INT-2M persistence repair:
+    # If an approval ledger record exists, the display/context must reflect approval,
+    # even after the gate is re-evaluated.
+    if approvals:
+        latest = approvals[0]
+        gate["gate_status"] = "approved_for_final_draft_preparation"
+        gate["gate_reason"] = (
+            "Approved for final-draft preparation. This still does not authorize "
+            "signing, filing, execution, transfer, or legal finalization."
+        )
+        gate["admin_approved"] = 1
+        gate["approval_note"] = latest.get("approval_note", "")
+        gate["updated_at"] = latest.get("created_at", gate.get("updated_at", ""))
+        gate["updated_by"] = latest.get("created_by", gate.get("updated_by", "—"))
+
     document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
 
     can_approve = (
@@ -7749,6 +7764,7 @@ def build_final_draft_admin_approval_context(intake_id, workflow_key, document_k
             "approved_for_final_draft_preparation",
         }
         and not gate.get("admin_approved")
+        and not approvals
     )
 
     return {
@@ -7756,7 +7772,6 @@ def build_final_draft_admin_approval_context(intake_id, workflow_key, document_k
         "document": document,
         "approvals": approvals,
         "can_approve": can_approve,
-        "already_approved": bool(gate.get("admin_approved")),
+        "already_approved": bool(gate.get("admin_approved") or approvals),
         "notice": "Admin approval only authorizes final-draft preparation. It does not authorize signing, filing, execution, transfer, or final legal use.",
     }
-
