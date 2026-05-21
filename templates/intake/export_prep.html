@@ -56,6 +56,32 @@
         </ul>
     </div>
 
+
+    <div class="export-card">
+        <h2>Export History</h2>
+
+        {% if export_logs %}
+            <ul>
+                {% for log in export_logs %}
+                    <li>
+                        <strong>{{ log.export_type.upper() }}</strong> —
+                        {{ log.export_status.title() }} —
+                        {{ log.created_at }} —
+                        By: {{ log.created_by }}<br>
+                        {% if log.file_path %}
+                            <span>{{ log.file_path }}</span><br>
+                        {% endif %}
+                        {% if log.message %}
+                            <span>{{ log.message }}</span>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No export attempts logged yet.</p>
+        {% endif %}
+    </div>
+
     <div class="export-actions">
         <a href="{{ url_for('intake_saved_snapshot', intake_id=export_data.intake_id) }}">Back to snapshot</a>
         <a href="{{ url_for('intake_followup_packet', intake_id=export_data.intake_id) }}">Follow-up packet</a>

@@ -26,3 +26,6 @@ data/backups/
 backups/
 *.sqlite
 *.sqlite3
+exports/
+*.pdf
+~$*.docx

@@ -16,6 +16,7 @@ from services.services_intake import auto_generate_followup_tasks_from_snapshot,
 from services.services_intake import summarize_followup_tasks, group_followup_tasks
 from services.services_intake import build_intake_followup_packet, get_packet_readiness_label
 from services.services_intake import generate_followup_packet_docx, generate_followup_packet_pdf
+from services.services_intake import generate_followup_packet_docx_logged, generate_followup_packet_pdf_logged, list_intake_export_logs, ensure_intake_export_log_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13246,7 +13247,12 @@ def intake_export_prep(intake_id):
         flash("Snapshot export preparation could not find that intake.", "warning")
         return redirect(url_for("intake_dashboard"))
 
-    return render_template("intake/export_prep.html", export_data=export_data)
+    export_logs = list_intake_export_logs(intake_id)
+    return render_template(
+        "intake/export_prep.html",
+        export_data=export_data,
+        export_logs=export_logs
+    )
 
 
 @app.route("/intake/<intake_id>/notes/add", methods=["POST"])
@@ -13321,7 +13327,10 @@ def intake_followup_packet(intake_id):
 
 @app.route("/intake/<intake_id>/packet/docx")
 def intake_followup_packet_docx(intake_id):
-    path = generate_followup_packet_docx(intake_id)
+    path = generate_followup_packet_docx_logged(
+        intake_id,
+        created_by=session.get("username") if "session" in globals() else None
+    )
 
     if not path:
         flash("DOCX packet could not be generated.", "warning")
@@ -13332,7 +13341,10 @@ def intake_followup_packet_docx(intake_id):
 
 @app.route("/intake/<intake_id>/packet/pdf")
 def intake_followup_packet_pdf(intake_id):
-    path = generate_followup_packet_pdf(intake_id)
+    path = generate_followup_packet_pdf_logged(
+        intake_id,
+        created_by=session.get("username") if "session" in globals() else None
+    )
 
     if not path:
         flash(

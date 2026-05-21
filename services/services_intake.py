@@ -2904,3 +2904,173 @@ def generate_followup_packet_pdf(intake_id):
             return None
 
     return None
+
+
+# -------------------------------------------------------------------
+# INT-1M — Export Folder Gitignore + Export Audit Record
+# -------------------------------------------------------------------
+
+def ensure_intake_export_log_tables():
+    ensure_intake_snapshot_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_export_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            export_type TEXT,
+            export_status TEXT,
+            file_path TEXT,
+            message TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def log_intake_export(intake_id, export_type, export_status, file_path=None, message=None, created_by=None):
+    ensure_intake_export_log_tables()
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_export_logs (
+            intake_id, firm_id, export_type, export_status,
+            file_path, message, created_at, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        firm_id,
+        export_type,
+        export_status,
+        file_path,
+        message,
+        now,
+        created_by,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "export_type": export_type,
+        "export_status": export_status,
+        "file_path": file_path,
+        "message": message,
+        "created_at": now,
+        "created_by": created_by,
+    }
+
+
+def list_intake_export_logs(intake_id):
+    ensure_intake_export_log_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT export_type, export_status, file_path, message, created_at, created_by
+        FROM intake_export_logs
+        WHERE intake_id = ?
+        ORDER BY id DESC
+        LIMIT 25
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "export_type": row[0],
+            "export_status": row[1],
+            "file_path": row[2],
+            "message": row[3],
+            "created_at": format_intake_timestamp(row[4]),
+            "created_by": row[5] or "—",
+        }
+        for row in rows
+    ]
+
+
+def generate_followup_packet_docx_logged(intake_id, created_by=None):
+    try:
+        path = generate_followup_packet_docx(intake_id)
+        if path:
+            log_intake_export(
+                intake_id=intake_id,
+                export_type="docx",
+                export_status="success",
+                file_path=path,
+                message="DOCX follow-up packet generated successfully.",
+                created_by=created_by,
+            )
+            return path
+
+        log_intake_export(
+            intake_id=intake_id,
+            export_type="docx",
+            export_status="failed",
+            file_path=None,
+            message="DOCX follow-up packet could not be generated.",
+            created_by=created_by,
+        )
+        return None
+
+    except Exception as exc:
+        log_intake_export(
+            intake_id=intake_id,
+            export_type="docx",
+            export_status="error",
+            file_path=None,
+            message=str(exc),
+            created_by=created_by,
+        )
+        return None
+
+
+def generate_followup_packet_pdf_logged(intake_id, created_by=None):
+    try:
+        path = generate_followup_packet_pdf(intake_id)
+        if path:
+            log_intake_export(
+                intake_id=intake_id,
+                export_type="pdf",
+                export_status="success",
+                file_path=path,
+                message="PDF follow-up packet generated successfully.",
+                created_by=created_by,
+            )
+            return path
+
+        log_intake_export(
+            intake_id=intake_id,
+            export_type="pdf",
+            export_status="failed",
+            file_path=None,
+            message="Automatic PDF generation unavailable. Use Print packet → Save as PDF or install LibreOffice / pywin32 + Word.",
+            created_by=created_by,
+        )
+        return None
+
+    except Exception as exc:
+        log_intake_export(
+            intake_id=intake_id,
+            export_type="pdf",
+            export_status="error",
+            file_path=None,
+            message=str(exc),
+            created_by=created_by,
+        )
+        return None
+
