@@ -13521,6 +13521,7 @@ def intake_workflow_bridge(intake_id, workflow_key):
         return render_template(
             "intake/workflow_bridge.html",
             launch=context.get("launch"),
+            definition=context.get("launch"),
             answers=context.get("answers") or {},
             intake_id=intake_id,
             workflow_key=workflow_key,
