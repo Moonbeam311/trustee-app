@@ -1992,3 +1992,198 @@ def prepare_snapshot_export_metadata(intake_id):
         "note": "Export preparation is ready. PDF/DOCX generation is intentionally not activated in INT-1G.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-1H — Intake Review Notes + Internal Staff Comments
+# -------------------------------------------------------------------
+
+VALID_REVIEW_NOTE_TYPES = {
+    "general": "General Note",
+    "risk": "Risk / Review Concern",
+    "document": "Document Follow-Up",
+    "client_followup": "Client Follow-Up",
+    "professional_review": "Professional Review",
+    "admin": "Administrative Note",
+}
+
+VALID_REVIEW_PRIORITIES = {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent",
+}
+
+VALID_FOLLOWUP_STATUSES = {
+    "open": "Open",
+    "pending_client": "Pending Client",
+    "pending_review": "Pending Review",
+    "resolved": "Resolved",
+}
+
+
+def ensure_intake_review_note_tables():
+    ensure_intake_snapshot_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_review_notes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            note_type TEXT DEFAULT 'general',
+            priority TEXT DEFAULT 'normal',
+            followup_status TEXT DEFAULT 'open',
+            note_body TEXT NOT NULL,
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def create_intake_review_note(
+    intake_id,
+    note_body,
+    note_type="general",
+    priority="normal",
+    followup_status="open",
+    created_by=None
+):
+    ensure_intake_review_note_tables()
+
+    note_body = (note_body or "").strip()
+    if not note_body:
+        raise ValueError("Review note cannot be blank.")
+
+    if note_type not in VALID_REVIEW_NOTE_TYPES:
+        note_type = "general"
+
+    if priority not in VALID_REVIEW_PRIORITIES:
+        priority = "normal"
+
+    if followup_status not in VALID_FOLLOWUP_STATUSES:
+        followup_status = "open"
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_review_notes (
+            intake_id, firm_id, note_type, priority, followup_status,
+            note_body, created_at, updated_at, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        firm_id,
+        note_type,
+        priority,
+        followup_status,
+        note_body,
+        now,
+        now,
+        created_by,
+    ))
+
+    cur.execute("""
+        UPDATE intake_sessions
+        SET updated_at = ?
+        WHERE intake_id = ?
+    """, (now, intake_id))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "intake_id": intake_id,
+        "note_type": note_type,
+        "priority": priority,
+        "followup_status": followup_status,
+        "note_body": note_body,
+        "created_at": now,
+        "created_by": created_by,
+    }
+
+
+def list_intake_review_notes(intake_id):
+    ensure_intake_review_note_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, intake_id, note_type, priority, followup_status,
+               note_body, created_at, updated_at, created_by
+        FROM intake_review_notes
+        WHERE intake_id = ?
+        ORDER BY id DESC
+    """, (intake_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": row[0],
+            "intake_id": row[1],
+            "note_type": row[2],
+            "note_type_label": VALID_REVIEW_NOTE_TYPES.get(row[2], row[2]),
+            "priority": row[3],
+            "priority_label": VALID_REVIEW_PRIORITIES.get(row[3], row[3]),
+            "followup_status": row[4],
+            "followup_status_label": VALID_FOLLOWUP_STATUSES.get(row[4], row[4]),
+            "note_body": row[5],
+            "created_at": format_intake_timestamp(row[6]),
+            "updated_at": format_intake_timestamp(row[7]),
+            "created_by": row[8] or "—",
+        }
+        for row in rows
+    ]
+
+
+def get_intake_review_note_counts():
+    ensure_intake_review_note_tables()
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, COUNT(*) AS note_count
+        FROM intake_review_notes
+        WHERE firm_id = ?
+        GROUP BY intake_id
+    """, (firm_id,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return {row[0]: row[1] for row in rows}
+
+
+def list_intake_dashboard_with_review_notes(limit=100, status_filter="all"):
+    items = list_intake_dashboard_polished(limit=limit, status_filter=status_filter)
+    counts = get_intake_review_note_counts()
+
+    for item in items:
+        count = counts.get(item["intake_id"], 0)
+        item["review_note_count"] = count
+        item["has_review_notes"] = count > 0
+
+    return items
+
+
+def get_review_note_form_options():
+    return {
+        "note_types": VALID_REVIEW_NOTE_TYPES,
+        "priorities": VALID_REVIEW_PRIORITIES,
+        "followup_statuses": VALID_FOLLOWUP_STATUSES,
+    }
+
