@@ -31,6 +31,7 @@ from services.services_intake import build_nonfinal_draft_document
 from services.services_intake import generate_nonfinal_draft_docx, upsert_review_gate_record, list_review_gate_records
 from services.services_intake import get_review_gate_record, list_review_gate_actions, resolve_review_gate_action, VALID_REVIEW_GATE_ACTIONS
 from services.services_intake import upsert_final_draft_prep_gate, get_final_draft_prep_gate, approve_final_draft_prep_gate, list_final_draft_prep_gates
+from services.services_intake import build_final_draft_resolution_context, record_final_draft_resolution_actions, upsert_final_draft_prep_gate_with_resolutions
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13778,7 +13779,7 @@ def intake_final_draft_gate_ledger():
 
 @app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-gate")
 def intake_final_draft_gate_detail(intake_id, workflow_key, document_key):
-    gate = upsert_final_draft_prep_gate(
+    gate = upsert_final_draft_prep_gate_with_resolutions(
         intake_id=intake_id,
         workflow_key=workflow_key,
         document_key=document_key,
@@ -13816,6 +13817,51 @@ def intake_final_draft_gate_approve(intake_id, workflow_key, document_key):
         flash(f"Final-draft preparation gate could not be approved: {exc}", "warning")
 
     return redirect(url_for("intake_final_draft_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-gate/resolve", methods=["GET", "POST"])
+def intake_final_draft_gate_resolution(intake_id, workflow_key, document_key):
+    context = build_final_draft_resolution_context(intake_id, workflow_key, document_key)
+
+    if not context:
+        flash("Final-draft gate resolution context could not be built.", "warning")
+        return redirect(url_for("intake_final_draft_gate_detail", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return redirect(url_for("intake_final_draft_gate_resolution", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+        action_keys = request.form.getlist("action_keys")
+        note = request.form.get("note") or ""
+
+        try:
+            record_final_draft_resolution_actions(
+                intake_id=intake_id,
+                workflow_key=workflow_key,
+                document_key=document_key,
+                action_keys=action_keys,
+                note=note,
+                created_by=session.get("username") if "session" in globals() else None,
+            )
+
+            upsert_final_draft_prep_gate_with_resolutions(
+                intake_id=intake_id,
+                workflow_key=workflow_key,
+                document_key=document_key,
+                updated_by=session.get("username") if "session" in globals() else None,
+            )
+
+            flash("Final-draft gate resolution actions recorded.", "success")
+        except Exception as exc:
+            flash(f"Final-draft gate resolution could not be recorded: {exc}", "warning")
+
+        return redirect(url_for("intake_final_draft_gate_resolution", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/final_draft_gate_resolution.html",
+        context=context
+    )
 
 
 if __name__ == "__main__":

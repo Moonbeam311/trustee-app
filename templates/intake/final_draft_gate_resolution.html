@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.resolution-wrap {
+    max-width: 1120px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.resolution-hero,
+.resolution-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.resolution-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.resolution-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.resolution-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.resolution-actions a,
+.resolution-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.resolution-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.resolution-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.resolution-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.resolution-list li,
+.resolution-option {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.resolution-options {
+    display: grid;
+    gap: 8px;
+}
+
+.resolution-card textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.resolution-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="resolution-wrap">
+    <div class="resolution-hero">
+        <h1 style="margin-top:0;">Final-Draft Gate Resolution Workflow</h1>
+        <p>
+            Intake ID: <strong>{{ context.gate.intake_id }}</strong> |
+            Workflow: <strong>{{ context.gate.workflow_key }}</strong> |
+            Document: <strong>{{ context.gate.document_key }}</strong>
+        </p>
+        <p class="resolution-muted">
+            This workflow resolves preparation conditions only. It does not authorize signing, filing, execution, transfer, or final legal use.
+        </p>
+
+        <div class="resolution-actions">
+            <a href="{{ url_for('intake_final_draft_gate_detail', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Final-draft gate</a>
+            <a href="{{ url_for('intake_review_gate_detail', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Review gate detail</a>
+            <a href="{{ url_for('intake_nonfinal_draft_document', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">Non-final draft</a>
+        </div>
+    </div>
+
+    <div class="resolution-grid">
+        <div class="resolution-card">
+            <h3>Status</h3>
+            <span class="resolution-pill">{{ context.gate.gate_status }}</span>
+        </div>
+        <div class="resolution-card">
+            <h3>Questionnaire</h3>
+            <span class="resolution-pill">{{ "Complete/Acknowledged" if context.gate.questionnaire_complete else "Open" }}</span>
+        </div>
+        <div class="resolution-card">
+            <h3>Issues</h3>
+            <span class="resolution-pill">{{ "Reviewed" if context.gate.open_issues_reviewed else "Open" }}</span>
+        </div>
+        <div class="resolution-card">
+            <h3>Tasks</h3>
+            <span class="resolution-pill">{{ "Reviewed" if context.gate.open_tasks_reviewed else "Open" }}</span>
+        </div>
+        <div class="resolution-card">
+            <h3>Documents</h3>
+            <span class="resolution-pill">{{ "Acknowledged" if context.gate.required_documents_acknowledged else "Open" }}</span>
+        </div>
+    </div>
+
+    <div class="resolution-card">
+        <h2>Current Gate Reason</h2>
+        <p>{{ context.gate.gate_reason }}</p>
+    </div>
+
+    <div class="resolution-card">
+        <h2>Known Blockers / Review Items</h2>
+
+        <h3>Missing Answers</h3>
+        <ul class="resolution-list">
+            {% for item in context.missing_answers %}
+                <li>{{ item }}</li>
+            {% else %}
+                <li>No missing questionnaire answers.</li>
+            {% endfor %}
+        </ul>
+
+        <h3>Open Issues</h3>
+        <ul class="resolution-list">
+            {% for item in context.open_issues %}
+                <li>{{ item }}</li>
+            {% else %}
+                <li>No open issues listed.</li>
+            {% endfor %}
+        </ul>
+
+        <h3>Open Tasks</h3>
+        <ul class="resolution-list">
+            {% for task in context.open_tasks %}
+                <li>{{ task.title }} — {{ task.status_label }} — Priority: {{ task.priority_label }}</li>
+            {% else %}
+                <li>No open tasks listed.</li>
+            {% endfor %}
+        </ul>
+
+        <h3>Required Documents</h3>
+        <ul class="resolution-list">
+            {% for item in context.required_documents %}
+                <li>{{ item }}</li>
+            {% else %}
+                <li>No required document checklist listed.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="resolution-card">
+        <h2>Record Resolution Actions</h2>
+        <form method="POST" action="{{ url_for('intake_final_draft_gate_resolution', intake_id=context.gate.intake_id, workflow_key=context.gate.workflow_key, document_key=context.gate.document_key) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+            <div class="resolution-options">
+                {% for key, label in context.action_options.items() %}
+                    <label class="resolution-option">
+                        <input type="checkbox" name="action_keys" value="{{ key }}">
+                        {{ label }}
+                    </label>
+                {% endfor %}
+            </div>
+
+            <br>
+
+            <label>
+                Resolution Note
+                <textarea name="note" rows="5" placeholder="Record what was reviewed, acknowledged, accepted, or resolved."></textarea>
+            </label>
+
+            <div class="resolution-actions">
+                <button type="submit">Save Resolution Actions</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="resolution-card">
+        <h2>Resolution History</h2>
+        <ul class="resolution-list">
+            {% for action in context.actions %}
+                <li>
+                    <strong>{{ action.action_label }}</strong> —
+                    {{ action.created_at }} —
+                    By: {{ action.created_by }}
+                    {% if action.note %}
+                        <br>{{ action.note }}
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>No final-draft gate resolution actions recorded yet.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+{% endblock %}

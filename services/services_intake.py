@@ -7252,3 +7252,314 @@ def list_final_draft_prep_gates(intake_id=None):
         for row in rows
     ]
 
+
+# -------------------------------------------------------------------
+# INT-2L — Final-Draft Gate Resolution Workflow
+# -------------------------------------------------------------------
+
+FINAL_DRAFT_RESOLUTION_ACTIONS = {
+    "missing_answers_acknowledged": "Missing Answers Reviewed / Acknowledged",
+    "open_issues_reviewed": "Open Issues Reviewed / Accepted",
+    "open_tasks_reviewed": "Open Tasks Reviewed / Accepted",
+    "required_documents_acknowledged": "Required Documents Acknowledged",
+    "professional_review_confirmed": "Professional Review Status Confirmed",
+}
+
+
+def ensure_final_draft_resolution_tables():
+    ensure_final_draft_prep_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_gate_actions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            action_key TEXT,
+            action_label TEXT,
+            note TEXT,
+            created_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def list_final_draft_resolution_actions(intake_id, workflow_key, document_key):
+    ensure_final_draft_resolution_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT action_key, action_label, note, created_at, created_by
+        FROM intake_final_draft_gate_actions
+        WHERE intake_id = ?
+          AND workflow_key = ?
+          AND document_key = ?
+        ORDER BY id DESC
+    """, (intake_id, workflow_key, document_key))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "action_key": row[0],
+            "action_label": row[1],
+            "note": row[2] or "",
+            "created_at": format_intake_timestamp(row[3]) if row[3] else "",
+            "created_by": row[4] or "—",
+        }
+        for row in rows
+    ]
+
+
+def _final_draft_resolution_action_keys(intake_id, workflow_key, document_key):
+    actions = list_final_draft_resolution_actions(intake_id, workflow_key, document_key)
+    return {a.get("action_key") for a in actions}
+
+
+def record_final_draft_resolution_actions(
+    intake_id,
+    workflow_key,
+    document_key,
+    action_keys,
+    note="",
+    created_by=None
+):
+    ensure_final_draft_resolution_tables()
+
+    if not action_keys:
+        return []
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+    recorded = []
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        for action_key in action_keys:
+            if action_key not in FINAL_DRAFT_RESOLUTION_ACTIONS:
+                continue
+
+            action_label = FINAL_DRAFT_RESOLUTION_ACTIONS[action_key]
+
+            cur.execute("""
+                INSERT INTO intake_final_draft_gate_actions (
+                    intake_id, workflow_key, document_key, firm_id,
+                    action_key, action_label, note, created_at, created_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                intake_id,
+                workflow_key,
+                document_key,
+                firm_id,
+                action_key,
+                action_label,
+                note,
+                now,
+                created_by,
+            ))
+
+            recorded.append({
+                "action_key": action_key,
+                "action_label": action_label,
+                "note": note,
+                "created_at": now,
+                "created_by": created_by,
+            })
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    # Re-evaluate gate after recording actions.
+    upsert_final_draft_prep_gate(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=created_by,
+    )
+
+    return recorded
+
+
+def evaluate_final_draft_prep_gate_with_resolutions(intake_id, workflow_key, document_key):
+    """
+    Extends INT-2K evaluation by allowing deliberate INT-2L resolution actions
+    to satisfy review/acknowledgment conditions without hiding the underlying facts.
+    Missing questionnaire answers can be acknowledged for preparation, but the
+    underlying missing count remains visible in the non-final draft/review gate.
+    """
+    base = evaluate_final_draft_prep_gate(intake_id, workflow_key, document_key)
+    if not base:
+        return None
+
+    resolution_keys = _final_draft_resolution_action_keys(intake_id, workflow_key, document_key)
+
+    # Apply deliberate resolution acknowledgments.
+    if "missing_answers_acknowledged" in resolution_keys:
+        base["questionnaire_complete"] = 1
+
+    if "open_issues_reviewed" in resolution_keys:
+        base["open_issues_reviewed"] = 1
+
+    if "open_tasks_reviewed" in resolution_keys:
+        base["open_tasks_reviewed"] = 1
+
+    if "required_documents_acknowledged" in resolution_keys:
+        base["required_documents_acknowledged"] = 1
+
+    if "professional_review_confirmed" in resolution_keys:
+        base["professional_review_recorded"] = 1
+
+    hard_blocks = []
+
+    if not base["questionnaire_complete"]:
+        hard_blocks.append("Controlled questionnaire has missing answers or has not been acknowledged.")
+
+    if not base["open_issues_reviewed"]:
+        hard_blocks.append("Open issues have not been reviewed or accepted.")
+
+    if not base["open_tasks_reviewed"]:
+        hard_blocks.append("Open tasks have not been reviewed or accepted.")
+
+    if not base["professional_review_recorded"]:
+        hard_blocks.append("Professional review status has not been recorded or confirmed.")
+
+    if not base["required_documents_acknowledged"]:
+        hard_blocks.append("Required document checklist has not been acknowledged.")
+
+    if hard_blocks:
+        base["gate_status"] = "blocked"
+        base["gate_reason"] = " ".join(hard_blocks)
+    else:
+        base["gate_status"] = "ready_for_admin_approval"
+        base["gate_reason"] = "All final-draft preparation conditions are reviewed or acknowledged. Admin approval is still required."
+
+    return base
+
+
+def upsert_final_draft_prep_gate_with_resolutions(intake_id, workflow_key, document_key, updated_by=None):
+    ensure_final_draft_prep_gate_tables()
+
+    evaluation = evaluate_final_draft_prep_gate_with_resolutions(intake_id, workflow_key, document_key)
+    if not evaluation:
+        return None
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT admin_approved, approval_note
+        FROM intake_final_draft_prep_gate
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key))
+    existing = cur.fetchone()
+
+    existing_admin_approved = int(existing[0]) if existing else 0
+    existing_note = existing[1] if existing else ""
+
+    admin_approved = existing_admin_approved if evaluation["gate_status"] != "blocked" else 0
+
+    if evaluation["gate_status"] == "blocked":
+        final_status = "blocked"
+    elif admin_approved:
+        final_status = "approved_for_final_draft_preparation"
+    else:
+        final_status = evaluation["gate_status"]
+
+    final_reason = (
+        "Approved for final-draft preparation. This still does not authorize signing, filing, execution, transfer, or legal finalization."
+        if final_status == "approved_for_final_draft_preparation"
+        else evaluation["gate_reason"]
+    )
+
+    cur.execute("""
+        INSERT INTO intake_final_draft_prep_gate (
+            intake_id, workflow_key, document_key, firm_id,
+            gate_status, gate_reason,
+            questionnaire_complete, open_issues_reviewed, open_tasks_reviewed,
+            professional_review_recorded, required_documents_acknowledged,
+            admin_approved, approval_note, created_at, updated_at, updated_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(intake_id, workflow_key, document_key) DO UPDATE SET
+            gate_status = excluded.gate_status,
+            gate_reason = excluded.gate_reason,
+            questionnaire_complete = excluded.questionnaire_complete,
+            open_issues_reviewed = excluded.open_issues_reviewed,
+            open_tasks_reviewed = excluded.open_tasks_reviewed,
+            professional_review_recorded = excluded.professional_review_recorded,
+            required_documents_acknowledged = excluded.required_documents_acknowledged,
+            admin_approved = excluded.admin_approved,
+            approval_note = excluded.approval_note,
+            updated_at = excluded.updated_at,
+            updated_by = excluded.updated_by
+    """, (
+        intake_id,
+        workflow_key,
+        document_key,
+        firm_id,
+        final_status,
+        final_reason,
+        evaluation["questionnaire_complete"],
+        evaluation["open_issues_reviewed"],
+        evaluation["open_tasks_reviewed"],
+        evaluation["professional_review_recorded"],
+        evaluation["required_documents_acknowledged"],
+        admin_approved,
+        existing_note,
+        now,
+        now,
+        updated_by,
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return get_final_draft_prep_gate(intake_id, workflow_key, document_key)
+
+
+def build_final_draft_resolution_context(intake_id, workflow_key, document_key):
+    gate = upsert_final_draft_prep_gate_with_resolutions(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        updated_by=None,
+    )
+
+    if not gate:
+        return None
+
+    document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
+    review_gate = get_review_gate_record(intake_id, workflow_key, document_key)
+    actions = list_final_draft_resolution_actions(intake_id, workflow_key, document_key)
+
+    return {
+        "gate": gate,
+        "document": document,
+        "review_gate": review_gate,
+        "actions": actions,
+        "action_options": FINAL_DRAFT_RESOLUTION_ACTIONS,
+        "missing_answers": document.get("missing_answers", []) if document else [],
+        "open_issues": document.get("preview", {}).get("draft_packet", {}).get("open_issues", []) if document else [],
+        "open_tasks": document.get("preview", {}).get("draft_packet", {}).get("open_tasks", []) if document else [],
+        "required_documents": document.get("preview", {}).get("draft_packet", {}).get("documents", []) if document else [],
+    }
+
