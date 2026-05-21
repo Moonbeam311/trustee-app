@@ -3447,3 +3447,176 @@ def list_intake_export_logs_dashboard(limit=200):
     fallback_logs = list_all_intake_export_logs_any_scope(limit=limit)
     return fallback_logs, get_intake_export_summary_from_logs(fallback_logs), "All Local Export Logs"
 
+
+# -------------------------------------------------------------------
+# INT-1O — Intake Module Completion Ledger
+# -------------------------------------------------------------------
+
+VALID_MODULE_LEDGER_STATUSES = {
+    "completed": "Completed",
+    "locked": "Locked",
+    "pending": "Pending",
+    "fallback": "Fallback / Limited",
+    "failed": "Failed",
+    "skipped": "Skipped",
+}
+
+DEFAULT_INTAKE_MODULE_LEDGER = [
+    ("INT-1A", "Intake Lane Map", "locked", "Classifies the user into the correct intake lane."),
+    ("INT-1B", "Intake Translation Map", "locked", "Translates plain-language answers into categories, modules, document requests, and risk flags."),
+    ("INT-1C", "Intake Scoring Engine", "locked", "Scores complexity, urgency, and readiness."),
+    ("INT-1D", "Client-Facing Fiduciary Snapshot", "locked", "Creates calm client-facing intake snapshot."),
+    ("INT-1E", "Save Snapshot + Intake Dashboard List", "locked", "Stores and lists intake records."),
+    ("INT-1F", "Resume + Completion Status Controls", "locked", "Separates completed and incomplete intakes."),
+    ("INT-1G", "Dashboard Polish + Print/Export Prep", "locked", "Adds dashboard filters, print view, and export-prep screen."),
+    ("INT-1H", "Internal Review Notes", "locked", "Adds internal staff/fiduciary notes."),
+    ("INT-1I", "Follow-Up Task Builder", "locked", "Creates structured follow-up tasks from intake outputs."),
+    ("INT-1J", "Task Filters + Workflow Polish", "locked", "Groups and summarizes follow-up tasks."),
+    ("INT-1K", "Follow-Up Packet / Checklist Export Prep", "locked", "Compiles packet-prep printable checklist view."),
+    ("INT-1L-DOCX", "Follow-Up Packet DOCX Export", "locked", "Generates downloadable DOCX follow-up packet."),
+    ("INT-1L-PDF", "Follow-Up Packet PDF Export", "fallback", "Automatic PDF export requires LibreOffice or Word/pywin32; browser print-to-PDF remains available."),
+    ("INT-1M", "Export Gitignore + Audit Log", "locked", "Ignores generated exports and logs export attempts."),
+    ("INT-1N", "Export History Dashboard + Packet Versioning", "locked", "Adds versioned export history."),
+    ("INT-1N-SCOPE", "Export History Firm Scope Repair", "locked", "Adds local fallback for all-export dashboard scope."),
+]
+
+
+def ensure_intake_module_ledger_tables():
+    ensure_intake_export_version_columns()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_module_ledger (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            module_code TEXT UNIQUE NOT NULL,
+            module_name TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            status_label TEXT,
+            description TEXT,
+            locked_at TEXT,
+            updated_at TEXT,
+            updated_by TEXT,
+            notes TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def upsert_intake_module_status(
+    module_code,
+    module_name,
+    status="pending",
+    description="",
+    notes="",
+    updated_by=None
+):
+    ensure_intake_module_ledger_tables()
+
+    if status not in VALID_MODULE_LEDGER_STATUSES:
+        status = "pending"
+
+    status_label = VALID_MODULE_LEDGER_STATUSES.get(status, status)
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    locked_at = now if status in ["locked", "completed"] else None
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_module_ledger (
+            module_code, module_name, status, status_label,
+            description, locked_at, updated_at, updated_by, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(module_code) DO UPDATE SET
+            module_name = excluded.module_name,
+            status = excluded.status,
+            status_label = excluded.status_label,
+            description = excluded.description,
+            locked_at = COALESCE(intake_module_ledger.locked_at, excluded.locked_at),
+            updated_at = excluded.updated_at,
+            updated_by = excluded.updated_by,
+            notes = excluded.notes
+    """, (
+        module_code,
+        module_name,
+        status,
+        status_label,
+        description,
+        locked_at,
+        now,
+        updated_by,
+        notes,
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def seed_default_intake_module_ledger(updated_by="system"):
+    ensure_intake_module_ledger_tables()
+
+    for code, name, status, description in DEFAULT_INTAKE_MODULE_LEDGER:
+        upsert_intake_module_status(
+            module_code=code,
+            module_name=name,
+            status=status,
+            description=description,
+            notes="Seeded from confirmed INT-1 build sequence.",
+            updated_by=updated_by,
+        )
+
+
+def list_intake_module_ledger():
+    ensure_intake_module_ledger_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT module_code, module_name, status, status_label,
+               description, locked_at, updated_at, updated_by, notes
+        FROM intake_module_ledger
+        ORDER BY id ASC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "module_code": row[0],
+            "module_name": row[1],
+            "status": row[2],
+            "status_label": row[3] or VALID_MODULE_LEDGER_STATUSES.get(row[2], row[2]),
+            "description": row[4],
+            "locked_at": format_intake_timestamp(row[5]) if row[5] else "",
+            "updated_at": format_intake_timestamp(row[6]) if row[6] else "",
+            "updated_by": row[7] or "—",
+            "notes": row[8] or "",
+        }
+        for row in rows
+    ]
+
+
+def summarize_intake_module_ledger(modules):
+    summary = {
+        "total": len(modules or []),
+        "locked": 0,
+        "completed": 0,
+        "pending": 0,
+        "fallback": 0,
+        "failed": 0,
+        "skipped": 0,
+    }
+
+    for module in modules or []:
+        status = module.get("status")
+        if status in summary:
+            summary[status] += 1
+
+    return summary
+

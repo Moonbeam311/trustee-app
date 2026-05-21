@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.module-ledger-wrap {
+    max-width: 1220px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.module-hero,
+.module-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.module-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.module-hero h1 {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+.module-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.module-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.module-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.module-summary-card {
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+}
+
+.module-summary-card strong {
+    display: block;
+    font-size: 1.4rem;
+}
+
+.module-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.module-table-wrap {
+    overflow-x: auto;
+}
+
+.module-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1050px;
+}
+
+.module-table th,
+.module-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.module-table th {
+    font-weight: 700;
+    background: rgba(255,255,255,0.06);
+}
+
+.module-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.status-locked,
+.status-completed {
+    font-weight: 700;
+}
+
+.status-fallback {
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+.status-pending {
+    opacity: 0.78;
+}
+
+.status-failed {
+    font-weight: 700;
+}
+
+.module-description {
+    max-width: 380px;
+    line-height: 1.45;
+}
+
+@media print {
+    nav,
+    .module-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .module-ledger-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .module-hero,
+    .module-card,
+    .module-summary-card {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+
+    .module-table {
+        min-width: 0;
+        font-size: 0.85rem;
+    }
+}
+</style>
+
+<div class="module-ledger-wrap">
+    <div class="module-hero">
+        <h1>Intake Module Completion Ledger</h1>
+        <p>
+            Formal status ledger for the INT-1 intake build sequence.
+        </p>
+
+        <div class="module-actions">
+            <a href="{{ url_for('intake_dashboard') }}">Back to intake dashboard</a>
+            <a href="{{ url_for('intake_export_history') }}">Export history</a>
+            <a href="{{ url_for('intake_start') }}">Start intake</a>
+            <a href="#" onclick="window.print(); return false;">Print ledger</a>
+        </div>
+    </div>
+
+    <div class="module-summary">
+        <div class="module-summary-card"><strong>{{ summary.total }}</strong>Total</div>
+        <div class="module-summary-card"><strong>{{ summary.locked }}</strong>Locked</div>
+        <div class="module-summary-card"><strong>{{ summary.completed }}</strong>Completed</div>
+        <div class="module-summary-card"><strong>{{ summary.fallback }}</strong>Fallback</div>
+        <div class="module-summary-card"><strong>{{ summary.pending }}</strong>Pending</div>
+        <div class="module-summary-card"><strong>{{ summary.failed }}</strong>Failed</div>
+    </div>
+
+    <div class="module-card">
+        <div class="module-table-wrap">
+            <table class="module-table">
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                        <th>Locked At</th>
+                        <th>Updated</th>
+                        <th>By</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for module in modules %}
+                        <tr>
+                            <td><strong>{{ module.module_code }}</strong></td>
+                            <td>{{ module.module_name }}</td>
+                            <td>
+                                <span class="module-pill status-{{ module.status }}">
+                                    {{ module.status_label }}
+                                </span>
+                            </td>
+                            <td class="module-description">{{ module.description }}</td>
+                            <td>{{ module.locked_at or '—' }}</td>
+                            <td>{{ module.updated_at or '—' }}</td>
+                            <td>{{ module.updated_by }}</td>
+                            <td>{{ module.notes }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8">No module ledger records found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -125,6 +125,7 @@
     <div class="dashboard-toolbar">
         <a href="{{ url_for('intake_start') }}">Start new intake</a>
         <a href="{{ url_for('intake_export_history') }}">Export history</a>
+        <a href="{{ url_for('intake_module_ledger') }}">Module ledger</a>
         <a href="{{ url_for('intake_dashboard', filter='all') }}" class="{{ 'active' if status_filter == 'all' else '' }}">All</a>
         <a href="{{ url_for('intake_dashboard', filter='completed') }}" class="{{ 'active' if status_filter == 'completed' else '' }}">Completed</a>
         <a href="{{ url_for('intake_dashboard', filter='incomplete') }}" class="{{ 'active' if status_filter == 'incomplete' else '' }}">Incomplete</a>

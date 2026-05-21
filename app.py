@@ -19,6 +19,7 @@ from services.services_intake import generate_followup_packet_docx, generate_fol
 from services.services_intake import generate_followup_packet_docx_logged, generate_followup_packet_pdf_logged, list_intake_export_logs, ensure_intake_export_log_tables
 from services.services_intake import ensure_intake_export_version_columns, list_all_intake_export_logs, list_intake_export_logs_versioned, get_intake_export_summary, generate_followup_packet_docx_logged_versioned, generate_followup_packet_pdf_logged_versioned
 from services.services_intake import list_intake_export_logs_dashboard
+from services.services_intake import seed_default_intake_module_ledger, list_intake_module_ledger, summarize_intake_module_ledger
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13378,6 +13379,21 @@ def intake_export_history_detail(intake_id):
         "intake/export_history_detail.html",
         intake_id=intake_id,
         logs=logs
+    )
+
+
+@app.route("/intake/modules")
+def intake_module_ledger():
+    seed_default_intake_module_ledger(
+        updated_by=session.get("username") if "session" in globals() else "system"
+    )
+    modules = list_intake_module_ledger()
+    summary = summarize_intake_module_ledger(modules)
+
+    return render_template(
+        "intake/module_ledger.html",
+        modules=modules,
+        summary=summary
     )
 
 
