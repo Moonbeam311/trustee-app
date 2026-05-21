@@ -2,91 +2,219 @@
 {% block content %}
 
 <style>
-.export-history-wrap {
-    max-width: 1100px;
+.export-detail-wrap {
+    max-width: 1180px;
     margin: 30px auto;
     padding: 0 16px;
 }
 
+.export-hero,
 .export-card {
     border: 1px solid rgba(0,0,0,0.16);
     border-radius: 16px;
     background: rgba(255,255,255,0.04);
-    padding: 20px;
+}
+
+.export-hero {
+    padding: 24px;
     margin-bottom: 18px;
 }
 
-.export-table {
-    width: 100%;
-    border-collapse: collapse;
+.export-hero h1 {
+    margin-top: 0;
+    margin-bottom: 8px;
 }
 
-.export-table th,
-.export-table td {
-    padding: 10px;
-    border-bottom: 1px solid rgba(0,0,0,0.12);
-    text-align: left;
-    vertical-align: top;
+.export-subtitle {
+    opacity: 0.78;
+    margin-bottom: 0;
 }
 
 .export-actions {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    margin-top: 18px;
 }
 
 .export-actions a {
-    padding: 8px 11px;
+    padding: 9px 12px;
     border: 1px solid rgba(0,0,0,0.16);
-    border-radius: 9px;
+    border-radius: 10px;
     text-decoration: none;
+    white-space: nowrap;
+}
+
+.export-summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.export-summary-card {
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 14px;
+    padding: 14px;
+    background: rgba(255,255,255,0.04);
+}
+
+.export-summary-card strong {
+    display: block;
+    font-size: 1.4rem;
+}
+
+.export-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.export-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.export-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 980px;
+}
+
+.export-table th,
+.export-table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.export-table th {
+    font-weight: 700;
+    background: rgba(255,255,255,0.06);
+    position: sticky;
+    top: 0;
+}
+
+.export-pill {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.export-message {
+    max-width: 360px;
+    line-height: 1.45;
+}
+
+.export-file {
+    max-width: 260px;
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+    opacity: 0.85;
+}
+
+@media print {
+    nav,
+    .export-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .export-detail-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .export-hero,
+    .export-card,
+    .export-summary-card {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+
+    .export-table {
+        min-width: 0;
+        font-size: 0.85rem;
+    }
 }
 </style>
 
-<div class="export-history-wrap">
-    <div class="export-card">
-        <h1 style="margin-top:0;">Export History: {{ intake_id }}</h1>
-        <p>Review versioned export attempts for this intake.</p>
+<div class="export-detail-wrap">
+    <div class="export-hero">
+        <h1>Export History</h1>
+        <p class="export-subtitle">
+            Intake ID: <strong>{{ intake_id }}</strong> — versioned export attempts for this intake.
+        </p>
 
         <div class="export-actions">
             <a href="{{ url_for('intake_export_history') }}">All exports</a>
             <a href="{{ url_for('intake_saved_snapshot', intake_id=intake_id) }}">Snapshot</a>
             <a href="{{ url_for('intake_followup_packet', intake_id=intake_id) }}">Packet</a>
+            <a href="{{ url_for('intake_export_prep', intake_id=intake_id) }}">Export prep</a>
             <a href="{{ url_for('intake_dashboard') }}">Dashboard</a>
+            <a href="#" onclick="window.print(); return false;">Print history</a>
         </div>
     </div>
 
+    {% set success_count = logs | selectattr("export_status", "equalto", "success") | list | length %}
+    {% set failed_count = logs | selectattr("export_status", "equalto", "failed") | list | length %}
+    {% set error_count = logs | selectattr("export_status", "equalto", "error") | list | length %}
+    {% set docx_count = logs | selectattr("export_type", "equalto", "docx") | list | length %}
+    {% set pdf_count = logs | selectattr("export_type", "equalto", "pdf") | list | length %}
+
+    <div class="export-summary-row">
+        <div class="export-summary-card"><strong>{{ logs|length }}</strong>Total Logs</div>
+        <div class="export-summary-card"><strong>{{ success_count }}</strong>Success</div>
+        <div class="export-summary-card"><strong>{{ failed_count }}</strong>Failed</div>
+        <div class="export-summary-card"><strong>{{ error_count }}</strong>Error</div>
+        <div class="export-summary-card"><strong>{{ docx_count }}</strong>DOCX</div>
+        <div class="export-summary-card"><strong>{{ pdf_count }}</strong>PDF</div>
+    </div>
+
     <div class="export-card">
-        <table class="export-table">
-            <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>Version</th>
-                    <th>Status</th>
-                    <th>Packet</th>
-                    <th>Created</th>
-                    <th>By</th>
-                    <th>File</th>
-                    <th>Message</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in logs %}
+        <div class="export-table-scroll">
+            <table class="export-table">
+                <thead>
                     <tr>
-                        <td>{{ log.export_type.upper() if log.export_type else '—' }}</td>
-                        <td>v{{ log.version_number }}</td>
-                        <td>{{ log.export_status.title() if log.export_status else '—' }}</td>
-                        <td>{{ log.packet_type.replace('_', ' ').title() if log.packet_type else '—' }}</td>
-                        <td>{{ log.created_at }}</td>
-                        <td>{{ log.created_by }}</td>
-                        <td>{{ log.file_path or '—' }}</td>
-                        <td>{{ log.message or '' }}</td>
+                        <th>Version</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Packet</th>
+                        <th>Created</th>
+                        <th>By</th>
+                        <th>File</th>
+                        <th>Message</th>
                     </tr>
-                {% else %}
-                    <tr><td colspan="8">No export logs found for this intake.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td><span class="export-pill">v{{ log.version_number }}</span></td>
+                            <td>{{ log.export_type.upper() if log.export_type else '—' }}</td>
+                            <td><span class="export-pill">{{ log.export_status.title() if log.export_status else '—' }}</span></td>
+                            <td>{{ log.packet_type.replace('_', ' ').title() if log.packet_type else '—' }}</td>
+                            <td>{{ log.created_at }}</td>
+                            <td>{{ log.created_by }}</td>
+                            <td class="export-file">{{ log.file_path or '—' }}</td>
+                            <td class="export-message">{{ log.message or '' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8">No export logs found for this intake.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
