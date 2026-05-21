@@ -35,6 +35,7 @@ from services.services_intake import build_final_draft_resolution_context, recor
 from services.services_intake import build_final_draft_admin_approval_context, record_final_draft_admin_approval, list_final_draft_admin_approvals
 from services.services_intake import build_final_draft_workspace_context
 from services.services_intake import build_final_draft_section_editor_context, get_final_draft_section, update_final_draft_section, build_final_draft_preview_context
+from services.services_intake import generate_final_draft_preview_docx
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13996,6 +13997,27 @@ def intake_final_draft_preview(intake_id, workflow_key, document_key):
         "intake/final_draft_preview.html",
         preview=preview
     )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-preview/docx")
+def intake_final_draft_preview_docx(intake_id, workflow_key, document_key):
+    path = generate_final_draft_preview_docx(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        created_by=session.get("username") if "session" in globals() else None,
+    )
+
+    if not path:
+        flash("Final-draft preview DOCX could not be generated.", "warning")
+        return redirect(url_for(
+            "intake_final_draft_preview",
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key
+        ))
+
+    return send_file(path, as_attachment=True)
 
 
 if __name__ == "__main__":

@@ -8206,3 +8206,146 @@ def build_final_draft_preview_context(intake_id, workflow_key, document_key):
         "notice": "This is a final-draft preview for preparation only. It is not signed, filed, executed, transferred, or legally final.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2P — Final-Draft Preview Export
+# -------------------------------------------------------------------
+
+def ensure_final_draft_preview_export_dir():
+    from pathlib import Path
+
+    export_dir = Path("exports/final_draft_previews")
+    export_dir.mkdir(parents=True, exist_ok=True)
+    return export_dir
+
+
+def generate_final_draft_preview_docx(intake_id, workflow_key, document_key, created_by=None):
+    """
+    Generate a DOCX export of the assembled final-draft preview.
+
+    Boundary:
+    This is a preparation draft only. It is not signed, filed, executed,
+    transferred, or legally final.
+    """
+    from docx import Document
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    preview = build_final_draft_preview_context(intake_id, workflow_key, document_key)
+
+    if not preview or not preview.get("access_granted"):
+        return None
+
+    export_dir = ensure_final_draft_preview_export_dir()
+
+    filename = (
+        f"{safe_export_filename(intake_id)}_"
+        f"{safe_export_filename(workflow_key)}_"
+        f"{safe_export_filename(document_key)}_FINAL_DRAFT_PREVIEW.docx"
+    )
+
+    out_path = export_dir / filename
+
+    doc = Document()
+
+    styles = doc.styles
+    styles["Normal"].font.name = "Arial"
+    styles["Normal"].font.size = Pt(10)
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = title.add_run("FINAL-DRAFT PREVIEW")
+    r.bold = True
+    r.font.size = Pt(16)
+
+    subtitle = doc.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    s = subtitle.add_run("PREPARATION DRAFT ONLY — NOT FINAL / NOT EXECUTED")
+    s.bold = True
+    s.font.size = Pt(11)
+
+    meta = doc.add_paragraph()
+    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    meta.add_run(
+        f"Intake ID: {intake_id} | Workflow: {workflow_key} | Document: {document_key}"
+    )
+
+    doc.add_paragraph("")
+
+    notice = doc.add_paragraph()
+    nr = notice.add_run(
+        "Important Boundary: This DOCX is a final-draft preview for preparation only. "
+        "It is not signed, filed, executed, transferred, or legally final."
+    )
+    nr.bold = True
+
+    doc.add_paragraph("")
+
+    status_heading = doc.add_paragraph()
+    sr = status_heading.add_run("Preview Status")
+    sr.bold = True
+    sr.font.size = Pt(13)
+
+    table = doc.add_table(rows=0, cols=2)
+    table.style = "Table Grid"
+
+    status_rows = [
+        ("Preview Status", preview.get("preview_status")),
+        ("Ready Sections", f"{preview.get('ready_count')} / {preview.get('total_sections')}"),
+        ("Boundary", "Preparation Only"),
+    ]
+
+    for label, value in status_rows:
+        cells = table.add_row().cells
+        cells[0].text = str(label)
+        cells[1].text = str(value or "")
+
+    doc.add_paragraph("")
+
+    sections_heading = doc.add_paragraph()
+    hr = sections_heading.add_run("Assembled Draft Sections")
+    hr.bold = True
+    hr.font.size = Pt(13)
+
+    for idx, section in enumerate(preview.get("sections", []) or [], start=1):
+        p = doc.add_paragraph()
+        h = p.add_run(f"{idx}. {section.get('section_heading')}")
+        h.bold = True
+        h.font.size = Pt(12)
+
+        status = doc.add_paragraph()
+        status.add_run(f"Section Status: {section.get('section_status_label')}").italic = True
+
+        body = section.get("section_body") or ""
+        if body.strip():
+            for line in body.splitlines():
+                doc.add_paragraph(line if line else "")
+        else:
+            doc.add_paragraph("[No section body provided.]")
+
+        doc.add_paragraph("")
+
+    final_notice = doc.add_paragraph()
+    fn = final_notice.add_run(
+        "Review Notice: This export is not a final legal, fiduciary, tax, property, or business document. "
+        "It is a preparation draft only and must remain subject to review before any formal use."
+    )
+    fn.bold = True
+
+    doc.save(out_path)
+
+    try:
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="final_draft_preview_docx",
+            export_status="success",
+            file_path=str(out_path),
+            message=f"Final-draft preview DOCX generated for {workflow_key}/{document_key}. Status={preview.get('preview_status')}.",
+            created_by=created_by,
+            packet_type="final_draft_preview",
+        )
+    except Exception:
+        pass
+
+    return str(out_path)
+

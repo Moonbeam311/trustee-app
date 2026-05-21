@@ -111,6 +111,7 @@
             <a href="{{ url_for('intake_final_draft_section_editor', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Section editor</a>
             <a href="{{ url_for('intake_final_draft_workspace', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Workspace</a>
             <a href="#" onclick="window.print(); return false;">Print preview</a>
+            <a href="{{ url_for('intake_final_draft_preview_docx', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Download DOCX</a>
         </div>
     </div>
 
