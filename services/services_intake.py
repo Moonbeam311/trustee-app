@@ -1836,3 +1836,84 @@ def get_saved_client_snapshot(intake_id):
     snapshot["technical_result"] = technical_result
     return snapshot, technical_result
 
+
+# -------------------------------------------------------------------
+# INT-1F — Intake Resume + Completion Status Controls
+# -------------------------------------------------------------------
+
+COMPLETED_INTAKE_STATUSES = {
+    "scored",
+    "snapshot_saved",
+    "completed",
+}
+
+INCOMPLETE_INTAKE_STATUSES = {
+    "lane_selected",
+    "started",
+    "universal_profile_started",
+}
+
+
+def intake_is_completed(status):
+    return status in COMPLETED_INTAKE_STATUSES
+
+
+def intake_is_incomplete(status):
+    return not intake_is_completed(status)
+
+
+def get_intake_resume_target(intake_id):
+    """
+    Decide where an intake should resume.
+    V1 resumes incomplete lane-selected sessions at universal profile.
+    Later versions can resume at lane-specific screens.
+    """
+    intake = get_intake_session(intake_id)
+    if not intake:
+        return None
+
+    status = intake.get("status")
+
+    if intake_is_completed(status):
+        return {
+            "route": "intake_saved_snapshot",
+            "intake_id": intake_id,
+            "label": "View snapshot",
+        }
+
+    return {
+        "route": "intake_universal_profile",
+        "intake_id": intake_id,
+        "label": "Continue intake",
+    }
+
+
+def list_intake_dashboard_with_controls(limit=100):
+    items = list_intake_dashboard(limit=limit)
+
+    for item in items:
+        status = item.get("status")
+        completed = intake_is_completed(status)
+
+        item["is_completed"] = completed
+        item["is_incomplete"] = not completed
+        item["status_label"] = "Completed" if completed else "Incomplete"
+
+        if completed:
+            item["primary_action"] = "View snapshot"
+            item["primary_route"] = "snapshot"
+        else:
+            item["primary_action"] = "Continue intake"
+            item["primary_route"] = "continue"
+
+        if item.get("complexity_level") == "—" and not completed:
+            item["complexity_level"] = "Pending"
+
+        if item.get("urgency_level") == "—" and not completed:
+            item["urgency_level"] = "Pending"
+
+        if item.get("readiness_level") == "—" and not completed:
+            item["readiness_level"] = "Pending"
+
+    return items
+

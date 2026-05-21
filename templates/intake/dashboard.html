@@ -49,6 +49,14 @@
     font-size: 0.85rem;
 }
 
+.dashboard-pill-complete {
+    font-weight: 700;
+}
+
+.dashboard-pill-incomplete {
+    opacity: 0.85;
+}
+
 .dashboard-actions {
     display: flex;
     gap: 10px;
@@ -68,7 +76,7 @@
     <div class="dashboard-hero">
         <h1 style="margin-top:0;">Intake Dashboard</h1>
         <p style="line-height:1.6; margin-bottom:0;">
-            Review saved intake sessions, scoring levels, readiness status, and reopen client-facing snapshots.
+            Review saved intake sessions, continue incomplete intakes, and reopen completed client-facing snapshots.
         </p>
     </div>
 
@@ -95,14 +103,24 @@
                     <tr>
                         <td><strong>{{ item.intake_id }}</strong></td>
                         <td>{{ item.intake_lane.replace('_', ' ').title() if item.intake_lane else '—' }}</td>
-                        <td><span class="dashboard-pill">{{ item.status.replace('_', ' ').title() if item.status else '—' }}</span></td>
+                        <td>
+                            {% if item.is_completed %}
+                                <span class="dashboard-pill dashboard-pill-complete">Completed</span>
+                            {% else %}
+                                <span class="dashboard-pill dashboard-pill-incomplete">Incomplete</span>
+                            {% endif %}
+                        </td>
                         <td>{{ item.complexity_level }}</td>
                         <td>{{ item.urgency_level }}</td>
                         <td>{{ item.readiness_level }}</td>
                         <td>{{ item.updated_at or item.created_at or '—' }}</td>
                         <td>
                             <div class="dashboard-actions">
-                                <a href="{{ url_for('intake_saved_snapshot', intake_id=item.intake_id) }}">View snapshot</a>
+                                {% if item.is_completed %}
+                                    <a href="{{ url_for('intake_saved_snapshot', intake_id=item.intake_id) }}">View snapshot</a>
+                                {% else %}
+                                    <a href="{{ url_for('intake_resume', intake_id=item.intake_id) }}">Continue intake</a>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

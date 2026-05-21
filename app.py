@@ -9,6 +9,7 @@ from services.services_intake import ensure_intake_tables, get_intake_lanes, cre
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from services.services_intake import build_client_snapshot
 from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, ensure_intake_snapshot_tables
+from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13161,7 +13162,7 @@ def intake_universal_profile(intake_id):
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()
-    items = list_intake_dashboard(limit=100)
+    items = list_intake_dashboard_with_controls(limit=100)
     return render_template("intake/dashboard.html", items=items)
 
 
@@ -13178,6 +13179,20 @@ def intake_saved_snapshot(intake_id):
         snapshot=snapshot,
         result=result
     )
+
+
+@app.route("/intake/<intake_id>/resume")
+def intake_resume(intake_id):
+    target = get_intake_resume_target(intake_id)
+
+    if not target:
+        flash("Intake session not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    if target["route"] == "intake_saved_snapshot":
+        return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+
+    return redirect(url_for("intake_universal_profile", intake_id=intake_id))
 
 
 if __name__ == "__main__":
