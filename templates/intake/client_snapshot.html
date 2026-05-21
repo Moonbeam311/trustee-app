@@ -241,6 +241,7 @@
         </p>
 
         <form method="POST" action="{{ url_for('intake_add_review_note', intake_id=snapshot.intake_id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <div class="staff-note-form-grid">
                 <label>
                     Note Type
