@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.gate-wrap {
+    max-width: 1240px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.gate-hero,
+.gate-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.gate-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.gate-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.gate-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.gate-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.gate-table-wrap {
+    overflow-x: auto;
+}
+
+.gate-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1120px;
+}
+
+.gate-table th,
+.gate-table td {
+    padding: 12px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    text-align: left;
+    vertical-align: top;
+}
+
+.gate-table th {
+    background: rgba(255,255,255,0.06);
+    font-weight: 700;
+}
+
+.gate-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+    font-size: 0.85rem;
+}
+
+.gate-reason {
+    max-width: 320px;
+    line-height: 1.4;
+}
+</style>
+
+<div class="gate-wrap">
+    <div class="gate-hero">
+        <h1 style="margin-top:0;">Review Gate Ledger</h1>
+        {% if intake_id %}
+            <p>Review gate records for Intake ID: <strong>{{ intake_id }}</strong></p>
+        {% else %}
+            <p>Review gate records across non-final draft documents.</p>
+        {% endif %}
+
+        <div class="gate-actions">
+            <a href="{{ url_for('intake_dashboard') }}">Intake dashboard</a>
+            <a href="{{ url_for('intake_draft_readiness_ledger') }}">Draft readiness ledger</a>
+            <a href="{{ url_for('intake_export_history') }}">Export history</a>
+        </div>
+    </div>
+
+    <div class="gate-card">
+        <div class="gate-table-wrap">
+            <table class="gate-table">
+                <thead>
+                    <tr>
+                        <th>Intake</th>
+                        <th>Workflow</th>
+                        <th>Document</th>
+                        <th>Gate</th>
+                        <th>Status</th>
+                        <th>Reason</th>
+                        <th>Missing</th>
+                        <th>Open Issues</th>
+                        <th>Open Tasks</th>
+                        <th>Document Status</th>
+                        <th>Updated</th>
+                        <th>By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in records %}
+                        <tr>
+                            <td>{{ row.intake_id }}</td>
+                            <td>{{ row.workflow_key }}</td>
+                            <td>{{ row.document_key }}</td>
+                            <td>{{ row.gate_name }}</td>
+                            <td><span class="gate-pill">{{ row.gate_status }}</span></td>
+                            <td class="gate-reason">{{ row.gate_reason }}</td>
+                            <td>{{ row.missing_answer_count }}</td>
+                            <td>{{ row.open_issue_count }}</td>
+                            <td>{{ row.open_task_count }}</td>
+                            <td>{{ row.document_status }}</td>
+                            <td>{{ row.updated_at }}</td>
+                            <td>{{ row.updated_by }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="12">No review gate records found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -28,6 +28,7 @@ from services.services_intake import build_workflow_draft_packet
 from services.services_intake import generate_workflow_draft_packet_docx, upsert_draft_readiness_record, list_draft_readiness_records
 from services.services_intake import get_document_draft_types_for_workflow, get_document_draft_type, get_document_draft_questions, save_document_draft_answers, build_document_draft_preview, ensure_document_draft_questionnaire_tables
 from services.services_intake import build_nonfinal_draft_document
+from services.services_intake import generate_nonfinal_draft_docx, upsert_review_gate_record, list_review_gate_records
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13656,9 +13657,58 @@ def intake_nonfinal_draft_document(intake_id, workflow_key, document_key):
             document_key=document_key
         ))
 
+    upsert_review_gate_record(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        document=document,
+        updated_by=session.get("username") if "session" in globals() else None,
+    )
+
     return render_template(
         "intake/nonfinal_draft_document.html",
         document=document
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/nonfinal/docx")
+def intake_nonfinal_draft_docx(intake_id, workflow_key, document_key):
+    path = generate_nonfinal_draft_docx(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        created_by=session.get("username") if "session" in globals() else None,
+    )
+
+    if not path:
+        flash("Non-final draft DOCX could not be generated.", "warning")
+        return redirect(url_for(
+            "intake_nonfinal_draft_document",
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key
+        ))
+
+    return send_file(path, as_attachment=True)
+
+
+@app.route("/intake/review-gates")
+def intake_review_gate_ledger():
+    records = list_review_gate_records()
+    return render_template(
+        "intake/review_gate_ledger.html",
+        records=records,
+        intake_id=None
+    )
+
+
+@app.route("/intake/<intake_id>/review-gates")
+def intake_review_gate_ledger_detail(intake_id):
+    records = list_review_gate_records(intake_id=intake_id)
+    return render_template(
+        "intake/review_gate_ledger.html",
+        records=records,
+        intake_id=intake_id
     )
 
 

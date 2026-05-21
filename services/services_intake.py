@@ -6365,3 +6365,298 @@ def build_nonfinal_draft_document(intake_id, workflow_key, document_key):
         "notice": "This is a non-final draft document generated from controlled intake data. It is not a final document.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2I — Non-Final Draft DOCX Export + Review Gate Ledger
+# -------------------------------------------------------------------
+
+def ensure_review_gate_tables():
+    ensure_document_draft_questionnaire_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_review_gate_ledger (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            gate_name TEXT,
+            gate_status TEXT DEFAULT 'pending',
+            gate_reason TEXT,
+            missing_answer_count INTEGER DEFAULT 0,
+            open_issue_count INTEGER DEFAULT 0,
+            open_task_count INTEGER DEFAULT 0,
+            document_status TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            updated_by TEXT,
+            notes TEXT,
+            UNIQUE(intake_id, workflow_key, document_key, gate_name)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def evaluate_nonfinal_review_gate(document):
+    missing_count = len(document.get("missing_answers", []) or [])
+    preview = document.get("preview", {}) or {}
+    draft_packet = preview.get("draft_packet", {}) or {}
+    open_issue_count = len(draft_packet.get("open_issues", []) or [])
+    open_task_count = len(draft_packet.get("open_tasks", []) or [])
+
+    if missing_count > 0:
+        return {
+            "gate_status": "blocked",
+            "gate_reason": "Controlled questionnaire has missing answers.",
+            "missing_answer_count": missing_count,
+            "open_issue_count": open_issue_count,
+            "open_task_count": open_task_count,
+        }
+
+    if open_issue_count > 0 or open_task_count > 0:
+        return {
+            "gate_status": "review_required",
+            "gate_reason": "Draft has open issues or open tasks requiring review.",
+            "missing_answer_count": missing_count,
+            "open_issue_count": open_issue_count,
+            "open_task_count": open_task_count,
+        }
+
+    return {
+        "gate_status": "ready_for_review",
+        "gate_reason": "Controlled questionnaire is complete and no open issues/tasks were detected.",
+        "missing_answer_count": missing_count,
+        "open_issue_count": open_issue_count,
+        "open_task_count": open_task_count,
+    }
+
+
+def upsert_review_gate_record(intake_id, workflow_key, document_key, document, updated_by=None):
+    ensure_review_gate_tables()
+
+    gate = evaluate_nonfinal_review_gate(document)
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_review_gate_ledger (
+            intake_id, workflow_key, document_key, firm_id,
+            gate_name, gate_status, gate_reason,
+            missing_answer_count, open_issue_count, open_task_count,
+            document_status, created_at, updated_at, updated_by, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(intake_id, workflow_key, document_key, gate_name) DO UPDATE SET
+            gate_status = excluded.gate_status,
+            gate_reason = excluded.gate_reason,
+            missing_answer_count = excluded.missing_answer_count,
+            open_issue_count = excluded.open_issue_count,
+            open_task_count = excluded.open_task_count,
+            document_status = excluded.document_status,
+            updated_at = excluded.updated_at,
+            updated_by = excluded.updated_by,
+            notes = excluded.notes
+    """, (
+        intake_id,
+        workflow_key,
+        document_key,
+        firm_id,
+        "non_final_draft_review_gate",
+        gate["gate_status"],
+        gate["gate_reason"],
+        gate["missing_answer_count"],
+        gate["open_issue_count"],
+        gate["open_task_count"],
+        document.get("document_status"),
+        now,
+        now,
+        updated_by,
+        "Auto-updated from INT-2I non-final draft review gate.",
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return gate
+
+
+def list_review_gate_records(intake_id=None):
+    ensure_review_gate_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if intake_id:
+        cur.execute("""
+            SELECT intake_id, workflow_key, document_key, gate_name,
+                   gate_status, gate_reason, missing_answer_count,
+                   open_issue_count, open_task_count, document_status,
+                   created_at, updated_at, updated_by, notes
+            FROM intake_review_gate_ledger
+            WHERE intake_id = ?
+            ORDER BY updated_at DESC
+        """, (intake_id,))
+    else:
+        cur.execute("""
+            SELECT intake_id, workflow_key, document_key, gate_name,
+                   gate_status, gate_reason, missing_answer_count,
+                   open_issue_count, open_task_count, document_status,
+                   created_at, updated_at, updated_by, notes
+            FROM intake_review_gate_ledger
+            ORDER BY updated_at DESC
+            LIMIT 200
+        """)
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "workflow_key": row[1],
+            "document_key": row[2],
+            "gate_name": row[3],
+            "gate_status": row[4],
+            "gate_reason": row[5],
+            "missing_answer_count": row[6],
+            "open_issue_count": row[7],
+            "open_task_count": row[8],
+            "document_status": row[9],
+            "created_at": format_intake_timestamp(row[10]) if row[10] else "",
+            "updated_at": format_intake_timestamp(row[11]) if row[11] else "",
+            "updated_by": row[12] or "—",
+            "notes": row[13] or "",
+        }
+        for row in rows
+    ]
+
+
+def ensure_nonfinal_draft_export_dir():
+    from pathlib import Path
+
+    export_dir = Path("exports/nonfinal_drafts")
+    export_dir.mkdir(parents=True, exist_ok=True)
+    return export_dir
+
+
+def generate_nonfinal_draft_docx(intake_id, workflow_key, document_key, created_by=None):
+    from docx import Document
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    document = build_nonfinal_draft_document(intake_id, workflow_key, document_key)
+    if not document:
+        return None
+
+    gate = upsert_review_gate_record(
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        document=document,
+        updated_by=created_by,
+    )
+
+    export_dir = ensure_nonfinal_draft_export_dir()
+    filename = (
+        f"{safe_export_filename(intake_id)}_"
+        f"{safe_export_filename(workflow_key)}_"
+        f"{safe_export_filename(document_key)}_NON_FINAL_DRAFT.docx"
+    )
+    out_path = export_dir / filename
+
+    doc = Document()
+
+    styles = doc.styles
+    styles["Normal"].font.name = "Arial"
+    styles["Normal"].font.size = Pt(10)
+
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = title.add_run(document.get("title") or "Non-Final Draft Document")
+    run.bold = True
+    run.font.size = Pt(16)
+
+    subtitle = doc.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle.add_run("NON-FINAL DRAFT — REVIEW REQUIRED")
+
+    meta = doc.add_paragraph()
+    meta.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    meta.add_run(
+        f"Intake ID: {intake_id} | Workflow: {workflow_key} | Document: {document_key}"
+    )
+
+    doc.add_paragraph("")
+
+    def add_heading(text):
+        p = doc.add_paragraph()
+        r = p.add_run(text)
+        r.bold = True
+        r.font.size = Pt(13)
+        return p
+
+    def add_body(text):
+        for line in str(text or "").splitlines():
+            doc.add_paragraph(line if line else "")
+
+    add_heading("Draft Status")
+    table = doc.add_table(rows=0, cols=2)
+    table.style = "Table Grid"
+
+    status_rows = [
+        ("Document Status", document.get("document_status")),
+        ("Draft Readiness", document.get("readiness")),
+        ("Preview Status", document.get("preview", {}).get("preview_status")),
+        ("Answered", f"{document.get('preview', {}).get('answered_count')} / {document.get('preview', {}).get('total_count')}"),
+        ("Review Gate", gate.get("gate_status")),
+        ("Gate Reason", gate.get("gate_reason")),
+    ]
+
+    for label, value in status_rows:
+        cells = table.add_row().cells
+        cells[0].text = str(label)
+        cells[1].text = str(value or "")
+
+    doc.add_paragraph("")
+
+    if document.get("missing_answers"):
+        add_heading("Missing Questionnaire Answers")
+        for item in document.get("missing_answers", []):
+            doc.add_paragraph(f"- {item}")
+
+    for section in document.get("sections", []) or []:
+        add_heading(section.get("heading"))
+        add_body(section.get("body"))
+
+    add_heading("Non-Final Draft Notice")
+    add_body(
+        "This document is a non-final draft generated from controlled intake data. "
+        "It is not legal advice, tax advice, fiduciary advice, property-transfer advice, "
+        "or a final enforceable document. Review gates must be completed before formal use."
+    )
+
+    doc.save(out_path)
+
+    try:
+        log_intake_export_versioned(
+            intake_id=intake_id,
+            export_type="nonfinal_docx",
+            export_status="success",
+            file_path=str(out_path),
+            message=f"Non-final draft DOCX generated for {workflow_key}/{document_key}. Gate={gate.get('gate_status')}.",
+            created_by=created_by,
+            packet_type="nonfinal_draft",
+        )
+    except Exception:
+        pass
+
+    return str(out_path)
+

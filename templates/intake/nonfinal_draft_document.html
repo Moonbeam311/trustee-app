@@ -115,6 +115,8 @@
             <a href="{{ url_for('intake_document_draft_questionnaire', intake_id=document.intake_id, workflow_key=document.workflow_key, document_key=document.document_key) }}">Edit questionnaire</a>
             <a href="{{ url_for('intake_workflow_draft_packet', intake_id=document.intake_id, workflow_key=document.workflow_key) }}">Draft packet</a>
             <a href="#" onclick="window.print(); return false;">Print non-final draft</a>
+            <a href="{{ url_for('intake_nonfinal_draft_docx', intake_id=document.intake_id, workflow_key=document.workflow_key, document_key=document.document_key) }}">Download DOCX</a>
+            <a href="{{ url_for('intake_review_gate_ledger_detail', intake_id=document.intake_id) }}">Review gate ledger</a>
         </div>
     </div>
 
