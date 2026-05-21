@@ -5062,57 +5062,70 @@ def save_workflow_bridge_answers(intake_id, workflow_key, form_data, created_by=
     conn = get_connection()
     cur = conn.cursor()
 
-    # Replace current bridge answers for this workflow/intake.
-    cur.execute("""
-        DELETE FROM intake_workflow_bridge_answers
-        WHERE intake_id = ? AND workflow_key = ?
-    """, (intake_id, workflow_key))
+    try:
+        # Replace current bridge answers for this workflow/intake.
+        cur.execute("""
+            DELETE FROM intake_workflow_bridge_answers
+            WHERE intake_id = ? AND workflow_key = ?
+        """, (intake_id, workflow_key))
 
-    for question in definition.get("questions", []):
-        qkey = question.get("key")
-        options = question.get("options", {})
-        input_type = question.get("input_type")
+        for question in definition.get("questions", []):
+            qkey = question.get("key")
+            options = question.get("options", {})
+            input_type = question.get("input_type")
 
-        if input_type == "checkbox":
-            values = form_data.getlist(qkey) if hasattr(form_data, "getlist") else []
-        else:
-            value = form_data.get(qkey) if hasattr(form_data, "get") else None
-            values = [value] if value else []
+            if input_type == "checkbox":
+                values = form_data.getlist(qkey) if hasattr(form_data, "getlist") else []
+            else:
+                value = form_data.get(qkey) if hasattr(form_data, "get") else None
+                values = [value] if value else []
 
-        for answer_key in values:
-            if not answer_key:
-                continue
+            for answer_key in values:
+                if not answer_key:
+                    continue
 
-            answer_label = options.get(answer_key, answer_key)
+                answer_label = options.get(answer_key, answer_key)
 
-            cur.execute("""
-                INSERT INTO intake_workflow_bridge_answers (
-                    intake_id, workflow_key, firm_id, question_key,
-                    answer_key, answer_label, created_at, updated_at, created_by
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                intake_id,
-                workflow_key,
-                firm_id,
-                qkey,
-                answer_key,
-                answer_label,
-                now,
-                now,
-                created_by,
-            ))
+                cur.execute("""
+                    INSERT INTO intake_workflow_bridge_answers (
+                        intake_id, workflow_key, firm_id, question_key,
+                        answer_key, answer_label, created_at, updated_at, created_by
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    intake_id,
+                    workflow_key,
+                    firm_id,
+                    qkey,
+                    answer_key,
+                    answer_label,
+                    now,
+                    now,
+                    created_by,
+                ))
 
-    update_document_recommendation_status(
-        intake_id=intake_id,
-        workflow_key=workflow_key,
-        status="launch_prepared",
-        updated_by=created_by,
-    )
+        # IMPORTANT:
+        # Do not call update_document_recommendation_status() here.
+        # That function opens another SQLite connection while this write transaction is open.
+        # On Windows SQLite, that can trigger "database is locked."
+        cur.execute("""
+            UPDATE intake_document_recommendations
+            SET status = ?,
+                updated_at = ?,
+                created_by = ?
+            WHERE intake_id = ? AND workflow_key = ?
+        """, (
+            "launch_prepared",
+            now,
+            created_by,
+            intake_id,
+            workflow_key,
+        ))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
+    finally:
+        conn.close()
 
 def list_workflow_bridge_answers(intake_id, workflow_key):
     ensure_workflow_bridge_tables()
