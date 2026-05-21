@@ -46,7 +46,7 @@
 .gate-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 1120px;
+    min-width: 1450px;
 }
 
 .gate-table th,
@@ -71,8 +71,27 @@
 }
 
 .gate-reason {
-    max-width: 320px;
+    max-width: 360px;
     line-height: 1.4;
+}
+
+.gate-table td:first-child,
+.gate-table th:first-child {
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+.gate-table td,
+.gate-table th {
+    white-space: nowrap;
+}
+
+.gate-reason,
+.gate-table td:nth-child(11) {
+    white-space: normal;
 }
 </style>
 
@@ -97,6 +116,7 @@
             <table class="gate-table">
                 <thead>
                     <tr>
+                        <th>Action</th>
                         <th>Intake</th>
                         <th>Workflow</th>
                         <th>Document</th>
@@ -114,12 +134,14 @@
                 <tbody>
                     {% for row in records %}
                         <tr>
+                            <td>
+                                <a href="{{ url_for('intake_review_gate_detail', intake_id=row.intake_id, workflow_key=row.workflow_key, document_key=row.document_key) }}">
+                                    Gate Detail
+                                </a>
+                            </td>
                             <td>{{ row.intake_id }}</td>
                             <td>{{ row.workflow_key }}</td>
-                            <td>
-                                {{ row.document_key }}<br>
-                                <a href="{{ url_for('intake_review_gate_detail', intake_id=row.intake_id, workflow_key=row.workflow_key, document_key=row.document_key) }}">Gate Detail</a>
-                            </td>
+                            <td>{{ row.document_key }}</td>
                             <td>{{ row.gate_name }}</td>
                             <td><span class="gate-pill">{{ row.gate_status }}</span></td>
                             <td class="gate-reason">{{ row.gate_reason }}</td>
@@ -132,7 +154,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="12">No review gate records found.</td>
+                            <td colspan="13">No review gate records found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
