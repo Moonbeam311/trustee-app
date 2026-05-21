@@ -1917,3 +1917,78 @@ def list_intake_dashboard_with_controls(limit=100):
 
     return items
 
+
+# -------------------------------------------------------------------
+# INT-1G — Dashboard Polish + Snapshot Print/Export Prep
+# -------------------------------------------------------------------
+
+def format_intake_timestamp(value):
+    if not value:
+        return "—"
+
+    try:
+        raw = str(value).replace("T", " ")
+        if "." in raw:
+            raw = raw.split(".")[0]
+        return raw
+    except Exception:
+        return str(value)
+
+
+def decorate_intake_dashboard_items(items, status_filter="all"):
+    decorated = []
+
+    for item in items:
+        item = dict(item)
+
+        item["updated_display"] = format_intake_timestamp(
+            item.get("updated_at") or item.get("created_at")
+        )
+
+        urgency = item.get("urgency_level") or "Pending"
+        readiness = item.get("readiness_level") or "Pending"
+        complexity = item.get("complexity_level") or "Pending"
+
+        item["urgency_badge"] = urgency
+        item["readiness_badge"] = readiness
+        item["complexity_badge"] = complexity
+
+        item["urgency_class"] = "badge-high" if urgency == "High" else "badge-medium" if urgency == "Medium" else "badge-low" if urgency == "Low" else "badge-pending"
+        item["readiness_class"] = "badge-ready" if readiness == "Ready for Deep Review" else "badge-medium" if readiness == "Partially Ready" else "badge-pending"
+        item["complexity_class"] = "badge-high" if complexity in ["Advanced", "Complex"] else "badge-medium" if complexity == "Moderate" else "badge-low" if complexity == "Simple" else "badge-pending"
+
+        if status_filter == "completed" and not item.get("is_completed"):
+            continue
+        if status_filter == "incomplete" and not item.get("is_incomplete"):
+            continue
+        if status_filter == "high_urgency" and item.get("urgency_level") != "High":
+            continue
+
+        decorated.append(item)
+
+    return decorated
+
+
+def list_intake_dashboard_polished(limit=100, status_filter="all"):
+    items = list_intake_dashboard_with_controls(limit=limit)
+    return decorate_intake_dashboard_items(items, status_filter=status_filter)
+
+
+def prepare_snapshot_export_metadata(intake_id):
+    snapshot, result = get_saved_client_snapshot(intake_id)
+    if not snapshot:
+        return None
+
+    return {
+        "intake_id": intake_id,
+        "snapshot": snapshot,
+        "result": result,
+        "export_ready": True,
+        "available_exports": [
+            "print_view",
+            "future_pdf_export",
+            "future_docx_export",
+        ],
+        "note": "Export preparation is ready. PDF/DOCX generation is intentionally not activated in INT-1G.",
+    }
+

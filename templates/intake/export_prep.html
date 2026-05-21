@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.export-prep-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.export-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+.export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.export-actions a {
+    padding: 10px 14px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+</style>
+
+<div class="export-prep-wrap">
+    <div class="export-card">
+        <h1 style="margin-top:0;">Snapshot Export Preparation</h1>
+        <p><strong>Intake ID:</strong> {{ export_data.intake_id }}</p>
+        <p>
+            This screen confirms the snapshot is organized for export. PDF/DOCX generation is not activated in this step.
+        </p>
+    </div>
+
+    <div class="export-card">
+        <h2>Available Now</h2>
+        <ul>
+            <li>Client-facing snapshot view</li>
+            <li>Browser print / save-as-PDF using the print button</li>
+            <li>Technical snapshot toggle</li>
+        </ul>
+
+        <h2>Prepared for Later</h2>
+        <ul>
+            <li>Future PDF export route</li>
+            <li>Future DOCX export route</li>
+            <li>Future formal snapshot packet</li>
+        </ul>
+    </div>
+
+    <div class="export-actions">
+        <a href="{{ url_for('intake_saved_snapshot', intake_id=export_data.intake_id) }}">Back to snapshot</a>
+        <a href="{{ url_for('intake_dashboard') }}">Back to dashboard</a>
+    </div>
+</div>
+
+{% endblock %}

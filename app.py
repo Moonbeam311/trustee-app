@@ -10,6 +10,7 @@ from services.services_intake import get_intake_session, get_universal_intake_qu
 from services.services_intake import build_client_snapshot
 from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, ensure_intake_snapshot_tables
 from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
+from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13162,8 +13163,9 @@ def intake_universal_profile(intake_id):
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()
-    items = list_intake_dashboard_with_controls(limit=100)
-    return render_template("intake/dashboard.html", items=items)
+    status_filter = request.args.get("filter", "all")
+    items = list_intake_dashboard_polished(limit=100, status_filter=status_filter)
+    return render_template("intake/dashboard.html", items=items, status_filter=status_filter)
 
 
 @app.route("/intake/<intake_id>/snapshot")
@@ -13193,6 +13195,17 @@ def intake_resume(intake_id):
         return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
 
     return redirect(url_for("intake_universal_profile", intake_id=intake_id))
+
+
+@app.route("/intake/<intake_id>/export-prep")
+def intake_export_prep(intake_id):
+    export_data = prepare_snapshot_export_metadata(intake_id)
+
+    if not export_data:
+        flash("Snapshot export preparation could not find that intake.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    return render_template("intake/export_prep.html", export_data=export_data)
 
 
 if __name__ == "__main__":

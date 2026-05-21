@@ -3,7 +3,7 @@
 
 <style>
 .intake-dashboard-wrap {
-    max-width: 1200px;
+    max-width: 1220px;
     margin: 30px auto;
     padding: 0 16px;
 }
@@ -18,6 +18,25 @@
 .dashboard-hero {
     padding: 22px;
     margin-bottom: 20px;
+}
+
+.dashboard-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.dashboard-toolbar a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 999px;
+    text-decoration: none;
+}
+
+.dashboard-toolbar a.active {
+    font-weight: 700;
+    border-width: 2px;
 }
 
 .dashboard-table-wrap {
@@ -41,12 +60,14 @@
     font-weight: 700;
 }
 
-.dashboard-pill {
+.dashboard-pill,
+.score-badge {
     display: inline-block;
     padding: 4px 8px;
     border: 1px solid rgba(0,0,0,0.14);
     border-radius: 999px;
     font-size: 0.85rem;
+    white-space: nowrap;
 }
 
 .dashboard-pill-complete {
@@ -55,6 +76,27 @@
 
 .dashboard-pill-incomplete {
     opacity: 0.85;
+}
+
+.badge-high {
+    font-weight: 700;
+    border-width: 2px;
+}
+
+.badge-medium {
+    font-weight: 600;
+}
+
+.badge-low {
+    opacity: 0.9;
+}
+
+.badge-ready {
+    font-weight: 700;
+}
+
+.badge-pending {
+    opacity: 0.7;
 }
 
 .dashboard-actions {
@@ -80,8 +122,12 @@
         </p>
     </div>
 
-    <div class="dashboard-actions" style="margin-bottom:18px;">
+    <div class="dashboard-toolbar">
         <a href="{{ url_for('intake_start') }}">Start new intake</a>
+        <a href="{{ url_for('intake_dashboard', filter='all') }}" class="{{ 'active' if status_filter == 'all' else '' }}">All</a>
+        <a href="{{ url_for('intake_dashboard', filter='completed') }}" class="{{ 'active' if status_filter == 'completed' else '' }}">Completed</a>
+        <a href="{{ url_for('intake_dashboard', filter='incomplete') }}" class="{{ 'active' if status_filter == 'incomplete' else '' }}">Incomplete</a>
+        <a href="{{ url_for('intake_dashboard', filter='high_urgency') }}" class="{{ 'active' if status_filter == 'high_urgency' else '' }}">High Urgency</a>
     </div>
 
     <div class="dashboard-card dashboard-table-wrap">
@@ -110,14 +156,15 @@
                                 <span class="dashboard-pill dashboard-pill-incomplete">Incomplete</span>
                             {% endif %}
                         </td>
-                        <td>{{ item.complexity_level }}</td>
-                        <td>{{ item.urgency_level }}</td>
-                        <td>{{ item.readiness_level }}</td>
-                        <td>{{ item.updated_at or item.created_at or '—' }}</td>
+                        <td><span class="score-badge {{ item.complexity_class }}">{{ item.complexity_badge }}</span></td>
+                        <td><span class="score-badge {{ item.urgency_class }}">{{ item.urgency_badge }}</span></td>
+                        <td><span class="score-badge {{ item.readiness_class }}">{{ item.readiness_badge }}</span></td>
+                        <td>{{ item.updated_display }}</td>
                         <td>
                             <div class="dashboard-actions">
                                 {% if item.is_completed %}
                                     <a href="{{ url_for('intake_saved_snapshot', intake_id=item.intake_id) }}">View snapshot</a>
+                                    <a href="{{ url_for('intake_export_prep', intake_id=item.intake_id) }}">Export prep</a>
                                 {% else %}
                                     <a href="{{ url_for('intake_resume', intake_id=item.intake_id) }}">Continue intake</a>
                                 {% endif %}
@@ -126,7 +173,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="8">No intake sessions found yet.</td>
+                        <td colspan="8">No intake sessions found for this filter.</td>
                     </tr>
                 {% endfor %}
             </tbody>

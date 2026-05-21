@@ -83,6 +83,35 @@
 .snapshot-muted {
     opacity: 0.75;
 }
+
+@media print {
+    nav,
+    .snapshot-actions,
+    .no-print {
+        display: none !important;
+    }
+
+    .client-snapshot-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .snapshot-hero,
+    .snapshot-card,
+    .snapshot-note,
+    .snapshot-list li {
+        border: 1px solid #999 !important;
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+}
+
 </style>
 
 <div class="client-snapshot-wrap">
@@ -170,6 +199,9 @@
 
     <div class="snapshot-actions">
         <a href="{{ url_for('intake_start') }}">Start another intake</a>
+        <a href="{{ url_for('intake_dashboard') }}">Back to dashboard</a>
+        <a href="#" onclick="window.print(); return false;">Print snapshot</a>
+        <a href="{{ url_for('intake_export_prep', intake_id=snapshot.intake_id) }}">Export prep</a>
 
         <a href="#" onclick="document.getElementById('technicalSnapshot').style.display = document.getElementById('technicalSnapshot').style.display === 'none' ? 'block' : 'none'; return false;">
             Show technical snapshot
