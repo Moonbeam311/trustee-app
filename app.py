@@ -13335,7 +13335,10 @@ def intake_followup_packet_pdf(intake_id):
     path = generate_followup_packet_pdf(intake_id)
 
     if not path:
-        flash("PDF packet could not be generated.", "warning")
+        flash(
+            "PDF packet could not be generated automatically. Use Print packet → Save as PDF, or install LibreOffice / pywin32 + Microsoft Word for automatic PDF export.",
+            "warning"
+        )
         return redirect(url_for("intake_followup_packet", intake_id=intake_id))
 
     return send_file(path, as_attachment=True)

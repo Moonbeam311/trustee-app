@@ -2807,6 +2807,17 @@ def generate_followup_packet_docx(intake_id):
 
 
 def generate_followup_packet_pdf(intake_id):
+    """
+    Generate a PDF version of the follow-up packet.
+
+    Windows-safe fallback order:
+    1. Generate DOCX.
+    2. Try LibreOffice/soffice if installed.
+    3. Try Microsoft Word COM automation if pywin32 + Word are available.
+    4. Return None if unavailable so the route can fail gracefully.
+    """
+    import os
+    import shutil
     import subprocess
     from pathlib import Path
 
@@ -2814,25 +2825,82 @@ def generate_followup_packet_pdf(intake_id):
     if not docx_path:
         return None
 
-    docx_path = Path(docx_path)
+    docx_path = Path(docx_path).resolve()
     export_dir = docx_path.parent
-
-    cmd = [
-        "python",
-        "/home/oai/skills/pdfs/scripts/lo_convert_to_pdf.py",
-        str(docx_path),
-        "--out_dir",
-        str(export_dir),
-    ]
+    pdf_path = export_dir / f"{docx_path.stem}.pdf"
 
     try:
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        if pdf_path.exists():
+            pdf_path.unlink()
     except Exception:
-        return None
+        pass
 
-    pdf_path = export_dir / f"{docx_path.stem}.pdf"
-    if pdf_path.exists():
-        return str(pdf_path)
+    soffice_candidates = [
+        shutil.which("soffice"),
+        shutil.which("libreoffice"),
+        r"C:\Program Files\LibreOffice\program\soffice.exe",
+        r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+    ]
+
+    for soffice in soffice_candidates:
+        if not soffice:
+            continue
+
+        try:
+            soffice_path = Path(soffice)
+            if not soffice_path.exists() and not shutil.which(str(soffice)):
+                continue
+
+            cmd = [
+                str(soffice),
+                "--headless",
+                "--convert-to",
+                "pdf",
+                "--outdir",
+                str(export_dir),
+                str(docx_path),
+            ]
+
+            subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+
+            if pdf_path.exists():
+                return str(pdf_path)
+
+        except Exception:
+            continue
+
+    if os.name == "nt":
+        try:
+            import pythoncom
+            import win32com.client
+
+            pythoncom.CoInitialize()
+            word = win32com.client.DispatchEx("Word.Application")
+            word.Visible = False
+            word.DisplayAlerts = 0
+
+            try:
+                doc = word.Documents.Open(str(docx_path))
+                doc.ExportAsFixedFormat(str(pdf_path), 17)
+                doc.Close(False)
+            finally:
+                word.Quit()
+                pythoncom.CoUninitialize()
+
+            if pdf_path.exists():
+                return str(pdf_path)
+
+        except Exception:
+            try:
+                pythoncom.CoUninitialize()
+            except Exception:
+                pass
+            return None
 
     return None
-
