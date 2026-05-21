@@ -238,6 +238,7 @@ UNIVERSAL_INTAKE_QUESTIONS = {
             "privacy": "Preserve privacy",
             "legacy_charitable": "Support legacy, charitable, or community goals",
             "review_documents": "Review existing documents",
+            "other_goal": "Other / not listed",
         },
     },
     "asset_snapshot": {
@@ -257,6 +258,7 @@ UNIVERSAL_INTAKE_QUESTIONS = {
             "intellectual_property": "Intellectual property",
             "collectibles_heirlooms": "Collectibles, heirlooms, or heritage property",
             "trust_estate_assets": "Trust or estate assets",
+            "other_asset": "Other / not listed",
             "none_not_sure": "None / not sure",
         },
     },
@@ -271,6 +273,7 @@ UNIVERSAL_INTAKE_QUESTIONS = {
             "special_needs_person": "Disabled or special-needs person",
             "business_partner": "Business partner",
             "charitable_beneficiary": "Charitable, community, or legacy beneficiary",
+            "other_person": "Other / not listed",
             "no_dependents": "No dependents",
             "not_sure": "Not sure",
         },
@@ -289,6 +292,7 @@ UNIVERSAL_INTAKE_QUESTIONS = {
             "medical_incapacity": "Medical or incapacity concern",
             "no_trusted_successor": "No trusted successor",
             "missing_documents": "Missing documents",
+            "none_apply": "None of these apply",
             "not_sure": "Not sure",
         },
     },
@@ -307,6 +311,7 @@ UNIVERSAL_INTAKE_QUESTIONS = {
             "beneficiary_forms": "Retirement / beneficiary forms",
             "tax_filings": "Tax filings",
             "court_documents": "Court documents",
+            "other_document": "Other / not listed",
             "none": "None",
             "not_sure": "Not sure",
         },
@@ -446,6 +451,15 @@ TRANSLATION_RULES = {
         "next_sessions": ["legacy_objectives_review"],
         "risk_flags": [],
     },
+    "main_goals.other_goal": {
+        "system_category": "OBJECTIVE_PROFILE",
+        "system_meaning": "other_goal_not_listed",
+        "module_triggers": ["planning_objective_review"],
+        "document_requests": ["goal_description"],
+        "next_sessions": ["initial_structure_review"],
+        "risk_flags": [],
+    },
+
     "main_goals.review_documents": {
         "system_category": "DOCUMENT_STATUS",
         "system_meaning": "document_review_objective",
@@ -552,6 +566,15 @@ TRANSLATION_RULES = {
         "next_sessions": ["heritage_asset_review"],
         "risk_flags": ["special_custody_or_heritage_flag"],
     },
+    "asset_snapshot.other_asset": {
+        "system_category": "ASSET_PROFILE",
+        "system_meaning": "other_asset_not_listed",
+        "module_triggers": ["general_asset_review"],
+        "document_requests": ["asset_description"],
+        "next_sessions": ["asset_document_deep_dive"],
+        "risk_flags": [],
+    },
+
     "asset_snapshot.trust_estate_assets": {
         "system_category": "FIDUCIARY_CONTEXT",
         "system_meaning": "existing_trust_or_estate_assets",
@@ -610,6 +633,15 @@ TRANSLATION_RULES = {
         "next_sessions": ["business_governance_review"],
         "risk_flags": ["co_owner_or_partner_flag"],
     },
+    "people_dependents.other_person": {
+        "system_category": "BENEFICIARY_PROFILE",
+        "system_meaning": "other_person_or_dependent_not_listed",
+        "module_triggers": ["beneficiary_planning"],
+        "document_requests": ["person_or_dependent_description"],
+        "next_sessions": ["beneficiary_planning_review"],
+        "risk_flags": [],
+    },
+
     "people_dependents.charitable_beneficiary": {
         "system_category": "LEGACY_PROFILE",
         "system_meaning": "charitable_or_legacy_beneficiary",
@@ -692,6 +724,15 @@ TRANSLATION_RULES = {
         "next_sessions": ["fiduciary_selection_review"],
         "risk_flags": ["successor_gap_flag"],
     },
+    "concerns.none_apply": {
+        "system_category": "RISK_PROFILE",
+        "system_meaning": "no_initial_concerns_reported",
+        "module_triggers": [],
+        "document_requests": [],
+        "next_sessions": [],
+        "risk_flags": [],
+    },
+
     "concerns.missing_documents": {
         "system_category": "DOCUMENT_STATUS",
         "system_meaning": "missing_documents_concern",
@@ -790,6 +831,15 @@ TRANSLATION_RULES = {
         "next_sessions": ["risk_triage_review"],
         "risk_flags": ["urgent_or_legal_review_flag"],
     },
+    "existing_documents.other_document": {
+        "system_category": "DOCUMENT_STATUS",
+        "system_meaning": "other_document_available",
+        "module_triggers": ["document_audit"],
+        "document_requests": ["other_document_description"],
+        "next_sessions": ["document_audit_session"],
+        "risk_flags": [],
+    },
+
     "existing_documents.none": {
         "system_category": "DOCUMENT_STATUS",
         "system_meaning": "no_documents_available",
@@ -1266,6 +1316,7 @@ def score_and_save_intake(intake_id, translations, created_by=None):
 
 CLIENT_PRIORITY_LABELS = {
     "family_structure_review": "Review family structure and decision-maker roles",
+    "initial_structure_review": "Review the stated planning goal and place it into the right follow-up path",
     "fiduciary_selection_review": "Choose or confirm trusted decision-makers",
     "real_property_deep_dive": "Review real property ownership and supporting documents",
     "financial_account_review": "Review financial accounts and how they are titled",
@@ -1292,6 +1343,8 @@ CLIENT_PRIORITY_LABELS = {
     "legacy_objectives_review": "Clarify legacy, charitable, or community goals",
     "probate_avoidance_review": "Review probate-avoidance objectives and document gaps",
     "asset_document_deep_dive": "Organize assets and supporting records",
+    "general_asset_review": "Review other assets not listed in the standard intake",
+    "planning_objective_review": "Review other planning goals not listed in the standard intake",
     "multi_jurisdiction_property_review": "Review property located in more than one state",
     "business_liability_review": "Review business liability and insurance concerns",
     "liability_review": "Review debt, creditor, or liability concerns",
@@ -1343,6 +1396,10 @@ CLIENT_DOCUMENT_LABELS = {
     "divorce_decree_if_available": "Divorce decree, if available",
     "prenuptial_or_postnuptial_if_available": "Prenuptial or postnuptial agreement, if available",
     "document_checklist": "Basic document checklist",
+    "goal_description": "Description of other planning goal not listed",
+    "asset_description": "Description of other asset not listed",
+    "person_or_dependent_description": "Description of other person, dependent, or role not listed",
+    "other_document_description": "Description or copy of other document not listed",
     "digital_asset_list": "Digital asset list",
     "ip_registration_records": "IP registration records",
     "licensing_agreements": "Licensing agreements",
