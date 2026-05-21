@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.docq-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.docq-hero,
+.docq-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.docq-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.docq-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.docq-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.docq-actions a,
+.docq-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.docq-options {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.docq-option {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.docq-card input[type="text"],
+.docq-card textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.docq-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="docq-wrap">
+    <div class="docq-hero">
+        <h1 style="margin-top:0;">{{ document_type.title }}</h1>
+        <p>{{ document_type.description }}</p>
+        <p class="docq-muted">
+            Intake ID: {{ intake_id }} | Workflow: {{ workflow_key }} | Document: {{ document_key }}
+        </p>
+
+        <div class="docq-actions">
+            <a href="{{ url_for('intake_document_draft_choose', intake_id=intake_id, workflow_key=workflow_key) }}">Choose draft type</a>
+            <a href="{{ url_for('intake_workflow_draft_packet', intake_id=intake_id, workflow_key=workflow_key) }}">Draft packet</a>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('intake_document_draft_questionnaire', intake_id=intake_id, workflow_key=workflow_key, document_key=document_key) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        {% for question in questions %}
+            <div class="docq-card">
+                <h2>{{ loop.index }}. {{ question.label }}</h2>
+
+                {% if question.input_type == "text" %}
+                    <input type="text" name="{{ question.key }}">
+                {% elif question.input_type == "textarea" %}
+                    <textarea name="{{ question.key }}" rows="5"></textarea>
+                {% elif question.input_type == "radio" %}
+                    <div class="docq-options">
+                        {% for key, label in question.options.items() %}
+                            <label class="docq-option">
+                                <input type="radio" name="{{ question.key }}" value="{{ key }}">
+                                {{ label }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% elif question.input_type == "checkbox" %}
+                    <div class="docq-options">
+                        {% for key, label in question.options.items() %}
+                            <label class="docq-option">
+                                <input type="checkbox" name="{{ question.key }}" value="{{ key }}">
+                                {{ label }}
+                            </label>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <div class="docq-actions">
+            <button type="submit">Save Controlled Draft Answers</button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

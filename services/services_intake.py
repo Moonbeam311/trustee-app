@@ -5674,3 +5674,537 @@ def generate_workflow_draft_packet_docx(intake_id, workflow_key, created_by=None
 
     return str(out_path)
 
+
+# -------------------------------------------------------------------
+# INT-2G — Controlled Document Draft Questionnaire
+# -------------------------------------------------------------------
+
+DOCUMENT_DRAFT_TYPE_CATALOG = {
+    "business_continuity_packet": [
+        {
+            "document_key": "business_continuity_memo",
+            "title": "Business Continuity Memo",
+            "description": "A controlled internal/client-facing memo organizing business authority, continuity risks, documents, and next actions.",
+        },
+        {
+            "document_key": "business_authority_checklist",
+            "title": "Business Authority Checklist",
+            "description": "A checklist to confirm who has authority to operate, sign, access records, and continue operations.",
+        },
+        {
+            "document_key": "business_records_request",
+            "title": "Business Records Request List",
+            "description": "A structured request list for business records, insurance, contracts, authority documents, and operating documents.",
+        },
+    ],
+    "professional_review_checklist": [
+        {
+            "document_key": "professional_review_memo",
+            "title": "Professional Review Memo",
+            "description": "A memo separating tax, legal, creditor, court, and administrative review issues.",
+        },
+        {
+            "document_key": "urgent_issue_checklist",
+            "title": "Urgent Issue Checklist",
+            "description": "A checklist for deadlines, notices, court dates, tax notices, claim letters, or creditor pressure.",
+        },
+    ],
+    "real_property_review": [
+        {
+            "document_key": "property_review_memo",
+            "title": "Real Property Review Memo",
+            "description": "A memo organizing ownership, deed/title, liens, taxes, insurance, and transfer-readiness questions.",
+        },
+        {
+            "document_key": "property_records_request",
+            "title": "Property Records Request List",
+            "description": "A document request list for deeds, tax bills, mortgage records, insurance, surveys, leases, and title records.",
+        },
+    ],
+    "foundational_estate_package": [
+        {
+            "document_key": "foundational_planning_memo",
+            "title": "Foundational Planning Memo",
+            "description": "A memo organizing family structure, decision-makers, beneficiaries, documents, and open planning issues.",
+        },
+        {
+            "document_key": "estate_document_request",
+            "title": "Estate Document Request List",
+            "description": "A request list for wills, trusts, POAs, health directives, deeds, beneficiary forms, and asset statements.",
+        },
+    ],
+    "document_audit": [
+        {
+            "document_key": "document_audit_memo",
+            "title": "Existing Document Audit Memo",
+            "description": "A memo identifying documents to audit, execution concerns, conflicts, missing signatures, and outdated provisions.",
+        },
+        {
+            "document_key": "document_audit_checklist",
+            "title": "Document Audit Checklist",
+            "description": "A checklist to classify documents as active, outdated, incomplete, conflicting, or requiring review.",
+        },
+    ],
+    "beneficiary_guardian_planning": [
+        {
+            "document_key": "beneficiary_guardian_memo",
+            "title": "Beneficiary / Guardian Planning Memo",
+            "description": "A memo organizing beneficiaries, guardians, minors, dependents, and distribution concerns.",
+        },
+        {
+            "document_key": "beneficiary_review_checklist",
+            "title": "Beneficiary Review Checklist",
+            "description": "A checklist for beneficiary designations, guardian choices, minor controls, and distribution review.",
+        },
+    ],
+    "asset_inventory_packet": [
+        {
+            "document_key": "asset_inventory_memo",
+            "title": "Asset Inventory Memo",
+            "description": "A memo organizing asset categories, ownership clarity, missing records, and inventory priorities.",
+        },
+        {
+            "document_key": "asset_records_request",
+            "title": "Asset Records Request List",
+            "description": "A request list for statements, titles, deeds, insurance records, appraisals, account registrations, and supporting records.",
+        },
+    ],
+    "fiduciary_authority_review": [
+        {
+            "document_key": "fiduciary_authority_memo",
+            "title": "Fiduciary Authority Review Memo",
+            "description": "A memo organizing fiduciary role, authority document, limitations, evidence, and restrictions.",
+        },
+        {
+            "document_key": "fiduciary_authority_checklist",
+            "title": "Fiduciary Authority Checklist",
+            "description": "A checklist for trustee, executor, agent, administrator, POA, or other authority verification.",
+        },
+    ],
+    "next_session_agenda": [
+        {
+            "document_key": "next_session_agenda",
+            "title": "Next Session Agenda",
+            "description": "A structured agenda for the next client/internal review session.",
+        },
+    ],
+}
+
+
+DOCUMENT_DRAFT_QUESTION_BANK = {
+    "business_continuity_memo": [
+        {"key": "business_name", "label": "What is the exact business name or DBA?", "input_type": "text"},
+        {"key": "current_operator", "label": "Who currently operates or controls the business?", "input_type": "text"},
+        {"key": "successor_contact", "label": "Who should be contacted if the operator is unavailable?", "input_type": "text"},
+        {"key": "continuity_priority", "label": "What is the highest continuity priority?", "input_type": "radio", "options": {
+            "authority": "Confirm authority",
+            "records": "Organize records",
+            "insurance": "Review insurance/liability",
+            "succession": "Prepare successor operator",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "business_authority_checklist": [
+        {"key": "authority_holder", "label": "Who currently has signing or operating authority?", "input_type": "text"},
+        {"key": "authority_evidence", "label": "What evidence supports that authority?", "input_type": "checkbox", "options": {
+            "ein": "EIN letter",
+            "operating_agreement": "Operating agreement",
+            "bank_records": "Bank records",
+            "license": "Business license",
+            "contracts": "Contracts",
+            "other": "Other",
+        }},
+        {"key": "authority_gap", "label": "Is there an authority gap?", "input_type": "radio", "options": {
+            "yes": "Yes",
+            "no": "No",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "business_records_request": [
+        {"key": "records_needed", "label": "Which business records must be requested?", "input_type": "checkbox", "options": {
+            "ein": "EIN letter",
+            "operating_agreement": "Operating agreement",
+            "license": "Business license/registration",
+            "insurance": "Insurance policy",
+            "contracts": "Contracts",
+            "bank_records": "Bank authority records",
+            "tax_records": "Tax records",
+            "other": "Other",
+        }},
+        {"key": "request_recipient", "label": "Who should receive the records request?", "input_type": "text"},
+        {"key": "urgency", "label": "How urgent is the records request?", "input_type": "radio", "options": {
+            "low": "Low",
+            "normal": "Normal",
+            "high": "High",
+            "urgent": "Urgent",
+        }},
+    ],
+    "professional_review_memo": [
+        {"key": "issue_summary", "label": "Briefly summarize the review issue.", "input_type": "textarea"},
+        {"key": "review_category", "label": "What category best fits the issue?", "input_type": "checkbox", "options": {
+            "tax": "Tax",
+            "legal": "Legal",
+            "court": "Court",
+            "creditor": "Creditor/claim",
+            "business": "Business liability",
+            "family": "Family conflict",
+            "other": "Other",
+        }},
+        {"key": "deadline", "label": "Is there a deadline or response date?", "input_type": "text"},
+    ],
+    "urgent_issue_checklist": [
+        {"key": "urgent_document", "label": "Which urgent document triggered this?", "input_type": "text"},
+        {"key": "response_needed", "label": "What response appears needed?", "input_type": "textarea"},
+        {"key": "outside_review", "label": "Is outside professional review needed before action?", "input_type": "radio", "options": {
+            "yes": "Yes",
+            "no": "No",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "property_review_memo": [
+        {"key": "property_identifier", "label": "What is the property address or parcel identifier?", "input_type": "text"},
+        {"key": "record_owner", "label": "Who appears on the deed/title record?", "input_type": "text"},
+        {"key": "property_issue", "label": "What property issue needs review?", "input_type": "checkbox", "options": {
+            "deed": "Deed/title",
+            "mortgage": "Mortgage/lien",
+            "tax": "Tax bill",
+            "insurance": "Insurance",
+            "co_owner": "Co-owner",
+            "transfer": "Transfer/funding",
+            "other": "Other",
+        }},
+    ],
+    "property_records_request": [
+        {"key": "property_records_needed", "label": "Which property records should be requested?", "input_type": "checkbox", "options": {
+            "deed": "Deed",
+            "tax_bill": "Tax bill",
+            "mortgage": "Mortgage statement",
+            "insurance": "Insurance declarations",
+            "survey": "Survey",
+            "lease": "Lease",
+            "title": "Title records",
+            "other": "Other",
+        }},
+        {"key": "property_request_recipient", "label": "Who should provide these records?", "input_type": "text"},
+    ],
+    "foundational_planning_memo": [
+        {"key": "planning_party", "label": "Who is the planning party?", "input_type": "text"},
+        {"key": "primary_goal", "label": "What is the primary planning goal?", "input_type": "textarea"},
+        {"key": "document_priority", "label": "Which foundational document should be considered first?", "input_type": "radio", "options": {
+            "will": "Will",
+            "trust": "Trust",
+            "poa": "Power of attorney",
+            "health": "Health directive",
+            "beneficiary": "Beneficiary update",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "estate_document_request": [
+        {"key": "estate_records_needed", "label": "Which estate planning records are needed?", "input_type": "checkbox", "options": {
+            "will": "Will",
+            "trust": "Trust",
+            "poa": "Power of attorney",
+            "health": "Health directive",
+            "deed": "Deed",
+            "beneficiary": "Beneficiary form",
+            "asset_statement": "Asset statement",
+            "other": "Other",
+        }},
+        {"key": "request_deadline", "label": "When should these be gathered?", "input_type": "text"},
+    ],
+    "document_audit_memo": [
+        {"key": "audit_scope", "label": "What documents are in the audit scope?", "input_type": "textarea"},
+        {"key": "audit_risk", "label": "What audit concerns are present?", "input_type": "checkbox", "options": {
+            "outdated": "Outdated",
+            "conflict": "Conflicting",
+            "unsigned": "Unsigned/incomplete",
+            "wrong_party": "Wrong party/name",
+            "missing_asset": "Missing asset reference",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "document_audit_checklist": [
+        {"key": "classification_needed", "label": "How should documents be classified?", "input_type": "checkbox", "options": {
+            "active": "Active",
+            "superseded": "Superseded",
+            "incomplete": "Incomplete",
+            "conflicting": "Conflicting",
+            "review_required": "Review required",
+        }},
+        {"key": "audit_owner", "label": "Who will gather or review the documents?", "input_type": "text"},
+    ],
+    "beneficiary_guardian_memo": [
+        {"key": "beneficiary_notes", "label": "Summarize beneficiary/guardian planning concerns.", "input_type": "textarea"},
+        {"key": "minor_or_dependent", "label": "Are minors or dependents involved?", "input_type": "radio", "options": {
+            "yes": "Yes",
+            "no": "No",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "beneficiary_review_checklist": [
+        {"key": "beneficiary_records", "label": "Which beneficiary records should be reviewed?", "input_type": "checkbox", "options": {
+            "life_insurance": "Life insurance beneficiary",
+            "retirement": "Retirement account beneficiary",
+            "bank": "Bank/account beneficiary",
+            "trust": "Trust beneficiary provision",
+            "will": "Will distribution provision",
+            "other": "Other",
+        }},
+        {"key": "guardian_candidate", "label": "Who is the proposed guardian/caregiver, if applicable?", "input_type": "text"},
+    ],
+    "asset_inventory_memo": [
+        {"key": "inventory_scope", "label": "What assets should be inventoried first?", "input_type": "textarea"},
+        {"key": "ownership_clarity", "label": "Is ownership clear?", "input_type": "radio", "options": {
+            "yes": "Yes",
+            "some": "Some assets",
+            "no": "No",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "asset_records_request": [
+        {"key": "asset_records_needed", "label": "Which asset records are needed?", "input_type": "checkbox", "options": {
+            "statements": "Statements",
+            "titles": "Titles",
+            "deeds": "Deeds",
+            "insurance": "Insurance records",
+            "registrations": "Account registrations",
+            "appraisals": "Appraisals/valuations",
+            "other": "Other",
+        }},
+        {"key": "asset_request_priority", "label": "Which asset record is most urgent?", "input_type": "text"},
+    ],
+    "fiduciary_authority_memo": [
+        {"key": "fiduciary_name", "label": "Who is the fiduciary/agent/trustee?", "input_type": "text"},
+        {"key": "authority_document", "label": "What document grants authority?", "input_type": "text"},
+        {"key": "authority_limits", "label": "Are there known limits or conditions?", "input_type": "textarea"},
+    ],
+    "fiduciary_authority_checklist": [
+        {"key": "authority_evidence_needed", "label": "Which authority evidence is needed?", "input_type": "checkbox", "options": {
+            "trust": "Trust instrument",
+            "poa": "Power of attorney",
+            "letters": "Letters testamentary/administration",
+            "resolution": "Resolution/minute",
+            "id": "Identification",
+            "other": "Other",
+        }},
+        {"key": "authority_status", "label": "Is authority currently usable?", "input_type": "radio", "options": {
+            "yes": "Yes",
+            "no": "No",
+            "not_sure": "Not sure",
+        }},
+    ],
+    "next_session_agenda": [
+        {"key": "agenda_goal", "label": "What is the next session goal?", "input_type": "textarea"},
+        {"key": "agenda_items", "label": "Which agenda items should be included?", "input_type": "checkbox", "options": {
+            "documents": "Document review",
+            "assets": "Asset inventory",
+            "family": "Family/beneficiary planning",
+            "business": "Business continuity",
+            "risk": "Risk/professional review",
+            "next_steps": "Next steps",
+        }},
+        {"key": "session_owner", "label": "Who is responsible for preparing the next session?", "input_type": "text"},
+    ],
+}
+
+
+def get_document_draft_types_for_workflow(workflow_key):
+    return DOCUMENT_DRAFT_TYPE_CATALOG.get(workflow_key, [])
+
+
+def get_document_draft_type(workflow_key, document_key):
+    for item in get_document_draft_types_for_workflow(workflow_key):
+        if item.get("document_key") == document_key:
+            return item
+    return None
+
+
+def get_document_draft_questions(document_key):
+    return DOCUMENT_DRAFT_QUESTION_BANK.get(document_key, [])
+
+
+def ensure_document_draft_questionnaire_tables():
+    ensure_draft_readiness_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_document_draft_answers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            question_key TEXT NOT NULL,
+            answer_key TEXT,
+            answer_label TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def save_document_draft_answers(intake_id, workflow_key, document_key, form_data, created_by=None):
+    ensure_document_draft_questionnaire_tables()
+
+    questions = get_document_draft_questions(document_key)
+    if not questions:
+        raise ValueError("Unknown document draft questionnaire.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            DELETE FROM intake_document_draft_answers
+            WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        """, (intake_id, workflow_key, document_key))
+
+        for question in questions:
+            qkey = question.get("key")
+            input_type = question.get("input_type")
+            options = question.get("options", {})
+
+            if input_type == "checkbox":
+                values = form_data.getlist(qkey) if hasattr(form_data, "getlist") else []
+            else:
+                value = form_data.get(qkey) if hasattr(form_data, "get") else None
+                values = [value] if value else []
+
+            for answer_key in values:
+                if not answer_key:
+                    continue
+
+                answer_label = options.get(answer_key, answer_key)
+
+                cur.execute("""
+                    INSERT INTO intake_document_draft_answers (
+                        intake_id, workflow_key, document_key, firm_id,
+                        question_key, answer_key, answer_label,
+                        created_at, updated_at, created_by
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    intake_id,
+                    workflow_key,
+                    document_key,
+                    firm_id,
+                    qkey,
+                    answer_key,
+                    answer_label,
+                    now,
+                    now,
+                    created_by,
+                ))
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+
+def list_document_draft_answers(intake_id, workflow_key, document_key):
+    ensure_document_draft_questionnaire_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT question_key, answer_key, answer_label, created_at, updated_at, created_by
+        FROM intake_document_draft_answers
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        ORDER BY id ASC
+    """, (intake_id, workflow_key, document_key))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "question_key": row[0],
+            "answer_key": row[1],
+            "answer_label": row[2],
+            "created_at": format_intake_timestamp(row[3]),
+            "updated_at": format_intake_timestamp(row[4]),
+            "created_by": row[5] or "—",
+        }
+        for row in rows
+    ]
+
+
+def build_document_draft_preview(intake_id, workflow_key, document_key):
+    draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
+    document_type = get_document_draft_type(workflow_key, document_key)
+    questions = get_document_draft_questions(document_key)
+
+    if not draft_packet or not document_type or not questions:
+        return None
+
+    answers = list_document_draft_answers(intake_id, workflow_key, document_key)
+    answers_by_question = {}
+
+    for answer in answers:
+        answers_by_question.setdefault(answer["question_key"], []).append(answer)
+
+    question_summaries = []
+    for question in questions:
+        qkey = question.get("key")
+        question_summaries.append({
+            "question_key": qkey,
+            "label": question.get("label"),
+            "input_type": question.get("input_type"),
+            "answers": answers_by_question.get(qkey, []),
+        })
+
+    answered_count = len([q for q in question_summaries if q["answers"]])
+    total_count = len(question_summaries)
+
+    if answered_count == 0:
+        preview_status = "Questionnaire Not Completed"
+    elif answered_count < total_count:
+        preview_status = "Partial Draft Preview"
+    else:
+        preview_status = "Draft Preview Ready"
+
+    outline_sections = [
+        "Purpose / Scope",
+        "Information Gathered",
+        "Open Issues",
+        "Required Documents",
+        "Recommended Next Steps",
+        "Review Notice",
+    ]
+
+    if workflow_key == "business_continuity_packet":
+        outline_sections.insert(2, "Business Authority / Continuity Notes")
+    elif workflow_key == "real_property_review":
+        outline_sections.insert(2, "Property Ownership / Records Notes")
+    elif workflow_key == "professional_review_checklist":
+        outline_sections.insert(2, "Professional Review Issue Notes")
+    elif workflow_key == "asset_inventory_packet":
+        outline_sections.insert(2, "Asset Inventory Notes")
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "document_type": document_type,
+        "draft_packet": draft_packet,
+        "questions": questions,
+        "answers": answers,
+        "question_summaries": question_summaries,
+        "answered_count": answered_count,
+        "total_count": total_count,
+        "preview_status": preview_status,
+        "outline_sections": outline_sections,
+        "notice": "This is a non-final draft preview generated from controlled questionnaire answers. It is not a final legal, fiduciary, tax, property, or business document.",
+    }
+

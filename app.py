@@ -26,6 +26,7 @@ from services.services_intake import update_document_recommendation_status, buil
 from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
 from services.services_intake import build_workflow_draft_packet
 from services.services_intake import generate_workflow_draft_packet_docx, upsert_draft_readiness_record, list_draft_readiness_records
+from services.services_intake import get_document_draft_types_for_workflow, get_document_draft_type, get_document_draft_questions, save_document_draft_answers, build_document_draft_preview, ensure_document_draft_questionnaire_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13567,6 +13568,77 @@ def intake_draft_readiness_ledger_detail(intake_id):
         "intake/draft_readiness_ledger.html",
         records=records,
         intake_id=intake_id
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft")
+def intake_document_draft_choose(intake_id, workflow_key):
+    draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
+    document_types = get_document_draft_types_for_workflow(workflow_key)
+
+    if not draft_packet or not document_types:
+        flash("No controlled document draft types are available for this workflow yet.", "warning")
+        return redirect(url_for("intake_workflow_draft_packet", intake_id=intake_id, workflow_key=workflow_key))
+
+    return render_template(
+        "intake/document_draft_choose.html",
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        draft_packet=draft_packet,
+        document_types=document_types
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>", methods=["GET", "POST"])
+def intake_document_draft_questionnaire(intake_id, workflow_key, document_key):
+    ensure_document_draft_questionnaire_tables()
+
+    draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
+    document_type = get_document_draft_type(workflow_key, document_key)
+    questions = get_document_draft_questions(document_key)
+
+    if not draft_packet or not document_type or not questions:
+        flash("Controlled document questionnaire could not be built.", "warning")
+        return redirect(url_for("intake_document_draft_choose", intake_id=intake_id, workflow_key=workflow_key))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return redirect(url_for("intake_document_draft_questionnaire", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+        save_document_draft_answers(
+            intake_id=intake_id,
+            workflow_key=workflow_key,
+            document_key=document_key,
+            form_data=request.form,
+            created_by=session.get("username") if "session" in globals() else None,
+        )
+
+        flash("Controlled document draft questionnaire saved.", "success")
+        return redirect(url_for("intake_document_draft_preview", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/document_draft_questionnaire.html",
+        intake_id=intake_id,
+        workflow_key=workflow_key,
+        document_key=document_key,
+        draft_packet=draft_packet,
+        document_type=document_type,
+        questions=questions
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/preview")
+def intake_document_draft_preview(intake_id, workflow_key, document_key):
+    preview = build_document_draft_preview(intake_id, workflow_key, document_key)
+
+    if not preview:
+        flash("Controlled document draft preview could not be built.", "warning")
+        return redirect(url_for("intake_document_draft_questionnaire", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    return render_template(
+        "intake/document_draft_preview.html",
+        preview=preview
     )
 
 

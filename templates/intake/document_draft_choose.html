@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.docdraft-wrap {
+    max-width: 1050px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.docdraft-hero,
+.docdraft-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.docdraft-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.docdraft-card {
+    padding: 18px;
+    margin-bottom: 14px;
+}
+
+.docdraft-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.docdraft-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.docdraft-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.docdraft-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="docdraft-wrap">
+    <div class="docdraft-hero">
+        <h1 style="margin-top:0;">Choose Controlled Draft Type</h1>
+        <p>
+            Intake ID: <strong>{{ intake_id }}</strong> |
+            Workflow: <strong>{{ workflow_key }}</strong>
+        </p>
+        <p class="docdraft-muted">
+            Choose the controlled document draft questionnaire to begin. This does not create a final document.
+        </p>
+
+        <div class="docdraft-actions">
+            <a href="{{ url_for('intake_workflow_draft_packet', intake_id=intake_id, workflow_key=workflow_key) }}">Draft packet</a>
+            <a href="{{ url_for('intake_document_recommendations', intake_id=intake_id) }}">Recommendations</a>
+        </div>
+    </div>
+
+    <div class="docdraft-grid">
+        {% for doc in document_types %}
+            <div class="docdraft-card">
+                <h2>{{ doc.title }}</h2>
+                <p>{{ doc.description }}</p>
+                <div class="docdraft-actions">
+                    <a href="{{ url_for('intake_document_draft_questionnaire', intake_id=intake_id, workflow_key=workflow_key, document_key=doc.document_key) }}">Start questionnaire</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
