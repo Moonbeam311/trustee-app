@@ -9036,18 +9036,29 @@ def merge_trust_instrument_recommendations(recommendations):
     """
     Add trust instrument workflows to the recommendation list without duplicating
     existing workflow keys.
+
+    Safe for mixed legacy recommendation formats:
+    - dict recommendation rows
+    - plain string recommendation labels
+    - other unexpected values
     """
     recommendations = list(recommendations or [])
 
-    existing_keys = {
-        rec.get("workflow_key") or rec.get("source") or rec.get("title")
-        for rec in recommendations
-    }
+    existing_keys = set()
+
+    for rec in recommendations:
+        if isinstance(rec, dict):
+            existing_keys.add(rec.get("workflow_key") or rec.get("source") or rec.get("title"))
+        elif isinstance(rec, str):
+            existing_keys.add(rec)
+        else:
+            existing_keys.add(str(rec))
 
     for item in get_trust_instrument_recommendation_menu():
         key = item.get("workflow_key")
-        if key not in existing_keys:
+        title = item.get("title")
+
+        if key not in existing_keys and title not in existing_keys:
             recommendations.append(item)
 
     return recommendations
-
