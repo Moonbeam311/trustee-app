@@ -18,6 +18,7 @@ from services.services_intake import build_intake_followup_packet, get_packet_re
 from services.services_intake import generate_followup_packet_docx, generate_followup_packet_pdf
 from services.services_intake import generate_followup_packet_docx_logged, generate_followup_packet_pdf_logged, list_intake_export_logs, ensure_intake_export_log_tables
 from services.services_intake import ensure_intake_export_version_columns, list_all_intake_export_logs, list_intake_export_logs_versioned, get_intake_export_summary, generate_followup_packet_docx_logged_versioned, generate_followup_packet_pdf_logged_versioned
+from services.services_intake import list_intake_export_logs_dashboard
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13360,12 +13361,12 @@ def intake_followup_packet_pdf(intake_id):
 @app.route("/intake/exports")
 def intake_export_history():
     ensure_intake_export_version_columns()
-    logs = list_all_intake_export_logs(limit=200)
-    summary = get_intake_export_summary(limit=200)
+    logs, summary, scope_label = list_intake_export_logs_dashboard(limit=200)
     return render_template(
         "intake/export_history.html",
         logs=logs,
-        summary=summary
+        summary=summary,
+        scope_label=scope_label
     )
 
 

@@ -3363,3 +3363,87 @@ def generate_followup_packet_pdf_logged_versioned(intake_id, created_by=None):
         )
         return None
 
+
+# -------------------------------------------------------------------
+# INT-1N-SCOPE — Export History Firm Scope Repair
+# -------------------------------------------------------------------
+
+def list_all_intake_export_logs_any_scope(limit=100):
+    """
+    Admin/local fallback: returns export logs across all firm scopes.
+    Used only when the active firm-scoped export dashboard is empty.
+    """
+    ensure_intake_export_version_columns()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT intake_id, export_type, export_status, file_path, message,
+               created_at, created_by, version_number, packet_type, firm_id
+        FROM intake_export_logs
+        ORDER BY id DESC
+        LIMIT ?
+    """, (limit,))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "intake_id": row[0],
+            "export_type": row[1],
+            "export_status": row[2],
+            "file_path": row[3],
+            "message": row[4],
+            "created_at": format_intake_timestamp(row[5]),
+            "created_by": row[6] or "—",
+            "version_number": row[7] or 1,
+            "packet_type": row[8] or "follow_up_packet",
+            "firm_id": row[9] or "—",
+        }
+        for row in rows
+    ]
+
+
+def get_intake_export_summary_from_logs(logs):
+    summary = {
+        "total": len(logs or []),
+        "success": 0,
+        "failed": 0,
+        "error": 0,
+        "docx": 0,
+        "pdf": 0,
+        "other": 0,
+    }
+
+    for log in logs or []:
+        status = log.get("export_status")
+        export_type = log.get("export_type")
+
+        if status in summary:
+            summary[status] += 1
+
+        if export_type == "docx":
+            summary["docx"] += 1
+        elif export_type == "pdf":
+            summary["pdf"] += 1
+        else:
+            summary["other"] += 1
+
+    return summary
+
+
+def list_intake_export_logs_dashboard(limit=200):
+    """
+    Firm-aware first, local-admin fallback second.
+    Returns (logs, summary, scope_label).
+    """
+    scoped_logs = list_all_intake_export_logs(limit=limit)
+
+    if scoped_logs:
+        return scoped_logs, get_intake_export_summary_from_logs(scoped_logs), "Active Firm Scope"
+
+    fallback_logs = list_all_intake_export_logs_any_scope(limit=limit)
+    return fallback_logs, get_intake_export_summary_from_logs(fallback_logs), "All Local Export Logs"
+

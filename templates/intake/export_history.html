@@ -70,6 +70,7 @@
     <div class="export-card">
         <h1 style="margin-top:0;">Intake Export History</h1>
         <p>Review DOCX/PDF export attempts across all intake sessions.</p>
+        <p><strong>Scope:</strong> {{ scope_label or "Active Firm Scope" }}</p>
 
         <div class="export-actions">
             <a href="{{ url_for('intake_dashboard') }}">Back to intake dashboard</a>
@@ -100,6 +101,7 @@
                     <th>Packet</th>
                     <th>Created</th>
                     <th>By</th>
+                    <th>Firm</th>
                     <th>Message</th>
                 </tr>
             </thead>
@@ -115,6 +117,7 @@
                         <td>{{ log.packet_type.replace('_', ' ').title() if log.packet_type else '—' }}</td>
                         <td>{{ log.created_at }}</td>
                         <td>{{ log.created_by }}</td>
+                        <td>{{ log.firm_id or '—' }}</td>
                         <td>{{ log.message or '' }}</td>
                     </tr>
                 {% else %}
