@@ -964,11 +964,14 @@ def save_universal_profile_answers(intake_id, form_data, created_by=None):
     conn.commit()
     conn.close()
 
+    scores = score_and_save_intake(intake_id, translations, created_by=created_by)
+
     return {
         "intake_id": intake_id,
         "answers": saved_answers,
         "translations": translations,
         "summary": summarize_intake_translations(translations),
+        "scores": scores,
     }
 
 
@@ -1017,4 +1020,242 @@ def get_intake_session(intake_id):
         "next_screen", "status", "created_at", "updated_at"
     ]
     return dict(zip(keys, row))
+
+
+# -------------------------------------------------------------------
+# INT-1C — Intake Scoring Engine
+# -------------------------------------------------------------------
+
+COMPLEXITY_WEIGHTS = {
+    # Asset / structure complexity
+    "real_property_review": 2,
+    "funding_checklist": 2,
+    "income_property_review": 3,
+    "business_continuity": 3,
+    "entity_review": 3,
+    "business_governance_review": 3,
+    "multi_jurisdiction_review": 4,
+    "fiduciary_administration": 3,
+    "trust_audit": 2,
+    "fiduciary_inventory": 3,
+    "ledger_readiness": 2,
+    "special_needs_review": 4,
+    "heritage_asset_ledger": 2,
+    "ip_inventory": 2,
+    "digital_asset_inventory": 1,
+
+    # Family/governance complexity
+    "guardian_review": 2,
+    "minor_beneficiary_controls": 2,
+    "governance_controls": 3,
+    "conflict_review": 3,
+    "successor_selection": 2,
+    "elder_planning": 3,
+}
+
+URGENCY_WEIGHTS = {
+    # Strong urgency flags
+    "urgent_or_legal_review_flag": 5,
+    "creditor_pressure_flag": 4,
+    "tax_review_flag": 4,
+    "incapacity_planning_needed": 4,
+    "authority_review_needed": 3,
+    "family_conflict_risk": 3,
+
+    # Moderate urgency flags
+    "business_continuity_needed": 3,
+    "business_liability_possible": 3,
+    "successor_gap_flag": 3,
+    "documentation_gap": 3,
+    "minor_children_flag": 2,
+    "special_needs_flag": 4,
+    "elder_dependency_flag": 3,
+    "multi_jurisdiction_flag": 3,
+    "liability_exposure_possible": 2,
+    "transfer_restriction_review_needed": 2,
+    "co_owner_or_partner_flag": 2,
+    "family_status_complexity": 2,
+    "special_custody_or_heritage_flag": 1,
+}
+
+READINESS_WEIGHTS = {
+    # Existing documents increase readiness
+    "will_exists": 1,
+    "trust_exists": 2,
+    "poa_exists": 1,
+    "health_directive_exists": 1,
+    "deed_available": 2,
+    "mortgage_statement_available": 1,
+    "business_documents_exist": 2,
+    "insurance_documents_exist": 1,
+    "beneficiary_forms_exist": 1,
+    "tax_filings_available": 1,
+    "court_documents_available": 1,
+
+    # Available document requests can also indicate partial readiness
+    "will": 1,
+    "trust_document": 2,
+    "power_of_attorney": 1,
+    "health_directive": 1,
+    "deed": 2,
+    "mortgage_statement": 1,
+    "business_documents": 2,
+    "insurance_policies": 1,
+    "beneficiary_forms": 1,
+    "tax_filings": 1,
+    "court_documents": 1,
+}
+
+
+def ensure_intake_scoring_tables():
+    ensure_intake_translation_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_scores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            complexity_score INTEGER DEFAULT 0,
+            complexity_level TEXT,
+            urgency_score INTEGER DEFAULT 0,
+            urgency_level TEXT,
+            readiness_score INTEGER DEFAULT 0,
+            readiness_level TEXT,
+            scoring_notes TEXT,
+            created_at TEXT,
+            updated_at TEXT,
+            created_by TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def classify_complexity(score):
+    if score <= 4:
+        return "Simple"
+    if score <= 9:
+        return "Moderate"
+    if score <= 15:
+        return "Advanced"
+    return "Complex"
+
+
+def classify_urgency(score):
+    if score <= 3:
+        return "Low"
+    if score <= 7:
+        return "Medium"
+    return "High"
+
+
+def classify_readiness(score):
+    if score <= 2:
+        return "Not Ready"
+    if score <= 6:
+        return "Partially Ready"
+    return "Ready for Deep Review"
+
+
+def calculate_intake_scores(translations):
+    complexity_score = 0
+    urgency_score = 0
+    readiness_score = 0
+
+    complexity_hits = []
+    urgency_hits = []
+    readiness_hits = []
+
+    for item in translations:
+        module_trigger = item.get("module_trigger")
+        risk_flag = item.get("risk_flag")
+        system_meaning = item.get("system_meaning")
+        document_request = item.get("document_request")
+
+        if module_trigger in COMPLEXITY_WEIGHTS:
+            value = COMPLEXITY_WEIGHTS[module_trigger]
+            complexity_score += value
+            complexity_hits.append(f"{module_trigger}+{value}")
+
+        if risk_flag in URGENCY_WEIGHTS:
+            value = URGENCY_WEIGHTS[risk_flag]
+            urgency_score += value
+            urgency_hits.append(f"{risk_flag}+{value}")
+
+        if system_meaning in READINESS_WEIGHTS:
+            value = READINESS_WEIGHTS[system_meaning]
+            readiness_score += value
+            readiness_hits.append(f"{system_meaning}+{value}")
+
+        if document_request in READINESS_WEIGHTS:
+            value = READINESS_WEIGHTS[document_request]
+            readiness_score += value
+            readiness_hits.append(f"{document_request}+{value}")
+
+    return {
+        "complexity_score": complexity_score,
+        "complexity_level": classify_complexity(complexity_score),
+        "urgency_score": urgency_score,
+        "urgency_level": classify_urgency(urgency_score),
+        "readiness_score": readiness_score,
+        "readiness_level": classify_readiness(readiness_score),
+        "scoring_notes": {
+            "complexity_hits": complexity_hits,
+            "urgency_hits": urgency_hits,
+            "readiness_hits": readiness_hits,
+        }
+    }
+
+
+def save_intake_scores(intake_id, scores, created_by=None):
+    ensure_intake_scoring_tables()
+
+    import json
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO intake_scores (
+            intake_id, firm_id, complexity_score, complexity_level,
+            urgency_score, urgency_level, readiness_score, readiness_level,
+            scoring_notes, created_at, updated_at, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        intake_id,
+        firm_id,
+        scores["complexity_score"],
+        scores["complexity_level"],
+        scores["urgency_score"],
+        scores["urgency_level"],
+        scores["readiness_score"],
+        scores["readiness_level"],
+        json.dumps(scores.get("scoring_notes", {})),
+        now,
+        now,
+        created_by,
+    ))
+
+    cur.execute("""
+        UPDATE intake_sessions
+        SET status = ?, updated_at = ?
+        WHERE intake_id = ?
+    """, ("scored", now, intake_id))
+
+    conn.commit()
+    conn.close()
+
+    return scores
+
+
+def score_and_save_intake(intake_id, translations, created_by=None):
+    scores = calculate_intake_scores(translations)
+    save_intake_scores(intake_id, scores, created_by=created_by)
+    return scores
 

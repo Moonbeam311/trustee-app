@@ -10,6 +10,39 @@
         <strong>Important:</strong> This is a routing and preparation map. It is not final legal, tax, or asset-transfer advice.
     </div>
 
+
+    {% if result.scores %}
+    <h2>Intake Scores</h2>
+
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin:20px 0;">
+        <div style="padding:16px; border:1px solid #ccc; border-radius:10px;">
+            <h3>Complexity</h3>
+            <p style="font-size:1.4rem;"><strong>{{ result.scores.complexity_level }}</strong></p>
+            <p>Score: {{ result.scores.complexity_score }}</p>
+            <p style="font-size:0.9rem; opacity:0.8;">Measures how involved the matter appears based on assets, people, governance, business, and administrative triggers.</p>
+        </div>
+
+        <div style="padding:16px; border:1px solid #ccc; border-radius:10px;">
+            <h3>Urgency</h3>
+            <p style="font-size:1.4rem;"><strong>{{ result.scores.urgency_level }}</strong></p>
+            <p>Score: {{ result.scores.urgency_score }}</p>
+            <p style="font-size:0.9rem; opacity:0.8;">Measures whether the matter may require faster review because of risk, deadlines, conflict, incapacity, tax, creditor, or legal pressure.</p>
+        </div>
+
+        <div style="padding:16px; border:1px solid #ccc; border-radius:10px;">
+            <h3>Readiness</h3>
+            <p style="font-size:1.4rem;"><strong>{{ result.scores.readiness_level }}</strong></p>
+            <p>Score: {{ result.scores.readiness_score }}</p>
+            <p style="font-size:0.9rem; opacity:0.8;">Measures whether enough documents appear to exist for a deeper review.</p>
+        </div>
+    </div>
+
+    <div style="padding: 14px; border: 1px solid #ddd; border-radius: 10px; margin: 18px 0;">
+        <strong>Scoring note:</strong>
+        These scores are intake-routing tools only. They do not determine legal validity, tax treatment, asset protection, or document sufficiency.
+    </div>
+    {% endif %}
+
     <h2>System Categories</h2>
     <ul>
         {% for item in result.summary.system_categories %}
