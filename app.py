@@ -34,6 +34,7 @@ from services.services_intake import upsert_final_draft_prep_gate, get_final_dra
 from services.services_intake import build_final_draft_resolution_context, record_final_draft_resolution_actions, upsert_final_draft_prep_gate_with_resolutions
 from services.services_intake import build_final_draft_admin_approval_context, record_final_draft_admin_approval, list_final_draft_admin_approvals
 from services.services_intake import build_final_draft_workspace_context
+from services.services_intake import build_final_draft_section_editor_context, get_final_draft_section, update_final_draft_section, build_final_draft_preview_context
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13931,6 +13932,69 @@ def intake_final_draft_workspace(intake_id, workflow_key, document_key):
     return render_template(
         "intake/final_draft_workspace.html",
         workspace=workspace
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-section-editor")
+def intake_final_draft_section_editor(intake_id, workflow_key, document_key):
+    editor = build_final_draft_section_editor_context(intake_id, workflow_key, document_key)
+
+    return render_template(
+        "intake/final_draft_section_editor.html",
+        editor=editor,
+        section=None
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-section-editor/<int:section_id>", methods=["GET", "POST"])
+def intake_final_draft_section_edit(intake_id, workflow_key, document_key, section_id):
+    editor = build_final_draft_section_editor_context(intake_id, workflow_key, document_key)
+
+    if not editor or not editor.get("access_granted"):
+        flash("Final-draft section editor is not available.", "warning")
+        return redirect(url_for("intake_final_draft_workspace", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    section = get_final_draft_section(intake_id, workflow_key, document_key, section_id)
+
+    if not section:
+        flash("Final-draft section not found.", "warning")
+        return redirect(url_for("intake_final_draft_section_editor", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            flash("Invalid or missing CSRF token.", "warning")
+            return redirect(url_for("intake_final_draft_section_edit", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key, section_id=section_id))
+
+        try:
+            update_final_draft_section(
+                intake_id=intake_id,
+                workflow_key=workflow_key,
+                document_key=document_key,
+                section_id=section_id,
+                section_heading=request.form.get("section_heading") or section.get("section_heading"),
+                section_body=request.form.get("section_body") or "",
+                section_status=request.form.get("section_status") or "draft",
+                updated_by=session.get("username") if "session" in globals() else None,
+            )
+            flash("Final-draft section updated.", "success")
+            return redirect(url_for("intake_final_draft_section_editor", intake_id=intake_id, workflow_key=workflow_key, document_key=document_key))
+        except Exception as exc:
+            flash(f"Final-draft section could not be updated: {exc}", "warning")
+
+    return render_template(
+        "intake/final_draft_section_editor.html",
+        editor=editor,
+        section=section
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/document-draft/<document_key>/final-draft-preview")
+def intake_final_draft_preview(intake_id, workflow_key, document_key):
+    preview = build_final_draft_preview_context(intake_id, workflow_key, document_key)
+
+    return render_template(
+        "intake/final_draft_preview.html",
+        preview=preview
     )
 
 

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.finalpreview-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.finalpreview-hero,
+.finalpreview-card,
+.finalpreview-section {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.finalpreview-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.finalpreview-card,
+.finalpreview-section {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.finalpreview-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.finalpreview-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.finalpreview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.finalpreview-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.finalpreview-body {
+    white-space: pre-line;
+    line-height: 1.6;
+}
+
+.finalpreview-muted {
+    opacity: 0.75;
+}
+
+@media print {
+    nav,
+    .finalpreview-actions {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .finalpreview-wrap {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .finalpreview-hero,
+    .finalpreview-card,
+    .finalpreview-section {
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid #999 !important;
+    }
+}
+</style>
+
+<div class="finalpreview-wrap">
+    <div class="finalpreview-hero">
+        <h1 style="margin-top:0;">Final-Draft Preview</h1>
+
+        <p>
+            Intake ID: <strong>{{ preview.intake_id }}</strong> |
+            Workflow: <strong>{{ preview.workflow_key }}</strong> |
+            Document: <strong>{{ preview.document_key }}</strong>
+        </p>
+
+        {% if preview.access_granted %}
+            <p class="finalpreview-muted">{{ preview.notice }}</p>
+        {% else %}
+            <p><strong>Access Not Granted:</strong> {{ preview.reason }}</p>
+        {% endif %}
+
+        <div class="finalpreview-actions">
+            <a href="{{ url_for('intake_final_draft_section_editor', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Section editor</a>
+            <a href="{{ url_for('intake_final_draft_workspace', intake_id=preview.intake_id, workflow_key=preview.workflow_key, document_key=preview.document_key) }}">Workspace</a>
+            <a href="#" onclick="window.print(); return false;">Print preview</a>
+        </div>
+    </div>
+
+    {% if preview.access_granted %}
+        <div class="finalpreview-grid">
+            <div class="finalpreview-card">
+                <h3>Status</h3>
+                <span class="finalpreview-pill">{{ preview.preview_status }}</span>
+            </div>
+            <div class="finalpreview-card">
+                <h3>Ready Sections</h3>
+                <span class="finalpreview-pill">{{ preview.ready_count }} / {{ preview.total_sections }}</span>
+            </div>
+            <div class="finalpreview-card">
+                <h3>Boundary</h3>
+                <span class="finalpreview-pill">Preparation Only</span>
+            </div>
+        </div>
+
+        <div class="finalpreview-card">
+            <h2>Important Boundary</h2>
+            <p>
+                This preview is not signed, filed, executed, transferred, or legally final.
+            </p>
+        </div>
+
+        {% for section in preview.sections %}
+            <div class="finalpreview-section">
+                <h2>{{ loop.index }}. {{ section.section_heading }}</h2>
+                <p><span class="finalpreview-pill">{{ section.section_status_label }}</span></p>
+                <div class="finalpreview-body">{{ section.section_body }}</div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}

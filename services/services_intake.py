@@ -7935,3 +7935,274 @@ def build_final_draft_workspace_context(intake_id, workflow_key, document_key):
         "notice": "This workspace prepares a final draft only. It does not authorize signing, filing, execution, transfer, or final legal use.",
     }
 
+
+# -------------------------------------------------------------------
+# INT-2O — Final-Draft Section Editor
+# -------------------------------------------------------------------
+
+FINAL_DRAFT_SECTION_STATUSES = {
+    "draft": "Draft",
+    "needs_review": "Needs Review",
+    "reviewed": "Reviewed",
+    "ready_for_final_preview": "Ready for Final Preview",
+    "hold": "Hold",
+}
+
+
+def ensure_final_draft_section_tables():
+    ensure_final_draft_admin_approval_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_final_draft_sections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT NOT NULL,
+            workflow_key TEXT NOT NULL,
+            document_key TEXT NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            section_order INTEGER,
+            section_heading TEXT,
+            section_source TEXT,
+            section_body TEXT,
+            section_status TEXT DEFAULT 'draft',
+            created_at TEXT,
+            updated_at TEXT,
+            updated_by TEXT,
+            UNIQUE(intake_id, workflow_key, document_key, section_order)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def seed_final_draft_sections(intake_id, workflow_key, document_key, updated_by=None):
+    ensure_final_draft_section_tables()
+
+    workspace = build_final_draft_workspace_context(intake_id, workflow_key, document_key)
+    if not workspace or not workspace.get("access_granted"):
+        return None
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+    firm_id = get_current_firm_id()
+
+    sections = workspace.get("workspace_sections", []) or []
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    try:
+        for idx, section in enumerate(sections, start=1):
+            cur.execute("""
+                INSERT INTO intake_final_draft_sections (
+                    intake_id, workflow_key, document_key, firm_id,
+                    section_order, section_heading, section_source,
+                    section_body, section_status, created_at, updated_at, updated_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(intake_id, workflow_key, document_key, section_order) DO NOTHING
+            """, (
+                intake_id,
+                workflow_key,
+                document_key,
+                firm_id,
+                idx,
+                section.get("heading"),
+                section.get("source"),
+                section.get("body"),
+                "draft",
+                now,
+                now,
+                updated_by,
+            ))
+
+        conn.commit()
+
+    finally:
+        conn.close()
+
+    return list_final_draft_sections(intake_id, workflow_key, document_key)
+
+
+def list_final_draft_sections(intake_id, workflow_key, document_key):
+    ensure_final_draft_section_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, section_order, section_heading, section_source,
+               section_body, section_status, created_at, updated_at, updated_by
+        FROM intake_final_draft_sections
+        WHERE intake_id = ? AND workflow_key = ? AND document_key = ?
+        ORDER BY section_order ASC
+    """, (intake_id, workflow_key, document_key))
+
+    rows = cur.fetchall()
+    conn.close()
+
+    return [
+        {
+            "id": row[0],
+            "section_order": row[1],
+            "section_heading": row[2],
+            "section_source": row[3],
+            "section_body": row[4] or "",
+            "section_status": row[5] or "draft",
+            "section_status_label": FINAL_DRAFT_SECTION_STATUSES.get(row[5] or "draft", row[5] or "draft"),
+            "created_at": format_intake_timestamp(row[6]) if row[6] else "",
+            "updated_at": format_intake_timestamp(row[7]) if row[7] else "",
+            "updated_by": row[8] or "—",
+        }
+        for row in rows
+    ]
+
+
+def get_final_draft_section(intake_id, workflow_key, document_key, section_id):
+    ensure_final_draft_section_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, section_order, section_heading, section_source,
+               section_body, section_status, created_at, updated_at, updated_by
+        FROM intake_final_draft_sections
+        WHERE intake_id = ?
+          AND workflow_key = ?
+          AND document_key = ?
+          AND id = ?
+        LIMIT 1
+    """, (intake_id, workflow_key, document_key, section_id))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "id": row[0],
+        "section_order": row[1],
+        "section_heading": row[2],
+        "section_source": row[3],
+        "section_body": row[4] or "",
+        "section_status": row[5] or "draft",
+        "section_status_label": FINAL_DRAFT_SECTION_STATUSES.get(row[5] or "draft", row[5] or "draft"),
+        "created_at": format_intake_timestamp(row[6]) if row[6] else "",
+        "updated_at": format_intake_timestamp(row[7]) if row[7] else "",
+        "updated_by": row[8] or "—",
+    }
+
+
+def update_final_draft_section(
+    intake_id,
+    workflow_key,
+    document_key,
+    section_id,
+    section_heading,
+    section_body,
+    section_status,
+    updated_by=None
+):
+    ensure_final_draft_section_tables()
+
+    if section_status not in FINAL_DRAFT_SECTION_STATUSES:
+        raise ValueError("Invalid final-draft section status.")
+
+    now = datetime.utcnow().isoformat(timespec="seconds")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE intake_final_draft_sections
+        SET section_heading = ?,
+            section_body = ?,
+            section_status = ?,
+            updated_at = ?,
+            updated_by = ?
+        WHERE intake_id = ?
+          AND workflow_key = ?
+          AND document_key = ?
+          AND id = ?
+    """, (
+        section_heading,
+        section_body,
+        section_status,
+        now,
+        updated_by,
+        intake_id,
+        workflow_key,
+        document_key,
+        section_id,
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+def build_final_draft_section_editor_context(intake_id, workflow_key, document_key):
+    workspace = build_final_draft_workspace_context(intake_id, workflow_key, document_key)
+
+    if not workspace or not workspace.get("access_granted"):
+        return {
+            "access_granted": False,
+            "reason": workspace.get("reason") if workspace else "Workspace unavailable.",
+            "intake_id": intake_id,
+            "workflow_key": workflow_key,
+            "document_key": document_key,
+        }
+
+    sections = list_final_draft_sections(intake_id, workflow_key, document_key)
+    if not sections:
+        sections = seed_final_draft_sections(intake_id, workflow_key, document_key)
+
+    total = len(sections or [])
+    ready_count = len([s for s in sections or [] if s.get("section_status") == "ready_for_final_preview"])
+    reviewed_count = len([s for s in sections or [] if s.get("section_status") in {"reviewed", "ready_for_final_preview"}])
+
+    return {
+        "access_granted": True,
+        "workspace": workspace,
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "sections": sections or [],
+        "status_options": FINAL_DRAFT_SECTION_STATUSES,
+        "total_sections": total,
+        "ready_count": ready_count,
+        "reviewed_count": reviewed_count,
+        "editor_status": "Ready for Preview" if total and ready_count == total else "Editing In Progress",
+        "notice": "This editor prepares final-draft text only. It does not authorize signing, filing, execution, transfer, or final legal use.",
+    }
+
+
+def build_final_draft_preview_context(intake_id, workflow_key, document_key):
+    editor = build_final_draft_section_editor_context(intake_id, workflow_key, document_key)
+
+    if not editor or not editor.get("access_granted"):
+        return editor
+
+    sections = editor.get("sections", []) or []
+    total = len(sections)
+    ready_count = len([s for s in sections if s.get("section_status") == "ready_for_final_preview"])
+
+    preview_status = "Final-Draft Preview Ready" if total and ready_count == total else "Final-Draft Preview Incomplete"
+
+    return {
+        "access_granted": True,
+        "editor": editor,
+        "workspace": editor.get("workspace"),
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "document_key": document_key,
+        "sections": sections,
+        "preview_status": preview_status,
+        "ready_count": ready_count,
+        "total_sections": total,
+        "notice": "This is a final-draft preview for preparation only. It is not signed, filed, executed, transferred, or legally final.",
+    }
+

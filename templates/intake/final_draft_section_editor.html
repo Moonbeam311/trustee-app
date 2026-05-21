@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.editor-wrap {
+    max-width: 1220px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.editor-hero,
+.editor-card,
+.editor-section {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.editor-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.editor-card,
+.editor-section {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.editor-actions a,
+.editor-actions button {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.editor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.editor-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.editor-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.editor-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.editor-two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 0.55fr) minmax(0, 1fr);
+    gap: 16px;
+}
+
+.editor-card input[type="text"],
+.editor-card textarea,
+.editor-card select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.editor-body-preview {
+    white-space: pre-line;
+    line-height: 1.55;
+}
+
+.editor-muted {
+    opacity: 0.75;
+}
+
+@media (max-width: 900px) {
+    .editor-two-col {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="editor-wrap">
+    <div class="editor-hero">
+        <h1 style="margin-top:0;">Final-Draft Section Editor</h1>
+
+        <p>
+            Intake ID: <strong>{{ editor.intake_id }}</strong> |
+            Workflow: <strong>{{ editor.workflow_key }}</strong> |
+            Document: <strong>{{ editor.document_key }}</strong>
+        </p>
+
+        {% if editor.access_granted %}
+            <p class="editor-muted">{{ editor.notice }}</p>
+        {% else %}
+            <p><strong>Access Not Granted:</strong> {{ editor.reason }}</p>
+        {% endif %}
+
+        <div class="editor-actions">
+            <a href="{{ url_for('intake_final_draft_workspace', intake_id=editor.intake_id, workflow_key=editor.workflow_key, document_key=editor.document_key) }}">Workspace</a>
+            <a href="{{ url_for('intake_final_draft_preview', intake_id=editor.intake_id, workflow_key=editor.workflow_key, document_key=editor.document_key) }}">Final-draft preview</a>
+            <a href="{{ url_for('intake_final_draft_admin_approval', intake_id=editor.intake_id, workflow_key=editor.workflow_key, document_key=editor.document_key) }}">Admin approval</a>
+        </div>
+    </div>
+
+    {% if editor.access_granted %}
+        <div class="editor-grid">
+            <div class="editor-card">
+                <h3>Editor Status</h3>
+                <span class="editor-pill">{{ editor.editor_status }}</span>
+            </div>
+            <div class="editor-card">
+                <h3>Total Sections</h3>
+                <span class="editor-pill">{{ editor.total_sections }}</span>
+            </div>
+            <div class="editor-card">
+                <h3>Reviewed</h3>
+                <span class="editor-pill">{{ editor.reviewed_count }}</span>
+            </div>
+            <div class="editor-card">
+                <h3>Ready</h3>
+                <span class="editor-pill">{{ editor.ready_count }}</span>
+            </div>
+        </div>
+
+        <div class="editor-two-col">
+            <div class="editor-card">
+                <h2>Sections</h2>
+                <ul class="editor-list">
+                    {% for item in editor.sections %}
+                        <li>
+                            <strong>{{ item.section_order }}. {{ item.section_heading }}</strong><br>
+                            <span class="editor-pill">{{ item.section_status_label }}</span><br>
+                            <span class="editor-muted">Updated: {{ item.updated_at }} | By: {{ item.updated_by }}</span>
+                            <div class="editor-actions">
+                                <a href="{{ url_for('intake_final_draft_section_edit', intake_id=editor.intake_id, workflow_key=editor.workflow_key, document_key=editor.document_key, section_id=item.id) }}">Edit Section</a>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li>No final-draft sections found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="editor-card">
+                {% if section %}
+                    <h2>Edit Section {{ section.section_order }}</h2>
+
+                    <form method="POST" action="{{ url_for('intake_final_draft_section_edit', intake_id=editor.intake_id, workflow_key=editor.workflow_key, document_key=editor.document_key, section_id=section.id) }}">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+                        <label>
+                            <strong>Section Heading</strong>
+                            <input type="text" name="section_heading" value="{{ section.section_heading }}">
+                        </label>
+
+                        <br><br>
+
+                        <label>
+                            <strong>Section Body</strong>
+                            <textarea name="section_body" rows="16">{{ section.section_body }}</textarea>
+                        </label>
+
+                        <br><br>
+
+                        <label>
+                            <strong>Section Status</strong>
+                            <select name="section_status">
+                                {% for key, label in editor.status_options.items() %}
+                                    <option value="{{ key }}" {% if section.section_status == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+
+                        <div class="editor-actions">
+                            <button type="submit">Save Section</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <h2>Select a Section</h2>
+                    <p>Choose a section from the left to edit final-draft preparation text.</p>
+                    <p class="editor-muted">
+                        This editor does not create a signed, filed, executed, transferred, or legally final document.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
