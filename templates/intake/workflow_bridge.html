@@ -76,6 +76,50 @@
     <form method="POST" action="{{ url_for('intake_workflow_bridge', intake_id=intake_id, workflow_key=workflow_key) }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
+{% if launch.bridge_questions %}
+    {% for q in launch.bridge_questions %}
+        <div class="workflow-card">
+            <label>
+                <strong>{{ loop.index }}. {{ q.label }}</strong>
+            </label>
+
+            {% if q.type == "text" %}
+                <input type="text" name="{{ q.key }}" value="{{ answers.get(q.key, '') if answers else '' }}">
+
+            {% elif q.type == "textarea" %}
+                <textarea name="{{ q.key }}" rows="5">{{ answers.get(q.key, '') if answers else '' }}</textarea>
+
+            {% elif q.type == "radio" %}
+                {% for opt in q.options %}
+                    <label>
+                        <input type="radio" name="{{ q.key }}" value="{{ opt }}"
+                        {% if answers and answers.get(q.key) == opt %}checked{% endif %}>
+                        {{ opt }}
+                    </label><br>
+                {% endfor %}
+
+            {% elif q.type == "checkbox" %}
+                {% set selected = answers.get(q.key, []) if answers else [] %}
+                {% if selected is string %}
+                    {% set selected = [selected] %}
+                {% endif %}
+
+                {% for opt in q.options %}
+                    <label>
+                        <input class="instrument_bridge_input" type="checkbox" name="{{ q.key }}" value="{{ opt }}"
+                        {% if opt in selected %}checked{% endif %}>
+                        {{ opt }}
+                    </label><br>
+                {% endfor %}
+
+            {% else %}
+                <input type="text" name="{{ q.key }}" value="{{ answers.get(q.key, '') if answers else '' }}">
+            {% endif %}
+        </div>
+    {% endfor %}
+{% endif %}
+
+
         {% for question in definition.questions %}
             <div class="bridge-card">
                 <h2>{{ loop.index }}. {{ question.label }}</h2>

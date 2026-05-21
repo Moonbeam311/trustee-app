@@ -228,7 +228,35 @@
     </div>
 
     <div class="launch-card">
-        <h2>Important</h2>
+        
+{% if launch.bridge_questions %}
+<div class="workflow-card">
+    <h2>Instrument-Specific Bridge Questions</h2>
+    <p>
+        These questions will control the next bridge layer for this trust instrument.
+    </p>
+
+    <ul>
+        {% for q in launch.bridge_questions %}
+            <li>
+                <strong>{{ q.label }}</strong>
+                {% if q.type %}
+                    <br><small>Input Type: {{ q.type }}</small>
+                {% endif %}
+                {% if q.options %}
+                    <ul>
+                        {% for opt in q.options %}
+                            <li>{{ opt }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<h2>Important</h2>
         <p>
             Workflow launch prep is a routing and preparation step only. It does not create final legal,
             fiduciary, tax, property, or business documents.
