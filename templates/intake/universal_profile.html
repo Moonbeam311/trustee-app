@@ -11,6 +11,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
         {% for q_key, question in questions.items() %}
             <fieldset style="border:1px solid #ccc; border-radius:10px; padding:16px; margin:20px 0;">

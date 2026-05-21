@@ -14,6 +14,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('intake_start') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <h2>What brings you here today?</h2>
 
         {% for key, lane in lanes.items() %}
