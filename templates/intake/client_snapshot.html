@@ -112,6 +112,42 @@
     }
 }
 
+
+.staff-notes-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+    padding: 18px;
+    margin-top: 24px;
+}
+
+.staff-note-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.staff-note-form-grid select,
+.staff-notes-card textarea {
+    width: 100%;
+    padding: 9px;
+    border-radius: 8px;
+}
+
+.staff-note-item {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 10px 0;
+}
+
+.staff-note-meta {
+    font-size: 0.9rem;
+    opacity: 0.78;
+    margin-bottom: 6px;
+}
+
 </style>
 
 <div class="client-snapshot-wrap">
@@ -196,6 +232,73 @@
         This is an intake-routing snapshot. It does not finalize legal, tax, fiduciary, or asset-transfer decisions.
         More detailed review may be needed before documents are signed, assets are transferred, or formal action is taken.
     </div>
+
+
+    <div class="staff-notes-card no-print">
+        <h2 style="margin-top:0;">Internal Review Notes</h2>
+        <p class="snapshot-muted">
+            These notes are for internal staff/fiduciary review and do not change the client's intake answers.
+        </p>
+
+        <form method="POST" action="{{ url_for('intake_add_review_note', intake_id=snapshot.intake_id) }}">
+            <div class="staff-note-form-grid">
+                <label>
+                    Note Type
+                    <select name="note_type">
+                        {% for key, label in note_options.note_types.items() %}
+                            <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Priority
+                    <select name="priority">
+                        {% for key, label in note_options.priorities.items() %}
+                            <option value="{{ key }}" {% if key == "normal" %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label>
+                    Follow-Up Status
+                    <select name="followup_status">
+                        {% for key, label in note_options.followup_statuses.items() %}
+                            <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+            </div>
+
+            <label>
+                Staff Comment
+                <textarea name="note_body" rows="4" required placeholder="Add internal review note, follow-up item, document issue, or risk observation..."></textarea>
+            </label>
+
+            <div class="snapshot-actions" style="margin-top:12px;">
+                <button type="submit" style="padding: 10px 14px; border-radius: 10px;">Add Review Note</button>
+            </div>
+        </form>
+
+        <h3>Note History</h3>
+        {% if notes %}
+            {% for note in notes %}
+                <div class="staff-note-item">
+                    <div class="staff-note-meta">
+                        <strong>{{ note.note_type_label }}</strong> |
+                        Priority: {{ note.priority_label }} |
+                        Status: {{ note.followup_status_label }} |
+                        By: {{ note.created_by }} |
+                        {{ note.created_at }}
+                    </div>
+                    <div>{{ note.note_body }}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="snapshot-muted">No internal review notes yet.</p>
+        {% endif %}
+    </div>
+
 
     <div class="snapshot-actions">
         <a href="{{ url_for('intake_start') }}">Start another intake</a>

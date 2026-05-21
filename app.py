@@ -11,6 +11,7 @@ from services.services_intake import build_client_snapshot
 from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, ensure_intake_snapshot_tables
 from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
 from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
+from services.services_intake import create_intake_review_note, list_intake_review_notes, list_intake_dashboard_with_review_notes, get_review_note_form_options, ensure_intake_review_note_tables
 from database.db import (
     verify_audit_log_chain,
     init_db,
@@ -13176,10 +13177,15 @@ def intake_saved_snapshot(intake_id):
         flash("Saved intake snapshot not found.", "warning")
         return redirect(url_for("intake_dashboard"))
 
+    notes = list_intake_review_notes(intake_id)
+    note_options = get_review_note_form_options()
+
     return render_template(
         "intake/client_snapshot.html",
         snapshot=snapshot,
-        result=result
+        result=result,
+        notes=notes,
+        note_options=note_options
     )
 
 
@@ -13206,6 +13212,24 @@ def intake_export_prep(intake_id):
         return redirect(url_for("intake_dashboard"))
 
     return render_template("intake/export_prep.html", export_data=export_data)
+
+
+@app.route("/intake/<intake_id>/notes/add", methods=["POST"])
+def intake_add_review_note(intake_id):
+    try:
+        create_intake_review_note(
+            intake_id=intake_id,
+            note_body=request.form.get("note_body", ""),
+            note_type=request.form.get("note_type", "general"),
+            priority=request.form.get("priority", "normal"),
+            followup_status=request.form.get("followup_status", "open"),
+            created_by=session.get("username") if "session" in globals() else None,
+        )
+        flash("Review note added.", "success")
+    except Exception as exc:
+        flash(f"Review note could not be added: {exc}", "warning")
+
+    return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
 
 
 if __name__ == "__main__":
