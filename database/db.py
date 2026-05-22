@@ -56,6 +56,48 @@ def ensure_identity_intake_table():
     conn.close()
 
 
+
+
+def ensure_intake_orchestration_table():
+    """
+    Intake orchestration state map.
+    Tracks where each intake stands across identity, assets, documents,
+    review, drafting, execution, and archive readiness.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_orchestration (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT UNIQUE,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            identity_status TEXT DEFAULT 'not_started',
+            asset_status TEXT DEFAULT 'not_started',
+            document_status TEXT DEFAULT 'not_started',
+            review_status TEXT DEFAULT 'not_started',
+            drafting_status TEXT DEFAULT 'not_started',
+            execution_status TEXT DEFAULT 'not_started',
+            archive_status TEXT DEFAULT 'not_started',
+
+            overall_stage TEXT DEFAULT 'intake_started',
+            readiness_label TEXT DEFAULT 'Not Ready',
+            next_recommended_action TEXT,
+            next_route TEXT,
+
+            complexity_level TEXT DEFAULT 'Pending',
+            urgency_level TEXT DEFAULT 'Pending',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def get_connection():
     # Ensure SQLite parent folder exists before connecting.
     # Required for Railway/Render/Linux deployment where /app/data may not exist yet.
