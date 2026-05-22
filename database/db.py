@@ -3752,3 +3752,36 @@ def ensure_deep_review_table():
 
     conn.commit()
     conn.close()
+
+def ensure_drafting_prep_gate_table():
+    """
+    Drafting preparation gate.
+    Converts deep review approval into controlled pre-draft readiness.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_drafting_prep_gate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prep_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            selected_document_type TEXT,
+            drafting_purpose TEXT,
+            required_inputs TEXT,
+            missing_inputs TEXT,
+
+            reviewer_approval TEXT DEFAULT 'pending',
+            drafting_status TEXT DEFAULT 'not_launched',
+
+            notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

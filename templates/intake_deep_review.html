@@ -78,6 +78,13 @@
   </div>
 {% endif %}
 
+
+<p>
+  <a href="{{ url_for('intake_drafting_prep', intake_id=intake_id) }}">
+    Open Drafting Preparation Gate
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('identity_intake_summary', intake_id=intake_id) }}">
     Back to Intake Summary

@@ -13546,6 +13546,101 @@ def intake_deep_review(intake_id):
 
 
 
+
+
+@app.route("/intake/drafting-prep/<intake_id>", methods=["GET", "POST"])
+@csrf.exempt
+def intake_drafting_prep(intake_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_drafting_prep_gate_table,
+        build_intake_readiness_summary,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_drafting_prep_gate_table()
+
+    summary = build_intake_readiness_summary(intake_id, firm_id)
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        prep_id = "PREP-" + uuid.uuid4().hex[:8].upper()
+
+        reviewer_approval = request.form.get("reviewer_approval") or "pending"
+        drafting_status = "ready_to_launch" if reviewer_approval == "approved" else "not_launched"
+
+        cur.execute("""
+            INSERT INTO intake_drafting_prep_gate (
+                prep_id,
+                intake_id,
+                firm_id,
+                selected_document_type,
+                drafting_purpose,
+                required_inputs,
+                missing_inputs,
+                reviewer_approval,
+                drafting_status,
+                notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            prep_id,
+            intake_id,
+            firm_id,
+            request.form.get("selected_document_type"),
+            request.form.get("drafting_purpose"),
+            request.form.get("required_inputs"),
+            request.form.get("missing_inputs"),
+            reviewer_approval,
+            drafting_status,
+            request.form.get("notes")
+        ))
+
+        conn.commit()
+
+        next_action = "Launch controlled draft workflow." if drafting_status == "ready_to_launch" else "Resolve missing drafting inputs."
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=firm_id,
+            drafting_status=drafting_status,
+            overall_stage="drafting_preparation",
+            readiness_label=summary["readiness_label"],
+            next_recommended_action=next_action,
+            next_route=f"/intake/drafting-prep/{intake_id}"
+        )
+
+        flash("Drafting preparation gate recorded.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM intake_drafting_prep_gate
+        WHERE intake_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (intake_id, firm_id))
+
+    prep_records = cur.fetchall()
+    conn.close()
+
+    return render_template(
+        "intake_drafting_prep.html",
+        intake_id=intake_id,
+        summary=summary,
+        prep_records=prep_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Drafting Preparation Gate</h1>
+
+<div class="card">
+  <h2>Readiness Context</h2>
+  <p><strong>Intake ID:</strong> {{ intake_id }}</p>
+  <p><strong>Readiness Score:</strong> {{ summary["score"] }}%</p>
+  <p><strong>Readiness:</strong> {{ summary["readiness_label"] }}</p>
+  <p><strong>Review Priority:</strong> {{ summary["review_priority"] }}</p>
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Prepare Draft Workflow</h2>
+
+  <label>Selected Document / Workflow Type</label>
+  <select name="selected_document_type">
+    <option>Revocable Living Trust</option>
+    <option>Irrevocable Trust</option>
+    <option>Trust Amendment</option>
+    <option>Trustee Appointment</option>
+    <option>Trustee Acceptance</option>
+    <option>Asset Assignment</option>
+    <option>Certification of Trust</option>
+    <option>Pour-Over Will</option>
+    <option>Power of Attorney</option>
+    <option>Healthcare Directive</option>
+    <option>Business Continuity Resolution</option>
+    <option>Family Governance Resolution</option>
+    <option>Other</option>
+  </select>
+
+  <label>Drafting Purpose</label>
+  <textarea name="drafting_purpose" rows="4"></textarea>
+
+  <label>Required Inputs</label>
+  <textarea name="required_inputs" rows="4"></textarea>
+
+  <label>Missing Inputs</label>
+  <textarea name="missing_inputs" rows="4"></textarea>
+
+  <label>Reviewer Approval</label>
+  <select name="reviewer_approval">
+    <option value="pending">Pending</option>
+    <option value="approved">Approved</option>
+    <option value="hold">Hold</option>
+  </select>
+
+  <label>Notes</label>
+  <textarea name="notes" rows="5"></textarea>
+
+  <br><br>
+  <button type="submit">Record Drafting Preparation Gate</button>
+
+</form>
+</div>
+
+<h2>Drafting Prep History</h2>
+
+{% if prep_records %}
+  {% for prep in prep_records %}
+    <div class="card">
+      <h3>{{ prep["prep_id"] }}</h3>
+      <p><strong>Document Type:</strong> {{ prep["selected_document_type"] }}</p>
+      <p><strong>Reviewer Approval:</strong> {{ prep["reviewer_approval"] }}</p>
+      <p><strong>Drafting Status:</strong> {{ prep["drafting_status"] }}</p>
+      <p><strong>Missing Inputs:</strong> {{ prep["missing_inputs"] }}</p>
+      <p><strong>Notes:</strong> {{ prep["notes"] }}</p>
+
+      {% if prep["drafting_status"] == "ready_to_launch" %}
+        <p><strong>Launch Status:</strong> Ready for controlled draft workflow.</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No drafting preparation records yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('intake_deep_review', intake_id=intake_id) }}">
+    Back to Deep Review
+  </a>
+</p>
+
+{% endblock %}
