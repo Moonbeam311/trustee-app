@@ -13209,6 +13209,115 @@ def intake_universal_profile(intake_id):
 # -------------------------------------------------------------------
 # INT-1E — Intake Dashboard + Saved Snapshot View
 # -------------------------------------------------------------------
+
+
+@app.route("/intake/assets/<intake_id>", methods=["GET", "POST"])
+@csrf.exempt
+def asset_intake(intake_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_asset_intake_table,
+        ensure_identity_intake_table,
+        upsert_intake_orchestration_state
+    )
+
+    ensure_identity_intake_table()
+    ensure_asset_intake_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM identity_intake
+        WHERE intake_id = ?
+    """, (intake_id,))
+
+    intake = cur.fetchone()
+
+    if not intake:
+        conn.close()
+        flash("Intake record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    if request.method == "POST":
+
+        asset_id = "AST-" + uuid.uuid4().hex[:8].upper()
+
+        cur.execute("""
+            INSERT INTO asset_intake (
+                asset_id,
+                intake_id,
+                firm_id,
+                asset_category,
+                asset_name,
+                ownership_type,
+                estimated_value,
+                has_title_document,
+                has_beneficiary_designation,
+                has_existing_transfer_plan,
+                risk_level,
+                notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            asset_id,
+            intake_id,
+            session.get("firm_id", "FIRM-001"),
+            request.form.get("asset_category"),
+            request.form.get("asset_name"),
+            request.form.get("ownership_type"),
+            request.form.get("estimated_value"),
+            request.form.get("has_title_document"),
+            request.form.get("has_beneficiary_designation"),
+            request.form.get("has_existing_transfer_plan"),
+            request.form.get("risk_level"),
+            request.form.get("notes")
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=session.get("firm_id", "FIRM-001"),
+            asset_status="in_progress",
+            overall_stage="asset_inventory_started",
+            readiness_label="Partially Ready",
+            next_recommended_action="Continue asset inventory or begin document gathering",
+            next_route=f"/intake/assets/{intake_id}",
+            complexity_level="Pending",
+            urgency_level="Pending"
+        )
+
+        flash("Asset inventory item added.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM asset_intake
+        WHERE intake_id = ?
+        ORDER BY created_at DESC
+    """, (intake_id,))
+
+    assets = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "asset_intake.html",
+        intake=intake,
+        assets=assets
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()
@@ -14244,7 +14353,17 @@ def identity_intake_summary(intake_id):
         flash("Identity intake record not found.", "warning")
         return redirect(url_for("identity_intake"))
 
-    return render_template("intake_identity_summary.html", intake=intake)
+    from database.db import get_intake_orchestration_state
+    orchestration = get_intake_orchestration_state(
+        intake_id,
+        session.get("firm_id", "FIRM-001")
+    )
+
+    return render_template(
+        "intake_identity_summary.html",
+        intake=intake,
+        orchestration=orchestration
+    )
 
 
 if __name__ == "__main__":
