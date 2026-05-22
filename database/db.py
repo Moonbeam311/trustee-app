@@ -3432,3 +3432,91 @@ def ensure_trust_minutes_capacity_columns():
 
     conn.commit()
     conn.close()
+
+
+def upsert_intake_orchestration_state(
+    intake_id,
+    firm_id="FIRM-001",
+    identity_status=None,
+    asset_status=None,
+    document_status=None,
+    review_status=None,
+    drafting_status=None,
+    execution_status=None,
+    archive_status=None,
+    overall_stage=None,
+    readiness_label=None,
+    next_recommended_action=None,
+    next_route=None,
+    complexity_level=None,
+    urgency_level=None
+):
+    """
+    Create or update orchestration state for an intake.
+    Only supplied fields are updated.
+    """
+    ensure_intake_orchestration_table()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT OR IGNORE INTO intake_orchestration (
+            intake_id, firm_id
+        ) VALUES (?, ?)
+    """, (intake_id, firm_id))
+
+    updates = {
+        "identity_status": identity_status,
+        "asset_status": asset_status,
+        "document_status": document_status,
+        "review_status": review_status,
+        "drafting_status": drafting_status,
+        "execution_status": execution_status,
+        "archive_status": archive_status,
+        "overall_stage": overall_stage,
+        "readiness_label": readiness_label,
+        "next_recommended_action": next_recommended_action,
+        "next_route": next_route,
+        "complexity_level": complexity_level,
+        "urgency_level": urgency_level,
+    }
+
+    set_parts = []
+    values = []
+
+    for key, value in updates.items():
+        if value is not None:
+            set_parts.append(f"{key} = ?")
+            values.append(value)
+
+    if set_parts:
+        set_parts.append("updated_at = CURRENT_TIMESTAMP")
+        values.extend([intake_id, firm_id])
+
+        cur.execute(f"""
+            UPDATE intake_orchestration
+            SET {", ".join(set_parts)}
+            WHERE intake_id = ? AND firm_id = ?
+        """, values)
+
+    conn.commit()
+    conn.close()
+
+
+def get_intake_orchestration_state(intake_id, firm_id="FIRM-001"):
+    ensure_intake_orchestration_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM intake_orchestration
+        WHERE intake_id = ? AND firm_id = ?
+    """, (intake_id, firm_id))
+
+    row = cur.fetchone()
+    conn.close()
+    return row
