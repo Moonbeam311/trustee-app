@@ -108,6 +108,12 @@
         {{ ws["draft_notes"] }}
       </p>
 
+      <p>
+        <a href="{{ url_for('draft_variable_binding', workspace_id=ws['workspace_id']) }}">
+          Open Variable Binding Engine
+        </a>
+      </p>
+
     </div>
 
   {% endfor %}

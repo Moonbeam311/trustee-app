@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Variable Binding Engine</h1>
+
+<p>
+  Workspace:
+  <strong>{{ workspace["workspace_id"] }}</strong>
+</p>
+
+<p>
+  Document Type:
+  <strong>{{ workspace["document_type"] }}</strong>
+</p>
+
+<hr>
+
+<div class="card">
+
+<form method="POST">
+
+  <h2>Bound Draft Variables</h2>
+
+  {% for key, value in default_bindings.items() %}
+    <label>{{ key }}</label>
+    <textarea name="{{ key }}" rows="3">{{ value }}</textarea>
+  {% endfor %}
+
+  <br><br>
+
+  <button type="submit">
+    Bind Variables
+  </button>
+
+</form>
+
+</div>
+
+<hr>
+
+<h2>Binding History</h2>
+
+{% if bindings %}
+
+  {% for binding in bindings %}
+    <div class="card">
+      <p><strong>{{ binding["variable_key"] }}</strong></p>
+      <p>{{ binding["variable_value"] }}</p>
+      <p><small>Source: {{ binding["variable_source"] }}</small></p>
+    </div>
+  {% endfor %}
+
+{% else %}
+
+<div class="card">
+  <p>No variables bound yet.</p>
+</div>
+
+{% endif %}
+
+<p>
+  <a href="{{ url_for('guided_draft_workspace', draft_session_id=workspace['draft_session_id']) }}">
+    Back to Guided Draft Workspace
+  </a>
+</p>
+
+{% endblock %}

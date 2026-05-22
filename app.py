@@ -13886,6 +13886,123 @@ def guided_draft_workspace(draft_session_id):
 
 
 
+
+
+@app.route("/draft-bind/<workspace_id>", methods=["GET", "POST"])
+@csrf.exempt
+def draft_variable_binding(workspace_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_variable_binding_table,
+        upsert_intake_orchestration_state
+    )
+
+    ensure_variable_binding_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM guided_draft_workspace
+        WHERE workspace_id = ?
+    """, (workspace_id,))
+
+    workspace = cur.fetchone()
+
+    if not workspace:
+        conn.close()
+        flash("Guided draft workspace not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    intake_id = workspace["intake_id"]
+    draft_session_id = workspace["draft_session_id"]
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    default_bindings = {
+        "primary_person": workspace["primary_person"],
+        "trustee_candidate": workspace["trustee_candidate"],
+        "successor_trustee_candidate": workspace["successor_trustee_candidate"],
+        "primary_goal": workspace["primary_goal"],
+        "secondary_goal": workspace["secondary_goal"],
+        "asset_summary": workspace["asset_summary"],
+        "document_summary": workspace["document_summary"],
+        "document_type": workspace["document_type"],
+    }
+
+    if request.method == "POST":
+
+        for key, default_value in default_bindings.items():
+            binding_id = "BIND-" + uuid.uuid4().hex[:8].upper()
+            value = request.form.get(key) or default_value or ""
+
+            cur.execute("""
+                INSERT INTO draft_variable_bindings (
+                    binding_id,
+                    workspace_id,
+                    draft_session_id,
+                    intake_id,
+                    firm_id,
+                    document_type,
+                    variable_key,
+                    variable_value,
+                    variable_source
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                binding_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                workspace["document_type"],
+                key,
+                value,
+                "guided_workspace"
+            ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=firm_id,
+            drafting_status="variables_bound",
+            overall_stage="variable_binding",
+            readiness_label="Variables Bound",
+            next_recommended_action="Preview dynamic draft assembly.",
+            next_route=f"/draft-bind/{workspace_id}"
+        )
+
+        flash("Draft variables bound successfully.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM draft_variable_bindings
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (workspace_id, firm_id))
+
+    bindings = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "draft_variable_binding.html",
+        workspace=workspace,
+        default_bindings=default_bindings,
+        bindings=bindings
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

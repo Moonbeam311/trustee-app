@@ -3863,3 +3863,67 @@ def ensure_guided_draft_workspace_table():
 
     conn.commit()
     conn.close()
+
+def ensure_variable_binding_table():
+    """
+    Variable binding table.
+    Stores controlled draft variables extracted from guided draft workspaces.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS draft_variable_bindings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            binding_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+
+            variable_key TEXT,
+            variable_value TEXT,
+            variable_source TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def ensure_variable_binding_table():
+    """
+    Variable binding table.
+    Stores controlled draft variables extracted from guided draft workspaces.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS draft_variable_bindings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            binding_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+
+            variable_key TEXT,
+            variable_value TEXT,
+            variable_source TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
