@@ -47,8 +47,22 @@
   {% if orchestration["next_route"] %}
     <p>
       <a href="{{ orchestration['next_route'] }}">Continue Recommended Workflow</a>
+
     </p>
-  {% endif %}
+
+    <p>
+      <a href="{{ url_for('document_intake', intake_id=intake['intake_id']) }}">
+        Document Gathering Intake
+      </a>
+    </p>
+  
+    <p>
+      <a href="{{ url_for('intake_readiness_review', intake_id=intake['intake_id']) }}">
+        Run Readiness Review
+      </a>
+    </p>
+
+{% endif %}
 </div>
 {% endif %}
 

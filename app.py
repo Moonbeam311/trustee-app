@@ -13318,6 +13318,142 @@ def asset_intake(intake_id):
 
 
 
+
+
+@app.route("/intake/documents/<intake_id>", methods=["GET", "POST"])
+@csrf.exempt
+def document_intake(intake_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_document_intake_table,
+        ensure_identity_intake_table,
+        upsert_intake_orchestration_state
+    )
+
+    ensure_identity_intake_table()
+    ensure_document_intake_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM identity_intake
+        WHERE intake_id = ?
+    """, (intake_id,))
+
+    intake = cur.fetchone()
+
+    if not intake:
+        conn.close()
+        flash("Intake record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    if request.method == "POST":
+
+        document_id = "DOC-" + uuid.uuid4().hex[:8].upper()
+
+        uploaded_file = request.files.get("document_file")
+
+        file_name = ""
+        if uploaded_file and uploaded_file.filename:
+            file_name = uploaded_file.filename
+
+        cur.execute("""
+            INSERT INTO document_intake (
+                document_id,
+                intake_id,
+                firm_id,
+                document_category,
+                document_name,
+                file_name,
+                notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            document_id,
+            intake_id,
+            session.get("firm_id", "FIRM-001"),
+            request.form.get("document_category"),
+            request.form.get("document_name"),
+            file_name,
+            request.form.get("notes")
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=session.get("firm_id", "FIRM-001"),
+            document_status="in_progress",
+            overall_stage="document_gathering_started",
+            readiness_label="Review In Progress",
+            next_recommended_action="Continue gathering supporting records",
+            next_route=f"/intake/documents/{intake_id}"
+        )
+
+        flash("Document intake record added.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM document_intake
+        WHERE intake_id = ?
+        ORDER BY created_at DESC
+    """, (intake_id,))
+
+    documents = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "document_intake.html",
+        intake=intake,
+        documents=documents
+    )
+
+
+
+
+
+@app.route("/intake/readiness/<intake_id>")
+def intake_readiness_review(intake_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from database.db import (
+        build_intake_readiness_summary,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    summary = build_intake_readiness_summary(intake_id, firm_id)
+
+    upsert_intake_orchestration_state(
+        intake_id=intake_id,
+        firm_id=firm_id,
+        review_status="ready_for_review" if summary["score"] >= 60 else "needs_more_intake",
+        overall_stage="readiness_review",
+        readiness_label=summary["readiness_label"],
+        next_recommended_action=summary["next_action"],
+        next_route=f"/intake/readiness/{intake_id}",
+        urgency_level=summary["review_priority"]
+    )
+
+    return render_template(
+        "intake_readiness.html",
+        summary=summary
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

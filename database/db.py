@@ -98,6 +98,80 @@ def ensure_intake_orchestration_table():
     conn.close()
 
 
+
+
+def ensure_asset_intake_table():
+    """
+    Asset inventory intake table.
+    Connects intake profiles to asset planning workflows.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS asset_intake (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            asset_category TEXT,
+            asset_name TEXT,
+            ownership_type TEXT,
+            estimated_value TEXT,
+
+            has_title_document TEXT,
+            has_beneficiary_designation TEXT,
+            has_existing_transfer_plan TEXT,
+
+            risk_level TEXT,
+            notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
+
+def ensure_document_intake_table():
+    """
+    Document gathering / upload intake table.
+    Tracks supporting records for fiduciary readiness.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS document_intake (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            document_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_category TEXT,
+            document_name TEXT,
+            file_name TEXT,
+
+            upload_status TEXT DEFAULT 'uploaded',
+
+            review_status TEXT DEFAULT 'pending',
+            readiness_impact TEXT DEFAULT 'unknown',
+
+            notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def get_connection():
     # Ensure SQLite parent folder exists before connecting.
     # Required for Railway/Render/Linux deployment where /app/data may not exist yet.
@@ -3520,3 +3594,99 @@ def get_intake_orchestration_state(intake_id, firm_id="FIRM-001"):
     row = cur.fetchone()
     conn.close()
     return row
+
+def build_intake_readiness_summary(intake_id, firm_id="FIRM-001"):
+    """
+    Basic readiness engine for Identity + Assets + Documents.
+    Returns a structured readiness summary.
+    """
+    ensure_identity_intake_table()
+    ensure_asset_intake_table()
+    ensure_document_intake_table()
+    ensure_intake_orchestration_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM identity_intake WHERE intake_id = ? AND firm_id = ?", (intake_id, firm_id))
+    identity = cur.fetchone()
+
+    cur.execute("SELECT * FROM asset_intake WHERE intake_id = ? AND firm_id = ?", (intake_id, firm_id))
+    assets = cur.fetchall()
+
+    cur.execute("SELECT * FROM document_intake WHERE intake_id = ? AND firm_id = ?", (intake_id, firm_id))
+    documents = cur.fetchall()
+
+    missing = []
+    warnings = []
+    strengths = []
+
+    if not identity:
+        missing.append("Identity intake is missing.")
+    else:
+        strengths.append("Identity intake completed.")
+
+        if not identity["trustee_candidate"]:
+            missing.append("Primary trustee candidate is missing.")
+        if not identity["successor_trustee_candidate"]:
+            missing.append("Successor trustee candidate is missing.")
+        if not identity["primary_goal"]:
+            missing.append("Primary planning goal is missing.")
+
+    if not assets:
+        missing.append("No assets have been added.")
+    else:
+        strengths.append(f"{len(assets)} asset record(s) added.")
+
+        high_risk_assets = [a for a in assets if a["risk_level"] == "High"]
+        if high_risk_assets:
+            warnings.append(f"{len(high_risk_assets)} high-risk asset(s) require review.")
+
+        untitled_assets = [a for a in assets if a["has_title_document"] in ("No", "Unknown")]
+        if untitled_assets:
+            warnings.append(f"{len(untitled_assets)} asset(s) lack confirmed title documentation.")
+
+    if not documents:
+        missing.append("No supporting documents have been gathered.")
+    else:
+        strengths.append(f"{len(documents)} supporting document record(s) added.")
+
+    score = 0
+    if identity:
+        score += 35
+    if assets:
+        score += 30
+    if documents:
+        score += 25
+    if not missing:
+        score += 10
+
+    if score >= 85:
+        readiness_label = "Ready for Deep Review"
+        review_priority = "Moderate"
+        next_action = "Begin fiduciary review and drafting preparation."
+    elif score >= 60:
+        readiness_label = "Partially Ready"
+        review_priority = "High"
+        next_action = "Gather missing records and continue intake completion."
+    else:
+        readiness_label = "Not Ready"
+        review_priority = "High"
+        next_action = "Complete identity, asset, and document intake before review."
+
+    summary = {
+        "intake_id": intake_id,
+        "score": score,
+        "readiness_label": readiness_label,
+        "review_priority": review_priority,
+        "missing": missing,
+        "warnings": warnings,
+        "strengths": strengths,
+        "next_action": next_action,
+        "asset_count": len(assets),
+        "document_count": len(documents),
+    }
+
+    conn.close()
+    return summary

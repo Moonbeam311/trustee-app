@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Intake Readiness Review</h1>
+
+<div class="card">
+  <h2>Readiness Score: {{ summary["score"] }}%</h2>
+
+  <p><strong>Intake ID:</strong> {{ summary["intake_id"] }}</p>
+  <p><strong>Readiness:</strong> {{ summary["readiness_label"] }}</p>
+  <p><strong>Review Priority:</strong> {{ summary["review_priority"] }}</p>
+  <p><strong>Asset Records:</strong> {{ summary["asset_count"] }}</p>
+  <p><strong>Document Records:</strong> {{ summary["document_count"] }}</p>
+</div>
+
+<div class="card">
+  <h2>Strengths</h2>
+  {% if summary["strengths"] %}
+    <ul>
+      {% for item in summary["strengths"] %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No strengths identified yet.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Missing Items</h2>
+  {% if summary["missing"] %}
+    <ul>
+      {% for item in summary["missing"] %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No major missing items detected.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Warnings / Review Flags</h2>
+  {% if summary["warnings"] %}
+    <ul>
+      {% for item in summary["warnings"] %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No warnings detected.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Next Recommended Action</h2>
+  <p>{{ summary["next_action"] }}</p>
+</div>
+
+<p>
+  <a href="{{ url_for('identity_intake_summary', intake_id=summary['intake_id']) }}">
+    Back to Intake Summary
+  </a>
+</p>
+
+{% endblock %}
