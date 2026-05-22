@@ -21,6 +21,41 @@ def get_current_firm_id():
     return "FIRM-001"
 
 
+
+
+def ensure_identity_intake_table():
+    """
+    Create Step 1 identity/family intake table.
+    Minimal Operational Version for guided intake.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS identity_intake (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            intake_id TEXT UNIQUE,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            intake_type TEXT,
+            primary_full_name TEXT,
+            preferred_name TEXT,
+            marital_status TEXT,
+            state_jurisdiction TEXT,
+            has_spouse TEXT,
+            has_children TEXT,
+            trustee_candidate TEXT,
+            successor_trustee_candidate TEXT,
+            primary_goal TEXT,
+            secondary_goal TEXT,
+            notes TEXT,
+            completion_status TEXT DEFAULT 'draft',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
 def get_connection():
     # Ensure SQLite parent folder exists before connecting.
     # Required for Railway/Render/Linux deployment where /app/data may not exist yet.
