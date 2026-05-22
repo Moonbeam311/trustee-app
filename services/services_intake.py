@@ -9603,3 +9603,288 @@ def build_instrument_workflow_bridge_context(intake_id, workflow_key):
         "bridge_questions": definition.get("questions", []),
     }
 
+
+# -------------------------------------------------------------------
+# INT-2E-INSTRUMENT-DRAFT-PACKETS — Instrument Bridge-to-Draft Packet Generator
+# -------------------------------------------------------------------
+
+INSTRUMENT_DRAFT_PACKET_RULES = {
+    "certificate_of_trust": {
+        "packet_title": "Certificate of Trust Draft Packet",
+        "readiness_label": "Certificate Preparation Review",
+        "drafting_questions": [
+            "What exact trust name should appear on the certificate?",
+            "Which trustee or fiduciary capacity should be certified?",
+            "Which powers should be certified and which should remain unstated?",
+            "Should the certificate expressly withhold full private trust terms?",
+            "Who is expected to rely on the certificate?",
+            "What execution language is needed: signature, witness, notary acknowledgment, jurat, or seal block?",
+            "Should the certificate include a limitation-of-reliance or no-expanded-disclosure notice?",
+        ],
+        "required_documents": [
+            "Trust declaration or trust agreement reference",
+            "Trustee appointment or acceptance evidence",
+            "Trust date / effective date record",
+            "Trustee identification / capacity confirmation",
+            "Any third-party requirement requesting the certificate",
+        ],
+        "open_issue_rules": [
+            ("trust_name", "Trust name must be confirmed before drafting."),
+            ("trust_date", "Trust date or effective date must be confirmed before drafting."),
+            ("trustee_names", "Trustee or fiduciary representative names must be confirmed."),
+            ("certification_purpose", "Certification purpose must be selected before drafting."),
+            ("full_terms_withheld", "Disclosure scope for private trust terms must be confirmed."),
+            ("execution_needs", "Execution features must be selected before preparing signature blocks."),
+        ],
+    },
+
+    "trust_articles_builder": {
+        "packet_title": "Trust Articles Draft Packet",
+        "readiness_label": "Article Drafting Review",
+        "drafting_questions": [
+            "Which article categories need drafting or revision?",
+            "What authority, powers, duties, or limitations must be stated clearly?",
+            "Which existing provisions must be preserved?",
+            "Which articles require trustee review before drafting?",
+            "Should articles be prepared as new provisions, amendments, or supplemental articles?",
+        ],
+        "required_documents": [
+            "Existing trust articles or declaration, if any",
+            "Trust purpose statement",
+            "Trustee powers reference",
+            "Beneficiary or administrative provisions to preserve",
+            "Prior amendments or resolutions, if any",
+        ],
+        "open_issue_rules": [
+            ("article_scope", "Article category must be selected."),
+            ("article_priority", "Article drafting priority must be selected."),
+            ("existing_articles", "Existing article status must be confirmed."),
+        ],
+    },
+
+    "declaration_of_trust": {
+        "packet_title": "Declaration of Trust Draft Packet",
+        "readiness_label": "Declaration Preparation Review",
+        "drafting_questions": [
+            "What exact trust name, type, and effective date should control?",
+            "Who are the settlor/grantor, trustee(s), successor trustee(s), and beneficiaries?",
+            "What purpose should the declaration state?",
+            "What initial property or Schedule A information should be attached or referenced?",
+            "Which trustee powers and limitations should be included?",
+            "What execution, witness, notary, or jurat sections are required?",
+        ],
+        "required_documents": [
+            "Trust party identity details",
+            "Trust purpose notes",
+            "Initial property / Schedule A records",
+            "Beneficiary planning notes",
+            "Trustee appointment and acceptance details",
+        ],
+        "open_issue_rules": [
+            ("trust_name", "Trust name must be confirmed."),
+            ("trust_type", "Trust type must be selected."),
+            ("trust_parties", "Trust parties must be identified."),
+            ("trust_purpose", "Trust purpose must be selected or described."),
+            ("initial_property", "Initial property / Schedule A status must be confirmed."),
+        ],
+    },
+
+    "trustee_acceptance": {
+        "packet_title": "Trustee Acceptance Draft Packet",
+        "readiness_label": "Trustee Acceptance Review",
+        "drafting_questions": [
+            "Who is accepting appointment and in what capacity?",
+            "Which trust is the acceptance connected to?",
+            "Is this an initial, successor, co-trustee, special trustee, or administrative fiduciary appointment?",
+            "Which fiduciary duties or limitations should be acknowledged?",
+            "Which execution features are required?",
+        ],
+        "required_documents": [
+            "Trustee appointment source",
+            "Trust name and date",
+            "Trustee identification / contact information",
+            "Acceptance capacity notes",
+            "Execution requirements",
+        ],
+        "open_issue_rules": [
+            ("trustee_name", "Trustee name must be confirmed."),
+            ("trust_name", "Trust name must be confirmed."),
+            ("appointment_type", "Appointment type must be selected."),
+            ("acceptance_scope", "Acceptance scope must be selected."),
+            ("execution_needs", "Execution needs must be selected."),
+        ],
+    },
+
+    "trust_minutes_resolution": {
+        "packet_title": "Trust Minutes / Resolution Draft Packet",
+        "readiness_label": "Resolution Preparation Review",
+        "drafting_questions": [
+            "What action is being approved, ratified, or recorded?",
+            "Is this a meeting minute, written consent, trustee resolution, or ratification?",
+            "Who is approving the action?",
+            "What authority supports the action?",
+            "Which supporting records should be referenced?",
+        ],
+        "required_documents": [
+            "Trust agreement or certificate reference",
+            "Action item description",
+            "Trustee/party attendance or consent details",
+            "Supporting records for the action",
+            "Prior minutes or resolutions, if any",
+        ],
+        "open_issue_rules": [
+            ("resolution_title", "Resolution title or subject must be confirmed."),
+            ("action_type", "Action type must be selected."),
+            ("meeting_type", "Meeting or approval type must be selected."),
+            ("persons_present", "Approving persons must be identified."),
+            ("supporting_records", "Supporting records should be selected."),
+        ],
+    },
+
+    "schedule_a_asset_schedule": {
+        "packet_title": "Schedule A / Asset Schedule Draft Packet",
+        "readiness_label": "Asset Schedule Preparation Review",
+        "drafting_questions": [
+            "Which asset categories will be listed?",
+            "How detailed should the asset schedule be?",
+            "Which supporting records are available?",
+            "What is the current transfer/funding status?",
+            "Should this be a preliminary inventory or transfer-ready schedule?",
+        ],
+        "required_documents": [
+            "Asset titles / deeds / statements",
+            "Asset descriptions",
+            "Valuation records, if any",
+            "Ownership or transfer records",
+            "Insurance or supporting documents",
+        ],
+        "open_issue_rules": [
+            ("asset_categories", "Asset categories must be selected."),
+            ("asset_detail_level", "Asset detail level must be selected."),
+            ("supporting_documents", "Supporting document availability must be selected."),
+            ("transfer_status", "Transfer/funding status must be confirmed."),
+        ],
+    },
+
+    "execution_notary_witness_packet": {
+        "packet_title": "Execution / Notary / Witness Draft Packet",
+        "readiness_label": "Execution Packet Preparation Review",
+        "drafting_questions": [
+            "Which document is being prepared for execution?",
+            "Who must sign and in what capacity?",
+            "Which witness, notary, jurat, seal, date/location, and footer features are needed?",
+            "What is the current execution status?",
+            "Are any pages, exhibits, or schedules attached?",
+        ],
+        "required_documents": [
+            "Document to be executed",
+            "Signer names and capacities",
+            "Witness/notary requirements",
+            "Attached exhibits or schedules",
+            "Date/location details",
+        ],
+        "open_issue_rules": [
+            ("execution_document_type", "Execution document type must be selected."),
+            ("signature_parties", "Signature parties must be identified."),
+            ("execution_features", "Execution features must be selected."),
+            ("execution_status", "Execution status must be confirmed."),
+        ],
+    },
+}
+
+
+def normalize_bridge_answer_value(value):
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return [str(v) for v in value if str(v).strip()]
+    return str(value).strip()
+
+
+def bridge_answer_is_empty(value):
+    value = normalize_bridge_answer_value(value)
+    if isinstance(value, list):
+        return len(value) == 0
+    return not bool(value)
+
+
+def get_instrument_draft_packet_rules(workflow_key):
+    return INSTRUMENT_DRAFT_PACKET_RULES.get(workflow_key)
+
+
+def build_instrument_draft_packet(intake_id, workflow_key):
+    """
+    Build an instrument-specific draft packet from saved bridge answers.
+    This is a preparation packet only and does not create a final signed/executed document.
+    """
+    if not is_trust_instrument_workflow(workflow_key):
+        return None
+
+    definition = get_trust_instrument_bridge_definition(workflow_key)
+    rules = get_instrument_draft_packet_rules(workflow_key)
+
+    if not definition or not rules:
+        return None
+
+    launch = build_workflow_launch_prep(intake_id, workflow_key)
+    answers = {}
+    try:
+        answers = get_workflow_bridge_answers(intake_id, workflow_key) or {}
+    except Exception:
+        answers = {}
+
+    normalized_answers = {}
+    for q in definition.get("questions", []):
+        key = q.get("key")
+        if not key:
+            continue
+        normalized_answers[key] = normalize_bridge_answer_value(answers.get(key))
+
+    open_issues = []
+    for key, issue in rules.get("open_issue_rules", []):
+        if bridge_answer_is_empty(normalized_answers.get(key)):
+            open_issues.append(issue)
+
+    answered_count = len([
+        key for key, value in normalized_answers.items()
+        if not bridge_answer_is_empty(value)
+    ])
+    total_questions = len(definition.get("questions", []) or [])
+
+    if open_issues:
+        readiness = "Draft Packet With Open Issues"
+    elif answered_count < total_questions:
+        readiness = "Draft Packet Partially Ready"
+    else:
+        readiness = "Draft Packet Ready for Controlled Questionnaire"
+
+    bridge_summary = []
+    for q in definition.get("questions", []):
+        key = q.get("key")
+        value = normalized_answers.get(key, "")
+        bridge_summary.append({
+            "key": key,
+            "label": q.get("label"),
+            "type": q.get("type"),
+            "value": value,
+            "answered": not bridge_answer_is_empty(value),
+        })
+
+    return {
+        "intake_id": intake_id,
+        "workflow_key": workflow_key,
+        "title": rules.get("packet_title"),
+        "readiness": readiness,
+        "readiness_label": rules.get("readiness_label"),
+        "launch": launch,
+        "definition": definition,
+        "answers": normalized_answers,
+        "bridge_summary": bridge_summary,
+        "drafting_questions": rules.get("drafting_questions", []),
+        "required_documents": rules.get("required_documents", []),
+        "open_issues": open_issues,
+        "answered_count": answered_count,
+        "total_questions": total_questions,
+        "notice": "This instrument draft packet is a preparation tool only. It does not create a final signed, filed, executed, transferred, or legally final document.",
+    }
+

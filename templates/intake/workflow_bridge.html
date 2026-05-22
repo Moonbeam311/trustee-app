@@ -69,6 +69,7 @@
         <div class="bridge-actions">
             <a href="{{ url_for('intake_workflow_launch_prep', intake_id=intake_id, workflow_key=workflow_key) }}">Launch prep</a>
             <a href="{{ url_for('intake_document_recommendations', intake_id=intake_id) }}">Recommendations</a>
+            <a href="{{ url_for('intake_instrument_draft_packet', intake_id=intake_id, workflow_key=workflow_key) }}">Instrument draft packet</a>
             <a href="{{ url_for('intake_followup_packet', intake_id=intake_id) }}">Packet</a>
         </div>
     </div>

@@ -1,4 +1,5 @@
 from services.services_intake import build_instrument_workflow_bridge_context, is_trust_instrument_workflow
+from services.services_intake import build_instrument_draft_packet
 import json
 import zipfile
 import os
@@ -14142,6 +14143,20 @@ def intake_trust_instrument_menu(intake_id):
         "intake/trust_instrument_menu.html",
         intake_id=intake_id,
         instruments=instruments
+    )
+
+
+@app.route("/intake/<intake_id>/recommendations/<workflow_key>/instrument-draft-packet")
+def intake_instrument_draft_packet(intake_id, workflow_key):
+    packet = build_instrument_draft_packet(intake_id, workflow_key)
+
+    if not packet:
+        flash("Instrument draft packet could not be built for this workflow.", "warning")
+        return redirect(url_for("intake_workflow_bridge", intake_id=intake_id, workflow_key=workflow_key))
+
+    return render_template(
+        "intake/instrument_draft_packet.html",
+        packet=packet
     )
 
 

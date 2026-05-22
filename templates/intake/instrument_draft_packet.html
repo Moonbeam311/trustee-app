@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.instrument-packet-wrap {
+    max-width: 1180px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.instrument-packet-hero,
+.instrument-packet-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 16px;
+    background: rgba(255,255,255,0.04);
+}
+
+.instrument-packet-hero {
+    padding: 24px;
+    margin-bottom: 18px;
+}
+
+.instrument-packet-card {
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+.instrument-packet-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+.instrument-packet-actions a {
+    padding: 9px 12px;
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+.instrument-packet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.instrument-packet-pill {
+    display: inline-block;
+    padding: 4px 9px;
+    border: 1px solid rgba(0,0,0,0.14);
+    border-radius: 999px;
+}
+
+.instrument-packet-list {
+    list-style: none;
+    padding-left: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.instrument-packet-list li {
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.instrument-packet-muted {
+    opacity: 0.75;
+}
+</style>
+
+<div class="instrument-packet-wrap">
+    <div class="instrument-packet-hero">
+        <h1 style="margin-top:0;">{{ packet.title }}</h1>
+        <p>
+            Intake ID: <strong>{{ packet.intake_id }}</strong> |
+            Workflow: <strong>{{ packet.workflow_key }}</strong>
+        </p>
+        <p class="instrument-packet-muted">{{ packet.notice }}</p>
+
+        <div class="instrument-packet-actions">
+            <a href="{{ url_for('intake_workflow_bridge', intake_id=packet.intake_id, workflow_key=packet.workflow_key) }}">Bridge</a>
+            <a href="{{ url_for('intake_workflow_launch_prep', intake_id=packet.intake_id, workflow_key=packet.workflow_key) }}">Launch prep</a>
+            <a href="{{ url_for('intake_document_recommendations', intake_id=packet.intake_id) }}">Recommendations</a>
+            <a href="{{ url_for('intake_packet', intake_id=packet.intake_id) }}">Follow-up packet</a>
+            <a href="#" onclick="window.print(); return false;">Print packet</a>
+        </div>
+    </div>
+
+    <div class="instrument-packet-grid">
+        <div class="instrument-packet-card">
+            <h3>Readiness</h3>
+            <span class="instrument-packet-pill">{{ packet.readiness }}</span>
+        </div>
+        <div class="instrument-packet-card">
+            <h3>Review Type</h3>
+            <span class="instrument-packet-pill">{{ packet.readiness_label }}</span>
+        </div>
+        <div class="instrument-packet-card">
+            <h3>Answered</h3>
+            <span class="instrument-packet-pill">{{ packet.answered_count }} / {{ packet.total_questions }}</span>
+        </div>
+        <div class="instrument-packet-card">
+            <h3>Open Issues</h3>
+            <span class="instrument-packet-pill">{{ packet.open_issues|length }}</span>
+        </div>
+    </div>
+
+    <div class="instrument-packet-card">
+        <h2>Bridge Answer Summary</h2>
+        <ul class="instrument-packet-list">
+            {% for item in packet.bridge_summary %}
+                <li>
+                    {{ "☑" if item.answered else "☐" }}
+                    <strong>{{ item.label }}</strong><br>
+                    {% if item.value is sequence and item.value is not string %}
+                        {% if item.value %}
+                            {{ item.value|join(", ") }}
+                        {% else %}
+                            <span class="instrument-packet-muted">No answer recorded.</span>
+                        {% endif %}
+                    {% elif item.value %}
+                        {{ item.value }}
+                    {% else %}
+                        <span class="instrument-packet-muted">No answer recorded.</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="instrument-packet-card">
+        <h2>Drafting Questions</h2>
+        <ul class="instrument-packet-list">
+            {% for item in packet.drafting_questions %}
+                <li>☐ {{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="instrument-packet-card">
+        <h2>Required / Supporting Documents</h2>
+        <ul class="instrument-packet-list">
+            {% for item in packet.required_documents %}
+                <li>☐ {{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="instrument-packet-card">
+        <h2>Open Issues Before Drafting</h2>
+        <ul class="instrument-packet-list">
+            {% for item in packet.open_issues %}
+                <li>☐ {{ item }}</li>
+            {% else %}
+                <li>☑ No instrument-specific open issues detected from the bridge answers.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="instrument-packet-card">
+        <h2>Next Step</h2>
+        <p>
+            This packet can now feed an instrument-specific controlled questionnaire and non-final draft generator.
+        </p>
+        <p class="instrument-packet-muted">
+            The next build layer should not finalize or execute the document. It should only prepare controlled draft text.
+        </p>
+    </div>
+
+    <div class="instrument-packet-card">
+        <h2>Important Boundary</h2>
+        <p>
+            This instrument draft packet is for preparation only. It does not create a signed, filed, executed,
+            transferred, or legally final document.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
