@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Identity Intake Summary</h1>
+
+<div class="card">
+  <h2>Completion Status: {{ intake["completion_status"] }}</h2>
+
+  <p><strong>Intake ID:</strong> {{ intake["intake_id"] }}</p>
+  <p><strong>Intake Type:</strong> {{ intake["intake_type"] }}</p>
+  <p><strong>Primary Person:</strong> {{ intake["primary_full_name"] }}</p>
+  <p><strong>Preferred Name:</strong> {{ intake["preferred_name"] }}</p>
+  <p><strong>Marital Status:</strong> {{ intake["marital_status"] }}</p>
+  <p><strong>Jurisdiction:</strong> {{ intake["state_jurisdiction"] }}</p>
+
+  <hr>
+
+  <p><strong>Spouse / Partner:</strong> {{ intake["has_spouse"] }}</p>
+  <p><strong>Children / Dependents:</strong> {{ intake["has_children"] }}</p>
+
+  <hr>
+
+  <p><strong>Trustee Candidate:</strong> {{ intake["trustee_candidate"] }}</p>
+  <p><strong>Successor Trustee Candidate:</strong> {{ intake["successor_trustee_candidate"] }}</p>
+
+  <hr>
+
+  <p><strong>Primary Goal:</strong> {{ intake["primary_goal"] }}</p>
+  <p><strong>Secondary Goal:</strong> {{ intake["secondary_goal"] }}</p>
+  <p><strong>Notes:</strong> {{ intake["notes"] }}</p>
+</div>
+
+<p>
+  <a href="{{ url_for('identity_intake') }}">Start another intake</a>
+</p>
+
+{% endblock %}

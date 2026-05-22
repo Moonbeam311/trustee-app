@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Identity & Family Structure Intake</h1>
+<p class="muted">Step 1 of the guided fiduciary intake process.</p>
+
+<form method="POST" class="card">
+
+  <h2>A. Intake Type</h2>
+  <label>What best describes this intake?</label>
+  <select name="intake_type" required>
+    <option value="">Select one</option>
+    <option>Individual</option>
+    <option>Married Couple</option>
+    <option>Family With Children</option>
+    <option>Blended Family</option>
+    <option>Single Parent</option>
+    <option>Business Owner</option>
+    <option>Multi-Generational Family</option>
+    <option>Existing Trust Review</option>
+  </select>
+
+  <h2>B. Primary Person</h2>
+  <label>Full Legal Name</label>
+  <input type="text" name="primary_full_name" required>
+
+  <label>Preferred Name</label>
+  <input type="text" name="preferred_name">
+
+  <label>Marital Status</label>
+  <select name="marital_status">
+    <option value="">Select</option>
+    <option>Single</option>
+    <option>Married</option>
+    <option>Divorced</option>
+    <option>Widowed</option>
+    <option>Separated</option>
+    <option>Domestic Partnership</option>
+  </select>
+
+  <label>State / Jurisdiction</label>
+  <input type="text" name="state_jurisdiction">
+
+  <h2>C. Family Structure</h2>
+  <label>Spouse / Partner involved?</label>
+  <select name="has_spouse">
+    <option>No</option>
+    <option>Yes</option>
+  </select>
+
+  <label>Children / Dependents involved?</label>
+  <select name="has_children">
+    <option>No</option>
+    <option>Yes</option>
+  </select>
+
+  <h2>D. Fiduciary Candidates</h2>
+  <label>Primary Trustee Candidate</label>
+  <input type="text" name="trustee_candidate">
+
+  <label>Successor Trustee Candidate</label>
+  <input type="text" name="successor_trustee_candidate">
+
+  <h2>E. Priorities</h2>
+  <label>Primary Goal</label>
+  <select name="primary_goal">
+    <option value="">Select</option>
+    <option>Avoid Probate</option>
+    <option>Protect Children</option>
+    <option>Preserve Family Property</option>
+    <option>Business Continuity</option>
+    <option>Reduce Family Conflict</option>
+    <option>Privacy</option>
+    <option>Asset Protection</option>
+    <option>Charitable / Educational Legacy</option>
+  </select>
+
+  <label>Secondary Goal</label>
+  <input type="text" name="secondary_goal">
+
+  <label>Notes / Special Concerns</label>
+  <textarea name="notes" rows="5"></textarea>
+
+  <br><br>
+  <button type="submit">Save Intake Step 1</button>
+
+</form>
+
+{% endblock %}

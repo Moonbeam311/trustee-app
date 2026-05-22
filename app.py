@@ -41,7 +41,7 @@ from services.services_intake import build_final_draft_section_editor_context, g
 from services.services_intake import generate_final_draft_preview_docx
 from services.services_intake import build_final_draft_version_register_context
 from services.services_intake import build_final_draft_completion_gate_context, record_final_draft_completion
-from database.db import (
+from database.db import (, ensure_identity_intake_table
     verify_audit_log_chain,
     init_db,
     get_next_trust_id,
@@ -14164,3 +14164,69 @@ if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
 app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
+
+
+@app.route("/intake/identity", methods=["GET", "POST"])
+@login_required
+def identity_intake():
+    ensure_identity_intake_table()
+    conn = get_connection()
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        import uuid
+        intake_id = "INT-" + uuid.uuid4().hex[:8].upper()
+
+        cur.execute("""
+            INSERT INTO identity_intake (
+                intake_id, firm_id, intake_type, primary_full_name, preferred_name,
+                marital_status, state_jurisdiction, has_spouse, has_children,
+                trustee_candidate, successor_trustee_candidate,
+                primary_goal, secondary_goal, notes, completion_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            intake_id,
+            session.get("firm_id", "FIRM-001"),
+            request.form.get("intake_type"),
+            request.form.get("primary_full_name"),
+            request.form.get("preferred_name"),
+            request.form.get("marital_status"),
+            request.form.get("state_jurisdiction"),
+            request.form.get("has_spouse"),
+            request.form.get("has_children"),
+            request.form.get("trustee_candidate"),
+            request.form.get("successor_trustee_candidate"),
+            request.form.get("primary_goal"),
+            request.form.get("secondary_goal"),
+            request.form.get("notes"),
+            "step_1_complete"
+        ))
+        conn.commit()
+        conn.close()
+        flash("Identity & Family Structure intake saved.", "success")
+        return redirect(url_for("identity_intake_summary", intake_id=intake_id))
+
+    conn.close()
+    return render_template("intake_identity.html")
+
+
+@app.route("/intake/identity/<intake_id>")
+@login_required
+def identity_intake_summary(intake_id):
+    ensure_identity_intake_table()
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM identity_intake
+        WHERE intake_id = ? AND firm_id = ?
+    """, (intake_id, session.get("firm_id", "FIRM-001")))
+    intake = cur.fetchone()
+    conn.close()
+
+    if not intake:
+        flash("Identity intake record not found.", "warning")
+        return redirect(url_for("identity_intake"))
+
+    return render_template("intake_identity_summary.html", intake=intake)
+
