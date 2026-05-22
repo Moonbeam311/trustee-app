@@ -81,6 +81,13 @@
   </div>
 {% endif %}
 
+
+<p>
+  <a href="{{ url_for('launch_draft_session', intake_id=intake_id) }}">
+    Open Controlled Draft Launch Engine
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('intake_deep_review', intake_id=intake_id) }}">
     Back to Deep Review

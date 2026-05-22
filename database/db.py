@@ -3785,3 +3785,38 @@ def ensure_drafting_prep_gate_table():
 
     conn.commit()
     conn.close()
+
+def ensure_draft_session_table():
+    """
+    Controlled draft launch sessions.
+    Tracks governed drafting workflow launches.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS draft_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            draft_session_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+            workflow_status TEXT DEFAULT 'initialized',
+
+            drafting_mode TEXT DEFAULT 'guided',
+
+            launched_by TEXT,
+
+            launch_notes TEXT,
+
+            generated_document_count INTEGER DEFAULT 0,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

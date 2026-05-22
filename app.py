@@ -13641,6 +13641,105 @@ def intake_drafting_prep(intake_id):
 
 
 
+
+
+@app.route("/draft-launch/<intake_id>", methods=["GET", "POST"])
+@csrf.exempt
+def launch_draft_session(intake_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_draft_session_table,
+        upsert_intake_orchestration_state
+    )
+
+    ensure_draft_session_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM identity_intake
+        WHERE intake_id = ?
+    """, (intake_id,))
+
+    intake = cur.fetchone()
+
+    if not intake:
+        conn.close()
+        flash("Intake record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    if request.method == "POST":
+
+        draft_session_id = "DS-" + uuid.uuid4().hex[:8].upper()
+
+        document_type = request.form.get("document_type")
+
+        cur.execute("""
+            INSERT INTO draft_sessions (
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_type,
+                workflow_status,
+                drafting_mode,
+                launched_by,
+                launch_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            draft_session_id,
+            intake_id,
+            session.get("firm_id", "FIRM-001"),
+            document_type,
+            "initialized",
+            "guided",
+            session.get("username", "unknown"),
+            request.form.get("launch_notes")
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=session.get("firm_id", "FIRM-001"),
+            drafting_status="draft_session_active",
+            overall_stage="drafting_active",
+            readiness_label="Drafting Active",
+            next_recommended_action="Continue controlled drafting workflow.",
+            next_route=f"/draft-launch/{intake_id}"
+        )
+
+        flash("Controlled draft session launched.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM draft_sessions
+        WHERE intake_id = ?
+        ORDER BY created_at DESC
+    """, (intake_id,))
+
+    draft_sessions = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "draft_launch.html",
+        intake=intake,
+        draft_sessions=draft_sessions
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

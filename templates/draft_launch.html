@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Controlled Draft Launch Engine</h1>
+
+<p>
+  Intake:
+  <strong>{{ intake["primary_full_name"] }}</strong>
+  ({{ intake["intake_id"] }})
+</p>
+
+<hr>
+
+<div class="card">
+
+<form method="POST">
+
+  <h2>Launch Draft Workflow</h2>
+
+  <label>Document Workflow Type</label>
+  <select name="document_type">
+    <option>Revocable Living Trust</option>
+    <option>Irrevocable Trust</option>
+    <option>Certification of Trust</option>
+    <option>Trust Amendment</option>
+    <option>Trustee Appointment</option>
+    <option>Asset Assignment</option>
+    <option>Pour-Over Will</option>
+    <option>Durable Power of Attorney</option>
+    <option>Healthcare Directive</option>
+    <option>Business Continuity Resolution</option>
+  </select>
+
+  <label>Launch Notes</label>
+  <textarea name="launch_notes" rows="5"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Launch Controlled Draft Session
+  </button>
+
+</form>
+
+</div>
+
+<hr>
+
+<h2>Draft Session History</h2>
+
+{% if draft_sessions %}
+
+  {% for session in draft_sessions %}
+
+    <div class="card">
+
+      <h3>{{ session["draft_session_id"] }}</h3>
+
+      <p>
+        <strong>Document Type:</strong>
+        {{ session["document_type"] }}
+      </p>
+
+      <p>
+        <strong>Workflow Status:</strong>
+        {{ session["workflow_status"] }}
+      </p>
+
+      <p>
+        <strong>Drafting Mode:</strong>
+        {{ session["drafting_mode"] }}
+      </p>
+
+      <p>
+        <strong>Generated Documents:</strong>
+        {{ session["generated_document_count"] }}
+      </p>
+
+      <p>
+        <strong>Launched By:</strong>
+        {{ session["launched_by"] }}
+      </p>
+
+    </div>
+
+  {% endfor %}
+
+{% else %}
+
+<div class="card">
+  <p>No draft sessions launched yet.</p>
+</div>
+
+{% endif %}
+
+<p>
+  <a href="{{ url_for('intake_drafting_prep', intake_id=intake['intake_id']) }}">
+    Back to Drafting Preparation
+  </a>
+</p>
+
+{% endblock %}
