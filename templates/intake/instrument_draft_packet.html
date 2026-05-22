@@ -84,7 +84,7 @@
             <a href="{{ url_for('intake_workflow_bridge', intake_id=packet.intake_id, workflow_key=packet.workflow_key) }}">Bridge</a>
             <a href="{{ url_for('intake_workflow_launch_prep', intake_id=packet.intake_id, workflow_key=packet.workflow_key) }}">Launch prep</a>
             <a href="{{ url_for('intake_document_recommendations', intake_id=packet.intake_id) }}">Recommendations</a>
-            <a href="{{ url_for('intake_packet', intake_id=packet.intake_id) }}">Follow-up packet</a>
+            <a href="{{ url_for('intake_followup_packet', intake_id=packet.intake_id) }}">Follow-up packet</a>
             <a href="#" onclick="window.print(); return false;">Print packet</a>
         </div>
     </div>
