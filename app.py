@@ -13740,6 +13740,152 @@ def launch_draft_session(intake_id):
 
 
 
+
+
+@app.route("/guided-draft/<draft_session_id>", methods=["GET", "POST"])
+@csrf.exempt
+def guided_draft_workspace(draft_session_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_guided_draft_workspace_table,
+        upsert_intake_orchestration_state
+    )
+
+    ensure_guided_draft_workspace_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM draft_sessions
+        WHERE draft_session_id = ?
+    """, (draft_session_id,))
+
+    draft_session = cur.fetchone()
+
+    if not draft_session:
+        conn.close()
+        flash("Draft session not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    intake_id = draft_session["intake_id"]
+
+    cur.execute("""
+        SELECT *
+        FROM identity_intake
+        WHERE intake_id = ?
+    """, (intake_id,))
+
+    intake = cur.fetchone()
+
+    cur.execute("""
+        SELECT *
+        FROM asset_intake
+        WHERE intake_id = ?
+    """, (intake_id,))
+
+    assets = cur.fetchall()
+
+    cur.execute("""
+        SELECT *
+        FROM document_intake
+        WHERE intake_id = ?
+    """, (intake_id,))
+
+    documents = cur.fetchall()
+
+    asset_summary = ", ".join([
+        f"{a['asset_category']}: {a['asset_name']}"
+        for a in assets
+    ])
+
+    document_summary = ", ".join([
+        f"{d['document_category']}: {d['document_name']}"
+        for d in documents
+    ])
+
+    if request.method == "POST":
+
+        workspace_id = "WS-" + uuid.uuid4().hex[:8].upper()
+
+        cur.execute("""
+            INSERT INTO guided_draft_workspace (
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_type,
+                primary_person,
+                trustee_candidate,
+                successor_trustee_candidate,
+                primary_goal,
+                secondary_goal,
+                asset_summary,
+                document_summary,
+                draft_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            workspace_id,
+            draft_session_id,
+            intake_id,
+            session.get("firm_id", "FIRM-001"),
+            draft_session["document_type"],
+            intake["primary_full_name"],
+            intake["trustee_candidate"],
+            intake["successor_trustee_candidate"],
+            intake["primary_goal"],
+            intake["secondary_goal"],
+            asset_summary,
+            document_summary,
+            request.form.get("draft_notes")
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=session.get("firm_id", "FIRM-001"),
+            drafting_status="workspace_active",
+            overall_stage="guided_drafting_workspace",
+            readiness_label="Draft Workspace Active",
+            next_recommended_action="Continue guided drafting workflow.",
+            next_route=f"/guided-draft/{draft_session_id}"
+        )
+
+        flash("Guided draft workspace initialized.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM guided_draft_workspace
+        WHERE draft_session_id = ?
+        ORDER BY created_at DESC
+    """, (draft_session_id,))
+
+    workspaces = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "guided_draft_workspace.html",
+        draft_session=draft_session,
+        intake=intake,
+        asset_summary=asset_summary,
+        document_summary=document_summary,
+        workspaces=workspaces
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

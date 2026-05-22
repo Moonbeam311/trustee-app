@@ -3820,3 +3820,46 @@ def ensure_draft_session_table():
 
     conn.commit()
     conn.close()
+
+def ensure_guided_draft_workspace_table():
+    """
+    Guided draft workspace engine.
+    Stores controlled editable drafting sessions.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS guided_draft_workspace (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            workspace_id TEXT UNIQUE,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+
+            primary_person TEXT,
+            trustee_candidate TEXT,
+            successor_trustee_candidate TEXT,
+
+            primary_goal TEXT,
+            secondary_goal TEXT,
+
+            asset_summary TEXT,
+            document_summary TEXT,
+
+            workspace_status TEXT DEFAULT 'active',
+
+            generated_output_status TEXT DEFAULT 'not_generated',
+
+            draft_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

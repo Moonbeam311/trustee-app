@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Guided Draft Workspace Engine</h1>
+
+<p>
+  Draft Session:
+  <strong>{{ draft_session["draft_session_id"] }}</strong>
+</p>
+
+<hr>
+
+<div class="card">
+
+  <h2>Preloaded Intake Intelligence</h2>
+
+  <p>
+    <strong>Primary Person:</strong>
+    {{ intake["primary_full_name"] }}
+  </p>
+
+  <p>
+    <strong>Trustee Candidate:</strong>
+    {{ intake["trustee_candidate"] }}
+  </p>
+
+  <p>
+    <strong>Successor Trustee:</strong>
+    {{ intake["successor_trustee_candidate"] }}
+  </p>
+
+  <p>
+    <strong>Primary Goal:</strong>
+    {{ intake["primary_goal"] }}
+  </p>
+
+  <p>
+    <strong>Secondary Goal:</strong>
+    {{ intake["secondary_goal"] }}
+  </p>
+
+</div>
+
+<div class="card">
+
+  <h2>Preloaded Asset Summary</h2>
+
+  <p>{{ asset_summary }}</p>
+
+</div>
+
+<div class="card">
+
+  <h2>Preloaded Document Summary</h2>
+
+  <p>{{ document_summary }}</p>
+
+</div>
+
+<div class="card">
+
+<form method="POST">
+
+  <h2>Initialize Guided Workspace</h2>
+
+  <label>Draft Notes</label>
+  <textarea name="draft_notes" rows="6"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Initialize Draft Workspace
+  </button>
+
+</form>
+
+</div>
+
+<hr>
+
+<h2>Workspace History</h2>
+
+{% if workspaces %}
+
+  {% for ws in workspaces %}
+
+    <div class="card">
+
+      <h3>{{ ws["workspace_id"] }}</h3>
+
+      <p>
+        <strong>Document Type:</strong>
+        {{ ws["document_type"] }}
+      </p>
+
+      <p>
+        <strong>Workspace Status:</strong>
+        {{ ws["workspace_status"] }}
+      </p>
+
+      <p>
+        <strong>Generated Output Status:</strong>
+        {{ ws["generated_output_status"] }}
+      </p>
+
+      <p>
+        <strong>Draft Notes:</strong>
+        {{ ws["draft_notes"] }}
+      </p>
+
+    </div>
+
+  {% endfor %}
+
+{% else %}
+
+<div class="card">
+  <p>No guided workspaces initialized yet.</p>
+</div>
+
+{% endif %}
+
+<p>
+  <a href="{{ url_for('launch_draft_session', intake_id=intake['intake_id']) }}">
+    Back to Draft Launch
+  </a>
+</p>
+
+{% endblock %}
