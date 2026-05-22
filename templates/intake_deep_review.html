@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Deep Review Workspace</h1>
+
+<div class="card">
+  <h2>Readiness Snapshot</h2>
+  <p><strong>Intake ID:</strong> {{ intake_id }}</p>
+  <p><strong>Readiness Score:</strong> {{ summary["score"] }}%</p>
+  <p><strong>Readiness:</strong> {{ summary["readiness_label"] }}</p>
+  <p><strong>Review Priority:</strong> {{ summary["review_priority"] }}</p>
+  <p><strong>Next Action:</strong> {{ summary["next_action"] }}</p>
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Record Review Decision</h2>
+
+  <label>Reviewer Name</label>
+  <input type="text" name="reviewer_name">
+
+  <label>Review Status</label>
+  <select name="review_status">
+    <option>open</option>
+    <option>needs_correction</option>
+    <option>reviewed</option>
+    <option>approved_for_drafting</option>
+  </select>
+
+  <label>Issue Flag</label>
+  <select name="issue_flag">
+    <option>None</option>
+    <option>Missing Document</option>
+    <option>Ownership Issue</option>
+    <option>Trustee Issue</option>
+    <option>Beneficiary Issue</option>
+    <option>Asset Risk</option>
+    <option>Execution Risk</option>
+    <option>Other</option>
+  </select>
+
+  <label>Correction Required</label>
+  <textarea name="correction_required" rows="4"></textarea>
+
+  <label>Reviewer Notes</label>
+  <textarea name="reviewer_notes" rows="5"></textarea>
+
+  <label>Drafting Gate</label>
+  <select name="drafting_gate">
+    <option value="not_ready">Not Ready</option>
+    <option value="ready_for_drafting">Ready for Drafting</option>
+  </select>
+
+  <br><br>
+  <button type="submit">Record Deep Review</button>
+
+</form>
+</div>
+
+<h2>Review History</h2>
+
+{% if reviews %}
+  {% for review in reviews %}
+    <div class="card">
+      <h3>{{ review["review_id"] }}</h3>
+      <p><strong>Reviewer:</strong> {{ review["reviewer_name"] }}</p>
+      <p><strong>Status:</strong> {{ review["review_status"] }}</p>
+      <p><strong>Issue Flag:</strong> {{ review["issue_flag"] }}</p>
+      <p><strong>Correction Required:</strong> {{ review["correction_required"] }}</p>
+      <p><strong>Drafting Gate:</strong> {{ review["drafting_gate"] }}</p>
+      <p><strong>Notes:</strong> {{ review["reviewer_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No deep review records yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('identity_intake_summary', intake_id=intake_id) }}">
+    Back to Intake Summary
+  </a>
+</p>
+
+{% endblock %}

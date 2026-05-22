@@ -13454,6 +13454,98 @@ def intake_readiness_review(intake_id):
 
 
 
+
+
+@app.route("/intake/deep-review/<intake_id>", methods=["GET", "POST"])
+@csrf.exempt
+def intake_deep_review(intake_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_deep_review_table,
+        build_intake_readiness_summary,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_deep_review_table()
+
+    summary = build_intake_readiness_summary(intake_id, firm_id)
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        review_id = "REV-" + uuid.uuid4().hex[:8].upper()
+
+        drafting_gate = request.form.get("drafting_gate") or "not_ready"
+
+        cur.execute("""
+            INSERT INTO intake_deep_review (
+                review_id,
+                intake_id,
+                firm_id,
+                reviewer_name,
+                review_status,
+                issue_flag,
+                correction_required,
+                reviewer_notes,
+                drafting_gate
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            review_id,
+            intake_id,
+            firm_id,
+            request.form.get("reviewer_name"),
+            request.form.get("review_status"),
+            request.form.get("issue_flag"),
+            request.form.get("correction_required"),
+            request.form.get("reviewer_notes"),
+            drafting_gate
+        ))
+
+        conn.commit()
+
+        next_action = "Proceed to drafting preparation." if drafting_gate == "ready_for_drafting" else "Resolve review issues before drafting."
+
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=firm_id,
+            review_status=request.form.get("review_status") or "reviewed",
+            overall_stage="deep_review",
+            readiness_label=summary["readiness_label"],
+            next_recommended_action=next_action,
+            next_route=f"/intake/deep-review/{intake_id}"
+        )
+
+        flash("Deep review note recorded.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM intake_deep_review
+        WHERE intake_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (intake_id, firm_id))
+
+    reviews = cur.fetchall()
+    conn.close()
+
+    return render_template(
+        "intake_deep_review.html",
+        intake_id=intake_id,
+        summary=summary,
+        reviews=reviews
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

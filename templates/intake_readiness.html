@@ -57,6 +57,13 @@
   <p>{{ summary["next_action"] }}</p>
 </div>
 
+
+<p>
+  <a href="{{ url_for('intake_deep_review', intake_id=summary['intake_id']) }}">
+    Open Deep Review Workspace
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('identity_intake_summary', intake_id=summary['intake_id']) }}">
     Back to Intake Summary

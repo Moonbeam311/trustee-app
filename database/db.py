@@ -3690,3 +3690,65 @@ def build_intake_readiness_summary(intake_id, firm_id="FIRM-001"):
 
     conn.close()
     return summary
+
+def ensure_deep_review_table():
+    """
+    Deep review workspace table.
+    Tracks reviewer judgment, issue flags, corrections, and drafting gate status.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_deep_review (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            review_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            reviewer_name TEXT,
+            review_status TEXT DEFAULT 'open',
+            issue_flag TEXT,
+            correction_required TEXT,
+            reviewer_notes TEXT,
+
+            drafting_gate TEXT DEFAULT 'not_ready',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def ensure_deep_review_table():
+    """
+    Deep review workspace table.
+    Tracks reviewer judgment, issue flags, corrections, and drafting gate status.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_deep_review (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            review_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            reviewer_name TEXT,
+            review_status TEXT DEFAULT 'open',
+            issue_flag TEXT,
+            correction_required TEXT,
+            reviewer_notes TEXT,
+
+            drafting_gate TEXT DEFAULT 'not_ready',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
