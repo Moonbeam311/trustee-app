@@ -41,7 +41,8 @@ from services.services_intake import build_final_draft_section_editor_context, g
 from services.services_intake import generate_final_draft_preview_docx
 from services.services_intake import build_final_draft_version_register_context
 from services.services_intake import build_final_draft_completion_gate_context, record_final_draft_completion
-from database.db import (, ensure_identity_intake_table
+from database.db import (
+    ensure_identity_intake_table,
     verify_audit_log_chain,
     init_db,
     get_next_trust_id,
@@ -14160,15 +14161,13 @@ def intake_instrument_draft_packet(intake_id, workflow_key):
     )
 
 
-if __name__ == "__main__":
-    app.run(debug=FLASK_DEBUG == "1")
-
-app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
-
 
 @app.route("/intake/identity", methods=["GET", "POST"])
-@login_required
+@csrf.exempt
 def identity_intake():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+    from database.db import ensure_identity_intake_table, get_connection
     ensure_identity_intake_table()
     conn = get_connection()
     cur = conn.cursor()
@@ -14202,6 +14201,20 @@ def identity_intake():
             "step_1_complete"
         ))
         conn.commit()
+
+        from database.db import upsert_intake_orchestration_state
+        upsert_intake_orchestration_state(
+            intake_id=intake_id,
+            firm_id=session.get("firm_id", "FIRM-001"),
+            identity_status="complete",
+            overall_stage="identity_complete",
+            readiness_label="Partially Ready",
+            next_recommended_action="Add asset inventory",
+            next_route=f"/intake/assets/{intake_id}",
+            complexity_level="Pending",
+            urgency_level="Pending"
+        )
+
         conn.close()
         flash("Identity & Family Structure intake saved.", "success")
         return redirect(url_for("identity_intake_summary", intake_id=intake_id))
@@ -14211,8 +14224,11 @@ def identity_intake():
 
 
 @app.route("/intake/identity/<intake_id>")
-@login_required
 def identity_intake_summary(intake_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+    import sqlite3
+    from database.db import ensure_identity_intake_table, get_connection
     ensure_identity_intake_table()
     conn = get_connection()
     conn.row_factory = sqlite3.Row
@@ -14229,4 +14245,10 @@ def identity_intake_summary(intake_id):
         return redirect(url_for("identity_intake"))
 
     return render_template("intake_identity_summary.html", intake=intake)
+
+
+if __name__ == "__main__":
+    app.run(debug=FLASK_DEBUG == "1")
+
+app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
 
