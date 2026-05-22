@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Document Gathering Intake</h1>
+
+<p>
+  Intake:
+  <strong>{{ intake["primary_full_name"] }}</strong>
+  ({{ intake["intake_id"] }})
+</p>
+
+<hr>
+
+<div class="card">
+
+<form method="POST" enctype="multipart/form-data">
+
+  <h2>Add Supporting Record</h2>
+
+  <label>Document Category</label>
+  <select name="document_category">
+    <option>Deed</option>
+    <option>Title</option>
+    <option>Bank Statement</option>
+    <option>Insurance Policy</option>
+    <option>Trust Document</option>
+    <option>Will</option>
+    <option>POA</option>
+    <option>Business Record</option>
+    <option>Tax Record</option>
+    <option>Contract</option>
+    <option>Other</option>
+  </select>
+
+  <label>Document Name</label>
+  <input type="text" name="document_name">
+
+  <label>Upload File</label>
+  <input type="file" name="document_file">
+
+  <label>Notes</label>
+  <textarea name="notes" rows="4"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Add Document Record
+  </button>
+
+</form>
+
+</div>
+
+<hr>
+
+<h2>Current Supporting Records</h2>
+
+{% if documents %}
+
+  {% for doc in documents %}
+
+    <div class="card">
+
+      <h3>{{ doc["document_name"] }}</h3>
+
+      <p><strong>Category:</strong> {{ doc["document_category"] }}</p>
+      <p><strong>File:</strong> {{ doc["file_name"] }}</p>
+      <p><strong>Review Status:</strong> {{ doc["review_status"] }}</p>
+
+    </div>
+
+  {% endfor %}
+
+{% else %}
+
+<div class="card">
+  <p>No supporting records added yet.</p>
+</div>
+
+{% endif %}
+
+<p>
+  <a href="{{ url_for('identity_intake_summary', intake_id=intake['intake_id']) }}">
+    Back to Intake Summary
+  </a>
+</p>
+
+{% endblock %}

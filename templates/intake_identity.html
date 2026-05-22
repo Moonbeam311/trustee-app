@@ -5,6 +5,7 @@
 <p class="muted">Step 1 of the guided fiduciary intake process.</p>
 
 <form method="POST" class="card">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
   <h2>A. Intake Type</h2>
   <label>What best describes this intake?</label>

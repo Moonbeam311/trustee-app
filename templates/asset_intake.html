@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Asset Inventory Intake</h1>
+
+<p>
+  Intake:
+  <strong>{{ intake["primary_full_name"] }}</strong>
+  ({{ intake["intake_id"] }})
+</p>
+
+<hr>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Add Asset</h2>
+
+  <label>Asset Category</label>
+  <select name="asset_category">
+    <option>Real Estate</option>
+    <option>Bank Account</option>
+    <option>Investment Account</option>
+    <option>Business Interest</option>
+    <option>Vehicle</option>
+    <option>Insurance Policy</option>
+    <option>Precious Metals</option>
+    <option>Collectible</option>
+    <option>Digital Asset</option>
+    <option>Intellectual Property</option>
+    <option>Other</option>
+  </select>
+
+  <label>Asset Name</label>
+  <input type="text" name="asset_name">
+
+  <label>Ownership Type</label>
+  <select name="ownership_type">
+    <option>Individual</option>
+    <option>Joint</option>
+    <option>Trust-Owned</option>
+    <option>Business-Owned</option>
+    <option>Unknown</option>
+  </select>
+
+  <label>Estimated Value</label>
+  <input type="text" name="estimated_value">
+
+  <label>Title / Ownership Document Exists?</label>
+  <select name="has_title_document">
+    <option>Yes</option>
+    <option>No</option>
+    <option>Unknown</option>
+  </select>
+
+  <label>Beneficiary Designation Exists?</label>
+  <select name="has_beneficiary_designation">
+    <option>Yes</option>
+    <option>No</option>
+    <option>Unknown</option>
+  </select>
+
+  <label>Existing Transfer Plan?</label>
+  <select name="has_existing_transfer_plan">
+    <option>Yes</option>
+    <option>No</option>
+    <option>Unknown</option>
+  </select>
+
+  <label>Risk Level</label>
+  <select name="risk_level">
+    <option>Low</option>
+    <option>Moderate</option>
+    <option>High</option>
+  </select>
+
+  <label>Notes</label>
+  <textarea name="notes" rows="4"></textarea>
+
+  <br><br>
+  <button type="submit">Add Asset</button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Current Asset Inventory</h2>
+
+{% if assets %}
+  {% for asset in assets %}
+    <div class="card">
+      <h3>{{ asset["asset_name"] }}</h3>
+      <p><strong>Category:</strong> {{ asset["asset_category"] }}</p>
+      <p><strong>Ownership:</strong> {{ asset["ownership_type"] }}</p>
+      <p><strong>Estimated Value:</strong> {{ asset["estimated_value"] }}</p>
+      <p><strong>Risk Level:</strong> {{ asset["risk_level"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No assets added yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('identity_intake_summary', intake_id=intake['intake_id']) }}">
+    Back to Intake Summary
+  </a>
+</p>
+
+{% endblock %}

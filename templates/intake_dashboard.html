@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Intake Dashboard</h1>
+
+<p class="muted">
+Operational intake command center for fiduciary onboarding.
+</p>
+
+<p>
+  <a href="{{ url_for('identity_intake') }}">
+    + Start New Intake
+  </a>
+</p>
+
+<hr>
+
+{% if intake_records %}
+
+<div class="dashboard-grid">
+
+{% for intake in intake_records %}
+
+<div class="card">
+
+  <h2>{{ intake["primary_full_name"] }}</h2>
+
+  <p>
+    <strong>Intake ID:</strong>
+    {{ intake["intake_id"] }}
+  </p>
+
+  <p>
+    <strong>Status:</strong>
+    {{ intake["completion_status"] }}
+  </p>
+
+  <p>
+    <strong>Type:</strong>
+    {{ intake["intake_type"] }}
+  </p>
+
+  <p>
+    <strong>Jurisdiction:</strong>
+    {{ intake["state_jurisdiction"] }}
+  </p>
+
+  <p>
+    <strong>Primary Goal:</strong>
+    {{ intake["primary_goal"] }}
+  </p>
+
+  <hr>
+
+  <p>
+    <a href="{{ url_for('identity_intake_summary', intake_id=intake['intake_id']) }}">
+      View Intake Summary
+    </a>
+  </p>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="card">
+  <p>No intake records found.</p>
+</div>
+
+{% endif %}
+
+{% endblock %}
