@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>PDF Review + Execution Approval Gate</h1>
+
+<div class="card">
+  <h2>PDF Export Record</h2>
+
+  <p><strong>PDF Export ID:</strong> {{ pdf_record["pdf_export_id"] }}</p>
+  <p><strong>Document Control ID:</strong> {{ pdf_record["document_control_id"] }}</p>
+  <p><strong>Document Type:</strong> {{ pdf_record["document_type"] }}</p>
+  <p><strong>Version:</strong> {{ pdf_record["version_label"] }}</p>
+  <p><strong>PDF File Name:</strong> {{ pdf_record["pdf_file_name"] }}</p>
+  <p><strong>PDF File Path:</strong> {{ pdf_record["pdf_file_path"] }}</p>
+  <p><strong>File Exists:</strong> {{ file_exists_status }}</p>
+
+  <p>
+    <a href="{{ url_for('download_controlled_pdf_export', pdf_export_id=pdf_record['pdf_export_id']) }}">
+      Download PDF
+    </a>
+  </p>
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Record PDF Review / Execution Approval</h2>
+
+  <label>Reviewer Name</label>
+  <input type="text" name="reviewer_name">
+
+  <label>Review Status</label>
+  <select name="review_status">
+    <option value="pending_review">Pending Review</option>
+    <option value="needs_correction">Needs Correction</option>
+    <option value="approved">Approved</option>
+  </select>
+
+  <label>Issue Flag</label>
+  <select name="issue_flag">
+    <option>None</option>
+    <option>File Missing</option>
+    <option>Formatting Issue</option>
+    <option>PDF Rendering Issue</option>
+    <option>Variable Error</option>
+    <option>Clause Issue</option>
+    <option>Metadata Issue</option>
+    <option>Document Control Issue</option>
+    <option>Other</option>
+  </select>
+
+  <label>Correction Required</label>
+  <textarea name="correction_required" rows="4"></textarea>
+
+  <label>Reviewer Notes</label>
+  <textarea name="reviewer_notes" rows="5"></textarea>
+
+  <label>Execution Gate</label>
+  <select name="execution_gate">
+    <option value="not_ready">Not Ready</option>
+    <option value="ready_for_execution">Ready for Execution Packet Preparation</option>
+  </select>
+
+  <br><br>
+
+  <button type="submit">
+    Record Execution Approval Review
+  </button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Execution Approval History</h2>
+
+{% if approval_records %}
+  {% for record in approval_records %}
+    <div class="card">
+      <h3>{{ record["approval_id"] }}</h3>
+      <p><strong>Reviewer:</strong> {{ record["reviewer_name"] }}</p>
+      <p><strong>Review Status:</strong> {{ record["review_status"] }}</p>
+      <p><strong>File Exists:</strong> {{ record["file_exists_status"] }}</p>
+      <p><strong>Issue Flag:</strong> {{ record["issue_flag"] }}</p>
+      <p><strong>Correction Required:</strong> {{ record["correction_required"] }}</p>
+      <p><strong>Execution Gate:</strong> {{ record["execution_gate"] }}</p>
+      <p><strong>Reviewer Notes:</strong> {{ record["reviewer_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No PDF execution approval records yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('controlled_pdf_conversion', export_id=pdf_record['export_id']) }}">
+    Back to PDF Conversion
+  </a>
+</p>
+
+{% endblock %}

@@ -15061,6 +15061,144 @@ def download_controlled_pdf_export(pdf_export_id):
 
 
 
+
+
+@app.route("/pdf-execution-approval/<pdf_export_id>", methods=["GET", "POST"])
+@csrf.exempt
+def pdf_execution_approval_gate(pdf_export_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+    from pathlib import Path
+
+    from database.db import (
+        get_connection,
+        ensure_pdf_execution_approval_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_pdf_execution_approval_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_pdf_exports
+        WHERE pdf_export_id = ? AND firm_id = ?
+    """, (pdf_export_id, firm_id))
+
+    pdf_record = cur.fetchone()
+
+    if not pdf_record:
+        conn.close()
+        flash("Controlled PDF export record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    pdf_path = Path(pdf_record["pdf_file_path"])
+    file_exists_status = "exists" if pdf_path.exists() else "missing"
+
+    if request.method == "POST":
+
+        approval_id = "EXEC-" + uuid.uuid4().hex[:8].upper()
+
+        review_status = request.form.get("review_status") or "pending_review"
+        execution_gate = request.form.get("execution_gate") or "not_ready"
+
+        if execution_gate == "ready_for_execution" and file_exists_status != "exists":
+            execution_gate = "blocked_missing_pdf_file"
+            flash("Execution approval blocked: PDF file does not exist on disk.", "warning")
+
+        if execution_gate == "ready_for_execution" and review_status != "approved":
+            execution_gate = "blocked_review_not_approved"
+            flash("Execution approval blocked: PDF review must be approved.", "warning")
+
+        cur.execute("""
+            INSERT INTO pdf_execution_approval_gate (
+                approval_id,
+                pdf_export_id,
+                export_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_control_id,
+                pdf_file_name,
+                pdf_file_path,
+                file_exists_status,
+                reviewer_name,
+                review_status,
+                issue_flag,
+                correction_required,
+                reviewer_notes,
+                execution_gate
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            approval_id,
+            pdf_record["pdf_export_id"],
+            pdf_record["export_id"],
+            pdf_record["workspace_id"],
+            pdf_record["draft_session_id"],
+            pdf_record["intake_id"],
+            firm_id,
+            pdf_record["document_control_id"],
+            pdf_record["pdf_file_name"],
+            pdf_record["pdf_file_path"],
+            file_exists_status,
+            request.form.get("reviewer_name"),
+            review_status,
+            request.form.get("issue_flag"),
+            request.form.get("correction_required"),
+            request.form.get("reviewer_notes"),
+            execution_gate
+        ))
+
+        conn.commit()
+
+        next_action = (
+            "Proceed to execution packet preparation."
+            if execution_gate == "ready_for_execution"
+            else "Resolve PDF review or file issues before execution approval."
+        )
+
+        upsert_intake_orchestration_state(
+            intake_id=pdf_record["intake_id"],
+            firm_id=firm_id,
+            execution_status="ready_for_execution" if execution_gate == "ready_for_execution" else "execution_blocked",
+            overall_stage="pdf_review_execution_approval",
+            readiness_label="Execution Approved" if execution_gate == "ready_for_execution" else "Execution Approval Pending",
+            next_recommended_action=next_action,
+            next_route=f"/pdf-execution-approval/{pdf_export_id}"
+        )
+
+        flash("PDF review and execution approval record saved.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM pdf_execution_approval_gate
+        WHERE pdf_export_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (pdf_export_id, firm_id))
+
+    approval_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "pdf_execution_approval_gate.html",
+        pdf_record=pdf_record,
+        file_exists_status=file_exists_status,
+        approval_records=approval_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

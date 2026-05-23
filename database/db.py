@@ -4189,3 +4189,44 @@ def ensure_controlled_pdf_export_table():
 
     conn.commit()
     conn.close()
+
+def ensure_pdf_execution_approval_table():
+    """
+    PDF review and execution approval gate.
+    Tracks generated PDF review, file verification, issue flags, and execution eligibility.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS pdf_execution_approval_gate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            approval_id TEXT UNIQUE,
+            pdf_export_id TEXT,
+            export_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            pdf_file_name TEXT,
+            pdf_file_path TEXT,
+
+            file_exists_status TEXT,
+            reviewer_name TEXT,
+            review_status TEXT DEFAULT 'pending_review',
+            issue_flag TEXT,
+            correction_required TEXT,
+            reviewer_notes TEXT,
+
+            execution_gate TEXT DEFAULT 'not_ready',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
