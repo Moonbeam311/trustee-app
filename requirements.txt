@@ -6,3 +6,4 @@ Flask-SQLAlchemy
 SQLAlchemy
 Flask-WTF==1.2.2
 python-docx
+python-docx
