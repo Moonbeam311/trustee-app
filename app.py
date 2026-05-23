@@ -6476,9 +6476,16 @@ def workflow_hub():
 
 @app.route("/admin/export-policy/toggle", methods=["POST"])
 def admin_toggle_export_policy():
-    gate = require_master_admin()
-    if gate:
-        return gate
+    """
+    Firm-scoped Admin policy toggle.
+    Master Admin retains global visibility elsewhere, but firm Admins may operate
+    local export/read-only controls for their controlled workflow.
+    """
+    if session.get("role") != "Admin":
+        return render_template(
+            "access_denied.html",
+            reason="Admin role required to update system policy controls."
+        ), 403
 
     allowed_keys = {"strict_packet_export", "allow_exports", "read_only_mode"}
     policy_key = (request.form.get("policy_key") or "strict_packet_export").strip()
@@ -6498,7 +6505,7 @@ def admin_toggle_export_policy():
         "export_policy",
         policy_key,
         "toggle",
-        f"Master admin set {policy_key} to {policy[policy_key]}"
+        f"Admin {session.get('username')} for firm {session.get('firm_id', 'FIRM-001')} set {policy_key} to {policy[policy_key]}"
     )
     flash(f"System policy updated: {policy_key} = {policy[policy_key]}")
     return redirect(url_for("admin_index"))
