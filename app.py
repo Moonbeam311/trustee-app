@@ -14681,6 +14681,142 @@ def download_controlled_docx_export(export_id):
 
 
 
+
+
+@app.route("/docx-verify/<export_id>", methods=["GET", "POST"])
+@csrf.exempt
+def docx_verification_gate(export_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+    from pathlib import Path
+
+    from database.db import (
+        get_connection,
+        ensure_docx_verification_gate_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_docx_verification_gate_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_docx_exports
+        WHERE export_id = ? AND firm_id = ?
+    """, (export_id, firm_id))
+
+    export_record = cur.fetchone()
+
+    if not export_record:
+        conn.close()
+        flash("Controlled DOCX export record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    file_path = Path(export_record["file_path"])
+    file_exists_status = "exists" if file_path.exists() else "missing"
+
+    if request.method == "POST":
+
+        verification_id = "VER-" + uuid.uuid4().hex[:8].upper()
+
+        review_status = request.form.get("review_status") or "pending_review"
+        pdf_gate = request.form.get("pdf_gate") or "not_ready"
+
+        if pdf_gate == "ready_for_pdf" and file_exists_status != "exists":
+            pdf_gate = "blocked_missing_docx_file"
+            flash("PDF gate blocked: DOCX file does not exist on disk.", "warning")
+
+        if pdf_gate == "ready_for_pdf" and review_status != "approved":
+            pdf_gate = "blocked_review_not_approved"
+            flash("PDF gate blocked: DOCX review must be approved.", "warning")
+
+        cur.execute("""
+            INSERT INTO docx_verification_gate (
+                verification_id,
+                export_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_control_id,
+                file_name,
+                file_path,
+                file_exists_status,
+                reviewer_name,
+                review_status,
+                issue_flag,
+                correction_required,
+                reviewer_notes,
+                pdf_gate
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            verification_id,
+            export_record["export_id"],
+            export_record["workspace_id"],
+            export_record["draft_session_id"],
+            export_record["intake_id"],
+            firm_id,
+            export_record["document_control_id"],
+            export_record["file_name"],
+            export_record["file_path"],
+            file_exists_status,
+            request.form.get("reviewer_name"),
+            review_status,
+            request.form.get("issue_flag"),
+            request.form.get("correction_required"),
+            request.form.get("reviewer_notes"),
+            pdf_gate
+        ))
+
+        conn.commit()
+
+        next_action = (
+            "Proceed to controlled PDF conversion."
+            if pdf_gate == "ready_for_pdf"
+            else "Resolve DOCX review or file issues before PDF conversion."
+        )
+
+        upsert_intake_orchestration_state(
+            intake_id=export_record["intake_id"],
+            firm_id=firm_id,
+            drafting_status="docx_verification",
+            overall_stage="docx_review_verification",
+            readiness_label="DOCX Verified" if pdf_gate == "ready_for_pdf" else "DOCX Verification Pending",
+            next_recommended_action=next_action,
+            next_route=f"/docx-verify/{export_id}"
+        )
+
+        flash("DOCX verification review recorded.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM docx_verification_gate
+        WHERE export_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (export_id, firm_id))
+
+    verification_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "docx_verification_gate.html",
+        export_record=export_record,
+        file_exists_status=file_exists_status,
+        verification_records=verification_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

@@ -59,6 +59,12 @@
           Download DOCX
         </a>
       </p>
+
+      <p>
+        <a href="{{ url_for('docx_verification_gate', export_id=record['export_id']) }}">
+          Open DOCX Review + Verification Gate
+        </a>
+      </p>
     </div>
   {% endfor %}
 {% else %}

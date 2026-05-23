@@ -4108,3 +4108,44 @@ def ensure_controlled_docx_export_table():
 
     conn.commit()
     conn.close()
+
+
+def ensure_docx_verification_gate_table():
+    """
+    DOCX review and verification gate.
+    Tracks review status, file verification, issues, and PDF conversion eligibility.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS docx_verification_gate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            verification_id TEXT UNIQUE,
+            export_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            file_name TEXT,
+            file_path TEXT,
+
+            file_exists_status TEXT,
+            reviewer_name TEXT,
+            review_status TEXT DEFAULT 'pending_review',
+            issue_flag TEXT,
+            correction_required TEXT,
+            reviewer_notes TEXT,
+
+            pdf_gate TEXT DEFAULT 'not_ready',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
