@@ -350,7 +350,26 @@
  </div>
  </section>
 
- <div class="shortcut-strip">
+ 
+<div class="admin-card admin-recommended-start">
+  <h2>Recommended Next Action</h2>
+  <p class="admin-muted">
+    <strong>New matter?</strong> Start with <strong>Start New Intake</strong>.
+    <strong>Existing trust?</strong> Use <strong>Existing Trust Operations</strong>.
+    <strong>Need proof, review, or audit trail?</strong> Open the <strong>Lifecycle Ledger</strong> from the Intake Dashboard.
+  </p>
+</div>
+
+<div class="admin-card admin-pilot-notice">
+  <h2>Pilot Mode Notice</h2>
+  <p class="admin-muted">
+    This hosted deployment should be treated as a controlled pilot until storage persistence,
+    role permissions, backups, security posture, and sensitive-data handling are fully verified.
+  </p>
+</div>
+
+
+<div class="shortcut-strip">
  <a href="/resume">Resume Process<span>Continue the latest active transfer</span></a>
  <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
  <a href="/learning">Learning Hub<span>Guides, trust types, forms, and videos</span></a>
