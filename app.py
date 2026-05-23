@@ -15199,6 +15199,174 @@ def pdf_execution_approval_gate(pdf_export_id):
 
 
 
+
+
+@app.route("/execution-packet/<pdf_export_id>", methods=["GET", "POST"])
+@csrf.exempt
+def execution_packet_prep(pdf_export_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+    from pathlib import Path
+
+    from database.db import (
+        get_connection,
+        ensure_execution_packet_prep_table,
+        ensure_pdf_execution_approval_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_execution_packet_prep_table()
+    ensure_pdf_execution_approval_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_pdf_exports
+        WHERE pdf_export_id = ? AND firm_id = ?
+    """, (pdf_export_id, firm_id))
+
+    pdf_record = cur.fetchone()
+
+    if not pdf_record:
+        conn.close()
+        flash("Controlled PDF export record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    pdf_path = Path(pdf_record["pdf_file_path"])
+    pdf_exists = pdf_path.exists()
+
+    cur.execute("""
+        SELECT *
+        FROM pdf_execution_approval_gate
+        WHERE pdf_export_id = ?
+          AND firm_id = ?
+          AND execution_gate = 'ready_for_execution'
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (pdf_export_id, firm_id))
+
+    approval = cur.fetchone()
+    packet_allowed = approval is not None and pdf_exists
+
+    if request.method == "POST":
+
+        if not packet_allowed:
+            flash("Execution packet blocked: PDF approval gate is not ready or PDF file is missing.", "warning")
+            conn.close()
+            return redirect(url_for("execution_packet_prep", pdf_export_id=pdf_export_id))
+
+        packet_id = "PKT-" + uuid.uuid4().hex[:8].upper()
+
+        execution_readiness = request.form.get("execution_readiness") or "not_ready"
+
+        cur.execute("""
+            INSERT INTO execution_packet_prep (
+                packet_id,
+                approval_id,
+                pdf_export_id,
+                export_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_control_id,
+                document_type,
+                version_label,
+                signer_name,
+                signer_capacity,
+                witness_required,
+                notary_required,
+                jurat_required,
+                execution_location,
+                execution_date,
+                delivery_method,
+                caf_number,
+                crid_number,
+                postal_tracking_reference,
+                packet_status,
+                execution_readiness,
+                preparation_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            packet_id,
+            approval["approval_id"],
+            pdf_record["pdf_export_id"],
+            pdf_record["export_id"],
+            pdf_record["workspace_id"],
+            pdf_record["draft_session_id"],
+            pdf_record["intake_id"],
+            firm_id,
+            pdf_record["document_control_id"],
+            pdf_record["document_type"],
+            pdf_record["version_label"],
+            request.form.get("signer_name"),
+            request.form.get("signer_capacity"),
+            request.form.get("witness_required"),
+            request.form.get("notary_required"),
+            request.form.get("jurat_required"),
+            request.form.get("execution_location"),
+            request.form.get("execution_date"),
+            request.form.get("delivery_method"),
+            request.form.get("caf_number"),
+            request.form.get("crid_number"),
+            request.form.get("postal_tracking_reference"),
+            "prepared",
+            execution_readiness,
+            request.form.get("preparation_notes")
+        ))
+
+        conn.commit()
+
+        next_action = (
+            "Proceed to execution event logging."
+            if execution_readiness == "ready_for_signing"
+            else "Complete signer, witness, notary, and delivery readiness before signing."
+        )
+
+        upsert_intake_orchestration_state(
+            intake_id=pdf_record["intake_id"],
+            firm_id=firm_id,
+            execution_status="packet_ready" if execution_readiness == "ready_for_signing" else "packet_preparation",
+            overall_stage="execution_packet_preparation",
+            readiness_label="Execution Packet Ready" if execution_readiness == "ready_for_signing" else "Execution Packet In Preparation",
+            next_recommended_action=next_action,
+            next_route=f"/execution-packet/{pdf_export_id}"
+        )
+
+        flash("Execution packet preparation record saved.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM execution_packet_prep
+        WHERE pdf_export_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (pdf_export_id, firm_id))
+
+    packet_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "execution_packet_prep.html",
+        pdf_record=pdf_record,
+        approval=approval,
+        pdf_exists=pdf_exists,
+        packet_allowed=packet_allowed,
+        packet_records=packet_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Execution Packet Preparation Layer</h1>
+
+<div class="card">
+  <h2>Approved PDF Record</h2>
+
+  <p><strong>PDF Export ID:</strong> {{ pdf_record["pdf_export_id"] }}</p>
+  <p><strong>Document Control ID:</strong> {{ pdf_record["document_control_id"] }}</p>
+  <p><strong>Document Type:</strong> {{ pdf_record["document_type"] }}</p>
+  <p><strong>Version:</strong> {{ pdf_record["version_label"] }}</p>
+  <p><strong>PDF File:</strong> {{ pdf_record["pdf_file_name"] }}</p>
+  <p><strong>PDF Exists:</strong> {{ pdf_exists }}</p>
+
+  {% if approval %}
+    <p><strong>Approval ID:</strong> {{ approval["approval_id"] }}</p>
+    <p><strong>Execution Gate:</strong> {{ approval["execution_gate"] }}</p>
+  {% else %}
+    <p><strong>Execution Gate:</strong> Not approved.</p>
+  {% endif %}
+
+  <p>
+    <a href="{{ url_for('download_controlled_pdf_export', pdf_export_id=pdf_record['pdf_export_id']) }}">
+      Download PDF
+    </a>
+  </p>
+</div>
+
+<div class="card">
+  <h2>Packet Eligibility</h2>
+
+  {% if packet_allowed %}
+    <p><strong>Status:</strong> Ready for execution packet preparation.</p>
+  {% else %}
+    <p><strong>Status:</strong> Blocked. PDF approval must be ready_for_execution and PDF file must exist.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Prepare Execution Packet</h2>
+
+  <label>Signer Name</label>
+  <input type="text" name="signer_name">
+
+  <label>Signer Capacity</label>
+  <select name="signer_capacity">
+    <option>Trustee</option>
+    <option>Settlor</option>
+    <option>Grantor</option>
+    <option>Executor</option>
+    <option>Authorized Representative</option>
+    <option>Fiduciary Agent</option>
+    <option>Other</option>
+  </select>
+
+  <label>Witness Required?</label>
+  <select name="witness_required">
+    <option>unknown</option>
+    <option>yes</option>
+    <option>no</option>
+  </select>
+
+  <label>Notary Required?</label>
+  <select name="notary_required">
+    <option>unknown</option>
+    <option>yes</option>
+    <option>no</option>
+  </select>
+
+  <label>Jurat / Acknowledgment Required?</label>
+  <select name="jurat_required">
+    <option>unknown</option>
+    <option>yes</option>
+    <option>no</option>
+  </select>
+
+  <label>Execution Location</label>
+  <input type="text" name="execution_location">
+
+  <label>Execution Date</label>
+  <input type="text" name="execution_date" placeholder="YYYY-MM-DD or planned date">
+
+  <label>Delivery Method</label>
+  <select name="delivery_method">
+    <option>Internal Record Only</option>
+    <option>Certified Mail</option>
+    <option>Registered Mail</option>
+    <option>Courier</option>
+    <option>Hand Delivery</option>
+    <option>Electronic Delivery</option>
+    <option>Other</option>
+  </select>
+
+  <label>CAF Number</label>
+  <input type="text" name="caf_number" placeholder="Optional">
+
+  <label>CRID Number</label>
+  <input type="text" name="crid_number" placeholder="Optional">
+
+  <label>Postal / Certified / Registered Tracking Reference</label>
+  <input type="text" name="postal_tracking_reference" placeholder="Optional">
+
+  <label>Execution Readiness</label>
+  <select name="execution_readiness">
+    <option value="not_ready">Not Ready</option>
+    <option value="ready_for_signing">Ready for Signing / Execution Event</option>
+  </select>
+
+  <label>Preparation Notes</label>
+  <textarea name="preparation_notes" rows="5"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Record Execution Packet Preparation
+  </button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Execution Packet History</h2>
+
+{% if packet_records %}
+  {% for record in packet_records %}
+    <div class="card">
+      <h3>{{ record["packet_id"] }}</h3>
+      <p><strong>Signer:</strong> {{ record["signer_name"] }}</p>
+      <p><strong>Capacity:</strong> {{ record["signer_capacity"] }}</p>
+      <p><strong>Witness Required:</strong> {{ record["witness_required"] }}</p>
+      <p><strong>Notary Required:</strong> {{ record["notary_required"] }}</p>
+      <p><strong>Jurat Required:</strong> {{ record["jurat_required"] }}</p>
+      <p><strong>Execution Location:</strong> {{ record["execution_location"] }}</p>
+      <p><strong>Execution Date:</strong> {{ record["execution_date"] }}</p>
+      <p><strong>Delivery Method:</strong> {{ record["delivery_method"] }}</p>
+      <p><strong>CAF:</strong> {{ record["caf_number"] }}</p>
+      <p><strong>CRID:</strong> {{ record["crid_number"] }}</p>
+      <p><strong>Postal Tracking:</strong> {{ record["postal_tracking_reference"] }}</p>
+      <p><strong>Execution Readiness:</strong> {{ record["execution_readiness"] }}</p>
+      <p><strong>Notes:</strong> {{ record["preparation_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No execution packet preparation records yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('pdf_execution_approval_gate', pdf_export_id=pdf_record['pdf_export_id']) }}">
+    Back to PDF Execution Approval
+  </a>
+</p>
+
+{% endblock %}

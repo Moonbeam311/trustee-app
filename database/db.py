@@ -4230,3 +4230,109 @@ def ensure_pdf_execution_approval_table():
 
     conn.commit()
     conn.close()
+
+def ensure_execution_packet_prep_table():
+    """
+    Execution packet preparation layer.
+    Tracks signing, witness, notary/jurat, delivery, and final execution readiness.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS execution_packet_prep (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            packet_id TEXT UNIQUE,
+            approval_id TEXT,
+            pdf_export_id TEXT,
+            export_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            document_type TEXT,
+            version_label TEXT,
+
+            signer_name TEXT,
+            signer_capacity TEXT,
+
+            witness_required TEXT DEFAULT 'unknown',
+            notary_required TEXT DEFAULT 'unknown',
+            jurat_required TEXT DEFAULT 'unknown',
+
+            execution_location TEXT,
+            execution_date TEXT,
+
+            delivery_method TEXT,
+            caf_number TEXT,
+            crid_number TEXT,
+            postal_tracking_reference TEXT,
+
+            packet_status TEXT DEFAULT 'prepared',
+            execution_readiness TEXT DEFAULT 'not_ready',
+
+            preparation_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def ensure_execution_packet_prep_table():
+    """
+    Execution packet preparation layer.
+    Tracks signing, witness, notary/jurat, delivery, and final execution readiness.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS execution_packet_prep (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            packet_id TEXT UNIQUE,
+            approval_id TEXT,
+            pdf_export_id TEXT,
+            export_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            document_type TEXT,
+            version_label TEXT,
+
+            signer_name TEXT,
+            signer_capacity TEXT,
+
+            witness_required TEXT DEFAULT 'unknown',
+            notary_required TEXT DEFAULT 'unknown',
+            jurat_required TEXT DEFAULT 'unknown',
+
+            execution_location TEXT,
+            execution_date TEXT,
+
+            delivery_method TEXT,
+            caf_number TEXT,
+            crid_number TEXT,
+            postal_tracking_reference TEXT,
+
+            packet_status TEXT DEFAULT 'prepared',
+            execution_readiness TEXT DEFAULT 'not_ready',
+
+            preparation_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

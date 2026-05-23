@@ -93,6 +93,13 @@
   </div>
 {% endif %}
 
+
+<p>
+  <a href="{{ url_for('execution_packet_prep', pdf_export_id=pdf_record['pdf_export_id']) }}">
+    Open Execution Packet Preparation Layer
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('controlled_pdf_conversion', export_id=pdf_record['export_id']) }}">
     Back to PDF Conversion
