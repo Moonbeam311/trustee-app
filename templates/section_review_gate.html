@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Section Review + Clause Control Gate</h1>
+
+<p>
+  Workspace:
+  <strong>{{ workspace["workspace_id"] }}</strong>
+</p>
+
+<p>
+  Document Type:
+  <strong>{{ workspace["document_type"] }}</strong>
+</p>
+
+<hr>
+
+<div class="card">
+  <h2>Latest Draft Preview Context</h2>
+
+  {% if latest_preview %}
+    <p><strong>Preview ID:</strong> {{ latest_preview["preview_id"] }}</p>
+    <p><strong>Status:</strong> {{ latest_preview["preview_status"] }}</p>
+    <pre style="white-space: pre-wrap;">{{ latest_preview["preview_body"] }}</pre>
+  {% else %}
+    <p>No saved dynamic draft preview found. Generate and save a preview before final section approval.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Record Section / Clause Review</h2>
+
+  <label>Section Name</label>
+  <select name="section_name">
+    <option>Title / Caption</option>
+    <option>Parties</option>
+    <option>Purpose</option>
+    <option>Trustee Powers</option>
+    <option>Successor Trustee</option>
+    <option>Beneficiary / Distribution Logic</option>
+    <option>Asset Schedule</option>
+    <option>Document References</option>
+    <option>Execution / Signature Block</option>
+    <option>Notary / Witness / Jurat</option>
+    <option>Other</option>
+  </select>
+
+  <label>Clause Status</label>
+  <select name="clause_status">
+    <option value="pending_review">Pending Review</option>
+    <option value="approved">Approved</option>
+    <option value="needs_revision">Needs Revision</option>
+    <option value="remove_clause">Remove Clause</option>
+    <option value="add_clause">Add Clause</option>
+  </select>
+
+  <label>Clause Flag</label>
+  <select name="clause_flag">
+    <option>None</option>
+    <option>Missing Required Clause</option>
+    <option>Ambiguous Language</option>
+    <option>Execution Risk</option>
+    <option>Authority Issue</option>
+    <option>Asset Description Issue</option>
+    <option>Beneficiary Issue</option>
+    <option>Trustee Capacity Issue</option>
+    <option>Other</option>
+  </select>
+
+  <label>Correction Required</label>
+  <textarea name="correction_required" rows="4"></textarea>
+
+  <label>Reviewer Notes</label>
+  <textarea name="reviewer_notes" rows="5"></textarea>
+
+  <label>Export Gate</label>
+  <select name="export_gate">
+    <option value="not_ready">Not Ready</option>
+    <option value="ready_for_export">Ready for Controlled Export Prep</option>
+  </select>
+
+  <br><br>
+
+  <button type="submit">
+    Record Section Review
+  </button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Section Review History</h2>
+
+{% if section_reviews %}
+  {% for review in section_reviews %}
+    <div class="card">
+      <h3>{{ review["section_review_id"] }}</h3>
+
+      <p><strong>Section:</strong> {{ review["section_name"] }}</p>
+      <p><strong>Clause Status:</strong> {{ review["clause_status"] }}</p>
+      <p><strong>Clause Flag:</strong> {{ review["clause_flag"] }}</p>
+      <p><strong>Correction Required:</strong> {{ review["correction_required"] }}</p>
+      <p><strong>Export Gate:</strong> {{ review["export_gate"] }}</p>
+      <p><strong>Reviewer Notes:</strong> {{ review["reviewer_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No section reviews recorded yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('dynamic_draft_preview', workspace_id=workspace['workspace_id']) }}">
+    Back to Draft Preview
+  </a>
+</p>
+
+{% endblock %}

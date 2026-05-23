@@ -51,6 +51,13 @@
   </div>
 {% endif %}
 
+
+<p>
+  <a href="{{ url_for('section_review_gate', workspace_id=workspace['workspace_id']) }}">
+    Open Section Review + Clause Control Gate
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('draft_variable_binding', workspace_id=workspace['workspace_id']) }}">
     Back to Variable Binding

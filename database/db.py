@@ -3958,3 +3958,39 @@ def ensure_dynamic_draft_preview_table():
 
     conn.commit()
     conn.close()
+
+def ensure_section_review_gate_table():
+    """
+    Section review and clause control gate.
+    Tracks section-level approval, clause flags, corrections, and export readiness.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS section_review_gate (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            section_review_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+
+            section_name TEXT,
+            clause_status TEXT DEFAULT 'pending_review',
+            clause_flag TEXT,
+            correction_required TEXT,
+            reviewer_notes TEXT,
+
+            export_gate TEXT DEFAULT 'not_ready',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

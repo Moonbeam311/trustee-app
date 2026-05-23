@@ -14169,6 +14169,135 @@ confirm document type, and approve section-level drafting before export.
 
 
 
+
+
+@app.route("/section-review/<workspace_id>", methods=["GET", "POST"])
+@csrf.exempt
+def section_review_gate(workspace_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_section_review_gate_table,
+        ensure_dynamic_draft_preview_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_section_review_gate_table()
+    ensure_dynamic_draft_preview_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM guided_draft_workspace
+        WHERE workspace_id = ?
+    """, (workspace_id,))
+
+    workspace = cur.fetchone()
+
+    if not workspace:
+        conn.close()
+        flash("Guided draft workspace not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    cur.execute("""
+        SELECT *
+        FROM dynamic_draft_previews
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (workspace_id, firm_id))
+
+    latest_preview = cur.fetchone()
+
+    if request.method == "POST":
+
+        section_review_id = "SEC-" + uuid.uuid4().hex[:8].upper()
+
+        export_gate = request.form.get("export_gate") or "not_ready"
+        clause_status = request.form.get("clause_status") or "pending_review"
+
+        cur.execute("""
+            INSERT INTO section_review_gate (
+                section_review_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_type,
+                section_name,
+                clause_status,
+                clause_flag,
+                correction_required,
+                reviewer_notes,
+                export_gate
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            section_review_id,
+            workspace_id,
+            workspace["draft_session_id"],
+            workspace["intake_id"],
+            firm_id,
+            workspace["document_type"],
+            request.form.get("section_name"),
+            clause_status,
+            request.form.get("clause_flag"),
+            request.form.get("correction_required"),
+            request.form.get("reviewer_notes"),
+            export_gate
+        ))
+
+        conn.commit()
+
+        next_action = (
+            "Proceed to controlled export preparation."
+            if export_gate == "ready_for_export"
+            else "Resolve section or clause issues before export."
+        )
+
+        upsert_intake_orchestration_state(
+            intake_id=workspace["intake_id"],
+            firm_id=firm_id,
+            drafting_status="section_review",
+            overall_stage="section_review_gate",
+            readiness_label="Section Review Active",
+            next_recommended_action=next_action,
+            next_route=f"/section-review/{workspace_id}"
+        )
+
+        flash("Section review gate recorded.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM section_review_gate
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (workspace_id, firm_id))
+
+    section_reviews = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "section_review_gate.html",
+        workspace=workspace,
+        latest_preview=latest_preview,
+        section_reviews=section_reviews
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()
