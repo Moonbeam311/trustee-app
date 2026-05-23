@@ -443,7 +443,36 @@
 
  <div class="admin-two-grid">
  <div class="admin-card">
- <h2>Quick Start</h2>
+ 
+<section class="admin-card">
+  <h2>Intake Command Center</h2>
+  <p>
+    Start, review, and continue the guided intake-to-lifecycle workflow.
+  </p>
+
+  <div class="admin-action-grid">
+    <a class="primary-action" href="{{ url_for('identity_intake') }}">
+      Start Guided Intake
+    </a>
+
+    <a class="primary-action" href="{{ url_for('intake_dashboard') }}">
+      Open Intake Dashboard
+    </a>
+
+    <a class="primary-action" href="{{ url_for('intake_dashboard') }}">
+      Open Lifecycle Master Ledger
+    </a>
+  </div>
+
+  <p>
+    <small>
+      Use the Lifecycle Master Ledger after selecting or creating an intake record.
+    </small>
+  </p>
+</section>
+
+
+<h2>Quick Start</h2>
  <p class="admin-muted">Use these pathways to create, review, plan, and export.</p>
  <div class="admin-actions">
  
