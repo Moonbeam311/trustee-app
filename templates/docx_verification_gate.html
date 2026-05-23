@@ -92,6 +92,13 @@
   </div>
 {% endif %}
 
+
+<p>
+  <a href="{{ url_for('controlled_pdf_conversion', export_id=export_record['export_id']) }}">
+    Open Controlled PDF Conversion Gate
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('controlled_docx_export', workspace_id=export_record['workspace_id']) }}">
     Back to DOCX Export

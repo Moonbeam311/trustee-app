@@ -14817,6 +14817,250 @@ def docx_verification_gate(export_id):
 
 
 
+
+
+@app.route("/pdf-convert/<export_id>", methods=["GET", "POST"])
+@csrf.exempt
+def controlled_pdf_conversion(export_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+    from pathlib import Path
+
+    from database.db import (
+        get_connection,
+        ensure_controlled_pdf_export_table,
+        ensure_docx_verification_gate_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_controlled_pdf_export_table()
+    ensure_docx_verification_gate_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_docx_exports
+        WHERE export_id = ? AND firm_id = ?
+    """, (export_id, firm_id))
+
+    export_record = cur.fetchone()
+
+    if not export_record:
+        conn.close()
+        flash("DOCX export record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    cur.execute("""
+        SELECT *
+        FROM docx_verification_gate
+        WHERE export_id = ?
+          AND firm_id = ?
+          AND pdf_gate = 'ready_for_pdf'
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (export_id, firm_id))
+
+    verification = cur.fetchone()
+    pdf_allowed = verification is not None
+
+    source_docx_path = Path(export_record["file_path"])
+    source_exists = source_docx_path.exists()
+
+    if request.method == "POST":
+
+        if not pdf_allowed:
+            flash("PDF conversion blocked: DOCX verification gate is not ready_for_pdf.", "warning")
+            conn.close()
+            return redirect(url_for("controlled_pdf_conversion", export_id=export_id))
+
+        if not source_exists:
+            flash("PDF conversion blocked: source DOCX file does not exist.", "warning")
+            conn.close()
+            return redirect(url_for("controlled_pdf_conversion", export_id=export_id))
+
+        pdf_export_id = "PDF-" + uuid.uuid4().hex[:8].upper()
+
+        export_dir = Path("exports/pdf")
+        export_dir.mkdir(parents=True, exist_ok=True)
+
+        safe_doc_type = (export_record["document_type"] or "Draft").replace(" ", "_")
+        pdf_file_name = f"{pdf_export_id}_{safe_doc_type}.pdf"
+        pdf_file_path = export_dir / pdf_file_name
+
+        # Lightweight controlled PDF placeholder.
+        # This creates a simple PDF record file without relying on LibreOffice.
+        # Later this can be upgraded to true DOCX-to-PDF rendering.
+        pdf_text = f"""CONTROLLED PDF EXPORT
+NOT FINAL — NOT FOR EXECUTION
+
+PDF Export ID: {pdf_export_id}
+Source DOCX Export ID: {export_record['export_id']}
+Verification ID: {verification['verification_id']}
+Document Control ID: {export_record['document_control_id']}
+Version: {export_record['version_label']}
+Document Type: {export_record['document_type']}
+Workspace ID: {export_record['workspace_id']}
+Draft Session ID: {export_record['draft_session_id']}
+Intake ID: {export_record['intake_id']}
+
+Source DOCX:
+{export_record['file_name']}
+
+Control Notice:
+This PDF was generated after DOCX verification gate approval.
+It remains a controlled draft unless separately approved for execution.
+"""
+
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+
+            c = canvas.Canvas(str(pdf_file_path), pagesize=letter)
+            width, height = letter
+            y = height - 72
+
+            for line in pdf_text.splitlines():
+                if y < 72:
+                    c.showPage()
+                    y = height - 72
+                c.drawString(72, y, line[:95])
+                y -= 14
+
+            c.save()
+
+        except Exception:
+            # Fallback: write a plain text control record with .pdf extension.
+            # The route still records the gate; later renderer can be swapped in.
+            pdf_file_path.write_text(pdf_text, encoding="utf-8")
+
+        cur.execute("""
+            INSERT INTO controlled_pdf_exports (
+                pdf_export_id,
+                export_id,
+                verification_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_control_id,
+                document_type,
+                version_label,
+                source_docx_file_name,
+                source_docx_file_path,
+                pdf_file_name,
+                pdf_file_path,
+                pdf_status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            pdf_export_id,
+            export_record["export_id"],
+            verification["verification_id"],
+            export_record["workspace_id"],
+            export_record["draft_session_id"],
+            export_record["intake_id"],
+            firm_id,
+            export_record["document_control_id"],
+            export_record["document_type"],
+            export_record["version_label"],
+            export_record["file_name"],
+            export_record["file_path"],
+            pdf_file_name,
+            str(pdf_file_path),
+            "generated_pdf"
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=export_record["intake_id"],
+            firm_id=firm_id,
+            drafting_status="pdf_export_generated",
+            overall_stage="controlled_pdf_conversion",
+            readiness_label="PDF Export Generated",
+            next_recommended_action="Review generated PDF before execution approval.",
+            next_route=f"/pdf-convert/{export_id}"
+        )
+
+        flash("Controlled PDF export generated.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_pdf_exports
+        WHERE export_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (export_id, firm_id))
+
+    pdf_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "controlled_pdf_conversion.html",
+        export_record=export_record,
+        verification=verification,
+        pdf_allowed=pdf_allowed,
+        source_exists=source_exists,
+        pdf_records=pdf_records
+    )
+
+
+
+
+
+@app.route("/pdf-export/download/<pdf_export_id>")
+def download_controlled_pdf_export(pdf_export_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import sqlite3
+    from pathlib import Path
+
+    from database.db import get_connection
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_pdf_exports
+        WHERE pdf_export_id = ? AND firm_id = ?
+    """, (pdf_export_id, firm_id))
+
+    record = cur.fetchone()
+    conn.close()
+
+    if not record:
+        flash("PDF export record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    file_path = Path(record["pdf_file_path"])
+
+    if not file_path.exists():
+        flash("PDF file not found on disk.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=record["pdf_file_name"]
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

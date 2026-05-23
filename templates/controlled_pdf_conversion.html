@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Controlled PDF Conversion Gate</h1>
+
+<div class="card">
+  <h2>Source DOCX Export</h2>
+
+  <p><strong>DOCX Export ID:</strong> {{ export_record["export_id"] }}</p>
+  <p><strong>Document Control ID:</strong> {{ export_record["document_control_id"] }}</p>
+  <p><strong>Document Type:</strong> {{ export_record["document_type"] }}</p>
+  <p><strong>Version:</strong> {{ export_record["version_label"] }}</p>
+  <p><strong>Source DOCX:</strong> {{ export_record["file_name"] }}</p>
+  <p><strong>Source Exists:</strong> {{ source_exists }}</p>
+</div>
+
+<div class="card">
+  <h2>PDF Conversion Eligibility</h2>
+
+  {% if pdf_allowed %}
+    <p><strong>Status:</strong> Ready for controlled PDF conversion.</p>
+    <p><strong>Verification ID:</strong> {{ verification["verification_id"] }}</p>
+    <p><strong>PDF Gate:</strong> {{ verification["pdf_gate"] }}</p>
+  {% else %}
+    <p><strong>Status:</strong> Blocked. DOCX verification must have pdf_gate = ready_for_pdf.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <form method="POST">
+    <button type="submit">
+      Generate Controlled PDF Export
+    </button>
+  </form>
+</div>
+
+<hr>
+
+<h2>PDF Export History</h2>
+
+{% if pdf_records %}
+  {% for record in pdf_records %}
+    <div class="card">
+      <h3>{{ record["pdf_export_id"] }}</h3>
+      <p><strong>Document Control ID:</strong> {{ record["document_control_id"] }}</p>
+      <p><strong>Version:</strong> {{ record["version_label"] }}</p>
+      <p><strong>PDF File:</strong> {{ record["pdf_file_name"] }}</p>
+      <p><strong>Status:</strong> {{ record["pdf_status"] }}</p>
+
+      <p>
+        <a href="{{ url_for('download_controlled_pdf_export', pdf_export_id=record['pdf_export_id']) }}">
+          Download PDF
+        </a>
+      </p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No PDF exports generated yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('docx_verification_gate', export_id=export_record['export_id']) }}">
+    Back to DOCX Verification
+  </a>
+</p>
+
+{% endblock %}

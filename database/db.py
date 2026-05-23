@@ -4149,3 +4149,43 @@ def ensure_docx_verification_gate_table():
 
     conn.commit()
     conn.close()
+
+def ensure_controlled_pdf_export_table():
+    """
+    Controlled PDF export records.
+    Tracks PDF files generated only after DOCX verification approval.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS controlled_pdf_exports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            pdf_export_id TEXT UNIQUE,
+            export_id TEXT,
+            verification_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            document_type TEXT,
+            version_label TEXT,
+
+            source_docx_file_name TEXT,
+            source_docx_file_path TEXT,
+
+            pdf_file_name TEXT,
+            pdf_file_path TEXT,
+
+            pdf_status TEXT DEFAULT 'generated_pdf',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
