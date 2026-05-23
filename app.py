@@ -997,17 +997,28 @@ def get_current_owner():
 
 
 def get_visible_trusts_for_current_operator():
-    # G-1 stability patch: pull from firm-scoped DB source, not itself.
+    # FIRM-SCOPE-1: Master Admin may see all; firm Admins only see active-firm records.
     trusts = get_all_trusts()
 
     if is_master_admin():
         return trusts
 
+    active_firm_id = session.get("firm_id") or "FIRM-001"
+
+    def trust_firm_id(trust):
+        try:
+            return trust.get("firm_id") or trust.get("firm") or "FIRM-001"
+        except Exception:
+            try:
+                return getattr(trust, "firm_id", None) or getattr(trust, "firm", None) or "FIRM-001"
+            except Exception:
+                return "FIRM-001"
+
     # Tenant isolation rule:
-    # A non-master Admin may see all trusts inside the active firm.
+    # A non-master Admin may see all trusts inside the active firm only.
     # Trustee/Viewer visibility remains assignment-based.
     if session.get("role") == "Admin":
-        return trusts
+        return [t for t in trusts if trust_firm_id(t) == active_firm_id]
 
     username = (session.get("username") or "").strip().lower()
     if not username:
@@ -1033,11 +1044,18 @@ def operator_can_access_trust(trust_id):
         return False
 
     # Tenant isolation rule:
-    # A non-master Admin may access any trust that belongs to the Admin's active firm.
+    # A non-master Admin may access only trusts that belong to the Admin's active firm.
     # Trustee/Viewer access still depends on trust role assignment below.
     if session.get("role") == "Admin":
         trust = get_trust_by_id(trust_id)
-        return bool(trust)
+        active_firm_id = session.get("firm_id") or "FIRM-001"
+        if not trust:
+            return False
+        try:
+            trust_firm_id = trust.get("firm_id") or trust.get("firm") or "FIRM-001"
+        except Exception:
+            trust_firm_id = getattr(trust, "firm_id", None) or getattr(trust, "firm", None) or "FIRM-001"
+        return trust_firm_id == active_firm_id
 
     role_rows = get_roles_by_trust_id(trust_id)
     for row in role_rows:
