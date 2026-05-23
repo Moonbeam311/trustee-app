@@ -113,6 +113,13 @@
   </div>
 {% endif %}
 
+
+<p>
+  <a href="{{ url_for('controlled_export_prep', workspace_id=workspace['workspace_id']) }}">
+    Open Controlled Export Preparation Gate
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('dynamic_draft_preview', workspace_id=workspace['workspace_id']) }}">
     Back to Draft Preview

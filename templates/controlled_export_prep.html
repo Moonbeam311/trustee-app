@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Controlled Export Preparation Gate</h1>
+
+<p>
+  Workspace:
+  <strong>{{ workspace["workspace_id"] }}</strong>
+</p>
+
+<p>
+  Document Type:
+  <strong>{{ workspace["document_type"] }}</strong>
+</p>
+
+<hr>
+
+<div class="card">
+  <h2>Export Eligibility</h2>
+
+  <p><strong>Ready Section Reviews:</strong> {{ ready_review_count }}</p>
+
+  {% if export_eligible %}
+    <p><strong>Status:</strong> Eligible for controlled export preparation.</p>
+  {% else %}
+    <p><strong>Status:</strong> Not eligible yet. At least one section review must be marked ready for export.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Prepare Export Metadata</h2>
+
+  <label>Export Status</label>
+  <select name="export_status">
+    <option value="not_ready">Not Ready</option>
+    <option value="ready_for_export">Ready for Controlled Export</option>
+  </select>
+
+  <label>Document Control ID</label>
+  <input type="text" name="document_control_id" placeholder="Auto-generated if blank">
+
+  <label>Version Label</label>
+  <input type="text" name="version_label" value="v0.1-preview">
+
+  <label>CAF Number</label>
+  <input type="text" name="caf_number" placeholder="Optional; IRS/fiduciary matters only">
+
+  <label>CRID Number</label>
+  <input type="text" name="crid_number" placeholder="Optional; postal/customer registration reference">
+
+  <label>Postal / Certified / Registered Tracking Reference</label>
+  <input type="text" name="postal_tracking_reference" placeholder="Optional">
+
+  <label>Export Notes</label>
+  <textarea name="export_notes" rows="5"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Record Export Preparation Gate
+  </button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Section Review Snapshot</h2>
+
+{% if section_reviews %}
+  {% for review in section_reviews %}
+    <div class="card">
+      <p><strong>Section:</strong> {{ review["section_name"] }}</p>
+      <p><strong>Clause Status:</strong> {{ review["clause_status"] }}</p>
+      <p><strong>Export Gate:</strong> {{ review["export_gate"] }}</p>
+      <p><strong>Flag:</strong> {{ review["clause_flag"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No section review records found.</p>
+  </div>
+{% endif %}
+
+<hr>
+
+<h2>Export Preparation History</h2>
+
+{% if export_records %}
+  {% for record in export_records %}
+    <div class="card">
+      <h3>{{ record["export_prep_id"] }}</h3>
+      <p><strong>Export Status:</strong> {{ record["export_status"] }}</p>
+      <p><strong>Document Control ID:</strong> {{ record["document_control_id"] }}</p>
+      <p><strong>Version:</strong> {{ record["version_label"] }}</p>
+      <p><strong>CAF:</strong> {{ record["caf_number"] }}</p>
+      <p><strong>CRID:</strong> {{ record["crid_number"] }}</p>
+      <p><strong>Postal Tracking:</strong> {{ record["postal_tracking_reference"] }}</p>
+      <p><strong>Notes:</strong> {{ record["export_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No export preparation records yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('section_review_gate', workspace_id=workspace['workspace_id']) }}">
+    Back to Section Review
+  </a>
+</p>
+
+{% endblock %}

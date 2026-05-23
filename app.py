@@ -14298,6 +14298,150 @@ def section_review_gate(workspace_id):
 
 
 
+
+
+@app.route("/export-prep/<workspace_id>", methods=["GET", "POST"])
+@csrf.exempt
+def controlled_export_prep(workspace_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_controlled_export_prep_table,
+        ensure_section_review_gate_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_controlled_export_prep_table()
+    ensure_section_review_gate_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM guided_draft_workspace
+        WHERE workspace_id = ?
+    """, (workspace_id,))
+
+    workspace = cur.fetchone()
+
+    if not workspace:
+        conn.close()
+        flash("Guided draft workspace not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    cur.execute("""
+        SELECT *
+        FROM section_review_gate
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (workspace_id, firm_id))
+
+    section_reviews = cur.fetchall()
+
+    ready_review_count = len([
+        r for r in section_reviews
+        if r["export_gate"] == "ready_for_export"
+    ])
+
+    export_eligible = ready_review_count > 0
+
+    if request.method == "POST":
+
+        export_prep_id = "EXP-" + uuid.uuid4().hex[:8].upper()
+
+        requested_status = request.form.get("export_status") or "not_ready"
+
+        if requested_status == "ready_for_export" and not export_eligible:
+            requested_status = "blocked_missing_section_approval"
+            flash("Export prep blocked: at least one section review must be marked ready for export.", "warning")
+
+        document_control_id = request.form.get("document_control_id") or f"DOCCTRL-{uuid.uuid4().hex[:8].upper()}"
+
+        cur.execute("""
+            INSERT INTO controlled_export_prep (
+                export_prep_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_type,
+                export_status,
+                document_control_id,
+                version_label,
+                caf_number,
+                crid_number,
+                postal_tracking_reference,
+                export_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            export_prep_id,
+            workspace_id,
+            workspace["draft_session_id"],
+            workspace["intake_id"],
+            firm_id,
+            workspace["document_type"],
+            requested_status,
+            document_control_id,
+            request.form.get("version_label") or "v0.1-preview",
+            request.form.get("caf_number"),
+            request.form.get("crid_number"),
+            request.form.get("postal_tracking_reference"),
+            request.form.get("export_notes")
+        ))
+
+        conn.commit()
+
+        next_action = (
+            "Proceed to controlled DOCX/PDF generation."
+            if requested_status == "ready_for_export"
+            else "Resolve export preparation blockers before file generation."
+        )
+
+        upsert_intake_orchestration_state(
+            intake_id=workspace["intake_id"],
+            firm_id=firm_id,
+            drafting_status="export_prep",
+            overall_stage="controlled_export_preparation",
+            readiness_label="Export Prep Ready" if requested_status == "ready_for_export" else "Export Prep Blocked",
+            next_recommended_action=next_action,
+            next_route=f"/export-prep/{workspace_id}"
+        )
+
+        flash("Controlled export preparation record saved.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_export_prep
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (workspace_id, firm_id))
+
+    export_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "controlled_export_prep.html",
+        workspace=workspace,
+        section_reviews=section_reviews,
+        ready_review_count=ready_review_count,
+        export_eligible=export_eligible,
+        export_records=export_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

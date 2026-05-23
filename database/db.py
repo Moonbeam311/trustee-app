@@ -3994,3 +3994,81 @@ def ensure_section_review_gate_table():
 
     conn.commit()
     conn.close()
+
+def ensure_controlled_export_prep_table():
+    """
+    Controlled export preparation gate.
+    Tracks whether a reviewed draft is eligible for controlled export.
+    Includes document identity and optional tracking metadata.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS controlled_export_prep (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            export_prep_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+            export_status TEXT DEFAULT 'not_ready',
+
+            document_control_id TEXT,
+            version_label TEXT DEFAULT 'v0.1-preview',
+
+            caf_number TEXT,
+            crid_number TEXT,
+            postal_tracking_reference TEXT,
+
+            export_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+def ensure_controlled_export_prep_table():
+    """
+    Controlled export preparation gate.
+    Tracks whether a reviewed draft is eligible for controlled export.
+    Includes document identity and optional tracking metadata.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS controlled_export_prep (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            export_prep_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+            export_status TEXT DEFAULT 'not_ready',
+
+            document_control_id TEXT,
+            version_label TEXT DEFAULT 'v0.1-preview',
+
+            caf_number TEXT,
+            crid_number TEXT,
+            postal_tracking_reference TEXT,
+
+            export_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
