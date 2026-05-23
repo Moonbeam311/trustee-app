@@ -325,6 +325,26 @@
 }
 </style>
 
+
+<style>
+.admin-pilot-notice {
+  border-left: 5px solid rgba(255, 193, 7, 0.95);
+}
+
+.railway-readiness-card {
+  border-left: 5px solid rgba(90, 160, 255, 0.95);
+}
+
+.railway-readiness-card ul {
+  margin-top: 10px;
+  padding-left: 22px;
+}
+
+.railway-readiness-card li {
+  margin-bottom: 6px;
+}
+</style>
+
 </head>
 
 <body>
@@ -395,6 +415,32 @@
   </div>
 </section>
 
+
+
+
+<div class="admin-card admin-pilot-notice">
+  <h2>Pilot Safety Notice</h2>
+  <p class="admin-muted">
+    This hosted deployment is a controlled pilot. Use test or mock records until persistence,
+    backups, permissions, export controls, and sensitive-data handling are fully verified.
+  </p>
+</div>
+
+<div class="admin-card railway-readiness-card">
+  <h2>Railway Readiness Checklist</h2>
+  <p class="admin-muted">
+    Confirm these items before live sensitive-data use:
+  </p>
+  <ul>
+    <li>DB_PATH is configured as <strong>/app/data/trustee_app.db</strong>.</li>
+    <li>Railway volume is mounted at <strong>/app/data</strong>.</li>
+    <li>Database Backup ZIP has been downloaded and opened successfully.</li>
+    <li>Logged-out route protection has been tested.</li>
+    <li>Global export policy is enforced before DOCX/PDF generation.</li>
+    <li>Read-only mode blocks POST actions when enabled.</li>
+    <li>DOCX/PDF exports survive redeploy or are stored under persistent storage.</li>
+  </ul>
+</div>
 
 
 <div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center</div>
