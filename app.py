@@ -9589,6 +9589,49 @@ def handle_csrf_error(e):
         "access_denied.html",
         reason="Security check failed. Please go back, refresh the page, and try again."
     ), 400
+
+@app.before_request
+def enforce_controlled_export_policy_by_path():
+    """
+    Fail-closed guard for controlled INT export routes.
+    This runs before route imports, database lookups, or fake-ID handling.
+    """
+    protected_prefixes = (
+        "/docx-export/",
+        "/pdf-convert/",
+        "/pdf-export/download/",
+    )
+
+    if not (request.path or "").startswith(protected_prefixes):
+        return
+
+    # Let login/static/public mechanics stay handled by the main auth lock.
+    if "role" not in session:
+        return redirect(url_for("login"))
+
+    try:
+        policy = get_export_policy()
+        exports_allowed = bool(policy.get("allow_exports", True))
+    except Exception:
+        exports_allowed = False
+
+    if not exports_allowed:
+        try:
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "export_blocked",
+                f"Path={request.path}; Policy=allow_exports_false_or_unreadable"
+            )
+        except Exception:
+            pass
+
+        return render_template(
+            "access_denied.html",
+            reason="Exports are currently disabled by system policy."
+        )
+
+
 @app.before_request
 def enforce_session_timeout():
     # 🔒 GLOBAL AUTHENTICATION LOCK
@@ -14480,6 +14523,9 @@ def controlled_docx_export(workspace_id):
     if not session.get("user_id") and not session.get("username"):
         return redirect(url_for("login"))
 
+    from database.db import ensure_controlled_docx_export_table
+    ensure_controlled_docx_export_table()
+
     import uuid
     import sqlite3
     from pathlib import Path
@@ -14854,6 +14900,10 @@ def controlled_pdf_conversion(export_id):
 
     if not session.get("user_id") and not session.get("username"):
         return redirect(url_for("login"))
+
+    from database.db import ensure_controlled_docx_export_table, ensure_controlled_pdf_export_table
+    ensure_controlled_docx_export_table()
+    ensure_controlled_pdf_export_table()
 
     import uuid
     import sqlite3
