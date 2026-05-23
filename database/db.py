@@ -4072,3 +4072,39 @@ def ensure_controlled_export_prep_table():
 
     conn.commit()
     conn.close()
+
+def ensure_controlled_docx_export_table():
+    """
+    Controlled DOCX export records.
+    Tracks generated DOCX files from approved export preparation gates.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS controlled_docx_exports (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            export_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            export_prep_id TEXT,
+            document_control_id TEXT,
+            document_type TEXT,
+            version_label TEXT,
+
+            file_name TEXT,
+            file_path TEXT,
+
+            export_status TEXT DEFAULT 'generated_docx',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

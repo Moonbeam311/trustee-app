@@ -14442,6 +14442,245 @@ def controlled_export_prep(workspace_id):
 
 
 
+
+
+@app.route("/docx-export/<workspace_id>", methods=["GET", "POST"])
+@csrf.exempt
+def controlled_docx_export(workspace_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+    from pathlib import Path
+    from docx import Document
+
+    from database.db import (
+        get_connection,
+        ensure_controlled_docx_export_table,
+        ensure_controlled_export_prep_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_controlled_docx_export_table()
+    ensure_controlled_export_prep_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM guided_draft_workspace
+        WHERE workspace_id = ?
+    """, (workspace_id,))
+
+    workspace = cur.fetchone()
+
+    if not workspace:
+        conn.close()
+        flash("Guided draft workspace not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_export_prep
+        WHERE workspace_id = ?
+          AND firm_id = ?
+          AND export_status = 'ready_for_export'
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (workspace_id, firm_id))
+
+    export_prep = cur.fetchone()
+
+    export_allowed = export_prep is not None
+
+    cur.execute("""
+        SELECT *
+        FROM dynamic_draft_previews
+        WHERE workspace_id = ?
+          AND firm_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (workspace_id, firm_id))
+
+    latest_preview = cur.fetchone()
+
+    if request.method == "POST":
+
+        if not export_allowed:
+            flash("DOCX export blocked: export preparation is not ready.", "warning")
+            conn.close()
+            return redirect(url_for("controlled_docx_export", workspace_id=workspace_id))
+
+        if not latest_preview:
+            flash("DOCX export blocked: no saved draft preview found.", "warning")
+            conn.close()
+            return redirect(url_for("controlled_docx_export", workspace_id=workspace_id))
+
+        export_id = "DOCX-" + uuid.uuid4().hex[:8].upper()
+
+        export_dir = Path("exports/docx")
+        export_dir.mkdir(parents=True, exist_ok=True)
+
+        safe_doc_type = (workspace["document_type"] or "Draft").replace(" ", "_")
+        file_name = f"{export_id}_{safe_doc_type}.docx"
+        file_path = export_dir / file_name
+
+        doc = Document()
+
+        doc.add_heading("CONTROLLED DRAFT PREVIEW", level=1)
+        doc.add_paragraph("NOT FINAL — NOT FOR EXECUTION")
+
+        doc.add_paragraph(f"Export ID: {export_id}")
+        doc.add_paragraph(f"Document Control ID: {export_prep['document_control_id']}")
+        doc.add_paragraph(f"Version: {export_prep['version_label']}")
+        doc.add_paragraph(f"Document Type: {workspace['document_type']}")
+        doc.add_paragraph(f"Workspace ID: {workspace_id}")
+        doc.add_paragraph(f"Draft Session ID: {workspace['draft_session_id']}")
+        doc.add_paragraph(f"Intake ID: {workspace['intake_id']}")
+
+        if export_prep["caf_number"]:
+            doc.add_paragraph(f"CAF Number: {export_prep['caf_number']}")
+
+        if export_prep["crid_number"]:
+            doc.add_paragraph(f"CRID Number: {export_prep['crid_number']}")
+
+        if export_prep["postal_tracking_reference"]:
+            doc.add_paragraph(f"Postal Tracking Reference: {export_prep['postal_tracking_reference']}")
+
+        doc.add_paragraph("")
+        doc.add_heading("Draft Preview Body", level=2)
+
+        for line in latest_preview["preview_body"].splitlines():
+            doc.add_paragraph(line)
+
+        doc.add_paragraph("")
+        doc.add_heading("Export Control Notice", level=2)
+        doc.add_paragraph(
+            "This DOCX was generated from the controlled export preparation gate. "
+            "It remains a controlled draft unless separately approved for execution."
+        )
+
+        doc.save(file_path)
+
+        cur.execute("""
+            INSERT INTO controlled_docx_exports (
+                export_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                export_prep_id,
+                document_control_id,
+                document_type,
+                version_label,
+                file_name,
+                file_path,
+                export_status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            export_id,
+            workspace_id,
+            workspace["draft_session_id"],
+            workspace["intake_id"],
+            firm_id,
+            export_prep["export_prep_id"],
+            export_prep["document_control_id"],
+            workspace["document_type"],
+            export_prep["version_label"],
+            file_name,
+            str(file_path),
+            "generated_docx"
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=workspace["intake_id"],
+            firm_id=firm_id,
+            drafting_status="docx_export_generated",
+            overall_stage="controlled_docx_export",
+            readiness_label="DOCX Export Generated",
+            next_recommended_action="Review generated DOCX before PDF export or execution.",
+            next_route=f"/docx-export/{workspace_id}"
+        )
+
+        flash("Controlled DOCX export generated.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_docx_exports
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (workspace_id, firm_id))
+
+    export_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "controlled_docx_export.html",
+        workspace=workspace,
+        export_allowed=export_allowed,
+        export_prep=export_prep,
+        latest_preview=latest_preview,
+        export_records=export_records
+    )
+
+
+
+
+
+@app.route("/docx-export/download/<export_id>")
+def download_controlled_docx_export(export_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import sqlite3
+    from pathlib import Path
+
+    from database.db import get_connection
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM controlled_docx_exports
+        WHERE export_id = ? AND firm_id = ?
+    """, (export_id, firm_id))
+
+    record = cur.fetchone()
+    conn.close()
+
+    if not record:
+        flash("DOCX export record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    file_path = Path(record["file_path"])
+
+    if not file_path.exists():
+        flash("DOCX file not found on disk.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name=record["file_name"]
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

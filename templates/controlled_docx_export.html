@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Controlled DOCX Export Layer</h1>
+
+<p>
+  Workspace:
+  <strong>{{ workspace["workspace_id"] }}</strong>
+</p>
+
+<p>
+  Document Type:
+  <strong>{{ workspace["document_type"] }}</strong>
+</p>
+
+<hr>
+
+<div class="card">
+  <h2>Export Readiness</h2>
+
+  {% if export_allowed %}
+    <p><strong>Status:</strong> Ready for controlled DOCX export.</p>
+    <p><strong>Document Control ID:</strong> {{ export_prep["document_control_id"] }}</p>
+    <p><strong>Version:</strong> {{ export_prep["version_label"] }}</p>
+  {% else %}
+    <p><strong>Status:</strong> Blocked. Controlled export prep must be marked ready_for_export.</p>
+  {% endif %}
+
+  {% if latest_preview %}
+    <p><strong>Draft Preview:</strong> Available.</p>
+  {% else %}
+    <p><strong>Draft Preview:</strong> Missing. Save a dynamic draft preview first.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <form method="POST">
+    <button type="submit">
+      Generate Controlled DOCX Export
+    </button>
+  </form>
+</div>
+
+<hr>
+
+<h2>DOCX Export History</h2>
+
+{% if export_records %}
+  {% for record in export_records %}
+    <div class="card">
+      <h3>{{ record["export_id"] }}</h3>
+      <p><strong>Document Control ID:</strong> {{ record["document_control_id"] }}</p>
+      <p><strong>Version:</strong> {{ record["version_label"] }}</p>
+      <p><strong>File:</strong> {{ record["file_name"] }}</p>
+      <p><strong>Status:</strong> {{ record["export_status"] }}</p>
+
+      <p>
+        <a href="{{ url_for('download_controlled_docx_export', export_id=record['export_id']) }}">
+          Download DOCX
+        </a>
+      </p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No DOCX exports generated yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('controlled_export_prep', workspace_id=workspace['workspace_id']) }}">
+    Back to Export Preparation
+  </a>
+</p>
+
+{% endblock %}
