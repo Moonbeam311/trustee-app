@@ -15367,6 +15367,187 @@ def execution_packet_prep(pdf_export_id):
 
 
 
+
+
+@app.route("/execution-event/<packet_id>", methods=["GET", "POST"])
+@csrf.exempt
+def execution_event_log(packet_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_execution_event_log_table,
+        ensure_execution_packet_prep_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_execution_event_log_table()
+    ensure_execution_packet_prep_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM execution_packet_prep
+        WHERE packet_id = ? AND firm_id = ?
+    """, (packet_id, firm_id))
+
+    packet = cur.fetchone()
+
+    if not packet:
+        conn.close()
+        flash("Execution packet record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    event_allowed = packet["execution_readiness"] == "ready_for_signing"
+
+    if request.method == "POST":
+
+        if not event_allowed:
+            flash("Execution event blocked: packet is not ready_for_signing.", "warning")
+            conn.close()
+            return redirect(url_for("execution_event_log", packet_id=packet_id))
+
+        event_id = "EVT-" + uuid.uuid4().hex[:8].upper()
+
+        signature_completed = request.form.get("signature_completed") or "unknown"
+        witness_completed = request.form.get("witness_completed") or "unknown"
+        notary_completed = request.form.get("notary_completed") or "unknown"
+        jurat_acknowledgment_completed = request.form.get("jurat_acknowledgment_completed") or "unknown"
+        finalization_gate = request.form.get("finalization_gate") or "not_ready"
+
+        if finalization_gate == "ready_to_finalize":
+            if signature_completed != "yes":
+                finalization_gate = "blocked_signature_incomplete"
+                flash("Finalization blocked: signature must be completed.", "warning")
+            elif packet["witness_required"] == "yes" and witness_completed != "yes":
+                finalization_gate = "blocked_witness_incomplete"
+                flash("Finalization blocked: witness completion is required.", "warning")
+            elif packet["notary_required"] == "yes" and notary_completed != "yes":
+                finalization_gate = "blocked_notary_incomplete"
+                flash("Finalization blocked: notary completion is required.", "warning")
+            elif packet["jurat_required"] == "yes" and jurat_acknowledgment_completed != "yes":
+                finalization_gate = "blocked_jurat_incomplete"
+                flash("Finalization blocked: jurat/acknowledgment completion is required.", "warning")
+
+        finalization_status = "ready_to_finalize" if finalization_gate == "ready_to_finalize" else "not_finalized"
+
+        cur.execute("""
+            INSERT INTO execution_event_log (
+                event_id,
+                packet_id,
+                pdf_export_id,
+                export_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_control_id,
+                document_type,
+                version_label,
+                signer_name,
+                signer_capacity,
+                signature_completed,
+                witness_completed,
+                witness_name,
+                notary_completed,
+                notary_name,
+                notary_commission_reference,
+                jurat_acknowledgment_completed,
+                execution_date,
+                execution_location,
+                delivery_method,
+                custody_status,
+                postal_tracking_reference,
+                caf_number,
+                crid_number,
+                finalization_status,
+                finalization_gate,
+                event_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            event_id,
+            packet["packet_id"],
+            packet["pdf_export_id"],
+            packet["export_id"],
+            packet["workspace_id"],
+            packet["draft_session_id"],
+            packet["intake_id"],
+            firm_id,
+            packet["document_control_id"],
+            packet["document_type"],
+            packet["version_label"],
+            request.form.get("signer_name") or packet["signer_name"],
+            request.form.get("signer_capacity") or packet["signer_capacity"],
+            signature_completed,
+            witness_completed,
+            request.form.get("witness_name"),
+            notary_completed,
+            request.form.get("notary_name"),
+            request.form.get("notary_commission_reference"),
+            jurat_acknowledgment_completed,
+            request.form.get("execution_date") or packet["execution_date"],
+            request.form.get("execution_location") or packet["execution_location"],
+            request.form.get("delivery_method") or packet["delivery_method"],
+            request.form.get("custody_status") or "internal_record",
+            request.form.get("postal_tracking_reference") or packet["postal_tracking_reference"],
+            request.form.get("caf_number") or packet["caf_number"],
+            request.form.get("crid_number") or packet["crid_number"],
+            finalization_status,
+            finalization_gate,
+            request.form.get("event_notes")
+        ))
+
+        conn.commit()
+
+        next_action = (
+            "Proceed to finalization record."
+            if finalization_gate == "ready_to_finalize"
+            else "Resolve execution event blockers before finalization."
+        )
+
+        upsert_intake_orchestration_state(
+            intake_id=packet["intake_id"],
+            firm_id=firm_id,
+            execution_status="event_ready_to_finalize" if finalization_gate == "ready_to_finalize" else "execution_event_logged",
+            overall_stage="execution_event_log",
+            readiness_label="Ready to Finalize" if finalization_gate == "ready_to_finalize" else "Execution Event Logged",
+            next_recommended_action=next_action,
+            next_route=f"/execution-event/{packet_id}"
+        )
+
+        flash("Execution event record saved.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM execution_event_log
+        WHERE packet_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (packet_id, firm_id))
+
+    event_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "execution_event_log.html",
+        packet=packet,
+        event_allowed=event_allowed,
+        event_records=event_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

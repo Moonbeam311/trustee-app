@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Execution Event Log + Finalization Gate</h1>
+
+<div class="card">
+  <h2>Execution Packet Context</h2>
+
+  <p><strong>Packet ID:</strong> {{ packet["packet_id"] }}</p>
+  <p><strong>Document Control ID:</strong> {{ packet["document_control_id"] }}</p>
+  <p><strong>Document Type:</strong> {{ packet["document_type"] }}</p>
+  <p><strong>Version:</strong> {{ packet["version_label"] }}</p>
+
+  <p><strong>Signer:</strong> {{ packet["signer_name"] }}</p>
+  <p><strong>Capacity:</strong> {{ packet["signer_capacity"] }}</p>
+
+  <p><strong>Witness Required:</strong> {{ packet["witness_required"] }}</p>
+  <p><strong>Notary Required:</strong> {{ packet["notary_required"] }}</p>
+  <p><strong>Jurat Required:</strong> {{ packet["jurat_required"] }}</p>
+
+  <p><strong>Execution Readiness:</strong> {{ packet["execution_readiness"] }}</p>
+
+  {% if event_allowed %}
+    <p><strong>Status:</strong> Ready to log execution event.</p>
+  {% else %}
+    <p><strong>Status:</strong> Blocked. Packet must be ready_for_signing.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Record Execution Event</h2>
+
+  <label>Signer Name</label>
+  <input type="text" name="signer_name" value="{{ packet['signer_name'] }}">
+
+  <label>Signer Capacity</label>
+  <input type="text" name="signer_capacity" value="{{ packet['signer_capacity'] }}">
+
+  <label>Signature Completed?</label>
+  <select name="signature_completed">
+    <option value="unknown">Unknown</option>
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>
+
+  <label>Witness Completed?</label>
+  <select name="witness_completed">
+    <option value="unknown">Unknown</option>
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>
+
+  <label>Witness Name</label>
+  <input type="text" name="witness_name">
+
+  <label>Notary Completed?</label>
+  <select name="notary_completed">
+    <option value="unknown">Unknown</option>
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>
+
+  <label>Notary Name</label>
+  <input type="text" name="notary_name">
+
+  <label>Notary Commission Reference</label>
+  <input type="text" name="notary_commission_reference">
+
+  <label>Jurat / Acknowledgment Completed?</label>
+  <select name="jurat_acknowledgment_completed">
+    <option value="unknown">Unknown</option>
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>
+
+  <label>Execution Date</label>
+  <input type="text" name="execution_date" value="{{ packet['execution_date'] }}">
+
+  <label>Execution Location</label>
+  <input type="text" name="execution_location" value="{{ packet['execution_location'] }}">
+
+  <label>Delivery Method</label>
+  <input type="text" name="delivery_method" value="{{ packet['delivery_method'] }}">
+
+  <label>Custody Status</label>
+  <select name="custody_status">
+    <option value="internal_record">Internal Record</option>
+    <option value="ready_for_delivery">Ready for Delivery</option>
+    <option value="delivered">Delivered</option>
+    <option value="archived">Archived</option>
+  </select>
+
+  <label>CAF Number</label>
+  <input type="text" name="caf_number" value="{{ packet['caf_number'] }}">
+
+  <label>CRID Number</label>
+  <input type="text" name="crid_number" value="{{ packet['crid_number'] }}">
+
+  <label>Postal / Certified / Registered Tracking Reference</label>
+  <input type="text" name="postal_tracking_reference" value="{{ packet['postal_tracking_reference'] }}">
+
+  <label>Finalization Gate</label>
+  <select name="finalization_gate">
+    <option value="not_ready">Not Ready</option>
+    <option value="ready_to_finalize">Ready to Finalize</option>
+  </select>
+
+  <label>Event Notes</label>
+  <textarea name="event_notes" rows="5"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Record Execution Event
+  </button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Execution Event History</h2>
+
+{% if event_records %}
+  {% for record in event_records %}
+    <div class="card">
+      <h3>{{ record["event_id"] }}</h3>
+      <p><strong>Signer:</strong> {{ record["signer_name"] }}</p>
+      <p><strong>Signature Completed:</strong> {{ record["signature_completed"] }}</p>
+      <p><strong>Witness Completed:</strong> {{ record["witness_completed"] }}</p>
+      <p><strong>Notary Completed:</strong> {{ record["notary_completed"] }}</p>
+      <p><strong>Jurat / Acknowledgment Completed:</strong> {{ record["jurat_acknowledgment_completed"] }}</p>
+      <p><strong>Execution Date:</strong> {{ record["execution_date"] }}</p>
+      <p><strong>Execution Location:</strong> {{ record["execution_location"] }}</p>
+      <p><strong>Custody Status:</strong> {{ record["custody_status"] }}</p>
+      <p><strong>Finalization Status:</strong> {{ record["finalization_status"] }}</p>
+      <p><strong>Finalization Gate:</strong> {{ record["finalization_gate"] }}</p>
+      <p><strong>Notes:</strong> {{ record["event_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No execution events recorded yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('execution_packet_prep', pdf_export_id=packet['pdf_export_id']) }}">
+    Back to Execution Packet
+  </a>
+</p>
+
+{% endblock %}

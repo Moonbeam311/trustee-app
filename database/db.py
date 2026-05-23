@@ -4336,3 +4336,64 @@ def ensure_execution_packet_prep_table():
 
     conn.commit()
     conn.close()
+
+def ensure_execution_event_log_table():
+    """
+    Execution event log and finalization gate.
+    Tracks actual signing/execution event details, witness/notary completion,
+    custody/delivery status, and finalization approval.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS execution_event_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            event_id TEXT UNIQUE,
+            packet_id TEXT,
+            pdf_export_id TEXT,
+            export_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            document_type TEXT,
+            version_label TEXT,
+
+            signer_name TEXT,
+            signer_capacity TEXT,
+            signature_completed TEXT DEFAULT 'unknown',
+
+            witness_completed TEXT DEFAULT 'unknown',
+            witness_name TEXT,
+
+            notary_completed TEXT DEFAULT 'unknown',
+            notary_name TEXT,
+            notary_commission_reference TEXT,
+
+            jurat_acknowledgment_completed TEXT DEFAULT 'unknown',
+
+            execution_date TEXT,
+            execution_location TEXT,
+
+            delivery_method TEXT,
+            custody_status TEXT DEFAULT 'internal_record',
+            postal_tracking_reference TEXT,
+            caf_number TEXT,
+            crid_number TEXT,
+
+            finalization_status TEXT DEFAULT 'not_finalized',
+            finalization_gate TEXT DEFAULT 'not_ready',
+
+            event_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
