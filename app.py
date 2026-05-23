@@ -2573,6 +2573,32 @@ ENDPOINT_PERMISSION_RULES = {
 }
 
 ROLE_RULES = {
+    # FIRM-SCOPE-2: INT lifecycle routes are firm-admin operational routes.
+    "identity_intake": {"Admin"},
+    "identity_intake_summary": {"Admin"},
+    "intake_dashboard": {"Admin"},
+    "asset_intake": {"Admin"},
+    "document_intake": {"Admin"},
+    "intake_readiness_review": {"Admin"},
+    "intake_deep_review": {"Admin"},
+    "intake_drafting_prep": {"Admin"},
+    "launch_draft_session": {"Admin"},
+    "guided_draft_workspace": {"Admin"},
+    "draft_variable_binding": {"Admin"},
+    "dynamic_draft_preview": {"Admin"},
+    "section_review_gate": {"Admin"},
+    "controlled_export_prep": {"Admin"},
+    "controlled_docx_export": {"Admin"},
+    "download_controlled_docx_export": {"Admin"},
+    "docx_verification_gate": {"Admin"},
+    "controlled_pdf_conversion": {"Admin"},
+    "download_controlled_pdf_export": {"Admin"},
+    "pdf_execution_approval_gate": {"Admin"},
+    "execution_packet_prep": {"Admin"},
+    "execution_event_log": {"Admin"},
+    "final_record_archive_gate": {"Admin"},
+    "lifecycle_master_ledger": {"Admin"},
+
     "home": {"Admin", "Trustee", "Viewer"},
     "workflow_hub": {"Admin", "Trustee"},
     "portfolio_dashboard": {"Admin", "Trustee", "Viewer"},
