@@ -4397,3 +4397,49 @@ def ensure_execution_event_log_table():
 
     conn.commit()
     conn.close()
+
+def ensure_final_record_archive_table():
+    """
+    Final record seal and archive gate.
+    Creates the final sealed record after execution event finalization approval.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS final_record_archive (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            final_record_id TEXT UNIQUE,
+            event_id TEXT,
+            packet_id TEXT,
+            pdf_export_id TEXT,
+            export_id TEXT,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_control_id TEXT,
+            document_type TEXT,
+            version_label TEXT,
+
+            final_status TEXT DEFAULT 'sealed_record',
+            archive_status TEXT DEFAULT 'archived',
+
+            seal_reference TEXT,
+            custody_status TEXT,
+            delivery_method TEXT,
+            postal_tracking_reference TEXT,
+            caf_number TEXT,
+            crid_number TEXT,
+
+            final_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()

@@ -15548,6 +15548,143 @@ def execution_event_log(packet_id):
 
 
 
+
+
+@app.route("/final-archive/<event_id>", methods=["GET", "POST"])
+@csrf.exempt
+def final_record_archive_gate(event_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_final_record_archive_table,
+        ensure_execution_event_log_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_final_record_archive_table()
+    ensure_execution_event_log_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM execution_event_log
+        WHERE event_id = ? AND firm_id = ?
+    """, (event_id, firm_id))
+
+    event = cur.fetchone()
+
+    if not event:
+        conn.close()
+        flash("Execution event record not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    archive_allowed = event["finalization_gate"] == "ready_to_finalize"
+
+    if request.method == "POST":
+
+        if not archive_allowed:
+            flash("Final archive blocked: execution event is not ready_to_finalize.", "warning")
+            conn.close()
+            return redirect(url_for("final_record_archive_gate", event_id=event_id))
+
+        final_record_id = "FINAL-" + uuid.uuid4().hex[:8].upper()
+        seal_reference = request.form.get("seal_reference") or f"SEAL-{uuid.uuid4().hex[:8].upper()}"
+
+        cur.execute("""
+            INSERT INTO final_record_archive (
+                final_record_id,
+                event_id,
+                packet_id,
+                pdf_export_id,
+                export_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_control_id,
+                document_type,
+                version_label,
+                final_status,
+                archive_status,
+                seal_reference,
+                custody_status,
+                delivery_method,
+                postal_tracking_reference,
+                caf_number,
+                crid_number,
+                final_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            final_record_id,
+            event["event_id"],
+            event["packet_id"],
+            event["pdf_export_id"],
+            event["export_id"],
+            event["workspace_id"],
+            event["draft_session_id"],
+            event["intake_id"],
+            firm_id,
+            event["document_control_id"],
+            event["document_type"],
+            event["version_label"],
+            "sealed_record",
+            request.form.get("archive_status") or "archived",
+            seal_reference,
+            request.form.get("custody_status") or event["custody_status"],
+            request.form.get("delivery_method") or event["delivery_method"],
+            request.form.get("postal_tracking_reference") or event["postal_tracking_reference"],
+            request.form.get("caf_number") or event["caf_number"],
+            request.form.get("crid_number") or event["crid_number"],
+            request.form.get("final_notes")
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=event["intake_id"],
+            firm_id=firm_id,
+            execution_status="final_record_archived",
+            archive_status="archived",
+            overall_stage="final_record_archive",
+            readiness_label="Final Record Archived",
+            next_recommended_action="Final record sealed and archived.",
+            next_route=f"/final-archive/{event_id}"
+        )
+
+        flash("Final sealed record archived.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM final_record_archive
+        WHERE event_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (event_id, firm_id))
+
+    final_records = cur.fetchall()
+
+    conn.close()
+
+    return render_template(
+        "final_record_archive_gate.html",
+        event=event,
+        archive_allowed=archive_allowed,
+        final_records=final_records
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

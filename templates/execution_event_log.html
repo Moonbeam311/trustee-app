@@ -138,6 +138,12 @@
       <p><strong>Finalization Status:</strong> {{ record["finalization_status"] }}</p>
       <p><strong>Finalization Gate:</strong> {{ record["finalization_gate"] }}</p>
       <p><strong>Notes:</strong> {{ record["event_notes"] }}</p>
+
+      <p>
+        <a href="{{ url_for('final_record_archive_gate', event_id=record['event_id']) }}">
+          Open Final Record Seal + Archive Gate
+        </a>
+      </p>
     </div>
   {% endfor %}
 {% else %}

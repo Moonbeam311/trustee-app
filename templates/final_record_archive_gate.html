@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Final Record Seal + Archive Gate</h1>
+
+<div class="card">
+  <h2>Execution Event Context</h2>
+
+  <p><strong>Event ID:</strong> {{ event["event_id"] }}</p>
+  <p><strong>Packet ID:</strong> {{ event["packet_id"] }}</p>
+  <p><strong>Document Control ID:</strong> {{ event["document_control_id"] }}</p>
+  <p><strong>Document Type:</strong> {{ event["document_type"] }}</p>
+  <p><strong>Version:</strong> {{ event["version_label"] }}</p>
+  <p><strong>Finalization Gate:</strong> {{ event["finalization_gate"] }}</p>
+  <p><strong>Finalization Status:</strong> {{ event["finalization_status"] }}</p>
+  <p><strong>Custody Status:</strong> {{ event["custody_status"] }}</p>
+  <p><strong>Delivery Method:</strong> {{ event["delivery_method"] }}</p>
+  <p><strong>Postal Tracking:</strong> {{ event["postal_tracking_reference"] }}</p>
+  <p><strong>CAF:</strong> {{ event["caf_number"] }}</p>
+  <p><strong>CRID:</strong> {{ event["crid_number"] }}</p>
+
+  {% if archive_allowed %}
+    <p><strong>Status:</strong> Ready for final sealed archive.</p>
+  {% else %}
+    <p><strong>Status:</strong> Blocked. Execution event must be ready_to_finalize.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+<form method="POST">
+
+  <h2>Create Final Sealed Record</h2>
+
+  <label>Seal Reference</label>
+  <input type="text" name="seal_reference" placeholder="Auto-generated if blank">
+
+  <label>Archive Status</label>
+  <select name="archive_status">
+    <option value="archived">Archived</option>
+    <option value="sealed_internal_record">Sealed Internal Record</option>
+    <option value="delivered_and_archived">Delivered and Archived</option>
+    <option value="custody_pending">Custody Pending</option>
+  </select>
+
+  <label>Custody Status</label>
+  <select name="custody_status">
+    <option value="{{ event['custody_status'] }}">{{ event["custody_status"] }}</option>
+    <option value="internal_record">Internal Record</option>
+    <option value="ready_for_delivery">Ready for Delivery</option>
+    <option value="delivered">Delivered</option>
+    <option value="archived">Archived</option>
+  </select>
+
+  <label>Delivery Method</label>
+  <input type="text" name="delivery_method" value="{{ event['delivery_method'] }}">
+
+  <label>CAF Number</label>
+  <input type="text" name="caf_number" value="{{ event['caf_number'] }}">
+
+  <label>CRID Number</label>
+  <input type="text" name="crid_number" value="{{ event['crid_number'] }}">
+
+  <label>Postal / Certified / Registered Tracking Reference</label>
+  <input type="text" name="postal_tracking_reference" value="{{ event['postal_tracking_reference'] }}">
+
+  <label>Final Notes</label>
+  <textarea name="final_notes" rows="5"></textarea>
+
+  <br><br>
+
+  <button type="submit">
+    Create Final Sealed Archive Record
+  </button>
+
+</form>
+</div>
+
+<hr>
+
+<h2>Final Archive History</h2>
+
+{% if final_records %}
+  {% for record in final_records %}
+    <div class="card">
+      <h3>{{ record["final_record_id"] }}</h3>
+      <p><strong>Seal Reference:</strong> {{ record["seal_reference"] }}</p>
+      <p><strong>Final Status:</strong> {{ record["final_status"] }}</p>
+      <p><strong>Archive Status:</strong> {{ record["archive_status"] }}</p>
+      <p><strong>Document Control ID:</strong> {{ record["document_control_id"] }}</p>
+      <p><strong>Document Type:</strong> {{ record["document_type"] }}</p>
+      <p><strong>Version:</strong> {{ record["version_label"] }}</p>
+      <p><strong>Custody Status:</strong> {{ record["custody_status"] }}</p>
+      <p><strong>Delivery Method:</strong> {{ record["delivery_method"] }}</p>
+      <p><strong>Postal Tracking:</strong> {{ record["postal_tracking_reference"] }}</p>
+      <p><strong>CAF:</strong> {{ record["caf_number"] }}</p>
+      <p><strong>CRID:</strong> {{ record["crid_number"] }}</p>
+      <p><strong>Notes:</strong> {{ record["final_notes"] }}</p>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="card">
+    <p>No final sealed archive records yet.</p>
+  </div>
+{% endif %}
+
+<p>
+  <a href="{{ url_for('execution_event_log', packet_id=event['packet_id']) }}">
+    Back to Execution Event
+  </a>
+</p>
+
+{% endblock %}
