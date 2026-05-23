@@ -9607,7 +9607,15 @@ def enforce_session_timeout():
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
-    if (request.endpoint or "").startswith("export_"):
+    export_guarded_endpoints = {
+        "controlled_docx_export",
+        "download_controlled_docx_export",
+        "controlled_pdf_conversion",
+        "download_controlled_pdf_export",
+        "trust_controlled_packet_export",
+    }
+
+    if (request.endpoint or "").startswith("export_") or request.endpoint in export_guarded_endpoints:
         export_policy = get_export_policy()
         if not bool(export_policy.get("allow_exports", True)):
             log_change(

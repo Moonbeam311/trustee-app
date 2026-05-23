@@ -345,6 +345,81 @@
 }
 </style>
 
+
+<style>
+.policy-switch-grid {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.policy-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+}
+
+.policy-switch-label strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.policy-switch-label small {
+  opacity: 0.8;
+}
+
+.policy-toggle-button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.policy-switch {
+  position: relative;
+  display: inline-block;
+  width: 72px;
+  height: 34px;
+  border-radius: 999px;
+  background: #777;
+  vertical-align: middle;
+  transition: 0.2s;
+}
+
+.policy-switch.on {
+  background: #2e7d32;
+}
+
+.policy-switch.off {
+  background: #9a3412;
+}
+
+.policy-switch-knob {
+  position: absolute;
+  height: 28px;
+  width: 28px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.policy-switch.on .policy-switch-knob {
+  transform: translateX(38px);
+}
+
+.policy-state {
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: 700;
+}
+</style>
+
 </head>
 
 <body>
@@ -634,31 +709,72 @@
 </div>
 
 <div class="admin-card">
+
 <h2 id="system-security">System Policy Controls</h2>
 
-<p><strong>Packet Export Mode:</strong>
-<span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
-{% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
-</span></p>
+<div class="policy-switch-grid">
 
-<p><strong>Exports:</strong>
-<span class="{% if export_policy.allow_exports %}trust-status-ready{% else %}trust-status-warning{% endif %}">
-{% if export_policy.allow_exports %}Enabled{% else %}Disabled{% endif %}
-</span></p>
+  <div class="policy-switch-row">
+    <div class="policy-switch-label">
+      <strong>Packet Export Mode</strong>
+      <small>Strict requires readiness checks before packet export. Advisory allows warnings.</small>
+    </div>
+    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="policy_key" value="strict_packet_export">
+      <button type="submit" class="policy-toggle-button" title="Toggle Packet Export Mode">
+        <span class="policy-switch {% if export_policy.strict_packet_export %}on{% else %}off{% endif %}">
+          <span class="policy-switch-knob"></span>
+        </span>
+        <span class="policy-state">
+          {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
+        </span>
+      </button>
+    </form>
+  </div>
 
-<p><strong>Read-Only Mode:</strong>
-<span class="{% if export_policy.read_only_mode %}trust-status-warning{% else %}trust-status-ready{% endif %}">
-{% if export_policy.read_only_mode %}Enabled{% else %}Disabled{% endif %}
-</span></p>
+  <div class="policy-switch-row">
+    <div class="policy-switch-label">
+      <strong>Exports</strong>
+      <small>When disabled, controlled packet/DOCX/PDF export routes should be blocked.</small>
+    </div>
+    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="policy_key" value="allow_exports">
+      <button type="submit" class="policy-toggle-button" title="Toggle All Exports">
+        <span class="policy-switch {% if export_policy.allow_exports %}on{% else %}off{% endif %}">
+          <span class="policy-switch-knob"></span>
+        </span>
+        <span class="policy-state">
+          {% if export_policy.allow_exports %}Enabled{% else %}Disabled{% endif %}
+        </span>
+      </button>
+    </form>
+  </div>
 
-<form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
- <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
- <button type="submit" class="admin-button" name="policy_key" value="strict_packet_export" style="cursor:pointer;">Toggle Packet Export Mode</button>
- <button type="submit" class="admin-button" name="policy_key" value="allow_exports" style="cursor:pointer;">Toggle All Exports</button>
- <button type="submit" class="admin-button" name="policy_key" value="read_only_mode" style="cursor:pointer;">Toggle Read-Only Mode</button>
-</form>
+  <div class="policy-switch-row">
+    <div class="policy-switch-label">
+      <strong>Read-Only Mode</strong>
+      <small>When enabled, write actions and POST submissions should be blocked.</small>
+    </div>
+    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="policy_key" value="read_only_mode">
+      <button type="submit" class="policy-toggle-button" title="Toggle Read-Only Mode">
+        <span class="policy-switch {% if export_policy.read_only_mode %}on{% else %}off{% endif %}">
+          <span class="policy-switch-knob"></span>
+        </span>
+        <span class="policy-state">
+          {% if export_policy.read_only_mode %}Enabled{% else %}Disabled{% endif %}
+        </span>
+      </button>
+    </form>
+  </div>
+
+</div>
 
 <p class="admin-muted">System policies control export authority, write access, and packet readiness behavior.</p>
+
 </div>
  </div>
 
