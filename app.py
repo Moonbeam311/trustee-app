@@ -14003,6 +14003,172 @@ def draft_variable_binding(workspace_id):
 
 
 
+
+
+@app.route("/draft-preview/<workspace_id>", methods=["GET", "POST"])
+@csrf.exempt
+def dynamic_draft_preview(workspace_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    import uuid
+    import sqlite3
+
+    from database.db import (
+        get_connection,
+        ensure_dynamic_draft_preview_table,
+        ensure_variable_binding_table,
+        upsert_intake_orchestration_state
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+
+    ensure_dynamic_draft_preview_table()
+    ensure_variable_binding_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM guided_draft_workspace
+        WHERE workspace_id = ?
+    """, (workspace_id,))
+
+    workspace = cur.fetchone()
+
+    if not workspace:
+        conn.close()
+        flash("Guided draft workspace not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    cur.execute("""
+        SELECT variable_key, variable_value
+        FROM draft_variable_bindings
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at ASC
+    """, (workspace_id, firm_id))
+
+    binding_rows = cur.fetchall()
+
+    bindings = {}
+    for row in binding_rows:
+        bindings[row["variable_key"]] = row["variable_value"]
+
+    if not bindings:
+        bindings = {
+            "primary_person": workspace["primary_person"],
+            "trustee_candidate": workspace["trustee_candidate"],
+            "successor_trustee_candidate": workspace["successor_trustee_candidate"],
+            "primary_goal": workspace["primary_goal"],
+            "secondary_goal": workspace["secondary_goal"],
+            "asset_summary": workspace["asset_summary"],
+            "document_summary": workspace["document_summary"],
+            "document_type": workspace["document_type"],
+        }
+
+    document_type = bindings.get("document_type") or workspace["document_type"]
+
+    preview_body = f"""
+CONTROLLED DRAFT PREVIEW — NOT FINAL — NOT FOR EXECUTION
+
+Document Type:
+{document_type}
+
+Primary Person / Settlor Reference:
+{bindings.get("primary_person", "")}
+
+Trustee Candidate:
+{bindings.get("trustee_candidate", "")}
+
+Successor Trustee Candidate:
+{bindings.get("successor_trustee_candidate", "")}
+
+Primary Purpose / Planning Goal:
+{bindings.get("primary_goal", "")}
+
+Secondary Purpose / Planning Goal:
+{bindings.get("secondary_goal", "")}
+
+Preliminary Asset Summary:
+{bindings.get("asset_summary", "")}
+
+Supporting Document Summary:
+{bindings.get("document_summary", "")}
+
+Draft Assembly Notice:
+This preview is generated from guided intake and variable binding records.
+It is a controlled working draft only. It is not final, not approved for execution,
+and not suitable for signing, notarization, filing, or delivery.
+
+Recommended Next Action:
+Review variable accuracy, confirm missing clauses, verify trustee capacity,
+confirm document type, and approve section-level drafting before export.
+""".strip()
+
+    if request.method == "POST":
+
+        preview_id = "PREV-" + uuid.uuid4().hex[:8].upper()
+
+        cur.execute("""
+            INSERT INTO dynamic_draft_previews (
+                preview_id,
+                workspace_id,
+                draft_session_id,
+                intake_id,
+                firm_id,
+                document_type,
+                preview_status,
+                preview_body
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            preview_id,
+            workspace_id,
+            workspace["draft_session_id"],
+            workspace["intake_id"],
+            firm_id,
+            document_type,
+            "non_final_preview",
+            preview_body
+        ))
+
+        conn.commit()
+
+        upsert_intake_orchestration_state(
+            intake_id=workspace["intake_id"],
+            firm_id=firm_id,
+            drafting_status="draft_preview_generated",
+            overall_stage="dynamic_draft_preview",
+            readiness_label="Draft Preview Generated",
+            next_recommended_action="Review non-final draft preview before export.",
+            next_route=f"/draft-preview/{workspace_id}"
+        )
+
+        flash("Dynamic draft preview generated.", "success")
+
+    cur.execute("""
+        SELECT *
+        FROM dynamic_draft_previews
+        WHERE workspace_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (workspace_id, firm_id))
+
+    previews = cur.fetchall()
+    conn.close()
+
+    return render_template(
+        "dynamic_draft_preview.html",
+        workspace=workspace,
+        bindings=bindings,
+        preview_body=preview_body,
+        previews=previews
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

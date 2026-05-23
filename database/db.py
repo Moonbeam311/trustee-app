@@ -3927,3 +3927,34 @@ def ensure_variable_binding_table():
 
     conn.commit()
     conn.close()
+
+def ensure_dynamic_draft_preview_table():
+    """
+    Dynamic draft preview table.
+    Stores non-final controlled draft previews assembled from bound variables.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS dynamic_draft_previews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            preview_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            document_type TEXT,
+            preview_status TEXT DEFAULT 'non_final_preview',
+
+            preview_body TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
