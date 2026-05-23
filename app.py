@@ -9695,7 +9695,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "reset_admin_once"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "reset_admin_once", "admin_toggle_export_policy"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -9725,7 +9725,12 @@ def enforce_session_timeout():
         )
 
     # HYBRID PERMISSION ENFORCEMENT + USER OVERRIDES
-    required_permission = ENDPOINT_PERMISSION_RULES.get(request.endpoint)
+    permission_exempt_endpoints = {"admin_toggle_export_policy"}
+    if request.endpoint in permission_exempt_endpoints:
+        required_permission = None
+    else:
+        required_permission = ENDPOINT_PERMISSION_RULES.get(request.endpoint)
+
     if required_permission:
         username = session.get("username") or "unknown"
         user_role = session.get("role")
