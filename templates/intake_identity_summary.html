@@ -67,6 +67,13 @@
 {% endif %}
 
 
+
+<p>
+  <a href="{{ url_for('lifecycle_master_ledger', intake_id=intake['intake_id']) }}">
+    Open Lifecycle Master Ledger
+  </a>
+</p>
+
 <p>
   <a href="{{ url_for('identity_intake') }}">Start another intake</a>
 </p>

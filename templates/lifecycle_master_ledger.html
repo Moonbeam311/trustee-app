@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Lifecycle Master Ledger</h1>
+
+<div class="card">
+  <h2>Master Status</h2>
+
+  <p><strong>Intake ID:</strong> {{ ledger["intake_id"] }}</p>
+  <p><strong>Current Stage:</strong> {{ ledger["current_stage"] }}</p>
+
+  {% if ledger["archive_complete"] %}
+    <p><strong>Archive Status:</strong> Final sealed archive complete.</p>
+  {% else %}
+    <p><strong>Archive Status:</strong> Not fully archived.</p>
+  {% endif %}
+
+  {% if ledger["orchestration"] %}
+    <p><strong>Readiness Label:</strong> {{ ledger["orchestration"]["readiness_label"] }}</p>
+    <p><strong>Overall Stage:</strong> {{ ledger["orchestration"]["overall_stage"] }}</p>
+    <p><strong>Execution Status:</strong> {{ ledger["orchestration"]["execution_status"] }}</p>
+    <p><strong>Archive Status:</strong> {{ ledger["orchestration"]["archive_status"] }}</p>
+    <p><strong>Next Action:</strong> {{ ledger["orchestration"]["next_recommended_action"] }}</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Linked Record IDs</h2>
+
+  <table>
+    <tr><th>Layer</th><th>Latest ID</th><th>Open</th></tr>
+
+    <tr>
+      <td>Identity Intake</td>
+      <td>{{ ledger["latest_ids"]["intake_id"] }}</td>
+      <td><a href="{{ url_for('identity_intake_summary', intake_id=ledger['intake_id']) }}">Open</a></td>
+    </tr>
+
+    <tr>
+      <td>Asset Intake</td>
+      <td>{{ ledger["assets"]|length }} record(s)</td>
+      <td><a href="{{ url_for('asset_intake', intake_id=ledger['intake_id']) }}">Open</a></td>
+    </tr>
+
+    <tr>
+      <td>Document Intake</td>
+      <td>{{ ledger["documents"]|length }} record(s)</td>
+      <td><a href="{{ url_for('document_intake', intake_id=ledger['intake_id']) }}">Open</a></td>
+    </tr>
+
+    <tr>
+      <td>Draft Session</td>
+      <td>{{ ledger["latest_ids"]["draft_session_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["draft_session_id"] %}
+          <a href="{{ url_for('launch_draft_session', intake_id=ledger['intake_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Guided Workspace</td>
+      <td>{{ ledger["latest_ids"]["workspace_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["draft_session_id"] %}
+          <a href="{{ url_for('guided_draft_workspace', draft_session_id=ledger['latest_ids']['draft_session_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Variable Binding</td>
+      <td>{{ ledger["bindings"]|length }} binding(s)</td>
+      <td>
+        {% if ledger["latest_ids"]["workspace_id"] %}
+          <a href="{{ url_for('draft_variable_binding', workspace_id=ledger['latest_ids']['workspace_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Draft Preview</td>
+      <td>{{ ledger["latest_ids"]["preview_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["workspace_id"] %}
+          <a href="{{ url_for('dynamic_draft_preview', workspace_id=ledger['latest_ids']['workspace_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Section Review</td>
+      <td>{{ ledger["latest_ids"]["section_review_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["workspace_id"] %}
+          <a href="{{ url_for('section_review_gate', workspace_id=ledger['latest_ids']['workspace_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Export Prep</td>
+      <td>{{ ledger["latest_ids"]["export_prep_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["workspace_id"] %}
+          <a href="{{ url_for('controlled_export_prep', workspace_id=ledger['latest_ids']['workspace_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>DOCX Export</td>
+      <td>{{ ledger["latest_ids"]["docx_export_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["workspace_id"] %}
+          <a href="{{ url_for('controlled_docx_export', workspace_id=ledger['latest_ids']['workspace_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>DOCX Verification</td>
+      <td>{{ ledger["latest_ids"]["docx_verification_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["docx_export_id"] %}
+          <a href="{{ url_for('docx_verification_gate', export_id=ledger['latest_ids']['docx_export_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>PDF Export</td>
+      <td>{{ ledger["latest_ids"]["pdf_export_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["docx_export_id"] %}
+          <a href="{{ url_for('controlled_pdf_conversion', export_id=ledger['latest_ids']['docx_export_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Execution Approval</td>
+      <td>{{ ledger["latest_ids"]["execution_approval_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["pdf_export_id"] %}
+          <a href="{{ url_for('pdf_execution_approval_gate', pdf_export_id=ledger['latest_ids']['pdf_export_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Execution Packet</td>
+      <td>{{ ledger["latest_ids"]["packet_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["pdf_export_id"] %}
+          <a href="{{ url_for('execution_packet_prep', pdf_export_id=ledger['latest_ids']['pdf_export_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Execution Event</td>
+      <td>{{ ledger["latest_ids"]["event_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["packet_id"] %}
+          <a href="{{ url_for('execution_event_log', packet_id=ledger['latest_ids']['packet_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+
+    <tr>
+      <td>Final Archive</td>
+      <td>{{ ledger["latest_ids"]["final_record_id"] or "Missing" }}</td>
+      <td>
+        {% if ledger["latest_ids"]["event_id"] %}
+          <a href="{{ url_for('final_record_archive_gate', event_id=ledger['latest_ids']['event_id']) }}">Open</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="card">
+  <h2>Missing Gates</h2>
+
+  {% if ledger["missing_gates"] %}
+    <ul>
+      {% for gate in ledger["missing_gates"] %}
+        <li>{{ gate }}</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No missing gates detected. Lifecycle appears complete.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Record Counts</h2>
+
+  <p><strong>Assets:</strong> {{ ledger["assets"]|length }}</p>
+  <p><strong>Documents:</strong> {{ ledger["documents"]|length }}</p>
+  <p><strong>Draft Sessions:</strong> {{ ledger["draft_sessions"]|length }}</p>
+  <p><strong>Workspaces:</strong> {{ ledger["workspaces"]|length }}</p>
+  <p><strong>Bindings:</strong> {{ ledger["bindings"]|length }}</p>
+  <p><strong>Previews:</strong> {{ ledger["previews"]|length }}</p>
+  <p><strong>Section Reviews:</strong> {{ ledger["section_reviews"]|length }}</p>
+  <p><strong>Export Prep Records:</strong> {{ ledger["export_prep"]|length }}</p>
+  <p><strong>DOCX Exports:</strong> {{ ledger["docx_exports"]|length }}</p>
+  <p><strong>DOCX Verifications:</strong> {{ ledger["docx_verifications"]|length }}</p>
+  <p><strong>PDF Exports:</strong> {{ ledger["pdf_exports"]|length }}</p>
+  <p><strong>Execution Approvals:</strong> {{ ledger["pdf_execution_approvals"]|length }}</p>
+  <p><strong>Execution Packets:</strong> {{ ledger["execution_packets"]|length }}</p>
+  <p><strong>Execution Events:</strong> {{ ledger["execution_events"]|length }}</p>
+  <p><strong>Final Archives:</strong> {{ ledger["final_archives"]|length }}</p>
+</div>
+
+<p>
+  <a href="{{ url_for('intake_dashboard') }}">Back to Intake Dashboard</a>
+</p>
+
+{% endblock %}

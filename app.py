@@ -15685,6 +15685,30 @@ def final_record_archive_gate(event_id):
 
 
 
+
+
+@app.route("/lifecycle-ledger/<intake_id>")
+def lifecycle_master_ledger(intake_id):
+
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from database.db import build_lifecycle_master_ledger
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ledger = build_lifecycle_master_ledger(intake_id, firm_id)
+
+    if not ledger["identity"]:
+        flash("Lifecycle ledger could not find the intake record.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    return render_template(
+        "lifecycle_master_ledger.html",
+        ledger=ledger
+    )
+
+
+
 @app.route("/intake/dashboard")
 def intake_dashboard():
     ensure_intake_snapshot_tables()

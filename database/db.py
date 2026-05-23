@@ -4443,3 +4443,167 @@ def ensure_final_record_archive_table():
 
     conn.commit()
     conn.close()
+
+def build_lifecycle_master_ledger(intake_id, firm_id="FIRM-001"):
+    """
+    Lifecycle Master Ledger.
+    Builds a read-only linked status map from intake through final archive.
+    """
+    ensure_identity_intake_table()
+    ensure_intake_orchestration_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    ledger = {
+        "intake_id": intake_id,
+        "firm_id": firm_id,
+        "identity": None,
+        "orchestration": None,
+        "assets": [],
+        "documents": [],
+        "draft_sessions": [],
+        "workspaces": [],
+        "bindings": [],
+        "previews": [],
+        "section_reviews": [],
+        "export_prep": [],
+        "docx_exports": [],
+        "docx_verifications": [],
+        "pdf_exports": [],
+        "pdf_execution_approvals": [],
+        "execution_packets": [],
+        "execution_events": [],
+        "final_archives": [],
+        "latest_ids": {},
+        "missing_gates": [],
+        "current_stage": "unknown",
+        "archive_complete": False,
+    }
+
+    cur.execute("""
+        SELECT *
+        FROM identity_intake
+        WHERE intake_id = ? AND firm_id = ?
+    """, (intake_id, firm_id))
+    ledger["identity"] = cur.fetchone()
+
+    cur.execute("""
+        SELECT *
+        FROM intake_orchestration
+        WHERE intake_id = ? AND firm_id = ?
+    """, (intake_id, firm_id))
+    ledger["orchestration"] = cur.fetchone()
+
+    table_queries = {
+        "assets": ("asset_intake", "created_at"),
+        "documents": ("document_intake", "created_at"),
+        "draft_sessions": ("draft_sessions", "created_at"),
+        "workspaces": ("guided_draft_workspace", "created_at"),
+        "bindings": ("draft_variable_bindings", "created_at"),
+        "previews": ("dynamic_draft_previews", "created_at"),
+        "section_reviews": ("section_review_gate", "created_at"),
+        "export_prep": ("controlled_export_prep", "created_at"),
+        "docx_exports": ("controlled_docx_exports", "created_at"),
+        "docx_verifications": ("docx_verification_gate", "created_at"),
+        "pdf_exports": ("controlled_pdf_exports", "created_at"),
+        "pdf_execution_approvals": ("pdf_execution_approval_gate", "created_at"),
+        "execution_packets": ("execution_packet_prep", "created_at"),
+        "execution_events": ("execution_event_log", "created_at"),
+        "final_archives": ("final_record_archive", "created_at"),
+    }
+
+    for key, (table, order_col) in table_queries.items():
+        try:
+            cur.execute(f"""
+                SELECT *
+                FROM {table}
+                WHERE intake_id = ? AND firm_id = ?
+                ORDER BY {order_col} DESC
+            """, (intake_id, firm_id))
+            ledger[key] = cur.fetchall()
+        except Exception:
+            ledger[key] = []
+
+    def latest(list_key, id_key):
+        rows = ledger.get(list_key) or []
+        if rows:
+            return rows[0][id_key]
+        return None
+
+    ledger["latest_ids"] = {
+        "intake_id": intake_id,
+        "draft_session_id": latest("draft_sessions", "draft_session_id"),
+        "workspace_id": latest("workspaces", "workspace_id"),
+        "preview_id": latest("previews", "preview_id"),
+        "section_review_id": latest("section_reviews", "section_review_id"),
+        "export_prep_id": latest("export_prep", "export_prep_id"),
+        "docx_export_id": latest("docx_exports", "export_id"),
+        "docx_verification_id": latest("docx_verifications", "verification_id"),
+        "pdf_export_id": latest("pdf_exports", "pdf_export_id"),
+        "execution_approval_id": latest("pdf_execution_approvals", "approval_id"),
+        "packet_id": latest("execution_packets", "packet_id"),
+        "event_id": latest("execution_events", "event_id"),
+        "final_record_id": latest("final_archives", "final_record_id"),
+    }
+
+    required_steps = [
+        ("identity", ledger["identity"]),
+        ("asset intake", ledger["assets"]),
+        ("document intake", ledger["documents"]),
+        ("draft session", ledger["draft_sessions"]),
+        ("guided workspace", ledger["workspaces"]),
+        ("variable bindings", ledger["bindings"]),
+        ("draft preview", ledger["previews"]),
+        ("section review", ledger["section_reviews"]),
+        ("export prep", ledger["export_prep"]),
+        ("DOCX export", ledger["docx_exports"]),
+        ("DOCX verification", ledger["docx_verifications"]),
+        ("PDF export", ledger["pdf_exports"]),
+        ("PDF execution approval", ledger["pdf_execution_approvals"]),
+        ("execution packet", ledger["execution_packets"]),
+        ("execution event", ledger["execution_events"]),
+        ("final archive", ledger["final_archives"]),
+    ]
+
+    for label, value in required_steps:
+        if not value:
+            ledger["missing_gates"].append(label)
+
+    if ledger["final_archives"]:
+        ledger["current_stage"] = "final_record_archive"
+        ledger["archive_complete"] = True
+    elif ledger["execution_events"]:
+        ledger["current_stage"] = "execution_event_log"
+    elif ledger["execution_packets"]:
+        ledger["current_stage"] = "execution_packet_preparation"
+    elif ledger["pdf_execution_approvals"]:
+        ledger["current_stage"] = "pdf_execution_approval"
+    elif ledger["pdf_exports"]:
+        ledger["current_stage"] = "controlled_pdf_conversion"
+    elif ledger["docx_verifications"]:
+        ledger["current_stage"] = "docx_verification"
+    elif ledger["docx_exports"]:
+        ledger["current_stage"] = "controlled_docx_export"
+    elif ledger["export_prep"]:
+        ledger["current_stage"] = "controlled_export_preparation"
+    elif ledger["section_reviews"]:
+        ledger["current_stage"] = "section_review"
+    elif ledger["previews"]:
+        ledger["current_stage"] = "dynamic_draft_preview"
+    elif ledger["bindings"]:
+        ledger["current_stage"] = "variable_binding"
+    elif ledger["workspaces"]:
+        ledger["current_stage"] = "guided_draft_workspace"
+    elif ledger["draft_sessions"]:
+        ledger["current_stage"] = "draft_session"
+    elif ledger["documents"]:
+        ledger["current_stage"] = "document_intake"
+    elif ledger["assets"]:
+        ledger["current_stage"] = "asset_intake"
+    elif ledger["identity"]:
+        ledger["current_stage"] = "identity_intake"
+
+    conn.close()
+    return ledger
