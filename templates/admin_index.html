@@ -281,6 +281,50 @@
  }
  }
  </style>
+
+<style>
+.admin-command-map .admin-action-grid,
+.intake-command-center .admin-action-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0;
+}
+.admin-command-map .primary-action,
+.intake-command-center .primary-action {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+}
+.intake-command-center {
+  border-left: 4px solid rgba(212, 175, 55, 0.8);
+}
+</style>
+
+
+<style>
+.promoted-intake-panel {
+  border-left: 5px solid rgba(212, 175, 55, 0.9);
+  margin: 18px 0;
+  padding: 18px;
+}
+
+.intake-action-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin: 14px 0 !important;
+}
+
+.intake-action-grid a {
+  display: inline-block !important;
+  padding: 10px 16px !important;
+  border-radius: 10px !important;
+  text-decoration: none !important;
+}
+</style>
+
 </head>
 
 <body>
@@ -315,7 +359,45 @@
  <a href="/execution">Execution<span>Tasks and workflow</span></a>
  </div>
 
- <div class="admin-section-label">System Snapshot</div>
+ 
+<section class="admin-card admin-command-map">
+  <h2>Admin Command Map</h2>
+  <p>
+    Use this command map to move quickly between intake, trust operations, documents, learning, security, and administrative tools.
+  </p>
+
+  <div class="admin-action-grid">
+    <a class="primary-action" href="#intake-command-center">Intake & Lifecycle</a>
+    <a class="primary-action" href="#trust-operations">Trust Operations</a>
+    <a class="primary-action" href="#document-export-center">Documents & Exports</a>
+    <a class="primary-action" href="#learning-guidance">Learning & Guidance</a>
+    <a class="primary-action" href="#system-security">System Health & Security</a>
+    <a class="primary-action" href="#admin-tools">Admin Tools</a>
+  </div>
+</section>
+
+
+
+<div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center</div>
+<div class="admin-card intake-command-center promoted-intake-panel">
+  <h2>Intake Command Center</h2>
+  <p class="admin-muted">
+    Recommended first step for new matters. Begin intake, review saved sessions, and follow each matter from first interview through final archive.
+  </p>
+
+  <div class="admin-actions intake-action-grid">
+    <a class="primary-action" href="{{ url_for('identity_intake') }}">Start New Intake</a>
+    <a href="{{ url_for('intake_dashboard') }}">Review Saved Intakes</a>
+    <a href="{{ url_for('intake_dashboard') }}">Open Lifecycle Ledger from Intake Dashboard</a>
+  </div>
+
+  <p class="admin-muted">
+    The Lifecycle Ledger is opened from a saved intake record and shows the full chain from intake through final archive.
+  </p>
+</div>
+
+
+<div class="admin-section-label">System Snapshot</div>
  <div class="admin-card">
  <div class="admin-grid">
  <div class="metric">
@@ -337,9 +419,9 @@
  </div>
  </div>
 
- <div class="admin-section-label">Primary Trust Operations</div>
+ <div class="admin-section-label">Existing Trust Operations</div>
  <div class="admin-card">
- <h2>Trust Operations Dashboard</h2>
+ <h2>Existing Trust Operations Dashboard</h2>
  <p class="admin-muted">Primary operating surface for trust readiness, packet status, and execution entry.</p>
 
  {% if trust_summaries %}
@@ -407,7 +489,7 @@
  </div>
 
  <div class="admin-card">
- <h2>Trust Command Cards</h2>
+ <h2>Existing Trust Command Cards</h2>
  <p class="admin-muted">Fast entry into each trust’s live workflow and controlled output surfaces.</p>
 
  {% if trusts %}
@@ -443,37 +525,8 @@
 
  <div class="admin-two-grid">
  <div class="admin-card">
- 
-<section class="admin-card">
-  <h2>Intake Command Center</h2>
-  <p>
-    Start, review, and continue the guided intake-to-lifecycle workflow.
-  </p>
-
-  <div class="admin-action-grid">
-    <a class="primary-action" href="{{ url_for('identity_intake') }}">
-      Start Guided Intake
-    </a>
-
-    <a class="primary-action" href="{{ url_for('intake_dashboard') }}">
-      Open Intake Dashboard
-    </a>
-
-    <a class="primary-action" href="{{ url_for('intake_dashboard') }}">
-      Open Lifecycle Master Ledger
-    </a>
-  </div>
-
-  <p>
-    <small>
-      Use the Lifecycle Master Ledger after selecting or creating an intake record.
-    </small>
-  </p>
-</section>
-
-
-<h2>Quick Start</h2>
- <p class="admin-muted">Use these pathways to create, review, plan, and export.</p>
+<h2 id="document-export-center">Legacy / General Quick Start</h2>
+ <p class="admin-muted">Use these legacy and general pathways for existing trust records, reports, learning, and workspace access.</p>
  <div class="admin-actions">
  
  <a class="primary-action" href="{{ url_for('create_trust_launch') }}">Create Trust</a>
@@ -485,7 +538,7 @@
  </div>
 
  <div class="admin-card">
- <h2>Learning & Guidance Suite</h2>
+ <h2 id="learning-guidance">Learning & Guidance Suite</h2>
  <p class="admin-muted">Central learning surface for trust concepts, guided forms, trust-type references, and tutorial support.</p>
  <div class="admin-actions">
  <a class="primary-action" href="/learning">Learning Hub</a>
@@ -516,7 +569,7 @@
 </div>
 
 <div class="admin-card">
-<h2>System Policy Controls</h2>
+<h2 id="system-security">System Policy Controls</h2>
 
 <p><strong>Packet Export Mode:</strong>
 <span class="{% if export_policy.strict_packet_export %}trust-status-warning{% else %}trust-status-ready{% endif %}">
@@ -557,7 +610,7 @@
  </div>
 
  <div class="admin-card">
- <h2>Admin Tools</h2>
+ <h2 id="admin-tools">Admin Tools</h2>
  <div class="admin-actions">
  {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
  <a class="primary-action" href="{{ url_for('users_dashboard') }}">Manage Users</a>
