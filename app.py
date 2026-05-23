@@ -9607,6 +9607,27 @@ def enforce_session_timeout():
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
+    # EXPORT-GUARD-1B: controlled DOCX/PDF export route protection by path
+    controlled_export_paths = (
+        "/docx-export/",
+        "/pdf-convert/",
+        "/pdf-export/download/",
+    )
+
+    if (request.path or "").startswith(controlled_export_paths):
+        export_policy = get_export_policy()
+        if not bool(export_policy.get("allow_exports", True)):
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "export_blocked",
+                f"Endpoint={request.endpoint}; Path={request.path}; Policy=allow_exports_false"
+            )
+            return render_template(
+                "access_denied.html",
+                reason="Exports are currently disabled by system policy."
+            )
+
     export_guarded_endpoints = {
         "controlled_docx_export",
         "download_controlled_docx_export",
