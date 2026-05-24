@@ -15558,21 +15558,30 @@ def execution_event_log(packet_id):
         witness_completed = request.form.get("witness_completed") or "unknown"
         notary_completed = request.form.get("notary_completed") or "unknown"
         jurat_acknowledgment_completed = request.form.get("jurat_acknowledgment_completed") or "unknown"
-        finalization_gate = request.form.get("finalization_gate") or "not_ready"
 
-        if finalization_gate == "ready_to_finalize":
-            if signature_completed != "yes":
-                finalization_gate = "blocked_signature_incomplete"
-                flash("Finalization blocked: signature must be completed.", "warning")
-            elif packet["witness_required"] == "yes" and witness_completed != "yes":
-                finalization_gate = "blocked_witness_incomplete"
-                flash("Finalization blocked: witness completion is required.", "warning")
-            elif packet["notary_required"] == "yes" and notary_completed != "yes":
-                finalization_gate = "blocked_notary_incomplete"
-                flash("Finalization blocked: notary completion is required.", "warning")
-            elif packet["jurat_required"] == "yes" and jurat_acknowledgment_completed != "yes":
-                finalization_gate = "blocked_jurat_incomplete"
-                flash("Finalization blocked: jurat/acknowledgment completion is required.", "warning")
+        # EXEC-FLOW-2:
+        # Do not let the form default "not_ready" override a fully complete event.
+        signature_ok = signature_completed == "yes"
+        witness_ok = (packet["witness_required"] != "yes") or witness_completed == "yes"
+        notary_ok = (packet["notary_required"] != "yes") or notary_completed == "yes"
+        jurat_ok = (packet["jurat_required"] != "yes") or jurat_acknowledgment_completed == "yes"
+
+        if signature_ok and witness_ok and notary_ok and jurat_ok:
+            finalization_gate = "ready_to_finalize"
+        elif not signature_ok:
+            finalization_gate = "blocked_signature_incomplete"
+            flash("Finalization blocked: signature must be completed.", "warning")
+        elif not witness_ok:
+            finalization_gate = "blocked_witness_incomplete"
+            flash("Finalization blocked: witness completion is required.", "warning")
+        elif not notary_ok:
+            finalization_gate = "blocked_notary_incomplete"
+            flash("Finalization blocked: notary completion is required.", "warning")
+        elif not jurat_ok:
+            finalization_gate = "blocked_jurat_incomplete"
+            flash("Finalization blocked: jurat/acknowledgment completion is required.", "warning")
+        else:
+            finalization_gate = "not_ready"
 
         finalization_status = "ready_to_finalize" if finalization_gate == "ready_to_finalize" else "not_finalized"
 
