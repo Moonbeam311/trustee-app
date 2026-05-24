@@ -16901,6 +16901,57 @@ def identity_intake_summary(intake_id):
     )
 
 
+
+
+@app.route("/admin/diag/execution-record/<record_id>")
+def admin_diag_execution_record(record_id):
+    if session.get("role") != "Admin":
+        return render_template("access_denied.html", reason="Admin role required."), 403
+
+    import sqlite3
+    from database.db import get_connection
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    results = {}
+
+    for table, col in [
+        ("execution_packet_prep", "packet_id"),
+        ("execution_event_log", "event_id"),
+        ("controlled_pdf_exports", "pdf_export_id"),
+        ("controlled_docx_exports", "export_id"),
+        ("identity_intake", "intake_id"),
+    ]:
+        try:
+            cur.execute(f"SELECT * FROM {table} WHERE {col} = ?", (record_id,))
+            rows = [dict(r) for r in cur.fetchall()]
+            results[table] = rows
+        except Exception as e:
+            results[table] = [{"error": str(e)}]
+
+    conn.close()
+
+    body = ["<h1>Execution Record Diagnostic</h1>"]
+    body.append(f"<p><strong>Current session firm:</strong> {session.get('firm_id')}</p>")
+    body.append(f"<p><strong>Current user:</strong> {session.get('username')}</p>")
+    body.append(f"<p><strong>Role:</strong> {session.get('role')}</p>")
+    body.append(f"<p><strong>Lookup:</strong> {record_id}</p>")
+
+    for table, rows in results.items():
+        body.append(f"<h2>{table}</h2>")
+        if not rows:
+            body.append("<p>No rows found.</p>")
+        else:
+            for row in rows:
+                body.append("<pre>")
+                body.append("\\n".join(f"{k}: {v}" for k, v in row.items()))
+                body.append("</pre>")
+
+    return "\\n".join(body)
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
