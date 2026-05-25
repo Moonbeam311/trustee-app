@@ -19027,6 +19027,7 @@ from services.services_matters import (
     create_matter,
     list_matters,
     get_matter,
+    add_matter_event,
 )
 
 @app.route("/matters")
@@ -19050,6 +19051,43 @@ def matter_detail(matter_id):
     ensure_matter_tables()
     matter, events = get_matter(matter_id)
     return render_template("matter_detail.html", matter=matter, events=events)
+
+
+@csrf.exempt
+@app.route("/matters/<matter_id>/events/new", methods=["GET", "POST"])
+def new_matter_event(matter_id):
+    ensure_matter_tables()
+    matter, events = get_matter(matter_id)
+
+    if not matter:
+        flash("Matter not found.", "warning")
+        return redirect(url_for("matters_dashboard"))
+
+    if request.method == "POST":
+        event_type = (request.form.get("event_type") or "").strip()
+        description = (request.form.get("description") or "").strip()
+
+        if not event_type or not description:
+            return render_template(
+                "matter_event_form.html",
+                matter=matter,
+                error_message="Event type and description are required."
+            )
+
+        event_id = add_matter_event(
+            matter_id=matter_id,
+            event_type=event_type,
+            actor=(request.form.get("actor") or "").strip(),
+            authority_basis=(request.form.get("authority_basis") or "").strip(),
+            description=description,
+            linked_record_type=(request.form.get("linked_record_type") or "").strip(),
+            linked_record_id=(request.form.get("linked_record_id") or "").strip(),
+        )
+
+        flash(f"Matter event {event_id} added.", "success")
+        return redirect(url_for("matter_detail", matter_id=matter_id))
+
+    return render_template("matter_event_form.html", matter=matter)
 # ---- END IC-1 Institutional Matter / Case Engine ----
 
 

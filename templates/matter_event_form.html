@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+    <title>Add Matter Event</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px; max-width:900px;}
+        label{display:block; margin-top:14px; font-weight:bold;}
+        input,select,textarea{width:100%; padding:10px; margin-top:5px;}
+        button{margin-top:20px; padding:12px 18px;}
+        .notice{padding:12px; border:1px solid #cc9; background:#fff8d8; margin:12px 0;}
+    </style>
+</head>
+<body>
+    <p><a href="/matters/{{ matter[1] }}">← Back to Matter</a></p>
+
+    <h1>Add Matter Event</h1>
+    <p><strong>Matter:</strong> {{ matter[3] }} | <strong>ID:</strong> {{ matter[1] }}</p>
+
+    {% if error_message %}
+      <div class="notice">{{ error_message }}</div>
+    {% endif %}
+
+    <form method="post">
+        <label>Event Type</label>
+        <select name="event_type" required>
+            <option value="Governance Note">Governance Note</option>
+            <option value="Document Received">Document Received</option>
+            <option value="Trustee Action">Trustee Action</option>
+            <option value="Review Completed">Review Completed</option>
+            <option value="Decision Recorded">Decision Recorded</option>
+            <option value="Evidence Added">Evidence Added</option>
+            <option value="Risk Flag">Risk Flag</option>
+            <option value="Archive Update">Archive Update</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Actor</label>
+        <input name="actor" placeholder="Name / role / system user">
+
+        <label>Authority Basis</label>
+        <input name="authority_basis" placeholder="Example: Trustee review, intake finding, document evidence, resolution">
+
+        <label>Description</label>
+        <textarea name="description" rows="6" required></textarea>
+
+        <label>Linked Record Type</label>
+        <input name="linked_record_type" placeholder="Example: trust, transfer, asset, document, media, minute">
+
+        <label>Linked Record ID</label>
+        <input name="linked_record_id" placeholder="Example: TR-000001, MAT-000001, DOC-000001">
+
+        <button type="submit">Add Event</button>
+    </form>
+</body>
+</html>
