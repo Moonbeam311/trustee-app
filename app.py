@@ -13346,6 +13346,156 @@ def transfer_archive_handoff_export_package(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff/audit-trail/export.pdf")
+def transfer_archive_handoff_audit_export_pdf(transfer_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import hashlib
+    import sqlite3
+    from datetime import datetime
+    from flask import Response
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    generated_by = session.get("username") or session.get("user_email") or "System User"
+    generated_at = datetime.utcnow().isoformat() + " UTC"
+    export_scope = "Transfer Archive Handoff Audit Trail PDF Export"
+
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+    handoff_records = cur.fetchall()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff_corrections
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+    correction_records = cur.fetchall()
+
+    audit_events = []
+
+    for record in handoff_records:
+        audit_events.append({
+            "event_type": "handoff_record",
+            "event_label": "Archive Handoff Record",
+            "event_id": record["handoff_id"],
+            "handoff_id": record["handoff_id"],
+            "correction_id": "",
+            "status": record["archive_status"],
+            "classification": record["custody_classification"],
+            "actor": record["handoff_by"],
+            "capacity": record["handoff_capacity"],
+            "notes": record["archive_notes"],
+            "created_at": record["created_at"],
+        })
+
+    for record in correction_records:
+        audit_events.append({
+            "event_type": "correction_record",
+            "event_label": "Correction Record",
+            "event_id": record["correction_id"],
+            "handoff_id": record["handoff_id"],
+            "correction_id": record["correction_id"],
+            "status": record["corrected_archive_status"],
+            "classification": record["corrected_custody_classification"],
+            "actor": record["corrected_by"],
+            "capacity": record["correction_capacity"],
+            "notes": record["correction_reason"],
+            "created_at": record["created_at"],
+        })
+
+    audit_events = sorted(
+        audit_events,
+        key=lambda item: item.get("created_at") or "",
+        reverse=True
+    )
+
+    audit_summary = {
+        "handoff_records": len(handoff_records),
+        "correction_records": len(correction_records),
+        "total_events": len(audit_events),
+        "corrections_present": len(correction_records) > 0,
+    }
+
+    certification_statement = (
+        "Certification: This PDF export was generated from the Trustee App archive "
+        "handoff records currently available to the active firm scope. It consolidates "
+        "handoff records and correction records for review, custody, audit continuity, "
+        "and fiduciary documentation. Original handoff records are not overwritten by "
+        "correction records."
+    )
+
+    hash_payload = "|".join([
+        str(firm_id),
+        str(transfer.transfer_id),
+        str(transfer.trust_id),
+        str(generated_by),
+        str(generated_at),
+        str(export_scope),
+        str(audit_summary),
+        str([(e.get("event_type"), e.get("event_id"), e.get("created_at")) for e in audit_events]),
+    ])
+    export_hash = hashlib.sha256(hash_payload.encode("utf-8")).hexdigest()
+
+    conn.close()
+
+    html = render_template(
+        "transfer_archive_handoff_audit_pdf.html",
+        transfer=transfer,
+        firm_id=firm_id,
+        generated_by=generated_by,
+        generated_at=generated_at,
+        export_scope=export_scope,
+        export_hash=export_hash,
+        certification_statement=certification_statement,
+        audit_summary=audit_summary,
+        audit_events=audit_events,
+    )
+
+    try:
+        import weasyprint
+        pdf_bytes = weasyprint.HTML(string=html).write_pdf()
+        return Response(
+            pdf_bytes,
+            mimetype="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=archive_handoff_audit_trail_{transfer.transfer_id}.pdf",
+                "X-Archive-Export-Hash": export_hash,
+                "X-Archive-Export-Scope": export_scope,
+            }
+        )
+    except Exception:
+        # Fallback: return printable HTML if PDF engine is unavailable.
+        return Response(
+            html,
+            mimetype="text/html",
+            headers={
+                "Content-Disposition": f"inline; filename=archive_handoff_audit_trail_{transfer.transfer_id}.html",
+                "X-Archive-Export-Hash": export_hash,
+                "X-Archive-Export-Scope": export_scope,
+                "X-Archive-PDF-Fallback": "html",
+            }
+        )
+
+
 @app.route("/execution/transfers/<transfer_id>/archive-handoff/audit-trail/export.txt")
 def transfer_archive_handoff_audit_export_txt(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)

@@ -15,6 +15,9 @@
   |
   {# INT-37A: archive export package link #}
   <a href="{{ url_for('transfer_archive_handoff_export_package', transfer_id=transfer.transfer_id) }}">Export Package ZIP</a>
+  |
+  {# INT-38A: archive handoff audit PDF export link #}
+  <a href="{{ url_for('transfer_archive_handoff_audit_export_pdf', transfer_id=transfer.transfer_id) }}">Export PDF</a>
 </p>
 
 <div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
