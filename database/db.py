@@ -4607,3 +4607,33 @@ def build_lifecycle_master_ledger(intake_id, firm_id="FIRM-001"):
 
     conn.close()
     return ledger
+
+def ensure_draft_variable_binding_table():
+    """
+    Ensure table exists for guided draft variable bindings.
+    Used by INT lifecycle variable binding gate.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS draft_variable_binding (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            binding_id TEXT UNIQUE,
+            workspace_id TEXT,
+            draft_session_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            variable_key TEXT,
+            variable_value TEXT,
+            source_layer TEXT DEFAULT 'guided_workspace',
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
