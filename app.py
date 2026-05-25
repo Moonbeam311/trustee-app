@@ -19029,14 +19029,12 @@ from services.services_matters import (
     get_matter,
 )
 
-@admin_required
 @app.route("/matters")
 def matters_dashboard():
     ensure_matter_tables()
     matters = list_matters()
     return render_template("matters_dashboard.html", matters=matters)
 
-@admin_required
 @app.route("/matters/new", methods=["GET", "POST"])
 def new_matter():
     ensure_matter_tables()
@@ -19046,7 +19044,6 @@ def new_matter():
         return redirect(url_for("matter_detail", matter_id=matter_id))
     return render_template("matter_form.html")
 
-@admin_required
 @app.route("/matters/<matter_id>")
 def matter_detail(matter_id):
     ensure_matter_tables()
