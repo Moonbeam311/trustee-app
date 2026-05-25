@@ -432,6 +432,25 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
             <span class="transfer-status-badge {% if ledger_ok and external_ok and proof_ok %}ready{% elif ledger_ok or external_ok or proof_ok %}warning{% else %}muted{% endif %}">
               Hybrid {% if ledger_ok and external_ok and proof_ok %}Complete{% elif ledger_ok or external_ok or proof_ok %}Partial{% else %}Not Started{% endif %}
             </span>
+
+            {# INT-19C: row-level archive readiness status #}
+            {% set minute_count = transfer_minute_counts.get(t.transfer_id, 0) if transfer_minute_counts else 0 %}
+            {% set finalized_ok = t.status == 'completed' or t.finalized_at %}
+            {% set minute_ok = minute_count > 0 %}
+            {% set archive_gate_ready = finalized_ok and ledger_ok and minute_ok %}
+
+            <span class="transfer-status-badge {% if archive_gate_ready %}ready{% else %}warning{% endif %}">
+              Archive Gate: {% if archive_gate_ready %}Ready{% else %}Blocked{% endif %}
+            </span>
+
+            {% if not archive_gate_ready %}
+              <span class="transfer-status-badge warning">
+                Blockers:
+                {% if not finalized_ok %} Finalization{% endif %}
+                {% if not ledger_ok %} Ledger{% endif %}
+                {% if not minute_ok %} Minute{% endif %}
+              </span>
+            {% endif %}
           </div>
 
           <small>
