@@ -94,7 +94,12 @@
   {% if handoff_records %}
     {% for record in handoff_records %}
       <div style="padding:12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
-        <p><strong>Handoff ID:</strong> {{ record["handoff_id"] }}</p>
+        {# INT-22A: handoff record detail link #}
+        <p><strong>Handoff ID:</strong>
+          <a href="{{ url_for('transfer_archive_handoff_detail', transfer_id=transfer.transfer_id, handoff_id=record['handoff_id']) }}">
+            {{ record["handoff_id"] }}
+          </a>
+        </p>
         <p><strong>Status:</strong> {{ record["archive_status"] }}</p>
         <p><strong>Custody Classification:</strong> {{ record["custody_classification"] }}</p>
         <p><strong>Seal Reference:</strong> {{ record["seal_reference"] }}</p>

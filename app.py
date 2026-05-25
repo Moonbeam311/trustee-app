@@ -12338,6 +12338,42 @@ def transfer_external_tracking(transfer_id):
     return render_template("transfer_external_tracking.html", transfer=transfer)
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>")
+def transfer_archive_handoff_detail(transfer_id, handoff_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import sqlite3
+    from database.db import get_connection, ensure_transfer_archive_handoff_table
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE handoff_id = ? AND transfer_id = ? AND firm_id = ?
+    """, (handoff_id, transfer.transfer_id, firm_id))
+
+    handoff_record = cur.fetchone()
+    conn.close()
+
+    if not handoff_record:
+        flash("Transfer archive handoff record not found.", "warning")
+        return redirect(url_for("transfer_archive_handoff", transfer_id=transfer.transfer_id))
+
+    return render_template(
+        "transfer_archive_handoff_detail.html",
+        transfer=transfer,
+        handoff_record=handoff_record,
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/archive-handoff", methods=["GET", "POST"])
 @csrf.exempt
 def transfer_archive_handoff(transfer_id):

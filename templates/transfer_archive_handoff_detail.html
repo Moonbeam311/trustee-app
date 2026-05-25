@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Archive Handoff Record Detail</h1>
+
+<p>
+  <a href="{{ url_for('transfer_archive_handoff', transfer_id=transfer.transfer_id) }}">Back to Archive Handoff</a>
+  |
+  <a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Transfer Detail</a>
+  |
+  <a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Execution Dashboard</a>
+</p>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Record Identity</h2>
+
+  <p><strong>Handoff ID:</strong> {{ handoff_record["handoff_id"] }}</p>
+  <p><strong>Transfer ID:</strong> {{ handoff_record["transfer_id"] }}</p>
+  <p><strong>Trust ID:</strong> {{ handoff_record["trust_id"] }}</p>
+  <p><strong>Firm ID:</strong> {{ handoff_record["firm_id"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #b6c6a8; border-radius:12px; margin-bottom:16px; background:#f8fff4;">
+  <h2>Archive Handoff Status</h2>
+
+  <p><strong>Archive Status:</strong> {{ handoff_record["archive_status"] }}</p>
+  <p><strong>Custody Classification:</strong> {{ handoff_record["custody_classification"] }}</p>
+  <p><strong>Seal Reference:</strong> {{ handoff_record["seal_reference"] }}</p>
+  <p><strong>Handoff By:</strong> {{ handoff_record["handoff_by"] }}</p>
+  <p><strong>Handoff Capacity:</strong> {{ handoff_record["handoff_capacity"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d6c28a; border-radius:12px; margin-bottom:16px; background:#fffaf0;">
+  <h2>Verification Chain</h2>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <span class="transfer-status-badge {% if handoff_record['finalization_verified'] == 'yes' %}ready{% else %}warning{% endif %}">
+      Finalization Verified: {{ handoff_record["finalization_verified"] }}
+    </span>
+
+    <span class="transfer-status-badge {% if handoff_record['ledger_verified'] == 'yes' %}ready{% else %}warning{% endif %}">
+      Ledger Verified: {{ handoff_record["ledger_verified"] }}
+    </span>
+
+    <span class="transfer-status-badge {% if handoff_record['minute_verified'] == 'yes' %}ready{% else %}warning{% endif %}">
+      Minute Verified: {{ handoff_record["minute_verified"] }}
+    </span>
+  </div>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Archive Notes</h2>
+  <p>{{ handoff_record["archive_notes"] or "No archive notes recorded." }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px;">
+  <h2>System Timestamps</h2>
+
+  <p><strong>Created At:</strong> {{ handoff_record["created_at"] }}</p>
+  <p><strong>Updated At:</strong> {{ handoff_record["updated_at"] }}</p>
+</div>
+
+{% endblock %}
