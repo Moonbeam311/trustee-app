@@ -24,13 +24,16 @@
       Handoff Not Created: {{ archive_handoff_summary.handoff_not_created }}
     </a>
 
-    <span class="transfer-status-badge {% if archive_handoff_summary.archive_ready_not_handed_off == 0 %}ready{% else %}warning{% endif %}">
+    {# INT-21C: clickable archive summary filters #}
+    <a class="transfer-status-badge {% if active_transfer_filter == 'archive_ready_no_handoff' %}warning{% elif archive_handoff_summary.archive_ready_not_handed_off == 0 %}ready{% else %}warning{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_ready_no_handoff">
       Archive Ready / No Handoff: {{ archive_handoff_summary.archive_ready_not_handed_off }}
-    </span>
+    </a>
 
-    <span class="transfer-status-badge {% if archive_handoff_summary.blocked_before_handoff == 0 %}ready{% else %}warning{% endif %}">
+    <a class="transfer-status-badge {% if active_transfer_filter == 'blocked_before_handoff' %}warning{% elif archive_handoff_summary.blocked_before_handoff == 0 %}ready{% else %}warning{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=blocked_before_handoff">
       Blocked Before Handoff: {{ archive_handoff_summary.blocked_before_handoff }}
-    </span>
+    </a>
   </div>
 </div>
 {% endif %}
@@ -375,6 +378,10 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
         <a class="transfer-status-badge {% if active_transfer_filter == 'archive_handoff_prepared' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_handoff_prepared">Handoff Prepared</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'archive_handoff_not_created' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_handoff_not_created">Handoff Not Created</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'archive_ready_no_handoff' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_ready_no_handoff">Ready / No Handoff</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'blocked_before_handoff' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=blocked_before_handoff">Blocked Before Handoff</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'completed' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=completed">Completed</a>
 

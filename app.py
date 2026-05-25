@@ -11607,6 +11607,12 @@ def trust_execution_dashboard(trust_id):
             return handoff_prepared
         if active_transfer_filter == "archive_handoff_not_created":
             return not handoff_prepared
+
+        # === INT-21C: archive summary actionable filters ===
+        if active_transfer_filter == "archive_ready_no_handoff":
+            return archive_ready and not handoff_prepared
+        if active_transfer_filter == "blocked_before_handoff":
+            return not archive_ready
         return True
 
     filtered_transfers = [t for t in transfers if transfer_matches_filter(t)]
