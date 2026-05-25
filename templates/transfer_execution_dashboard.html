@@ -376,6 +376,10 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
             <span class="transfer-status-badge {% if ledger_ok %}ready{% else %}muted{% endif %}">
               Ledger {% if ledger_ok %}Posted{% else %}Missing{% endif %}: {{ ledger_count }}
             </span>
+            {# INT-18C: Ledger readiness badge #}
+            <span class="transfer-status-badge {% if ledger_ok %}ready{% else %}warning{% endif %}">
+              Ledger Readiness: {% if ledger_ok %}Ready{% else %}Pending{% endif %}
+            </span>
 
             <span class="transfer-status-badge {% if external_ok %}ready{% else %}warning{% endif %}">
               External {% if external_ok %}Verified{% else %}Pending{% endif %}

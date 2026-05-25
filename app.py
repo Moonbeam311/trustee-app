@@ -11971,7 +11971,7 @@ def transfer_review(transfer_id):
                         overall_stage="transfer_finalization",
                         readiness_label="Transfer Finalized",
                         next_recommended_action="Confirm ledger posting, review generated trust minute, and proceed to final archive readiness.",
-                        next_route=f"/trust/{transfer.trust_id}/execution-dashboard"
+                        next_route=url_for("trust_execution_dashboard", trust_id=transfer.trust_id)
                     )
 
                     log_change(
