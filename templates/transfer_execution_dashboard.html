@@ -5,6 +5,38 @@
 <div class="trust-panel" style="{% if packet_readiness.blocked %}background:#fef2f2; border-color:#fca5a5;{% elif packet_readiness.ready %}background:#f0fdf4; border-color:#86efac;{% else %}background:#fff7ed; border-color:#fed7aa;{% endif %}">
   <h2 class="trust-panel-heading">Execution Handoff Status</h2>
 
+{# INT-18G: dashboard execution chain health panel #}
+{% if execution_chain_health is defined %}
+<div style="margin:18px 0; padding:18px; border:1px solid rgba(214,194,138,0.75); border-radius:14px; background:#fffaf0;">
+  <h3 style="margin-top:0;">Execution Chain Health Summary</h3>
+  <p style="margin-top:0;">
+    Dashboard-level view of transfer finalization, ledger posting, verified minutes, archive readiness, and records needing attention.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
+    <span class="transfer-status-badge ready">
+      Total Transfers: {{ execution_chain_health.total }}
+    </span>
+    <span class="transfer-status-badge {% if execution_chain_health.finalized == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}">
+      Finalized: {{ execution_chain_health.finalized }}
+    </span>
+    <span class="transfer-status-badge {% if execution_chain_health.ledger_posted == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}">
+      Ledger Posted: {{ execution_chain_health.ledger_posted }}
+    </span>
+    <span class="transfer-status-badge {% if execution_chain_health.minutes_verified == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}">
+      Minutes Verified: {{ execution_chain_health.minutes_verified }}
+    </span>
+    <span class="transfer-status-badge {% if execution_chain_health.archive_ready == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}">
+      Archive Ready: {{ execution_chain_health.archive_ready }}
+    </span>
+    <span class="transfer-status-badge {% if execution_chain_health.needs_attention == 0 %}ready{% else %}warning{% endif %}">
+      Needs Attention: {{ execution_chain_health.needs_attention }}
+    </span>
+  </div>
+</div>
+{% endif %}
+
+
   {% if packet_readiness.ready %}
     <p>
       <strong class="trust-status-ready">Formation packet appears ready.</strong>

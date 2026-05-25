@@ -11425,6 +11425,83 @@ def trust_execution_dashboard(trust_id):
         else:
             transfer_completion_summary["hybrid_not_started"] += 1
 
+    # === INT-18G: execution chain health summary ===
+    execution_chain_health = {
+        "total": len(transfers),
+        "finalized": 0,
+        "ledger_posted": 0,
+        "minutes_verified": 0,
+        "archive_ready": 0,
+        "needs_attention": 0,
+    }
+
+    transfer_minute_counts = {}
+    try:
+        import sqlite3
+        from database.db import get_connection
+
+        firm_id = session.get("firm_id", "FIRM-001")
+        conn = get_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        cur.execute("PRAGMA table_info(trust_minutes)")
+        minute_cols = [row["name"] for row in cur.fetchall()]
+
+        searchable_cols = [
+            col for col in ["minute_id", "title", "purpose", "resolutions", "action_items", "notes"]
+            if col in minute_cols
+        ]
+
+        if searchable_cols:
+            for t in transfers:
+                where_parts = ["trust_id = ?"]
+                params = [t.trust_id]
+
+                if "firm_id" in minute_cols:
+                    where_parts.append("firm_id = ?")
+                    params.append(firm_id)
+
+                minute_like = f"%{t.transfer_id}%"
+                search_clause = " OR ".join([f"{col} LIKE ?" for col in searchable_cols])
+                where_parts.append(f"({search_clause})")
+                params.extend([minute_like] * len(searchable_cols))
+
+                cur.execute(f"""
+                    SELECT COUNT(*) AS count
+                    FROM trust_minutes
+                    WHERE {" AND ".join(where_parts)}
+                """, params)
+
+                row = cur.fetchone()
+                transfer_minute_counts[t.transfer_id] = row["count"] if row else 0
+
+        conn.close()
+
+    except Exception as e:
+        print("⚠️ INT-18G minute health summary failed:", e)
+        transfer_minute_counts = {}
+
+    for t in transfers:
+        ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
+        minute_count = transfer_minute_counts.get(t.transfer_id, 0)
+
+        finalized_ok = (getattr(t, "status", "") == "completed") or bool(getattr(t, "finalized_at", None))
+        ledger_ok = ledger_count > 0
+        minute_ok = minute_count > 0
+        archive_ready = finalized_ok and ledger_ok and minute_ok
+
+        if finalized_ok:
+            execution_chain_health["finalized"] += 1
+        if ledger_ok:
+            execution_chain_health["ledger_posted"] += 1
+        if minute_ok:
+            execution_chain_health["minutes_verified"] += 1
+        if archive_ready:
+            execution_chain_health["archive_ready"] += 1
+        if not archive_ready:
+            execution_chain_health["needs_attention"] += 1
+
 
     def transfer_matches_filter(t):
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
@@ -11472,6 +11549,8 @@ def trust_execution_dashboard(trust_id):
           transfer_proof_counts=transfer_proof_counts,
           transfer_ledger_counts=transfer_ledger_counts,
           transfer_completion_summary=transfer_completion_summary,
+          execution_chain_health=execution_chain_health,
+          transfer_minute_counts=transfer_minute_counts,
           active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),
     )
