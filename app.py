@@ -11672,6 +11672,10 @@ def trust_execution_dashboard(trust_id):
             return correction_count > 0
         if active_transfer_filter == "handoff_no_corrections":
             return handoff_prepared and correction_count == 0
+
+        # === INT-25C: correction review needed dashboard filter ===
+        if active_transfer_filter == "correction_review_needed":
+            return correction_count > 0
         return True
 
     filtered_transfers = [t for t in transfers if transfer_matches_filter(t)]

@@ -28,9 +28,11 @@
       Latest Corrected Handoff Records: {{ archive_handoff_correction_summary.latest_corrected_handoff_records }}
     </span>
 
-    <span class="transfer-status-badge {% if archive_handoff_correction_summary.correction_review_needed == 0 %}ready{% else %}warning{% endif %}">
+    {# INT-25C: clickable correction review needed summary filter #}
+    <a class="transfer-status-badge {% if active_transfer_filter == 'correction_review_needed' %}warning{% elif archive_handoff_correction_summary.correction_review_needed == 0 %}ready{% else %}warning{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=correction_review_needed">
       Correction Review Needed: {{ archive_handoff_correction_summary.correction_review_needed }}
-    </span>
+    </a>
   </div>
 </div>
 {% endif %}
@@ -416,6 +418,8 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
         <a class="transfer-status-badge {% if active_transfer_filter == 'handoff_corrections_present' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=handoff_corrections_present">Corrections Present</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'handoff_no_corrections' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=handoff_no_corrections">No Corrections</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'correction_review_needed' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=correction_review_needed">Correction Review Needed</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'completed' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=completed">Completed</a>
 
