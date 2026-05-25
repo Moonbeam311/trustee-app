@@ -52,6 +52,45 @@
 
   <div class="section">
     <h2>Summary</h2>
+
+{# INT-18D: Transfer detail execution chain panel #}
+<div style="margin:18px 0; padding:16px; border:1px solid #d6c28a; border-radius:12px; background:#fffaf0;">
+  <h3 style="margin-top:0;">Execution Chain Status</h3>
+
+  {% set ledger_count = transfer_ledger_records|length if transfer_ledger_records else 0 %}
+  {% set ledger_ok = ledger_count > 0 %}
+  {% set finalized_ok = transfer.status == 'completed' or transfer.finalized_at %}
+  {% set minute_hint = finalized_ok %}
+  {% set archive_ready = finalized_ok and ledger_ok %}
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if finalized_ok %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Transfer Status: {% if finalized_ok %}Finalized{% else %}Pending{% endif %}
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if ledger_ok %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Ledger Posted: {% if ledger_ok %}Yes{% else %}No{% endif %} ({{ ledger_count }})
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if minute_hint %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Minute Generated: {% if minute_hint %}Expected / Verify{% else %}Pending{% endif %}
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:#eef2ff;">
+      Execution Event: Transfer-Linked Review
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if archive_ready %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Archive Readiness: {% if archive_ready %}Ready for Review{% else %}Pending{% endif %}
+    </span>
+  </div>
+
+  <p style="margin-bottom:0; margin-top:12px; font-size:0.95em;">
+    This panel summarizes the transfer execution chain: finalization, ledger posting, governance minute expectation,
+    execution-event review, and archive readiness.
+  </p>
+</div>
+
     <p><strong>Status:</strong> {{ transfer.status }}</p>
     <p><strong>Mode:</strong> {{ transfer.mode }}</p>
     <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
