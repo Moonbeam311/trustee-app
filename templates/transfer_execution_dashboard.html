@@ -5,6 +5,36 @@
 <div class="trust-panel" style="{% if packet_readiness.blocked %}background:#fef2f2; border-color:#fca5a5;{% elif packet_readiness.ready %}background:#f0fdf4; border-color:#86efac;{% else %}background:#fff7ed; border-color:#fed7aa;{% endif %}">
   <h2 class="trust-panel-heading">Execution Handoff Status</h2>
 
+{# INT-25A: archive handoff correction summary panel #}
+{% if archive_handoff_correction_summary is defined %}
+<div style="margin:18px 0; padding:18px; border:1px solid rgba(240,195,109,0.9); border-radius:14px; background:#fff8e6;">
+  <h3 style="margin-top:0;">Archive Handoff Correction Summary</h3>
+  <p style="margin-top:0;">
+    Dashboard-level view of correction activity tied to prepared archive handoff records.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
+    <a class="transfer-status-badge {% if active_transfer_filter == 'handoff_corrections_present' %}warning{% else %}muted{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=handoff_corrections_present">
+      Transfers With Corrections: {{ archive_handoff_correction_summary.transfers_with_corrections }}
+    </a>
+
+    <a class="transfer-status-badge {% if active_transfer_filter == 'handoff_no_corrections' %}ready{% else %}muted{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=handoff_no_corrections">
+      Transfers Without Corrections: {{ archive_handoff_correction_summary.transfers_without_corrections }}
+    </a>
+
+    <span class="transfer-status-badge {% if archive_handoff_correction_summary.latest_corrected_handoff_records == 0 %}ready{% else %}warning{% endif %}">
+      Latest Corrected Handoff Records: {{ archive_handoff_correction_summary.latest_corrected_handoff_records }}
+    </span>
+
+    <span class="transfer-status-badge {% if archive_handoff_correction_summary.correction_review_needed == 0 %}ready{% else %}warning{% endif %}">
+      Correction Review Needed: {{ archive_handoff_correction_summary.correction_review_needed }}
+    </span>
+  </div>
+</div>
+{% endif %}
+
 {# INT-21A: archive handoff summary panel #}
 {% if archive_handoff_summary is defined %}
 <div style="margin:18px 0; padding:18px; border:1px solid rgba(122,155,105,0.75); border-radius:14px; background:#f8fff4;">

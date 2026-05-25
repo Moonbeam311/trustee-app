@@ -11574,10 +11574,19 @@ def trust_execution_dashboard(trust_id):
         "blocked_before_handoff": 0,
     }
 
+    # === INT-25A: archive handoff correction summary metrics ===
+    archive_handoff_correction_summary = {
+        "transfers_with_corrections": 0,
+        "transfers_without_corrections": 0,
+        "latest_corrected_handoff_records": 0,
+        "correction_review_needed": 0,
+    }
+
     for t in transfers:
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
         minute_count = transfer_minute_counts.get(t.transfer_id, 0)
         handoff_count = transfer_archive_handoff_counts.get(t.transfer_id, 0)
+        correction_count = transfer_archive_handoff_correction_counts.get(t.transfer_id, 0) if "transfer_archive_handoff_correction_counts" in locals() else 0
 
         finalized_ok = (getattr(t, "status", "") == "completed") or bool(getattr(t, "finalized_at", None))
         ledger_ok = ledger_count > 0
@@ -11595,6 +11604,13 @@ def trust_execution_dashboard(trust_id):
 
         if not archive_ready:
             archive_handoff_summary["blocked_before_handoff"] += 1
+
+        if correction_count > 0:
+            archive_handoff_correction_summary["transfers_with_corrections"] += 1
+            archive_handoff_correction_summary["latest_corrected_handoff_records"] += 1
+            archive_handoff_correction_summary["correction_review_needed"] += 1
+        elif handoff_prepared:
+            archive_handoff_correction_summary["transfers_without_corrections"] += 1
 
 
     def transfer_matches_filter(t):
@@ -11683,6 +11699,7 @@ def trust_execution_dashboard(trust_id):
           transfer_archive_handoff_latest_ids=transfer_archive_handoff_latest_ids,
           transfer_archive_handoff_correction_counts=transfer_archive_handoff_correction_counts,
           archive_handoff_summary=archive_handoff_summary,
+          archive_handoff_correction_summary=archive_handoff_correction_summary,
           active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),
     )
