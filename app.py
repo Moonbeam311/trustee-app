@@ -11531,6 +11531,36 @@ def trust_execution_dashboard(trust_id):
         print("⚠️ INT-20C transfer archive handoff count failed:", e)
         transfer_archive_handoff_counts = {}
 
+    # === INT-21A: archive handoff summary panel metrics ===
+    archive_handoff_summary = {
+        "handoff_prepared": 0,
+        "handoff_not_created": 0,
+        "archive_ready_not_handed_off": 0,
+        "blocked_before_handoff": 0,
+    }
+
+    for t in transfers:
+        ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
+        minute_count = transfer_minute_counts.get(t.transfer_id, 0)
+        handoff_count = transfer_archive_handoff_counts.get(t.transfer_id, 0)
+
+        finalized_ok = (getattr(t, "status", "") == "completed") or bool(getattr(t, "finalized_at", None))
+        ledger_ok = ledger_count > 0
+        minute_ok = minute_count > 0
+        archive_ready = finalized_ok and ledger_ok and minute_ok
+        handoff_prepared = handoff_count > 0
+
+        if handoff_prepared:
+            archive_handoff_summary["handoff_prepared"] += 1
+        else:
+            archive_handoff_summary["handoff_not_created"] += 1
+
+        if archive_ready and not handoff_prepared:
+            archive_handoff_summary["archive_ready_not_handed_off"] += 1
+
+        if not archive_ready:
+            archive_handoff_summary["blocked_before_handoff"] += 1
+
 
     def transfer_matches_filter(t):
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
@@ -11601,6 +11631,7 @@ def trust_execution_dashboard(trust_id):
           execution_chain_health=execution_chain_health,
           transfer_minute_counts=transfer_minute_counts,
           transfer_archive_handoff_counts=transfer_archive_handoff_counts,
+          archive_handoff_summary=archive_handoff_summary,
           active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),
     )

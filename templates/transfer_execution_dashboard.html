@@ -5,6 +5,36 @@
 <div class="trust-panel" style="{% if packet_readiness.blocked %}background:#fef2f2; border-color:#fca5a5;{% elif packet_readiness.ready %}background:#f0fdf4; border-color:#86efac;{% else %}background:#fff7ed; border-color:#fed7aa;{% endif %}">
   <h2 class="trust-panel-heading">Execution Handoff Status</h2>
 
+{# INT-21A: archive handoff summary panel #}
+{% if archive_handoff_summary is defined %}
+<div style="margin:18px 0; padding:18px; border:1px solid rgba(122,155,105,0.75); border-radius:14px; background:#f8fff4;">
+  <h3 style="margin-top:0;">Archive Handoff Summary</h3>
+  <p style="margin-top:0;">
+    Dashboard-level view of transfer archive handoff preparation after finalization, ledger posting, and minute verification.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
+    <a class="transfer-status-badge {% if active_transfer_filter == 'archive_handoff_prepared' %}ready{% else %}muted{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_handoff_prepared">
+      Handoff Prepared: {{ archive_handoff_summary.handoff_prepared }}
+    </a>
+
+    <a class="transfer-status-badge {% if active_transfer_filter == 'archive_handoff_not_created' %}warning{% else %}muted{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_handoff_not_created">
+      Handoff Not Created: {{ archive_handoff_summary.handoff_not_created }}
+    </a>
+
+    <span class="transfer-status-badge {% if archive_handoff_summary.archive_ready_not_handed_off == 0 %}ready{% else %}warning{% endif %}">
+      Archive Ready / No Handoff: {{ archive_handoff_summary.archive_ready_not_handed_off }}
+    </span>
+
+    <span class="transfer-status-badge {% if archive_handoff_summary.blocked_before_handoff == 0 %}ready{% else %}warning{% endif %}">
+      Blocked Before Handoff: {{ archive_handoff_summary.blocked_before_handoff }}
+    </span>
+  </div>
+</div>
+{% endif %}
+
 {# INT-18G: dashboard execution chain health panel #}
 {% if execution_chain_health is defined %}
 <div style="margin:18px 0; padding:18px; border:1px solid rgba(214,194,138,0.75); border-radius:14px; background:#fffaf0;">
