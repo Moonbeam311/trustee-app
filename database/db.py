@@ -4444,6 +4444,36 @@ def ensure_final_record_archive_table():
     conn.commit()
     conn.close()
 
+def ensure_archive_export_history_table():
+    """
+    Archive export/download history log.
+    Tracks generated TXT, CSV, PDF, and ZIP exports for fiduciary audit continuity.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS archive_export_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            export_id TEXT UNIQUE,
+            export_type TEXT,
+            transfer_id TEXT,
+            trust_id TEXT,
+            firm_id TEXT,
+            generated_by TEXT,
+            generated_at TEXT,
+            export_scope TEXT,
+            export_hash TEXT,
+            filename TEXT,
+            route_path TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def ensure_transfer_archive_handoff_correction_table():
     """
     Transfer archive handoff correction records.
