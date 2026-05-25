@@ -16954,62 +16954,51 @@ def admin_diag_execution_record(record_id):
 
 
 
+
 @app.route("/admin/repair/int-lifecycle-tables")
 def admin_repair_int_lifecycle_tables():
     """
     Admin repair route for hosted Railway DB after volume reset.
     Creates missing INT lifecycle tables without overwriting records.
+    Missing helper functions are reported instead of crashing the route.
     """
     if session.get("role") != "Admin":
         return render_template("access_denied.html", reason="Admin role required."), 403
 
-    from database.db import (
-        ensure_identity_intake_table,
-        ensure_asset_intake_table,
-        ensure_document_intake_table,
-        ensure_intake_orchestration_table,
-        ensure_draft_session_table,
-        ensure_guided_draft_workspace_table,
-        ensure_draft_variable_binding_table,
-        ensure_dynamic_draft_preview_table,
-        ensure_section_review_gate_table,
-        ensure_controlled_export_prep_table,
-        ensure_controlled_docx_export_table,
-        ensure_docx_verification_gate_table,
-        ensure_controlled_pdf_export_table,
-        ensure_pdf_execution_approval_table,
-        ensure_execution_packet_prep_table,
-        ensure_execution_event_log_table,
-        ensure_final_record_archive_table,
-    )
+    from database import db as db_module
 
     repair_steps = [
-        ("identity_intake", ensure_identity_intake_table),
-        ("asset_intake", ensure_asset_intake_table),
-        ("document_intake", ensure_document_intake_table),
-        ("intake_orchestration", ensure_intake_orchestration_table),
-        ("draft_session", ensure_draft_session_table),
-        ("guided_draft_workspace", ensure_guided_draft_workspace_table),
-        ("draft_variable_binding", ensure_draft_variable_binding_table),
-        ("dynamic_draft_preview", ensure_dynamic_draft_preview_table),
-        ("section_review_gate", ensure_section_review_gate_table),
-        ("controlled_export_prep", ensure_controlled_export_prep_table),
-        ("controlled_docx_exports", ensure_controlled_docx_export_table),
-        ("docx_verification_gate", ensure_docx_verification_gate_table),
-        ("controlled_pdf_exports", ensure_controlled_pdf_export_table),
-        ("pdf_execution_approval", ensure_pdf_execution_approval_table),
-        ("execution_packet_prep", ensure_execution_packet_prep_table),
-        ("execution_event_log", ensure_execution_event_log_table),
-        ("final_record_archive", ensure_final_record_archive_table),
+        ("identity_intake", "ensure_identity_intake_table"),
+        ("asset_intake", "ensure_asset_intake_table"),
+        ("document_intake", "ensure_document_intake_table"),
+        ("intake_orchestration", "ensure_intake_orchestration_table"),
+        ("draft_session", "ensure_draft_session_table"),
+        ("guided_draft_workspace", "ensure_guided_draft_workspace_table"),
+        ("draft_variable_binding", "ensure_draft_variable_binding_table"),
+        ("dynamic_draft_preview", "ensure_dynamic_draft_preview_table"),
+        ("section_review_gate", "ensure_section_review_gate_table"),
+        ("controlled_export_prep", "ensure_controlled_export_prep_table"),
+        ("controlled_docx_exports", "ensure_controlled_docx_export_table"),
+        ("docx_verification_gate", "ensure_docx_verification_gate_table"),
+        ("controlled_pdf_exports", "ensure_controlled_pdf_export_table"),
+        ("pdf_execution_approval", "ensure_pdf_execution_approval_table"),
+        ("execution_packet_prep", "ensure_execution_packet_prep_table"),
+        ("execution_event_log", "ensure_execution_event_log_table"),
+        ("final_record_archive", "ensure_final_record_archive_table"),
     ]
 
     results = []
-    for name, fn in repair_steps:
+    for table_name, function_name in repair_steps:
+        fn = getattr(db_module, function_name, None)
+        if not callable(fn):
+            results.append((table_name, f"MISSING HELPER: {function_name}"))
+            continue
+
         try:
             fn()
-            results.append((name, "OK"))
+            results.append((table_name, "OK"))
         except Exception as e:
-            results.append((name, f"ERROR: {e}"))
+            results.append((table_name, f"ERROR: {e}"))
 
     body = ["<h1>INT Lifecycle Table Repair</h1>"]
     body.append(f"<p><strong>Firm:</strong> {session.get('firm_id')}</p>")
@@ -17018,9 +17007,11 @@ def admin_repair_int_lifecycle_tables():
     for name, status in results:
         body.append(f"<li><strong>{name}</strong>: {status}</li>")
     body.append("</ul>")
+    body.append('<p><a href="/admin">Back to Admin</a></p>')
     body.append('<p><a href="/intake/identity">Start INT Intake</a></p>')
     body.append('<p><a href="/intake/dashboard">Open Intake Dashboard</a></p>')
     return "\n".join(body)
+
 
 
 if __name__ == "__main__":
