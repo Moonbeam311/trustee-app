@@ -127,6 +127,14 @@
   {% for record in event_records %}
     <div class="card">
       <h3>{{ record["event_id"] }}</h3>
+
+      {% if loop.first and record["finalization_gate"] == "ready_to_finalize" %}
+        <p><strong>Badge:</strong> LATEST VALID — READY TO FINALIZE</p>
+      {% elif record["finalization_gate"] == "ready_to_finalize" %}
+        <p><strong>Badge:</strong> VALID — SUPERSEDED BY NEWER RECORD IF ONE EXISTS</p>
+      {% else %}
+        <p><strong>Badge:</strong> BLOCKED / NOT READY</p>
+      {% endif %}
       <p><strong>Signer:</strong> {{ record["signer_name"] }}</p>
       <p><strong>Signature Completed:</strong> {{ record["signature_completed"] }}</p>
       <p><strong>Witness Completed:</strong> {{ record["witness_completed"] }}</p>

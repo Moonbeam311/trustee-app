@@ -83,6 +83,14 @@
   {% for record in final_records %}
     <div class="card">
       <h3>{{ record["final_record_id"] }}</h3>
+
+      {% if loop.first and record["archive_status"] == "archived" %}
+        <p><strong>Badge:</strong> ACTIVE FINAL ARCHIVE</p>
+      {% elif record["archive_status"] == "archived" %}
+        <p><strong>Badge:</strong> DUPLICATE / SUPERSEDED FINAL ARCHIVE</p>
+      {% else %}
+        <p><strong>Badge:</strong> NOT ARCHIVED</p>
+      {% endif %}
       <p><strong>Seal Reference:</strong> {{ record["seal_reference"] }}</p>
       <p><strong>Final Status:</strong> {{ record["final_status"] }}</p>
       <p><strong>Archive Status:</strong> {{ record["archive_status"] }}</p>

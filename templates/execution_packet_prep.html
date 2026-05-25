@@ -129,6 +129,14 @@
   {% for record in packet_records %}
     <div class="card">
       <h3>{{ record["packet_id"] }}</h3>
+
+      {% if loop.first and record["execution_readiness"] == "ready_for_signing" %}
+        <p><strong>Badge:</strong> LATEST VALID — READY FOR SIGNING</p>
+      {% elif record["execution_readiness"] == "ready_for_signing" %}
+        <p><strong>Badge:</strong> VALID — SUPERSEDED BY NEWER RECORD IF ONE EXISTS</p>
+      {% else %}
+        <p><strong>Badge:</strong> BLOCKED / NOT READY</p>
+      {% endif %}
       <p><strong>Signer:</strong> {{ record["signer_name"] }}</p>
       <p><strong>Capacity:</strong> {{ record["signer_capacity"] }}</p>
       <p><strong>Witness Required:</strong> {{ record["witness_required"] }}</p>

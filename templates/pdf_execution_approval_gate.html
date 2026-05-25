@@ -78,6 +78,14 @@
   {% for record in approval_records %}
     <div class="card">
       <h3>{{ record["approval_id"] }}</h3>
+
+      {% if loop.first and record["execution_gate"] == "ready_for_execution" %}
+        <p><strong>Badge:</strong> LATEST VALID — READY FOR EXECUTION</p>
+      {% elif record["execution_gate"] == "ready_for_execution" %}
+        <p><strong>Badge:</strong> VALID — SUPERSEDED BY NEWER RECORD IF ONE EXISTS</p>
+      {% else %}
+        <p><strong>Badge:</strong> BLOCKED / NOT READY</p>
+      {% endif %}
       <p><strong>Reviewer:</strong> {{ record["reviewer_name"] }}</p>
       <p><strong>Review Status:</strong> {{ record["review_status"] }}</p>
       <p><strong>File Exists:</strong> {{ record["file_exists_status"] }}</p>
