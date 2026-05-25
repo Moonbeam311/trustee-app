@@ -12404,6 +12404,65 @@ def transfer_external_tracking(transfer_id):
     return render_template("transfer_external_tracking.html", transfer=transfer)
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>/correction/<correction_id>")
+def transfer_archive_handoff_correction_detail(transfer_id, handoff_id, correction_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import sqlite3
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE handoff_id = ? AND transfer_id = ? AND firm_id = ?
+    """, (handoff_id, transfer.transfer_id, firm_id))
+
+    handoff_record = cur.fetchone()
+
+    if not handoff_record:
+        conn.close()
+        flash("Transfer archive handoff record not found.", "warning")
+        return redirect(url_for("transfer_archive_handoff", transfer_id=transfer.transfer_id))
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff_corrections
+        WHERE correction_id = ? AND handoff_id = ? AND transfer_id = ? AND firm_id = ?
+    """, (correction_id, handoff_record["handoff_id"], transfer.transfer_id, firm_id))
+
+    correction_record = cur.fetchone()
+    conn.close()
+
+    if not correction_record:
+        flash("Archive handoff correction record not found.", "warning")
+        return redirect(url_for(
+            "transfer_archive_handoff_correction",
+            transfer_id=transfer.transfer_id,
+            handoff_id=handoff_record["handoff_id"]
+        ))
+
+    return render_template(
+        "transfer_archive_handoff_correction_detail.html",
+        transfer=transfer,
+        handoff_record=handoff_record,
+        correction_record=correction_record,
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>/correction", methods=["GET", "POST"])
 @csrf.exempt
 def transfer_archive_handoff_correction(transfer_id, handoff_id):

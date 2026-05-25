@@ -82,7 +82,12 @@
   {% if correction_records %}
     {% for record in correction_records %}
       <div style="padding:12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
-        <p><strong>Correction ID:</strong> {{ record["correction_id"] }}</p>
+        {# INT-26A: correction record detail link #}
+        <p><strong>Correction ID:</strong>
+          <a href="{{ url_for('transfer_archive_handoff_correction_detail', transfer_id=transfer.transfer_id, handoff_id=handoff_record['handoff_id'], correction_id=record['correction_id']) }}">
+            {{ record["correction_id"] }}
+          </a>
+        </p>
         <p><strong>Corrected Archive Status:</strong> {{ record["corrected_archive_status"] }}</p>
         <p><strong>Corrected Custody Classification:</strong> {{ record["corrected_custody_classification"] }}</p>
         <p><strong>Corrected Seal Reference:</strong> {{ record["corrected_seal_reference"] }}</p>

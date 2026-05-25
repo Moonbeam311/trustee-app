@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Archive Handoff Correction Detail</h1>
+
+<p>
+  <a href="{{ url_for('transfer_archive_handoff_correction', transfer_id=transfer.transfer_id, handoff_id=handoff_record['handoff_id']) }}">Back to Correction Records</a>
+  |
+  <a href="{{ url_for('transfer_archive_handoff_detail', transfer_id=transfer.transfer_id, handoff_id=handoff_record['handoff_id']) }}">Back to Handoff Detail</a>
+  |
+  <a href="{{ url_for('transfer_archive_handoff', transfer_id=transfer.transfer_id) }}">Back to Archive Handoff</a>
+</p>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Correction Identity</h2>
+
+  <p><strong>Correction ID:</strong> {{ correction_record["correction_id"] }}</p>
+  <p><strong>Handoff ID:</strong> {{ correction_record["handoff_id"] }}</p>
+  <p><strong>Transfer ID:</strong> {{ correction_record["transfer_id"] }}</p>
+  <p><strong>Trust ID:</strong> {{ correction_record["trust_id"] }}</p>
+  <p><strong>Firm ID:</strong> {{ correction_record["firm_id"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #f0c36d; border-radius:12px; margin-bottom:16px; background:#fff8e6;">
+  <h2>Correction Values</h2>
+
+  <p><strong>Corrected Archive Status:</strong> {{ correction_record["corrected_archive_status"] }}</p>
+  <p><strong>Corrected Custody Classification:</strong> {{ correction_record["corrected_custody_classification"] }}</p>
+  <p><strong>Corrected Seal Reference:</strong> {{ correction_record["corrected_seal_reference"] }}</p>
+  <p><strong>Corrected Handoff Capacity:</strong> {{ correction_record["corrected_handoff_capacity"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d6c28a; border-radius:12px; margin-bottom:16px; background:#fffaf0;">
+  <h2>Original Handoff Snapshot</h2>
+
+  <p><strong>Original Archive Status:</strong> {{ handoff_record["archive_status"] }}</p>
+  <p><strong>Original Custody Classification:</strong> {{ handoff_record["custody_classification"] }}</p>
+  <p><strong>Original Seal Reference:</strong> {{ handoff_record["seal_reference"] }}</p>
+  <p><strong>Original Handoff Capacity:</strong> {{ handoff_record["handoff_capacity"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Correction Reason & Notes</h2>
+
+  <p><strong>Correction Reason:</strong> {{ correction_record["correction_reason"] }}</p>
+  <p><strong>Corrected Archive Notes:</strong> {{ correction_record["corrected_archive_notes"] or "No corrected archive notes recorded." }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Correction Authority</h2>
+
+  <p><strong>Corrected By:</strong> {{ correction_record["corrected_by"] }}</p>
+  <p><strong>Correction Capacity:</strong> {{ correction_record["correction_capacity"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px;">
+  <h2>System Timestamps</h2>
+
+  <p><strong>Created At:</strong> {{ correction_record["created_at"] }}</p>
+  <p><strong>Updated At:</strong> {{ correction_record["updated_at"] }}</p>
+</div>
+
+{% endblock %}
