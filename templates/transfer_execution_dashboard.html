@@ -552,6 +552,12 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
                 View Audit Trail
               </a>
 
+              {# INT-30C: dashboard row archive handoff audit TXT export link #}
+              <a class="transfer-status-badge muted"
+                 href="{{ url_for('transfer_archive_handoff_audit_export_txt', transfer_id=t.transfer_id) }}">
+                Export Audit TXT
+              </a>
+
               {# INT-24A: dashboard row correction visibility badge #}
               {% set correction_count = transfer_archive_handoff_correction_counts.get(t.transfer_id, 0) if transfer_archive_handoff_correction_counts else 0 %}
               <span class="transfer-status-badge {% if correction_count > 0 %}warning{% else %}ready{% endif %}">
