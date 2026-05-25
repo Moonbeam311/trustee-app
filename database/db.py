@@ -4444,6 +4444,44 @@ def ensure_final_record_archive_table():
     conn.commit()
     conn.close()
 
+def ensure_transfer_archive_handoff_table():
+    """
+    Transfer-level archive handoff record.
+    Captures the formal handoff from transfer execution readiness into archive custody.
+    This is separate from the intake/document final_record_archive lifecycle table.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS transfer_archive_handoff (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            handoff_id TEXT UNIQUE,
+            transfer_id TEXT,
+            trust_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            archive_status TEXT DEFAULT 'handoff_prepared',
+            custody_classification TEXT DEFAULT 'internal_record',
+            seal_reference TEXT,
+            handoff_by TEXT,
+            handoff_capacity TEXT,
+
+            ledger_verified TEXT DEFAULT 'unknown',
+            minute_verified TEXT DEFAULT 'unknown',
+            finalization_verified TEXT DEFAULT 'unknown',
+
+            archive_notes TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
 def build_lifecycle_master_ledger(intake_id, firm_id="FIRM-001"):
     """
     Lifecycle Master Ledger.

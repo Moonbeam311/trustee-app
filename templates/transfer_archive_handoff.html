@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Transfer Archive Handoff</h1>
+
+<p>
+  <a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Transfer Detail</a>
+  |
+  <a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Execution Dashboard</a>
+</p>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Archive Handoff Readiness</h2>
+
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+  <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <span class="transfer-status-badge {% if finalized_ok %}ready{% else %}warning{% endif %}">
+      Finalization: {% if finalized_ok %}Verified{% else %}Missing{% endif %}
+    </span>
+
+    <span class="transfer-status-badge {% if ledger_ok %}ready{% else %}warning{% endif %}">
+      Ledger: {% if ledger_ok %}Verified{% else %}Missing{% endif %}
+    </span>
+
+    <span class="transfer-status-badge {% if minute_ok %}ready{% else %}warning{% endif %}">
+      Minute: {% if minute_ok %}Verified{% else %}Missing{% endif %}
+    </span>
+
+    <span class="transfer-status-badge {% if handoff_ready %}ready{% else %}warning{% endif %}">
+      Handoff Gate: {% if handoff_ready %}Ready{% else %}Blocked{% endif %}
+    </span>
+  </div>
+</div>
+
+{% if handoff_ready %}
+  <div class="card" style="padding:16px; border:1px solid #b6c6a8; border-radius:12px; margin-bottom:16px; background:#f8fff4;">
+    <h2>Create Archive Handoff Record</h2>
+
+    <form method="POST">
+      <label>Archive Status</label><br>
+      <select name="archive_status">
+        <option value="handoff_prepared">Handoff Prepared</option>
+        <option value="sealed_transfer_record">Sealed Transfer Record</option>
+        <option value="archive_review_pending">Archive Review Pending</option>
+      </select>
+
+      <br><br>
+
+      <label>Custody Classification</label><br>
+      <select name="custody_classification">
+        <option value="internal_record">Internal Record</option>
+        <option value="fiduciary_record">Fiduciary Record</option>
+        <option value="protected_heritage_property">Protected Heritage Property</option>
+        <option value="family_stewardship_property">Family Stewardship Property</option>
+      </select>
+
+      <br><br>
+
+      <label>Seal Reference</label><br>
+      <input type="text" name="seal_reference" placeholder="Auto-generated if blank">
+
+      <br><br>
+
+      <label>Handoff Capacity</label><br>
+      <input type="text" name="handoff_capacity" value="{{ transfer.current_capacity or 'fiduciary' }}">
+
+      <br><br>
+
+      <label>Archive Notes</label><br>
+      <textarea name="archive_notes" rows="5" style="width:100%;" placeholder="Record archive custody, seal, location, chain-of-custody, or handoff notes."></textarea>
+
+      <br><br>
+
+      <button type="submit">Create Archive Handoff Record</button>
+    </form>
+  </div>
+{% else %}
+  <div class="card" style="padding:16px; border:1px solid #f0c36d; border-radius:12px; margin-bottom:16px; background:#fff8e6;">
+    <h2>Handoff Blocked</h2>
+    <p>This transfer cannot be handed off to archive until all required items are verified:</p>
+    <ul>
+      {% if not finalized_ok %}<li>Transfer finalization is missing.</li>{% endif %}
+      {% if not ledger_ok %}<li>Ledger posting is missing.</li>{% endif %}
+      {% if not minute_ok %}<li>Trust minute verification is missing.</li>{% endif %}
+    </ul>
+  </div>
+{% endif %}
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px;">
+  <h2>Existing Archive Handoff Records</h2>
+
+  {% if handoff_records %}
+    {% for record in handoff_records %}
+      <div style="padding:12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
+        <p><strong>Handoff ID:</strong> {{ record["handoff_id"] }}</p>
+        <p><strong>Status:</strong> {{ record["archive_status"] }}</p>
+        <p><strong>Custody Classification:</strong> {{ record["custody_classification"] }}</p>
+        <p><strong>Seal Reference:</strong> {{ record["seal_reference"] }}</p>
+        <p><strong>Handoff By:</strong> {{ record["handoff_by"] }}</p>
+        <p><strong>Capacity:</strong> {{ record["handoff_capacity"] }}</p>
+        <p><strong>Finalization Verified:</strong> {{ record["finalization_verified"] }}</p>
+        <p><strong>Ledger Verified:</strong> {{ record["ledger_verified"] }}</p>
+        <p><strong>Minute Verified:</strong> {{ record["minute_verified"] }}</p>
+        <p><strong>Notes:</strong> {{ record["archive_notes"] }}</p>
+        <p><strong>Created:</strong> {{ record["created_at"] }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No transfer archive handoff records have been created yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -12262,6 +12262,156 @@ def transfer_external_tracking(transfer_id):
     return render_template("transfer_external_tracking.html", transfer=transfer)
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff", methods=["GET", "POST"])
+@csrf.exempt
+def transfer_archive_handoff(transfer_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import uuid
+    import sqlite3
+    from database.db import get_connection, ensure_transfer_archive_handoff_table
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+
+    transfer_ledger_records = [
+        row for row in get_ledger_entries_by_trust_id(transfer.trust_id)
+        if transfer.transfer_id in (row["description"] or "")
+    ]
+
+    transfer_minute_records = []
+    try:
+        conn = get_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        cur.execute("PRAGMA table_info(trust_minutes)")
+        minute_cols = [row["name"] for row in cur.fetchall()]
+
+        where_parts = ["trust_id = ?"]
+        params = [transfer.trust_id]
+
+        if "firm_id" in minute_cols:
+            where_parts.append("firm_id = ?")
+            params.append(firm_id)
+
+        searchable_cols = [
+            col for col in ["minute_id", "title", "purpose", "resolutions", "action_items", "notes"]
+            if col in minute_cols
+        ]
+
+        if searchable_cols:
+            minute_like = f"%{transfer.transfer_id}%"
+            search_clause = " OR ".join([f"{col} LIKE ?" for col in searchable_cols])
+            where_parts.append(f"({search_clause})")
+            params.extend([minute_like] * len(searchable_cols))
+
+            order_col = "created_at" if "created_at" in minute_cols else "minute_id"
+
+            cur.execute(f"""
+                SELECT *
+                FROM trust_minutes
+                WHERE {" AND ".join(where_parts)}
+                ORDER BY {order_col} DESC
+            """, params)
+
+            transfer_minute_records = cur.fetchall()
+
+        conn.close()
+
+    except Exception as e:
+        print("⚠️ INT-20A minute lookup failed:", e)
+        transfer_minute_records = []
+
+    finalized_ok = (transfer.status == "completed") or bool(transfer.finalized_at)
+    ledger_ok = len(transfer_ledger_records) > 0
+    minute_ok = len(transfer_minute_records) > 0
+    handoff_ready = finalized_ok and ledger_ok and minute_ok
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        if not handoff_ready:
+            flash("Archive handoff blocked: finalization, ledger, and minute verification are required.", "warning")
+            conn.close()
+            return redirect(url_for("transfer_archive_handoff", transfer_id=transfer.transfer_id))
+
+        handoff_id = "TAH-" + uuid.uuid4().hex[:8].upper()
+        seal_reference = request.form.get("seal_reference") or f"SEAL-{uuid.uuid4().hex[:8].upper()}"
+
+        cur.execute("""
+            INSERT INTO transfer_archive_handoff (
+                handoff_id,
+                transfer_id,
+                trust_id,
+                firm_id,
+                archive_status,
+                custody_classification,
+                seal_reference,
+                handoff_by,
+                handoff_capacity,
+                ledger_verified,
+                minute_verified,
+                finalization_verified,
+                archive_notes
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            handoff_id,
+            transfer.transfer_id,
+            transfer.trust_id,
+            firm_id,
+            request.form.get("archive_status") or "handoff_prepared",
+            request.form.get("custody_classification") or "internal_record",
+            seal_reference,
+            session.get("username") or "system",
+            request.form.get("handoff_capacity") or transfer.current_capacity or "fiduciary",
+            "yes" if ledger_ok else "no",
+            "yes" if minute_ok else "no",
+            "yes" if finalized_ok else "no",
+            request.form.get("archive_notes") or "",
+        ))
+
+        conn.commit()
+
+        log_change(
+            "transfer_archive_handoff",
+            handoff_id,
+            "created_from_transfer_archive_gate",
+            f"Transfer={transfer.transfer_id}; Trust={transfer.trust_id}"
+        )
+
+        flash(f"Transfer archive handoff record {handoff_id} created.", "success")
+        conn.close()
+        return redirect(url_for("transfer_archive_handoff", transfer_id=transfer.transfer_id))
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+
+    handoff_records = cur.fetchall()
+    conn.close()
+
+    return render_template(
+        "transfer_archive_handoff.html",
+        transfer=transfer,
+        transfer_ledger_records=transfer_ledger_records,
+        transfer_minute_records=transfer_minute_records,
+        finalized_ok=finalized_ok,
+        ledger_ok=ledger_ok,
+        minute_ok=minute_ok,
+        handoff_ready=handoff_ready,
+        handoff_records=handoff_records,
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/detail")
 def transfer_detail(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)

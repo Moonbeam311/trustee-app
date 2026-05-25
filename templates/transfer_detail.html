@@ -136,7 +136,7 @@
 
     {# INT-19E: archive handoff action link #}
     <div style="margin-top:14px;">
-      <a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}?transfer_filter=archive_ready"
+      <a href="{{ url_for('transfer_archive_handoff', transfer_id=transfer.transfer_id) }}"
          style="display:inline-block; padding:9px 14px; border-radius:10px; border:1px solid #7a9b69; background:#e8f7ea; color:#1f4d2e; text-decoration:none; font-weight:bold;">
         Prepare Archive Handoff
       </a>
