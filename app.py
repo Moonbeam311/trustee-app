@@ -1090,6 +1090,80 @@ def validate_csrf_token():
     return False
 
 
+def log_archive_export_history(
+    export_type,
+    transfer_id,
+    trust_id,
+    firm_id,
+    generated_by,
+    generated_at,
+    export_scope,
+    export_hash,
+    filename,
+    route_path,
+):
+    """
+    INT-39B: archive export history logging helper.
+    Best-effort logging; export generation should not fail if history logging fails.
+    """
+    try:
+        import hashlib
+        from database.db import get_connection, ensure_archive_export_history_table
+
+        ensure_archive_export_history_table()
+
+        seed = "|".join([
+            str(export_type),
+            str(transfer_id),
+            str(trust_id),
+            str(firm_id),
+            str(generated_by),
+            str(generated_at),
+            str(export_scope),
+            str(export_hash),
+            str(filename),
+            str(route_path),
+        ])
+        export_id = "AEH-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16].upper()
+
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT OR IGNORE INTO archive_export_history (
+                export_id,
+                export_type,
+                transfer_id,
+                trust_id,
+                firm_id,
+                generated_by,
+                generated_at,
+                export_scope,
+                export_hash,
+                filename,
+                route_path
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            export_id,
+            export_type,
+            transfer_id,
+            trust_id,
+            firm_id,
+            generated_by,
+            generated_at,
+            export_scope,
+            export_hash,
+            filename,
+            route_path,
+        ))
+        conn.commit()
+        conn.close()
+        return export_id
+    except Exception as e:
+        print("⚠️ INT-39B archive export history logging failed:", e)
+        return ""
+
+
 def get_transfer_for_active_firm_or_404(transfer_id):
     firm_id = session.get("firm_id") or "FIRM-001"
     transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()
@@ -11569,6 +11643,20 @@ def archive_handoff_export_index_csv(trust_id):
 
     filename = f"archive_handoff_export_index_{trust_id}_{active_export_filter}.csv"
 
+    # === INT-39B: log CSV archive export history ===
+    log_archive_export_history(
+        export_type="CSV",
+        transfer_id="",
+        trust_id=trust_id,
+        firm_id=firm_id,
+        generated_by=generated_by,
+        generated_at=generated_at,
+        export_scope=export_scope,
+        export_hash=export_hash,
+        filename=filename,
+        route_path=f"/trust/{trust_id}/archive-handoff/export-index/export.csv?export_filter={active_export_filter}",
+    )
+
     return Response(
         output.getvalue(),
         mimetype="text/csv",
@@ -13335,6 +13423,20 @@ def transfer_archive_handoff_export_package(transfer_id):
 
     filename = f"archive_export_package_{transfer.transfer_id}.zip"
 
+    # === INT-39B: log ZIP archive export history ===
+    log_archive_export_history(
+        export_type="ZIP",
+        transfer_id=transfer.transfer_id,
+        trust_id=transfer.trust_id,
+        firm_id=firm_id,
+        generated_by=generated_by,
+        generated_at=generated_at,
+        export_scope=package_scope,
+        export_hash=package_hash,
+        filename=filename,
+        route_path=f"/execution/transfers/{transfer.transfer_id}/archive-handoff/export-package.zip",
+    )
+
     return Response(
         zip_buffer.getvalue(),
         mimetype="application/zip",
@@ -13473,22 +13575,54 @@ def transfer_archive_handoff_audit_export_pdf(transfer_id):
     try:
         import weasyprint
         pdf_bytes = weasyprint.HTML(string=html).write_pdf()
+        pdf_filename = f"archive_handoff_audit_trail_{transfer.transfer_id}.pdf"
+
+        # === INT-39B: log PDF archive export history ===
+        log_archive_export_history(
+            export_type="PDF",
+            transfer_id=transfer.transfer_id,
+            trust_id=transfer.trust_id,
+            firm_id=firm_id,
+            generated_by=generated_by,
+            generated_at=generated_at,
+            export_scope=export_scope,
+            export_hash=export_hash,
+            filename=pdf_filename,
+            route_path=f"/execution/transfers/{transfer.transfer_id}/archive-handoff/audit-trail/export.pdf",
+        )
+
         return Response(
             pdf_bytes,
             mimetype="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=archive_handoff_audit_trail_{transfer.transfer_id}.pdf",
+                "Content-Disposition": f"attachment; filename={pdf_filename}",
                 "X-Archive-Export-Hash": export_hash,
                 "X-Archive-Export-Scope": export_scope,
             }
         )
     except Exception:
         # Fallback: return printable HTML if PDF engine is unavailable.
+        html_filename = f"archive_handoff_audit_trail_{transfer.transfer_id}.html"
+
+        # === INT-39B: log PDF archive export history fallback ===
+        log_archive_export_history(
+            export_type="PDF_HTML_FALLBACK",
+            transfer_id=transfer.transfer_id,
+            trust_id=transfer.trust_id,
+            firm_id=firm_id,
+            generated_by=generated_by,
+            generated_at=generated_at,
+            export_scope=export_scope,
+            export_hash=export_hash,
+            filename=html_filename,
+            route_path=f"/execution/transfers/{transfer.transfer_id}/archive-handoff/audit-trail/export.pdf",
+        )
+
         return Response(
             html,
             mimetype="text/html",
             headers={
-                "Content-Disposition": f"inline; filename=archive_handoff_audit_trail_{transfer.transfer_id}.html",
+                "Content-Disposition": f"inline; filename={html_filename}",
                 "X-Archive-Export-Hash": export_hash,
                 "X-Archive-Export-Scope": export_scope,
                 "X-Archive-PDF-Fallback": "html",
@@ -13651,6 +13785,20 @@ def transfer_archive_handoff_audit_export_txt(transfer_id):
 
     body = "\n".join(lines) + "\n"
     filename = f"archive_handoff_audit_trail_{transfer.transfer_id}.txt"
+
+    # === INT-39B: log TXT archive export history ===
+    log_archive_export_history(
+        export_type="TXT",
+        transfer_id=transfer.transfer_id,
+        trust_id=transfer.trust_id,
+        firm_id=firm_id,
+        generated_by=generated_by,
+        generated_at=generated_at,
+        export_scope=export_scope,
+        export_hash=export_hash,
+        filename=filename,
+        route_path=f"/execution/transfers/{transfer.transfer_id}/archive-handoff/audit-trail/export.txt",
+    )
 
     return Response(
         body,
