@@ -11358,6 +11358,171 @@ def trust_accounting_method_settings(trust_id):
     return render_template("trust_accounting_method.html", trust=trust)
 
 
+@app.route("/trust/<trust_id>/archive-handoff/export-index/export.csv")
+def archive_handoff_export_index_csv(trust_id):
+    import csv
+    import io
+    import sqlite3
+    from datetime import datetime
+    from flask import Response
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    active_export_filter = request.args.get("export_filter", "all")
+
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT *
+            FROM transfers
+            WHERE trust_id = ? AND firm_id = ?
+            ORDER BY created_at DESC
+        """, (trust_id, firm_id))
+        transfers = cur.fetchall()
+    except Exception:
+        cur.execute("""
+            SELECT *
+            FROM transfers
+            WHERE trust_id = ?
+            ORDER BY created_at DESC
+        """, (trust_id,))
+        transfers = cur.fetchall()
+
+    export_rows = []
+
+    for transfer in transfers:
+        transfer_id = transfer["transfer_id"] if isinstance(transfer, sqlite3.Row) else getattr(transfer, "transfer_id", "")
+
+        cur.execute("""
+            SELECT COUNT(*) AS count
+            FROM transfer_archive_handoff
+            WHERE transfer_id = ? AND firm_id = ?
+        """, (transfer_id, firm_id))
+        handoff_row = cur.fetchone()
+        handoff_count = handoff_row["count"] if handoff_row else 0
+
+        cur.execute("""
+            SELECT handoff_id
+            FROM transfer_archive_handoff
+            WHERE transfer_id = ? AND firm_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        """, (transfer_id, firm_id))
+        latest_handoff = cur.fetchone()
+        latest_handoff_id = latest_handoff["handoff_id"] if latest_handoff else ""
+
+        correction_count = 0
+        latest_correction_id = ""
+
+        if latest_handoff_id:
+            cur.execute("""
+                SELECT COUNT(*) AS count
+                FROM transfer_archive_handoff_corrections
+                WHERE transfer_id = ? AND handoff_id = ? AND firm_id = ?
+            """, (transfer_id, latest_handoff_id, firm_id))
+            correction_row = cur.fetchone()
+            correction_count = correction_row["count"] if correction_row else 0
+
+            cur.execute("""
+                SELECT correction_id
+                FROM transfer_archive_handoff_corrections
+                WHERE transfer_id = ? AND handoff_id = ? AND firm_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (transfer_id, latest_handoff_id, firm_id))
+            latest_correction = cur.fetchone()
+            latest_correction_id = latest_correction["correction_id"] if latest_correction else ""
+
+        row = {
+            "transfer_id": transfer_id,
+            "trust_id": trust_id,
+            "firm_id": firm_id,
+            "handoff_count": handoff_count,
+            "latest_handoff_id": latest_handoff_id,
+            "correction_count": correction_count,
+            "latest_correction_id": latest_correction_id,
+            "audit_available": handoff_count > 0,
+            "export_available": handoff_count > 0,
+        }
+
+        export_rows.append(row)
+
+    def export_row_matches_filter(row):
+        if active_export_filter == "all":
+            return True
+        if active_export_filter == "audit_available":
+            return bool(row["audit_available"])
+        if active_export_filter == "no_audit_yet":
+            return not bool(row["audit_available"])
+        if active_export_filter == "with_corrections":
+            return row["correction_count"] > 0
+        if active_export_filter == "without_corrections":
+            return row["audit_available"] and row["correction_count"] == 0
+        return True
+
+    filtered_export_rows = [row for row in export_rows if export_row_matches_filter(row)]
+
+    conn.close()
+
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=[
+            "export_generated_utc",
+            "active_export_filter",
+            "trust_id",
+            "firm_id",
+            "transfer_id",
+            "audit_status",
+            "export_status",
+            "correction_status",
+            "handoff_count",
+            "latest_handoff_id",
+            "correction_count",
+            "latest_correction_id",
+        ],
+    )
+    writer.writeheader()
+
+    generated_at = datetime.utcnow().isoformat() + " UTC"
+
+    for row in filtered_export_rows:
+        writer.writerow({
+            "export_generated_utc": generated_at,
+            "active_export_filter": active_export_filter,
+            "trust_id": row["trust_id"],
+            "firm_id": row["firm_id"],
+            "transfer_id": row["transfer_id"],
+            "audit_status": "Audit Available" if row["audit_available"] else "No Audit Yet",
+            "export_status": "Export Ready" if row["export_available"] else "Not Ready",
+            "correction_status": "Corrections Present" if row["correction_count"] > 0 else "Clean",
+            "handoff_count": row["handoff_count"],
+            "latest_handoff_id": row["latest_handoff_id"],
+            "correction_count": row["correction_count"],
+            "latest_correction_id": row["latest_correction_id"],
+        })
+
+    filename = f"archive_handoff_export_index_{trust_id}_{active_export_filter}.csv"
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
 @app.route("/trust/<trust_id>/archive-handoff/export-index")
 def archive_handoff_export_index(trust_id):
     import sqlite3
