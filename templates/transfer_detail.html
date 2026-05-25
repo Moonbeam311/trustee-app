@@ -60,7 +60,8 @@
   {% set ledger_count = transfer_ledger_records|length if transfer_ledger_records else 0 %}
   {% set ledger_ok = ledger_count > 0 %}
   {% set finalized_ok = transfer.status == 'completed' or transfer.finalized_at %}
-  {% set minute_hint = finalized_ok %}
+  {% set minute_count = transfer_minute_records|length if transfer_minute_records is defined and transfer_minute_records else 0 %}
+  {% set minute_ok = minute_count > 0 %}
   {% set archive_ready = finalized_ok and ledger_ok %}
 
   <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
@@ -72,8 +73,9 @@
       Ledger Posted: {% if ledger_ok %}Yes{% else %}No{% endif %} ({{ ledger_count }})
     </span>
 
-    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if minute_hint %}#e8f7ea{% else %}#fff3cd{% endif %};">
-      Minute Generated: {% if minute_hint %}Expected / Verify{% else %}Pending{% endif %}
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if minute_ok %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      {# INT-18E: verified minute status #}
+      Minute Generated: {% if minute_ok %}Yes{% else %}No{% endif %} ({{ minute_count }})
     </span>
 
     <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:#eef2ff;">

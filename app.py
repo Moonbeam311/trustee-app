@@ -12192,6 +12192,56 @@ def transfer_detail(transfer_id):
         if transfer.transfer_id in (row["description"] or "")
     ]
 
+    # === INT-18E: verify real trust-minute records tied to transfer ===
+    transfer_minute_records = []
+    try:
+        import sqlite3
+        from database.db import get_connection
+
+        firm_id = session.get("firm_id", "FIRM-001")
+        minute_like = f"%{transfer.transfer_id}%"
+
+        conn = get_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        cur.execute("PRAGMA table_info(trust_minutes)")
+        minute_cols = [row["name"] for row in cur.fetchall()]
+
+        where_parts = ["trust_id = ?"]
+        params = [transfer.trust_id]
+
+        if "firm_id" in minute_cols:
+            where_parts.append("firm_id = ?")
+            params.append(firm_id)
+
+        searchable_cols = [
+            col for col in ["minute_id", "title", "purpose", "resolutions", "action_items", "notes"]
+            if col in minute_cols
+        ]
+
+        if searchable_cols:
+            search_clause = " OR ".join([f"{col} LIKE ?" for col in searchable_cols])
+            where_parts.append(f"({search_clause})")
+            params.extend([minute_like] * len(searchable_cols))
+
+            order_col = "created_at" if "created_at" in minute_cols else "minute_id"
+
+            cur.execute(f"""
+                SELECT *
+                FROM trust_minutes
+                WHERE {" AND ".join(where_parts)}
+                ORDER BY {order_col} DESC
+            """, params)
+
+            transfer_minute_records = cur.fetchall()
+
+        conn.close()
+
+    except Exception as e:
+        print("⚠️ INT-18E minute verification failed:", e)
+        transfer_minute_records = []
+
     return render_template(
         "transfer_detail.html",
         transfer=transfer,
@@ -12199,6 +12249,7 @@ def transfer_detail(transfer_id):
         actions=actions,
         transfer_proof_records=transfer_proof_records,
         transfer_ledger_records=transfer_ledger_records,
+        transfer_minute_records=transfer_minute_records,
         control_strength=calculate_control_strength(transfer.control_change_status),
     )
 
