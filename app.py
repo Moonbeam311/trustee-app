@@ -11956,6 +11956,41 @@ def transfer_review(transfer_id):
             except Exception as e:
                 print("⚠️ Auto-minute generation failed:", e)
 
+            # === INT-18B: sync finalized transfer into lifecycle orchestration state ===
+            try:
+                from database.db import upsert_intake_orchestration_state
+
+                transfer_intake_id = getattr(transfer, "intake_id", None) or ""
+                transfer_firm_id = session.get("firm_id", "FIRM-001")
+
+                if transfer_intake_id:
+                    upsert_intake_orchestration_state(
+                        intake_id=transfer_intake_id,
+                        firm_id=transfer_firm_id,
+                        execution_status="transfer_finalized",
+                        overall_stage="transfer_finalization",
+                        readiness_label="Transfer Finalized",
+                        next_recommended_action="Confirm ledger posting, review generated trust minute, and proceed to final archive readiness.",
+                        next_route=f"/trust/{transfer.trust_id}/execution-dashboard"
+                    )
+
+                    log_change(
+                        "transfer",
+                        transfer.transfer_id,
+                        "orchestration_synced_from_transfer_finalization",
+                        f"Intake={transfer_intake_id}; Trust={transfer.trust_id}"
+                    )
+                else:
+                    log_change(
+                        "transfer",
+                        transfer.transfer_id,
+                        "orchestration_sync_skipped_no_intake_id",
+                        f"Trust={transfer.trust_id}"
+                    )
+
+            except Exception as e:
+                print("⚠️ INT-18B orchestration sync failed:", e)
+
             return redirect(url_for("trust_execution_dashboard", trust_id=transfer.trust_id))
         else:
             flash(
