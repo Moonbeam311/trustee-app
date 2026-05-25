@@ -12353,6 +12353,113 @@ def transfer_external_tracking(transfer_id):
     return render_template("transfer_external_tracking.html", transfer=transfer)
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>/correction", methods=["GET", "POST"])
+@csrf.exempt
+def transfer_archive_handoff_correction(transfer_id, handoff_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import uuid
+    import sqlite3
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE handoff_id = ? AND transfer_id = ? AND firm_id = ?
+    """, (handoff_id, transfer.transfer_id, firm_id))
+
+    handoff_record = cur.fetchone()
+
+    if not handoff_record:
+        conn.close()
+        flash("Transfer archive handoff record not found.", "warning")
+        return redirect(url_for("transfer_archive_handoff", transfer_id=transfer.transfer_id))
+
+    if request.method == "POST":
+        correction_id = "TAHC-" + uuid.uuid4().hex[:8].upper()
+
+        cur.execute("""
+            INSERT INTO transfer_archive_handoff_corrections (
+                correction_id,
+                handoff_id,
+                transfer_id,
+                trust_id,
+                firm_id,
+                corrected_archive_status,
+                corrected_custody_classification,
+                corrected_seal_reference,
+                corrected_handoff_capacity,
+                corrected_archive_notes,
+                correction_reason,
+                corrected_by,
+                correction_capacity
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            correction_id,
+            handoff_record["handoff_id"],
+            transfer.transfer_id,
+            transfer.trust_id,
+            firm_id,
+            request.form.get("corrected_archive_status") or handoff_record["archive_status"],
+            request.form.get("corrected_custody_classification") or handoff_record["custody_classification"],
+            request.form.get("corrected_seal_reference") or handoff_record["seal_reference"],
+            request.form.get("corrected_handoff_capacity") or handoff_record["handoff_capacity"],
+            request.form.get("corrected_archive_notes") or handoff_record["archive_notes"],
+            request.form.get("correction_reason") or "Correction entered without stated reason.",
+            session.get("username") or "system",
+            request.form.get("correction_capacity") or "fiduciary",
+        ))
+
+        conn.commit()
+
+        log_change(
+            "transfer_archive_handoff_correction",
+            correction_id,
+            "created_for_archive_handoff",
+            f"Handoff={handoff_record['handoff_id']}; Transfer={transfer.transfer_id}; Trust={transfer.trust_id}"
+        )
+
+        flash(f"Archive handoff correction record {correction_id} created.", "success")
+        conn.close()
+        return redirect(url_for(
+            "transfer_archive_handoff_detail",
+            transfer_id=transfer.transfer_id,
+            handoff_id=handoff_record["handoff_id"]
+        ))
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff_corrections
+        WHERE handoff_id = ? AND transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (handoff_record["handoff_id"], transfer.transfer_id, firm_id))
+
+    correction_records = cur.fetchall()
+    conn.close()
+
+    return render_template(
+        "transfer_archive_handoff_correction.html",
+        transfer=transfer,
+        handoff_record=handoff_record,
+        correction_records=correction_records,
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>")
 def transfer_archive_handoff_detail(transfer_id, handoff_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)

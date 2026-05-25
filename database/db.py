@@ -4444,6 +4444,42 @@ def ensure_final_record_archive_table():
     conn.commit()
     conn.close()
 
+def ensure_transfer_archive_handoff_correction_table():
+    """
+    Transfer archive handoff correction records.
+    Preserves the original handoff record and stores amendment/correction history separately.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS transfer_archive_handoff_corrections (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            correction_id TEXT UNIQUE,
+            handoff_id TEXT,
+            transfer_id TEXT,
+            trust_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+
+            corrected_archive_status TEXT,
+            corrected_custody_classification TEXT,
+            corrected_seal_reference TEXT,
+            corrected_handoff_capacity TEXT,
+            corrected_archive_notes TEXT,
+
+            correction_reason TEXT,
+            corrected_by TEXT,
+            correction_capacity TEXT,
+
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
 def ensure_transfer_archive_handoff_table():
     """
     Transfer-level archive handoff record.

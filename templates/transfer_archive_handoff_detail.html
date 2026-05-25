@@ -48,6 +48,17 @@
   </div>
 </div>
 
+{# INT-23A: correction workflow link #}
+<div class="card" style="padding:16px; border:1px solid #f0c36d; border-radius:12px; margin-bottom:16px; background:#fff8e6;">
+  <h2>Correction Workflow</h2>
+  <p>Use this workflow to record amendments or corrections while preserving the original handoff record.</p>
+  <p>
+    <a href="{{ url_for('transfer_archive_handoff_correction', transfer_id=transfer.transfer_id, handoff_id=handoff_record['handoff_id']) }}">
+      Create / View Correction Records
+    </a>
+  </p>
+</div>
+
 <div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
   <h2>Archive Notes</h2>
   <p>{{ handoff_record["archive_notes"] or "No archive notes recorded." }}</p>

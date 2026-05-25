@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Archive Handoff Correction</h1>
+
+<p>
+  <a href="{{ url_for('transfer_archive_handoff_detail', transfer_id=transfer.transfer_id, handoff_id=handoff_record['handoff_id']) }}">Back to Handoff Detail</a>
+  |
+  <a href="{{ url_for('transfer_archive_handoff', transfer_id=transfer.transfer_id) }}">Back to Archive Handoff</a>
+</p>
+
+<div class="card" style="padding:16px; border:1px solid #d6c28a; border-radius:12px; margin-bottom:16px; background:#fffaf0;">
+  <h2>Original Handoff Record</h2>
+
+  <p><strong>Handoff ID:</strong> {{ handoff_record["handoff_id"] }}</p>
+  <p><strong>Archive Status:</strong> {{ handoff_record["archive_status"] }}</p>
+  <p><strong>Custody Classification:</strong> {{ handoff_record["custody_classification"] }}</p>
+  <p><strong>Seal Reference:</strong> {{ handoff_record["seal_reference"] }}</p>
+  <p><strong>Handoff Capacity:</strong> {{ handoff_record["handoff_capacity"] }}</p>
+  <p><strong>Archive Notes:</strong> {{ handoff_record["archive_notes"] }}</p>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #b6c6a8; border-radius:12px; margin-bottom:16px; background:#f8fff4;">
+  <h2>Create Correction Record</h2>
+  <p>This creates a separate correction record. The original handoff record remains preserved.</p>
+
+  <form method="POST">
+    <label>Corrected Archive Status</label><br>
+    <select name="corrected_archive_status">
+      <option value="{{ handoff_record['archive_status'] }}">Keep Current: {{ handoff_record["archive_status"] }}</option>
+      <option value="handoff_prepared">Handoff Prepared</option>
+      <option value="sealed_transfer_record">Sealed Transfer Record</option>
+      <option value="archive_review_pending">Archive Review Pending</option>
+      <option value="correction_entered">Correction Entered</option>
+    </select>
+
+    <br><br>
+
+    <label>Corrected Custody Classification</label><br>
+    <select name="corrected_custody_classification">
+      <option value="{{ handoff_record['custody_classification'] }}">Keep Current: {{ handoff_record["custody_classification"] }}</option>
+      <option value="internal_record">Internal Record</option>
+      <option value="fiduciary_record">Fiduciary Record</option>
+      <option value="protected_heritage_property">Protected Heritage Property</option>
+      <option value="family_stewardship_property">Family Stewardship Property</option>
+    </select>
+
+    <br><br>
+
+    <label>Corrected Seal Reference</label><br>
+    <input type="text" name="corrected_seal_reference" value="{{ handoff_record['seal_reference'] or '' }}">
+
+    <br><br>
+
+    <label>Corrected Handoff Capacity</label><br>
+    <input type="text" name="corrected_handoff_capacity" value="{{ handoff_record['handoff_capacity'] or 'fiduciary' }}">
+
+    <br><br>
+
+    <label>Corrected Archive Notes</label><br>
+    <textarea name="corrected_archive_notes" rows="5" style="width:100%;">{{ handoff_record["archive_notes"] or "" }}</textarea>
+
+    <br><br>
+
+    <label>Correction Reason</label><br>
+    <textarea name="correction_reason" rows="4" style="width:100%;" placeholder="Explain why this correction is being entered."></textarea>
+
+    <br><br>
+
+    <label>Correction Capacity</label><br>
+    <input type="text" name="correction_capacity" value="fiduciary">
+
+    <br><br>
+
+    <button type="submit">Create Correction Record</button>
+  </form>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px;">
+  <h2>Existing Correction Records</h2>
+
+  {% if correction_records %}
+    {% for record in correction_records %}
+      <div style="padding:12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px;">
+        <p><strong>Correction ID:</strong> {{ record["correction_id"] }}</p>
+        <p><strong>Corrected Archive Status:</strong> {{ record["corrected_archive_status"] }}</p>
+        <p><strong>Corrected Custody Classification:</strong> {{ record["corrected_custody_classification"] }}</p>
+        <p><strong>Corrected Seal Reference:</strong> {{ record["corrected_seal_reference"] }}</p>
+        <p><strong>Corrected Capacity:</strong> {{ record["corrected_handoff_capacity"] }}</p>
+        <p><strong>Reason:</strong> {{ record["correction_reason"] }}</p>
+        <p><strong>Corrected By:</strong> {{ record["corrected_by"] }}</p>
+        <p><strong>Correction Capacity:</strong> {{ record["correction_capacity"] }}</p>
+        <p><strong>Created:</strong> {{ record["created_at"] }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No correction records have been created for this handoff.</p>
+  {% endif %}
+</div>
+
+{% endblock %}
