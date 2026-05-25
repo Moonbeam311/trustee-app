@@ -341,6 +341,11 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'needs_attention' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=needs_attention">Needs Attention</a>
 
+        {# INT-20E: main filter badges for archive handoff status #}
+        <a class="transfer-status-badge {% if active_transfer_filter == 'archive_handoff_prepared' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_handoff_prepared">Handoff Prepared</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'archive_handoff_not_created' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_handoff_not_created">Handoff Not Created</a>
+
         <a class="transfer-status-badge {% if active_transfer_filter == 'completed' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=completed">Completed</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'open' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=open">Open</a>

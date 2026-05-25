@@ -11568,6 +11568,15 @@ def trust_execution_dashboard(trust_id):
             return archive_ready
         if active_transfer_filter == "needs_attention":
             return not archive_ready
+
+        # === INT-20E: archive handoff dashboard filters ===
+        handoff_count = transfer_archive_handoff_counts.get(t.transfer_id, 0) if "transfer_archive_handoff_counts" in locals() else 0
+        handoff_prepared = handoff_count > 0
+
+        if active_transfer_filter == "archive_handoff_prepared":
+            return handoff_prepared
+        if active_transfer_filter == "archive_handoff_not_created":
+            return not handoff_prepared
         return True
 
     filtered_transfers = [t for t in transfers if transfer_matches_filter(t)]
