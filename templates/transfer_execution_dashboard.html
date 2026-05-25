@@ -5,6 +5,14 @@
 <div class="trust-panel" style="{% if packet_readiness.blocked %}background:#fef2f2; border-color:#fca5a5;{% elif packet_readiness.ready %}background:#f0fdf4; border-color:#86efac;{% else %}background:#fff7ed; border-color:#fed7aa;{% endif %}">
   <h2 class="trust-panel-heading">Execution Handoff Status</h2>
 
+{# INT-31B: archive handoff export index dashboard link #}
+<div style="margin:12px 0 18px 0;">
+  <a class="transfer-status-badge muted"
+     href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}">
+    Archive Handoff Export Index
+  </a>
+</div>
+
 {# INT-25A: archive handoff correction summary panel #}
 {% if archive_handoff_correction_summary is defined %}
 <div style="margin:18px 0; padding:18px; border:1px solid rgba(240,195,109,0.9); border-radius:14px; background:#fff8e6;">
