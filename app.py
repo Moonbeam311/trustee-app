@@ -11504,6 +11504,7 @@ def trust_execution_dashboard(trust_id):
 
     # === INT-20C: transfer archive handoff counts for dashboard rows ===
     transfer_archive_handoff_counts = {}
+    transfer_archive_handoff_latest_ids = {}
     try:
         import sqlite3
         from database.db import get_connection, ensure_transfer_archive_handoff_table
@@ -11525,11 +11526,24 @@ def trust_execution_dashboard(trust_id):
             row = cur.fetchone()
             transfer_archive_handoff_counts[t.transfer_id] = row["count"] if row else 0
 
+            # === INT-22C: latest archive handoff IDs for dashboard detail links ===
+            cur.execute("""
+                SELECT handoff_id
+                FROM transfer_archive_handoff
+                WHERE transfer_id = ? AND firm_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (t.transfer_id, firm_id))
+
+            latest = cur.fetchone()
+            transfer_archive_handoff_latest_ids[t.transfer_id] = latest["handoff_id"] if latest else ""
+
         conn.close()
 
     except Exception as e:
-        print("⚠️ INT-20C transfer archive handoff count failed:", e)
+        print("⚠️ INT-20C/INT-22C transfer archive handoff lookup failed:", e)
         transfer_archive_handoff_counts = {}
+        transfer_archive_handoff_latest_ids = {}
 
     # === INT-21A: archive handoff summary panel metrics ===
     archive_handoff_summary = {
@@ -11637,6 +11651,7 @@ def trust_execution_dashboard(trust_id):
           execution_chain_health=execution_chain_health,
           transfer_minute_counts=transfer_minute_counts,
           transfer_archive_handoff_counts=transfer_archive_handoff_counts,
+          transfer_archive_handoff_latest_ids=transfer_archive_handoff_latest_ids,
           archive_handoff_summary=archive_handoff_summary,
           active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),

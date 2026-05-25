@@ -499,6 +499,15 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
             <span class="transfer-status-badge {% if handoff_count > 0 %}ready{% elif archive_gate_ready %}warning{% else %}muted{% endif %}">
               Archive Handoff: {% if handoff_count > 0 %}Prepared{% elif archive_gate_ready %}Ready to Prepare{% else %}Not Created{% endif %}
             </span>
+
+            {# INT-22C: dashboard row link to archive handoff detail #}
+            {% set latest_handoff_id = transfer_archive_handoff_latest_ids.get(t.transfer_id, '') if transfer_archive_handoff_latest_ids else '' %}
+            {% if latest_handoff_id %}
+              <a class="transfer-status-badge ready"
+                 href="{{ url_for('transfer_archive_handoff_detail', transfer_id=t.transfer_id, handoff_id=latest_handoff_id) }}">
+                View Handoff Detail
+              </a>
+            {% endif %}
           </div>
 
           <small>
