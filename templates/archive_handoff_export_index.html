@@ -76,6 +76,21 @@
         <p><strong>Correction Records:</strong> {{ row.correction_count }}</p>
         <p><strong>Latest Correction ID:</strong> {{ row.latest_correction_id or "None" }}</p>
 
+        {# INT-33A: archive handoff export index row status badges #}
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin:8px 0 10px 0;">
+          <span class="transfer-status-badge {% if row.audit_available %}ready{% else %}muted{% endif %}">
+            Audit Status: {% if row.audit_available %}Audit Available{% else %}No Audit Yet{% endif %}
+          </span>
+
+          <span class="transfer-status-badge {% if row.export_available %}ready{% else %}muted{% endif %}">
+            Export Status: {% if row.export_available %}Export Ready{% else %}Not Ready{% endif %}
+          </span>
+
+          <span class="transfer-status-badge {% if row.correction_count > 0 %}warning{% else %}ready{% endif %}">
+            Correction Status: {% if row.correction_count > 0 %}Corrections Present{% else %}Clean{% endif %}
+          </span>
+        </div>
+
         <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;">
           <a class="transfer-status-badge muted"
              href="{{ url_for('transfer_detail', transfer_id=row.transfer_id) }}">
