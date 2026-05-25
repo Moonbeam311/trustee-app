@@ -19035,6 +19035,7 @@ def matters_dashboard():
     matters = list_matters()
     return render_template("matters_dashboard.html", matters=matters)
 
+@csrf.exempt
 @app.route("/matters/new", methods=["GET", "POST"])
 def new_matter():
     ensure_matter_tables()
