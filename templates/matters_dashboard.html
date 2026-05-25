@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+    <title>Institutional Matters</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px;}
+        table{width:100%; border-collapse:collapse;}
+        th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left;}
+        .btn{display:inline-block; padding:10px 14px; border:1px solid #444; text-decoration:none; border-radius:8px;}
+    </style>
+</head>
+<body>
+    <h1>Institutional Matters</h1>
+    <p>Master case/governance containers for trusts, transfers, fiduciary actions, archives, and institutional memory.</p>
+
+    <p><a class="btn" href="/matters/new">+ New Matter</a></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Matter ID</th>
+                <th>Title</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Governance</th>
+                <th>Risk</th>
+                <th>Archive</th>
+                <th>Updated</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for m in matters %}
+            <tr>
+                <td><a href="/matters/{{ m[0] }}">{{ m[0] }}</a></td>
+                <td>{{ m[1] }}</td>
+                <td>{{ m[2] }}</td>
+                <td>{{ m[3] }}</td>
+                <td>{{ m[4] }}</td>
+                <td>{{ m[5] }}</td>
+                <td>{{ m[6] }}</td>
+                <td>{{ m[7] }}</td>
+                <td>{{ m[8] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

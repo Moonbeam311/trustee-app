@@ -19019,6 +19019,39 @@ def admin_repair_int_lifecycle_tables():
 
 
 
+
+
+# ---- IC-1 Institutional Matter / Case Engine ----
+from services.services_matters import (
+    ensure_matter_tables,
+    create_matter,
+    list_matters,
+    get_matter,
+)
+
+@app.route("/matters")
+def matters_dashboard():
+    ensure_matter_tables()
+    matters = list_matters()
+    return render_template("matters_dashboard.html", matters=matters)
+
+@app.route("/matters/new", methods=["GET", "POST"])
+def new_matter():
+    ensure_matter_tables()
+    if request.method == "POST":
+        matter_id = create_matter(request.form)
+        flash(f"Matter {matter_id} created.", "success")
+        return redirect(url_for("matter_detail", matter_id=matter_id))
+    return render_template("matter_form.html")
+
+@app.route("/matters/<matter_id>")
+def matter_detail(matter_id):
+    ensure_matter_tables()
+    matter, events = get_matter(matter_id)
+    return render_template("matter_detail.html", matter=matter, events=events)
+# ---- END IC-1 Institutional Matter / Case Engine ----
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 

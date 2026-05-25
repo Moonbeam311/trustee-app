@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+    <title>Matter Detail</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px;}
+        .card{border:1px solid #ddd; border-radius:10px; padding:18px; margin-bottom:20px;}
+        table{width:100%; border-collapse:collapse;}
+        th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left;}
+    </style>
+</head>
+<body>
+    <p><a href="/matters">← Back to Matters</a></p>
+
+    {% if matter %}
+    <h1>{{ matter[3] }}</h1>
+
+    <div class="card">
+        <p><b>Matter ID:</b> {{ matter[1] }}</p>
+        <p><b>Type:</b> {{ matter[4] }}</p>
+        <p><b>Status:</b> {{ matter[5] }}</p>
+        <p><b>Priority:</b> {{ matter[6] }}</p>
+        <p><b>Governance State:</b> {{ matter[9] }}</p>
+        <p><b>Risk Level:</b> {{ matter[10] }}</p>
+        <p><b>Archive Status:</b> {{ matter[11] }}</p>
+        <p><b>Purpose:</b> {{ matter[12] }}</p>
+        <p><b>Notes:</b> {{ matter[13] }}</p>
+    </div>
+
+    <h2>Matter Timeline</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Event ID</th>
+                <th>Type</th>
+                <th>Actor</th>
+                <th>Authority Basis</th>
+                <th>Description</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in events %}
+            <tr>
+                <td>{{ e[0] }}</td>
+                <td>{{ e[1] }}</td>
+                <td>{{ e[2] }}</td>
+                <td>{{ e[3] }}</td>
+                <td>{{ e[4] }}</td>
+                <td>{{ e[7] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <h1>Matter not found</h1>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+    <title>New Institutional Matter</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px; max-width:900px;}
+        label{display:block; margin-top:14px; font-weight:bold;}
+        input,select,textarea{width:100%; padding:10px; margin-top:5px;}
+        button{margin-top:20px; padding:12px 18px;}
+    </style>
+</head>
+<body>
+    <h1>Create Institutional Matter</h1>
+
+    <form method="post">
+        <label>Title</label>
+        <input name="title" required placeholder="Example: Moore-Mishoe Family Trust Formation">
+
+        <label>Matter Type</label>
+        <select name="matter_type" required>
+            <option value="Trust Formation">Trust Formation</option>
+            <option value="Asset Transfer">Asset Transfer</option>
+            <option value="Estate Administration">Estate Administration</option>
+            <option value="Fiduciary Governance">Fiduciary Governance</option>
+            <option value="Archive / Provenance">Archive / Provenance</option>
+            <option value="Dispute / Remedy">Dispute / Remedy</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Status</label>
+        <select name="status">
+            <option>Open</option>
+            <option>Pending Review</option>
+            <option>In Execution</option>
+            <option>Archived</option>
+            <option>Closed</option>
+        </select>
+
+        <label>Priority</label>
+        <select name="priority">
+            <option>Normal</option>
+            <option>High</option>
+            <option>Critical</option>
+            <option>Low</option>
+        </select>
+
+        <label>Jurisdiction</label>
+        <input name="jurisdiction" placeholder="Example: New Jersey">
+
+        <label>Lead Fiduciary</label>
+        <input name="lead_fiduciary" placeholder="Name / role">
+
+        <label>Purpose / Objective</label>
+        <textarea name="purpose" rows="4"></textarea>
+
+        <label>Notes</label>
+        <textarea name="notes" rows="5"></textarea>
+
+        <button type="submit">Create Matter</button>
+    </form>
+</body>
+</html>
