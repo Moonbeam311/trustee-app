@@ -11506,6 +11506,7 @@ def trust_execution_dashboard(trust_id):
     transfer_archive_handoff_counts = {}
     transfer_archive_handoff_latest_ids = {}
     transfer_archive_handoff_correction_counts = {}
+    transfer_archive_handoff_latest_correction_ids = {}
     try:
         import sqlite3
         from database.db import (
@@ -11555,16 +11556,30 @@ def trust_execution_dashboard(trust_id):
 
                 correction_row = cur.fetchone()
                 transfer_archive_handoff_correction_counts[t.transfer_id] = correction_row["count"] if correction_row else 0
+
+                # === INT-27A: latest archive handoff correction IDs for dashboard detail links ===
+                cur.execute("""
+                    SELECT correction_id
+                    FROM transfer_archive_handoff_corrections
+                    WHERE transfer_id = ? AND handoff_id = ? AND firm_id = ?
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                """, (t.transfer_id, latest_handoff_id, firm_id))
+
+                latest_correction = cur.fetchone()
+                transfer_archive_handoff_latest_correction_ids[t.transfer_id] = latest_correction["correction_id"] if latest_correction else ""
             else:
                 transfer_archive_handoff_correction_counts[t.transfer_id] = 0
+                transfer_archive_handoff_latest_correction_ids[t.transfer_id] = ""
 
         conn.close()
 
     except Exception as e:
-        print("⚠️ INT-20C/INT-22C/INT-24A transfer archive handoff lookup failed:", e)
+        print("⚠️ INT-20C/INT-22C/INT-24A/INT-27A transfer archive handoff lookup failed:", e)
         transfer_archive_handoff_counts = {}
         transfer_archive_handoff_latest_ids = {}
         transfer_archive_handoff_correction_counts = {}
+        transfer_archive_handoff_latest_correction_ids = {}
 
     # === INT-21A: archive handoff summary panel metrics ===
     archive_handoff_summary = {
@@ -11702,6 +11717,7 @@ def trust_execution_dashboard(trust_id):
           transfer_archive_handoff_counts=transfer_archive_handoff_counts,
           transfer_archive_handoff_latest_ids=transfer_archive_handoff_latest_ids,
           transfer_archive_handoff_correction_counts=transfer_archive_handoff_correction_counts,
+          transfer_archive_handoff_latest_correction_ids=transfer_archive_handoff_latest_correction_ids,
           archive_handoff_summary=archive_handoff_summary,
           archive_handoff_correction_summary=archive_handoff_correction_summary,
           active_transfer_filter=active_transfer_filter,

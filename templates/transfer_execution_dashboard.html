@@ -551,6 +551,15 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
               <span class="transfer-status-badge {% if correction_count > 0 %}warning{% else %}ready{% endif %}">
                 Corrections: {{ correction_count }}
               </span>
+
+              {# INT-27A: dashboard row link to latest correction detail #}
+              {% set latest_correction_id = transfer_archive_handoff_latest_correction_ids.get(t.transfer_id, '') if transfer_archive_handoff_latest_correction_ids else '' %}
+              {% if latest_correction_id %}
+                <a class="transfer-status-badge warning"
+                   href="{{ url_for('transfer_archive_handoff_correction_detail', transfer_id=t.transfer_id, handoff_id=latest_handoff_id, correction_id=latest_correction_id) }}">
+                  View Correction Detail
+                </a>
+              {% endif %}
             {% endif %}
           </div>
 
