@@ -52,6 +52,27 @@
 <div class="card" style="padding:16px; border:1px solid #f0c36d; border-radius:12px; margin-bottom:16px; background:#fff8e6;">
   <h2>Correction Workflow</h2>
   <p>Use this workflow to record amendments or corrections while preserving the original handoff record.</p>
+
+  {# INT-23C: correction count and latest correction badge #}
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin:10px 0;">
+    <span class="transfer-status-badge {% if correction_count and correction_count > 0 %}warning{% else %}ready{% endif %}">
+      Corrections: {{ correction_count or 0 }}
+    </span>
+
+    {% if latest_correction %}
+      <span class="transfer-status-badge warning">
+        Latest Correction: {{ latest_correction["correction_id"] }}
+      </span>
+      <span class="transfer-status-badge muted">
+        Latest Status: {{ latest_correction["corrected_archive_status"] }}
+      </span>
+    {% else %}
+      <span class="transfer-status-badge ready">
+        No Correction Records
+      </span>
+    {% endif %}
+  </div>
+
   <p>
     <a href="{{ url_for('transfer_archive_handoff_correction', transfer_id=transfer.transfer_id, handoff_id=handoff_record['handoff_id']) }}">
       Create / View Correction Records

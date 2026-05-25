@@ -12483,16 +12483,43 @@ def transfer_archive_handoff_detail(transfer_id, handoff_id):
     """, (handoff_id, transfer.transfer_id, firm_id))
 
     handoff_record = cur.fetchone()
-    conn.close()
 
     if not handoff_record:
+        conn.close()
         flash("Transfer archive handoff record not found.", "warning")
         return redirect(url_for("transfer_archive_handoff", transfer_id=transfer.transfer_id))
+
+    # === INT-23C: correction summary for handoff detail ===
+    from database.db import ensure_transfer_archive_handoff_correction_table
+    ensure_transfer_archive_handoff_correction_table()
+
+    cur.execute("""
+        SELECT COUNT(*) AS count
+        FROM transfer_archive_handoff_corrections
+        WHERE handoff_id = ? AND transfer_id = ? AND firm_id = ?
+    """, (handoff_record["handoff_id"], transfer.transfer_id, firm_id))
+
+    row = cur.fetchone()
+    correction_count = row["count"] if row else 0
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff_corrections
+        WHERE handoff_id = ? AND transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (handoff_record["handoff_id"], transfer.transfer_id, firm_id))
+
+    latest_correction = cur.fetchone()
+
+    conn.close()
 
     return render_template(
         "transfer_archive_handoff_detail.html",
         transfer=transfer,
         handoff_record=handoff_record,
+        correction_count=correction_count,
+        latest_correction=latest_correction,
     )
 
 
