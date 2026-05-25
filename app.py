@@ -11506,9 +11506,16 @@ def trust_execution_dashboard(trust_id):
     def transfer_matches_filter(t):
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
         proof_count = transfer_proof_counts.get(t.transfer_id, 0)
+        minute_count = transfer_minute_counts.get(t.transfer_id, 0) if "transfer_minute_counts" in locals() else 0
+
         ledger_ok = ledger_count > 0
         external_ok = bool(t.external_verified)
         proof_ok = proof_count > 0
+
+        # === INT-18H: health summary archive-ready filters ===
+        finalized_ok = (getattr(t, "status", "") == "completed") or bool(getattr(t, "finalized_at", None))
+        minute_ok = minute_count > 0
+        archive_ready = finalized_ok and ledger_ok and minute_ok
 
         if active_transfer_filter == "all":
             return True
@@ -11528,6 +11535,10 @@ def trust_execution_dashboard(trust_id):
             return external_ok
         if active_transfer_filter == "proof_attached":
             return proof_ok
+        if active_transfer_filter == "archive_ready":
+            return archive_ready
+        if active_transfer_filter == "needs_attention":
+            return not archive_ready
         return True
 
     filtered_transfers = [t for t in transfers if transfer_matches_filter(t)]

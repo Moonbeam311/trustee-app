@@ -26,12 +26,15 @@
     <span class="transfer-status-badge {% if execution_chain_health.minutes_verified == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}">
       Minutes Verified: {{ execution_chain_health.minutes_verified }}
     </span>
-    <span class="transfer-status-badge {% if execution_chain_health.archive_ready == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}">
+    {# INT-18H: clickable health summary filters #}
+    <a class="transfer-status-badge {% if active_transfer_filter == 'archive_ready' %}ready{% elif execution_chain_health.archive_ready == execution_chain_health.total and execution_chain_health.total > 0 %}ready{% else %}warning{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_ready">
       Archive Ready: {{ execution_chain_health.archive_ready }}
-    </span>
-    <span class="transfer-status-badge {% if execution_chain_health.needs_attention == 0 %}ready{% else %}warning{% endif %}">
+    </a>
+    <a class="transfer-status-badge {% if active_transfer_filter == 'needs_attention' %}warning{% elif execution_chain_health.needs_attention == 0 %}ready{% else %}warning{% endif %}"
+       href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=needs_attention">
       Needs Attention: {{ execution_chain_health.needs_attention }}
-    </span>
+    </a>
   </div>
 </div>
 {% endif %}
