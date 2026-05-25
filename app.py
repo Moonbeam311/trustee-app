@@ -15253,15 +15253,18 @@ def pdf_execution_approval_gate(pdf_export_id):
         approval_id = "EXEC-" + uuid.uuid4().hex[:8].upper()
 
         review_status = request.form.get("review_status") or "pending_review"
-        execution_gate = request.form.get("execution_gate") or "not_ready"
 
-        if execution_gate == "ready_for_execution" and file_exists_status != "exists":
+        # EXEC-APPROVAL-1:
+        # Auto-compute execution approval from the actual review/file conditions.
+        # Prevents the form's default "not_ready" value from trapping a valid approval.
+        if file_exists_status != "exists":
             execution_gate = "blocked_missing_pdf_file"
             flash("Execution approval blocked: PDF file does not exist on disk.", "warning")
-
-        if execution_gate == "ready_for_execution" and review_status != "approved":
+        elif review_status != "approved":
             execution_gate = "blocked_review_not_approved"
             flash("Execution approval blocked: PDF review must be approved.", "warning")
+        else:
+            execution_gate = "ready_for_execution"
 
         cur.execute("""
             INSERT INTO pdf_execution_approval_gate (
