@@ -383,6 +383,10 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'blocked_before_handoff' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=blocked_before_handoff">Blocked Before Handoff</a>
 
+        <a class="transfer-status-badge {% if active_transfer_filter == 'handoff_corrections_present' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=handoff_corrections_present">Corrections Present</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'handoff_no_corrections' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=handoff_no_corrections">No Corrections</a>
+
         <a class="transfer-status-badge {% if active_transfer_filter == 'completed' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=completed">Completed</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'open' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=open">Open</a>
@@ -507,6 +511,12 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
                  href="{{ url_for('transfer_archive_handoff_detail', transfer_id=t.transfer_id, handoff_id=latest_handoff_id) }}">
                 View Handoff Detail
               </a>
+
+              {# INT-24A: dashboard row correction visibility badge #}
+              {% set correction_count = transfer_archive_handoff_correction_counts.get(t.transfer_id, 0) if transfer_archive_handoff_correction_counts else 0 %}
+              <span class="transfer-status-badge {% if correction_count > 0 %}warning{% else %}ready{% endif %}">
+                Corrections: {{ correction_count }}
+              </span>
             {% endif %}
           </div>
 

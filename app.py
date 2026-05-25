@@ -11505,12 +11505,18 @@ def trust_execution_dashboard(trust_id):
     # === INT-20C: transfer archive handoff counts for dashboard rows ===
     transfer_archive_handoff_counts = {}
     transfer_archive_handoff_latest_ids = {}
+    transfer_archive_handoff_correction_counts = {}
     try:
         import sqlite3
-        from database.db import get_connection, ensure_transfer_archive_handoff_table
+        from database.db import (
+            get_connection,
+            ensure_transfer_archive_handoff_table,
+            ensure_transfer_archive_handoff_correction_table,
+        )
 
         firm_id = session.get("firm_id", "FIRM-001")
         ensure_transfer_archive_handoff_table()
+        ensure_transfer_archive_handoff_correction_table()
 
         conn = get_connection()
         conn.row_factory = sqlite3.Row
@@ -11536,14 +11542,29 @@ def trust_execution_dashboard(trust_id):
             """, (t.transfer_id, firm_id))
 
             latest = cur.fetchone()
-            transfer_archive_handoff_latest_ids[t.transfer_id] = latest["handoff_id"] if latest else ""
+            latest_handoff_id = latest["handoff_id"] if latest else ""
+            transfer_archive_handoff_latest_ids[t.transfer_id] = latest_handoff_id
+
+            # === INT-24A: archive handoff correction counts for dashboard rows ===
+            if latest_handoff_id:
+                cur.execute("""
+                    SELECT COUNT(*) AS count
+                    FROM transfer_archive_handoff_corrections
+                    WHERE transfer_id = ? AND handoff_id = ? AND firm_id = ?
+                """, (t.transfer_id, latest_handoff_id, firm_id))
+
+                correction_row = cur.fetchone()
+                transfer_archive_handoff_correction_counts[t.transfer_id] = correction_row["count"] if correction_row else 0
+            else:
+                transfer_archive_handoff_correction_counts[t.transfer_id] = 0
 
         conn.close()
 
     except Exception as e:
-        print("⚠️ INT-20C/INT-22C transfer archive handoff lookup failed:", e)
+        print("⚠️ INT-20C/INT-22C/INT-24A transfer archive handoff lookup failed:", e)
         transfer_archive_handoff_counts = {}
         transfer_archive_handoff_latest_ids = {}
+        transfer_archive_handoff_correction_counts = {}
 
     # === INT-21A: archive handoff summary panel metrics ===
     archive_handoff_summary = {
@@ -11627,6 +11648,14 @@ def trust_execution_dashboard(trust_id):
             return archive_ready and not handoff_prepared
         if active_transfer_filter == "blocked_before_handoff":
             return not archive_ready
+
+        # === INT-24A: dashboard correction visibility filters ===
+        correction_count = transfer_archive_handoff_correction_counts.get(t.transfer_id, 0) if "transfer_archive_handoff_correction_counts" in locals() else 0
+
+        if active_transfer_filter == "handoff_corrections_present":
+            return correction_count > 0
+        if active_transfer_filter == "handoff_no_corrections":
+            return handoff_prepared and correction_count == 0
         return True
 
     filtered_transfers = [t for t in transfers if transfer_matches_filter(t)]
@@ -11652,6 +11681,7 @@ def trust_execution_dashboard(trust_id):
           transfer_minute_counts=transfer_minute_counts,
           transfer_archive_handoff_counts=transfer_archive_handoff_counts,
           transfer_archive_handoff_latest_ids=transfer_archive_handoff_latest_ids,
+          transfer_archive_handoff_correction_counts=transfer_archive_handoff_correction_counts,
           archive_handoff_summary=archive_handoff_summary,
           active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),
