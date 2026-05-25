@@ -451,6 +451,12 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
                 {% if not minute_ok %} Minute{% endif %}
               </span>
             {% endif %}
+
+            {# INT-20C: row-level transfer archive handoff status #}
+            {% set handoff_count = transfer_archive_handoff_counts.get(t.transfer_id, 0) if transfer_archive_handoff_counts else 0 %}
+            <span class="transfer-status-badge {% if handoff_count > 0 %}ready{% elif archive_gate_ready %}warning{% else %}muted{% endif %}">
+              Archive Handoff: {% if handoff_count > 0 %}Prepared{% elif archive_gate_ready %}Ready to Prepare{% else %}Not Created{% endif %}
+            </span>
           </div>
 
           <small>

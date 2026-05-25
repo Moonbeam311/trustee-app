@@ -11502,6 +11502,35 @@ def trust_execution_dashboard(trust_id):
         if not archive_ready:
             execution_chain_health["needs_attention"] += 1
 
+    # === INT-20C: transfer archive handoff counts for dashboard rows ===
+    transfer_archive_handoff_counts = {}
+    try:
+        import sqlite3
+        from database.db import get_connection, ensure_transfer_archive_handoff_table
+
+        firm_id = session.get("firm_id", "FIRM-001")
+        ensure_transfer_archive_handoff_table()
+
+        conn = get_connection()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        for t in transfers:
+            cur.execute("""
+                SELECT COUNT(*) AS count
+                FROM transfer_archive_handoff
+                WHERE transfer_id = ? AND firm_id = ?
+            """, (t.transfer_id, firm_id))
+
+            row = cur.fetchone()
+            transfer_archive_handoff_counts[t.transfer_id] = row["count"] if row else 0
+
+        conn.close()
+
+    except Exception as e:
+        print("⚠️ INT-20C transfer archive handoff count failed:", e)
+        transfer_archive_handoff_counts = {}
+
 
     def transfer_matches_filter(t):
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
@@ -11562,6 +11591,7 @@ def trust_execution_dashboard(trust_id):
           transfer_completion_summary=transfer_completion_summary,
           execution_chain_health=execution_chain_health,
           transfer_minute_counts=transfer_minute_counts,
+          transfer_archive_handoff_counts=transfer_archive_handoff_counts,
           active_transfer_filter=active_transfer_filter,
         current_role=session.get("role"),
     )
