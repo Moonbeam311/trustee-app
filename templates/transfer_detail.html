@@ -93,6 +93,60 @@
   </p>
 </div>
 
+{# INT-19A: transfer archive readiness gate panel #}
+<div style="margin:18px 0; padding:16px; border:1px solid #b6c6a8; border-radius:12px; background:#f8fff4;">
+  <h3 style="margin-top:0;">Archive Readiness Gate</h3>
+
+  {% set archive_blockers = [] %}
+  {% if not finalized_ok %}
+    {% set _ = archive_blockers.append('Transfer has not been finalized.') %}
+  {% endif %}
+  {% if not ledger_ok %}
+    {% set _ = archive_blockers.append('Ledger entry has not been posted or verified.') %}
+  {% endif %}
+  {% if not minute_ok %}
+    {% set _ = archive_blockers.append('Trust minute has not been verified for this transfer.') %}
+  {% endif %}
+
+  {% set archive_gate_ready = archive_blockers|length == 0 %}
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if archive_gate_ready %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Archive Gate: {% if archive_gate_ready %}Ready{% else %}Blocked{% endif %}
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if finalized_ok %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Finalization: {% if finalized_ok %}Complete{% else %}Missing{% endif %}
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if ledger_ok %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Ledger: {% if ledger_ok %}Posted{% else %}Missing{% endif %}
+    </span>
+
+    <span style="padding:7px 11px; border-radius:20px; border:1px solid #bbb; background:{% if minute_ok %}#e8f7ea{% else %}#fff3cd{% endif %};">
+      Minute: {% if minute_ok %}Verified{% else %}Missing{% endif %}
+    </span>
+  </div>
+
+  {% if archive_gate_ready %}
+    <p style="margin-bottom:0; margin-top:12px;">
+      <strong>Recommended Next Action:</strong>
+      Prepare this transfer for final record archive review, sealing, custody classification, and archive handoff.
+    </p>
+  {% else %}
+    <p style="margin-top:12px;"><strong>Archive Blockers:</strong></p>
+    <ul>
+      {% for blocker in archive_blockers %}
+        <li>{{ blocker }}</li>
+      {% endfor %}
+    </ul>
+    <p style="margin-bottom:0;">
+      <strong>Recommended Next Action:</strong>
+      Resolve the blockers above before treating this transfer as archive-ready.
+    </p>
+  {% endif %}
+</div>
+
     <p><strong>Status:</strong> {{ transfer.status }}</p>
     <p><strong>Mode:</strong> {{ transfer.mode }}</p>
     <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
