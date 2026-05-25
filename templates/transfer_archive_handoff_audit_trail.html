@@ -12,6 +12,9 @@
   |
   {# INT-30A: archive handoff audit TXT export link #}
   <a href="{{ url_for('transfer_archive_handoff_audit_export_txt', transfer_id=transfer.transfer_id) }}">Export TXT</a>
+  |
+  {# INT-37A: archive export package link #}
+  <a href="{{ url_for('transfer_archive_handoff_export_package', transfer_id=transfer.transfer_id) }}">Export Package ZIP</a>
 </p>
 
 <div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">

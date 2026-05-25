@@ -112,6 +112,12 @@
                href="{{ url_for('transfer_archive_handoff_audit_export_txt', transfer_id=row.transfer_id) }}">
               Export TXT
             </a>
+
+            {# INT-37A: export index row package link #}
+            <a class="transfer-status-badge ready"
+               href="{{ url_for('transfer_archive_handoff_export_package', transfer_id=row.transfer_id) }}">
+              Export Package ZIP
+            </a>
           {% else %}
             <span class="transfer-status-badge muted">No Audit Trail Yet</span>
           {% endif %}
