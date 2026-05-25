@@ -6,10 +6,16 @@
   <h2 class="trust-panel-heading">Execution Handoff Status</h2>
 
 {# INT-31B: archive handoff export index dashboard link #}
-<div style="margin:12px 0 18px 0;">
+<div style="margin:12px 0 18px 0; display:flex; flex-wrap:wrap; gap:10px;">
   <a class="transfer-status-badge muted"
      href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}">
     Archive Handoff Export Index
+  </a>
+
+  {# INT-35A: dashboard export index CSV link #}
+  <a class="transfer-status-badge muted"
+     href="{{ url_for('archive_handoff_export_index_csv', trust_id=trust_id, export_filter=active_export_filter if active_export_filter is defined else 'all') }}">
+    Export Index CSV
   </a>
 </div>
 
