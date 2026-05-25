@@ -11358,6 +11358,114 @@ def trust_accounting_method_settings(trust_id):
     return render_template("trust_accounting_method.html", trust=trust)
 
 
+@app.route("/trust/<trust_id>/archive-handoff/export-index")
+def archive_handoff_export_index(trust_id):
+    import sqlite3
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Pull transfers for this trust/firm if the transfers table supports firm_id.
+    try:
+        cur.execute("""
+            SELECT *
+            FROM transfers
+            WHERE trust_id = ? AND firm_id = ?
+            ORDER BY created_at DESC
+        """, (trust_id, firm_id))
+        transfers = cur.fetchall()
+    except Exception:
+        cur.execute("""
+            SELECT *
+            FROM transfers
+            WHERE trust_id = ?
+            ORDER BY created_at DESC
+        """, (trust_id,))
+        transfers = cur.fetchall()
+
+    export_rows = []
+
+    for transfer in transfers:
+        transfer_id = transfer["transfer_id"] if isinstance(transfer, sqlite3.Row) else getattr(transfer, "transfer_id", "")
+
+        cur.execute("""
+            SELECT COUNT(*) AS count
+            FROM transfer_archive_handoff
+            WHERE transfer_id = ? AND firm_id = ?
+        """, (transfer_id, firm_id))
+        handoff_row = cur.fetchone()
+        handoff_count = handoff_row["count"] if handoff_row else 0
+
+        cur.execute("""
+            SELECT handoff_id
+            FROM transfer_archive_handoff
+            WHERE transfer_id = ? AND firm_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+        """, (transfer_id, firm_id))
+        latest_handoff = cur.fetchone()
+        latest_handoff_id = latest_handoff["handoff_id"] if latest_handoff else ""
+
+        correction_count = 0
+        latest_correction_id = ""
+
+        if latest_handoff_id:
+            cur.execute("""
+                SELECT COUNT(*) AS count
+                FROM transfer_archive_handoff_corrections
+                WHERE transfer_id = ? AND handoff_id = ? AND firm_id = ?
+            """, (transfer_id, latest_handoff_id, firm_id))
+            correction_row = cur.fetchone()
+            correction_count = correction_row["count"] if correction_row else 0
+
+            cur.execute("""
+                SELECT correction_id
+                FROM transfer_archive_handoff_corrections
+                WHERE transfer_id = ? AND handoff_id = ? AND firm_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (transfer_id, latest_handoff_id, firm_id))
+            latest_correction = cur.fetchone()
+            latest_correction_id = latest_correction["correction_id"] if latest_correction else ""
+
+        export_rows.append({
+            "transfer_id": transfer_id,
+            "trust_id": trust_id,
+            "handoff_count": handoff_count,
+            "latest_handoff_id": latest_handoff_id,
+            "correction_count": correction_count,
+            "latest_correction_id": latest_correction_id,
+            "audit_available": handoff_count > 0,
+            "export_available": handoff_count > 0,
+        })
+
+    summary = {
+        "total_transfers": len(export_rows),
+        "audit_available": sum(1 for row in export_rows if row["audit_available"]),
+        "export_available": sum(1 for row in export_rows if row["export_available"]),
+        "with_corrections": sum(1 for row in export_rows if row["correction_count"] > 0),
+    }
+
+    conn.close()
+
+    return render_template(
+        "archive_handoff_export_index.html",
+        trust_id=trust_id,
+        export_rows=export_rows,
+        summary=summary,
+    )
+
+
 @app.route("/trust/<trust_id>/execution")
 def trust_execution_dashboard(trust_id):
     gate = deny_unassigned_trust_access(trust_id)

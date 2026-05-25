@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Archive Handoff Export Index</h1>
+
+<p>
+  <a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Back to Execution Dashboard</a>
+</p>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Export Index Summary</h2>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <span class="transfer-status-badge muted">
+      Total Transfers: {{ summary.total_transfers }}
+    </span>
+
+    <span class="transfer-status-badge {% if summary.audit_available > 0 %}ready{% else %}muted{% endif %}">
+      Audit Trails Available: {{ summary.audit_available }}
+    </span>
+
+    <span class="transfer-status-badge {% if summary.export_available > 0 %}ready{% else %}muted{% endif %}">
+      TXT Exports Available: {{ summary.export_available }}
+    </span>
+
+    <span class="transfer-status-badge {% if summary.with_corrections > 0 %}warning{% else %}ready{% endif %}">
+      Transfers With Corrections: {{ summary.with_corrections }}
+    </span>
+  </div>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d6c28a; border-radius:12px; background:#fffaf0;">
+  <h2>Transfer Export Rows</h2>
+
+  {% if export_rows %}
+    {% for row in export_rows %}
+      <div style="padding:12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px; background:#fff;">
+        <p><strong>Transfer ID:</strong> {{ row.transfer_id }}</p>
+        <p><strong>Handoff Records:</strong> {{ row.handoff_count }}</p>
+        <p><strong>Latest Handoff ID:</strong> {{ row.latest_handoff_id or "None" }}</p>
+        <p><strong>Correction Records:</strong> {{ row.correction_count }}</p>
+        <p><strong>Latest Correction ID:</strong> {{ row.latest_correction_id or "None" }}</p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:8px;">
+          <a class="transfer-status-badge muted"
+             href="{{ url_for('transfer_detail', transfer_id=row.transfer_id) }}">
+            Transfer Detail
+          </a>
+
+          {% if row.audit_available %}
+            <a class="transfer-status-badge ready"
+               href="{{ url_for('transfer_archive_handoff_audit_trail', transfer_id=row.transfer_id) }}">
+              View Audit Trail
+            </a>
+
+            <a class="transfer-status-badge ready"
+               href="{{ url_for('transfer_archive_handoff_audit_export_txt', transfer_id=row.transfer_id) }}">
+              Export TXT
+            </a>
+          {% else %}
+            <span class="transfer-status-badge muted">No Audit Trail Yet</span>
+          {% endif %}
+
+          {% if row.latest_handoff_id %}
+            <a class="transfer-status-badge muted"
+               href="{{ url_for('transfer_archive_handoff_detail', transfer_id=row.transfer_id, handoff_id=row.latest_handoff_id) }}">
+              Latest Handoff Detail
+            </a>
+          {% endif %}
+
+          {% if row.latest_correction_id %}
+            <a class="transfer-status-badge warning"
+               href="{{ url_for('transfer_archive_handoff_correction_detail', transfer_id=row.transfer_id, handoff_id=row.latest_handoff_id, correction_id=row.latest_correction_id) }}">
+              Latest Correction Detail
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No transfers found for this trust.</p>
+  {% endif %}
+</div>
+
+{% endblock %}
