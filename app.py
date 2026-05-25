@@ -2540,6 +2540,16 @@ with app.app_context():
 DEFAULT_UPLOAD_FOLDER = Path(__file__).resolve().parent / "uploads"
 UPLOAD_FOLDER = Path(os.getenv("UPLOAD_FOLDER", str(DEFAULT_UPLOAD_FOLDER))).resolve()
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
+
+# RAILWAY-SEC-3A: persistent export storage.
+# On Railway, set EXPORT_ROOT=/app/data/exports so generated DOCX/PDF files survive redeploy.
+DEFAULT_EXPORT_ROOT = Path(__file__).resolve().parent / "exports"
+EXPORT_ROOT = Path(os.getenv("EXPORT_ROOT", str(DEFAULT_EXPORT_ROOT))).resolve()
+DOCX_EXPORT_DIR = EXPORT_ROOT / "docx"
+PDF_EXPORT_DIR = EXPORT_ROOT / "pdf"
+DOCX_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+PDF_EXPORT_DIR.mkdir(parents=True, exist_ok=True)
+
 ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "jpg", "jpeg", "png", "mp3", "wav", "mp4", "mov"}
 
 def allowed_file(filename):
@@ -14655,7 +14665,7 @@ def controlled_docx_export(workspace_id):
 
         export_id = "DOCX-" + uuid.uuid4().hex[:8].upper()
 
-        export_dir = Path("exports/docx")
+        export_dir = DOCX_EXPORT_DIR
         export_dir.mkdir(parents=True, exist_ok=True)
 
         safe_doc_type = (workspace["document_type"] or "Draft").replace(" ", "_")
@@ -14801,7 +14811,7 @@ def download_controlled_docx_export(export_id):
     file_path = Path(record["file_path"])
 
     if not file_path.exists():
-        flash("DOCX file not found on disk.", "warning")
+        flash(f"DOCX export record exists, but file is missing from storage: {file_path}", "warning")
         return redirect(url_for("intake_dashboard"))
 
     return send_file(
@@ -15024,7 +15034,7 @@ def controlled_pdf_conversion(export_id):
 
         pdf_export_id = "PDF-" + uuid.uuid4().hex[:8].upper()
 
-        export_dir = Path("exports/pdf")
+        export_dir = PDF_EXPORT_DIR
         export_dir.mkdir(parents=True, exist_ok=True)
 
         safe_doc_type = (export_record["document_type"] or "Draft").replace(" ", "_")
@@ -15185,7 +15195,7 @@ def download_controlled_pdf_export(pdf_export_id):
     file_path = Path(record["pdf_file_path"])
 
     if not file_path.exists():
-        flash("PDF file not found on disk.", "warning")
+        flash(f"PDF export record exists, but file is missing from storage: {file_path}", "warning")
         return redirect(url_for("intake_dashboard"))
 
     return send_file(
