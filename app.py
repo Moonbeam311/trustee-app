@@ -16918,11 +16918,23 @@ def admin_diag_execution_record(record_id):
     results = {}
 
     for table, col in [
+        ("identity_intake", "intake_id"),
+        ("asset_intake", "intake_id"),
+        ("document_intake", "intake_id"),
+        ("intake_orchestration", "intake_id"),
+        ("draft_session", "intake_id"),
+        ("guided_draft_workspace", "intake_id"),
+        ("draft_variable_binding", "intake_id"),
+        ("dynamic_draft_preview", "intake_id"),
+        ("section_review_gate", "intake_id"),
+        ("controlled_export_prep", "intake_id"),
+        ("controlled_docx_exports", "intake_id"),
+        ("docx_verification_gate", "intake_id"),
+        ("controlled_pdf_exports", "intake_id"),
+        ("pdf_execution_approval", "intake_id"),
         ("execution_packet_prep", "packet_id"),
         ("execution_event_log", "event_id"),
-        ("controlled_pdf_exports", "pdf_export_id"),
-        ("controlled_docx_exports", "export_id"),
-        ("identity_intake", "intake_id"),
+        ("final_record_archive", "event_id"),
     ]:
         try:
             cur.execute(f"SELECT * FROM {table} WHERE {col} = ?", (record_id,))
