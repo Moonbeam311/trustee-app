@@ -93,6 +93,55 @@
   </p>
 </div>
 
+{# INT-40A: final archive UX consolidated action panel #}
+<div class="card" style="padding:16px; border:1px solid #cbd5e1; border-radius:12px; margin:16px 0; background:#f8fafc;">
+  <h2>Archive & Export Actions</h2>
+  <p style="margin-top:0; color:#475569;">
+    Consolidated access to archive handoff, audit review, certified exports, and export index tools for this transfer.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <a class="transfer-status-badge muted"
+       href="{{ url_for('transfer_archive_handoff', transfer_id=transfer.transfer_id) }}">
+      Archive Handoff
+    </a>
+
+    <a class="transfer-status-badge muted"
+       href="{{ url_for('transfer_archive_handoff_audit_trail', transfer_id=transfer.transfer_id) }}">
+      View Audit Trail
+    </a>
+
+    <a class="transfer-status-badge ready"
+       href="{{ url_for('transfer_archive_handoff_audit_export_txt', transfer_id=transfer.transfer_id) }}">
+      Export TXT
+    </a>
+
+    <a class="transfer-status-badge ready"
+       href="{{ url_for('transfer_archive_handoff_audit_export_pdf', transfer_id=transfer.transfer_id) }}">
+      Export PDF
+    </a>
+
+    <a class="transfer-status-badge ready"
+       href="{{ url_for('transfer_archive_handoff_export_package', transfer_id=transfer.transfer_id) }}">
+      Export Package ZIP
+    </a>
+
+    <a class="transfer-status-badge muted"
+       href="{{ url_for('archive_handoff_export_index', trust_id=transfer.trust_id) }}">
+      Export Index
+    </a>
+
+    <a class="transfer-status-badge muted"
+       href="{{ url_for('archive_handoff_export_index_csv', trust_id=transfer.trust_id, export_filter='all') }}">
+      Export Index CSV
+    </a>
+  </div>
+
+  <p style="margin-bottom:0; margin-top:12px; font-size:0.92em; color:#475569;">
+    Export events are logged when generated. Certified export hashes are included in TXT, CSV, PDF, and ZIP responses where applicable.
+  </p>
+</div>
+
 {# INT-19A: transfer archive readiness gate panel #}
 <div style="margin:18px 0; padding:16px; border:1px solid #b6c6a8; border-radius:12px; background:#f8fff4;">
   <h3 style="margin-top:0;">Archive Readiness Gate</h3>
