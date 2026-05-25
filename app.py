@@ -11456,13 +11456,43 @@ def archive_handoff_export_index(trust_id):
         "with_corrections": sum(1 for row in export_rows if row["correction_count"] > 0),
     }
 
+    # === INT-32A: archive handoff export index filters ===
+    active_export_filter = request.args.get("export_filter", "all")
+
+    def export_row_matches_filter(row):
+        if active_export_filter == "all":
+            return True
+        if active_export_filter == "audit_available":
+            return bool(row["audit_available"])
+        if active_export_filter == "no_audit_yet":
+            return not bool(row["audit_available"])
+        if active_export_filter == "with_corrections":
+            return row["correction_count"] > 0
+        if active_export_filter == "without_corrections":
+            return row["audit_available"] and row["correction_count"] == 0
+        return True
+
+    filtered_export_rows = [row for row in export_rows if export_row_matches_filter(row)]
+
+    filter_summary = {
+        "active": active_export_filter,
+        "visible_rows": len(filtered_export_rows),
+        "all": len(export_rows),
+        "audit_available": summary["audit_available"],
+        "no_audit_yet": sum(1 for row in export_rows if not row["audit_available"]),
+        "with_corrections": summary["with_corrections"],
+        "without_corrections": sum(1 for row in export_rows if row["audit_available"] and row["correction_count"] == 0),
+    }
+
     conn.close()
 
     return render_template(
         "archive_handoff_export_index.html",
         trust_id=trust_id,
-        export_rows=export_rows,
+        export_rows=filtered_export_rows,
         summary=summary,
+        filter_summary=filter_summary,
+        active_export_filter=active_export_filter,
     )
 
 

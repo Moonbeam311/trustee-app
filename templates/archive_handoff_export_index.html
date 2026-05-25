@@ -7,6 +7,41 @@
   <a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Back to Execution Dashboard</a>
 </p>
 
+{# INT-32A: archive handoff export index filter panel #}
+{% if filter_summary is defined %}
+<div class="card" style="padding:16px; border:1px solid #cbd5e1; border-radius:12px; margin-bottom:16px; background:#f8fafc;">
+  <h2>Export Index Filters</h2>
+  <p><strong>Visible Rows:</strong> {{ filter_summary.visible_rows }} of {{ filter_summary.all }}</p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <a class="transfer-status-badge {% if active_export_filter == 'all' %}ready{% else %}muted{% endif %}"
+       href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}?export_filter=all">
+      All Transfers: {{ filter_summary.all }}
+    </a>
+
+    <a class="transfer-status-badge {% if active_export_filter == 'audit_available' %}ready{% else %}muted{% endif %}"
+       href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}?export_filter=audit_available">
+      Audit Available: {{ filter_summary.audit_available }}
+    </a>
+
+    <a class="transfer-status-badge {% if active_export_filter == 'no_audit_yet' %}warning{% else %}muted{% endif %}"
+       href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}?export_filter=no_audit_yet">
+      No Audit Yet: {{ filter_summary.no_audit_yet }}
+    </a>
+
+    <a class="transfer-status-badge {% if active_export_filter == 'with_corrections' %}warning{% else %}muted{% endif %}"
+       href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}?export_filter=with_corrections">
+      With Corrections: {{ filter_summary.with_corrections }}
+    </a>
+
+    <a class="transfer-status-badge {% if active_export_filter == 'without_corrections' %}ready{% else %}muted{% endif %}"
+       href="{{ url_for('archive_handoff_export_index', trust_id=trust_id) }}?export_filter=without_corrections">
+      Without Corrections: {{ filter_summary.without_corrections }}
+    </a>
+  </div>
+</div>
+{% endif %}
+
 <div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
   <h2>Export Index Summary</h2>
 
