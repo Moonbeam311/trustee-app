@@ -12649,6 +12649,143 @@ def transfer_archive_handoff_detail(transfer_id, handoff_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff/audit-trail/export.txt")
+def transfer_archive_handoff_audit_export_txt(transfer_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import sqlite3
+    from datetime import datetime
+    from flask import Response
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+    handoff_records = cur.fetchall()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff_corrections
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+    correction_records = cur.fetchall()
+
+    audit_events = []
+
+    for record in handoff_records:
+        audit_events.append({
+            "event_type": "Archive Handoff Record",
+            "event_id": record["handoff_id"],
+            "handoff_id": record["handoff_id"],
+            "correction_id": "",
+            "status": record["archive_status"],
+            "classification": record["custody_classification"],
+            "actor": record["handoff_by"],
+            "capacity": record["handoff_capacity"],
+            "notes": record["archive_notes"],
+            "created_at": record["created_at"],
+        })
+
+    for record in correction_records:
+        audit_events.append({
+            "event_type": "Correction Record",
+            "event_id": record["correction_id"],
+            "handoff_id": record["handoff_id"],
+            "correction_id": record["correction_id"],
+            "status": record["corrected_archive_status"],
+            "classification": record["corrected_custody_classification"],
+            "actor": record["corrected_by"],
+            "capacity": record["correction_capacity"],
+            "notes": record["correction_reason"],
+            "created_at": record["created_at"],
+        })
+
+    audit_events = sorted(
+        audit_events,
+        key=lambda item: item.get("created_at") or "",
+        reverse=True
+    )
+
+    conn.close()
+
+    lines = []
+    lines.append("ARCHIVE HANDOFF AUDIT TRAIL EXPORT")
+    lines.append("=" * 72)
+    lines.append(f"Export Generated: {datetime.utcnow().isoformat()} UTC")
+    lines.append(f"Firm ID: {firm_id}")
+    lines.append(f"Transfer ID: {transfer.transfer_id}")
+    lines.append(f"Trust ID: {transfer.trust_id}")
+    lines.append("")
+    lines.append("SUMMARY")
+    lines.append("-" * 72)
+    lines.append(f"Handoff Records: {len(handoff_records)}")
+    lines.append(f"Correction Records: {len(correction_records)}")
+    lines.append(f"Total Audit Events: {len(audit_events)}")
+    lines.append(f"Corrections Present: {'Yes' if correction_records else 'No'}")
+    lines.append("")
+    lines.append("CHRONOLOGICAL AUDIT EVENTS")
+    lines.append("-" * 72)
+
+    if audit_events:
+        for idx, event in enumerate(audit_events, start=1):
+            lines.append(f"Event #{idx}")
+            lines.append(f"Type: {event['event_type']}")
+            lines.append(f"Event ID: {event['event_id']}")
+            lines.append(f"Handoff ID: {event['handoff_id']}")
+            if event.get("correction_id"):
+                lines.append(f"Correction ID: {event['correction_id']}")
+            lines.append(f"Status: {event['status']}")
+            lines.append(f"Classification: {event['classification']}")
+            lines.append(f"Actor: {event['actor']}")
+            lines.append(f"Capacity: {event['capacity']}")
+            lines.append(f"Notes / Reason: {event['notes'] or 'No notes recorded.'}")
+            lines.append(f"Created At: {event['created_at']}")
+            lines.append("-" * 72)
+    else:
+        lines.append("No archive handoff audit events exist for this transfer yet.")
+
+    lines.append("")
+    lines.append("AUDIT TRAIL MEANING")
+    lines.append("-" * 72)
+    lines.append(
+        "This export consolidates original archive handoff records and later "
+        "correction records without overwriting the original record."
+    )
+    lines.append(
+        "Purpose: preserve chain-of-custody, amendment history, review visibility, "
+        "and fiduciary audit continuity."
+    )
+
+    body = "\n".join(lines) + "\n"
+    filename = f"archive_handoff_audit_trail_{transfer.transfer_id}.txt"
+
+    return Response(
+        body,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/archive-handoff/audit-trail")
 def transfer_archive_handoff_audit_trail(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)

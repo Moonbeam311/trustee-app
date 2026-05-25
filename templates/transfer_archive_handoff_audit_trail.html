@@ -9,6 +9,9 @@
   <a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Transfer Detail</a>
   |
   <a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Execution Dashboard</a>
+  |
+  {# INT-30A: archive handoff audit TXT export link #}
+  <a href="{{ url_for('transfer_archive_handoff_audit_export_txt', transfer_id=transfer.transfer_id) }}">Export TXT</a>
 </p>
 
 <div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
