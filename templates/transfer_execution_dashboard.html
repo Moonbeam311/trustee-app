@@ -336,6 +336,11 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'proof_attached' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=proof_attached">Proof Attached</a>
 
+        {# INT-18J: main filter badges for health summary #}
+        <a class="transfer-status-badge {% if active_transfer_filter == 'archive_ready' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=archive_ready">Archive Ready</a>
+
+        <a class="transfer-status-badge {% if active_transfer_filter == 'needs_attention' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=needs_attention">Needs Attention</a>
+
         <a class="transfer-status-badge {% if active_transfer_filter == 'completed' %}ready{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=completed">Completed</a>
 
         <a class="transfer-status-badge {% if active_transfer_filter == 'open' %}warning{% else %}muted{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}?transfer_filter=open">Open</a>
