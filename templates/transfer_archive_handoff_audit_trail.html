@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Archive Handoff Audit Trail</h1>
+
+<p>
+  <a href="{{ url_for('transfer_archive_handoff', transfer_id=transfer.transfer_id) }}">Back to Archive Handoff</a>
+  |
+  <a href="{{ url_for('transfer_detail', transfer_id=transfer.transfer_id) }}">Back to Transfer Detail</a>
+  |
+  <a href="{{ url_for('trust_execution_dashboard', trust_id=transfer.trust_id) }}">Back to Execution Dashboard</a>
+</p>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px; margin-bottom:16px;">
+  <h2>Audit Trail Summary</h2>
+
+  <p><strong>Transfer ID:</strong> {{ transfer.transfer_id }}</p>
+  <p><strong>Trust ID:</strong> {{ transfer.trust_id }}</p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <span class="transfer-status-badge ready">
+      Handoff Records: {{ audit_summary.handoff_records }}
+    </span>
+
+    <span class="transfer-status-badge {% if audit_summary.correction_records > 0 %}warning{% else %}ready{% endif %}">
+      Correction Records: {{ audit_summary.correction_records }}
+    </span>
+
+    <span class="transfer-status-badge muted">
+      Total Audit Events: {{ audit_summary.total_events }}
+    </span>
+
+    <span class="transfer-status-badge {% if audit_summary.corrections_present %}warning{% else %}ready{% endif %}">
+      Corrections Present: {% if audit_summary.corrections_present %}Yes{% else %}No{% endif %}
+    </span>
+  </div>
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d6c28a; border-radius:12px; margin-bottom:16px; background:#fffaf0;">
+  <h2>Chronological Audit Events</h2>
+
+  {% if audit_events %}
+    {% for event in audit_events %}
+      <div style="padding:12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:10px; background:#fff;">
+        <p><strong>Event Type:</strong> {{ event.event_label }}</p>
+        <p><strong>Event ID:</strong>
+          <a href="{{ event.detail_url }}">{{ event.event_id }}</a>
+        </p>
+        <p><strong>Handoff ID:</strong> {{ event.handoff_id }}</p>
+        {% if event.correction_id %}
+          <p><strong>Correction ID:</strong> {{ event.correction_id }}</p>
+        {% endif %}
+        <p><strong>Status:</strong> {{ event.status }}</p>
+        <p><strong>Classification:</strong> {{ event.classification }}</p>
+        <p><strong>Actor:</strong> {{ event.actor }}</p>
+        <p><strong>Capacity:</strong> {{ event.capacity }}</p>
+        <p><strong>Notes / Reason:</strong> {{ event.notes or "No notes recorded." }}</p>
+        <p><strong>Created:</strong> {{ event.created_at }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No archive handoff audit events exist for this transfer yet.</p>
+  {% endif %}
+</div>
+
+<div class="card" style="padding:16px; border:1px solid #d1d5db; border-radius:12px;">
+  <h2>Audit Trail Meaning</h2>
+  <p>
+    This view consolidates original archive handoff records and later correction records without overwriting the original record.
+    The purpose is to preserve chain-of-custody, amendment history, review visibility, and fiduciary audit continuity.
+  </p>
+</div>
+
+{% endblock %}

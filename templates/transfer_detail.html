@@ -143,6 +143,12 @@
       <span style="display:inline-block; margin-left:8px; font-size:0.92em; color:#35563c;">
         This transfer has passed finalization, ledger, and minute verification.
       </span>
+      {# INT-28A: transfer detail audit trail link #}
+      <div style="margin-top:10px;">
+        <a href="{{ url_for('transfer_archive_handoff_audit_trail', transfer_id=transfer.transfer_id) }}">
+          View Archive Handoff Audit Trail
+        </a>
+      </div>
     </div>
   {% else %}
     <p style="margin-top:12px;"><strong>Archive Blockers:</strong></p>

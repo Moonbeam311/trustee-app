@@ -12649,6 +12649,111 @@ def transfer_archive_handoff_detail(transfer_id, handoff_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>/archive-handoff/audit-trail")
+def transfer_archive_handoff_audit_trail(transfer_id):
+    transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
+    if gate:
+        return gate
+
+    import sqlite3
+    from database.db import (
+        get_connection,
+        ensure_transfer_archive_handoff_table,
+        ensure_transfer_archive_handoff_correction_table,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    ensure_transfer_archive_handoff_table()
+    ensure_transfer_archive_handoff_correction_table()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+    handoff_records = cur.fetchall()
+
+    cur.execute("""
+        SELECT *
+        FROM transfer_archive_handoff_corrections
+        WHERE transfer_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (transfer.transfer_id, firm_id))
+    correction_records = cur.fetchall()
+
+    audit_events = []
+
+    for record in handoff_records:
+        audit_events.append({
+            "event_type": "handoff_record",
+            "event_label": "Archive Handoff Record",
+            "event_id": record["handoff_id"],
+            "handoff_id": record["handoff_id"],
+            "correction_id": "",
+            "status": record["archive_status"],
+            "classification": record["custody_classification"],
+            "actor": record["handoff_by"],
+            "capacity": record["handoff_capacity"],
+            "notes": record["archive_notes"],
+            "created_at": record["created_at"],
+            "detail_url": url_for(
+                "transfer_archive_handoff_detail",
+                transfer_id=transfer.transfer_id,
+                handoff_id=record["handoff_id"]
+            ),
+        })
+
+    for record in correction_records:
+        audit_events.append({
+            "event_type": "correction_record",
+            "event_label": "Correction Record",
+            "event_id": record["correction_id"],
+            "handoff_id": record["handoff_id"],
+            "correction_id": record["correction_id"],
+            "status": record["corrected_archive_status"],
+            "classification": record["corrected_custody_classification"],
+            "actor": record["corrected_by"],
+            "capacity": record["correction_capacity"],
+            "notes": record["correction_reason"],
+            "created_at": record["created_at"],
+            "detail_url": url_for(
+                "transfer_archive_handoff_correction_detail",
+                transfer_id=transfer.transfer_id,
+                handoff_id=record["handoff_id"],
+                correction_id=record["correction_id"]
+            ),
+        })
+
+    audit_events = sorted(
+        audit_events,
+        key=lambda item: item.get("created_at") or "",
+        reverse=True
+    )
+
+    audit_summary = {
+        "handoff_records": len(handoff_records),
+        "correction_records": len(correction_records),
+        "total_events": len(audit_events),
+        "corrections_present": len(correction_records) > 0,
+    }
+
+    conn.close()
+
+    return render_template(
+        "transfer_archive_handoff_audit_trail.html",
+        transfer=transfer,
+        handoff_records=handoff_records,
+        correction_records=correction_records,
+        audit_events=audit_events,
+        audit_summary=audit_summary,
+    )
+
+
 @app.route("/execution/transfers/<transfer_id>/archive-handoff", methods=["GET", "POST"])
 @csrf.exempt
 def transfer_archive_handoff(transfer_id):
