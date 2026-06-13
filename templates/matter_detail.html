@@ -130,7 +130,9 @@
                 <th>Purpose / Basis</th>
                 <th>Created By</th>
                 <th>Status</th>
+                <th>Verification</th>
                 <th>Created</th>
+                <th>Detail</th>
                 <th>Management</th>
             </tr>
         </thead>
@@ -144,7 +146,17 @@
                 <td>{{ r[4] }}</td>
                 <td>{{ r[5] }}</td>
                 <td>{{ r[6] }}</td>
+                <td>{{ r[8] or "Unverified" }}</td>
                 <td>{{ r[7] }}</td>
+                <td>
+                    <a href="{{ url_for(
+                        'matter_relationship_detail',
+                        matter_id=matter[1],
+                        relationship_id=r[0]
+                    ) }}">
+                        View
+                    </a>
+                </td>
                 <td>
                     <form method="post"
                           action="{{ url_for(

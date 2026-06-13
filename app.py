@@ -19033,6 +19033,8 @@ from services.services_matters import (
     add_matter_relationship,
     list_matter_relationships,
     update_matter_relationship_status,
+    get_matter_relationship,
+    update_matter_relationship_verification,
 )
 
 @app.route("/matters")
@@ -19115,6 +19117,85 @@ def matter_detail(matter_id):
         matter=matter,
         events=events,
         relationships=relationships
+    )
+
+
+@app.route(
+    "/matters/<matter_id>/relationships/<relationship_id>"
+)
+def matter_relationship_detail(matter_id, relationship_id):
+    ensure_matter_tables()
+
+    matter, events = get_matter(matter_id)
+
+    if not matter:
+        flash("Matter not found.", "warning")
+        return redirect(url_for("matters_dashboard"))
+
+    relationship = get_matter_relationship(
+        matter_id,
+        relationship_id
+    )
+
+    if not relationship:
+        flash("Matter relationship not found.", "warning")
+        return redirect(
+            url_for("matter_detail", matter_id=matter_id)
+        )
+
+    return render_template(
+        "matter_relationship_detail.html",
+        matter=matter,
+        relationship=relationship
+    )
+
+
+@csrf.exempt
+@app.route(
+    "/matters/<matter_id>/relationships/"
+    "<relationship_id>/verification",
+    methods=["POST"]
+)
+def matter_relationship_verification_update(
+    matter_id,
+    relationship_id
+):
+    ensure_matter_tables()
+
+    verification_status = (
+        request.form.get("verification_status") or ""
+    ).strip()
+
+    verification_basis = (
+        request.form.get("verification_basis") or ""
+    ).strip()
+
+    actor = session.get("username") or "System"
+
+    success, result = (
+        update_matter_relationship_verification(
+            matter_id=matter_id,
+            relationship_id=relationship_id,
+            verification_status=verification_status,
+            verification_basis=verification_basis,
+            actor=actor,
+        )
+    )
+
+    if success:
+        flash(
+            f"Relationship verification updated to {result}.",
+            "success"
+        )
+    else:
+        flash(result, "warning")
+
+    return redirect(
+        url_for(
+            "matter_relationship_detail",
+            matter_id=matter_id,
+            relationship_id=relationship_id,
+        )
     )
 
 

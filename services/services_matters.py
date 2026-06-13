@@ -68,6 +68,44 @@ def ensure_matter_tables():
         """
     )
 
+    cur.execute("PRAGMA table_info(matter_relationships)")
+    relationship_columns = {
+        row[1] for row in cur.fetchall()
+    }
+
+    if "verification_status" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN verification_status TEXT
+            NOT NULL DEFAULT 'Unverified'
+            """
+        )
+
+    if "verification_basis" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN verification_basis TEXT
+            """
+        )
+
+    if "verified_by" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN verified_by TEXT
+            """
+        )
+
+    if "verified_at" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN verified_at TEXT
+            """
+        )
+
     conn.commit()
     conn.close()
 
@@ -582,6 +620,179 @@ def update_matter_relationship_status(
     return True, new_status
 
 
+
+
+def get_matter_relationship(matter_id, relationship_id):
+    ensure_matter_tables()
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            relationship_id,
+            matter_id,
+            relationship_type,
+            linked_record_id,
+            display_label,
+            purpose_basis,
+            created_by,
+            status,
+            created_at,
+            updated_at,
+            verification_status,
+            verification_basis,
+            verified_by,
+            verified_at
+        FROM matter_relationships
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def update_matter_relationship_verification(
+    matter_id,
+    relationship_id,
+    verification_status,
+    verification_basis,
+    actor="",
+):
+    ensure_matter_tables()
+
+    allowed_statuses = {
+        "Unverified",
+        "Pending",
+        "Verified",
+        "Rejected",
+    }
+
+    verification_status = (
+        verification_status or ""
+    ).strip()
+
+    verification_basis = (
+        verification_basis or ""
+    ).strip()
+
+    actor = (actor or "").strip() or "System"
+
+    if verification_status not in allowed_statuses:
+        return False, "Invalid verification status."
+
+    if not verification_basis:
+        return False, "Verification basis is required."
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            relationship_type,
+            linked_record_id,
+            display_label,
+            verification_status
+        FROM matter_relationships
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return False, "Matter relationship not found."
+
+    relationship_type = row[0]
+    linked_record_id = row[1]
+    display_label = row[2]
+    old_status = row[3] or "Unverified"
+
+    if old_status == verification_status:
+        conn.close()
+        return False, (
+            f"Verification status is already "
+            f"{verification_status}."
+        )
+
+    verified_at_value = (
+        "CURRENT_TIMESTAMP"
+        if verification_status in {"Verified", "Rejected"}
+        else "NULL"
+    )
+
+    cur.execute(
+        f"""
+        UPDATE matter_relationships
+        SET verification_status = ?,
+            verification_basis = ?,
+            verified_by = ?,
+            verified_at = {verified_at_value},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            verification_status,
+            verification_basis,
+            actor,
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    if cur.rowcount != 1:
+        conn.rollback()
+        conn.close()
+        return False, "Verification update failed."
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Relationship Verification Changed",
+        actor=actor,
+        authority_basis="Relationship Verification Review",
+        description=(
+            f"{relationship_type} relationship "
+            f"{relationship_id} verification changed "
+            f"from {old_status} → {verification_status}: "
+            f"{display_label} ({linked_record_id}). "
+            f"Basis: {verification_basis}"
+        ),
+        linked_record_type=relationship_type.lower(),
+        linked_record_id=linked_record_id,
+    )
+
+    return True, verification_status
+
+
 def list_matter_relationships(matter_id):
     ensure_matter_tables()
 
@@ -600,7 +811,8 @@ def list_matter_relationships(matter_id):
             purpose_basis,
             created_by,
             status,
-            created_at
+            created_at,
+            verification_status
         FROM matter_relationships
         WHERE matter_id = ?
           AND firm_id = ?
