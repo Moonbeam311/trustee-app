@@ -19051,27 +19051,29 @@ def new_matter():
 @csrf.exempt
 @app.route("/matters/<matter_id>/governance", methods=["POST"])
 def matter_governance_state(matter_id):
+    ensure_matter_tables()
 
-    state = request.form.get("governance_state", "").strip()
+    new_state = (request.form.get("governance_state") or "").strip()
+    actor = session.get("username") or "System"
+    authority_basis = "Matter Governance Review"
 
-    if not state:
+    if not new_state:
         flash("Governance state is required.", "warning")
         return redirect(url_for("matter_detail", matter_id=matter_id))
 
     updated = update_governance_state(
         matter_id=matter_id,
-        new_state=state,
-        actor=session.get("username", "System"),
-        authority_basis="Matter Governance Review"
+        new_state=new_state,
+        actor=actor,
+        authority_basis=authority_basis
     )
 
     if updated:
-        flash("Governance state updated.", "success")
+        flash(f"Governance state updated to {new_state}.", "success")
     else:
         flash("Governance state update failed.", "warning")
 
     return redirect(url_for("matter_detail", matter_id=matter_id))
-
 
 
 @app.route("/matters/<matter_id>")

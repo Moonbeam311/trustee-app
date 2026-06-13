@@ -37,7 +37,7 @@
 
     <h3>Update Governance State</h3>
 
-    <form method="post" action="/matters/{{ matter[1] }}/governance">
+    <form method="post" action="{{ url_for('matter_governance_state', matter_id=matter[1]) }}">
 
         <select name="governance_state">
 
