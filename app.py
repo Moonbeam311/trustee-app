@@ -19054,14 +19054,21 @@ def matter_governance_state(matter_id):
 
     state = request.form.get("governance_state", "").strip()
 
-    update_governance_state(
+    if not state:
+        flash("Governance state is required.", "warning")
+        return redirect(url_for("matter_detail", matter_id=matter_id))
+
+    updated = update_governance_state(
         matter_id=matter_id,
         new_state=state,
         actor=session.get("username", "System"),
         authority_basis="Matter Governance Review"
     )
 
-    flash("Governance state updated.", "success")
+    if updated:
+        flash("Governance state updated.", "success")
+    else:
+        flash("Governance state update failed.", "warning")
 
     return redirect(url_for("matter_detail", matter_id=matter_id))
 
