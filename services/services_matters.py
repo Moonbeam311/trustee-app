@@ -188,6 +188,96 @@ def update_governance_state(matter_id, new_state, actor="", authority_basis=""):
     return True
 
 
+
+
+def update_matter_risk(
+    matter_id,
+    new_risk,
+    assessment_note,
+    actor="",
+    authority_basis=""
+):
+    ensure_matter_tables()
+
+    allowed_risks = {
+        "Unrated",
+        "Low",
+        "Moderate",
+        "High",
+        "Critical",
+    }
+
+    new_risk = (new_risk or "").strip()
+    assessment_note = (assessment_note or "").strip()
+
+    if new_risk not in allowed_risks:
+        return False, "Invalid risk level."
+
+    if not assessment_note:
+        return False, "Risk assessment note is required."
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT risk_level
+        FROM matters
+        WHERE matter_id = ?
+          AND firm_id = ?
+        """,
+        (matter_id, firm_id)
+    )
+
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return False, "Matter not found."
+
+    old_risk = row[0] or "Unrated"
+
+    if old_risk == new_risk:
+        conn.close()
+        return False, "Select a different risk level."
+
+    cur.execute(
+        """
+        UPDATE matters
+        SET risk_level = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE matter_id = ?
+          AND firm_id = ?
+        """,
+        (new_risk, matter_id, firm_id)
+    )
+
+    if cur.rowcount != 1:
+        conn.rollback()
+        conn.close()
+        return False, "Risk update failed."
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Risk Level Changed",
+        actor=actor or "System",
+        authority_basis=authority_basis or "Matter Risk Assessment",
+        description=(
+            f"Risk Level: {old_risk} → {new_risk}. "
+            f"Assessment: {assessment_note}"
+        ),
+        linked_record_type="matter",
+        linked_record_id=matter_id,
+    )
+
+    return True, new_risk
+
+
 def get_matter(matter_id):
     ensure_matter_tables()
     firm_id = get_current_firm_id()

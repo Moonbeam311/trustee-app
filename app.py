@@ -19029,6 +19029,7 @@ from services.services_matters import (
     get_matter,
     add_matter_event,
     update_governance_state,
+    update_matter_risk,
 )
 
 @app.route("/matters")
@@ -19072,6 +19073,31 @@ def matter_governance_state(matter_id):
         flash(f"Governance state updated to {new_state}.", "success")
     else:
         flash("Governance state update failed.", "warning")
+
+    return redirect(url_for("matter_detail", matter_id=matter_id))
+
+
+@csrf.exempt
+@app.route("/matters/<matter_id>/risk", methods=["POST"])
+def matter_risk_update(matter_id):
+    ensure_matter_tables()
+
+    new_risk = (request.form.get("risk_level") or "").strip()
+    assessment_note = (request.form.get("assessment_note") or "").strip()
+    actor = session.get("username") or "System"
+
+    success, result = update_matter_risk(
+        matter_id=matter_id,
+        new_risk=new_risk,
+        assessment_note=assessment_note,
+        actor=actor,
+        authority_basis="Matter Risk Assessment"
+    )
+
+    if success:
+        flash(f"Risk level updated to {result}.", "success")
+    else:
+        flash(result, "warning")
 
     return redirect(url_for("matter_detail", matter_id=matter_id))
 
