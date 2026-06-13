@@ -19035,6 +19035,7 @@ from services.services_matters import (
     update_matter_relationship_status,
     get_matter_relationship,
     update_matter_relationship_verification,
+    validate_matter_relationship_link,
 )
 
 @app.route("/matters")
@@ -19143,10 +19144,90 @@ def matter_relationship_detail(matter_id, relationship_id):
             url_for("matter_detail", matter_id=matter_id)
         )
 
+    relationship_type = relationship[2]
+    linked_record_id = relationship[3]
+
+    endpoint_map = {
+        "Trust": ("trust_detail", {"trust_id": linked_record_id}),
+        "Document": (
+            "document_detail",
+            {"document_id": linked_record_id}
+        ),
+        "Transfer": (
+            "transfer_detail",
+            {"transfer_id": linked_record_id}
+        ),
+        "Media": (
+            "media_file",
+            {"media_id": linked_record_id}
+        ),
+        "Minute": (
+            "trust_minute_detail",
+            {"minute_id": linked_record_id}
+        ),
+        "Intake Record": (
+            "intake_saved_snapshot",
+            {"intake_id": linked_record_id}
+        ),
+    }
+
+    linked_record_url = None
+    route_config = endpoint_map.get(relationship_type)
+
+    if route_config:
+        endpoint_name, endpoint_values = route_config
+        try:
+            linked_record_url = url_for(
+                endpoint_name,
+                **endpoint_values
+            )
+        except Exception:
+            linked_record_url = None
+
     return render_template(
         "matter_relationship_detail.html",
         matter=matter,
-        relationship=relationship
+        relationship=relationship,
+        linked_record_url=linked_record_url
+    )
+
+
+@csrf.exempt
+@app.route(
+    "/matters/<matter_id>/relationships/"
+    "<relationship_id>/validate-link",
+    methods=["POST"]
+)
+def matter_relationship_validate_link(
+    matter_id,
+    relationship_id
+):
+    ensure_matter_tables()
+
+    actor = session.get("username") or "System"
+
+    success, status, message = (
+        validate_matter_relationship_link(
+            matter_id=matter_id,
+            relationship_id=relationship_id,
+            actor=actor,
+        )
+    )
+
+    if success:
+        flash(
+            f"Linked record validation completed: {status}.",
+            "success"
+        )
+    else:
+        flash(status, "warning")
+
+    return redirect(
+        url_for(
+            "matter_relationship_detail",
+            matter_id=matter_id,
+            relationship_id=relationship_id,
+        )
     )
 
 

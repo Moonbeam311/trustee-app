@@ -106,6 +106,44 @@ def ensure_matter_tables():
             """
         )
 
+    cur.execute("PRAGMA table_info(matter_relationships)")
+    relationship_columns = {
+        row[1] for row in cur.fetchall()
+    }
+
+    if "link_validation_status" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN link_validation_status TEXT
+            NOT NULL DEFAULT 'Not Checked'
+            """
+        )
+
+    if "link_validation_message" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN link_validation_message TEXT
+            """
+        )
+
+    if "link_validated_by" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN link_validated_by TEXT
+            """
+        )
+
+    if "link_validated_at" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN link_validated_at TEXT
+            """
+        )
+
     conn.commit()
     conn.close()
 
@@ -646,7 +684,11 @@ def get_matter_relationship(matter_id, relationship_id):
             verification_status,
             verification_basis,
             verified_by,
-            verified_at
+            verified_at,
+            link_validation_status,
+            link_validation_message,
+            link_validated_by,
+            link_validated_at
         FROM matter_relationships
         WHERE relationship_id = ?
           AND matter_id = ?
@@ -791,6 +833,143 @@ def update_matter_relationship_verification(
     )
 
     return True, verification_status
+
+
+
+
+def validate_matter_relationship_link(
+    matter_id,
+    relationship_id,
+    actor="",
+):
+    ensure_matter_tables()
+
+    actor = (actor or "").strip() or "System"
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            relationship_type,
+            linked_record_id,
+            display_label,
+            verification_status
+        FROM matter_relationships
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return False, "Matter relationship not found.", None
+
+    relationship_type = row[0]
+    linked_record_id = row[1]
+    display_label = row[2]
+    verification_status = row[3] or "Unverified"
+
+    validation_map = {
+        "Trust": ("trusts", "trust_id"),
+        "Document": ("documents", "document_id"),
+        "Transfer": ("transfers", "transfer_id"),
+        "Media": ("media_records", "media_id"),
+        "Minute": ("trust_minutes", "minute_id"),
+        "Intake Record": ("intake_sessions", "intake_id"),
+    }
+
+    if relationship_type not in validation_map:
+        validation_status = "Unsupported"
+        validation_message = (
+            f"No direct system-record validator is configured "
+            f"for relationship type {relationship_type}."
+        )
+    else:
+        table_name, id_column = validation_map[relationship_type]
+
+        cur.execute(
+            f"""
+            SELECT 1
+            FROM {table_name}
+            WHERE {id_column} = ?
+              AND firm_id = ?
+            LIMIT 1
+            """,
+            (
+                linked_record_id,
+                firm_id,
+            )
+        )
+
+        exists = cur.fetchone() is not None
+
+        if exists:
+            validation_status = "Found"
+            validation_message = (
+                f"{relationship_type} record "
+                f"{linked_record_id} exists in the active firm."
+            )
+        else:
+            validation_status = "Missing"
+            validation_message = (
+                f"{relationship_type} record "
+                f"{linked_record_id} was not found in the active firm."
+            )
+
+    cur.execute(
+        """
+        UPDATE matter_relationships
+        SET link_validation_status = ?,
+            link_validation_message = ?,
+            link_validated_by = ?,
+            link_validated_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            validation_status,
+            validation_message,
+            actor,
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Linked Record Validation",
+        actor=actor,
+        authority_basis="Linked Record Validation Review",
+        description=(
+            f"{relationship_type} relationship "
+            f"{relationship_id} link validation: "
+            f"{validation_status}. "
+            f"{validation_message} "
+            f"Verification status remains "
+            f"{verification_status}."
+        ),
+        linked_record_type=relationship_type.lower(),
+        linked_record_id=linked_record_id,
+    )
+
+    return True, validation_status, validation_message
 
 
 def list_matter_relationships(matter_id):

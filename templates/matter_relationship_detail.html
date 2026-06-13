@@ -103,7 +103,58 @@
 
         <div class="label">Verification Date</div>
         <div>{{ relationship[13] or "Not verified" }}</div>
+
+        <div class="label">Link Validation Status</div>
+        <div>{{ relationship[14] or "Not Checked" }}</div>
+
+        <div class="label">Link Validation Message</div>
+        <div>{{ relationship[15] or "Not checked" }}</div>
+
+        <div class="label">Link Validated By</div>
+        <div>{{ relationship[16] or "Not checked" }}</div>
+
+        <div class="label">Link Validation Date</div>
+        <div>{{ relationship[17] or "Not checked" }}</div>
     </div>
+
+    <hr>
+
+    <h2>Linked Record Validation</h2>
+
+    <p>
+        Validation checks whether the linked identifier exists in the
+        active firm's system records. Validation does not prove legal
+        authenticity, execution, ownership, or effectiveness.
+    </p>
+
+    <form method="post"
+          action="{{ url_for(
+              'matter_relationship_validate_link',
+              matter_id=matter[1],
+              relationship_id=relationship[0]
+          ) }}">
+        <button type="submit">
+            Validate Linked Record
+        </button>
+    </form>
+
+    {% if linked_record_url and relationship[14] == "Found" %}
+        <p>
+            <a href="{{ linked_record_url }}">
+                Open Linked Record
+            </a>
+        </p>
+    {% elif relationship[14] == "Missing" %}
+        <p>
+            The linked record cannot be opened because it was not
+            found in the active firm.
+        </p>
+    {% elif relationship[14] == "Unsupported" %}
+        <p>
+            Direct routing is not yet supported for this relationship
+            type.
+        </p>
+    {% endif %}
 
     <hr>
 
