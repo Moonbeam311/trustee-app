@@ -115,7 +115,71 @@
 
         <div class="label">Link Validation Date</div>
         <div>{{ relationship[17] or "Not checked" }}</div>
+
+        <div class="label">Previous Linked Record ID</div>
+        <div>{{ relationship[18] or "No correction recorded" }}</div>
+
+        <div class="label">Relink Reason</div>
+        <div>{{ relationship[19] or "No correction recorded" }}</div>
+
+        <div class="label">Relinked By</div>
+        <div>{{ relationship[20] or "No correction recorded" }}</div>
+
+        <div class="label">Relinked At</div>
+        <div>{{ relationship[21] or "No correction recorded" }}</div>
     </div>
+
+    <hr>
+
+    <h2>Relationship Correction and Relinking</h2>
+
+    <p>
+        Use this control only to correct an incorrect or obsolete
+        linked-record identifier. The prior identifier and correction
+        reason will remain in the institutional record.
+    </p>
+
+    <p>
+        Relinking resets system validation to <strong>Not Checked</strong>
+        and human verification to <strong>Pending</strong>.
+    </p>
+
+    <form method="post"
+          action="{{ url_for(
+              'matter_relationship_relink',
+              matter_id=matter[1],
+              relationship_id=relationship[0]
+          ) }}">
+
+        <label for="new_linked_record_id">
+            <strong>New Linked Record ID</strong>
+        </label>
+
+        <input
+            id="new_linked_record_id"
+            name="new_linked_record_id"
+            required
+            placeholder="Enter the corrected system record ID"
+        >
+
+        <br><br>
+
+        <label for="correction_reason">
+            <strong>Correction Reason</strong>
+        </label>
+
+        <textarea
+            id="correction_reason"
+            name="correction_reason"
+            rows="5"
+            required
+            placeholder="Explain why the existing linked record ID is incorrect, obsolete, or must be replaced."
+        ></textarea>
+
+        <button type="submit">
+            Correct and Relink Relationship
+        </button>
+    </form>
 
     <hr>
 

@@ -19036,6 +19036,7 @@ from services.services_matters import (
     get_matter_relationship,
     update_matter_relationship_verification,
     validate_matter_relationship_link,
+    relink_matter_relationship,
 )
 
 @app.route("/matters")
@@ -19189,6 +19190,53 @@ def matter_relationship_detail(matter_id, relationship_id):
         matter=matter,
         relationship=relationship,
         linked_record_url=linked_record_url
+    )
+
+
+@csrf.exempt
+@app.route(
+    "/matters/<matter_id>/relationships/"
+    "<relationship_id>/relink",
+    methods=["POST"]
+)
+def matter_relationship_relink(
+    matter_id,
+    relationship_id
+):
+    ensure_matter_tables()
+
+    new_linked_record_id = (
+        request.form.get("new_linked_record_id") or ""
+    ).strip()
+
+    correction_reason = (
+        request.form.get("correction_reason") or ""
+    ).strip()
+
+    actor = session.get("username") or "System"
+
+    success, result = relink_matter_relationship(
+        matter_id=matter_id,
+        relationship_id=relationship_id,
+        new_linked_record_id=new_linked_record_id,
+        correction_reason=correction_reason,
+        actor=actor,
+    )
+
+    if success:
+        flash(
+            f"Relationship relinked to {result}.",
+            "success"
+        )
+    else:
+        flash(result, "warning")
+
+    return redirect(
+        url_for(
+            "matter_relationship_detail",
+            matter_id=matter_id,
+            relationship_id=relationship_id,
+        )
     )
 
 

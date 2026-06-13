@@ -144,6 +144,43 @@ def ensure_matter_tables():
             """
         )
 
+    cur.execute("PRAGMA table_info(matter_relationships)")
+    relationship_columns = {
+        row[1] for row in cur.fetchall()
+    }
+
+    if "previous_linked_record_id" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN previous_linked_record_id TEXT
+            """
+        )
+
+    if "relink_reason" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN relink_reason TEXT
+            """
+        )
+
+    if "relinked_by" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN relinked_by TEXT
+            """
+        )
+
+    if "relinked_at" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN relinked_at TEXT
+            """
+        )
+
     conn.commit()
     conn.close()
 
@@ -688,7 +725,11 @@ def get_matter_relationship(matter_id, relationship_id):
             link_validation_status,
             link_validation_message,
             link_validated_by,
-            link_validated_at
+            link_validated_at,
+            previous_linked_record_id,
+            relink_reason,
+            relinked_by,
+            relinked_at
         FROM matter_relationships
         WHERE relationship_id = ?
           AND matter_id = ?
@@ -970,6 +1011,173 @@ def validate_matter_relationship_link(
     )
 
     return True, validation_status, validation_message
+
+
+
+
+def relink_matter_relationship(
+    matter_id,
+    relationship_id,
+    new_linked_record_id,
+    correction_reason,
+    actor="",
+):
+    ensure_matter_tables()
+
+    new_linked_record_id = (
+        new_linked_record_id or ""
+    ).strip()
+
+    correction_reason = (
+        correction_reason or ""
+    ).strip()
+
+    actor = (actor or "").strip() or "System"
+
+    if not new_linked_record_id:
+        return False, "New linked record ID is required."
+
+    if not correction_reason:
+        return False, "Correction reason is required."
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            relationship_type,
+            linked_record_id,
+            display_label,
+            verification_status,
+            link_validation_status
+        FROM matter_relationships
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return False, "Matter relationship not found."
+
+    relationship_type = row[0]
+    old_linked_record_id = row[1]
+    display_label = row[2]
+    old_verification_status = row[3] or "Unverified"
+    old_validation_status = row[4] or "Not Checked"
+
+    if old_linked_record_id == new_linked_record_id:
+        conn.close()
+        return False, (
+            "New linked record ID must differ from "
+            "the current linked record ID."
+        )
+
+    cur.execute(
+        """
+        SELECT relationship_id
+        FROM matter_relationships
+        WHERE matter_id = ?
+          AND firm_id = ?
+          AND relationship_type = ?
+          AND linked_record_id = ?
+          AND status = 'Active'
+          AND relationship_id <> ?
+        """,
+        (
+            matter_id,
+            firm_id,
+            relationship_type,
+            new_linked_record_id,
+            relationship_id,
+        )
+    )
+
+    if cur.fetchone():
+        conn.close()
+        return False, (
+            "Another active relationship already uses "
+            "that linked record ID."
+        )
+
+    cur.execute(
+        """
+        UPDATE matter_relationships
+        SET previous_linked_record_id = linked_record_id,
+            linked_record_id = ?,
+            relink_reason = ?,
+            relinked_by = ?,
+            relinked_at = CURRENT_TIMESTAMP,
+            verification_status = 'Pending',
+            verification_basis = ?,
+            verified_by = ?,
+            verified_at = NULL,
+            link_validation_status = 'Not Checked',
+            link_validation_message = NULL,
+            link_validated_by = NULL,
+            link_validated_at = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            new_linked_record_id,
+            correction_reason,
+            actor,
+            (
+                "Relationship identifier corrected. "
+                "Verification must be completed again. "
+                f"Correction reason: {correction_reason}"
+            ),
+            actor,
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    if cur.rowcount != 1:
+        conn.rollback()
+        conn.close()
+        return False, "Relationship relinking failed."
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Relationship Relinked",
+        actor=actor,
+        authority_basis="Relationship Identifier Correction",
+        description=(
+            f"{relationship_type} relationship "
+            f"{relationship_id} relinked from "
+            f"{old_linked_record_id} → "
+            f"{new_linked_record_id}: "
+            f"{display_label}. "
+            f"Reason: {correction_reason}. "
+            f"Verification reset from "
+            f"{old_verification_status} → Pending. "
+            f"Link validation reset from "
+            f"{old_validation_status} → Not Checked."
+        ),
+        linked_record_type=relationship_type.lower(),
+        linked_record_id=new_linked_record_id,
+    )
+
+    return True, new_linked_record_id
 
 
 def list_matter_relationships(matter_id):
