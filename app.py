@@ -19028,6 +19028,7 @@ from services.services_matters import (
     list_matters,
     get_matter,
     add_matter_event,
+    update_governance_state,
 )
 
 @app.route("/matters")
@@ -19045,6 +19046,26 @@ def new_matter():
         flash(f"Matter {matter_id} created.", "success")
         return redirect(url_for("matter_detail", matter_id=matter_id))
     return render_template("matter_form.html")
+
+
+@csrf.exempt
+@app.route("/matters/<matter_id>/governance", methods=["POST"])
+def matter_governance_state(matter_id):
+
+    state = request.form.get("governance_state", "").strip()
+
+    update_governance_state(
+        matter_id=matter_id,
+        new_state=state,
+        actor=session.get("username", "System"),
+        authority_basis="Matter Governance Review"
+    )
+
+    flash("Governance state updated.", "success")
+
+    return redirect(url_for("matter_detail", matter_id=matter_id))
+
+
 
 @app.route("/matters/<matter_id>")
 def matter_detail(matter_id):

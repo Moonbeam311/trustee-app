@@ -32,7 +32,43 @@
     {# IC-1 Step 2A: add matter event button #}
     <p><a class="btn" href="/matters/{{ matter[1] }}/events/new">+ Add Matter Event</a></p>
 
+    
+    <hr>
+
+    <h3>Update Governance State</h3>
+
+    <form method="post" action="/matters/{{ matter[1] }}/governance">
+
+        <select name="governance_state">
+
+            <option>Intake</option>
+
+            <option>Pending Review</option>
+
+            <option>Execution Readiness</option>
+
+            <option>Approved for Execution</option>
+
+            <option>Execution In Progress</option>
+
+            <option>Archive Ready</option>
+
+            <option>Archived</option>
+
+            <option>Closed</option>
+
+        </select>
+
+        <button type="submit">
+            Update Governance State
+        </button>
+
+    </form>
+
+    <hr>
+
     <h2>Matter Timeline</h2>
+
     <table>
         <thead>
             <tr>

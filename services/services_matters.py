@@ -136,6 +136,58 @@ def list_matters():
     conn.close()
     return rows
 
+
+
+def update_governance_state(matter_id, new_state, actor="", authority_basis=""):
+    ensure_matter_tables()
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT governance_state FROM matters WHERE matter_id = ? AND firm_id = ?",
+        (matter_id, firm_id)
+    )
+
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return False
+
+    old_state = row[0]
+
+    cur.execute(
+        """
+        UPDATE matters
+        SET governance_state = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE matter_id = ?
+        AND firm_id = ?
+        """,
+        (
+            new_state,
+            matter_id,
+            firm_id
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Governance State Changed",
+        actor=actor,
+        authority_basis=authority_basis,
+        description=f"Governance State: {old_state} → {new_state}"
+    )
+
+    return True
+
+
 def get_matter(matter_id):
     ensure_matter_tables()
     firm_id = get_current_firm_id()
