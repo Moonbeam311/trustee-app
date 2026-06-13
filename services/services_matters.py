@@ -181,6 +181,44 @@ def ensure_matter_tables():
             """
         )
 
+    cur.execute("PRAGMA table_info(matter_relationships)")
+    relationship_columns = {
+        row[1] for row in cur.fetchall()
+    }
+
+    if "governance_clearance_status" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN governance_clearance_status TEXT
+            NOT NULL DEFAULT 'Not Cleared'
+            """
+        )
+
+    if "governance_clearance_note" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN governance_clearance_note TEXT
+            """
+        )
+
+    if "governance_cleared_by" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN governance_cleared_by TEXT
+            """
+        )
+
+    if "governance_cleared_at" not in relationship_columns:
+        cur.execute(
+            """
+            ALTER TABLE matter_relationships
+            ADD COLUMN governance_cleared_at TEXT
+            """
+        )
+
     conn.commit()
     conn.close()
 
@@ -729,7 +767,11 @@ def get_matter_relationship(matter_id, relationship_id):
             previous_linked_record_id,
             relink_reason,
             relinked_by,
-            relinked_at
+            relinked_at,
+            governance_clearance_status,
+            governance_clearance_note,
+            governance_cleared_by,
+            governance_cleared_at
         FROM matter_relationships
         WHERE relationship_id = ?
           AND matter_id = ?
@@ -1178,6 +1220,240 @@ def relink_matter_relationship(
     )
 
     return True, new_linked_record_id
+
+
+
+
+def build_relationship_audit_summary(
+    matter_id,
+    relationship_id,
+):
+    ensure_matter_tables()
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    conn.row_factory = __import__("sqlite3").Row
+    cur = conn.cursor()
+
+    row = cur.execute(
+        """
+        SELECT
+            relationship_id,
+            matter_id,
+            firm_id,
+            relationship_type,
+            linked_record_id,
+            display_label,
+            status,
+            verification_status,
+            verification_basis,
+            verified_by,
+            verified_at,
+            link_validation_status,
+            link_validation_message,
+            link_validated_by,
+            link_validated_at,
+            previous_linked_record_id,
+            relink_reason,
+            relinked_by,
+            relinked_at,
+            governance_clearance_status,
+            governance_clearance_note,
+            governance_cleared_by,
+            governance_cleared_at
+        FROM matter_relationships
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    ).fetchone()
+
+    conn.close()
+
+    if not row:
+        return None
+
+    active_ok = row["status"] == "Active"
+    validation_ok = (
+        row["link_validation_status"] == "Found"
+    )
+    verification_ok = (
+        row["verification_status"] == "Verified"
+    )
+
+    unresolved_correction = bool(
+        row["relink_reason"]
+        and (
+            row["link_validation_status"] != "Found"
+            or row["verification_status"] != "Verified"
+        )
+    )
+
+    fully_cleared = bool(
+        active_ok
+        and validation_ok
+        and verification_ok
+        and not unresolved_correction
+    )
+
+    blockers = []
+
+    if not active_ok:
+        blockers.append(
+            "Relationship status must be Active."
+        )
+
+    if not validation_ok:
+        blockers.append(
+            "Linked record validation must be Found."
+        )
+
+    if not verification_ok:
+        blockers.append(
+            "Relationship verification must be Verified."
+        )
+
+    if unresolved_correction:
+        blockers.append(
+            "Relink correction remains unresolved."
+        )
+
+    return {
+        "relationship_id": row["relationship_id"],
+        "relationship_type": row["relationship_type"],
+        "linked_record_id": row["linked_record_id"],
+        "display_label": row["display_label"],
+        "relationship_status": row["status"],
+        "verification_status": row["verification_status"],
+        "verification_basis": row["verification_basis"],
+        "verified_by": row["verified_by"],
+        "verified_at": row["verified_at"],
+        "validation_status": row["link_validation_status"],
+        "validation_message": row["link_validation_message"],
+        "validated_by": row["link_validated_by"],
+        "validated_at": row["link_validated_at"],
+        "previous_linked_record_id": (
+            row["previous_linked_record_id"]
+        ),
+        "relink_reason": row["relink_reason"],
+        "relinked_by": row["relinked_by"],
+        "relinked_at": row["relinked_at"],
+        "clearance_status": (
+            row["governance_clearance_status"]
+            or "Not Cleared"
+        ),
+        "clearance_note": row["governance_clearance_note"],
+        "cleared_by": row["governance_cleared_by"],
+        "cleared_at": row["governance_cleared_at"],
+        "active_ok": active_ok,
+        "validation_ok": validation_ok,
+        "verification_ok": verification_ok,
+        "unresolved_correction": unresolved_correction,
+        "fully_cleared": fully_cleared,
+        "blockers": blockers,
+    }
+
+
+def clear_relationship_governance(
+    matter_id,
+    relationship_id,
+    clearance_note,
+    actor="",
+):
+    ensure_matter_tables()
+
+    clearance_note = (
+        clearance_note or ""
+    ).strip()
+
+    actor = (actor or "").strip() or "System"
+
+    if not clearance_note:
+        return False, "Clearance note is required."
+
+    audit = build_relationship_audit_summary(
+        matter_id,
+        relationship_id,
+    )
+
+    if not audit:
+        return False, "Matter relationship not found."
+
+    if not audit["fully_cleared"]:
+        return False, (
+            "Relationship cannot be cleared: "
+            + " ".join(audit["blockers"])
+        )
+
+    if audit["clearance_status"] == "Cleared":
+        return False, (
+            "Relationship governance is already cleared."
+        )
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE matter_relationships
+        SET governance_clearance_status = 'Cleared',
+            governance_clearance_note = ?,
+            governance_cleared_by = ?,
+            governance_cleared_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            clearance_note,
+            actor,
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    if cur.rowcount != 1:
+        conn.rollback()
+        conn.close()
+        return False, "Governance clearance update failed."
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Relationship Governance Cleared",
+        actor=actor,
+        authority_basis="Relationship Governance Closeout Gate",
+        description=(
+            f"{audit['relationship_type']} relationship "
+            f"{relationship_id} was governance-cleared. "
+            f"Linked record: {audit['linked_record_id']}. "
+            f"Relationship status: "
+            f"{audit['relationship_status']}. "
+            f"Validation status: "
+            f"{audit['validation_status']}. "
+            f"Verification status: "
+            f"{audit['verification_status']}. "
+            f"Clearance note: {clearance_note}"
+        ),
+        linked_record_type=(
+            audit["relationship_type"].lower()
+        ),
+        linked_record_id=audit["linked_record_id"],
+    )
+
+    return True, "Cleared"
 
 
 def list_matter_relationships(matter_id):

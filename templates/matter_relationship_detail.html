@@ -131,6 +131,151 @@
 
     <hr>
 
+    <h2>Relationship Audit Summary</h2>
+
+    {% if relationship_audit %}
+    <table>
+        <tbody>
+            <tr>
+                <th>Current Linked Record</th>
+                <td>{{ relationship_audit.linked_record_id }}</td>
+            </tr>
+            <tr>
+                <th>Previous Linked Record</th>
+                <td>
+                    {{ relationship_audit.previous_linked_record_id
+                       or "None recorded" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Relationship Status</th>
+                <td>{{ relationship_audit.relationship_status }}</td>
+            </tr>
+            <tr>
+                <th>Verification Status</th>
+                <td>{{ relationship_audit.verification_status }}</td>
+            </tr>
+            <tr>
+                <th>Validation Status</th>
+                <td>{{ relationship_audit.validation_status }}</td>
+            </tr>
+            <tr>
+                <th>Last Relink</th>
+                <td>
+                    {{ relationship_audit.relinked_at
+                       or "No relink recorded" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Last Validation</th>
+                <td>
+                    {{ relationship_audit.validated_at
+                       or "Not validated" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Last Verification</th>
+                <td>
+                    {{ relationship_audit.verified_at
+                       or "Not verified" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Closeout Readiness</th>
+                <td>
+                    {% if relationship_audit.fully_cleared %}
+                        READY
+                    {% else %}
+                        NOT READY
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Governance Clearance</th>
+                <td>{{ relationship_audit.clearance_status }}</td>
+            </tr>
+            <tr>
+                <th>Cleared By</th>
+                <td>
+                    {{ relationship_audit.cleared_by
+                       or "Not cleared" }}
+                </td>
+            </tr>
+            <tr>
+                <th>Cleared At</th>
+                <td>
+                    {{ relationship_audit.cleared_at
+                       or "Not cleared" }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if relationship_audit.blockers %}
+        <h3>Closeout Blockers</h3>
+        <ul>
+        {% for blocker in relationship_audit.blockers %}
+            <li>{{ blocker }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    <hr>
+
+    <h2>Relationship Phase Closeout Gate</h2>
+
+    <p>
+        A relationship may be cleared only when it is Active,
+        the linked record is Found, verification is Verified,
+        and no relink correction remains unresolved.
+    </p>
+
+    {% if relationship_audit.clearance_status == "Cleared" %}
+        <p>
+            <strong>
+                Relationship Governance Cleared
+            </strong>
+        </p>
+
+        <p>
+            {{ relationship_audit.clearance_note }}
+        </p>
+
+    {% elif relationship_audit.fully_cleared %}
+        <form method="post"
+              action="{{ url_for(
+                  'matter_relationship_clearance',
+                  matter_id=matter[1],
+                  relationship_id=relationship[0]
+              ) }}">
+
+            <label for="clearance_note">
+                <strong>Clearance Note</strong>
+            </label>
+
+            <textarea
+                id="clearance_note"
+                name="clearance_note"
+                rows="5"
+                required
+                placeholder="State the basis for closing the relationship governance phase."
+            ></textarea>
+
+            <button type="submit">
+                Clear Relationship Governance
+            </button>
+        </form>
+
+    {% else %}
+        <p>
+            This relationship cannot be cleared until all blockers
+            listed above are resolved.
+        </p>
+    {% endif %}
+    {% endif %}
+
+    <hr>
+
     <h2>Relationship Correction and Relinking</h2>
 
     <p>

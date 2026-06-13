@@ -19037,6 +19037,8 @@ from services.services_matters import (
     update_matter_relationship_verification,
     validate_matter_relationship_link,
     relink_matter_relationship,
+    build_relationship_audit_summary,
+    clear_relationship_governance,
 )
 
 @app.route("/matters")
@@ -19185,11 +19187,61 @@ def matter_relationship_detail(matter_id, relationship_id):
         except Exception:
             linked_record_url = None
 
+    relationship_audit = (
+        build_relationship_audit_summary(
+            matter_id,
+            relationship_id,
+        )
+    )
+
     return render_template(
         "matter_relationship_detail.html",
         matter=matter,
         relationship=relationship,
-        linked_record_url=linked_record_url
+        linked_record_url=linked_record_url,
+        relationship_audit=relationship_audit
+    )
+
+
+@csrf.exempt
+@app.route(
+    "/matters/<matter_id>/relationships/"
+    "<relationship_id>/clearance",
+    methods=["POST"]
+)
+def matter_relationship_clearance(
+    matter_id,
+    relationship_id
+):
+    ensure_matter_tables()
+
+    clearance_note = (
+        request.form.get("clearance_note") or ""
+    ).strip()
+
+    actor = session.get("username") or "System"
+
+    success, result = clear_relationship_governance(
+        matter_id=matter_id,
+        relationship_id=relationship_id,
+        clearance_note=clearance_note,
+        actor=actor,
+    )
+
+    if success:
+        flash(
+            "Relationship governance cleared.",
+            "success"
+        )
+    else:
+        flash(result, "warning")
+
+    return redirect(
+        url_for(
+            "matter_relationship_detail",
+            matter_id=matter_id,
+            relationship_id=relationship_id,
+        )
     )
 
 
