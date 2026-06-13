@@ -107,6 +107,53 @@
 
     <hr>
 
+    {# IC-1 Step 4A: matter relationships #}
+    <hr>
+
+    <h2>Matter Relationships</h2>
+
+    <p>
+        <a class="btn"
+           href="{{ url_for('new_matter_relationship', matter_id=matter[1]) }}">
+            + Add Matter Relationship
+        </a>
+    </p>
+
+    {% if relationships %}
+    <table>
+        <thead>
+            <tr>
+                <th>Relationship ID</th>
+                <th>Type</th>
+                <th>Linked Record</th>
+                <th>Label</th>
+                <th>Purpose / Basis</th>
+                <th>Created By</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in relationships %}
+            <tr>
+                <td>{{ r[0] }}</td>
+                <td>{{ r[1] }}</td>
+                <td>{{ r[2] }}</td>
+                <td>{{ r[3] }}</td>
+                <td>{{ r[4] }}</td>
+                <td>{{ r[5] }}</td>
+                <td>{{ r[6] }}</td>
+                <td>{{ r[7] }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No relationships have been added to this Matter.</p>
+    {% endif %}
+
+    <hr>
+
     <h2>Matter Timeline</h2>
 
     <table>

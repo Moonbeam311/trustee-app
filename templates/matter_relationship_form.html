@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+    <title>Add Matter Relationship</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            max-width: 900px;
+        }
+
+        label {
+            display: block;
+            margin-top: 14px;
+            font-weight: bold;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 18px;
+        }
+
+        .notice {
+            padding: 12px;
+            border: 1px solid #cc9;
+            background: #fff8d8;
+            margin: 12px 0;
+        }
+    </style>
+</head>
+<body>
+    <p>
+        <a href="{{ url_for('matter_detail', matter_id=matter[1]) }}">
+            ← Back to Matter
+        </a>
+    </p>
+
+    <h1>Add Matter Relationship</h1>
+
+    <p>
+        <strong>Matter:</strong> {{ matter[3] }}
+        |
+        <strong>ID:</strong> {{ matter[1] }}
+    </p>
+
+    {% if error_message %}
+        <div class="notice">{{ error_message }}</div>
+    {% endif %}
+
+    <form method="post">
+        <label for="relationship_type">Relationship Type</label>
+        <select id="relationship_type" name="relationship_type" required>
+            <option value="">Select relationship type</option>
+            {% for item in [
+                "Trust",
+                "Person",
+                "Asset",
+                "Document",
+                "Transfer",
+                "Media",
+                "Minute",
+                "Intake Record",
+                "Other"
+            ] %}
+                <option value="{{ item }}"
+                    {% if form_data.get('relationship_type') == item %}selected{% endif %}>
+                    {{ item }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="linked_record_id">Linked Record ID</label>
+        <input
+            id="linked_record_id"
+            name="linked_record_id"
+            required
+            value="{{ form_data.get('linked_record_id', '') }}"
+            placeholder="Example: TR-000001, DOC-000001, AST-000001"
+        >
+
+        <label for="display_label">Display Label</label>
+        <input
+            id="display_label"
+            name="display_label"
+            required
+            value="{{ form_data.get('display_label', '') }}"
+            placeholder="Readable name for the linked record"
+        >
+
+        <label for="purpose_basis">Purpose or Authority Basis</label>
+        <textarea
+            id="purpose_basis"
+            name="purpose_basis"
+            rows="5"
+            placeholder="Explain why this record belongs to this Matter."
+        >{{ form_data.get('purpose_basis', '') }}</textarea>
+
+        <label for="status">Relationship Status</label>
+        <select id="status" name="status">
+            <option value="Active"
+                {% if form_data.get('status', 'Active') == 'Active' %}selected{% endif %}>
+                Active
+            </option>
+            <option value="Inactive"
+                {% if form_data.get('status') == 'Inactive' %}selected{% endif %}>
+                Inactive
+            </option>
+        </select>
+
+        <button type="submit">Add Relationship</button>
+    </form>
+</body>
+</html>

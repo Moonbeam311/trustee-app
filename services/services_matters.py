@@ -42,6 +42,32 @@ def ensure_matter_tables():
         )
     """)
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS matter_relationships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            relationship_id TEXT NOT NULL UNIQUE,
+            matter_id TEXT NOT NULL,
+            firm_id TEXT NOT NULL,
+            relationship_type TEXT NOT NULL,
+            linked_record_id TEXT NOT NULL,
+            display_label TEXT NOT NULL,
+            purpose_basis TEXT,
+            created_by TEXT,
+            status TEXT NOT NULL DEFAULT 'Active',
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_matter_relationships_matter_firm
+        ON matter_relationships (matter_id, firm_id)
+        """
+    )
+
     conn.commit()
     conn.close()
 
@@ -276,6 +302,201 @@ def update_matter_risk(
     )
 
     return True, new_risk
+
+
+
+
+def _next_relationship_id():
+    ensure_matter_tables()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT relationship_id
+        FROM matter_relationships
+        ORDER BY id DESC
+        LIMIT 1
+        """
+    )
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return "MRL-000001"
+
+    try:
+        next_number = int(str(row[0]).split("-")[-1]) + 1
+    except (TypeError, ValueError):
+        next_number = 1
+
+    return f"MRL-{next_number:06d}"
+
+
+def add_matter_relationship(
+    matter_id,
+    relationship_type,
+    linked_record_id,
+    display_label,
+    purpose_basis="",
+    created_by="",
+    status="Active",
+):
+    ensure_matter_tables()
+
+    allowed_types = {
+        "Trust",
+        "Person",
+        "Asset",
+        "Document",
+        "Transfer",
+        "Media",
+        "Minute",
+        "Intake Record",
+        "Other",
+    }
+
+    relationship_type = (relationship_type or "").strip()
+    linked_record_id = (linked_record_id or "").strip()
+    display_label = (display_label or "").strip()
+    purpose_basis = (purpose_basis or "").strip()
+    created_by = (created_by or "").strip() or "System"
+    status = (status or "").strip() or "Active"
+
+    if relationship_type not in allowed_types:
+        return False, "Invalid relationship type."
+
+    if not linked_record_id:
+        return False, "Linked record ID is required."
+
+    if not display_label:
+        return False, "Display label is required."
+
+    if status not in {"Active", "Inactive"}:
+        return False, "Invalid relationship status."
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT 1
+        FROM matters
+        WHERE matter_id = ?
+          AND firm_id = ?
+        """,
+        (matter_id, firm_id)
+    )
+
+    if not cur.fetchone():
+        conn.close()
+        return False, "Matter not found."
+
+    cur.execute(
+        """
+        SELECT relationship_id
+        FROM matter_relationships
+        WHERE matter_id = ?
+          AND firm_id = ?
+          AND relationship_type = ?
+          AND linked_record_id = ?
+          AND status = 'Active'
+        """,
+        (
+            matter_id,
+            firm_id,
+            relationship_type,
+            linked_record_id,
+        )
+    )
+
+    if cur.fetchone():
+        conn.close()
+        return False, "An active relationship to this record already exists."
+
+    relationship_id = _next_relationship_id()
+
+    cur.execute(
+        """
+        INSERT INTO matter_relationships (
+            relationship_id,
+            matter_id,
+            firm_id,
+            relationship_type,
+            linked_record_id,
+            display_label,
+            purpose_basis,
+            created_by,
+            status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+            relationship_type,
+            linked_record_id,
+            display_label,
+            purpose_basis,
+            created_by,
+            status,
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type="Relationship Added",
+        actor=created_by,
+        authority_basis=purpose_basis or "Matter Relationship Review",
+        description=(
+            f"{relationship_type} relationship added: "
+            f"{display_label} ({linked_record_id})"
+        ),
+        linked_record_type=relationship_type.lower(),
+        linked_record_id=linked_record_id,
+    )
+
+    return True, relationship_id
+
+
+def list_matter_relationships(matter_id):
+    ensure_matter_tables()
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            relationship_id,
+            relationship_type,
+            linked_record_id,
+            display_label,
+            purpose_basis,
+            created_by,
+            status,
+            created_at
+        FROM matter_relationships
+        WHERE matter_id = ?
+          AND firm_id = ?
+        ORDER BY id DESC
+        """,
+        (matter_id, firm_id)
+    )
+
+    rows = cur.fetchall()
+    conn.close()
+    return rows
 
 
 def get_matter(matter_id):

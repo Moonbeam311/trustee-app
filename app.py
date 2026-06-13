@@ -19030,6 +19030,8 @@ from services.services_matters import (
     add_matter_event,
     update_governance_state,
     update_matter_risk,
+    add_matter_relationship,
+    list_matter_relationships,
 )
 
 @app.route("/matters")
@@ -19106,7 +19108,53 @@ def matter_risk_update(matter_id):
 def matter_detail(matter_id):
     ensure_matter_tables()
     matter, events = get_matter(matter_id)
-    return render_template("matter_detail.html", matter=matter, events=events)
+    relationships = list_matter_relationships(matter_id) if matter else []
+    return render_template(
+        "matter_detail.html",
+        matter=matter,
+        events=events,
+        relationships=relationships
+    )
+
+
+@csrf.exempt
+@app.route("/matters/<matter_id>/relationships/new", methods=["GET", "POST"])
+def new_matter_relationship(matter_id):
+    ensure_matter_tables()
+
+    matter, events = get_matter(matter_id)
+
+    if not matter:
+        flash("Matter not found.", "warning")
+        return redirect(url_for("matters_dashboard"))
+
+    if request.method == "POST":
+        success, result = add_matter_relationship(
+            matter_id=matter_id,
+            relationship_type=request.form.get("relationship_type"),
+            linked_record_id=request.form.get("linked_record_id"),
+            display_label=request.form.get("display_label"),
+            purpose_basis=request.form.get("purpose_basis"),
+            created_by=session.get("username") or "System",
+            status=request.form.get("status") or "Active",
+        )
+
+        if success:
+            flash(f"Matter relationship {result} added.", "success")
+            return redirect(url_for("matter_detail", matter_id=matter_id))
+
+        return render_template(
+            "matter_relationship_form.html",
+            matter=matter,
+            error_message=result,
+            form_data=request.form
+        )
+
+    return render_template(
+        "matter_relationship_form.html",
+        matter=matter,
+        form_data={}
+    )
 
 
 @csrf.exempt
