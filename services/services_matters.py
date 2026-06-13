@@ -467,6 +467,121 @@ def add_matter_relationship(
     return True, relationship_id
 
 
+
+
+def update_matter_relationship_status(
+    matter_id,
+    relationship_id,
+    new_status,
+    reason,
+    actor="",
+    authority_basis="Matter Relationship Review",
+):
+    ensure_matter_tables()
+
+    new_status = (new_status or "").strip()
+    reason = (reason or "").strip()
+    actor = (actor or "").strip() or "System"
+    authority_basis = (
+        (authority_basis or "").strip()
+        or "Matter Relationship Review"
+    )
+
+    if new_status not in {"Active", "Inactive"}:
+        return False, "Invalid relationship status."
+
+    if not reason:
+        return False, "Status-change reason is required."
+
+    firm_id = get_current_firm_id()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            relationship_type,
+            linked_record_id,
+            display_label,
+            status
+        FROM matter_relationships
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    row = cur.fetchone()
+
+    if not row:
+        conn.close()
+        return False, "Matter relationship not found."
+
+    relationship_type = row[0]
+    linked_record_id = row[1]
+    display_label = row[2]
+    old_status = row[3] or "Active"
+
+    if old_status == new_status:
+        conn.close()
+        return False, f"Relationship is already {new_status}."
+
+    cur.execute(
+        """
+        UPDATE matter_relationships
+        SET status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE relationship_id = ?
+          AND matter_id = ?
+          AND firm_id = ?
+        """,
+        (
+            new_status,
+            relationship_id,
+            matter_id,
+            firm_id,
+        )
+    )
+
+    if cur.rowcount != 1:
+        conn.rollback()
+        conn.close()
+        return False, "Relationship status update failed."
+
+    conn.commit()
+    conn.close()
+
+    event_type = (
+        "Relationship Reactivated"
+        if new_status == "Active"
+        else "Relationship Deactivated"
+    )
+
+    add_matter_event(
+        matter_id=matter_id,
+        event_type=event_type,
+        actor=actor,
+        authority_basis=authority_basis,
+        description=(
+            f"{relationship_type} relationship "
+            f"{relationship_id} changed from "
+            f"{old_status} → {new_status}: "
+            f"{display_label} ({linked_record_id}). "
+            f"Reason: {reason}"
+        ),
+        linked_record_type=relationship_type.lower(),
+        linked_record_id=linked_record_id,
+    )
+
+    return True, new_status
+
+
 def list_matter_relationships(matter_id):
     ensure_matter_tables()
 

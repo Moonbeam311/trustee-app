@@ -19032,6 +19032,7 @@ from services.services_matters import (
     update_matter_risk,
     add_matter_relationship,
     list_matter_relationships,
+    update_matter_relationship_status,
 )
 
 @app.route("/matters")
@@ -19114,6 +19115,40 @@ def matter_detail(matter_id):
         matter=matter,
         events=events,
         relationships=relationships
+    )
+
+
+@csrf.exempt
+@app.route(
+    "/matters/<matter_id>/relationships/<relationship_id>/status",
+    methods=["POST"]
+)
+def matter_relationship_status_update(matter_id, relationship_id):
+    ensure_matter_tables()
+
+    new_status = (request.form.get("new_status") or "").strip()
+    reason = (request.form.get("status_reason") or "").strip()
+    actor = session.get("username") or "System"
+
+    success, result = update_matter_relationship_status(
+        matter_id=matter_id,
+        relationship_id=relationship_id,
+        new_status=new_status,
+        reason=reason,
+        actor=actor,
+        authority_basis="Matter Relationship Review"
+    )
+
+    if success:
+        flash(
+            f"Relationship {relationship_id} updated to {result}.",
+            "success"
+        )
+    else:
+        flash(result, "warning")
+
+    return redirect(
+        url_for("matter_detail", matter_id=matter_id)
     )
 
 

@@ -131,6 +131,7 @@
                 <th>Created By</th>
                 <th>Status</th>
                 <th>Created</th>
+                <th>Management</th>
             </tr>
         </thead>
         <tbody>
@@ -144,6 +145,43 @@
                 <td>{{ r[5] }}</td>
                 <td>{{ r[6] }}</td>
                 <td>{{ r[7] }}</td>
+                <td>
+                    <form method="post"
+                          action="{{ url_for(
+                              'matter_relationship_status_update',
+                              matter_id=matter[1],
+                              relationship_id=r[0]
+                          ) }}">
+
+                        {% if r[6] == "Active" %}
+                            <input type="hidden"
+                                   name="new_status"
+                                   value="Inactive">
+
+                            <input type="text"
+                                   name="status_reason"
+                                   required
+                                   placeholder="Reason for deactivation">
+
+                            <button type="submit">
+                                Deactivate
+                            </button>
+                        {% else %}
+                            <input type="hidden"
+                                   name="new_status"
+                                   value="Active">
+
+                            <input type="text"
+                                   name="status_reason"
+                                   required
+                                   placeholder="Reason for reactivation">
+
+                            <button type="submit">
+                                Reactivate
+                            </button>
+                        {% endif %}
+                    </form>
+                </td>
             </tr>
         {% endfor %}
         </tbody>
