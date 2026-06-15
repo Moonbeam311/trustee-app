@@ -97,6 +97,8 @@ def test_bridge_template_contains_review_and_history() -> None:
     assert "Immutable Bridge History" in source
     assert 'name="handoff_status"' in source
     assert 'name="event_basis"' in source
+    assert 'name="csrf_token"' in source
+    assert "{{ csrf_token() }}" in source
     assert "event.event_id" in source
     assert "event.event_type" in source
 
