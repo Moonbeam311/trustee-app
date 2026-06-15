@@ -2594,7 +2594,17 @@ app.jinja_env.globals["app_csrf_token"] = generate_csrf_token
 
 init_audit_table()
 
+
 init_db()
+
+# MIA-1C: additive startup migrations
+# This creates schema only. It does not create Matter–Intake links.
+from database.db import DB_PATH as ACTIVE_STARTUP_DB_PATH
+from database.startup_migrations import run_additive_startup_migrations
+
+MIA_STARTUP_MIGRATION_RESULT = run_additive_startup_migrations(
+    ACTIVE_STARTUP_DB_PATH
+)
 ensure_k1_tables()
 ensure_instrument_tables()
 ensure_fiduciary_tables()
