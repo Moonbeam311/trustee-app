@@ -607,6 +607,13 @@
                                     </td>
                                     <td style="padding:8px;">
                                         <a href="{{ url_for(
+                                            'matter_intake_bridge_detail',
+                                            bridge_id=link.bridge_id
+                                        ) }}">
+                                            Review Handoff
+                                        </a>
+                                        |
+                                        <a href="{{ url_for(
                                             'matter_detail',
                                             matter_id=link.matter_id
                                         ) }}">

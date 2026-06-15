@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Matter–Intake Handoff Review</title>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='trust_ui.css') }}"
+    >
+</head>
+<body>
+<main style="max-width:1100px; margin:30px auto; padding:0 20px;">
+    <p>
+        <a href="{{ url_for(
+            'matter_detail',
+            matter_id=bridge.matter_id
+        ) }}">
+            ← Back to Matter
+        </a>
+        |
+        <a href="{{ url_for(
+            'intake_saved_snapshot',
+            intake_id=bridge.intake_id
+        ) }}">
+            Open Intake
+        </a>
+    </p>
+
+    <h1>Matter–Intake Handoff Review</h1>
+
+    <div style="padding:14px; border:1px solid #cbd5e1; border-radius:8px;">
+        <p>
+            This bridge is the operational handoff record.
+            It does not create, validate, verify, correct,
+            or replace a Matter Relationship.
+        </p>
+    </div>
+
+    <h2>Bridge Record</h2>
+
+    <table style="width:100%; border-collapse:collapse;">
+        <tbody>
+            <tr>
+                <th style="text-align:left; padding:8px;">Bridge ID</th>
+                <td style="padding:8px;">{{ bridge.bridge_id }}</td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Matter</th>
+                <td style="padding:8px;">{{ bridge.matter_id }}</td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Intake</th>
+                <td style="padding:8px;">{{ bridge.intake_id }}</td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Role</th>
+                <td style="padding:8px;">
+                    {{ "Primary" if bridge.is_primary else bridge.link_type }}
+                </td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Link Status</th>
+                <td style="padding:8px;">{{ bridge.link_status }}</td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Handoff Status</th>
+                <td style="padding:8px;">{{ bridge.handoff_status }}</td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Disposition</th>
+                <td style="padding:8px;">
+                    {{ bridge.recommendation_disposition or "Not recorded" }}
+                </td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Reviewed By</th>
+                <td style="padding:8px;">
+                    {{ bridge.handoff_by or "Not reviewed" }}
+                </td>
+            </tr>
+            <tr>
+                <th style="text-align:left; padding:8px;">Reviewed At</th>
+                <td style="padding:8px;">
+                    {{ bridge.handoff_at or "Not reviewed" }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% if bridge.link_status != "ENDED" %}
+    <section style="margin-top:28px; padding:18px; border:1px solid #cbd5e1; border-radius:8px;">
+        <h2 style="margin-top:0;">Record Handoff Decision</h2>
+
+        <form method="POST">
+            <div style="margin-bottom:14px;">
+                <label for="handoff_status">
+                    <strong>Decision</strong>
+                </label>
+                <select
+                    id="handoff_status"
+                    name="handoff_status"
+                    required
+                >
+                    <option value="">Select decision</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="MODIFIED">Modified</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label for="recommendation_disposition">
+                    <strong>Recommendation Disposition</strong>
+                </label>
+                <textarea
+                    id="recommendation_disposition"
+                    name="recommendation_disposition"
+                    rows="4"
+                    placeholder="State the accepted, modified, or rejected recommendation disposition."
+                ></textarea>
+            </div>
+
+            <div style="margin-bottom:14px;">
+                <label for="event_basis">
+                    <strong>Decision Basis</strong>
+                </label>
+                <textarea
+                    id="event_basis"
+                    name="event_basis"
+                    rows="4"
+                    required
+                    placeholder="State the authority, evidence, review, or governance basis for this decision."
+                ></textarea>
+            </div>
+
+            <button type="submit">
+                Record Handoff Decision
+            </button>
+        </form>
+    </section>
+    {% endif %}
+
+    <section style="margin-top:28px;">
+        <h2>Immutable Bridge History</h2>
+
+        {% if events %}
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px;">Event</th>
+                        <th style="text-align:left; padding:8px;">Type</th>
+                        <th style="text-align:left; padding:8px;">Actor</th>
+                        <th style="text-align:left; padding:8px;">Basis</th>
+                        <th style="text-align:left; padding:8px;">Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td style="padding:8px;">{{ event.event_id }}</td>
+                        <td style="padding:8px;">{{ event.event_type }}</td>
+                        <td style="padding:8px;">{{ event.actor_id }}</td>
+                        <td style="padding:8px;">
+                            {{ event.event_basis or "Not stated" }}
+                        </td>
+                        <td style="padding:8px;">{{ event.created_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No bridge events were found.</p>
+        {% endif %}
+    </section>
+</main>
+</body>
+</html>

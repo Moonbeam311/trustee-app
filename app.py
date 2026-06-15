@@ -42,8 +42,14 @@ from services.services_intake import generate_final_draft_preview_docx
 from services.services_intake import build_final_draft_version_register_context
 from services.services_intake import build_final_draft_completion_gate_context, record_final_draft_completion
 from services.services_matter_intake import (
+    MatterIntakeConflictError,
+    MatterIntakeNotFoundError,
+    MatterIntakeValidationError,
+    get_matter_intake_link,
+    list_link_events,
     list_links_for_matter,
     list_links_for_intake,
+    review_matter_intake_handoff,
 )
 from database.db import (
     ensure_identity_intake_table,
@@ -19161,6 +19167,135 @@ def matter_detail(matter_id):
         events=events,
         relationships=relationships,
         matter_intake_links=matter_intake_links,
+    )
+
+
+@app.route(
+    "/matter-intake-bridges/<bridge_id>",
+    methods=["GET", "POST"],
+)
+def matter_intake_bridge_detail(bridge_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    actor_id = (
+        session.get("username")
+        or session.get("user_id")
+        or ""
+    )
+
+    bridge = get_matter_intake_link(
+        DB_PATH,
+        firm_id=firm_id,
+        bridge_id=bridge_id,
+    )
+
+    if not bridge:
+        flash(
+            "Matter–Intake bridge was not found in the active firm.",
+            "warning",
+        )
+        return redirect(url_for("matters_dashboard"))
+
+    if request.method == "POST":
+        handoff_status = (
+            request.form.get("handoff_status") or ""
+        ).strip().upper()
+
+        recommendation_disposition = (
+            request.form.get(
+                "recommendation_disposition"
+            )
+            or ""
+        ).strip()
+
+        event_basis = (
+            request.form.get("event_basis") or ""
+        ).strip()
+
+        if handoff_status not in {
+            "ACCEPTED",
+            "MODIFIED",
+            "REJECTED",
+        }:
+            flash(
+                "Select Accepted, Modified, or Rejected.",
+                "warning",
+            )
+
+        elif not event_basis:
+            flash(
+                "Decision basis is required.",
+                "warning",
+            )
+
+        elif not actor_id:
+            flash(
+                "An authenticated review actor is required.",
+                "warning",
+            )
+
+        else:
+            try:
+                review_matter_intake_handoff(
+                    DB_PATH,
+                    firm_id=firm_id,
+                    bridge_id=bridge_id,
+                    handoff_status=handoff_status,
+                    actor_id=str(actor_id),
+                    recommendation_disposition=(
+                        recommendation_disposition
+                        or None
+                    ),
+                    event_basis=event_basis,
+                )
+
+                flash(
+                    "Matter–Intake handoff decision recorded.",
+                    "success",
+                )
+
+                return redirect(
+                    url_for(
+                        "matter_intake_bridge_detail",
+                        bridge_id=bridge_id,
+                    )
+                )
+
+            except MatterIntakeNotFoundError:
+                flash(
+                    "Matter–Intake bridge was not found "
+                    "in the active firm.",
+                    "warning",
+                )
+
+                return redirect(
+                    url_for("matters_dashboard")
+                )
+
+            except (
+                MatterIntakeValidationError,
+                MatterIntakeConflictError,
+            ) as error:
+                flash(str(error), "warning")
+
+    bridge = get_matter_intake_link(
+        DB_PATH,
+        firm_id=firm_id,
+        bridge_id=bridge_id,
+    )
+
+    events = list_link_events(
+        DB_PATH,
+        firm_id=firm_id,
+        bridge_id=bridge_id,
+    )
+
+    return render_template(
+        "matter_intake_bridge_detail.html",
+        bridge=bridge,
+        events=events,
     )
 
 
