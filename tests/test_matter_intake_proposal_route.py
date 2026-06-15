@@ -44,6 +44,36 @@ def test_proposal_route_is_post_only() -> None:
     assert 'methods=["POST"]' in source
 
 
+def test_proposal_route_uses_explicit_application_csrf_gate() -> None:
+    source = read(APP)
+    route = function_source(
+        "propose_matter_intake_bridge"
+    )
+
+    route_position = source.index(
+        "def propose_matter_intake_bridge"
+    )
+
+    decorator_window = source[
+        max(0, route_position - 180):
+        route_position
+    ]
+
+    assert "@csrf.exempt" in decorator_window
+    assert "validate_csrf_token()" in route
+    assert "Invalid or missing CSRF token." in route
+
+    creation_position = route.index(
+        "create_matter_intake_link("
+    )
+
+    csrf_position = route.index(
+        "validate_csrf_token()"
+    )
+
+    assert csrf_position < creation_position
+
+
 def test_proposal_route_uses_session_scope_and_actor() -> None:
     route = function_source(
         "propose_matter_intake_bridge"
@@ -103,7 +133,7 @@ def test_proposal_form_is_csrf_protected() -> None:
         in source
     )
     assert "propose_matter_intake_bridge" in source
-    assert 'name="csrf_token"' in source
+    assert 'name="_csrf_token"' in source
     assert "{{ csrf_token() }}" in source
     assert 'name="intake_id"' in source
     assert 'name="is_primary"' in source

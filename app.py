@@ -19216,6 +19216,7 @@ def matter_detail(matter_id):
     )
 
 
+@csrf.exempt
 @app.route(
     "/matters/<matter_id>/intake-handoff/propose",
     methods=["POST"],
@@ -19223,6 +19224,18 @@ def matter_detail(matter_id):
 def propose_matter_intake_bridge(matter_id):
     if not session.get("user_id") and not session.get("username"):
         return redirect(url_for("login"))
+
+    if not validate_csrf_token():
+        flash(
+            "Invalid or missing CSRF token.",
+            "warning",
+        )
+        return redirect(
+            url_for(
+                "matter_detail",
+                matter_id=matter_id,
+            )
+        )
 
     firm_id = session.get("firm_id") or "FIRM-001"
     actor_id = (

@@ -180,7 +180,7 @@ def test_explicit_proposal_form_is_separate_from_listing() -> None:
     assert "<form" in proposal_section
     assert 'method="POST"' in proposal_section
     assert "propose_matter_intake_bridge" in proposal_section
-    assert 'name="csrf_token"' in proposal_section
+    assert 'name="_csrf_token"' in proposal_section
     assert "{{ csrf_token() }}" in proposal_section
 
     assert "review_matter_intake_handoff" not in proposal_section
