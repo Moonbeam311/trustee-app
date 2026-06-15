@@ -1072,6 +1072,77 @@ def get_intake_session(intake_id):
     return dict(zip(keys, row))
 
 
+
+def get_intake_session_for_firm(
+    intake_id,
+    firm_id,
+):
+    """
+    Return an Intake session only when it belongs to the supplied firm.
+
+    This helper is additive and does not alter the legacy unscoped
+    get_intake_session() contract used by older workflows.
+    """
+    ensure_intake_tables()
+
+    intake_id = (intake_id or "").strip()
+    firm_id = (firm_id or "").strip()
+
+    if not intake_id or not firm_id:
+        return None
+
+    conn = get_connection()
+    conn.row_factory = None
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT
+            intake_id,
+            intake_lane,
+            user_posture,
+            default_depth,
+            risk_posture,
+            professional_review_recommended,
+            automation_limits,
+            next_screen,
+            status,
+            created_at,
+            updated_at
+        FROM intake_sessions
+        WHERE intake_id = ?
+          AND firm_id = ?
+        LIMIT 1
+        """,
+        (
+            intake_id,
+            firm_id,
+        ),
+    )
+
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    keys = [
+        "intake_id",
+        "intake_lane",
+        "user_posture",
+        "default_depth",
+        "risk_posture",
+        "professional_review_recommended",
+        "automation_limits",
+        "next_screen",
+        "status",
+        "created_at",
+        "updated_at",
+    ]
+
+    return dict(zip(keys, row))
+
+
 # -------------------------------------------------------------------
 # INT-1C — Intake Scoring Engine
 # -------------------------------------------------------------------
@@ -1835,6 +1906,28 @@ def get_saved_client_snapshot(intake_id):
     snapshot = build_client_snapshot(technical_result)
     snapshot["technical_result"] = technical_result
     return snapshot, technical_result
+
+
+
+def get_saved_client_snapshot_for_firm(
+    intake_id,
+    firm_id,
+):
+    """
+    Return a saved Intake snapshot only after firm ownership is proven.
+
+    The ownership gate executes before the legacy snapshot builder,
+    preventing cross-firm route access through an Intake identifier.
+    """
+    intake = get_intake_session_for_firm(
+        intake_id,
+        firm_id,
+    )
+
+    if not intake:
+        return None, None
+
+    return get_saved_client_snapshot(intake_id)
 
 
 # -------------------------------------------------------------------
@@ -9887,4 +9980,3 @@ def build_instrument_draft_packet(intake_id, workflow_key):
         "total_questions": total_questions,
         "notice": "This instrument draft packet is a preparation tool only. It does not create a final signed, filed, executed, transferred, or legally final document.",
     }
-

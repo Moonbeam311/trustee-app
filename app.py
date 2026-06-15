@@ -11,7 +11,7 @@ from services.services_intake import ensure_intake_tables, get_intake_lanes, cre
 from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from services.services_intake import build_client_snapshot
-from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, ensure_intake_snapshot_tables
+from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, get_saved_client_snapshot_for_firm, ensure_intake_snapshot_tables
 from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
 from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
 from services.services_intake import create_intake_review_note, list_intake_review_notes, list_intake_dashboard_with_review_notes, get_review_note_form_options, ensure_intake_review_note_tables
@@ -41,6 +41,10 @@ from services.services_intake import build_final_draft_section_editor_context, g
 from services.services_intake import generate_final_draft_preview_docx
 from services.services_intake import build_final_draft_version_register_context
 from services.services_intake import build_final_draft_completion_gate_context, record_final_draft_completion
+from services.services_matter_intake import (
+    list_links_for_matter,
+    list_links_for_intake,
+)
 from database.db import (
     ensure_identity_intake_table,
     verify_audit_log_chain,
@@ -17866,11 +17870,22 @@ def intake_dashboard():
 
 @app.route("/intake/<intake_id>/snapshot")
 def intake_saved_snapshot(intake_id):
-    snapshot, result = get_saved_client_snapshot(intake_id)
+    firm_id = session.get("firm_id") or "FIRM-001"
+
+    snapshot, result = get_saved_client_snapshot_for_firm(
+        intake_id,
+        firm_id,
+    )
 
     if not snapshot:
         flash("Saved intake snapshot not found.", "warning")
         return redirect(url_for("intake_dashboard"))
+
+    matter_intake_links = list_links_for_intake(
+        DB_PATH,
+        firm_id=firm_id,
+        intake_id=intake_id,
+    )
 
     auto_generate_followup_tasks_from_snapshot(
         intake_id=intake_id,
@@ -17893,7 +17908,8 @@ def intake_saved_snapshot(intake_id):
         tasks=tasks,
         task_options=task_options,
         task_summary=task_summary,
-        task_groups=task_groups
+        task_groups=task_groups,
+        matter_intake_links=matter_intake_links,
     )
 
 
@@ -19126,11 +19142,25 @@ def matter_detail(matter_id):
     ensure_matter_tables()
     matter, events = get_matter(matter_id)
     relationships = list_matter_relationships(matter_id) if matter else []
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+
+    matter_intake_links = (
+        list_links_for_matter(
+            DB_PATH,
+            firm_id=firm_id,
+            matter_id=matter_id,
+        )
+        if matter
+        else []
+    )
+
     return render_template(
         "matter_detail.html",
         matter=matter,
         events=events,
-        relationships=relationships
+        relationships=relationships,
+        matter_intake_links=matter_intake_links,
     )
 
 
@@ -19506,4 +19536,3 @@ if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
 app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
-
