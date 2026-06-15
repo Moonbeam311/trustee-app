@@ -847,3 +847,258 @@ def end_matter_intake_link(
 
     finally:
         connection.close()
+
+
+def review_matter_intake_handoff(
+    db_path: str | Path,
+    *,
+    firm_id: str,
+    bridge_id: str,
+    handoff_status: str,
+    actor_id: str,
+    recommendation_disposition: str | None = None,
+    event_basis: str | None = None,
+) -> dict[str, Any]:
+    """
+    Review a proposed Matter-Intake handoff atomically.
+
+    The bridge decision, immutable bridge event, Matter event,
+    and Matter updated_at value are committed together or rolled
+    back together.
+    """
+    apply_matter_intake_bridge_schema(db_path)
+
+    normalized_status = _normalize_choice(
+        handoff_status,
+        "handoff_status",
+        {
+            "ACCEPTED",
+            "MODIFIED",
+            "REJECTED",
+        },
+    )
+
+    normalized_disposition = _normalize_optional_choice(
+        recommendation_disposition,
+        "recommendation_disposition",
+        VALID_RECOMMENDATION_DISPOSITIONS,
+    )
+
+    firm_id = _clean_required(
+        firm_id,
+        "firm_id",
+    )
+
+    bridge_id = _clean_required(
+        bridge_id,
+        "bridge_id",
+    )
+
+    actor = _clean_required(
+        actor_id,
+        "actor_id",
+    )
+
+    basis = (
+        str(event_basis).strip()
+        if event_basis is not None
+        else None
+    )
+
+    bridge_event_type = {
+        "ACCEPTED": "HANDOFF_ACCEPTED",
+        "MODIFIED": "HANDOFF_MODIFIED",
+        "REJECTED": "HANDOFF_REJECTED",
+    }[normalized_status]
+
+    matter_event_type = {
+        "ACCEPTED": "Intake Handoff Accepted",
+        "MODIFIED": "Intake Handoff Modified",
+        "REJECTED": "Intake Handoff Rejected",
+    }[normalized_status]
+
+    connection = _connect(db_path)
+
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+
+        previous = _get_link_for_update(
+            connection,
+            firm_id,
+            bridge_id,
+        )
+
+        if previous["link_status"] == "ENDED":
+            raise MatterIntakeConflictError(
+                "An ended bridge cannot receive a handoff decision."
+            )
+
+        matter_id = previous["matter_id"]
+        intake_id = previous["intake_id"]
+
+        _assert_matter_exists(
+            connection,
+            firm_id,
+            matter_id,
+        )
+
+        _assert_intake_exists(
+            connection,
+            firm_id,
+            intake_id,
+        )
+
+        now = utc_now()
+        link_status = previous["link_status"]
+
+        if normalized_status == "ACCEPTED":
+            link_status = "ACTIVE"
+        elif normalized_status == "REJECTED":
+            link_status = "REJECTED"
+
+        connection.execute(
+            f"""
+            UPDATE {LINK_TABLE}
+            SET handoff_status = ?,
+                handoff_by = ?,
+                handoff_at = ?,
+                recommendation_disposition =
+                    COALESCE(
+                        ?,
+                        recommendation_disposition
+                    ),
+                link_status = ?,
+                updated_by = ?,
+                updated_at = ?
+            WHERE firm_id = ?
+              AND bridge_id = ?
+            """,
+            (
+                normalized_status,
+                actor,
+                now,
+                normalized_disposition,
+                link_status,
+                actor,
+                now,
+                firm_id,
+                bridge_id,
+            ),
+        )
+
+        current = _get_link_for_update(
+            connection,
+            firm_id,
+            bridge_id,
+        )
+
+        bridge_event = _record_event(
+            connection,
+            bridge_id=bridge_id,
+            firm_id=firm_id,
+            event_type=bridge_event_type,
+            actor_id=actor,
+            event_basis=basis,
+            previous_state=dict(previous),
+            new_state=dict(current),
+        )
+
+        matter_event_id = _next_identifier(
+            connection,
+            "matter_events",
+            "event_id",
+            "MEV",
+        )
+
+        description = (
+            f"Intake handoff {normalized_status.lower()} "
+            f"for Intake {intake_id} through bridge "
+            f"{bridge_id}."
+        )
+
+        connection.execute(
+            """
+            INSERT INTO matter_events (
+                event_id,
+                matter_id,
+                firm_id,
+                event_type,
+                actor,
+                authority_basis,
+                description,
+                linked_record_type,
+                linked_record_id,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                matter_event_id,
+                matter_id,
+                firm_id,
+                matter_event_type,
+                actor,
+                basis or "Matter-Intake Handoff Review",
+                description,
+                "Matter Intake Bridge",
+                bridge_id,
+                now,
+            ),
+        )
+
+        matter_update = connection.execute(
+            """
+            UPDATE matters
+            SET updated_at = ?
+            WHERE matter_id = ?
+              AND firm_id = ?
+            """,
+            (
+                now,
+                matter_id,
+                firm_id,
+            ),
+        )
+
+        if matter_update.rowcount != 1:
+            raise MatterIntakeNotFoundError(
+                f"Matter {matter_id} was not found "
+                f"for firm {firm_id}."
+            )
+
+        connection.commit()
+
+        return {
+            "link": dict(current),
+            "bridge_event": bridge_event,
+            "matter_event": {
+                "event_id": matter_event_id,
+                "matter_id": matter_id,
+                "firm_id": firm_id,
+                "event_type": matter_event_type,
+                "actor": actor,
+                "authority_basis": (
+                    basis
+                    or "Matter-Intake Handoff Review"
+                ),
+                "description": description,
+                "linked_record_type": (
+                    "Matter Intake Bridge"
+                ),
+                "linked_record_id": bridge_id,
+                "created_at": now,
+            },
+        }
+
+    except sqlite3.IntegrityError as error:
+        connection.rollback()
+        raise MatterIntakeConflictError(
+            str(error)
+        ) from error
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
