@@ -559,6 +559,73 @@
     </div>
 
     <div id="technicalSnapshot" style="display:none; margin-top: 24px;">
+        {# MIA-1D-F-E: institutional Matter panel #}
+        <section class="institutional-matter-panel"
+                 style="margin:24px 0; padding:18px; border:1px solid #cbd5e1; border-radius:10px;">
+            <h2 style="margin-top:0;">Institutional Matter</h2>
+
+            <p class="snapshot-muted">
+                This panel shows the governed Matter handoff for this
+                Intake. It does not replace a Matter Relationship,
+                relationship verification, or the Intake lifecycle ledger.
+            </p>
+
+            {% if matter_intake_links %}
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left; padding:8px;">Bridge</th>
+                                <th style="text-align:left; padding:8px;">Matter</th>
+                                <th style="text-align:left; padding:8px;">Role</th>
+                                <th style="text-align:left; padding:8px;">Link Status</th>
+                                <th style="text-align:left; padding:8px;">Handoff</th>
+                                <th style="text-align:left; padding:8px;">Disposition</th>
+                                <th style="text-align:left; padding:8px;">Open</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for link in matter_intake_links %}
+                                <tr>
+                                    <td style="padding:8px;">
+                                        {{ link.bridge_id }}
+                                    </td>
+                                    <td style="padding:8px;">
+                                        {{ link.matter_id }}
+                                    </td>
+                                    <td style="padding:8px;">
+                                        {{ "Primary" if link.is_primary else link.link_type }}
+                                    </td>
+                                    <td style="padding:8px;">
+                                        {{ link.link_status }}
+                                    </td>
+                                    <td style="padding:8px;">
+                                        {{ link.handoff_status }}
+                                    </td>
+                                    <td style="padding:8px;">
+                                        {{ link.recommendation_disposition or "Not recorded" }}
+                                    </td>
+                                    <td style="padding:8px;">
+                                        <a href="{{ url_for(
+                                            'matter_detail',
+                                            matter_id=link.matter_id
+                                        ) }}">
+                                            Open Matter
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="snapshot-muted">
+                    No governed Institutional Matter handoff is currently
+                    recorded for this Intake.
+                </p>
+            {% endif %}
+        </section>
+
         {% include "intake/translation_snapshot.html" %}
     </div>
 </div>

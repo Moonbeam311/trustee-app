@@ -204,6 +204,71 @@
 
     <hr>
 
+    {# MIA-1D-F-E: governed Intake handoff panel #}
+    <section class="matter-intake-handoff"
+             style="margin:24px 0; padding:18px; border:1px solid #cbd5e1; border-radius:10px;">
+        <h2 style="margin-top:0;">Intake Handoff</h2>
+
+        <p>
+            This panel shows the governed operational handoff between
+            this Matter and an Intake record. It is separate from the
+            general Matter Relationship and verification system.
+        </p>
+
+        {% if matter_intake_links %}
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left; padding:8px;">Bridge</th>
+                        <th style="text-align:left; padding:8px;">Intake</th>
+                        <th style="text-align:left; padding:8px;">Role</th>
+                        <th style="text-align:left; padding:8px;">Link Status</th>
+                        <th style="text-align:left; padding:8px;">Handoff</th>
+                        <th style="text-align:left; padding:8px;">Disposition</th>
+                        <th style="text-align:left; padding:8px;">Open</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in matter_intake_links %}
+                        <tr>
+                            <td style="padding:8px;">
+                                {{ link.bridge_id }}
+                            </td>
+                            <td style="padding:8px;">
+                                {{ link.intake_id }}
+                            </td>
+                            <td style="padding:8px;">
+                                {{ "Primary" if link.is_primary else link.link_type }}
+                            </td>
+                            <td style="padding:8px;">
+                                {{ link.link_status }}
+                            </td>
+                            <td style="padding:8px;">
+                                {{ link.handoff_status }}
+                            </td>
+                            <td style="padding:8px;">
+                                {{ link.recommendation_disposition or "Not recorded" }}
+                            </td>
+                            <td style="padding:8px;">
+                                <a href="{{ url_for(
+                                    'intake_saved_snapshot',
+                                    intake_id=link.intake_id
+                                ) }}">
+                                    Open Intake
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>
+                No governed Matter–Intake handoff is currently recorded
+                for this Matter.
+            </p>
+        {% endif %}
+    </section>
+
     <h2>Matter Timeline</h2>
 
     <table>
