@@ -215,6 +215,91 @@
             general Matter Relationship and verification system.
         </p>
 
+        {# MIA-1D-F-G-B3: explicit handoff proposal #}
+        <section style="margin:18px 0; padding:16px; border:1px solid #d1d5db; border-radius:8px;">
+            <h3 style="margin-top:0;">Propose Intake Handoff</h3>
+
+            <p>
+                This records a pending operational proposal only.
+                It does not accept the handoff and does not create,
+                verify, or modify a Matter Relationship.
+            </p>
+
+            {% if eligible_intakes %}
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'propose_matter_intake_bridge',
+                        matter_id=matter[1]
+                    ) }}"
+                >
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+                    <div style="margin-bottom:12px;">
+                        <label for="intake_id">
+                            <strong>Intake Record</strong>
+                        </label>
+
+                        <select
+                            id="intake_id"
+                            name="intake_id"
+                            required
+                        >
+                            <option value="">
+                                Select Intake record
+                            </option>
+
+                            {% for intake in eligible_intakes %}
+                                <option value="{{ intake.intake_id }}">
+                                    {{ intake.intake_id }}
+                                    — {{ intake.intake_lane }}
+                                    — {{ intake.status }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="is_primary"
+                                value="1"
+                            >
+                            Propose as primary Intake handoff
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom:12px;">
+                        <label for="event_basis">
+                            <strong>Proposal Basis</strong>
+                        </label>
+
+                        <textarea
+                            id="event_basis"
+                            name="event_basis"
+                            rows="4"
+                            required
+                            placeholder="State why this Intake should be operationally associated with this Matter."
+                        ></textarea>
+                    </div>
+
+                    <button type="submit">
+                        Record Pending Proposal
+                    </button>
+                </form>
+            {% else %}
+                <p>
+                    No unlinked Intake records are currently
+                    available in the active firm.
+                </p>
+            {% endif %}
+        </section>
+
         {% if matter_intake_links %}
             <table style="width:100%; border-collapse:collapse;">
                 <thead>

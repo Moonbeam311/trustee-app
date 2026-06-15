@@ -90,27 +90,48 @@ def test_templates_parse_as_jinja() -> None:
     )
 
 
-def test_visibility_panels_are_read_only() -> None:
+def test_visibility_listing_remains_read_only() -> None:
     matter_source = read(MATTER_TEMPLATE)
     intake_source = read(INTAKE_TEMPLATE)
 
-    governed_sections = (
-        matter_source[
-            matter_source.index(
-                "MIA-1D-F-E: governed Intake handoff panel"
-            ):
-            matter_source.index(
-                "<h2>Matter Timeline</h2>"
-            )
-        ]
-        + intake_source[
-            intake_source.index(
-                "MIA-1D-F-E: institutional Matter panel"
-            ):
-            intake_source.index(
-                'include "intake/translation_snapshot.html"'
-            )
-        ]
+    matter_section = matter_source[
+        matter_source.index(
+            "MIA-1D-F-E: governed Intake handoff panel"
+        ):
+        matter_source.index(
+            "<h2>Matter Timeline</h2>"
+        )
+    ]
+
+    intake_section = intake_source[
+        intake_source.index(
+            "MIA-1D-F-E: institutional Matter panel"
+        ):
+        intake_source.index(
+            'include "intake/translation_snapshot.html"'
+        )
+    ]
+
+    proposal_marker = (
+        "MIA-1D-F-G-B3: explicit handoff proposal"
+    )
+
+    assert proposal_marker in matter_section
+
+    proposal_start = matter_section.index(
+        proposal_marker
+    )
+
+    listing_start = matter_section.index(
+        "{% if matter_intake_links %}",
+        proposal_start,
+    )
+
+    matter_listing = matter_section[listing_start:]
+
+    governed_listing_sections = (
+        matter_listing
+        + intake_section
     )
 
     prohibited = (
@@ -123,4 +144,44 @@ def test_visibility_panels_are_read_only() -> None:
     )
 
     for marker in prohibited:
-        assert marker not in governed_sections
+        assert marker not in governed_listing_sections
+
+
+def test_explicit_proposal_form_is_separate_from_listing() -> None:
+    matter_source = read(MATTER_TEMPLATE)
+
+    matter_section = matter_source[
+        matter_source.index(
+            "MIA-1D-F-E: governed Intake handoff panel"
+        ):
+        matter_source.index(
+            "<h2>Matter Timeline</h2>"
+        )
+    ]
+
+    proposal_marker = (
+        "MIA-1D-F-G-B3: explicit handoff proposal"
+    )
+
+    proposal_start = matter_section.index(
+        proposal_marker
+    )
+
+    listing_start = matter_section.index(
+        "{% if matter_intake_links %}",
+        proposal_start,
+    )
+
+    proposal_section = matter_section[
+        proposal_start:
+        listing_start
+    ]
+
+    assert "<form" in proposal_section
+    assert 'method="POST"' in proposal_section
+    assert "propose_matter_intake_bridge" in proposal_section
+    assert 'name="csrf_token"' in proposal_section
+    assert "{{ csrf_token() }}" in proposal_section
+
+    assert "review_matter_intake_handoff" not in proposal_section
+    assert "Add Matter Relationship" not in proposal_section

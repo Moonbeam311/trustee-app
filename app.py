@@ -45,6 +45,7 @@ from services.services_matter_intake import (
     MatterIntakeConflictError,
     MatterIntakeNotFoundError,
     MatterIntakeValidationError,
+    create_matter_intake_link,
     get_matter_intake_link,
     list_link_events,
     list_links_for_matter,
@@ -19147,7 +19148,11 @@ def matter_risk_update(matter_id):
 def matter_detail(matter_id):
     ensure_matter_tables()
     matter, events = get_matter(matter_id)
-    relationships = list_matter_relationships(matter_id) if matter else []
+    relationships = (
+        list_matter_relationships(matter_id)
+        if matter
+        else []
+    )
 
     firm_id = session.get("firm_id") or "FIRM-001"
 
@@ -19161,12 +19166,175 @@ def matter_detail(matter_id):
         else []
     )
 
+    eligible_intakes = []
+
+    if matter:
+        connection = sqlite3.connect(DB_PATH)
+        connection.row_factory = sqlite3.Row
+
+        try:
+            rows = connection.execute(
+                """
+                SELECT
+                    i.intake_id,
+                    i.intake_lane,
+                    i.status,
+                    i.created_at
+                FROM intake_sessions AS i
+                LEFT JOIN matter_intake_links AS mil
+                  ON mil.firm_id = i.firm_id
+                 AND mil.matter_id = ?
+                 AND mil.intake_id = i.intake_id
+                 AND mil.link_status != 'ENDED'
+                WHERE i.firm_id = ?
+                  AND mil.bridge_id IS NULL
+                ORDER BY
+                    i.created_at DESC,
+                    i.intake_id DESC
+                """,
+                (
+                    matter_id,
+                    firm_id,
+                ),
+            ).fetchall()
+
+            eligible_intakes = [
+                dict(row)
+                for row in rows
+            ]
+
+        finally:
+            connection.close()
+
     return render_template(
         "matter_detail.html",
         matter=matter,
         events=events,
         relationships=relationships,
         matter_intake_links=matter_intake_links,
+        eligible_intakes=eligible_intakes,
+    )
+
+
+@app.route(
+    "/matters/<matter_id>/intake-handoff/propose",
+    methods=["POST"],
+)
+def propose_matter_intake_bridge(matter_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    actor_id = (
+        session.get("username")
+        or session.get("user_id")
+        or ""
+    )
+
+    intake_id = (
+        request.form.get("intake_id") or ""
+    ).strip()
+
+    event_basis = (
+        request.form.get("event_basis") or ""
+    ).strip()
+
+    is_primary = (
+        request.form.get("is_primary") == "1"
+    )
+
+    if not intake_id:
+        flash(
+            "Select an Intake record.",
+            "warning",
+        )
+        return redirect(
+            url_for(
+                "matter_detail",
+                matter_id=matter_id,
+            )
+        )
+
+    if not event_basis:
+        flash(
+            "Proposal basis is required.",
+            "warning",
+        )
+        return redirect(
+            url_for(
+                "matter_detail",
+                matter_id=matter_id,
+            )
+        )
+
+    if not actor_id:
+        flash(
+            "An authenticated proposal actor is required.",
+            "warning",
+        )
+        return redirect(
+            url_for(
+                "matter_detail",
+                matter_id=matter_id,
+            )
+        )
+
+    try:
+        result = create_matter_intake_link(
+            DB_PATH,
+            firm_id=firm_id,
+            matter_id=matter_id,
+            intake_id=intake_id,
+            created_by=str(actor_id),
+            link_type=(
+                "PRIMARY"
+                if is_primary
+                else "SUPPORTING"
+            ),
+            link_status="PROPOSED",
+            is_primary=is_primary,
+            handoff_status="PENDING",
+            recommendation_disposition="PENDING",
+            event_basis=event_basis,
+        )
+
+    except MatterIntakeNotFoundError:
+        flash(
+            "The selected Matter or Intake record was not "
+            "found in the active firm.",
+            "warning",
+        )
+        return redirect(
+            url_for(
+                "matter_detail",
+                matter_id=matter_id,
+            )
+        )
+
+    except (
+        MatterIntakeValidationError,
+        MatterIntakeConflictError,
+    ) as error:
+        flash(str(error), "warning")
+        return redirect(
+            url_for(
+                "matter_detail",
+                matter_id=matter_id,
+            )
+        )
+
+    bridge_id = result["link"]["bridge_id"]
+
+    flash(
+        "Matter–Intake handoff proposal recorded.",
+        "success",
+    )
+
+    return redirect(
+        url_for(
+            "matter_intake_bridge_detail",
+            bridge_id=bridge_id,
+        )
     )
 
 
