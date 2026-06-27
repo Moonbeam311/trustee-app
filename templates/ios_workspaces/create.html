@@ -1,6 +1,52 @@
 <section class="admin-card">
   <h2>CREATE Workspace</h2>
   <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
+    Start new institutional work: intake, matters, trusts, instruments, documents,
+    templates, and future specialized trust structures.
   </p>
+</section>
+
+<section class="admin-card">
+  <h2>Primary Creation Paths</h2>
+  <div class="admin-actions">
+    <a class="primary-action" href="{{ url_for('create_trust_launch') }}">Create Trust</a>
+    <a href="{{ url_for('intake_dashboard') }}">Review Saved Intakes</a>
+    <a href="/intake">Start New Intake</a>
+    <a href="/instruments">Create Instrument</a>
+    <a href="/documents/generate">Generate Document</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>Trust Creation & Intake</h2>
+  <p class="admin-muted">
+    Intake gathers institutional facts. Trust creation converts approved facts into records,
+    instruments, execution packets, and lifecycle history.
+  </p>
+  <ul>
+    <li>Start New Intake — begin information gathering.</li>
+    <li>Review Saved Intakes — continue prior sessions.</li>
+    <li>Create Trust — begin formal trust record creation.</li>
+    <li>Create Instrument — prepare fiduciary or governance instruments.</li>
+  </ul>
+</section>
+
+<section class="admin-card">
+  <h2>Future Creation Modules</h2>
+  <div class="admin-grid">
+    <div class="metric"><h3>ILIT</h3><p>Queued</p></div>
+    <div class="metric"><h3>Dynasty</h3><p>Queued</p></div>
+    <div class="metric"><h3>Pet Trust</h3><p>Queued</p></div>
+    <div class="metric"><h3>Firearms</h3><p>Queued</p></div>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>Navigation</h2>
+  <div class="admin-actions">
+    <a href="/admin/workspace/home">HOME</a>
+    <a class="primary-action" href="/admin/workspace/create">CREATE</a>
+    <a href="/admin/workspace/administer">ADMINISTER</a>
+    <a href="/admin">Legacy Admin Dashboard</a>
+  </div>
 </section>
