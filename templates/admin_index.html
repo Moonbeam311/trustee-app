@@ -511,6 +511,48 @@
 
 
 <details class="admin-card legacy-quick-launch">
+  <summary>Legacy Quick Launch / Compatibility Shortcuts</summary>
+  <p class="admin-muted">
+    These older shortcuts are preserved for continuity. Use the Institutional Command Center above for normal navigation.
+  </p>
+<div class="shortcut-strip">
+ <a href="/resume">Resume Process<span>Continue the latest active transfer</span></a>
+ <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
+ <a href="/learning">Learning Hub<span>Guides, trust types, forms, and videos</span></a>
+ <a href="{{ url_for('certificate_registry') }}">Certificates<span>Execution certificates and packet records</span></a>
+ <a href="/reports">Report Center<span>PDFs and guided reports</span></a>
+ <a href="/execution">Execution<span>Tasks and workflow</span></a>
+ </div>
+
+ 
+
+</details>
+
+<details class="admin-card legacy-command-map">
+  <summary>Legacy Shortcut Map</summary>
+  <p class="admin-muted">
+    Preserved for continuity during dashboard consolidation. Prefer the Institutional Command Center above for normal navigation.
+  </p>
+  <div class="admin-action-grid">
+    <a class="primary-action" href="#intake-command-center">Intake & Lifecycle</a>
+    <a class="primary-action" href="#trust-operations">Trust Operations</a>
+    <a class="primary-action" href="#document-export-center">Documents & Exports</a>
+    <a class="primary-action" href="#learning-guidance">Learning & Guidance</a>
+    <a class="primary-action" href="#system-security">System Health & Security</a>
+    <a class="primary-action" href="#admin-tools">Admin Tools</a>
+  </div>
+</details>
+
+<div class="admin-card admin-pilot-notice">
+  <h2>Pilot Mode Notice</h2>
+  <p class="admin-muted">
+    This hosted deployment should be treated as a controlled pilot until storage persistence,
+    role permissions, backups, security posture, and sensitive-data handling are fully verified.
+  </p>
+</div>
+
+
+<details class="admin-card legacy-quick-launch">
   <summary>Legacy Quick Launch Shortcuts</summary>
   <p class="admin-muted">
     These older shortcuts are preserved for continuity. Use the Institutional Command Center above for normal navigation.
@@ -895,7 +937,7 @@
  <details class="admin-card" open>
  <summary>Security Layer</summary>
  <p><a href="{{ url_for('security_dashboard') }}">Open Security Dashboard</a></p>
- <p class="admin-muted">Current recommendation: treat hosted deployment as a controlled pilot until access/storage posture is fully hardened.</p>
+ <p class="admin-muted">Pilot reminder: confirm storage, access, backups, and export controls before live sensitive-data use.</p>
  </details>
 </div>
 </body>
