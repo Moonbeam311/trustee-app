@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "_platform_shell.html" %}
+  <title>Institutional Operating System</title>
+</head>
+<body>
+<div class="page-shell admin-wrap">
+
+  {% include "_platform_nav.html" %}
+
+  <section class="admin-card">
+    <h1>Institutional Operating System</h1>
+    <p class="admin-muted">
+      Executive shell for fiduciary operations, institutional workflow, records,
+      relationships, reports, archive, and system oversight.
+    </p>
+  </section>
+
+  <section class="admin-card">
+    <h2>Executive Home</h2>
+    <p class="admin-muted">
+      This shell answers: where am I, what requires attention, what should happen next,
+      what changed, and where do I go?
+    </p>
+
+    <div class="admin-grid">
+      <div class="metric">
+        <h3>Institution Health</h3>
+        <p>Pilot</p>
+      </div>
+      <div class="metric">
+        <h3>Trust Portfolio</h3>
+        <p>{{ report.trust_count if report else 0 }}</p>
+      </div>
+      <div class="metric">
+        <h3>Pending Reviews</h3>
+        <p>0</p>
+      </div>
+      <div class="metric">
+        <h3>Audit Exceptions</h3>
+        <p>0</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>Continue Work</h2>
+    <p class="admin-muted">
+      Resume existing institutional work or return to the legacy admin dashboard during migration.
+    </p>
+    <div class="admin-actions">
+      <a class="primary-action" href="/resume">Resume Process</a>
+      <a href="/admin">Legacy Admin Dashboard</a>
+      <a href="{{ url_for('create_trust_launch') }}">Start Trust Creation</a>
+      <a href="{{ url_for('intake_dashboard') }}">Review Intakes</a>
+      <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>Institutional Workspaces</h2>
+    <p class="admin-muted">
+      Existing routes remain active while the IOS shell takes shape.
+    </p>
+    <div class="admin-actions">
+      <a class="primary-action" href="/ios">HOME</a>
+      <a href="{{ url_for('create_trust_launch') }}">CREATE</a>
+      <a href="/admin">ADMINISTER</a>
+      <a href="/learning">LIBRARY</a>
+      <a href="/reports">REPORTS</a>
+      <a href="/security">REVIEW</a>
+      <a href="/system/health">SYSTEM</a>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>Recent Institutional Activity</h2>
+    <p class="admin-muted">
+      Placeholder for future audit, timeline, matter, trust, relationship, document, and archive events.
+    </p>
+    <ul>
+      <li>IIA-1 through IIA-4 architecture approved.</li>
+      <li>IOS-1 executive shell implementation started.</li>
+      <li>Legacy admin dashboard preserved during migration.</li>
+    </ul>
+  </section>
+
+</div>
+</body>
+</html>
