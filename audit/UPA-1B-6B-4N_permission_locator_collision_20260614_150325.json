@@ -1,0 +1,199 @@
+{
+  "generated_at": "2026-06-14T15:03:25.723161",
+  "status": "PERMISSION_LOCATOR_COLLISION_CONFIRMED_CONTENT_REVIEW_REQUIRED",
+  "sources": {
+    "4g": "audit\\UPA-1B-6B-4G_extraction_gate_20260614_143113.json",
+    "4m": "audit\\UPA-1B-6B-4M_manifest_gap_trace_20260614_145345.json"
+  },
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "source_database": {
+    "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "integrity": "ok",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true
+  },
+  "permissions_schema": {
+    "columns": [
+      {
+        "cid": 0,
+        "name": "permission_id",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 1
+      },
+      {
+        "cid": 1,
+        "name": "permission_name",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      },
+      {
+        "cid": 2,
+        "name": "description",
+        "type": "TEXT",
+        "notnull": 0,
+        "default": null,
+        "pk": 0
+      }
+    ],
+    "primary_key_columns": [
+      "permission_id"
+    ],
+    "indexes": [
+      {
+        "name": "sqlite_autoindex_permissions_2",
+        "unique": true,
+        "origin": "u",
+        "partial": false,
+        "columns": [
+          "permission_name"
+        ]
+      },
+      {
+        "name": "sqlite_autoindex_permissions_1",
+        "unique": true,
+        "origin": "pk",
+        "partial": false,
+        "columns": [
+          "permission_id"
+        ]
+      }
+    ]
+  },
+  "summary": {
+    "source_permission_rows": 15,
+    "manifest_permission_rows": 13,
+    "multiplicity_gap": 2,
+    "duplicate_locator_groups": 1,
+    "exact_duplicate_content_groups": 0,
+    "locator_difference_groups": 1,
+    "locator_difference_total": 2
+  },
+  "locator_differences": [
+    {
+      "locator_key": "permissions|{\"permission_id\":null}",
+      "source_count": 3,
+      "manifest_count": 1,
+      "difference": 2,
+      "source_entries": [
+        {
+          "rowid": 13,
+          "locator": {
+            "permission_id": null
+          },
+          "row": {
+            "permission_id": null,
+            "permission_name": "matters_dashboard",
+            "description": "Access Institutional Matters dashboard"
+          },
+          "row_fingerprint": "b80fd4325eb156142ab7c95ef46009a04cbd7c871455a84a6981334df0dcfd42"
+        },
+        {
+          "rowid": 14,
+          "locator": {
+            "permission_id": null
+          },
+          "row": {
+            "permission_id": null,
+            "permission_name": "new_matter",
+            "description": "Create Institutional Matters"
+          },
+          "row_fingerprint": "70831e19fed78358fb4bb71ff5a728cf9a21282e4c6e84367b36752a1f3e31e5"
+        },
+        {
+          "rowid": 15,
+          "locator": {
+            "permission_id": null
+          },
+          "row": {
+            "permission_id": null,
+            "permission_name": "matter_detail",
+            "description": "View Institutional Matter detail"
+          },
+          "row_fingerprint": "a006c6dc1238ca9f7d615688e5668c0ce008f6f8494fffcb039fe32405d71139"
+        }
+      ],
+      "manifest_entries": [
+        {
+          "table": "permissions",
+          "row_locator": {
+            "permission_id": null
+          },
+          "ownership": "BOTH_GLOBAL",
+          "action": "COPY_TO_BOTH",
+          "confidence": "HIGH",
+          "evidence": [
+            "Generic permission catalog row with no tenant marker"
+          ],
+          "validation_status": "GLOBAL_ROW_REVALIDATED"
+        }
+      ],
+      "distinct_content_fingerprints": 3,
+      "content_fingerprint_counts": {
+        "70831e19fed78358fb4bb71ff5a728cf9a21282e4c6e84367b36752a1f3e31e5": 1,
+        "a006c6dc1238ca9f7d615688e5668c0ce008f6f8494fffcb039fe32405d71139": 1,
+        "b80fd4325eb156142ab7c95ef46009a04cbd7c871455a84a6981334df0dcfd42": 1
+      }
+    }
+  ],
+  "duplicate_locator_groups": [
+    {
+      "locator_key": "permissions|{\"permission_id\":null}",
+      "count": 3,
+      "rows": [
+        {
+          "rowid": 13,
+          "locator": {
+            "permission_id": null
+          },
+          "row": {
+            "permission_id": null,
+            "permission_name": "matters_dashboard",
+            "description": "Access Institutional Matters dashboard"
+          },
+          "row_fingerprint": "b80fd4325eb156142ab7c95ef46009a04cbd7c871455a84a6981334df0dcfd42"
+        },
+        {
+          "rowid": 14,
+          "locator": {
+            "permission_id": null
+          },
+          "row": {
+            "permission_id": null,
+            "permission_name": "new_matter",
+            "description": "Create Institutional Matters"
+          },
+          "row_fingerprint": "70831e19fed78358fb4bb71ff5a728cf9a21282e4c6e84367b36752a1f3e31e5"
+        },
+        {
+          "rowid": 15,
+          "locator": {
+            "permission_id": null
+          },
+          "row": {
+            "permission_id": null,
+            "permission_name": "matter_detail",
+            "description": "View Institutional Matter detail"
+          },
+          "row_fingerprint": "a006c6dc1238ca9f7d615688e5668c0ce008f6f8494fffcb039fe32405d71139"
+        }
+      ]
+    }
+  ],
+  "exact_duplicate_content_groups": [],
+  "authorization": {
+    "manifest_correction": false,
+    "sandbox_rebuild": false,
+    "runtime_validation": false,
+    "production_cutover": false,
+    "live_database_modification": false
+  }
+}

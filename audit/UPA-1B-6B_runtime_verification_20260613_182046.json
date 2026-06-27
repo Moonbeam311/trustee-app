@@ -1,0 +1,2895 @@
+{
+  "generated_at": "2026-06-13T18:20:47.893694",
+  "source_report": "audit\\UPA-1B-6A_runtime_target_map_20260613_181830.json",
+  "overall_status": "FAIL_CROSS_FIRM_EXPOSURE_DETECTED",
+  "git": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "status": "?? audit/"
+  },
+  "database_control": {
+    "live_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "sandbox_database": "audit\\runtime_sandbox\\UPA-1B-6B_sandbox_20260613_182046.db",
+    "live_sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "live_sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "live_database_unchanged": true,
+    "sandbox_sha256_initial": "fe5adfde97954bea6730ca3c7e1230883099165262002ab959e7726b7838abf4",
+    "sandbox_sha256_after": "38ec1890eeea4beca3b9bea74799237b5cb5034a79fc1f46558175a78f72b729",
+    "sandbox_changed_during_test": true
+  },
+  "binding": {
+    "environment_db_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B_sandbox_20260613_182046.db",
+    "database_module_db_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B_sandbox_20260613_182046.db",
+    "connection_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B_sandbox_20260613_182046.db",
+    "app_module": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\app.py",
+    "app_object": "app",
+    "binding_verified": true,
+    "errors": []
+  },
+  "summary": {
+    "collision_targets": 7,
+    "requests_attempted": 8,
+    "requests_completed": 8,
+    "opposite_firm_exposure_responses": 2,
+    "write_functions_inventoried": 5,
+    "write_mutations_executed": 0,
+    "opposite_firm_exposure_detected": 1,
+    "tested_without_opposite_marker": 1,
+    "no_resolvable_get_route": 5,
+    "routes_unresolved": 0
+  },
+  "collision_results": [
+    {
+      "finding_id": "ISO-009",
+      "table": "audit_log",
+      "identifier_column": "entity_id",
+      "identifier": "TR-001",
+      "database_records": [
+        {
+          "id": 94,
+          "entity_type": "1041_export",
+          "entity_id": "TR-001",
+          "action": "export",
+          "note": "1041 TXT export generated for tax year 2026",
+          "created_at": "2026-04-29 02:07:16",
+          "previous_hash": "719a4584df2761996c00e90b671f6a87f12628378dbf38caf3551c6ab9ba09ed",
+          "entry_hash": "9ed936efc8b7d69d820538478c25f0475d1ca2a4491f15a1d47359257b0a0c8e",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 96,
+          "entity_type": "1041_export",
+          "entity_id": "TR-001",
+          "action": "export",
+          "note": "1041 TXT export generated for tax year 2026",
+          "created_at": "2026-04-29 02:16:00",
+          "previous_hash": "9c02046cfe097c3ea3d56ebab9cb12fb7f8fd6e96e69d2d0d4e3623de3ba5c75",
+          "entry_hash": "67e3d01b59d33740a9e45da92e1caef167488559dbc07a1f15d36a9a04e7ea27",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 99,
+          "entity_type": "k1_export",
+          "entity_id": "TR-001",
+          "action": "export",
+          "note": "K-1 CSV export generated for tax year 2026",
+          "created_at": "2026-04-29 02:35:52",
+          "previous_hash": "9d10358c96d10282f25ef70bf753fd9ba17d7b4f432ca9c8f8f8326254c39690",
+          "entry_hash": "c28f714f55767db7c6491c547405e7cf659302d2ec49c1b910d2811187623aba",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 213,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 02:11:04",
+          "previous_hash": "0dd723df729f3c712bc0a3b1075637d9800f40e439a5d6741e5b050b3d416ace",
+          "entry_hash": "aacafb7962699aec5242f13f720228dccc245c885942fb4dec98aa58660d349f",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 214,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "trust_branding_seal_uploaded",
+          "note": "Seal uploaded: seal_20260501222305_river_delta_map.png",
+          "created_at": "2026-05-02 02:23:05",
+          "previous_hash": "aacafb7962699aec5242f13f720228dccc245c885942fb4dec98aa58660d349f",
+          "entry_hash": "65ea6a688bcb6b26b994ebed7d69957d2a70e0c7aac5c6d4df73f14d883b9ba5",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 215,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 02:23:05",
+          "previous_hash": "65ea6a688bcb6b26b994ebed7d69957d2a70e0c7aac5c6d4df73f14d883b9ba5",
+          "entry_hash": "aae52cd4ce475218c1be6e0f841eea54ffdc73b8c036d3e3d957c47bc0c44e4a",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 216,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "trust_branding_seal_uploaded",
+          "note": "Seal uploaded: seal_20260501223056_river_delta_map.png",
+          "created_at": "2026-05-02 02:30:56",
+          "previous_hash": "aae52cd4ce475218c1be6e0f841eea54ffdc73b8c036d3e3d957c47bc0c44e4a",
+          "entry_hash": "3008832d7284d79736e1303e06e3a26051141ff5ed1abab79b9fd87a9664dfbd",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 217,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 02:30:56",
+          "previous_hash": "3008832d7284d79736e1303e06e3a26051141ff5ed1abab79b9fd87a9664dfbd",
+          "entry_hash": "9e7f52d17f0801b5c15bfa6d101663292e35d6cc7753038e33e2f05149656d7f",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 218,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 02:40:14",
+          "previous_hash": "9e7f52d17f0801b5c15bfa6d101663292e35d6cc7753038e33e2f05149656d7f",
+          "entry_hash": "868ae670dc289d3786cdf80c0bc63ac3398c8a9ceea53df136824444437fdd90",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 222,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 15:08:37",
+          "previous_hash": "37f2ee2f8b4ff05cd5dcad4f2f98beb313e45de24f40b37871a0f57a3b2fee43",
+          "entry_hash": "4d75912fd80a9dc6641b3fcc1c6c7dfc14767b29c086e74e4d47d6b43b17447d",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 223,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 15:08:42",
+          "previous_hash": "4d75912fd80a9dc6641b3fcc1c6c7dfc14767b29c086e74e4d47d6b43b17447d",
+          "entry_hash": "c5ed8411a0c439ffb51f7bd4ab41a331615aacbd7073cb31ac83edfa6aba0d2d",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 224,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 15:08:49",
+          "previous_hash": "c5ed8411a0c439ffb51f7bd4ab41a331615aacbd7073cb31ac83edfa6aba0d2d",
+          "entry_hash": "83c826eb89e73c07d3834cecb92f15d957156d26cb848698eab84399002f7532",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 225,
+          "entity_type": "trust_branding",
+          "entity_id": "TR-001",
+          "action": "branding_settings_updated",
+          "note": "Trust branding settings updated",
+          "created_at": "2026-05-02 15:08:56",
+          "previous_hash": "83c826eb89e73c07d3834cecb92f15d957156d26cb848698eab84399002f7532",
+          "entry_hash": "17742a9940199fb617540231c6ddbf4f98e13708350b894549af93b178e101d8",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 302,
+          "entity_type": "security",
+          "entity_id": "TR-001",
+          "action": "trust_export_scope_denied",
+          "note": "Attempted access to controlled packet export outside active firm scope. User=admin123; Firm=FIRM-002",
+          "created_at": "2026-05-12 10:50:41",
+          "previous_hash": "81f461763e5f75e99be1b5dcac2f4b4657baa385b7b54e2e0b3d8eee28a5c405",
+          "entry_hash": "8967c6bb03e43407f8ddab336badcaa188db55b6b113c500227105a4d1b53b77",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 304,
+          "entity_type": "security",
+          "entity_id": "TR-001",
+          "action": "trust_export_scope_denied",
+          "note": "Attempted access to controlled packet export outside active firm scope. User=admin123; Firm=FIRM-002",
+          "created_at": "2026-05-12 11:17:49",
+          "previous_hash": "390be6cdd62793c0151c3779a106e5f1e8588e264a479dc2ca4dae13704319e9",
+          "entry_hash": "a52b571dfa80d9237c86957e7f527c590ee057cbe0f0782789bd629082378be2",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 306,
+          "entity_type": "security",
+          "entity_id": "TR-001",
+          "action": "trust_export_scope_denied",
+          "note": "Attempted access to controlled packet export outside active firm scope. User=admin123; Firm=FIRM-002",
+          "created_at": "2026-05-12 12:10:43",
+          "previous_hash": "6fa59b5ed63ed89c601db35bef55f9a8ce52a6c1b87194cd14845f8fcb02c3a8",
+          "entry_hash": "3982ca000fb373695d00c9f9d409318ca1d4b819251ae5eb4499f4505528017f",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "0dd723df729f3c712bc0a3b1075637d9800f40e439a5d6741e5b050b3d416ace",
+          "17742a9940199fb617540231c6ddbf4f98e13708350b894549af93b178e101d8",
+          "3008832d7284d79736e1303e06e3a26051141ff5ed1abab79b9fd87a9664dfbd",
+          "37f2ee2f8b4ff05cd5dcad4f2f98beb313e45de24f40b37871a0f57a3b2fee43",
+          "4d75912fd80a9dc6641b3fcc1c6c7dfc14767b29c086e74e4d47d6b43b17447d",
+          "65ea6a688bcb6b26b994ebed7d69957d2a70e0c7aac5c6d4df73f14d883b9ba5",
+          "67e3d01b59d33740a9e45da92e1caef167488559dbc07a1f15d36a9a04e7ea27",
+          "719a4584df2761996c00e90b671f6a87f12628378dbf38caf3551c6ab9ba09ed",
+          "83c826eb89e73c07d3834cecb92f15d957156d26cb848698eab84399002f7532",
+          "868ae670dc289d3786cdf80c0bc63ac3398c8a9ceea53df136824444437fdd90",
+          "9c02046cfe097c3ea3d56ebab9cb12fb7f8fd6e96e69d2d0d4e3623de3ba5c75",
+          "9d10358c96d10282f25ef70bf753fd9ba17d7b4f432ca9c8f8f8326254c39690",
+          "9e7f52d17f0801b5c15bfa6d101663292e35d6cc7753038e33e2f05149656d7f",
+          "9ed936efc8b7d69d820538478c25f0475d1ca2a4491f15a1d47359257b0a0c8e",
+          "aacafb7962699aec5242f13f720228dccc245c885942fb4dec98aa58660d349f",
+          "aae52cd4ce475218c1be6e0f841eea54ffdc73b8c036d3e3d957c47bc0c44e4a",
+          "c28f714f55767db7c6491c547405e7cf659302d2ec49c1b910d2811187623aba",
+          "c5ed8411a0c439ffb51f7bd4ab41a331615aacbd7073cb31ac83edfa6aba0d2d",
+          "Seal uploaded: seal_20260501222305_river_delta_map.png",
+          "Seal uploaded: seal_20260501223056_river_delta_map.png",
+          "1041 TXT export generated for tax year 2026",
+          "K-1 CSV export generated for tax year 2026",
+          "Trust branding settings updated",
+          "trust_branding_seal_uploaded",
+          "branding_settings_updated",
+          "trust_branding",
+          "1041_export",
+          "k1_export",
+          "export"
+        ],
+        "FIRM-002": [
+          "Attempted access to controlled packet export outside active firm scope. User=admin123; Firm=FIRM-002",
+          "390be6cdd62793c0151c3779a106e5f1e8588e264a479dc2ca4dae13704319e9",
+          "3982ca000fb373695d00c9f9d409318ca1d4b819251ae5eb4499f4505528017f",
+          "6fa59b5ed63ed89c601db35bef55f9a8ce52a6c1b87194cd14845f8fcb02c3a8",
+          "81f461763e5f75e99be1b5dcac2f4b4657baa385b7b54e2e0b3d8eee28a5c405",
+          "8967c6bb03e43407f8ddab336badcaa188db55b6b113c500227105a4d1b53b77",
+          "a52b571dfa80d9237c86957e7f527c590ee057cbe0f0782789bd629082378be2",
+          "trust_export_scope_denied",
+          "security"
+        ]
+      },
+      "route_tests": [],
+      "outcome": "NO_RESOLVABLE_GET_ROUTE"
+    },
+    {
+      "finding_id": "ISO-010",
+      "table": "audit_log",
+      "identifier_column": "entity_id",
+      "identifier": "admin123",
+      "database_records": [
+        {
+          "id": 288,
+          "entity_type": "app_user",
+          "entity_id": "admin123",
+          "action": "create",
+          "note": "Master admin created user 'admin123' with role 'Admin' and status 'active'",
+          "created_at": "2026-05-11 13:32:03",
+          "previous_hash": "ac1b595717abcf0ff744cfbdee034fa179151835d8d98c6b4a5fc30ac0c6e833",
+          "entry_hash": "396645e35cea78b15cca2b9fd11d39d8bde83fef375da5ea7a18d1ef9bd8b824",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 289,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-11 13:33:28",
+          "previous_hash": "396645e35cea78b15cca2b9fd11d39d8bde83fef375da5ea7a18d1ef9bd8b824",
+          "entry_hash": "3f2d8c211a4cb4b17459a4529d53a8db71008d2b590b49837eabf579e701afb7",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 290,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-11 15:40:23",
+          "previous_hash": "3f2d8c211a4cb4b17459a4529d53a8db71008d2b590b49837eabf579e701afb7",
+          "entry_hash": "8dbc6a30f24c330ff5f89e3558393017b11b1cdd1e92d51b7444e87b11eafcce",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 291,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-11 16:10:16",
+          "previous_hash": "8dbc6a30f24c330ff5f89e3558393017b11b1cdd1e92d51b7444e87b11eafcce",
+          "entry_hash": "ee3916f16948fcebbcdb1066dcd2e7cac23ecc957a7db81228ca740dc2a8ed44",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 293,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-11 16:50:34",
+          "previous_hash": "cd9a452fd89024eb770cbfbd6f3f95948677943077c0825b1956928c8b84c44b",
+          "entry_hash": "5d0b6f6a12f1c8aea232c3fba831acf8aa16a8c9fae8ab67c51d31f1ddfc9dce",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 294,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-11 17:16:19",
+          "previous_hash": "5d0b6f6a12f1c8aea232c3fba831acf8aa16a8c9fae8ab67c51d31f1ddfc9dce",
+          "entry_hash": "1e4c817d0092f43878285abd3a8fa8877fb30e83a371021a9dabe72ee7812433",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 296,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 02:49:33",
+          "previous_hash": "2e75c2b4e7ffdccccc2b020d6898b86ca114e716ab41301206889b6f568b78ec",
+          "entry_hash": "d9342ef77f4f2b75f864f20cbab659c4e5e69bc9bc1b3934ae8c3f69aefbb095",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 297,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 02:52:44",
+          "previous_hash": "d9342ef77f4f2b75f864f20cbab659c4e5e69bc9bc1b3934ae8c3f69aefbb095",
+          "entry_hash": "634c888b9a4d49e608fdddc0b76644f805349a2cbcaf96546034d09fa3400612",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 298,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 03:12:16",
+          "previous_hash": "634c888b9a4d49e608fdddc0b76644f805349a2cbcaf96546034d09fa3400612",
+          "entry_hash": "e6121fe3826bda526a4aced640bae7f47246fc1e86df958193e17560619d3cb8",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 299,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 03:43:08",
+          "previous_hash": "e6121fe3826bda526a4aced640bae7f47246fc1e86df958193e17560619d3cb8",
+          "entry_hash": "241f9bb7b775ff25524be1fab7fb6a81e7e5b32fa3319b5e86ec5a1ce704aa6a",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 300,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 03:58:07",
+          "previous_hash": "241f9bb7b775ff25524be1fab7fb6a81e7e5b32fa3319b5e86ec5a1ce704aa6a",
+          "entry_hash": "bd2b382c69930f6bede09c0ee22d3f700bf0fcbce2fcc63d1b75fa419976b4d7",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 301,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 10:49:38",
+          "previous_hash": "bd2b382c69930f6bede09c0ee22d3f700bf0fcbce2fcc63d1b75fa419976b4d7",
+          "entry_hash": "81f461763e5f75e99be1b5dcac2f4b4657baa385b7b54e2e0b3d8eee28a5c405",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 303,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 11:13:15",
+          "previous_hash": "8967c6bb03e43407f8ddab336badcaa188db55b6b113c500227105a4d1b53b77",
+          "entry_hash": "390be6cdd62793c0151c3779a106e5f1e8588e264a479dc2ca4dae13704319e9",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 305,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-12 11:57:23",
+          "previous_hash": "a52b571dfa80d9237c86957e7f527c590ee057cbe0f0782789bd629082378be2",
+          "entry_hash": "6fa59b5ed63ed89c601db35bef55f9a8ce52a6c1b87194cd14845f8fcb02c3a8",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 307,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-19 15:23:24",
+          "previous_hash": "3982ca000fb373695d00c9f9d409318ca1d4b819251ae5eb4499f4505528017f",
+          "entry_hash": "fad703087ae9f0f2640cf313c92e17c33b094cf1129b055d3a4fa10d2bcc77a0",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 308,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-19 15:23:52",
+          "previous_hash": "fad703087ae9f0f2640cf313c92e17c33b094cf1129b055d3a4fa10d2bcc77a0",
+          "entry_hash": "fd999b738f03f63545d40ab31eaff5bbb2a01922fa8865c453135ed6e2350793",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 309,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-19 15:41:46",
+          "previous_hash": "fd999b738f03f63545d40ab31eaff5bbb2a01922fa8865c453135ed6e2350793",
+          "entry_hash": "fc34698f316eab58e6690c36b3e6eca28695a416b5f15e67e53b204e2268630f",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 310,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-19 17:12:51",
+          "previous_hash": "fc34698f316eab58e6690c36b3e6eca28695a416b5f15e67e53b204e2268630f",
+          "entry_hash": "b9eace1dbbeba09cff301c540022dfc49a9b042fbe6c4c19fee020192ff5f9dd",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 311,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-19 19:43:25",
+          "previous_hash": "b9eace1dbbeba09cff301c540022dfc49a9b042fbe6c4c19fee020192ff5f9dd",
+          "entry_hash": "b9fe39bd344c64c08b1fc4c221a85b86aea4a6d2528190c4e9d2bc160487c58d",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 312,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 00:30:46",
+          "previous_hash": "b9fe39bd344c64c08b1fc4c221a85b86aea4a6d2528190c4e9d2bc160487c58d",
+          "entry_hash": "6658cc8bd07aa848b88ef1704a94c572cd3e7b17fd19081f9e0c847334dc2c55",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 314,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 01:08:51",
+          "previous_hash": "dd26cac34d60fce2e6af9a3cf64d2090dc4489e507bdde53d052361bd39d2b85",
+          "entry_hash": "80dd41d01bdc9a1b906047b869e85bfadf31466b2dd8df19b4efab58dfeb7b60",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 315,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 02:55:00",
+          "previous_hash": "80dd41d01bdc9a1b906047b869e85bfadf31466b2dd8df19b4efab58dfeb7b60",
+          "entry_hash": "20dda5a757abc8a5642b4c0c8bce7082d8f49eea14b6c9356ead18b52f685b41",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 316,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 14:26:25",
+          "previous_hash": "20dda5a757abc8a5642b4c0c8bce7082d8f49eea14b6c9356ead18b52f685b41",
+          "entry_hash": "10b7d57df83b1b74e0869331c2877c32f65dcb837d0e0ac153fe60f0aedcfc81",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 317,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 15:08:30",
+          "previous_hash": "10b7d57df83b1b74e0869331c2877c32f65dcb837d0e0ac153fe60f0aedcfc81",
+          "entry_hash": "3feec0b7d50d5c58b41eca7ba6a35d55f4228874ea7f00edec1ea074a7f102b0",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 318,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 16:18:50",
+          "previous_hash": "3feec0b7d50d5c58b41eca7ba6a35d55f4228874ea7f00edec1ea074a7f102b0",
+          "entry_hash": "050983f5a5e0bb07ceddaf96c3c8bba041afc408d34ab759c5d7db4c805732db",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 319,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 18:40:43",
+          "previous_hash": "050983f5a5e0bb07ceddaf96c3c8bba041afc408d34ab759c5d7db4c805732db",
+          "entry_hash": "61f5cef5abf8a67bcf4959175806bb5e9be66c2e356342d41d81488accbe30bf",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 320,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 19:50:43",
+          "previous_hash": "61f5cef5abf8a67bcf4959175806bb5e9be66c2e356342d41d81488accbe30bf",
+          "entry_hash": "9429cfe5b7a67c2a7aaf7b48f64f7d881a9f982498835207c4d4ec7095057892",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 321,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 20:44:54",
+          "previous_hash": "9429cfe5b7a67c2a7aaf7b48f64f7d881a9f982498835207c4d4ec7095057892",
+          "entry_hash": "10dae456502f095bfb6f6f678024ea94e8f5a3d0de5dff7fb8d516a97b90d7a5",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 322,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 22:42:29",
+          "previous_hash": "10dae456502f095bfb6f6f678024ea94e8f5a3d0de5dff7fb8d516a97b90d7a5",
+          "entry_hash": "aafbfb3137f1b0879fa0bcf4a424bcf8cff6b98149bed75c0a2e3ac9af21f2ba",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 323,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-20 23:47:15",
+          "previous_hash": "aafbfb3137f1b0879fa0bcf4a424bcf8cff6b98149bed75c0a2e3ac9af21f2ba",
+          "entry_hash": "fa553a2fc2397dd78346bd32854627dca86722e5fdfec3e92e3cc9392493e65e",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 324,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 00:35:47",
+          "previous_hash": "fa553a2fc2397dd78346bd32854627dca86722e5fdfec3e92e3cc9392493e65e",
+          "entry_hash": "7e048a38fa1ad514dc135c54b23303659f1d9a58c53ee1e8c594434c5782b5cf",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 325,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 01:06:37",
+          "previous_hash": "7e048a38fa1ad514dc135c54b23303659f1d9a58c53ee1e8c594434c5782b5cf",
+          "entry_hash": "c06fa2173b1cf61f16ec3cc1efc602f4d17964bf287cde1f381904afdc843897",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 326,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 01:48:33",
+          "previous_hash": "c06fa2173b1cf61f16ec3cc1efc602f4d17964bf287cde1f381904afdc843897",
+          "entry_hash": "5bc483e22e292f1fce008e6f226eaedb3a73cc956a752888b256c81a43caea05",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 327,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 12:04:08",
+          "previous_hash": "5bc483e22e292f1fce008e6f226eaedb3a73cc956a752888b256c81a43caea05",
+          "entry_hash": "48f67c4da815faec6dcd529b94161d7ae5233b5358b892c421179bcbce39c6ec",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 328,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 13:38:34",
+          "previous_hash": "48f67c4da815faec6dcd529b94161d7ae5233b5358b892c421179bcbce39c6ec",
+          "entry_hash": "22ecf42c5e77414a243cdb3e40e2c8bdd66a178dd36005711abf9d644f9effe6",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 329,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 17:40:15",
+          "previous_hash": "22ecf42c5e77414a243cdb3e40e2c8bdd66a178dd36005711abf9d644f9effe6",
+          "entry_hash": "2e732300eaa567447639613194605838ecb590e895974e9c73154631ffb9aece",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 330,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 21:28:40",
+          "previous_hash": "2e732300eaa567447639613194605838ecb590e895974e9c73154631ffb9aece",
+          "entry_hash": "9079fcb57e75f6f2ad4e71d8fbc57cabb85d9b356a213cff5d81bedb07a9b973",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 331,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 22:15:43",
+          "previous_hash": "9079fcb57e75f6f2ad4e71d8fbc57cabb85d9b356a213cff5d81bedb07a9b973",
+          "entry_hash": "5d62b5d24182c45af4d960290e0fe0a2dfa65382b18ade9af99f1726de66728b",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 332,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-21 22:54:48",
+          "previous_hash": "5d62b5d24182c45af4d960290e0fe0a2dfa65382b18ade9af99f1726de66728b",
+          "entry_hash": "e7a8a476c2a88e61e953b819e2af16203143a84b630f92891ad0ac4fa66c20d8",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 333,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 12:37:07",
+          "previous_hash": "e7a8a476c2a88e61e953b819e2af16203143a84b630f92891ad0ac4fa66c20d8",
+          "entry_hash": "e4875436327f8dfeda08240ee958b06c49dc76b3417d14d86fcec512e54fe963",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 334,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 12:57:11",
+          "previous_hash": "e4875436327f8dfeda08240ee958b06c49dc76b3417d14d86fcec512e54fe963",
+          "entry_hash": "9815246e120d5a58e3176f751b35355ac9bc10e79b863a7cf2adc4afc9281cba",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 335,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 14:00:04",
+          "previous_hash": "9815246e120d5a58e3176f751b35355ac9bc10e79b863a7cf2adc4afc9281cba",
+          "entry_hash": "92ab25b1dd3f293d8a1a09456c2e18c488a3a55fc3e5b33fe6a2f012bcea005b",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 336,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 19:29:37",
+          "previous_hash": "92ab25b1dd3f293d8a1a09456c2e18c488a3a55fc3e5b33fe6a2f012bcea005b",
+          "entry_hash": "fbc2b487742738ac1f0f4dcaff9470d85d6747c05e22c5a4b22380459757279f",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 337,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 19:48:04",
+          "previous_hash": "fbc2b487742738ac1f0f4dcaff9470d85d6747c05e22c5a4b22380459757279f",
+          "entry_hash": "a9488487b7c3dafc665661be9b4066860725abcf540c5aa8a21929efd38b8204",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 338,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 20:08:27",
+          "previous_hash": "a9488487b7c3dafc665661be9b4066860725abcf540c5aa8a21929efd38b8204",
+          "entry_hash": "cfd675cc0512cf815f83497fc75dadbd5aa53764c684c8815138fd14af29c52d",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 339,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 21:43:24",
+          "previous_hash": "cfd675cc0512cf815f83497fc75dadbd5aa53764c684c8815138fd14af29c52d",
+          "entry_hash": "c14529a9a6548a71b94d3ed2f63ee95f554a62c97e3fde7110805cd7867594bf",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 340,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-22 22:56:55",
+          "previous_hash": "c14529a9a6548a71b94d3ed2f63ee95f554a62c97e3fde7110805cd7867594bf",
+          "entry_hash": "f36d3ed5900ac09f0d00403ccc4b6079e17d48ffcb41e42ef5536e05ffe8dc8f",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 341,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 00:50:05",
+          "previous_hash": "f36d3ed5900ac09f0d00403ccc4b6079e17d48ffcb41e42ef5536e05ffe8dc8f",
+          "entry_hash": "42374304f3c5fcb490a9c1c7e12a51b220ae660e9e7d22ca0dc28044cde4f612",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 342,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 01:28:12",
+          "previous_hash": "42374304f3c5fcb490a9c1c7e12a51b220ae660e9e7d22ca0dc28044cde4f612",
+          "entry_hash": "c6fcb345278270bbd236fd115a3f3ea3831609577a776ce266a741be8823bcf3",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 343,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 11:20:06",
+          "previous_hash": "c6fcb345278270bbd236fd115a3f3ea3831609577a776ce266a741be8823bcf3",
+          "entry_hash": "39a0e3bb4852735ba1ff275b7db453312ca6888a4d59a62bc05e1d4d461f5768",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 344,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 12:21:54",
+          "previous_hash": "39a0e3bb4852735ba1ff275b7db453312ca6888a4d59a62bc05e1d4d461f5768",
+          "entry_hash": "e4a897c93a1eeedbf72f9f1f73f381e636bc032893f8b780f4fe21f12a17fbdc",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 345,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 13:11:42",
+          "previous_hash": "e4a897c93a1eeedbf72f9f1f73f381e636bc032893f8b780f4fe21f12a17fbdc",
+          "entry_hash": "bf37ab021ba880b587eb062b75ef3ccffed506c880358717c86af9400c5fc851",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 346,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_docx_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:11:49",
+          "previous_hash": "bf37ab021ba880b587eb062b75ef3ccffed506c880358717c86af9400c5fc851",
+          "entry_hash": "a8d3d8bf1321cf3fd5ed8db5f3a51c652e8d02008b9f9cab234f1596f9dca9c4",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 347,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_pdf_conversion; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:12:01",
+          "previous_hash": "a8d3d8bf1321cf3fd5ed8db5f3a51c652e8d02008b9f9cab234f1596f9dca9c4",
+          "entry_hash": "737c3f46cf09debe0b0472ecb4713c4f58b70bf7beee06bfc620116dd1cd5a6a",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 348,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=download_controlled_docx_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:12:12",
+          "previous_hash": "737c3f46cf09debe0b0472ecb4713c4f58b70bf7beee06bfc620116dd1cd5a6a",
+          "entry_hash": "5d9c9f36bd19f7c3149de1592d97a99751b93e4bd7b1c06bb8280d127eaefcce",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 349,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=download_controlled_pdf_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:12:23",
+          "previous_hash": "5d9c9f36bd19f7c3149de1592d97a99751b93e4bd7b1c06bb8280d127eaefcce",
+          "entry_hash": "b4a394b086ae649f0687c27cef17ac0afa1973665b644f1404fbc508ce4915e2",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 350,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 13:37:32",
+          "previous_hash": "b4a394b086ae649f0687c27cef17ac0afa1973665b644f1404fbc508ce4915e2",
+          "entry_hash": "e7489bc1b6bfeb8a3a2d13c4a1d4a3496ec050e7238baf595cabf9cc47cc0be1",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 351,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_docx_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:37:39",
+          "previous_hash": "e7489bc1b6bfeb8a3a2d13c4a1d4a3496ec050e7238baf595cabf9cc47cc0be1",
+          "entry_hash": "daed4be136a115121e770a4576d85a01a5d1a2f8e258bbe4080c0c6ca5c48fd0",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 352,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_docx_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:46:14",
+          "previous_hash": "daed4be136a115121e770a4576d85a01a5d1a2f8e258bbe4080c0c6ca5c48fd0",
+          "entry_hash": "c3f61ce3347b2a9e790155be9ae12b3f91b16c009304527a5222f352f68d72f5",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 353,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_pdf_conversion; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:46:30",
+          "previous_hash": "c3f61ce3347b2a9e790155be9ae12b3f91b16c009304527a5222f352f68d72f5",
+          "entry_hash": "b8ad3c044e62726be86639c4c32c06b0b7cac13715ba8b2ac97766ab6bd7c73a",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 354,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_docx_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:51:59",
+          "previous_hash": "b8ad3c044e62726be86639c4c32c06b0b7cac13715ba8b2ac97766ab6bd7c73a",
+          "entry_hash": "8e9af7496c89446392f8757f20982240d9db24d8d04df220d55d3d355c87117a",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 355,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_pdf_conversion; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:52:25",
+          "previous_hash": "8e9af7496c89446392f8757f20982240d9db24d8d04df220d55d3d355c87117a",
+          "entry_hash": "720510522dfc2fb39fd33cff28e036dcfbd38dbe0b9c5b8ee773ded7a54ea99b",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 356,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_docx_export; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:55:20",
+          "previous_hash": "720510522dfc2fb39fd33cff28e036dcfbd38dbe0b9c5b8ee773ded7a54ea99b",
+          "entry_hash": "aeae77cbd98a9c9e0f2b181c4b0645058a8055af71208888d9ef97ec6eb8a50e",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 357,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_pdf_conversion; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:55:39",
+          "previous_hash": "aeae77cbd98a9c9e0f2b181c4b0645058a8055af71208888d9ef97ec6eb8a50e",
+          "entry_hash": "58a633446a61b2ca5c61e0913905143e9a087cc14fa28479eb03a2862e9d5a14",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 358,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_docx_export; Path=/docx-export/FAKE-TEST; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:59:06",
+          "previous_hash": "58a633446a61b2ca5c61e0913905143e9a087cc14fa28479eb03a2862e9d5a14",
+          "entry_hash": "82f831f48e4b0ba892eab49ec2844ec80fa2b3227b9abe63ed8234afcde147e3",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 359,
+          "entity_type": "security",
+          "entity_id": "admin123",
+          "action": "export_blocked",
+          "note": "Endpoint=controlled_pdf_conversion; Path=/pdf-convert/FAKE-DOCX; Policy=allow_exports_false",
+          "created_at": "2026-05-23 13:59:23",
+          "previous_hash": "82f831f48e4b0ba892eab49ec2844ec80fa2b3227b9abe63ed8234afcde147e3",
+          "entry_hash": "27f38b245333f687f99d618515bca118d7ace8fa3e77b981c1ee8f01b4c462e5",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 360,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-23 14:12:45",
+          "previous_hash": "27f38b245333f687f99d618515bca118d7ace8fa3e77b981c1ee8f01b4c462e5",
+          "entry_hash": "1562ccac43e05e87508b148506910164b721f082b43a74b2940c833c18e85571",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 361,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-25 17:06:36",
+          "previous_hash": "1562ccac43e05e87508b148506910164b721f082b43a74b2940c833c18e85571",
+          "entry_hash": "31aa3538ef4e8fad7967df0199b162fbf747d18b5b396f21e5eb9bc2216e337d",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 362,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-25 17:41:09",
+          "previous_hash": "31aa3538ef4e8fad7967df0199b162fbf747d18b5b396f21e5eb9bc2216e337d",
+          "entry_hash": "6cb8312853f8554b9bc9ebfbd6da62a806f6e81f1955c4814070e21cc0f7b21e",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 363,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-05-25 18:11:36",
+          "previous_hash": "6cb8312853f8554b9bc9ebfbd6da62a806f6e81f1955c4814070e21cc0f7b21e",
+          "entry_hash": "3072bfa6f6db6180b333bb4e057ad7988928f7862ad579b9e19bf2c97ee8485b",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 364,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-06-13 01:59:48",
+          "previous_hash": "3072bfa6f6db6180b333bb4e057ad7988928f7862ad579b9e19bf2c97ee8485b",
+          "entry_hash": "ecefca84c0518086e2b415a7d6f6cc065ff5b81dce50d4d09b3f039f54ff0ef9",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 365,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-06-13 11:53:02",
+          "previous_hash": "ecefca84c0518086e2b415a7d6f6cc065ff5b81dce50d4d09b3f039f54ff0ef9",
+          "entry_hash": "9d78fccd17021d6aa4f0743f7fe993ac6d671287ab7245ca43bc2e79d4f5be93",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 366,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-06-13 17:03:18",
+          "previous_hash": "9d78fccd17021d6aa4f0743f7fe993ac6d671287ab7245ca43bc2e79d4f5be93",
+          "entry_hash": "291047609efd5208ec6c310e495cb03dfa3bc38c6f5ea21c9b9ceb140abfc3ec",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 367,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-06-13 17:32:15",
+          "previous_hash": "291047609efd5208ec6c310e495cb03dfa3bc38c6f5ea21c9b9ceb140abfc3ec",
+          "entry_hash": "fbb43014f7c6505dafb0c32134a0d289fc24de209413bade4e20eb57cc2bf641",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 368,
+          "entity_type": "auth",
+          "entity_id": "admin123",
+          "action": "login_success",
+          "note": "User logged in successfully",
+          "created_at": "2026-06-13 18:21:45",
+          "previous_hash": "fbb43014f7c6505dafb0c32134a0d289fc24de209413bade4e20eb57cc2bf641",
+          "entry_hash": "60c40b1d8279c816b3baea6a8cbbe59c859204925ae9c815048397482056b4bf",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "Master admin created user 'admin123' with role 'Admin' and status 'active'",
+          "396645e35cea78b15cca2b9fd11d39d8bde83fef375da5ea7a18d1ef9bd8b824",
+          "ac1b595717abcf0ff744cfbdee034fa179151835d8d98c6b4a5fc30ac0c6e833",
+          "app_user",
+          "create"
+        ],
+        "FIRM-002": [
+          "Endpoint=controlled_pdf_conversion; Path=/pdf-convert/FAKE-DOCX; Policy=allow_exports_false",
+          "Endpoint=controlled_docx_export; Path=/docx-export/FAKE-TEST; Policy=allow_exports_false",
+          "Endpoint=download_controlled_docx_export; Policy=allow_exports_false",
+          "Endpoint=download_controlled_pdf_export; Policy=allow_exports_false",
+          "050983f5a5e0bb07ceddaf96c3c8bba041afc408d34ab759c5d7db4c805732db",
+          "10b7d57df83b1b74e0869331c2877c32f65dcb837d0e0ac153fe60f0aedcfc81",
+          "10dae456502f095bfb6f6f678024ea94e8f5a3d0de5dff7fb8d516a97b90d7a5",
+          "1562ccac43e05e87508b148506910164b721f082b43a74b2940c833c18e85571",
+          "1e4c817d0092f43878285abd3a8fa8877fb30e83a371021a9dabe72ee7812433",
+          "20dda5a757abc8a5642b4c0c8bce7082d8f49eea14b6c9356ead18b52f685b41",
+          "22ecf42c5e77414a243cdb3e40e2c8bdd66a178dd36005711abf9d644f9effe6",
+          "241f9bb7b775ff25524be1fab7fb6a81e7e5b32fa3319b5e86ec5a1ce704aa6a",
+          "27f38b245333f687f99d618515bca118d7ace8fa3e77b981c1ee8f01b4c462e5",
+          "291047609efd5208ec6c310e495cb03dfa3bc38c6f5ea21c9b9ceb140abfc3ec",
+          "2e732300eaa567447639613194605838ecb590e895974e9c73154631ffb9aece",
+          "2e75c2b4e7ffdccccc2b020d6898b86ca114e716ab41301206889b6f568b78ec",
+          "3072bfa6f6db6180b333bb4e057ad7988928f7862ad579b9e19bf2c97ee8485b",
+          "31aa3538ef4e8fad7967df0199b162fbf747d18b5b396f21e5eb9bc2216e337d",
+          "390be6cdd62793c0151c3779a106e5f1e8588e264a479dc2ca4dae13704319e9",
+          "3982ca000fb373695d00c9f9d409318ca1d4b819251ae5eb4499f4505528017f",
+          "39a0e3bb4852735ba1ff275b7db453312ca6888a4d59a62bc05e1d4d461f5768",
+          "3feec0b7d50d5c58b41eca7ba6a35d55f4228874ea7f00edec1ea074a7f102b0",
+          "42374304f3c5fcb490a9c1c7e12a51b220ae660e9e7d22ca0dc28044cde4f612",
+          "48f67c4da815faec6dcd529b94161d7ae5233b5358b892c421179bcbce39c6ec",
+          "58a633446a61b2ca5c61e0913905143e9a087cc14fa28479eb03a2862e9d5a14",
+          "5bc483e22e292f1fce008e6f226eaedb3a73cc956a752888b256c81a43caea05",
+          "5d0b6f6a12f1c8aea232c3fba831acf8aa16a8c9fae8ab67c51d31f1ddfc9dce",
+          "5d62b5d24182c45af4d960290e0fe0a2dfa65382b18ade9af99f1726de66728b",
+          "5d9c9f36bd19f7c3149de1592d97a99751b93e4bd7b1c06bb8280d127eaefcce",
+          "60c40b1d8279c816b3baea6a8cbbe59c859204925ae9c815048397482056b4bf",
+          "61f5cef5abf8a67bcf4959175806bb5e9be66c2e356342d41d81488accbe30bf",
+          "634c888b9a4d49e608fdddc0b76644f805349a2cbcaf96546034d09fa3400612",
+          "6658cc8bd07aa848b88ef1704a94c572cd3e7b17fd19081f9e0c847334dc2c55",
+          "6cb8312853f8554b9bc9ebfbd6da62a806f6e81f1955c4814070e21cc0f7b21e",
+          "6fa59b5ed63ed89c601db35bef55f9a8ce52a6c1b87194cd14845f8fcb02c3a8",
+          "720510522dfc2fb39fd33cff28e036dcfbd38dbe0b9c5b8ee773ded7a54ea99b",
+          "737c3f46cf09debe0b0472ecb4713c4f58b70bf7beee06bfc620116dd1cd5a6a",
+          "7e048a38fa1ad514dc135c54b23303659f1d9a58c53ee1e8c594434c5782b5cf",
+          "80dd41d01bdc9a1b906047b869e85bfadf31466b2dd8df19b4efab58dfeb7b60",
+          "81f461763e5f75e99be1b5dcac2f4b4657baa385b7b54e2e0b3d8eee28a5c405"
+        ]
+      },
+      "route_tests": [],
+      "outcome": "NO_RESOLVABLE_GET_ROUTE"
+    },
+    {
+      "finding_id": "ISO-011",
+      "table": "intake_document_recommendations",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "database_records": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "professional_review_checklist",
+          "title": "Professional Review Checklist",
+          "workflow_type": "professional_review",
+          "priority": "urgent",
+          "confidence": 99,
+          "reason": "High urgency or review flags were detected during intake. Additional signal: Tax, legal, court, creditor, or professional-review signals were detected.",
+          "source": "engine",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:17:20",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "beneficiary_guardian_planning",
+          "title": "Beneficiary / Guardian Planning",
+          "workflow_type": "family",
+          "priority": "high",
+          "confidence": 97,
+          "reason": "Beneficiary, child, guardian, or family planning issues were detected. Additional signal: Beneficiary, child, guardian, dependent, or family-planning signals were detected.",
+          "source": "engine",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:17:20",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "asset_inventory_packet",
+          "title": "Asset Inventory Packet",
+          "workflow_type": "inventory",
+          "priority": "normal",
+          "confidence": 92,
+          "reason": "Assets and supporting records need to be organized before deeper review. Additional signal: Asset, account, title, statement, or inventory signals were detected.",
+          "source": "engine",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:17:20",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "next_session_agenda",
+          "title": "Next Session Agenda",
+          "workflow_type": "session",
+          "priority": "normal",
+          "confidence": 87,
+          "reason": "A recommended next session was generated from the intake snapshot. Additional signal: Recommended next session exists and should be converted into a working agenda.",
+          "source": "engine",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:17:20",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "business_continuity_packet",
+          "title": "Business Continuity Packet",
+          "workflow_type": "business",
+          "priority": "high",
+          "confidence": 99,
+          "reason": "Business-related documents, liability signals, partner/entity references, or business continuity tasks were detected.",
+          "source": "engine_tuned",
+          "status": "launch_prepared",
+          "created_at": "2026-05-21T12:21:17",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "real_property_review",
+          "title": "Real Property Review",
+          "workflow_type": "asset",
+          "priority": "high",
+          "confidence": 99,
+          "reason": "Property documents or real-property task signals were detected.",
+          "source": "engine_tuned",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:21:17",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "foundational_estate_package",
+          "title": "Foundational Estate Planning Package",
+          "workflow_type": "planning",
+          "priority": "high",
+          "confidence": 97,
+          "reason": "Readiness is low or foundational planning/document gaps were detected.",
+          "source": "engine_tuned",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:21:17",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "workflow_key": "document_audit",
+          "title": "Existing Document Audit",
+          "workflow_type": "review",
+          "priority": "high",
+          "confidence": 95,
+          "reason": "Document gaps, existing document references, or document follow-up tasks were detected.",
+          "source": "engine_tuned",
+          "status": "recommended",
+          "created_at": "2026-05-21T12:21:17",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "certificate_of_trust",
+          "title": "Certificate of Trust",
+          "workflow_type": "Trust Instrument",
+          "priority": "High",
+          "confidence": 94,
+          "reason": "A Certificate of Trust can summarize trust existence, authority, trustees, and limited certification details without exposing the full trust instrument.",
+          "source": "instrument_menu",
+          "status": "launch_prepared",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "trust_articles_builder",
+          "title": "Trust Articles / Article Builder",
+          "workflow_type": "Trust Instrument",
+          "priority": "High",
+          "confidence": 93,
+          "reason": "Trust articles allow controlled drafting of governing provisions, powers, limitations, fiduciary terms, and administrative structure.",
+          "source": "instrument_menu",
+          "status": "recommended",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 11,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "declaration_of_trust",
+          "title": "Declaration of Trust",
+          "workflow_type": "Trust Instrument",
+          "priority": "High",
+          "confidence": 92,
+          "reason": "A Declaration of Trust can organize the trust name, settlor/grantor role, trustee authority, trust purpose, property, beneficiaries, and administration terms.",
+          "source": "instrument_menu",
+          "status": "recommended",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 12,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "schedule_a_asset_schedule",
+          "title": "Schedule A / Asset Schedule",
+          "workflow_type": "Trust Funding",
+          "priority": "High",
+          "confidence": 91,
+          "reason": "A Schedule A or asset schedule organizes initial trust property, later contributions, asset descriptions, supporting records, and transfer readiness.",
+          "source": "instrument_menu",
+          "status": "recommended",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 13,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "execution_notary_witness_packet",
+          "title": "Execution / Notary / Witness Packet",
+          "workflow_type": "Execution",
+          "priority": "High",
+          "confidence": 91,
+          "reason": "Execution packets organize signature blocks, witness sections, jurat/notary language, execution checklist, and completion controls.",
+          "source": "instrument_menu",
+          "status": "recommended",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 14,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "trustee_acceptance",
+          "title": "Trustee Acceptance",
+          "workflow_type": "Trust Instrument",
+          "priority": "Normal",
+          "confidence": 90,
+          "reason": "Trustee acceptance records formal acceptance of appointment and fiduciary responsibilities.",
+          "source": "instrument_menu",
+          "status": "recommended",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        },
+        {
+          "id": 15,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "workflow_key": "trust_minutes_resolution",
+          "title": "Trust Minutes / Resolution",
+          "workflow_type": "Trust Governance",
+          "priority": "Normal",
+          "confidence": 89,
+          "reason": "Trust minutes and resolutions document trustee decisions, approvals, appointments, authority, and administrative actions.",
+          "source": "instrument_menu",
+          "status": "recommended",
+          "created_at": "2026-05-21T22:22:33",
+          "updated_at": "2026-05-22T20:13:38",
+          "created_by": "admin123"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "Beneficiary, child, guardian, or family planning issues were detected. Additional signal: Beneficiary, child, guardian, dependent, or family-planning signals were detected.",
+          "A recommended next session was generated from the intake snapshot. Additional signal: Recommended next session exists and should be converted into a working agenda.",
+          "Assets and supporting records need to be organized before deeper review. Additional signal: Asset, account, title, statement, or inventory signals were detected.",
+          "High urgency or review flags were detected during intake. Additional signal: Tax, legal, court, creditor, or professional-review signals were detected.",
+          "Business-related documents, liability signals, partner/entity references, or business continuity tasks were detected.",
+          "Document gaps, existing document references, or document follow-up tasks were detected.",
+          "Readiness is low or foundational planning/document gaps were detected.",
+          "Property documents or real-property task signals were detected.",
+          "Foundational Estate Planning Package",
+          "Beneficiary / Guardian Planning",
+          "Professional Review Checklist",
+          "beneficiary_guardian_planning",
+          "professional_review_checklist",
+          "foundational_estate_package",
+          "Business Continuity Packet",
+          "business_continuity_packet",
+          "Existing Document Audit",
+          "Asset Inventory Packet",
+          "asset_inventory_packet",
+          "Real Property Review",
+          "real_property_review",
+          "Next Session Agenda",
+          "next_session_agenda",
+          "professional_review",
+          "document_audit",
+          "engine_tuned",
+          "inventory",
+          "business",
+          "planning",
+          "session",
+          "engine",
+          "family",
+          "normal",
+          "review",
+          "urgent",
+          "asset",
+          "high"
+        ],
+        "FIRM-002": [
+          "A Declaration of Trust can organize the trust name, settlor/grantor role, trustee authority, trust purpose, property, beneficiaries, and administration terms.",
+          "A Certificate of Trust can summarize trust existence, authority, trustees, and limited certification details without exposing the full trust instrument.",
+          "A Schedule A or asset schedule organizes initial trust property, later contributions, asset descriptions, supporting records, and transfer readiness.",
+          "Trust articles allow controlled drafting of governing provisions, powers, limitations, fiduciary terms, and administrative structure.",
+          "Execution packets organize signature blocks, witness sections, jurat/notary language, execution checklist, and completion controls.",
+          "Trust minutes and resolutions document trustee decisions, approvals, appointments, authority, and administrative actions.",
+          "Trustee acceptance records formal acceptance of appointment and fiduciary responsibilities.",
+          "Execution / Notary / Witness Packet",
+          "Trust Articles / Article Builder",
+          "execution_notary_witness_packet",
+          "Schedule A / Asset Schedule",
+          "Trust Minutes / Resolution",
+          "schedule_a_asset_schedule",
+          "trust_minutes_resolution",
+          "trust_articles_builder",
+          "Certificate of Trust",
+          "Declaration of Trust",
+          "certificate_of_trust",
+          "declaration_of_trust",
+          "Trustee Acceptance",
+          "trustee_acceptance",
+          "Trust Governance",
+          "Trust Instrument",
+          "instrument_menu",
+          "Trust Funding",
+          "Execution",
+          "Normal",
+          "High"
+        ]
+      },
+      "route_tests": [
+        {
+          "source_file": "app.py",
+          "source_function": "intake_document_recommendations",
+          "source_line": 18060,
+          "route_template": "/intake/<intake_id>/recommendations",
+          "methods": [
+            "GET"
+          ],
+          "built_route": "/intake/INTAKE-0005/recommendations",
+          "route_error": null,
+          "status": "TESTED",
+          "same_response_hash_across_firms": true,
+          "firm_results": [
+            {
+              "firm_id": "FIRM-001",
+              "status_code": 302,
+              "location": "/login?timeout=1",
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 219,
+              "response_sha256": "26bba1d5e39c19394c15a964b2e35ec61c39feb986ff3d6c8d6e7a5d298ceb0b",
+              "opposite_firm_markers_found": [],
+              "body_preview": "<!doctype html>\n<html lang=en>\n<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to the target URL: <a href=\"/login?timeout=1\">/login?timeout=1</a>. If not, click the link.\n"
+            },
+            {
+              "firm_id": "FIRM-002",
+              "status_code": 302,
+              "location": "/login?timeout=1",
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 219,
+              "response_sha256": "26bba1d5e39c19394c15a964b2e35ec61c39feb986ff3d6c8d6e7a5d298ceb0b",
+              "opposite_firm_markers_found": [],
+              "body_preview": "<!doctype html>\n<html lang=en>\n<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to the target URL: <a href=\"/login?timeout=1\">/login?timeout=1</a>. If not, click the link.\n"
+            }
+          ]
+        },
+        {
+          "source_file": "app.py",
+          "source_function": "intake_workflow_launch_prep",
+          "source_line": 18101,
+          "route_template": "/intake/<intake_id>/recommendations/<workflow_key>/launch-prep",
+          "methods": [
+            "GET"
+          ],
+          "built_route": null,
+          "route_error": "Unresolved route parameters: workflow_key",
+          "status": "UNRESOLVED_ROUTE",
+          "firm_results": []
+        },
+        {
+          "source_file": "app.py",
+          "source_function": "intake_workflow_bridge",
+          "source_line": 18122,
+          "route_template": "/intake/<intake_id>/recommendations/<workflow_key>/bridge",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "built_route": null,
+          "route_error": "Unresolved route parameters: workflow_key",
+          "status": "UNRESOLVED_ROUTE",
+          "firm_results": []
+        },
+        {
+          "source_file": "app.py",
+          "source_function": "intake_workflow_bridge_summary",
+          "source_line": 18204,
+          "route_template": "/intake/<intake_id>/recommendations/<workflow_key>/bridge-summary",
+          "methods": [
+            "GET"
+          ],
+          "built_route": null,
+          "route_error": "Unresolved route parameters: workflow_key",
+          "status": "UNRESOLVED_ROUTE",
+          "firm_results": []
+        }
+      ],
+      "outcome": "NO_OPPOSITE_MARKER_DETECTED_IN_TESTED_GET_ROUTES"
+    },
+    {
+      "finding_id": "ISO-012",
+      "table": "intake_export_logs",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "database_records": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "test",
+          "export_status": "success",
+          "file_path": null,
+          "message": "INT-1M export log table test.",
+          "created_at": "2026-05-21T02:57:43",
+          "created_by": "system_check",
+          "version_number": 1,
+          "packet_type": "follow_up_packet"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "version_test",
+          "export_status": "success",
+          "file_path": null,
+          "message": "INT-1N versioning test.",
+          "created_at": "2026-05-21T03:03:20",
+          "created_by": "system_check",
+          "version_number": 1,
+          "packet_type": "follow_up_packet"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "draft_docx",
+          "export_status": "success",
+          "file_path": "exports\\draft_packets\\INTAKE-0005_business_continuity_packet_Draft_Packet.docx",
+          "message": "Draft packet DOCX generated for business_continuity_packet.",
+          "created_at": "2026-05-21T13:02:44",
+          "created_by": "system_check",
+          "version_number": 1,
+          "packet_type": "draft_packet"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "nonfinal_docx",
+          "export_status": "success",
+          "file_path": "exports\\nonfinal_drafts\\INTAKE-0005_business_continuity_packet_business_continuity_memo_NON_FINAL_DRAFT.docx",
+          "message": "Non-final draft DOCX generated for business_continuity_packet/business_continuity_memo. Gate=blocked.",
+          "created_at": "2026-05-21T14:03:06",
+          "created_by": "system_check",
+          "version_number": 1,
+          "packet_type": "nonfinal_draft"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "final_draft_preview_docx",
+          "export_status": "success",
+          "file_path": "exports\\final_draft_previews\\INTAKE-0005_business_continuity_packet_business_continuity_memo_FINAL_DRAFT_PREVIEW.docx",
+          "message": "Final-draft preview DOCX generated for business_continuity_packet/business_continuity_memo. Status=Final-Draft Preview Incomplete.",
+          "created_at": "2026-05-21T15:25:53",
+          "created_by": "system_check",
+          "version_number": 1,
+          "packet_type": "final_draft_preview"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "final_draft_preview_docx",
+          "export_status": "success",
+          "file_path": "exports\\final_draft_previews\\INTAKE-0005_business_continuity_packet_business_continuity_memo_FINAL_DRAFT_PREVIEW.docx",
+          "message": "Final-draft preview DOCX generated for business_continuity_packet/business_continuity_memo. Status=Final-Draft Preview Incomplete.",
+          "created_at": "2026-05-21T15:30:32",
+          "created_by": "system_check",
+          "version_number": 3,
+          "packet_type": "final_draft_preview"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001",
+          "export_type": "final_draft_preview_docx",
+          "export_status": "success",
+          "file_path": "exports\\final_draft_previews\\INTAKE-0005_business_continuity_packet_business_continuity_memo_FINAL_DRAFT_PREVIEW.docx",
+          "message": "Final-draft preview DOCX generated for business_continuity_packet/business_continuity_memo. Status=Final-Draft Preview Incomplete.",
+          "created_at": "2026-05-21T15:32:08",
+          "created_by": "system_check",
+          "version_number": 4,
+          "packet_type": "final_draft_preview"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "export_type": "nonfinal_docx",
+          "export_status": "success",
+          "file_path": "exports\\nonfinal_drafts\\INTAKE-0005_business_continuity_packet_business_continuity_memo_NON_FINAL_DRAFT.docx",
+          "message": "Non-final draft DOCX generated for business_continuity_packet/business_continuity_memo. Gate=blocked.",
+          "created_at": "2026-05-21T14:07:03",
+          "created_by": "admin123",
+          "version_number": 2,
+          "packet_type": "nonfinal_draft"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "export_type": "nonfinal_docx",
+          "export_status": "success",
+          "file_path": "exports\\nonfinal_drafts\\INTAKE-0005_business_continuity_packet_business_continuity_memo_NON_FINAL_DRAFT.docx",
+          "message": "Non-final draft DOCX generated for business_continuity_packet/business_continuity_memo. Gate=blocked.",
+          "created_at": "2026-05-21T14:08:21",
+          "created_by": "admin123",
+          "version_number": 3,
+          "packet_type": "nonfinal_draft"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002",
+          "export_type": "final_draft_preview_docx",
+          "export_status": "success",
+          "file_path": "exports\\final_draft_previews\\INTAKE-0005_business_continuity_packet_business_continuity_memo_FINAL_DRAFT_PREVIEW.docx",
+          "message": "Final-draft preview DOCX generated for business_continuity_packet/business_continuity_memo. Status=Final-Draft Preview Incomplete.",
+          "created_at": "2026-05-21T15:26:27",
+          "created_by": "admin123",
+          "version_number": 2,
+          "packet_type": "final_draft_preview"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "exports\\draft_packets\\INTAKE-0005_business_continuity_packet_Draft_Packet.docx",
+          "Draft packet DOCX generated for business_continuity_packet.",
+          "INT-1M export log table test.",
+          "INT-1N versioning test.",
+          "follow_up_packet",
+          "draft_packet",
+          "system_check",
+          "version_test",
+          "draft_docx",
+          "test"
+        ],
+        "FIRM-002": [
+          "admin123"
+        ]
+      },
+      "route_tests": [],
+      "outcome": "NO_RESOLVABLE_GET_ROUTE"
+    },
+    {
+      "finding_id": "ISO-013",
+      "table": "intake_final_draft_gate_actions",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "database_records": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "firm_id": "FIRM-001",
+          "action_key": "professional_review_confirmed",
+          "action_label": "Professional Review Status Confirmed",
+          "note": "INT-2L system test action.",
+          "created_at": "2026-05-21T14:37:29",
+          "created_by": "system_check"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "firm_id": "FIRM-002",
+          "action_key": "missing_answers_acknowledged",
+          "action_label": "Missing Answers Reviewed / Acknowledged",
+          "note": "Administrative review completed for test workflow. Final-draft preparation may proceed, but no signing, filing, execution, or final use is authorized.",
+          "created_at": "2026-05-21T14:40:19",
+          "created_by": "admin123"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "firm_id": "FIRM-002",
+          "action_key": "open_issues_reviewed",
+          "action_label": "Open Issues Reviewed / Accepted",
+          "note": "Administrative review completed for test workflow. Final-draft preparation may proceed, but no signing, filing, execution, or final use is authorized.",
+          "created_at": "2026-05-21T14:40:19",
+          "created_by": "admin123"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "firm_id": "FIRM-002",
+          "action_key": "open_tasks_reviewed",
+          "action_label": "Open Tasks Reviewed / Accepted",
+          "note": "Administrative review completed for test workflow. Final-draft preparation may proceed, but no signing, filing, execution, or final use is authorized.",
+          "created_at": "2026-05-21T14:40:19",
+          "created_by": "admin123"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "firm_id": "FIRM-002",
+          "action_key": "required_documents_acknowledged",
+          "action_label": "Required Documents Acknowledged",
+          "note": "Administrative review completed for test workflow. Final-draft preparation may proceed, but no signing, filing, execution, or final use is authorized.",
+          "created_at": "2026-05-21T14:40:19",
+          "created_by": "admin123"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "firm_id": "FIRM-002",
+          "action_key": "professional_review_confirmed",
+          "action_label": "Professional Review Status Confirmed",
+          "note": "Administrative review completed for test workflow. Final-draft preparation may proceed, but no signing, filing, execution, or final use is authorized.",
+          "created_at": "2026-05-21T14:40:19",
+          "created_by": "admin123"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "INT-2L system test action.",
+          "system_check"
+        ],
+        "FIRM-002": [
+          "Administrative review completed for test workflow. Final-draft preparation may proceed, but no signing, filing, execution, or final use is authorized.",
+          "Missing Answers Reviewed / Acknowledged",
+          "Open Issues Reviewed / Accepted",
+          "Required Documents Acknowledged",
+          "required_documents_acknowledged",
+          "Open Tasks Reviewed / Accepted",
+          "missing_answers_acknowledged",
+          "open_issues_reviewed",
+          "open_tasks_reviewed",
+          "admin123"
+        ]
+      },
+      "route_tests": [],
+      "outcome": "NO_RESOLVABLE_GET_ROUTE"
+    },
+    {
+      "finding_id": "ISO-014",
+      "table": "intake_review_gate_actions",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "database_records": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "gate_name": "non_final_draft_review_gate",
+          "firm_id": "FIRM-001",
+          "action_key": "professional_review_required",
+          "action_label": "Professional Review Required",
+          "resulting_status": "professional_review_required",
+          "note": "INT-2J system test action.",
+          "created_at": "2026-05-21T14:18:31",
+          "created_by": "system_check"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "workflow_key": "business_continuity_packet",
+          "document_key": "business_continuity_memo",
+          "gate_name": "non_final_draft_review_gate",
+          "firm_id": "FIRM-002",
+          "action_key": "missing_answers_resolved",
+          "action_label": "Missing Answers Resolved",
+          "resulting_status": "review_required",
+          "note": "",
+          "created_at": "2026-05-21T14:29:27",
+          "created_by": "admin123"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "Professional Review Required",
+          "professional_review_required",
+          "INT-2J system test action.",
+          "system_check"
+        ],
+        "FIRM-002": [
+          "Missing Answers Resolved",
+          "missing_answers_resolved",
+          "review_required",
+          "admin123"
+        ]
+      },
+      "route_tests": [],
+      "outcome": "NO_RESOLVABLE_GET_ROUTE"
+    },
+    {
+      "finding_id": "ISO-015",
+      "table": "workspaces",
+      "identifier_column": "owner_id",
+      "identifier": "ADMIN_OWNER_001",
+      "database_records": [
+        {
+          "workspace_id": "WS-001",
+          "title": "Family Trust Design Sandbox",
+          "workspace_type": "trust_design",
+          "trust_type_focus": "revocable",
+          "purpose": "Plan and compare family trust structure options before formal buildout.",
+          "owner": "admin",
+          "status": "draft",
+          "created_at": "2026-04-12 22:40:34",
+          "updated_at": "2026-04-12 22:40:34",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-002",
+          "title": "Fiduciary Filing Planning Sandbox",
+          "workspace_type": "filing_planning",
+          "trust_type_focus": "other",
+          "purpose": "Organize filing questions, tax form links, and reporting workflow notes.",
+          "owner": "admin",
+          "status": "draft",
+          "created_at": "2026-04-12 22:40:34",
+          "updated_at": "2026-04-12 22:40:34",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-010",
+          "title": "Land Holding Structure Sandbox",
+          "workspace_type": "trust_design",
+          "trust_type_focus": "land",
+          "purpose": "Explore real-property holding structure and related recordkeeping questions.",
+          "owner": "admin",
+          "status": "draft",
+          "created_at": "2026-04-13 02:11:23",
+          "updated_at": "2026-04-13 02:11:23",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-011",
+          "title": "Insurance Planning Sandbox",
+          "workspace_type": "trust_design",
+          "trust_type_focus": "insurance",
+          "purpose": "Explore insurance-related trust planning and documentation questions.",
+          "owner": "admin",
+          "status": "draft",
+          "created_at": "2026-04-13 02:11:23",
+          "updated_at": "2026-04-13 02:11:23",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-012",
+          "title": "Tax Workflow Sandbox",
+          "workspace_type": "filing_planning",
+          "trust_type_focus": "complex",
+          "purpose": "Organize filing guides, reporting flow, and amendment considerations.",
+          "owner": "admin",
+          "status": "draft",
+          "created_at": "2026-04-13 02:11:23",
+          "updated_at": "2026-04-13 02:11:23",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "admin 01",
+          "title": "too much",
+          "workspace_type": "too short",
+          "trust_type_focus": "too long",
+          "purpose": "too fat",
+          "owner": "admin",
+          "status": "draft",
+          "created_at": "2026-04-14 22:43:10",
+          "updated_at": "2026-04-14 22:43:10",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "FIRM-002",
+          "title": "Luna I Mishoe III Revocable Trust",
+          "workspace_type": "Trust Creation",
+          "trust_type_focus": "Beneficiary",
+          "purpose": "Too Create a Trust",
+          "owner": "Luna Mishoe",
+          "status": "draft",
+          "created_at": "2026-05-12 03:52:31",
+          "updated_at": "2026-05-12 03:52:31",
+          "owner_id": "ADMIN_OWNER_001",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "unique_markers": {
+        "FIRM-001": [
+          "Explore real-property holding structure and related recordkeeping questions.",
+          "Organize filing questions, tax form links, and reporting workflow notes.",
+          "Plan and compare family trust structure options before formal buildout.",
+          "Explore insurance-related trust planning and documentation questions.",
+          "Organize filing guides, reporting flow, and amendment considerations.",
+          "Fiduciary Filing Planning Sandbox",
+          "Land Holding Structure Sandbox",
+          "Family Trust Design Sandbox",
+          "Insurance Planning Sandbox",
+          "Tax Workflow Sandbox",
+          "filing_planning",
+          "trust_design",
+          "insurance",
+          "revocable",
+          "too short",
+          "admin 01",
+          "too long",
+          "too much",
+          "complex",
+          "too fat",
+          "WS-001",
+          "WS-002",
+          "WS-010",
+          "WS-011",
+          "WS-012",
+          "admin",
+          "other",
+          "land"
+        ],
+        "FIRM-002": [
+          "Luna I Mishoe III Revocable Trust",
+          "Too Create a Trust",
+          "Trust Creation",
+          "Beneficiary",
+          "Luna Mishoe",
+          "FIRM-002"
+        ]
+      },
+      "route_tests": [
+        {
+          "source_file": "app.py",
+          "source_function": "discussion_new",
+          "source_line": 10528,
+          "route_template": "/discussions/new",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "built_route": "/discussions/new",
+          "route_error": null,
+          "status": "TESTED",
+          "same_response_hash_across_firms": true,
+          "firm_results": [
+            {
+              "firm_id": "FIRM-001",
+              "status_code": 200,
+              "location": null,
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 756,
+              "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+              "opposite_firm_markers_found": [],
+              "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_passwo"
+            },
+            {
+              "firm_id": "FIRM-002",
+              "status_code": 200,
+              "location": null,
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 756,
+              "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+              "opposite_firm_markers_found": [
+                "admin"
+              ],
+              "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_passwo"
+            }
+          ]
+        },
+        {
+          "source_file": "app.py",
+          "source_function": "document_generate",
+          "source_line": 10888,
+          "route_template": "/documents/generate",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "built_route": "/documents/generate",
+          "route_error": null,
+          "status": "TESTED",
+          "same_response_hash_across_firms": true,
+          "firm_results": [
+            {
+              "firm_id": "FIRM-001",
+              "status_code": 200,
+              "location": null,
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 756,
+              "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+              "opposite_firm_markers_found": [],
+              "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_passwo"
+            },
+            {
+              "firm_id": "FIRM-002",
+              "status_code": 200,
+              "location": null,
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 756,
+              "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+              "opposite_firm_markers_found": [
+                "admin"
+              ],
+              "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_passwo"
+            }
+          ]
+        },
+        {
+          "source_file": "app.py",
+          "source_function": "hosted_repair_admin_access_once",
+          "source_line": 14760,
+          "route_template": "/hosted-repair-admin-access-once",
+          "methods": [
+            "GET"
+          ],
+          "built_route": "/hosted-repair-admin-access-once",
+          "route_error": null,
+          "status": "TESTED",
+          "same_response_hash_across_firms": true,
+          "firm_results": [
+            {
+              "firm_id": "FIRM-001",
+              "status_code": 302,
+              "location": "/login?timeout=1",
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 219,
+              "response_sha256": "26bba1d5e39c19394c15a964b2e35ec61c39feb986ff3d6c8d6e7a5d298ceb0b",
+              "opposite_firm_markers_found": [],
+              "body_preview": "<!doctype html>\n<html lang=en>\n<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to the target URL: <a href=\"/login?timeout=1\">/login?timeout=1</a>. If not, click the link.\n"
+            },
+            {
+              "firm_id": "FIRM-002",
+              "status_code": 302,
+              "location": "/login?timeout=1",
+              "content_type": "text/html; charset=utf-8",
+              "response_length": 219,
+              "response_sha256": "26bba1d5e39c19394c15a964b2e35ec61c39feb986ff3d6c8d6e7a5d298ceb0b",
+              "opposite_firm_markers_found": [],
+              "body_preview": "<!doctype html>\n<html lang=en>\n<title>Redirecting...</title>\n<h1>Redirecting...</h1>\n<p>You should be redirected automatically to the target URL: <a href=\"/login?timeout=1\">/login?timeout=1</a>. If not, click the link.\n"
+            }
+          ]
+        }
+      ],
+      "outcome": "OPPOSITE_FIRM_DATA_EXPOSURE_DETECTED"
+    }
+  ],
+  "write_results": [
+    {
+      "target_function": "update_app_user",
+      "callable_in_active_database_module": true,
+      "signature": "(username, data)",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_app_user",
+          "line": 2863,
+          "end_line": 2876,
+          "decorators": [],
+          "calls": [
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection"
+          ],
+          "source": "def update_app_user(username, data):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        UPDATE app_users\n        SET role_name = ?, status = ?\n        WHERE username = ?\n    \"\"\", (\n        data[\"role_name\"],\n        data[\"status\"],\n        username,\n    ))\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "users_edit",
+          "route": "/users/<username>/edit",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 6749,
+          "decorators": [
+            "app.route('/users/<username>/edit', methods=['GET', 'POST'])"
+          ],
+          "source": "def users_edit(username):\n    gate = require_master_admin()\n    if gate:\n        return gate\n    user = get_user_by_username(username)\n    if not user:\n        return f\"User {username} not found\", 404\n\n    if request.method == \"POST\":\n        role_name = request.form.get(\"role_name\") or \"\"\n        status = request.form.get(\"status\") or \"active\"\n\n        if role_name not in {\"Admin\", \"Trustee\", \"Viewer\"}:\n            return render_template(\n                \"user_edit.html\",\n                user=user,\n                error_message=\"Valid role is required.\"\n            )\n\n        if session.get(\"username\") == username:\n            if role_name != \"Admin\":\n                return render_template(\n                    \"user_edit.html\",\n                    user=user,\n                    error_message=\"You cannot remove your own Admin role.\"\n                )\n            if status.lower() != \"active\":\n                return render_template(\n                    \"user_edit.html\",\n                    user=user,\n                    error_message=\"You cannot deactivate your own account.\"\n                )\n\n        update_app_user(username, {\n            \"role_name\": role_name,\n            \"status\": status,\n        })\n\n        allow_permissions = request.form.getlist(\"allow_permissions\")\n        deny_permissions = request.form.getlist(\"deny_permissions\")\n\n        replace_user_permission_overrides(username, allow_permissions, deny_permissions)\n\n        log_change(\"app_user\", username, \"update\", f\"Master admin updated user '{username}' to role '{role_name}' with status '{status}'\")\n        log_change(\"security\", username, \"user_permission_overrides_updated\", f\"Allow={allow_permissions}; Deny={deny_permissions}\")\n        flash(f\"User {username} updated successfully.\")\n        return redirect(url_for(\"users_dashboard\"))\n\n    all_permissions = get_all_permissions()\n    overrides = get_user_permission_overrides(username)\n\n    allow_set = {row[\"permission_name\"] for row in overrides if row[\"effect\"] == \"allow\"}\n    deny_set = {row[\"permission_name\"] for row in overrides if row[\"effect\"] == \"deny\"}\n\n    return render_template(\n        \"user_edit.html\",\n        user=user,\n        all_permissions=all_permissions,\n        allow_set=allow_set,\n        deny_set=deny_set\n    )"
+        }
+      ],
+      "status": "SANDBOX_READY_REQUIRES_CONTROLLED_PAYLOAD",
+      "mutation_executed": false,
+      "reason": "UPA-1B-6B does not invent mutation payloads. The exact function signature and route requirements are recorded for controlled case-specific tests."
+    },
+    {
+      "target_function": "update_app_user_password",
+      "callable_in_active_database_module": true,
+      "signature": "(username, password_hash)",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_app_user_password",
+          "line": 2879,
+          "end_line": 2891,
+          "decorators": [],
+          "calls": [
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection"
+          ],
+          "source": "def update_app_user_password(username, password_hash):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        UPDATE app_users\n        SET password_hash = ?\n        WHERE username = ?\n    \"\"\", (\n        password_hash,\n        username,\n    ))\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "users_reset_password",
+          "route": "/users/<username>/reset_password",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 6813,
+          "decorators": [
+            "app.route('/users/<username>/reset_password', methods=['GET', 'POST'])"
+          ],
+          "source": "def users_reset_password(username):\n    gate = require_master_admin()\n    if gate:\n        return gate\n    user = get_user_by_username(username)\n    if not user:\n        return f\"User {username} not found\", 404\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"user_reset_password.html\", user=user, error_message=\"Invalid or missing CSRF token.\")\n\n        password = request.form.get(\"password\") or \"\"\n        confirm_password = request.form.get(\"confirm_password\") or \"\"\n\n        if not password:\n            return render_template(\n                \"user_reset_password.html\",\n                user=user,\n                error_message=\"Password is required.\"\n            )\n\n        if password != confirm_password:\n            return render_template(\n                \"user_reset_password.html\",\n                user=user,\n                error_message=\"Passwords do not match.\"\n            )\n\n        update_app_user_password(username, generate_password_hash(password))\n        log_change(\"app_user\", username, \"reset_password\", f\"Master admin reset password for user '{username}'\")\n        flash(f\"Password reset successfully for {username}.\")\n        return redirect(url_for(\"users_dashboard\"))\n\n    return render_template(\"user_reset_password.html\", user=user)"
+        },
+        {
+          "file": "app.py",
+          "function": "reset_admin_once",
+          "route": "/admin/reset_admin_once",
+          "methods": [
+            "GET"
+          ],
+          "line": 14337,
+          "decorators": [
+            "app.route('/admin/reset_admin_once')"
+          ],
+          "source": "def reset_admin_once():\n    \"\"\"\n    Controlled emergency admin reset.\n    Disabled unless ALLOW_ADMIN_RESET=1 is set.\n    \"\"\"\n    if os.getenv(\"ALLOW_ADMIN_RESET\") != \"1\":\n        return \"Admin reset disabled. Set ALLOW_ADMIN_RESET=1 to enable.\", 403\n\n    username = os.getenv(\"RESET_ADMIN_USERNAME\", \"admin\").strip()\n    password = os.getenv(\"RESET_ADMIN_PASSWORD\", \"admin123\")\n\n    if not username or not password:\n        return \"RESET_ADMIN_USERNAME and RESET_ADMIN_PASSWORD are required.\", 400\n\n    existing = get_user_by_username(username)\n\n    if existing:\n        update_app_user_password(username, generate_password_hash(password))\n        log_change(\"app_user\", username, \"emergency_reset\", \"Emergency admin password reset route used.\")\n        return f\"Admin password reset for username: {username}\"\n\n    create_app_user({\n        \"user_id\": get_next_user_id(),\n        \"username\": username,\n        \"password_hash\": generate_password_hash(password),\n        \"role_name\": \"Admin\",\n        \"status\": \"active\",\n    })\n    log_change(\"app_user\", username, \"emergency_create\", \"Emergency admin user created.\")\n    return f\"Admin user created for username: {username}\""
+        },
+        {
+          "file": "app.py",
+          "function": "change_password",
+          "route": "/change_password",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 14390,
+          "decorators": [
+            "app.route('/change_password', methods=['GET', 'POST'])"
+          ],
+          "source": "def change_password():\n    username = session.get(\"username\")\n    if not username:\n        return redirect(url_for(\"login\"))\n\n    user = get_user_by_username(username)\n    if not user:\n        session.clear()\n        return redirect(url_for(\"login\"))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"change_password.html\", error_message=\"Invalid or missing CSRF token.\")\n\n        current_password = request.form.get(\"current_password\") or \"\"\n        new_password = request.form.get(\"new_password\") or \"\"\n        confirm_password = request.form.get(\"confirm_password\") or \"\"\n\n        if not current_password or not new_password or not confirm_password:\n            return render_template(\n                \"change_password.html\",\n                error_message=\"All password fields are required.\"\n            )\n\n        if not check_password_hash(user[\"password_hash\"], current_password):\n            return render_template(\n                \"change_password.html\",\n                error_message=\"Current password is incorrect.\"\n            )\n\n        if new_password != confirm_password:\n            return render_template(\n                \"change_password.html\",\n                error_message=\"New passwords do not match.\"\n            )\n\n        update_app_user_password(username, generate_password_hash(new_password))\n        flash(\"Password changed successfully.\")\n        return redirect(url_for(\"change_password\"))\n\n    return render_template(\"change_password.html\")"
+        }
+      ],
+      "status": "SANDBOX_READY_REQUIRES_CONTROLLED_PAYLOAD",
+      "mutation_executed": false,
+      "reason": "UPA-1B-6B does not invent mutation payloads. The exact function signature and route requirements are recorded for controlled case-specific tests."
+    },
+    {
+      "target_function": "update_distribution_record",
+      "callable_in_active_database_module": true,
+      "signature": "(distribution_id, updates)",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_distribution_record",
+          "line": 1248,
+          "end_line": 1255,
+          "decorators": [],
+          "calls": [
+            "', '.join",
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection",
+            "list",
+            "updates.keys",
+            "updates.values"
+          ],
+          "source": "def update_distribution_record(distribution_id, updates):\n    conn = get_connection()\n    cur = conn.cursor()\n    fields = \", \".join([f\"{k} = ?\" for k in updates.keys()])\n    values = list(updates.values()) + [distribution_id]\n    cur.execute(f\"UPDATE distributions SET {fields} WHERE distribution_id = ?\", values)\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "k1_edit_distribution",
+          "route": "/k1/trust/<trust_id>/distribution/<distribution_id>/edit",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 8074,
+          "decorators": [
+            "app.route('/k1/trust/<trust_id>/distribution/<distribution_id>/edit', methods=['GET', 'POST'])"
+          ],
+          "source": "def k1_edit_distribution(trust_id, distribution_id):\n    trust = get_trust_by_id(trust_id)\n    distribution = get_distribution_by_id_and_trust(distribution_id, trust_id)\n    beneficiaries = get_beneficiaries_by_trust_id(trust_id)\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\n                \"k1_distribution_edit.html\",\n                trust=trust,\n                distribution=distribution,\n                beneficiaries=beneficiaries,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        if not validate_csrf_token():\n            return render_template(\n                \"k1_distribution_edit.html\",\n                trust=trust,\n                distribution=distribution,\n                beneficiaries=beneficiaries,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        update_distribution_record(distribution_id, {\n            \"beneficiary_id\": request.form.get(\"beneficiary_id\"),\n            \"tax_year\": request.form.get(\"tax_year\"),\n            \"distribution_date\": request.form.get(\"distribution_date\"),\n            \"distribution_type\": request.form.get(\"distribution_type\"),\n            \"description\": request.form.get(\"description\"),\n            \"gross_amount\": request.form.get(\"gross_amount\"),\n            \"taxable_amount\": request.form.get(\"taxable_amount\"),\n            \"principal_amount\": request.form.get(\"principal_amount\"),\n            \"source_reference\": request.form.get(\"source_reference\"),\n            \"status\": request.form.get(\"status\"),\n        })\n        log_change(\"distribution\", distribution_id, \"create\", f\"Distribution created for trust {trust_id}\")\n        return redirect(url_for(\"k1_trust_view\", trust_id=trust_id, tax_year=request.form.get(\"tax_year\")))\n\n    return render_template(\n        \"k1_distribution_edit.html\",\n        trust=trust,\n        distribution=distribution,\n        beneficiaries=beneficiaries\n    )"
+        }
+      ],
+      "status": "SANDBOX_READY_REQUIRES_CONTROLLED_PAYLOAD",
+      "mutation_executed": false,
+      "reason": "UPA-1B-6B does not invent mutation payloads. The exact function signature and route requirements are recorded for controlled case-specific tests."
+    },
+    {
+      "target_function": "update_trust_fields",
+      "callable_in_active_database_module": true,
+      "signature": "(trust_id, updates)",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_trust_fields",
+          "line": 553,
+          "end_line": 560,
+          "decorators": [],
+          "calls": [
+            "', '.join",
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection",
+            "list",
+            "updates.keys",
+            "updates.values"
+          ],
+          "source": "def update_trust_fields(trust_id, updates):\n    conn = get_connection()\n    cur = conn.cursor()\n    fields = \", \".join([f\"{k} = ?\" for k in updates.keys()])\n    values = list(updates.values()) + [trust_id]\n    cur.execute(f\"UPDATE trusts SET {fields} WHERE trust_id = ?\", values)\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "create_trust_step2_grantor",
+          "route": "/create_trust_step2_grantor/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 2981,
+          "decorators": [
+            "app.route('/create_trust_step2_grantor/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step2_grantor(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step2_grantor.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"grantor_name\": request.form.get(\"grantor_name\"),\n            \"grantor_type\": request.form.get(\"grantor_type\"),\n            \"grantor_contact\": request.form.get(\"grantor_contact\"),\n        })\n\n        return redirect(url_for(\"create_trust_step2\", trust_id=trust_id))\n\n    return render_template(\"create_trust_step2_grantor.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step2",
+          "route": "/create_trust_step2/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3003,
+          "decorators": [
+            "app.route('/create_trust_step2/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step2(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step2.html\", trust=trust, trust_types=get_trust_type_cards(), error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"trust_type\": request.form.get(\"trust_type\"),\n            \"trust_purpose\": request.form.get(\"trust_purpose\"),\n            \"accounting_method\": request.form.get(\"accounting_method\"),\n            \"workflow_mode\": request.form.get(\"workflow_mode\"),\n            \"status\": \"Draft - Step 2 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step3\", trust_id=trust_id))\n    return render_template(\"create_trust_step2.html\", trust=trust, trust_types=get_trust_type_cards())"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step3",
+          "route": "/create_trust_step3/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3023,
+          "decorators": [
+            "app.route('/create_trust_step3/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step3(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step3.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"settlor_name\": request.form.get(\"settlor_name\"),\n            \"trustee_name\": request.form.get(\"trustee_name\"),\n            \"successor_trustee_name\": request.form.get(\"successor_trustee_name\"),\n            \"beneficiary_name\": request.form.get(\"beneficiary_name\"),\n            \"status\": \"Draft - Step 3 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step4\", trust_id=trust_id))\n    return render_template(\"create_trust_step3.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step4",
+          "route": "/create_trust_step4/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3043,
+          "decorators": [
+            "app.route('/create_trust_step4/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step4(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step4.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"record_visibility\": request.form.get(\"record_visibility\"),\n            \"workflow_mode_confirmed\": request.form.get(\"workflow_mode_confirmed\"),\n            \"ai_explanations\": request.form.get(\"ai_explanations\"),\n            \"recommended_guidance\": request.form.get(\"recommended_guidance\"),\n            \"status\": \"Draft - Step 4 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step5\", trust_id=trust_id))\n    return render_template(\"create_trust_step4.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step5",
+          "route": "/create_trust_step5/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3063,
+          "decorators": [
+            "app.route('/create_trust_step5/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step5(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step5.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"initial_corpus_description\": request.form.get(\"initial_corpus_description\"),\n            \"property_mapping_timing\": request.form.get(\"property_mapping_timing\"),\n            \"asset_categories\": request.form.get(\"asset_categories\"),\n            \"generate_schedule_recommendations\": request.form.get(\"generate_schedule_recommendations\"),\n            \"status\": \"Draft - Step 5 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step6\", trust_id=trust_id))\n    return render_template(\"create_trust_step5.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step6",
+          "route": "/create_trust_step6/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3083,
+          "decorators": [
+            "app.route('/create_trust_step6/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step6(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step6.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\"status\": \"Finalized\"})\n        return redirect(url_for(\"trust_post_create_review\", trust_id=trust_id))\n    return render_template(\"create_trust_step6.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "trust_branding_settings",
+          "route": "/trust/<trust_id>/branding",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3272,
+          "decorators": [
+            "app.route('/trust/<trust_id>/branding', methods=['GET', 'POST'])"
+          ],
+          "source": "def trust_branding_settings(trust_id):\n    gate = gate_trust_access(trust_id, {\"Admin\", \"Trustee\"})\n    if gate:\n        return gate\n\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\", 404\n\n    if request.method == \"POST\":\n        update_payload = {\n            \"caf_number\": request.form.get(\"caf_number\", \"\").strip(),\n            \"crid_number\": request.form.get(\"crid_number\", \"\").strip(),\n            \"trust_motto\": request.form.get(\"trust_motto\", \"\").strip(),\n            \"foundation_scripture\": request.form.get(\"foundation_scripture\", \"\").strip(),\n            \"prepared_by\": request.form.get(\"prepared_by\", \"\").strip(),\n            \"return_to\": request.form.get(\"return_to\", \"\").strip(),\n            \"branding_style\": request.form.get(\"branding_style\", \"v3_minimal\").strip() or \"v3_minimal\",\n        }\n\n        seal_file = request.files.get(\"seal_file\")\n        if seal_file and seal_file.filename:\n            original_name = seal_file.filename\n            extension = original_name.rsplit(\".\", 1)[1].lower() if \".\" in original_name else \"\"\n            if extension not in {\"png\", \"jpg\", \"jpeg\"}:\n                trust = get_trust_by_id(trust_id)\n                return render_template(\n                    \"trust_branding_settings.html\",\n                    trust=trust,\n                    error_message=\"Seal upload must be a PNG, JPG, or JPEG image.\"\n                )\n\n            safe_name = secure_filename(original_name)\n            branding_dir = UPLOAD_FOLDER / \"trust_branding\" / trust_id\n            branding_dir.mkdir(parents=True, exist_ok=True)\n            stored_filename = f\"seal_{datetime.now().strftime('%Y%m%d%H%M%S')}_{safe_name}\"\n            stored_path = branding_dir / stored_filename\n            seal_file.save(stored_path)\n\n            update_payload[\"seal_path\"] = stored_path.as_posix()\n\n            log_change(\n                \"trust_branding\",\n                trust_id,\n                \"trust_branding_seal_uploaded\",\n                f\"Seal uploaded: {stored_filename}\"\n            )\n\n        update_trust_fields(trust_id, update_payload)\n\n        log_change(\n            \"trust_branding\",\n            trust_id,\n            \"branding_settings_updated\",\n            \"Trust branding settings updated\"\n        )\n\n        next_action = request.form.get(\"next_action\", \"stay\")\n\n        if next_action == \"declaration\":\n            return redirect(url_for(\"trust_declaration_output_surface\", trust_id=trust_id))\n        if next_action == \"certificate\":\n            return redirect(url_for(\"trust_certificate_of_trust_output_surface\", trust_id=trust_id))\n        if next_action == \"packet_preview\":\n            return redirect(url_for(\"trust_packet_preview\", trust_id=trust_id))\n\n        return redirect(url_for(\"trust_branding_settings\", trust_id=trust_id))\n\n    trust = get_trust_by_id(trust_id)\n    return render_template(\"trust_branding_settings.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "trust_accounting_method_settings",
+          "route": "/trust/<trust_id>/accounting-method",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 11402,
+          "decorators": [
+            "app.route('/trust/<trust_id>/accounting-method', methods=['GET', 'POST'])"
+          ],
+          "source": "def trust_accounting_method_settings(trust_id):\n    gate = gate_trust_access(trust_id, [\"Admin\", \"Trustee\"])\n    if gate:\n        return gate\n\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        flash(\"Trust not found.\", \"error\")\n        return redirect(url_for(\"admin_dashboard\"))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            flash(\"Invalid or missing CSRF token.\", \"warning\")\n            return render_template(\"trust_accounting_method.html\", trust=trust)\n\n        accounting_method = (request.form.get(\"accounting_method\") or \"\").strip()\n        if accounting_method not in [\"cash\", \"accrual\"]:\n            flash(\"Select a valid accounting method: cash or accrual.\", \"error\")\n            return render_template(\"trust_accounting_method.html\", trust=trust)\n\n        update_trust_fields(trust_id, {\"accounting_method\": accounting_method})\n        log_change(\n            \"trust\",\n            trust_id,\n            \"accounting_method_updated\",\n            f\"Accounting method set to {accounting_method} by {session.get('username') or 'unknown'}\"\n        )\n        flash(f\"Accounting method set to {accounting_method}.\", \"success\")\n        return redirect(url_for(\"trust_execution_dashboard\", trust_id=trust_id))\n\n    return render_template(\"trust_accounting_method.html\", trust=trust)"
+        }
+      ],
+      "status": "SANDBOX_READY_REQUIRES_CONTROLLED_PAYLOAD",
+      "mutation_executed": false,
+      "reason": "UPA-1B-6B does not invent mutation payloads. The exact function signature and route requirements are recorded for controlled case-specific tests."
+    },
+    {
+      "target_function": "update_trust_minute_execution",
+      "callable_in_active_database_module": true,
+      "signature": "(minute_id, data)",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_trust_minute_execution",
+          "line": 3435,
+          "end_line": 3484,
+          "decorators": [],
+          "calls": [
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "data.get",
+            "get_connection",
+            "int"
+          ],
+          "source": "def update_trust_minute_execution(minute_id, data):\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        UPDATE trust_minutes\n        SET\n            trustee_1_name = ?,\n            trustee_1_capacity = ?,\n            trustee_1_signed_date = ?,\n            trustee_1_signature_image = ?,\n            trustee_2_name = ?,\n            trustee_2_capacity = ?,\n            trustee_2_signed_date = ?,\n            trustee_2_signature_image = ?,\n            trustee_3_name = ?,\n            trustee_3_capacity = ?,\n            trustee_3_signed_date = ?,\n            trustee_3_signature_image = ?,\n            certificate_id = ?,\n            approved_at = ?,\n            executed_at = ?,\n            archived_at = ?,\n            status = ?,\n            locked = ?\n        WHERE minute_id = ?\n    \"\"\", (\n        data.get(\"trustee_1_name\"),\n        data.get(\"trustee_1_capacity\"),\n        data.get(\"trustee_1_signed_date\"),\n        data.get(\"trustee_1_signature_image\"),\n        data.get(\"trustee_2_name\"),\n        data.get(\"trustee_2_capacity\"),\n        data.get(\"trustee_2_signed_date\"),\n        data.get(\"trustee_2_signature_image\"),\n        data.get(\"trustee_3_name\"),\n        data.get(\"trustee_3_capacity\"),\n        data.get(\"trustee_3_signed_date\"),\n        data.get(\"trustee_3_signature_image\"),\n        data.get(\"certificate_id\"),\n        data.get(\"approved_at\"),\n        data.get(\"executed_at\"),\n        data.get(\"archived_at\"),\n        data.get(\"status\"),\n        int(data.get(\"locked\", 0)),\n        minute_id,\n    ))\n\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "trust_minute_execute",
+          "route": "/minutes/<minute_id>/execute",
+          "methods": [
+            "POST"
+          ],
+          "line": 7697,
+          "decorators": [
+            "app.route('/minutes/<minute_id>/execute', methods=['POST'])"
+          ],
+          "source": "def trust_minute_execute(minute_id):\n    gate = require_master_admin()\n    if gate:\n        return gate\n\n    minute = get_trust_minute_by_id(minute_id)\n    if not minute:\n        return \"Minute not found\", 404\n\n    if int(minute[\"locked\"] or 0) == 1:\n        log_change(\n            \"trust_minute\",\n            minute_id,\n            \"locked_minute_post_blocked\",\n            \"Attempted POST blocked because trust minute is locked.\"\n        )\n        return \"This trust minute is locked and cannot be modified.\", 403\n\n    action = request.form.get(\"action\")\n\n    now = datetime.now(UTC).isoformat()\n\n    data = {\n        \"trustee_1_name\": request.form.get(\"trustee_1_name\"),\n        \"trustee_1_capacity\": request.form.get(\"trustee_1_capacity\"),\n        \"trustee_1_signed_date\": request.form.get(\"trustee_1_signed_date\"),\n        \"trustee_1_signature_image\": request.form.get(\"trustee_1_signature_image\"),\n        \"trustee_2_name\": request.form.get(\"trustee_2_name\"),\n        \"trustee_2_capacity\": request.form.get(\"trustee_2_capacity\"),\n        \"trustee_2_signed_date\": request.form.get(\"trustee_2_signed_date\"),\n        \"trustee_2_signature_image\": request.form.get(\"trustee_2_signature_image\"),\n        \"trustee_3_name\": request.form.get(\"trustee_3_name\"),\n        \"trustee_3_capacity\": request.form.get(\"trustee_3_capacity\"),\n        \"trustee_3_signed_date\": request.form.get(\"trustee_3_signed_date\"),\n        \"trustee_3_signature_image\": request.form.get(\"trustee_3_signature_image\"),\n        \"approved_at\": minute[\"approved_at\"],\n        \"executed_at\": minute[\"executed_at\"],\n        \"archived_at\": minute[\"archived_at\"],\n        \"status\": minute[\"status\"],\n        \"locked\": minute[\"locked\"],\n        \"certificate_id\": minute[\"certificate_id\"] if \"certificate_id\" in minute.keys() else None,\n    }\n\n    current_status = minute[\"status\"] or \"Draft\"\n\n    if action == \"approve\":\n        if current_status in (\"Executed\", \"Archived\"):\n            message = f\"Action blocked. Cannot approve a minute with status {current_status}.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_approve_blocked\",\n                message\n            )\n            return message, 403\n\n        data[\"approved_at\"] = now\n        data[\"status\"] = \"Approved\"\n\n    elif action == \"execute\":\n        if current_status == \"Archived\":\n            message = \"Action blocked. Archived minutes cannot be executed.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_execute_blocked\",\n                message\n            )\n            return message, 403\n\n        is_valid, validation_message = validate_trust_minute_execution_requirements(data)\n        if not is_valid:\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_execute_blocked\",\n                validation_message\n            )\n            return validation_message, 400\n\n        data[\"executed_at\"] = now\n        data[\"status\"] = \"Executed\"\n        data[\"locked\"] = 1\n        if not data.get(\"certificate_id\"):\n            data[\"certificate_id\"] = f\"CERT-{minute_id}\"\n\n    elif action == \"archive\":\n        if current_status != \"Executed\":\n            message = f\"Action blocked. Only executed minutes can be archived. Current status: {current_status}.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_archive_blocked\",\n                message\n            )\n            return message, 403\n\n        data[\"archived_at\"] = now\n        data[\"status\"] = \"Archived\"\n\n    else:\n        message = f\"Action blocked. Unknown trust minute action: {action}.\"\n        log_change(\n            \"trust_minute\",\n            minute_id,\n            \"minute_action_blocked\",\n            message\n        )\n        return message, 400\n\n    update_trust_minute_execution(minute_id, data)\n\n    log_change(\n        \"trust_minute\",\n        minute_id,\n        f\"minute_{action}\",\n        f\"Status updated to {data['status']}\"\n    )\n\n    return redirect(url_for(\"trust_minute_detail\", minute_id=minute_id))"
+        }
+      ],
+      "status": "SANDBOX_READY_REQUIRES_CONTROLLED_PAYLOAD",
+      "mutation_executed": false,
+      "reason": "UPA-1B-6B does not invent mutation payloads. The exact function signature and route requirements are recorded for controlled case-specific tests."
+    }
+  ],
+  "null_firm_ownership_targets": [
+    {
+      "finding_id": "ISO-016",
+      "table": "audit_log",
+      "record": {
+        "id": 114,
+        "entity_type": "auth",
+        "entity_id": "trustee",
+        "action": "login_success",
+        "note": "User logged in successfully",
+        "created_at": "2026-04-29 16:42:03",
+        "previous_hash": "f5d247f6a6faaa52f50c060bdbb8bda2760dca7b62663080257f80f7872dc89c",
+        "entry_hash": "58772444f918fa176739034f73f4452fd1bb7c7740d274873ec09c760223c12e",
+        "hash_algorithm": "sha256",
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-001",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-017",
+      "table": "audit_log",
+      "record": {
+        "id": 115,
+        "entity_type": "auth",
+        "entity_id": "trustee",
+        "action": "login_success",
+        "note": "User logged in successfully",
+        "created_at": "2026-04-29 16:43:36",
+        "previous_hash": "58772444f918fa176739034f73f4452fd1bb7c7740d274873ec09c760223c12e",
+        "entry_hash": "c3754a2db8fb998685c0bfdfcdb922c26ce38e2475ee592434150fddc9edbe6b",
+        "hash_algorithm": "sha256",
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-001",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-018",
+      "table": "audit_log",
+      "record": {
+        "id": 116,
+        "entity_type": "auth",
+        "entity_id": "admin",
+        "action": "login_success",
+        "note": "User logged in successfully",
+        "created_at": "2026-04-29 16:43:58",
+        "previous_hash": "c3754a2db8fb998685c0bfdfcdb922c26ce38e2475ee592434150fddc9edbe6b",
+        "entry_hash": "22ee34aafe54ee2be4d0e5819b2cca5d7a30345c66b07a07835a2add97568382",
+        "hash_algorithm": "sha256",
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-001",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-019",
+      "table": "documents",
+      "record": {
+        "document_id": "DOC-001",
+        "trust_id": "TR-022",
+        "property_id": "PR-001",
+        "account_id": "",
+        "document_category": "property_record",
+        "document_title": "PR-001 Supporting Evidence for PR-001",
+        "notes": "Test evidence upload for AC-1 readiness recovery.",
+        "original_filename": "PR-001_Continuity_Custody_Log (2).pdf",
+        "stored_filename": "DOC-001_PR-001_Continuity_Custody_Log_2.pdf",
+        "file_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\uploads\\DOC-001_PR-001_Continuity_Custody_Log_2.pdf",
+        "owner_id": null,
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-002",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-020",
+      "table": "documents",
+      "record": {
+        "document_id": "DOC-002",
+        "trust_id": "TR-022",
+        "property_id": "PR-001",
+        "account_id": "",
+        "document_category": "property_record",
+        "document_title": "Supporting Evidence for PR-001",
+        "notes": "",
+        "original_filename": "Continuity_Asset_Dashboard_Report (3).pdf",
+        "stored_filename": "DOC-002_Continuity_Asset_Dashboard_Report_3.pdf",
+        "file_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\uploads\\DOC-002_Continuity_Asset_Dashboard_Report_3.pdf",
+        "owner_id": null,
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-002",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-021",
+      "table": "documents",
+      "record": {
+        "document_id": "DOC-003",
+        "trust_id": "TR-022",
+        "property_id": "PR-001",
+        "account_id": "",
+        "document_category": "property_record",
+        "document_title": "Supporting Evidence for PR-001",
+        "notes": "Test evidence upload for AC-1 readiness recovery.",
+        "original_filename": "PR-001_Continuity_Custody_Log (2).pdf",
+        "stored_filename": "DOC-003_PR-001_Continuity_Custody_Log_2.pdf",
+        "file_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\uploads\\DOC-003_PR-001_Continuity_Custody_Log_2.pdf",
+        "owner_id": null,
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-002",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    }
+  ],
+  "schema_review_targets": [
+    {
+      "finding_id": "ISO-022",
+      "table": "chart_of_accounts",
+      "columns": [
+        "coa_id",
+        "trust_id",
+        "account_code",
+        "account_name",
+        "account_group",
+        "normal_balance",
+        "is_active"
+      ],
+      "row_count": 0,
+      "likely_design": "LIKELY_GLOBAL_ACCOUNT_CATALOG_OR_NEEDS_TRUST_PARENT",
+      "unscoped_references": [
+        {
+          "file": "database/db.py",
+          "function": "init_db",
+          "line": 219,
+          "has_firm_scope": false,
+          "source_excerpt": "def init_db():\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS trusts (\n        trust_id TEXT PRIMARY KEY,\n        trust_name TEXT,\n        short_name TEXT,\n        jurisdiction TEXT,\n        effective_date TEXT,\n        trust_type TEXT,\n        trust_purpose TEXT,\n        accounting_method TEXT,\n        workflow_mode TEXT,\n        settlor_name TEXT,\n        trustee_name TEXT,\n        successor_trustee_name TEXT,\n        beneficiary_name TEXT,\n        record_visibility TEXT,\n        workflow_mode_confirmed TEXT,\n        ai_explanations TEXT,\n        recommended_guidance TEXT,\n        initial_corpus_description TEXT,\n        property_mapping_timing TEXT,\n        asset_categories TEXT,\n        generate_schedule_recommendations TEXT,\n        status TEXT\n    )\n    \"\"\")\n\n    trust_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(trusts)\").fetchall()]\n    for col in [\n        (\"grantor_name\", \"TEXT\"),\n        (\"grantor_type\", \"TEXT\"),\n        (\"grantor_contact\", \"TEXT\"),\n        (\"seal_path\", \"TEXT\"),\n        (\"caf_number\", \"TEXT\"),\n        (\"crid_number\", \"TEXT\"),\n        (\"trust_motto\", \"TEXT\"),\n        (\"foundation_scripture\", \"TEXT\"),\n        (\"prepared_by\", \"TEXT\"),\n        (\"return_to\", \"TEXT\"),\n        (\"branding_style\", \"TEXT DEFAULT 'v3_minimal'\"),\n    ]:\n        if col[0] not in trust_cols:\n            cur.execute(f\"ALTER TABLE trusts ADD COLUMN {col[0]} {col[1]}\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS properties (\n        property_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_name TEXT,\n        property_type TEXT,\n        address_or_identifier TEXT,\n        acquisition_date TEXT,\n        title_notes TEXT,\n        beneficial_notes TEXT,\n        status TEXT,\n        asset_class TEXT,\n        asset_subtype TEXT,\n        established_date TEXT,\n        effective_date TEXT,\n        review_date TEXT,\n        expiration_date TEXT,\n        responsible_party TEXT,\n        custodian TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS accounts (\n        account_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_id TEXT,\n        account_type TEXT,\n        institution TEXT,\n        account_label TEXT,\n        masked_number TEXT,\n        purpose TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS documents (\n        document_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_id TEXT,\n        account_id TEXT,\n        document_category TEXT,\n        document_title TEXT,\n        notes TEXT,\n        original_filename TEXT,\n        stored_filename TEXT,\n        file_path TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS ledger_entries (\n        entry_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_id TEXT,\n        account_id TEXT,\n        entry_type TEXT,\n        amount TEXT,\n        entry_date TEXT,\n        description TEXT,\n        entry_category TEXT,\n        accounting_method TEXT,\n        recognition_date TEXT,\n        due_date TEXT,\n        paid_date TEXT,\n        chart_account TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS chart_of_accounts (\n        coa_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        account_code TEXT,\n        account_name TEXT,\n        account_group TEXT,\n        normal_balance TEXT,\n        is_active TEXT\n    )\n    \"\"\")\n\n    existing_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(documents)\").fetchall()]\n    if \"original_filename\" not in existing_cols:\n        cur.execute(\"ALTER TABLE documents ADD COLUMN original_filename TEXT\")\n    if \"stored_filename\" not in existing_cols:\n        cur.execute(\"ALTER TABLE documents ADD COLUMN stored_filename TEXT\")\n    if \"file_path\" not in existing_cols:\n        cur.execute(\"ALTER TABLE documents ADD COLUMN file_path TEXT\")\n\n    prop_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(properties)\").fetchall()]\n    for col in [\n        (\"asset_class\", \"TEXT\"),\n        (\"asset_subtype\", \"TEXT\"),\n        (\"established_date\", \"TEXT\"),\n        (\"effective_date\", \"TEXT\"),\n        (\"review_date\", \"TEXT\"),\n        (\"expiration_date\", \"TEXT\"),\n        (\"responsible_party\", \"TEXT\"),\n        (\"custodian\", \"TEXT\"),\n    ]:\n        if col[0] not in prop_cols:\n            cur.execute(f\"ALTER TABLE properties ADD COLUMN {col[0]} {col[1]}\")\n\n    ledger_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(ledger_entries)\").fetchall()]\n    for col in [\n        (\"entry_category\", \"TEXT\"),\n        (\"accounting_method\", \"TEXT\"),\n        (\"recognition_date\", \"TEXT\"),\n        (\"due_date\", \"TEXT\"),\n        (\"paid_date\", \"TEXT\"),\n        (\"chart_account\", \"TEXT\"),\n    ]:\n        if col[0] not in ledger_cols:\n            cur.execute(f\"ALTER TABLE ledger_entries ADD COLUMN {col[0]} {col[1]}\")\n\n    for table_name in [\"properties\", \"accounts\", \"documents\", \"ledger_entries\", \"trusts\"]:\n        cols = [row[\"name\"] for row in cur.execute(f\"PRAGMA table_info({table_name})\").fetchall()]\n        if \"owner_id\" not in cols:\n            cur.execute(f\"ALTER TABLE {table_name} ADD COLUMN owner_id TEXT\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "seed_chart_of_accounts_for_trust",
+          "line": 811,
+          "has_firm_scope": false,
+          "source_excerpt": "def seed_chart_of_accounts_for_trust(trust_id):\n    defaults = [\n        (\"1000\", \"Cash\", \"asset\", \"debit\"),\n        (\"1100\", \"Accounts Receivable\", \"asset\", \"debit\"),\n        (\"1200\", \"Prepaid Expense\", \"asset\", \"debit\"),\n        (\"2000\", \"Accounts Payable\", \"liability\", \"credit\"),\n        (\"2100\", \"Deferred Revenue\", \"liability\", \"credit\"),\n        (\"4000\", \"Trust Income\", \"income\", \"credit\"),\n        (\"5000\", \"Trust Expense\", \"expense\", \"debit\"),\n    ]\n    conn = get_connection()\n    cur = conn.cursor()\n    for code, name, grp, normal in defaults:\n        coa_id = f\"{trust_id}-{code}\"\n        cur.execute(\"\"\"\n            INSERT OR IGNORE INTO chart_of_accounts (\n                coa_id, trust_id, account_code, account_name,\n                account_group, normal_balance, is_active\n            ) VALUES (?, ?, ?, ?, ?, ?, ?)\n        \"\"\", (coa_id, trust_id, code, name, grp, normal, \"yes\"))\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_chart_of_accounts",
+          "line": 834,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_chart_of_accounts(trust_id):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"SELECT * FROM chart_of_accounts WHERE trust_id = ? ORDER BY account_code\", (trust_id,))\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        }
+      ]
+    },
+    {
+      "finding_id": "ISO-023",
+      "table": "discussion_threads",
+      "columns": [
+        "thread_id",
+        "workspace_id",
+        "title",
+        "category",
+        "related_trust_type",
+        "related_form",
+        "created_by",
+        "status",
+        "created_at",
+        "updated_at",
+        "owner_id"
+      ],
+      "row_count": 5,
+      "likely_design": "LIKELY_TENANT_DATA",
+      "unscoped_references": [
+        {
+          "file": "app.py",
+          "function": "get_visualization_metrics",
+          "line": 8461,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_visualization_metrics():\n    conn = _learning_conn()\n    metrics = {}\n    table_map = {\n        \"learning_articles\": \"learning_articles\",\n        \"form_guides\": \"tax_form_guides\",\n        \"tutorial_videos\": \"tutorial_videos\",\n        \"workspaces\": \"workspaces\",\n        \"workspace_notes\": \"workspace_notes\",\n        \"discussion_threads\": \"discussion_threads\",\n        \"discussion_messages\": \"discussion_messages\",\n        \"execution_tasks\": \"execution_tasks\",\n        \"document_templates\": \"document_templates\",\n        \"generated_documents\": \"generated_documents\",\n    }\n\n    for key, table_name in table_map.items():\n        try:\n            metrics[key] = conn.execute(f\"SELECT COUNT(*) FROM {table_name}\").fetchone()[0]\n        except Exception:\n            metrics[key] = 0\n\n    conn.close()\n\n    # pull from main app helpers where available\n    try:\n        metrics[\"trusts\"] = len(get_all_trusts())\n    except Exception:\n        metrics[\"trusts\"] = 0\n\n    try:\n        metrics[\"fiduciaries\"] = len(get_all_fiduciaries())\n    except Exception:\n        metrics[\"fiduciaries\"] = 0\n\n    try:\n        metrics[\"instruments\"] = len(get_all_instruments())\n    except Exception:\n        metrics[\"instruments\"] = 0\n\n    try:\n        metrics[\"media\"] = len(get_all_media())\n    except Exception:\n        metrics[\"media\"] = 0\n\n    return metrics"
+        },
+        {
+          "file": "app.py",
+          "function": "get_visualization_timeline",
+          "line": 8508,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_visualization_timeline():\n    conn = _learning_conn()\n    timeline = []\n\n    sources = [\n        (\"Workspace\", \"workspaces\", \"workspace_id\", \"title\"),\n        (\"Discussion Thread\", \"discussion_threads\", \"thread_id\", \"title\"),\n        (\"Execution Task\", \"execution_tasks\", \"task_id\", \"title\"),\n        (\"Generated Document\", \"generated_documents\", \"document_id\", \"title\"),\n        (\"Tutorial Video\", \"tutorial_videos\", \"video_id\", \"title\"),\n    ]\n\n    for label, table_name, id_col, title_col in sources:\n        try:\n            rows = conn.execute(\n                f\"SELECT {id_col} as item_id, {title_col} as item_title, created_at FROM {table_name} ORDER BY created_at DESC LIMIT 10\"\n            ).fetchall()\n            for row in rows:\n                timeline.append({\n                    \"kind\": label,\n                    \"item_id\": row[\"item_id\"],\n                    \"item_title\": row[\"item_title\"],\n                    \"created_at\": row[\"created_at\"],\n                })\n        except Exception:\n            continue\n\n    conn.close()\n    timeline.sort(key=lambda x: x.get(\"created_at\") or \"\", reverse=True)\n    return timeline[:30]"
+        },
+        {
+          "file": "app.py",
+          "function": "get_all_discussion_threads",
+          "line": 8796,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_all_discussion_threads():\n    conn = _learning_conn()\n    rows = conn.execute(\"\"\"\n        SELECT * FROM discussion_threads\n        WHERE owner_id = ?\n        ORDER BY created_at DESC, title\n    \"\"\", (get_current_owner(),)).fetchall()\n    conn.close()\n    return [dict(r) for r in rows]"
+        },
+        {
+          "file": "app.py",
+          "function": "get_discussion_threads_by_workspace",
+          "line": 8806,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_discussion_threads_by_workspace(workspace_id):\n    conn = _learning_conn()\n    rows = conn.execute(\"\"\"\n        SELECT * FROM discussion_threads\n        WHERE workspace_id = ?\n          AND owner_id = ?\n        ORDER BY created_at DESC, title\n    \"\"\", (workspace_id, get_current_owner())).fetchall()\n    conn.close()\n    return [dict(r) for r in rows]"
+        },
+        {
+          "file": "app.py",
+          "function": "get_discussion_thread_by_id",
+          "line": 8817,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_discussion_thread_by_id(thread_id):\n    conn = _learning_conn()\n    row = conn.execute(\"\"\"\n        SELECT * FROM discussion_threads\n        WHERE thread_id = ?\n    \"\"\", (thread_id,)).fetchone()\n    conn.close()\n    return dict(row) if row else None"
+        },
+        {
+          "file": "app.py",
+          "function": "create_discussion_thread",
+          "line": 8826,
+          "has_firm_scope": false,
+          "source_excerpt": "def create_discussion_thread(payload):\n    conn = _learning_conn()\n    conn.execute(\"\"\"\n        INSERT INTO discussion_threads (\n            thread_id, workspace_id, title, category, related_trust_type,\n            related_form, created_by, status\n        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        payload.get(\"thread_id\"),\n        payload.get(\"workspace_id\"),\n        payload.get(\"title\"),\n        payload.get(\"category\"),\n        payload.get(\"related_trust_type\"),\n        payload.get(\"related_form\"),\n        payload.get(\"created_by\"),\n        payload.get(\"status\"),\n    ))\n    conn.commit()\n    conn.close()"
+        }
+      ]
+    },
+    {
+      "finding_id": "ISO-024",
+      "table": "genealogy_records",
+      "columns": [
+        "genealogy_id",
+        "trust_id",
+        "full_name",
+        "lineage_role",
+        "birth_date",
+        "death_date",
+        "parent_1",
+        "parent_2",
+        "spouse",
+        "notes",
+        "evidence_notes",
+        "source_platform",
+        "source_title",
+        "source_reference",
+        "archive_date",
+        "verification_status",
+        "trace_summary",
+        "guidance_prompt"
+      ],
+      "row_count": 0,
+      "likely_design": "LIKELY_TENANT_DATA",
+      "unscoped_references": [
+        {
+          "file": "database/db.py",
+          "function": "ensure_genealogy_tables",
+          "line": 2419,
+          "has_firm_scope": false,
+          "source_excerpt": "def ensure_genealogy_tables():\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS genealogy_records (\n        genealogy_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        full_name TEXT,\n        lineage_role TEXT,\n        birth_date TEXT,\n        death_date TEXT,\n        parent_1 TEXT,\n        parent_2 TEXT,\n        spouse TEXT,\n        notes TEXT,\n        evidence_notes TEXT,\n        source_platform TEXT,\n        source_title TEXT,\n        source_reference TEXT,\n        archive_date TEXT,\n        verification_status TEXT,\n        trace_summary TEXT,\n        guidance_prompt TEXT\n    )\n    \"\"\")\n\n    existing_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(genealogy_records)\").fetchall()]\n    for col in [\n        (\"source_platform\", \"TEXT\"),\n        (\"source_title\", \"TEXT\"),\n        (\"source_reference\", \"TEXT\"),\n        (\"archive_date\", \"TEXT\"),\n        (\"verification_status\", \"TEXT\"),\n        (\"trace_summary\", \"TEXT\"),\n        (\"guidance_prompt\", \"TEXT\"),\n    ]:\n        if col[0] not in existing_cols:\n            cur.execute(f\"ALTER TABLE genealogy_records ADD COLUMN {col[0]} {col[1]}\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_next_genealogy_id",
+          "line": 2463,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_next_genealogy_id():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"SELECT COUNT(*) AS count FROM genealogy_records\")\n    row = cur.fetchone()\n    conn.close()\n    return f\"GEN-{row['count'] + 1:03d}\""
+        },
+        {
+          "file": "database/db.py",
+          "function": "create_genealogy_record",
+          "line": 2472,
+          "has_firm_scope": false,
+          "source_excerpt": "def create_genealogy_record(data):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        INSERT INTO genealogy_records (\n            genealogy_id, trust_id, full_name, lineage_role,\n            birth_date, death_date, parent_1, parent_2,\n            spouse, notes, evidence_notes,\n            source_platform, source_title, source_reference,\n            archive_date, verification_status, trace_summary, guidance_prompt\n        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        data[\"genealogy_id\"],\n        data.get(\"trust_id\"),\n        data.get(\"full_name\"),\n        data.get(\"lineage_role\"),\n        data.get(\"birth_date\"),\n        data.get(\"death_date\"),\n        data.get(\"parent_1\"),\n        data.get(\"parent_2\"),\n        data.get(\"spouse\"),\n        data.get(\"notes\"),\n        data.get(\"evidence_notes\"),\n        data.get(\"source_platform\"),\n        data.get(\"source_title\"),\n        data.get(\"source_reference\"),\n        data.get(\"archive_date\"),\n        data.get(\"verification_status\"),\n        data.get(\"trace_summary\"),\n        data.get(\"guidance_prompt\"),\n    ))\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_all_genealogy_records",
+          "line": 2507,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_all_genealogy_records():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        SELECT * FROM genealogy_records\n        ORDER BY full_name\n    \"\"\")\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_genealogy_by_trust_id",
+          "line": 2519,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_genealogy_by_trust_id(trust_id):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        SELECT * FROM genealogy_records\n        WHERE trust_id = ?\n        ORDER BY full_name\n    \"\"\", (trust_id,))\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        }
+      ]
+    },
+    {
+      "finding_id": "ISO-025",
+      "table": "user_permission_overrides",
+      "columns": [
+        "id",
+        "username",
+        "permission_name",
+        "effect",
+        "created_at"
+      ],
+      "row_count": 1,
+      "likely_design": "LIKELY_FIRM_OR_USER_SCOPED",
+      "unscoped_references": [
+        {
+          "file": "database/db.py",
+          "function": "ensure_user_permission_override_tables",
+          "line": 2931,
+          "has_firm_scope": false,
+          "source_excerpt": "def ensure_user_permission_override_tables():\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS user_permission_overrides (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        username TEXT,\n        permission_name TEXT,\n        effect TEXT,\n        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n    )\n    \"\"\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_user_permission_overrides",
+          "line": 2949,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_user_permission_overrides(username):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        SELECT * FROM user_permission_overrides\n        WHERE username = ?\n        ORDER BY permission_name\n    \"\"\", (username,))\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        },
+        {
+          "file": "database/db.py",
+          "function": "replace_user_permission_overrides",
+          "line": 2962,
+          "has_firm_scope": false,
+          "source_excerpt": "def replace_user_permission_overrides(username, allow_permissions, deny_permissions):\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"DELETE FROM user_permission_overrides WHERE username = ?\", (username,))\n\n    for permission_name in allow_permissions:\n        cur.execute(\"\"\"\n            INSERT INTO user_permission_overrides (username, permission_name, effect)\n            VALUES (?, ?, 'allow')\n        \"\"\", (username, permission_name))\n\n    for permission_name in deny_permissions:\n        cur.execute(\"\"\"\n            INSERT INTO user_permission_overrides (username, permission_name, effect)\n            VALUES (?, ?, 'deny')\n        \"\"\", (username, permission_name))\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "build_system_health_report",
+          "line": 3047,
+          "has_firm_scope": false,
+          "source_excerpt": "def build_system_health_report():\n    required_tables = {\n        \"audit_log\": [\"id\", \"entity_type\", \"entity_id\", \"action\", \"note\", \"created_at\", \"previous_hash\", \"entry_hash\", \"hash_algorithm\"],\n        \"permissions\": [\"permission_id\", \"permission_name\", \"description\"],\n        \"role_permissions\": [\"id\", \"role_name\", \"permission_name\"],\n        \"app_users\": [\"user_id\", \"username\", \"password_hash\", \"role_name\", \"status\"],\n        \"user_permission_overrides\": [\"id\", \"username\", \"permission_name\", \"effect\", \"created_at\"],\n    }\n\n    table_reports = []\n    overall_ok = True\n\n    for table_name, required_columns in required_tables.items():\n        exists = table_exists(table_name)\n        columns = get_table_columns(table_name) if exists else []\n        missing_columns = [col for col in required_columns if col not in columns]\n\n        ok = exists and not missing_columns\n        if not ok:\n            overall_ok = False\n\n        table_reports.append({\n            \"table_name\": table_name,\n            \"exists\": exists,\n            \"columns\": columns,\n            \"missing_columns\": missing_columns,\n            \"ok\": ok,\n        })\n\n    return {\n        \"overall_status\": \"OK\" if overall_ok else \"ATTENTION\",\n        \"tables\": table_reports,\n    }"
+        },
+        {
+          "file": "database/db.py",
+          "function": "run_safe_recovery_migrations",
+          "line": 3081,
+          "has_firm_scope": false,
+          "source_excerpt": "def run_safe_recovery_migrations():\n    \"\"\"\n    Re-runs safe startup migration/initialization routines.\n    This is intentionally non-destructive:\n    - creates missing tables\n    - adds missing columns where coded\n    - seeds missing default permissions\n    - does not delete user data\n    \"\"\"\n    results = []\n\n    try:\n        init_audit_table()\n        results.append({\"name\": \"audit_log\", \"status\": \"OK\", \"note\": \"Audit table and hash columns verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"audit_log\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    try:\n        ensure_role_tables()\n        results.append({\"name\": \"permissions\", \"status\": \"OK\", \"note\": \"Permission matrix tables and defaults verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"permissions\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    try:\n        ensure_user_tables()\n        results.append({\"name\": \"app_users\", \"status\": \"OK\", \"note\": \"User table verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"app_users\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    try:\n        ensure_user_permission_override_tables()\n        results.append({\"name\": \"user_permission_overrides\", \"status\": \"OK\", \"note\": \"User override table verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"user_permission_overrides\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    return {\n        \"overall_status\": \"OK\" if all(item[\"status\"] == \"OK\" for item in results) else \"ATTENTION\",\n        \"results\": results,\n    }"
+        },
+        {
+          "file": "database/db.py",
+          "function": "reseed_default_role_permissions",
+          "line": 3121,
+          "has_firm_scope": false,
+          "source_excerpt": "def reseed_default_role_permissions():\n    \"\"\"\n    Rebuilds the default role_permissions matrix.\n    This does not modify app_users or user_permission_overrides.\n    \"\"\"\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS permissions (\n        permission_id TEXT PRIMARY KEY,\n        permission_name TEXT UNIQUE,\n        description TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS role_permissions (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        role_name TEXT,\n        permission_name TEXT,\n        UNIQUE(role_name, permission_name)\n    )\n    \"\"\")\n\n    default_permissions = [\n        (\"PERM-001\", \"view_dashboard\", \"View dashboards and core system pages\"),\n        (\"PERM-002\", \"create_trust\", \"Create new trust records\"),\n        (\"PERM-003\", \"edit_trust\", \"Edit trust records\"),\n        (\"PERM-004\", \"view_documents\", \"View trust documents\"),\n        (\"PERM-005\", \"generate_documents\", \"Generate trust documents and packets\"),\n        (\"PERM-006\", \"export_documents\", \"Export documents, packets, and snapshots\"),\n        (\"PERM-007\", \"manage_users\", \"Create, edit, and reset app users\"),\n        (\"PERM-008\", \"manage_roles\", \"Create and manage fiduciary role records\"),\n        (\"PERM-009\", \"view_audit\", \"View audit and evidence logs\"),\n        (\"PERM-010\", \"manage_permissions\", \"View and manage permission matrix\"),\n        (\"PERM-011\", \"view_security\", \"View security dashboard and audit integrity\"),\n        (\"PERM-012\", \"manage_tax_reports\", \"Create, view, print, and export K-1 / 1041 reports\"),\n    ]\n\n    default_role_permissions = {\n        \"Admin\": [\n            \"view_dashboard\", \"create_trust\", \"edit_trust\", \"view_documents\",\n            \"generate_documents\", \"export_documents\", \"manage_users\",\n            \"manage_roles\", \"view_audit\", \"manage_permissions\",\n            \"view_security\", \"manage_tax_reports\"\n        ],\n        \"Trustee\": [\n            \"view_dashboard\", \"create_trust\", \"edit_trust\", \"view_documents\",\n            \"generate_documents\", \"export_documents\", \"view_audit\",\n            \"manage_tax_reports\"\n        ],\n        \"Viewer\": [\n            \"view_dashboard\", \"view_documents\"\n        ],\n    }\n\n    cur.executemany(\"\"\"\n        INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)\n        VALUES (?, ?, ?)\n    \"\"\", default_permissions)\n\n    for role_name in default_role_permissions:\n        cur.execute(\"DELETE FROM role_permissions WHERE role_name = ?\", (role_name,))\n\n    inserted = 0\n    for role_name, permission_names in default_role_permissions.items():\n        for permission_name in permission_names:\n            cur.execute(\"\"\"\n                INSERT OR IGNORE INTO role_permissions (role_name, permission_name)\n                VALUES (?, ?)\n            \"\"\", (role_name, permission_name))\n            inserted += 1\n\n    conn.commit()\n    conn.close()\n\n    return {\n        \"overall_status\": \"OK\",\n        \"roles_seeded\": sorted(default_role_permissions.keys()),\n        \"permissions_inserted_or_verified\": len(default_permissions),\n        \"role_permission_rows_written\": inserted,\n        \"note\": \"Default role permission matrix restored. User-specific overrides preserved.\",\n    }"
+        }
+      ]
+    }
+  ]
+}

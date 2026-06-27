@@ -1,0 +1,42 @@
+=== MIA-1C STAGE TRACE ===
+Started: Sun Jun 14 21:46:03 EDT 2026
+Repository: /c/Users/LunaMishoe/Desktop/trustee-app-clean
+Branch: strapback/stable-661bb66
+HEAD: 6badd21
+STAGE 1: Python started
+ROOT: C:\Users\LunaMishoe\Desktop\trustee-app-clean
+STAGE 2: Project imports passed
+4P reports found: 1
+Using report: C:\Users\LunaMishoe\Desktop\trustee-app-clean\audit\UPA-1B-6B-4P_corrected_sandbox_rebuild_20260614_150738.json
+STAGE 3: 4P report loaded
+Database candidates:
+- exists=True path=C:\Users\LunaMishoe\Desktop\trustee-app-clean\trustee_app.db
+- exists=True path=C:\Users\LunaMishoe\Desktop\trustee-app-clean\audit\runtime_sandbox\UPA-1B-6B-4P_20260614_150738\trustee_app_firm1_sandbox.db
+- exists=True path=C:\Users\LunaMishoe\Desktop\trustee-app-clean\audit\runtime_sandbox\UPA-1B-6B-4P_20260614_150738\trustee_app_firm2_sandbox.db
+Firm 1 sources: [WindowsPath('C:/Users/LunaMishoe/Desktop/trustee-app-clean/audit/runtime_sandbox/UPA-1B-6B-4P_20260614_150738/trustee_app_firm1_sandbox.db')]
+Firm 2 sources: [WindowsPath('C:/Users/LunaMishoe/Desktop/trustee-app-clean/audit/runtime_sandbox/UPA-1B-6B-4P_20260614_150738/trustee_app_firm2_sandbox.db')]
+STAGE 4: Sandbox copies created
+Firm 1: integrity=ok, tables=89
+Firm 1: matters exists=True
+Firm 1: intake_sessions exists=True
+Firm 1: role_permissions=23873
+Firm 2: integrity=ok, tables=89
+Firm 2: matters exists=True
+Firm 2: intake_sessions exists=True
+Firm 2: role_permissions=23873
+STAGE 5: Pre-migration database inspection passed
+Firm 1 migration 1: {'matter_intake_bridge': {'tables': ['matter_intake_link_events', 'matter_intake_links'], 'indexes': ['ix_matter_intake_events_bridge', 'ix_matter_intake_links_intake', 'ix_matter_intake_links_matter', 'uq_matter_intake_active_pair', 'uq_matter_intake_primary_intake'], 'triggers': ['trg_matter_intake_event_immutable_delete', 'trg_matter_intake_event_immutable_update', 'trg_matter_intake_event_same_firm', 'trg_matter_intake_insert_same_firm', 'trg_matter_intake_update_same_firm'], 'link_rows': 0, 'event_rows': 0, 'schema_complete': True}, 'operational_links_created': 0, 'operational_events_created': 0}
+Firm 1 migration 2: {'matter_intake_bridge': {'tables': ['matter_intake_link_events', 'matter_intake_links'], 'indexes': ['ix_matter_intake_events_bridge', 'ix_matter_intake_links_intake', 'ix_matter_intake_links_matter', 'uq_matter_intake_active_pair', 'uq_matter_intake_primary_intake'], 'triggers': ['trg_matter_intake_event_immutable_delete', 'trg_matter_intake_event_immutable_update', 'trg_matter_intake_event_same_firm', 'trg_matter_intake_insert_same_firm', 'trg_matter_intake_update_same_firm'], 'link_rows': 0, 'event_rows': 0, 'schema_complete': True}, 'operational_links_created': 0, 'operational_events_created': 0}
+Firm 2 migration 1: {'matter_intake_bridge': {'tables': ['matter_intake_link_events', 'matter_intake_links'], 'indexes': ['ix_matter_intake_events_bridge', 'ix_matter_intake_links_intake', 'ix_matter_intake_links_matter', 'uq_matter_intake_active_pair', 'uq_matter_intake_primary_intake'], 'triggers': ['trg_matter_intake_event_immutable_delete', 'trg_matter_intake_event_immutable_update', 'trg_matter_intake_event_same_firm', 'trg_matter_intake_insert_same_firm', 'trg_matter_intake_update_same_firm'], 'link_rows': 0, 'event_rows': 0, 'schema_complete': True}, 'operational_links_created': 0, 'operational_events_created': 0}
+Firm 2 migration 2: {'matter_intake_bridge': {'tables': ['matter_intake_link_events', 'matter_intake_links'], 'indexes': ['ix_matter_intake_events_bridge', 'ix_matter_intake_links_intake', 'ix_matter_intake_links_matter', 'uq_matter_intake_active_pair', 'uq_matter_intake_primary_intake'], 'triggers': ['trg_matter_intake_event_immutable_delete', 'trg_matter_intake_event_immutable_update', 'trg_matter_intake_event_same_firm', 'trg_matter_intake_insert_same_firm', 'trg_matter_intake_update_same_firm'], 'link_rows': 0, 'event_rows': 0, 'schema_complete': True}, 'operational_links_created': 0, 'operational_events_created': 0}
+STAGE 6: Additive migrations passed
+FAILURE TYPE: RuntimeError
+FAILURE MESSAGE: No matters.matter_id found for FIRM-001
+Traceback (most recent call last):
+  File "<stdin>", line 222, in <module>
+  File "<stdin>", line 213, in first_id
+RuntimeError: No matters.matter_id found for FIRM-001
+Python exit status: 1
+Finished: Sun Jun 14 21:46:04 EDT 2026
+=== END MIA-1C STAGE TRACE ===
+logout

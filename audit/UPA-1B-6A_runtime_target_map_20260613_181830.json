@@ -1,0 +1,1379 @@
+{
+  "generated_at": "2026-06-13T18:18:34.004563",
+  "source_report": "audit\\UPA-1B-5_runtime_defect_triage_20260613_181635.json",
+  "git": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "status": "?? audit/"
+  },
+  "summary": {
+    "active_write_functions": 5,
+    "write_routes_found": 14,
+    "collision_targets": 7,
+    "collision_references": 40,
+    "unscoped_collision_references": 19,
+    "null_firm_ownership_maps": 6,
+    "schema_review_tables": 4
+  },
+  "write_targets": [
+    {
+      "target_function": "update_app_user",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_app_user",
+          "line": 2863,
+          "end_line": 2876,
+          "decorators": [],
+          "calls": [
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection"
+          ],
+          "source": "def update_app_user(username, data):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        UPDATE app_users\n        SET role_name = ?, status = ?\n        WHERE username = ?\n    \"\"\", (\n        data[\"role_name\"],\n        data[\"status\"],\n        username,\n    ))\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "direct_callers": [
+        {
+          "file": "app.py",
+          "function": "users_edit",
+          "line": 6749,
+          "decorators": [
+            "app.route('/users/<username>/edit', methods=['GET', 'POST'])"
+          ],
+          "source": "def users_edit(username):\n    gate = require_master_admin()\n    if gate:\n        return gate\n    user = get_user_by_username(username)\n    if not user:\n        return f\"User {username} not found\", 404\n\n    if request.method == \"POST\":\n        role_name = request.form.get(\"role_name\") or \"\"\n        status = request.form.get(\"status\") or \"active\"\n\n        if role_name not in {\"Admin\", \"Trustee\", \"Viewer\"}:\n            return render_template(\n                \"user_edit.html\",\n                user=user,\n                error_message=\"Valid role is required.\"\n            )\n\n        if session.get(\"username\") == username:\n            if role_name != \"Admin\":\n                return render_template(\n                    \"user_edit.html\",\n                    user=user,\n                    error_message=\"You cannot remove your own Admin role.\"\n                )\n            if status.lower() != \"active\":\n                return render_template(\n                    \"user_edit.html\",\n                    user=user,\n                    error_message=\"You cannot deactivate your own account.\"\n                )\n\n        update_app_user(username, {\n            \"role_name\": role_name,\n            \"status\": status,\n        })\n\n        allow_permissions = request.form.getlist(\"allow_permissions\")\n        deny_permissions = request.form.getlist(\"deny_permissions\")\n\n        replace_user_permission_overrides(username, allow_permissions, deny_permissions)\n\n        log_change(\"app_user\", username, \"update\", f\"Master admin updated user '{username}' to role '{role_name}' with status '{status}'\")\n        log_change(\"security\", username, \"user_permission_overrides_updated\", f\"Allow={allow_permissions}; Deny={deny_permissions}\")\n        flash(f\"User {username} updated successfully.\")\n        return redirect(url_for(\"users_dashboard\"))\n\n    all_permissions = get_all_permissions()\n    overrides = get_user_permission_overrides(username)\n\n    allow_set = {row[\"permission_name\"] for row in overrides if row[\"effect\"] == \"allow\"}\n    deny_set = {row[\"permission_name\"] for row in overrides if row[\"effect\"] == \"deny\"}\n\n    return render_template(\n        \"user_edit.html\",\n        user=user,\n        all_permissions=all_permissions,\n        allow_set=allow_set,\n        deny_set=deny_set\n    )"
+        }
+      ],
+      "second_level_callers": [],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "users_edit",
+          "route": "/users/<username>/edit",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 6749,
+          "decorators": [
+            "app.route('/users/<username>/edit', methods=['GET', 'POST'])"
+          ],
+          "source": "def users_edit(username):\n    gate = require_master_admin()\n    if gate:\n        return gate\n    user = get_user_by_username(username)\n    if not user:\n        return f\"User {username} not found\", 404\n\n    if request.method == \"POST\":\n        role_name = request.form.get(\"role_name\") or \"\"\n        status = request.form.get(\"status\") or \"active\"\n\n        if role_name not in {\"Admin\", \"Trustee\", \"Viewer\"}:\n            return render_template(\n                \"user_edit.html\",\n                user=user,\n                error_message=\"Valid role is required.\"\n            )\n\n        if session.get(\"username\") == username:\n            if role_name != \"Admin\":\n                return render_template(\n                    \"user_edit.html\",\n                    user=user,\n                    error_message=\"You cannot remove your own Admin role.\"\n                )\n            if status.lower() != \"active\":\n                return render_template(\n                    \"user_edit.html\",\n                    user=user,\n                    error_message=\"You cannot deactivate your own account.\"\n                )\n\n        update_app_user(username, {\n            \"role_name\": role_name,\n            \"status\": status,\n        })\n\n        allow_permissions = request.form.getlist(\"allow_permissions\")\n        deny_permissions = request.form.getlist(\"deny_permissions\")\n\n        replace_user_permission_overrides(username, allow_permissions, deny_permissions)\n\n        log_change(\"app_user\", username, \"update\", f\"Master admin updated user '{username}' to role '{role_name}' with status '{status}'\")\n        log_change(\"security\", username, \"user_permission_overrides_updated\", f\"Allow={allow_permissions}; Deny={deny_permissions}\")\n        flash(f\"User {username} updated successfully.\")\n        return redirect(url_for(\"users_dashboard\"))\n\n    all_permissions = get_all_permissions()\n    overrides = get_user_permission_overrides(username)\n\n    allow_set = {row[\"permission_name\"] for row in overrides if row[\"effect\"] == \"allow\"}\n    deny_set = {row[\"permission_name\"] for row in overrides if row[\"effect\"] == \"deny\"}\n\n    return render_template(\n        \"user_edit.html\",\n        user=user,\n        all_permissions=all_permissions,\n        allow_set=allow_set,\n        deny_set=deny_set\n    )"
+        }
+      ],
+      "runtime_test_required": true,
+      "test_rule": "Test only against a copied database. Record before-state, operate under the opposite firm session, then compare both firm rows and the complete database copy."
+    },
+    {
+      "target_function": "update_app_user_password",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_app_user_password",
+          "line": 2879,
+          "end_line": 2891,
+          "decorators": [],
+          "calls": [
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection"
+          ],
+          "source": "def update_app_user_password(username, password_hash):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        UPDATE app_users\n        SET password_hash = ?\n        WHERE username = ?\n    \"\"\", (\n        password_hash,\n        username,\n    ))\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "direct_callers": [
+        {
+          "file": "app.py",
+          "function": "users_reset_password",
+          "line": 6813,
+          "decorators": [
+            "app.route('/users/<username>/reset_password', methods=['GET', 'POST'])"
+          ],
+          "source": "def users_reset_password(username):\n    gate = require_master_admin()\n    if gate:\n        return gate\n    user = get_user_by_username(username)\n    if not user:\n        return f\"User {username} not found\", 404\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"user_reset_password.html\", user=user, error_message=\"Invalid or missing CSRF token.\")\n\n        password = request.form.get(\"password\") or \"\"\n        confirm_password = request.form.get(\"confirm_password\") or \"\"\n\n        if not password:\n            return render_template(\n                \"user_reset_password.html\",\n                user=user,\n                error_message=\"Password is required.\"\n            )\n\n        if password != confirm_password:\n            return render_template(\n                \"user_reset_password.html\",\n                user=user,\n                error_message=\"Passwords do not match.\"\n            )\n\n        update_app_user_password(username, generate_password_hash(password))\n        log_change(\"app_user\", username, \"reset_password\", f\"Master admin reset password for user '{username}'\")\n        flash(f\"Password reset successfully for {username}.\")\n        return redirect(url_for(\"users_dashboard\"))\n\n    return render_template(\"user_reset_password.html\", user=user)"
+        },
+        {
+          "file": "app.py",
+          "function": "reset_admin_once",
+          "line": 14337,
+          "decorators": [
+            "app.route('/admin/reset_admin_once')"
+          ],
+          "source": "def reset_admin_once():\n    \"\"\"\n    Controlled emergency admin reset.\n    Disabled unless ALLOW_ADMIN_RESET=1 is set.\n    \"\"\"\n    if os.getenv(\"ALLOW_ADMIN_RESET\") != \"1\":\n        return \"Admin reset disabled. Set ALLOW_ADMIN_RESET=1 to enable.\", 403\n\n    username = os.getenv(\"RESET_ADMIN_USERNAME\", \"admin\").strip()\n    password = os.getenv(\"RESET_ADMIN_PASSWORD\", \"admin123\")\n\n    if not username or not password:\n        return \"RESET_ADMIN_USERNAME and RESET_ADMIN_PASSWORD are required.\", 400\n\n    existing = get_user_by_username(username)\n\n    if existing:\n        update_app_user_password(username, generate_password_hash(password))\n        log_change(\"app_user\", username, \"emergency_reset\", \"Emergency admin password reset route used.\")\n        return f\"Admin password reset for username: {username}\"\n\n    create_app_user({\n        \"user_id\": get_next_user_id(),\n        \"username\": username,\n        \"password_hash\": generate_password_hash(password),\n        \"role_name\": \"Admin\",\n        \"status\": \"active\",\n    })\n    log_change(\"app_user\", username, \"emergency_create\", \"Emergency admin user created.\")\n    return f\"Admin user created for username: {username}\""
+        },
+        {
+          "file": "app.py",
+          "function": "change_password",
+          "line": 14390,
+          "decorators": [
+            "app.route('/change_password', methods=['GET', 'POST'])"
+          ],
+          "source": "def change_password():\n    username = session.get(\"username\")\n    if not username:\n        return redirect(url_for(\"login\"))\n\n    user = get_user_by_username(username)\n    if not user:\n        session.clear()\n        return redirect(url_for(\"login\"))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"change_password.html\", error_message=\"Invalid or missing CSRF token.\")\n\n        current_password = request.form.get(\"current_password\") or \"\"\n        new_password = request.form.get(\"new_password\") or \"\"\n        confirm_password = request.form.get(\"confirm_password\") or \"\"\n\n        if not current_password or not new_password or not confirm_password:\n            return render_template(\n                \"change_password.html\",\n                error_message=\"All password fields are required.\"\n            )\n\n        if not check_password_hash(user[\"password_hash\"], current_password):\n            return render_template(\n                \"change_password.html\",\n                error_message=\"Current password is incorrect.\"\n            )\n\n        if new_password != confirm_password:\n            return render_template(\n                \"change_password.html\",\n                error_message=\"New passwords do not match.\"\n            )\n\n        update_app_user_password(username, generate_password_hash(new_password))\n        flash(\"Password changed successfully.\")\n        return redirect(url_for(\"change_password\"))\n\n    return render_template(\"change_password.html\")"
+        }
+      ],
+      "second_level_callers": [],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "users_reset_password",
+          "route": "/users/<username>/reset_password",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 6813,
+          "decorators": [
+            "app.route('/users/<username>/reset_password', methods=['GET', 'POST'])"
+          ],
+          "source": "def users_reset_password(username):\n    gate = require_master_admin()\n    if gate:\n        return gate\n    user = get_user_by_username(username)\n    if not user:\n        return f\"User {username} not found\", 404\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"user_reset_password.html\", user=user, error_message=\"Invalid or missing CSRF token.\")\n\n        password = request.form.get(\"password\") or \"\"\n        confirm_password = request.form.get(\"confirm_password\") or \"\"\n\n        if not password:\n            return render_template(\n                \"user_reset_password.html\",\n                user=user,\n                error_message=\"Password is required.\"\n            )\n\n        if password != confirm_password:\n            return render_template(\n                \"user_reset_password.html\",\n                user=user,\n                error_message=\"Passwords do not match.\"\n            )\n\n        update_app_user_password(username, generate_password_hash(password))\n        log_change(\"app_user\", username, \"reset_password\", f\"Master admin reset password for user '{username}'\")\n        flash(f\"Password reset successfully for {username}.\")\n        return redirect(url_for(\"users_dashboard\"))\n\n    return render_template(\"user_reset_password.html\", user=user)"
+        },
+        {
+          "file": "app.py",
+          "function": "reset_admin_once",
+          "route": "/admin/reset_admin_once",
+          "methods": [
+            "GET"
+          ],
+          "line": 14337,
+          "decorators": [
+            "app.route('/admin/reset_admin_once')"
+          ],
+          "source": "def reset_admin_once():\n    \"\"\"\n    Controlled emergency admin reset.\n    Disabled unless ALLOW_ADMIN_RESET=1 is set.\n    \"\"\"\n    if os.getenv(\"ALLOW_ADMIN_RESET\") != \"1\":\n        return \"Admin reset disabled. Set ALLOW_ADMIN_RESET=1 to enable.\", 403\n\n    username = os.getenv(\"RESET_ADMIN_USERNAME\", \"admin\").strip()\n    password = os.getenv(\"RESET_ADMIN_PASSWORD\", \"admin123\")\n\n    if not username or not password:\n        return \"RESET_ADMIN_USERNAME and RESET_ADMIN_PASSWORD are required.\", 400\n\n    existing = get_user_by_username(username)\n\n    if existing:\n        update_app_user_password(username, generate_password_hash(password))\n        log_change(\"app_user\", username, \"emergency_reset\", \"Emergency admin password reset route used.\")\n        return f\"Admin password reset for username: {username}\"\n\n    create_app_user({\n        \"user_id\": get_next_user_id(),\n        \"username\": username,\n        \"password_hash\": generate_password_hash(password),\n        \"role_name\": \"Admin\",\n        \"status\": \"active\",\n    })\n    log_change(\"app_user\", username, \"emergency_create\", \"Emergency admin user created.\")\n    return f\"Admin user created for username: {username}\""
+        },
+        {
+          "file": "app.py",
+          "function": "change_password",
+          "route": "/change_password",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 14390,
+          "decorators": [
+            "app.route('/change_password', methods=['GET', 'POST'])"
+          ],
+          "source": "def change_password():\n    username = session.get(\"username\")\n    if not username:\n        return redirect(url_for(\"login\"))\n\n    user = get_user_by_username(username)\n    if not user:\n        session.clear()\n        return redirect(url_for(\"login\"))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"change_password.html\", error_message=\"Invalid or missing CSRF token.\")\n\n        current_password = request.form.get(\"current_password\") or \"\"\n        new_password = request.form.get(\"new_password\") or \"\"\n        confirm_password = request.form.get(\"confirm_password\") or \"\"\n\n        if not current_password or not new_password or not confirm_password:\n            return render_template(\n                \"change_password.html\",\n                error_message=\"All password fields are required.\"\n            )\n\n        if not check_password_hash(user[\"password_hash\"], current_password):\n            return render_template(\n                \"change_password.html\",\n                error_message=\"Current password is incorrect.\"\n            )\n\n        if new_password != confirm_password:\n            return render_template(\n                \"change_password.html\",\n                error_message=\"New passwords do not match.\"\n            )\n\n        update_app_user_password(username, generate_password_hash(new_password))\n        flash(\"Password changed successfully.\")\n        return redirect(url_for(\"change_password\"))\n\n    return render_template(\"change_password.html\")"
+        }
+      ],
+      "runtime_test_required": true,
+      "test_rule": "Test only against a copied database. Record before-state, operate under the opposite firm session, then compare both firm rows and the complete database copy."
+    },
+    {
+      "target_function": "update_distribution_record",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_distribution_record",
+          "line": 1248,
+          "end_line": 1255,
+          "decorators": [],
+          "calls": [
+            "', '.join",
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection",
+            "list",
+            "updates.keys",
+            "updates.values"
+          ],
+          "source": "def update_distribution_record(distribution_id, updates):\n    conn = get_connection()\n    cur = conn.cursor()\n    fields = \", \".join([f\"{k} = ?\" for k in updates.keys()])\n    values = list(updates.values()) + [distribution_id]\n    cur.execute(f\"UPDATE distributions SET {fields} WHERE distribution_id = ?\", values)\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "direct_callers": [
+        {
+          "file": "app.py",
+          "function": "k1_edit_distribution",
+          "line": 8074,
+          "decorators": [
+            "app.route('/k1/trust/<trust_id>/distribution/<distribution_id>/edit', methods=['GET', 'POST'])"
+          ],
+          "source": "def k1_edit_distribution(trust_id, distribution_id):\n    trust = get_trust_by_id(trust_id)\n    distribution = get_distribution_by_id_and_trust(distribution_id, trust_id)\n    beneficiaries = get_beneficiaries_by_trust_id(trust_id)\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\n                \"k1_distribution_edit.html\",\n                trust=trust,\n                distribution=distribution,\n                beneficiaries=beneficiaries,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        if not validate_csrf_token():\n            return render_template(\n                \"k1_distribution_edit.html\",\n                trust=trust,\n                distribution=distribution,\n                beneficiaries=beneficiaries,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        update_distribution_record(distribution_id, {\n            \"beneficiary_id\": request.form.get(\"beneficiary_id\"),\n            \"tax_year\": request.form.get(\"tax_year\"),\n            \"distribution_date\": request.form.get(\"distribution_date\"),\n            \"distribution_type\": request.form.get(\"distribution_type\"),\n            \"description\": request.form.get(\"description\"),\n            \"gross_amount\": request.form.get(\"gross_amount\"),\n            \"taxable_amount\": request.form.get(\"taxable_amount\"),\n            \"principal_amount\": request.form.get(\"principal_amount\"),\n            \"source_reference\": request.form.get(\"source_reference\"),\n            \"status\": request.form.get(\"status\"),\n        })\n        log_change(\"distribution\", distribution_id, \"create\", f\"Distribution created for trust {trust_id}\")\n        return redirect(url_for(\"k1_trust_view\", trust_id=trust_id, tax_year=request.form.get(\"tax_year\")))\n\n    return render_template(\n        \"k1_distribution_edit.html\",\n        trust=trust,\n        distribution=distribution,\n        beneficiaries=beneficiaries\n    )"
+        }
+      ],
+      "second_level_callers": [],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "k1_edit_distribution",
+          "route": "/k1/trust/<trust_id>/distribution/<distribution_id>/edit",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 8074,
+          "decorators": [
+            "app.route('/k1/trust/<trust_id>/distribution/<distribution_id>/edit', methods=['GET', 'POST'])"
+          ],
+          "source": "def k1_edit_distribution(trust_id, distribution_id):\n    trust = get_trust_by_id(trust_id)\n    distribution = get_distribution_by_id_and_trust(distribution_id, trust_id)\n    beneficiaries = get_beneficiaries_by_trust_id(trust_id)\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\n                \"k1_distribution_edit.html\",\n                trust=trust,\n                distribution=distribution,\n                beneficiaries=beneficiaries,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        if not validate_csrf_token():\n            return render_template(\n                \"k1_distribution_edit.html\",\n                trust=trust,\n                distribution=distribution,\n                beneficiaries=beneficiaries,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        update_distribution_record(distribution_id, {\n            \"beneficiary_id\": request.form.get(\"beneficiary_id\"),\n            \"tax_year\": request.form.get(\"tax_year\"),\n            \"distribution_date\": request.form.get(\"distribution_date\"),\n            \"distribution_type\": request.form.get(\"distribution_type\"),\n            \"description\": request.form.get(\"description\"),\n            \"gross_amount\": request.form.get(\"gross_amount\"),\n            \"taxable_amount\": request.form.get(\"taxable_amount\"),\n            \"principal_amount\": request.form.get(\"principal_amount\"),\n            \"source_reference\": request.form.get(\"source_reference\"),\n            \"status\": request.form.get(\"status\"),\n        })\n        log_change(\"distribution\", distribution_id, \"create\", f\"Distribution created for trust {trust_id}\")\n        return redirect(url_for(\"k1_trust_view\", trust_id=trust_id, tax_year=request.form.get(\"tax_year\")))\n\n    return render_template(\n        \"k1_distribution_edit.html\",\n        trust=trust,\n        distribution=distribution,\n        beneficiaries=beneficiaries\n    )"
+        }
+      ],
+      "runtime_test_required": true,
+      "test_rule": "Test only against a copied database. Record before-state, operate under the opposite firm session, then compare both firm rows and the complete database copy."
+    },
+    {
+      "target_function": "update_trust_fields",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_trust_fields",
+          "line": 553,
+          "end_line": 560,
+          "decorators": [],
+          "calls": [
+            "', '.join",
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "get_connection",
+            "list",
+            "updates.keys",
+            "updates.values"
+          ],
+          "source": "def update_trust_fields(trust_id, updates):\n    conn = get_connection()\n    cur = conn.cursor()\n    fields = \", \".join([f\"{k} = ?\" for k in updates.keys()])\n    values = list(updates.values()) + [trust_id]\n    cur.execute(f\"UPDATE trusts SET {fields} WHERE trust_id = ?\", values)\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "direct_callers": [
+        {
+          "file": "app.py",
+          "function": "create_trust_step2_grantor",
+          "line": 2981,
+          "decorators": [
+            "app.route('/create_trust_step2_grantor/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step2_grantor(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step2_grantor.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"grantor_name\": request.form.get(\"grantor_name\"),\n            \"grantor_type\": request.form.get(\"grantor_type\"),\n            \"grantor_contact\": request.form.get(\"grantor_contact\"),\n        })\n\n        return redirect(url_for(\"create_trust_step2\", trust_id=trust_id))\n\n    return render_template(\"create_trust_step2_grantor.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step2",
+          "line": 3003,
+          "decorators": [
+            "app.route('/create_trust_step2/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step2(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step2.html\", trust=trust, trust_types=get_trust_type_cards(), error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"trust_type\": request.form.get(\"trust_type\"),\n            \"trust_purpose\": request.form.get(\"trust_purpose\"),\n            \"accounting_method\": request.form.get(\"accounting_method\"),\n            \"workflow_mode\": request.form.get(\"workflow_mode\"),\n            \"status\": \"Draft - Step 2 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step3\", trust_id=trust_id))\n    return render_template(\"create_trust_step2.html\", trust=trust, trust_types=get_trust_type_cards())"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step3",
+          "line": 3023,
+          "decorators": [
+            "app.route('/create_trust_step3/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step3(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step3.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"settlor_name\": request.form.get(\"settlor_name\"),\n            \"trustee_name\": request.form.get(\"trustee_name\"),\n            \"successor_trustee_name\": request.form.get(\"successor_trustee_name\"),\n            \"beneficiary_name\": request.form.get(\"beneficiary_name\"),\n            \"status\": \"Draft - Step 3 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step4\", trust_id=trust_id))\n    return render_template(\"create_trust_step3.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step4",
+          "line": 3043,
+          "decorators": [
+            "app.route('/create_trust_step4/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step4(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step4.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"record_visibility\": request.form.get(\"record_visibility\"),\n            \"workflow_mode_confirmed\": request.form.get(\"workflow_mode_confirmed\"),\n            \"ai_explanations\": request.form.get(\"ai_explanations\"),\n            \"recommended_guidance\": request.form.get(\"recommended_guidance\"),\n            \"status\": \"Draft - Step 4 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step5\", trust_id=trust_id))\n    return render_template(\"create_trust_step4.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step5",
+          "line": 3063,
+          "decorators": [
+            "app.route('/create_trust_step5/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step5(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step5.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"initial_corpus_description\": request.form.get(\"initial_corpus_description\"),\n            \"property_mapping_timing\": request.form.get(\"property_mapping_timing\"),\n            \"asset_categories\": request.form.get(\"asset_categories\"),\n            \"generate_schedule_recommendations\": request.form.get(\"generate_schedule_recommendations\"),\n            \"status\": \"Draft - Step 5 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step6\", trust_id=trust_id))\n    return render_template(\"create_trust_step5.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step6",
+          "line": 3083,
+          "decorators": [
+            "app.route('/create_trust_step6/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step6(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step6.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\"status\": \"Finalized\"})\n        return redirect(url_for(\"trust_post_create_review\", trust_id=trust_id))\n    return render_template(\"create_trust_step6.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "trust_branding_settings",
+          "line": 3272,
+          "decorators": [
+            "app.route('/trust/<trust_id>/branding', methods=['GET', 'POST'])"
+          ],
+          "source": "def trust_branding_settings(trust_id):\n    gate = gate_trust_access(trust_id, {\"Admin\", \"Trustee\"})\n    if gate:\n        return gate\n\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\", 404\n\n    if request.method == \"POST\":\n        update_payload = {\n            \"caf_number\": request.form.get(\"caf_number\", \"\").strip(),\n            \"crid_number\": request.form.get(\"crid_number\", \"\").strip(),\n            \"trust_motto\": request.form.get(\"trust_motto\", \"\").strip(),\n            \"foundation_scripture\": request.form.get(\"foundation_scripture\", \"\").strip(),\n            \"prepared_by\": request.form.get(\"prepared_by\", \"\").strip(),\n            \"return_to\": request.form.get(\"return_to\", \"\").strip(),\n            \"branding_style\": request.form.get(\"branding_style\", \"v3_minimal\").strip() or \"v3_minimal\",\n        }\n\n        seal_file = request.files.get(\"seal_file\")\n        if seal_file and seal_file.filename:\n            original_name = seal_file.filename\n            extension = original_name.rsplit(\".\", 1)[1].lower() if \".\" in original_name else \"\"\n            if extension not in {\"png\", \"jpg\", \"jpeg\"}:\n                trust = get_trust_by_id(trust_id)\n                return render_template(\n                    \"trust_branding_settings.html\",\n                    trust=trust,\n                    error_message=\"Seal upload must be a PNG, JPG, or JPEG image.\"\n                )\n\n            safe_name = secure_filename(original_name)\n            branding_dir = UPLOAD_FOLDER / \"trust_branding\" / trust_id\n            branding_dir.mkdir(parents=True, exist_ok=True)\n            stored_filename = f\"seal_{datetime.now().strftime('%Y%m%d%H%M%S')}_{safe_name}\"\n            stored_path = branding_dir / stored_filename\n            seal_file.save(stored_path)\n\n            update_payload[\"seal_path\"] = stored_path.as_posix()\n\n            log_change(\n                \"trust_branding\",\n                trust_id,\n                \"trust_branding_seal_uploaded\",\n                f\"Seal uploaded: {stored_filename}\"\n            )\n\n        update_trust_fields(trust_id, update_payload)\n\n        log_change(\n            \"trust_branding\",\n            trust_id,\n            \"branding_settings_updated\",\n            \"Trust branding settings updated\"\n        )\n\n        next_action = request.form.get(\"next_action\", \"stay\")\n\n        if next_action == \"declaration\":\n            return redirect(url_for(\"trust_declaration_output_surface\", trust_id=trust_id))\n        if next_action == \"certificate\":\n            return redirect(url_for(\"trust_certificate_of_trust_output_surface\", trust_id=trust_id))\n        if next_action == \"packet_preview\":\n            return redirect(url_for(\"trust_packet_preview\", trust_id=trust_id))\n\n        return redirect(url_for(\"trust_branding_settings\", trust_id=trust_id))\n\n    trust = get_trust_by_id(trust_id)\n    return render_template(\"trust_branding_settings.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "trust_accounting_method_settings",
+          "line": 11402,
+          "decorators": [
+            "app.route('/trust/<trust_id>/accounting-method', methods=['GET', 'POST'])"
+          ],
+          "source": "def trust_accounting_method_settings(trust_id):\n    gate = gate_trust_access(trust_id, [\"Admin\", \"Trustee\"])\n    if gate:\n        return gate\n\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        flash(\"Trust not found.\", \"error\")\n        return redirect(url_for(\"admin_dashboard\"))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            flash(\"Invalid or missing CSRF token.\", \"warning\")\n            return render_template(\"trust_accounting_method.html\", trust=trust)\n\n        accounting_method = (request.form.get(\"accounting_method\") or \"\").strip()\n        if accounting_method not in [\"cash\", \"accrual\"]:\n            flash(\"Select a valid accounting method: cash or accrual.\", \"error\")\n            return render_template(\"trust_accounting_method.html\", trust=trust)\n\n        update_trust_fields(trust_id, {\"accounting_method\": accounting_method})\n        log_change(\n            \"trust\",\n            trust_id,\n            \"accounting_method_updated\",\n            f\"Accounting method set to {accounting_method} by {session.get('username') or 'unknown'}\"\n        )\n        flash(f\"Accounting method set to {accounting_method}.\", \"success\")\n        return redirect(url_for(\"trust_execution_dashboard\", trust_id=trust_id))\n\n    return render_template(\"trust_accounting_method.html\", trust=trust)"
+        }
+      ],
+      "second_level_callers": [],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "create_trust_step2_grantor",
+          "route": "/create_trust_step2_grantor/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 2981,
+          "decorators": [
+            "app.route('/create_trust_step2_grantor/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step2_grantor(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step2_grantor.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"grantor_name\": request.form.get(\"grantor_name\"),\n            \"grantor_type\": request.form.get(\"grantor_type\"),\n            \"grantor_contact\": request.form.get(\"grantor_contact\"),\n        })\n\n        return redirect(url_for(\"create_trust_step2\", trust_id=trust_id))\n\n    return render_template(\"create_trust_step2_grantor.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step2",
+          "route": "/create_trust_step2/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3003,
+          "decorators": [
+            "app.route('/create_trust_step2/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step2(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step2.html\", trust=trust, trust_types=get_trust_type_cards(), error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"trust_type\": request.form.get(\"trust_type\"),\n            \"trust_purpose\": request.form.get(\"trust_purpose\"),\n            \"accounting_method\": request.form.get(\"accounting_method\"),\n            \"workflow_mode\": request.form.get(\"workflow_mode\"),\n            \"status\": \"Draft - Step 2 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step3\", trust_id=trust_id))\n    return render_template(\"create_trust_step2.html\", trust=trust, trust_types=get_trust_type_cards())"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step3",
+          "route": "/create_trust_step3/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3023,
+          "decorators": [
+            "app.route('/create_trust_step3/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step3(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step3.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"settlor_name\": request.form.get(\"settlor_name\"),\n            \"trustee_name\": request.form.get(\"trustee_name\"),\n            \"successor_trustee_name\": request.form.get(\"successor_trustee_name\"),\n            \"beneficiary_name\": request.form.get(\"beneficiary_name\"),\n            \"status\": \"Draft - Step 3 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step4\", trust_id=trust_id))\n    return render_template(\"create_trust_step3.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step4",
+          "route": "/create_trust_step4/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3043,
+          "decorators": [
+            "app.route('/create_trust_step4/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step4(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step4.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"record_visibility\": request.form.get(\"record_visibility\"),\n            \"workflow_mode_confirmed\": request.form.get(\"workflow_mode_confirmed\"),\n            \"ai_explanations\": request.form.get(\"ai_explanations\"),\n            \"recommended_guidance\": request.form.get(\"recommended_guidance\"),\n            \"status\": \"Draft - Step 4 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step5\", trust_id=trust_id))\n    return render_template(\"create_trust_step4.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step5",
+          "route": "/create_trust_step5/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3063,
+          "decorators": [
+            "app.route('/create_trust_step5/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step5(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step5.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\n            \"initial_corpus_description\": request.form.get(\"initial_corpus_description\"),\n            \"property_mapping_timing\": request.form.get(\"property_mapping_timing\"),\n            \"asset_categories\": request.form.get(\"asset_categories\"),\n            \"generate_schedule_recommendations\": request.form.get(\"generate_schedule_recommendations\"),\n            \"status\": \"Draft - Step 5 Complete\",\n        })\n        return redirect(url_for(\"create_trust_step6\", trust_id=trust_id))\n    return render_template(\"create_trust_step5.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_trust_step6",
+          "route": "/create_trust_step6/<trust_id>",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3083,
+          "decorators": [
+            "app.route('/create_trust_step6/<trust_id>', methods=['GET', 'POST'])",
+            "csrf.exempt"
+          ],
+          "source": "def create_trust_step6(trust_id):\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\"\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"create_trust_step6.html\", trust=trust, error_message=\"Invalid or missing CSRF token.\")\n\n        update_trust_fields(trust_id, {\"status\": \"Finalized\"})\n        return redirect(url_for(\"trust_post_create_review\", trust_id=trust_id))\n    return render_template(\"create_trust_step6.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "trust_branding_settings",
+          "route": "/trust/<trust_id>/branding",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 3272,
+          "decorators": [
+            "app.route('/trust/<trust_id>/branding', methods=['GET', 'POST'])"
+          ],
+          "source": "def trust_branding_settings(trust_id):\n    gate = gate_trust_access(trust_id, {\"Admin\", \"Trustee\"})\n    if gate:\n        return gate\n\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        return f\"Trust {trust_id} not found\", 404\n\n    if request.method == \"POST\":\n        update_payload = {\n            \"caf_number\": request.form.get(\"caf_number\", \"\").strip(),\n            \"crid_number\": request.form.get(\"crid_number\", \"\").strip(),\n            \"trust_motto\": request.form.get(\"trust_motto\", \"\").strip(),\n            \"foundation_scripture\": request.form.get(\"foundation_scripture\", \"\").strip(),\n            \"prepared_by\": request.form.get(\"prepared_by\", \"\").strip(),\n            \"return_to\": request.form.get(\"return_to\", \"\").strip(),\n            \"branding_style\": request.form.get(\"branding_style\", \"v3_minimal\").strip() or \"v3_minimal\",\n        }\n\n        seal_file = request.files.get(\"seal_file\")\n        if seal_file and seal_file.filename:\n            original_name = seal_file.filename\n            extension = original_name.rsplit(\".\", 1)[1].lower() if \".\" in original_name else \"\"\n            if extension not in {\"png\", \"jpg\", \"jpeg\"}:\n                trust = get_trust_by_id(trust_id)\n                return render_template(\n                    \"trust_branding_settings.html\",\n                    trust=trust,\n                    error_message=\"Seal upload must be a PNG, JPG, or JPEG image.\"\n                )\n\n            safe_name = secure_filename(original_name)\n            branding_dir = UPLOAD_FOLDER / \"trust_branding\" / trust_id\n            branding_dir.mkdir(parents=True, exist_ok=True)\n            stored_filename = f\"seal_{datetime.now().strftime('%Y%m%d%H%M%S')}_{safe_name}\"\n            stored_path = branding_dir / stored_filename\n            seal_file.save(stored_path)\n\n            update_payload[\"seal_path\"] = stored_path.as_posix()\n\n            log_change(\n                \"trust_branding\",\n                trust_id,\n                \"trust_branding_seal_uploaded\",\n                f\"Seal uploaded: {stored_filename}\"\n            )\n\n        update_trust_fields(trust_id, update_payload)\n\n        log_change(\n            \"trust_branding\",\n            trust_id,\n            \"branding_settings_updated\",\n            \"Trust branding settings updated\"\n        )\n\n        next_action = request.form.get(\"next_action\", \"stay\")\n\n        if next_action == \"declaration\":\n            return redirect(url_for(\"trust_declaration_output_surface\", trust_id=trust_id))\n        if next_action == \"certificate\":\n            return redirect(url_for(\"trust_certificate_of_trust_output_surface\", trust_id=trust_id))\n        if next_action == \"packet_preview\":\n            return redirect(url_for(\"trust_packet_preview\", trust_id=trust_id))\n\n        return redirect(url_for(\"trust_branding_settings\", trust_id=trust_id))\n\n    trust = get_trust_by_id(trust_id)\n    return render_template(\"trust_branding_settings.html\", trust=trust)"
+        },
+        {
+          "file": "app.py",
+          "function": "trust_accounting_method_settings",
+          "route": "/trust/<trust_id>/accounting-method",
+          "methods": [
+            "GET",
+            "POST"
+          ],
+          "line": 11402,
+          "decorators": [
+            "app.route('/trust/<trust_id>/accounting-method', methods=['GET', 'POST'])"
+          ],
+          "source": "def trust_accounting_method_settings(trust_id):\n    gate = gate_trust_access(trust_id, [\"Admin\", \"Trustee\"])\n    if gate:\n        return gate\n\n    trust = get_trust_by_id(trust_id)\n    if not trust:\n        flash(\"Trust not found.\", \"error\")\n        return redirect(url_for(\"admin_dashboard\"))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            flash(\"Invalid or missing CSRF token.\", \"warning\")\n            return render_template(\"trust_accounting_method.html\", trust=trust)\n\n        accounting_method = (request.form.get(\"accounting_method\") or \"\").strip()\n        if accounting_method not in [\"cash\", \"accrual\"]:\n            flash(\"Select a valid accounting method: cash or accrual.\", \"error\")\n            return render_template(\"trust_accounting_method.html\", trust=trust)\n\n        update_trust_fields(trust_id, {\"accounting_method\": accounting_method})\n        log_change(\n            \"trust\",\n            trust_id,\n            \"accounting_method_updated\",\n            f\"Accounting method set to {accounting_method} by {session.get('username') or 'unknown'}\"\n        )\n        flash(f\"Accounting method set to {accounting_method}.\", \"success\")\n        return redirect(url_for(\"trust_execution_dashboard\", trust_id=trust_id))\n\n    return render_template(\"trust_accounting_method.html\", trust=trust)"
+        }
+      ],
+      "runtime_test_required": true,
+      "test_rule": "Test only against a copied database. Record before-state, operate under the opposite firm session, then compare both firm rows and the complete database copy."
+    },
+    {
+      "target_function": "update_trust_minute_execution",
+      "definitions": [
+        {
+          "file": "database/db.py",
+          "name": "update_trust_minute_execution",
+          "line": 3435,
+          "end_line": 3484,
+          "decorators": [],
+          "calls": [
+            "conn.close",
+            "conn.commit",
+            "conn.cursor",
+            "cur.execute",
+            "data.get",
+            "get_connection",
+            "int"
+          ],
+          "source": "def update_trust_minute_execution(minute_id, data):\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        UPDATE trust_minutes\n        SET\n            trustee_1_name = ?,\n            trustee_1_capacity = ?,\n            trustee_1_signed_date = ?,\n            trustee_1_signature_image = ?,\n            trustee_2_name = ?,\n            trustee_2_capacity = ?,\n            trustee_2_signed_date = ?,\n            trustee_2_signature_image = ?,\n            trustee_3_name = ?,\n            trustee_3_capacity = ?,\n            trustee_3_signed_date = ?,\n            trustee_3_signature_image = ?,\n            certificate_id = ?,\n            approved_at = ?,\n            executed_at = ?,\n            archived_at = ?,\n            status = ?,\n            locked = ?\n        WHERE minute_id = ?\n    \"\"\", (\n        data.get(\"trustee_1_name\"),\n        data.get(\"trustee_1_capacity\"),\n        data.get(\"trustee_1_signed_date\"),\n        data.get(\"trustee_1_signature_image\"),\n        data.get(\"trustee_2_name\"),\n        data.get(\"trustee_2_capacity\"),\n        data.get(\"trustee_2_signed_date\"),\n        data.get(\"trustee_2_signature_image\"),\n        data.get(\"trustee_3_name\"),\n        data.get(\"trustee_3_capacity\"),\n        data.get(\"trustee_3_signed_date\"),\n        data.get(\"trustee_3_signature_image\"),\n        data.get(\"certificate_id\"),\n        data.get(\"approved_at\"),\n        data.get(\"executed_at\"),\n        data.get(\"archived_at\"),\n        data.get(\"status\"),\n        int(data.get(\"locked\", 0)),\n        minute_id,\n    ))\n\n    conn.commit()\n    conn.close()"
+        }
+      ],
+      "direct_callers": [
+        {
+          "file": "app.py",
+          "function": "trust_minute_execute",
+          "line": 7697,
+          "decorators": [
+            "app.route('/minutes/<minute_id>/execute', methods=['POST'])"
+          ],
+          "source": "def trust_minute_execute(minute_id):\n    gate = require_master_admin()\n    if gate:\n        return gate\n\n    minute = get_trust_minute_by_id(minute_id)\n    if not minute:\n        return \"Minute not found\", 404\n\n    if int(minute[\"locked\"] or 0) == 1:\n        log_change(\n            \"trust_minute\",\n            minute_id,\n            \"locked_minute_post_blocked\",\n            \"Attempted POST blocked because trust minute is locked.\"\n        )\n        return \"This trust minute is locked and cannot be modified.\", 403\n\n    action = request.form.get(\"action\")\n\n    now = datetime.now(UTC).isoformat()\n\n    data = {\n        \"trustee_1_name\": request.form.get(\"trustee_1_name\"),\n        \"trustee_1_capacity\": request.form.get(\"trustee_1_capacity\"),\n        \"trustee_1_signed_date\": request.form.get(\"trustee_1_signed_date\"),\n        \"trustee_1_signature_image\": request.form.get(\"trustee_1_signature_image\"),\n        \"trustee_2_name\": request.form.get(\"trustee_2_name\"),\n        \"trustee_2_capacity\": request.form.get(\"trustee_2_capacity\"),\n        \"trustee_2_signed_date\": request.form.get(\"trustee_2_signed_date\"),\n        \"trustee_2_signature_image\": request.form.get(\"trustee_2_signature_image\"),\n        \"trustee_3_name\": request.form.get(\"trustee_3_name\"),\n        \"trustee_3_capacity\": request.form.get(\"trustee_3_capacity\"),\n        \"trustee_3_signed_date\": request.form.get(\"trustee_3_signed_date\"),\n        \"trustee_3_signature_image\": request.form.get(\"trustee_3_signature_image\"),\n        \"approved_at\": minute[\"approved_at\"],\n        \"executed_at\": minute[\"executed_at\"],\n        \"archived_at\": minute[\"archived_at\"],\n        \"status\": minute[\"status\"],\n        \"locked\": minute[\"locked\"],\n        \"certificate_id\": minute[\"certificate_id\"] if \"certificate_id\" in minute.keys() else None,\n    }\n\n    current_status = minute[\"status\"] or \"Draft\"\n\n    if action == \"approve\":\n        if current_status in (\"Executed\", \"Archived\"):\n            message = f\"Action blocked. Cannot approve a minute with status {current_status}.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_approve_blocked\",\n                message\n            )\n            return message, 403\n\n        data[\"approved_at\"] = now\n        data[\"status\"] = \"Approved\"\n\n    elif action == \"execute\":\n        if current_status == \"Archived\":\n            message = \"Action blocked. Archived minutes cannot be executed.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_execute_blocked\",\n                message\n            )\n            return message, 403\n\n        is_valid, validation_message = validate_trust_minute_execution_requirements(data)\n        if not is_valid:\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_execute_blocked\",\n                validation_message\n            )\n            return validation_message, 400\n\n        data[\"executed_at\"] = now\n        data[\"status\"] = \"Executed\"\n        data[\"locked\"] = 1\n        if not data.get(\"certificate_id\"):\n            data[\"certificate_id\"] = f\"CERT-{minute_id}\"\n\n    elif action == \"archive\":\n        if current_status != \"Executed\":\n            message = f\"Action blocked. Only executed minutes can be archived. Current status: {current_status}.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_archive_blocked\",\n                message\n            )\n            return message, 403\n\n        data[\"archived_at\"] = now\n        data[\"status\"] = \"Archived\"\n\n    else:\n        message = f\"Action blocked. Unknown trust minute action: {action}.\"\n        log_change(\n            \"trust_minute\",\n            minute_id,\n            \"minute_action_blocked\",\n            message\n        )\n        return message, 400\n\n    update_trust_minute_execution(minute_id, data)\n\n    log_change(\n        \"trust_minute\",\n        minute_id,\n        f\"minute_{action}\",\n        f\"Status updated to {data['status']}\"\n    )\n\n    return redirect(url_for(\"trust_minute_detail\", minute_id=minute_id))"
+        }
+      ],
+      "second_level_callers": [],
+      "routes": [
+        {
+          "file": "app.py",
+          "function": "trust_minute_execute",
+          "route": "/minutes/<minute_id>/execute",
+          "methods": [
+            "POST"
+          ],
+          "line": 7697,
+          "decorators": [
+            "app.route('/minutes/<minute_id>/execute', methods=['POST'])"
+          ],
+          "source": "def trust_minute_execute(minute_id):\n    gate = require_master_admin()\n    if gate:\n        return gate\n\n    minute = get_trust_minute_by_id(minute_id)\n    if not minute:\n        return \"Minute not found\", 404\n\n    if int(minute[\"locked\"] or 0) == 1:\n        log_change(\n            \"trust_minute\",\n            minute_id,\n            \"locked_minute_post_blocked\",\n            \"Attempted POST blocked because trust minute is locked.\"\n        )\n        return \"This trust minute is locked and cannot be modified.\", 403\n\n    action = request.form.get(\"action\")\n\n    now = datetime.now(UTC).isoformat()\n\n    data = {\n        \"trustee_1_name\": request.form.get(\"trustee_1_name\"),\n        \"trustee_1_capacity\": request.form.get(\"trustee_1_capacity\"),\n        \"trustee_1_signed_date\": request.form.get(\"trustee_1_signed_date\"),\n        \"trustee_1_signature_image\": request.form.get(\"trustee_1_signature_image\"),\n        \"trustee_2_name\": request.form.get(\"trustee_2_name\"),\n        \"trustee_2_capacity\": request.form.get(\"trustee_2_capacity\"),\n        \"trustee_2_signed_date\": request.form.get(\"trustee_2_signed_date\"),\n        \"trustee_2_signature_image\": request.form.get(\"trustee_2_signature_image\"),\n        \"trustee_3_name\": request.form.get(\"trustee_3_name\"),\n        \"trustee_3_capacity\": request.form.get(\"trustee_3_capacity\"),\n        \"trustee_3_signed_date\": request.form.get(\"trustee_3_signed_date\"),\n        \"trustee_3_signature_image\": request.form.get(\"trustee_3_signature_image\"),\n        \"approved_at\": minute[\"approved_at\"],\n        \"executed_at\": minute[\"executed_at\"],\n        \"archived_at\": minute[\"archived_at\"],\n        \"status\": minute[\"status\"],\n        \"locked\": minute[\"locked\"],\n        \"certificate_id\": minute[\"certificate_id\"] if \"certificate_id\" in minute.keys() else None,\n    }\n\n    current_status = minute[\"status\"] or \"Draft\"\n\n    if action == \"approve\":\n        if current_status in (\"Executed\", \"Archived\"):\n            message = f\"Action blocked. Cannot approve a minute with status {current_status}.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_approve_blocked\",\n                message\n            )\n            return message, 403\n\n        data[\"approved_at\"] = now\n        data[\"status\"] = \"Approved\"\n\n    elif action == \"execute\":\n        if current_status == \"Archived\":\n            message = \"Action blocked. Archived minutes cannot be executed.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_execute_blocked\",\n                message\n            )\n            return message, 403\n\n        is_valid, validation_message = validate_trust_minute_execution_requirements(data)\n        if not is_valid:\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_execute_blocked\",\n                validation_message\n            )\n            return validation_message, 400\n\n        data[\"executed_at\"] = now\n        data[\"status\"] = \"Executed\"\n        data[\"locked\"] = 1\n        if not data.get(\"certificate_id\"):\n            data[\"certificate_id\"] = f\"CERT-{minute_id}\"\n\n    elif action == \"archive\":\n        if current_status != \"Executed\":\n            message = f\"Action blocked. Only executed minutes can be archived. Current status: {current_status}.\"\n            log_change(\n                \"trust_minute\",\n                minute_id,\n                \"minute_archive_blocked\",\n                message\n            )\n            return message, 403\n\n        data[\"archived_at\"] = now\n        data[\"status\"] = \"Archived\"\n\n    else:\n        message = f\"Action blocked. Unknown trust minute action: {action}.\"\n        log_change(\n            \"trust_minute\",\n            minute_id,\n            \"minute_action_blocked\",\n            message\n        )\n        return message, 400\n\n    update_trust_minute_execution(minute_id, data)\n\n    log_change(\n        \"trust_minute\",\n        minute_id,\n        f\"minute_{action}\",\n        f\"Status updated to {data['status']}\"\n    )\n\n    return redirect(url_for(\"trust_minute_detail\", minute_id=minute_id))"
+        }
+      ],
+      "runtime_test_required": true,
+      "test_rule": "Test only against a copied database. Record before-state, operate under the opposite firm session, then compare both firm rows and the complete database copy."
+    }
+  ],
+  "collision_maps": [
+    {
+      "finding_id": "ISO-009",
+      "table": "audit_log",
+      "identifier_column": "entity_id",
+      "identifier": "TR-001",
+      "references": [
+        {
+          "file": "database/db.py",
+          "function": "init_audit_table",
+          "line": 1939,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def init_audit_table():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS audit_log (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            entity_type TEXT,\n            entity_id TEXT,\n            action TEXT,\n            note TEXT,\n            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n            previous_hash TEXT,\n            entry_hash TEXT,\n            hash_algorithm TEXT\n        )\n    \"\"\")\n\n    cur.execute(\"PRAGMA table_info(audit_log)\")\n    existing_columns = {row[\"name\"] for row in cur.fetchall()}\n\n    migrations = {\n        \"previous_hash\": \"ALTER TABLE audit_log ADD COLUMN previous_hash TEXT\",\n        \"entry_hash\": \"ALTER TABLE audit_log ADD COLUMN entry_hash TEXT\",\n        \"hash_algorithm\": \"ALTER TABLE audit_log ADD COLUMN hash_algorithm TEXT\",\n    }\n\n    for column_name, ddl in migrations.items():\n        if column_name not in existing_columns:\n            cur.execute(ddl)\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "log_change",
+          "line": 1973,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def log_change(entity_type, entity_id, action, note=\"\"):\n    import hashlib, json\n\n    try:\n        from flask import has_request_context, session\n        firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\"\n    except Exception:\n        firm_id = \"FIRM-001\"\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    # 1. Get previous hash\n    cur.execute(\"SELECT entry_hash FROM audit_log ORDER BY id DESC LIMIT 1\")\n    row = cur.fetchone()\n    previous_hash = row[\"entry_hash\"] if row and row[\"entry_hash\"] else None\n\n    # 2. Insert base record WITH firm_id\n    cur.execute(\"\"\"\n        INSERT INTO audit_log (entity_type, entity_id, action, note, firm_id)\n        VALUES (?, ?, ?, ?, ?)\n    \"\"\", (entity_type, entity_id, action, note, firm_id))\n\n    entry_id = cur.lastrowid\n\n    # 3. Get created_at timestamp\n    cur.execute(\"SELECT created_at FROM audit_log WHERE id = ?\", (entry_id,))\n    created_at = cur.fetchone()[\"created_at\"]\n\n    # 4. Build canonical payload\n    payload = {\n        \"id\": entry_id,\n        \"firm_id\": firm_id,\n        \"entity_type\": entity_type,\n        \"entity_id\": entity_id,\n        \"action\": action,\n        \"note\": note,\n        \"created_at\": created_at,\n        \"previous_hash\": previous_hash\n    }\n\n    payload_str = json.dumps(payload, sort_keys=True)\n\n    # 5. Generate hash\n    entry_hash = hashlib.sha256(payload_str.encode()).hexdigest()\n\n    # 6. Update record with hash values\n    cur.execute(\"\"\"\n        UPDATE audit_log\n        SET previous_hash = ?, entry_hash = ?, hash_algorithm = ?\n        WHERE id = ?\n    \"\"\", (previous_hash, entry_hash, \"sha256\", entry_id))\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_audit_log_by_entity",
+          "line": 2044,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):\n    firm_id = get_current_firm_id()\n    conn = get_connection()\n    cur = conn.cursor()\n\n    if entity_type and entity_id:\n        cur.execute(\"\"\"\n            SELECT * FROM audit_log\n            WHERE entity_type = ? AND entity_id = ? AND firm_id = ?\n            ORDER BY id DESC\n            LIMIT ?\n        \"\"\", (entity_type, entity_id, firm_id, limit))\n    elif entity_type:\n        cur.execute(\"\"\"\n            SELECT * FROM audit_log\n            WHERE entity_type = ? AND firm_id = ?\n            ORDER BY id DESC\n            LIMIT ?\n        \"\"\", (entity_type, firm_id, limit))\n    else:\n        cur.execute(\"\"\"\n            SELECT * FROM audit_log\n            WHERE firm_id = ?\n            ORDER BY id DESC\n            LIMIT ?\n        \"\"\", (firm_id, limit))\n\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        },
+        {
+          "file": "database/db.py",
+          "function": "verify_audit_log_chain",
+          "line": 2076,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def verify_audit_log_chain(limit=None):\n    import hashlib, json\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    query = \"SELECT * FROM audit_log ORDER BY id ASC\"\n    if limit:\n        query += f\" LIMIT {limit}\"\n\n    cur.execute(query)\n    rows = cur.fetchall()\n\n    conn.close()\n\n    previous_hash = None\n    checked = 0\n    broken = 0\n    legacy = 0\n    first_broken_id = None\n\n    for row in rows:\n        row = dict(row)\n\n        # Skip legacy rows:\n        # - rows before hash system\n        # - rows before firm-aware audit epoch\n        if not row[\"entry_hash\"] or row[\"id\"] < 117:\n            legacy += 1\n            continue\n\n        payload = {\n            \"id\": row[\"id\"],\n            \"firm_id\": row.get(\"firm_id\"),\n            \"entity_type\": row[\"entity_type\"],\n            \"entity_id\": row[\"entity_id\"],\n            \"action\": row[\"action\"],\n            \"note\": row[\"note\"],\n            \"created_at\": row[\"created_at\"],\n            \"previous_hash\": row[\"previous_hash\"]\n        }\n\n        payload_str = json.dumps(payload, sort_keys=True)\n        expected_hash = hashlib.sha256(payload_str.encode()).hexdigest()\n\n        # Check hash integrity\n        if expected_hash != row[\"entry_hash\"]:\n            broken += 1\n            if not first_broken_id:\n                first_broken_id = row[\"id\"]\n\n        # Check chain linkage\n        if row[\"previous_hash\"] != previous_hash:\n            if previous_hash is not None:\n                broken += 1\n                if not first_broken_id:\n                    first_broken_id = row[\"id\"]\n\n        previous_hash = row[\"entry_hash\"]\n        checked += 1\n\n    status = \"VERIFIED\" if broken == 0 else \"BROKEN\"\n\n    return {\n        \"status\": status,\n        \"checked\": checked,\n        \"broken\": broken,\n        \"legacy\": legacy,\n        \"first_broken_id\": first_broken_id\n    }"
+        },
+        {
+          "file": "database/db.py",
+          "function": "build_system_health_report",
+          "line": 3047,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def build_system_health_report():\n    required_tables = {\n        \"audit_log\": [\"id\", \"entity_type\", \"entity_id\", \"action\", \"note\", \"created_at\", \"previous_hash\", \"entry_hash\", \"hash_algorithm\"],\n        \"permissions\": [\"permission_id\", \"permission_name\", \"description\"],\n        \"role_permissions\": [\"id\", \"role_name\", \"permission_name\"],\n        \"app_users\": [\"user_id\", \"username\", \"password_hash\", \"role_name\", \"status\"],\n        \"user_permission_overrides\": [\"id\", \"username\", \"permission_name\", \"effect\", \"created_at\"],\n    }\n\n    table_reports = []\n    overall_ok = True\n\n    for table_name, required_columns in required_tables.items():\n        exists = table_exists(table_name)\n        columns = get_table_columns(table_name) if exists else []\n        missing_columns = [col for col in required_columns if col not in columns]\n\n        ok = exists and not missing_columns\n        if not ok:\n            overall_ok = False\n\n        table_reports.append({\n            \"table_name\": table_name,\n            \"exists\": exists,\n            \"columns\": columns,\n            \"missing_columns\": missing_columns,\n            \"ok\": ok,\n        })\n\n    return {\n        \"overall_status\": \"OK\" if overall_ok else \"ATTENTION\",\n        \"tables\": table_reports,\n    }"
+        }
+      ],
+      "unscoped_reference_count": 2,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    },
+    {
+      "finding_id": "ISO-010",
+      "table": "audit_log",
+      "identifier_column": "entity_id",
+      "identifier": "admin123",
+      "references": [
+        {
+          "file": "database/db.py",
+          "function": "init_audit_table",
+          "line": 1939,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def init_audit_table():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS audit_log (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            entity_type TEXT,\n            entity_id TEXT,\n            action TEXT,\n            note TEXT,\n            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n            previous_hash TEXT,\n            entry_hash TEXT,\n            hash_algorithm TEXT\n        )\n    \"\"\")\n\n    cur.execute(\"PRAGMA table_info(audit_log)\")\n    existing_columns = {row[\"name\"] for row in cur.fetchall()}\n\n    migrations = {\n        \"previous_hash\": \"ALTER TABLE audit_log ADD COLUMN previous_hash TEXT\",\n        \"entry_hash\": \"ALTER TABLE audit_log ADD COLUMN entry_hash TEXT\",\n        \"hash_algorithm\": \"ALTER TABLE audit_log ADD COLUMN hash_algorithm TEXT\",\n    }\n\n    for column_name, ddl in migrations.items():\n        if column_name not in existing_columns:\n            cur.execute(ddl)\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "log_change",
+          "line": 1973,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def log_change(entity_type, entity_id, action, note=\"\"):\n    import hashlib, json\n\n    try:\n        from flask import has_request_context, session\n        firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\"\n    except Exception:\n        firm_id = \"FIRM-001\"\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    # 1. Get previous hash\n    cur.execute(\"SELECT entry_hash FROM audit_log ORDER BY id DESC LIMIT 1\")\n    row = cur.fetchone()\n    previous_hash = row[\"entry_hash\"] if row and row[\"entry_hash\"] else None\n\n    # 2. Insert base record WITH firm_id\n    cur.execute(\"\"\"\n        INSERT INTO audit_log (entity_type, entity_id, action, note, firm_id)\n        VALUES (?, ?, ?, ?, ?)\n    \"\"\", (entity_type, entity_id, action, note, firm_id))\n\n    entry_id = cur.lastrowid\n\n    # 3. Get created_at timestamp\n    cur.execute(\"SELECT created_at FROM audit_log WHERE id = ?\", (entry_id,))\n    created_at = cur.fetchone()[\"created_at\"]\n\n    # 4. Build canonical payload\n    payload = {\n        \"id\": entry_id,\n        \"firm_id\": firm_id,\n        \"entity_type\": entity_type,\n        \"entity_id\": entity_id,\n        \"action\": action,\n        \"note\": note,\n        \"created_at\": created_at,\n        \"previous_hash\": previous_hash\n    }\n\n    payload_str = json.dumps(payload, sort_keys=True)\n\n    # 5. Generate hash\n    entry_hash = hashlib.sha256(payload_str.encode()).hexdigest()\n\n    # 6. Update record with hash values\n    cur.execute(\"\"\"\n        UPDATE audit_log\n        SET previous_hash = ?, entry_hash = ?, hash_algorithm = ?\n        WHERE id = ?\n    \"\"\", (previous_hash, entry_hash, \"sha256\", entry_id))\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_audit_log_by_entity",
+          "line": 2044,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def get_audit_log_by_entity(entity_type=None, entity_id=None, limit=100):\n    firm_id = get_current_firm_id()\n    conn = get_connection()\n    cur = conn.cursor()\n\n    if entity_type and entity_id:\n        cur.execute(\"\"\"\n            SELECT * FROM audit_log\n            WHERE entity_type = ? AND entity_id = ? AND firm_id = ?\n            ORDER BY id DESC\n            LIMIT ?\n        \"\"\", (entity_type, entity_id, firm_id, limit))\n    elif entity_type:\n        cur.execute(\"\"\"\n            SELECT * FROM audit_log\n            WHERE entity_type = ? AND firm_id = ?\n            ORDER BY id DESC\n            LIMIT ?\n        \"\"\", (entity_type, firm_id, limit))\n    else:\n        cur.execute(\"\"\"\n            SELECT * FROM audit_log\n            WHERE firm_id = ?\n            ORDER BY id DESC\n            LIMIT ?\n        \"\"\", (firm_id, limit))\n\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        },
+        {
+          "file": "database/db.py",
+          "function": "verify_audit_log_chain",
+          "line": 2076,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def verify_audit_log_chain(limit=None):\n    import hashlib, json\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    query = \"SELECT * FROM audit_log ORDER BY id ASC\"\n    if limit:\n        query += f\" LIMIT {limit}\"\n\n    cur.execute(query)\n    rows = cur.fetchall()\n\n    conn.close()\n\n    previous_hash = None\n    checked = 0\n    broken = 0\n    legacy = 0\n    first_broken_id = None\n\n    for row in rows:\n        row = dict(row)\n\n        # Skip legacy rows:\n        # - rows before hash system\n        # - rows before firm-aware audit epoch\n        if not row[\"entry_hash\"] or row[\"id\"] < 117:\n            legacy += 1\n            continue\n\n        payload = {\n            \"id\": row[\"id\"],\n            \"firm_id\": row.get(\"firm_id\"),\n            \"entity_type\": row[\"entity_type\"],\n            \"entity_id\": row[\"entity_id\"],\n            \"action\": row[\"action\"],\n            \"note\": row[\"note\"],\n            \"created_at\": row[\"created_at\"],\n            \"previous_hash\": row[\"previous_hash\"]\n        }\n\n        payload_str = json.dumps(payload, sort_keys=True)\n        expected_hash = hashlib.sha256(payload_str.encode()).hexdigest()\n\n        # Check hash integrity\n        if expected_hash != row[\"entry_hash\"]:\n            broken += 1\n            if not first_broken_id:\n                first_broken_id = row[\"id\"]\n\n        # Check chain linkage\n        if row[\"previous_hash\"] != previous_hash:\n            if previous_hash is not None:\n                broken += 1\n                if not first_broken_id:\n                    first_broken_id = row[\"id\"]\n\n        previous_hash = row[\"entry_hash\"]\n        checked += 1\n\n    status = \"VERIFIED\" if broken == 0 else \"BROKEN\"\n\n    return {\n        \"status\": status,\n        \"checked\": checked,\n        \"broken\": broken,\n        \"legacy\": legacy,\n        \"first_broken_id\": first_broken_id\n    }"
+        },
+        {
+          "file": "database/db.py",
+          "function": "build_system_health_report",
+          "line": 3047,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def build_system_health_report():\n    required_tables = {\n        \"audit_log\": [\"id\", \"entity_type\", \"entity_id\", \"action\", \"note\", \"created_at\", \"previous_hash\", \"entry_hash\", \"hash_algorithm\"],\n        \"permissions\": [\"permission_id\", \"permission_name\", \"description\"],\n        \"role_permissions\": [\"id\", \"role_name\", \"permission_name\"],\n        \"app_users\": [\"user_id\", \"username\", \"password_hash\", \"role_name\", \"status\"],\n        \"user_permission_overrides\": [\"id\", \"username\", \"permission_name\", \"effect\", \"created_at\"],\n    }\n\n    table_reports = []\n    overall_ok = True\n\n    for table_name, required_columns in required_tables.items():\n        exists = table_exists(table_name)\n        columns = get_table_columns(table_name) if exists else []\n        missing_columns = [col for col in required_columns if col not in columns]\n\n        ok = exists and not missing_columns\n        if not ok:\n            overall_ok = False\n\n        table_reports.append({\n            \"table_name\": table_name,\n            \"exists\": exists,\n            \"columns\": columns,\n            \"missing_columns\": missing_columns,\n            \"ok\": ok,\n        })\n\n    return {\n        \"overall_status\": \"OK\" if overall_ok else \"ATTENTION\",\n        \"tables\": table_reports,\n    }"
+        }
+      ],
+      "unscoped_reference_count": 2,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    },
+    {
+      "finding_id": "ISO-011",
+      "table": "intake_document_recommendations",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "references": [
+        {
+          "file": "app.py",
+          "function": "intake_document_recommendations",
+          "line": 18060,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/intake/<intake_id>/recommendations",
+              "methods": [
+                "GET"
+              ],
+              "decorators": [
+                "app.route('/intake/<intake_id>/recommendations')"
+              ]
+            }
+          ],
+          "source": "def intake_document_recommendations(intake_id):\n    ensure_intake_document_recommendation_tables()\n\n    recommendation_result = build_document_recommendations_tuned(intake_id)\n    if not recommendation_result:\n        flash(\"Document recommendations could not be built for that intake.\", \"warning\")\n        return redirect(url_for(\"intake_dashboard\"))\n\n    save_document_recommendations(\n        intake_id=intake_id,\n        recommendations=recommendation_result[\"recommendations\"],\n        created_by=session.get(\"username\") if \"session\" in globals() else None\n    )\n\n    saved_recommendations = list_saved_document_recommendations(intake_id)\n\n    return render_template(\n        \"intake/document_recommendations.html\",\n        intake_id=intake_id,\n        recommendation_result=recommendation_result,\n        recommendations=saved_recommendations\n    )"
+        },
+        {
+          "file": "app.py",
+          "function": "intake_update_recommendation_status",
+          "line": 18085,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/intake/<intake_id>/recommendations/<workflow_key>/status",
+              "methods": [
+                "POST"
+              ],
+              "decorators": [
+                "app.route('/intake/<intake_id>/recommendations/<workflow_key>/status', methods=['POST'])"
+              ]
+            }
+          ],
+          "source": "def intake_update_recommendation_status(intake_id, workflow_key):\n    try:\n        update_document_recommendation_status(\n            intake_id=intake_id,\n            workflow_key=workflow_key,\n            status=request.form.get(\"status\", \"recommended\"),\n            updated_by=session.get(\"username\") if \"session\" in globals() else None,\n        )\n        flash(\"Recommendation status updated.\", \"success\")\n    except Exception as exc:\n        flash(f\"Recommendation status could not be updated: {exc}\", \"warning\")\n\n    return redirect(url_for(\"intake_document_recommendations\", intake_id=intake_id))"
+        },
+        {
+          "file": "app.py",
+          "function": "intake_workflow_launch_prep",
+          "line": 18101,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/intake/<intake_id>/recommendations/<workflow_key>/launch-prep",
+              "methods": [
+                "GET"
+              ],
+              "decorators": [
+                "app.route('/intake/<intake_id>/recommendations/<workflow_key>/launch-prep')"
+              ]
+            }
+          ],
+          "source": "def intake_workflow_launch_prep(intake_id, workflow_key):\n    launch = build_workflow_launch_prep(intake_id, workflow_key)\n\n    if not launch:\n        flash(\"Workflow launch prep could not be built.\", \"warning\")\n        return redirect(url_for(\"intake_document_recommendations\", intake_id=intake_id))\n\n    update_document_recommendation_status(\n        intake_id=intake_id,\n        workflow_key=workflow_key,\n        status=\"launch_prepared\",\n        updated_by=session.get(\"username\") if \"session\" in globals() else None,\n    )\n\n    return render_template(\n        \"intake/workflow_launch_prep.html\",\n        launch=launch\n    )"
+        },
+        {
+          "file": "app.py",
+          "function": "intake_workflow_bridge",
+          "line": 18122,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/intake/<intake_id>/recommendations/<workflow_key>/bridge",
+              "methods": [
+                "GET",
+                "POST"
+              ],
+              "decorators": [
+                "app.route('/intake/<intake_id>/recommendations/<workflow_key>/bridge', methods=['GET', 'POST'])"
+              ]
+            }
+          ],
+          "source": "def intake_workflow_bridge(intake_id, workflow_key):\n    # INT-2D-BRIDGE-CONTROLLER instrument bridge bypass\n    if is_trust_instrument_workflow(workflow_key):\n        context = build_instrument_workflow_bridge_context(intake_id, workflow_key)\n\n        if not context:\n            flash(\"Instrument bridge context could not be built.\", \"warning\")\n            return redirect(url_for(\"intake_document_recommendations\", intake_id=intake_id))\n\n        if request.method == \"POST\":\n            if not validate_csrf_token():\n                flash(\"Invalid or missing CSRF token.\", \"warning\")\n                return redirect(url_for(\"intake_workflow_bridge\", intake_id=intake_id, workflow_key=workflow_key))\n\n            answers = {}\n            for q in context.get(\"bridge_questions\", []):\n                key = q.get(\"key\")\n                qtype = q.get(\"type\")\n                if not key:\n                    continue\n                if qtype == \"checkbox\":\n                    answers[key] = request.form.getlist(key)\n                else:\n                    answers[key] = request.form.get(key) or \"\"\n\n            try:\n                save_workflow_bridge_answers(\n                    intake_id=intake_id,\n                    workflow_key=workflow_key,\n                    answers=answers,\n                    created_by=session.get(\"username\") if \"session\" in globals() else None,\n                )\n                flash(\"Instrument workflow bridge saved.\", \"success\")\n                return redirect(url_for(\"intake_workflow_bridge_summary\", intake_id=intake_id, workflow_key=workflow_key))\n            except Exception as exc:\n                flash(f\"Instrument workflow bridge could not be saved: {exc}\", \"warning\")\n                return redirect(url_for(\"intake_workflow_bridge\", intake_id=intake_id, workflow_key=workflow_key))\n\n        return render_template(\n            \"intake/workflow_bridge.html\",\n            launch=context.get(\"launch\"),\n            definition=context.get(\"launch\"),\n            answers=context.get(\"answers\") or {},\n            intake_id=intake_id,\n            workflow_key=workflow_key,\n        )\n\n\n    ensure_workflow_bridge_tables()\n\n    definition = get_workflow_bridge_definition(workflow_key)\n    launch = build_workflow_launch_prep(intake_id, workflow_key)\n\n    if not definition or not launch:\n        flash(\"Workflow bridge could not be built.\", \"warning\")\n        return redirect(url_for(\"intake_document_recommendations\", intake_id=intake_id))\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            flash(\"Invalid or missing CSRF token.\", \"warning\")\n            return redirect(url_for(\"intake_workflow_bridge\", intake_id=intake_id, workflow_key=workflow_key))\n\n        save_workflow_bridge_answers(\n            intake_id=intake_id,\n            workflow_key=workflow_key,\n            form_data=request.form,\n            created_by=session.get(\"username\") if \"session\" in globals() else None,\n        )\n\n        flash(\"Workflow bridge answers saved.\", \"success\")\n        return redirect(url_for(\"intake_workflow_bridge_summary\", intake_id=intake_id, workflow_key=workflow_key))\n\n    return render_template(\n        \"intake/workflow_bridge.html\",\n        intake_id=intake_id,\n        workflow_key=workflow_key,\n        definition=definition,\n        launch=launch\n    )"
+        },
+        {
+          "file": "app.py",
+          "function": "intake_workflow_bridge_summary",
+          "line": 18204,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/intake/<intake_id>/recommendations/<workflow_key>/bridge-summary",
+              "methods": [
+                "GET"
+              ],
+              "decorators": [
+                "app.route('/intake/<intake_id>/recommendations/<workflow_key>/bridge-summary')"
+              ]
+            }
+          ],
+          "source": "def intake_workflow_bridge_summary(intake_id, workflow_key):\n    summary = build_workflow_bridge_summary(intake_id, workflow_key)\n\n    if not summary:\n        flash(\"Workflow bridge summary could not be built.\", \"warning\")\n        return redirect(url_for(\"intake_document_recommendations\", intake_id=intake_id))\n\n    return render_template(\n        \"intake/workflow_bridge_summary.html\",\n        summary=summary\n    )"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "ensure_intake_document_recommendation_tables",
+          "line": 3905,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def ensure_intake_document_recommendation_tables():\n    ensure_intake_module_ledger_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS intake_document_recommendations (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            intake_id TEXT NOT NULL,\n            firm_id TEXT DEFAULT 'FIRM-001',\n            workflow_key TEXT NOT NULL,\n            title TEXT,\n            workflow_type TEXT,\n            priority TEXT,\n            confidence INTEGER,\n            reason TEXT,\n            source TEXT,\n            status TEXT DEFAULT 'recommended',\n            created_at TEXT,\n            updated_at TEXT,\n            created_by TEXT\n        )\n    \"\"\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "save_document_recommendations",
+          "line": 3966,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def save_document_recommendations(intake_id, recommendations, created_by=None):\n    ensure_intake_document_recommendation_tables()\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n    firm_id = get_current_firm_id()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    for rec in recommendations or []:\n        workflow_key = rec.get(\"workflow_key\")\n        if not workflow_key:\n            continue\n\n        cur.execute(\"\"\"\n            SELECT id, status\n            FROM intake_document_recommendations\n            WHERE intake_id = ? AND workflow_key = ?\n            LIMIT 1\n        \"\"\", (intake_id, workflow_key))\n        existing = cur.fetchone()\n\n        if existing:\n            existing_id = existing[0]\n            existing_status = existing[1] or \"recommended\"\n\n            preserved_status = existing_status if existing_status in {\n                \"accepted\",\n                \"deferred\",\n                \"rejected\",\n                \"launch_prepared\",\n            } else rec.get(\"status\", \"recommended\")\n\n            cur.execute(\"\"\"\n                UPDATE intake_document_recommendations\n                SET title = ?,\n                    workflow_type = ?,\n                    priority = ?,\n                    confidence = ?,\n                    reason = ?,\n                    source = ?,\n                    status = ?,\n                    updated_at = ?,\n                    created_by = ?\n                WHERE id = ?\n            \"\"\", (\n                rec.get(\"title\"),\n                rec.get(\"workflow_type\"),\n                rec.get(\"priority\"),\n                int(rec.get(\"confidence\", 0)),\n                rec.get(\"reason\"),\n                rec.get(\"source\"),\n                preserved_status,\n                now,\n                created_by,\n                existing_id,\n            ))\n        else:\n            cur.execute(\"\"\"\n                INSERT INTO intake_document_recommendations (\n                    intake_id, firm_id, workflow_key, title, workflow_type,\n                    priority, confidence, reason, source, status,\n                    created_at, updated_at, created_by\n                )\n                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n            \"\"\", (\n                intake_id,\n                firm_id,\n                workflow_key,\n                rec.get(\"title\"),\n                rec.get(\"workflow_type\"),\n                rec.get(\"priority\"),\n                int(rec.get(\"confidence\", 0)),\n                rec.get(\"reason\"),\n                rec.get(\"source\"),\n                rec.get(\"status\", \"recommended\"),\n                now,\n                now,\n                created_by,\n            ))\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_saved_document_recommendations",
+          "line": 4050,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def list_saved_document_recommendations(intake_id):\n    ensure_intake_document_recommendation_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT workflow_key, title, workflow_type, priority, confidence,\n               reason, source, status, created_at, updated_at, created_by\n        FROM intake_document_recommendations\n        WHERE intake_id = ?\n        ORDER BY\n            CASE priority\n                WHEN 'urgent' THEN 1\n                WHEN 'high' THEN 2\n                WHEN 'normal' THEN 3\n                WHEN 'low' THEN 4\n                ELSE 5\n            END,\n            confidence DESC,\n            id ASC\n    \"\"\", (intake_id,))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"workflow_key\": row[0],\n            \"title\": row[1],\n            \"workflow_type\": row[2],\n            \"priority\": row[3],\n            \"confidence\": row[4],\n            \"reason\": row[5],\n            \"source\": row[6],\n            \"status\": row[7],\n            \"created_at\": format_intake_timestamp(row[8]),\n            \"updated_at\": format_intake_timestamp(row[9]),\n            \"created_by\": row[10] or \"\u2014\",\n        }\n        for row in rows\n    ]"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "update_document_recommendation_status",
+          "line": 4435,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def update_document_recommendation_status(\n    intake_id,\n    workflow_key,\n    status,\n    updated_by=None\n):\n    ensure_intake_document_recommendation_tables()\n\n    if status not in VALID_RECOMMENDATION_STATUSES:\n        raise ValueError(\"Invalid recommendation status.\")\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        UPDATE intake_document_recommendations\n        SET status = ?, updated_at = ?, created_by = ?\n        WHERE intake_id = ? AND workflow_key = ?\n    \"\"\", (\n        status,\n        now,\n        updated_by,\n        intake_id,\n        workflow_key,\n    ))\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "get_document_recommendation",
+          "line": 4467,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def get_document_recommendation(intake_id, workflow_key):\n    ensure_intake_document_recommendation_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT workflow_key, title, workflow_type, priority, confidence,\n               reason, source, status, created_at, updated_at, created_by\n        FROM intake_document_recommendations\n        WHERE intake_id = ? AND workflow_key = ?\n        LIMIT 1\n    \"\"\", (intake_id, workflow_key))\n\n    row = cur.fetchone()\n    conn.close()\n\n    if not row:\n        return None\n\n    return {\n        \"workflow_key\": row[0],\n        \"title\": row[1],\n        \"workflow_type\": row[2],\n        \"priority\": row[3],\n        \"confidence\": row[4],\n        \"reason\": row[5],\n        \"source\": row[6],\n        \"status\": row[7],\n        \"created_at\": format_intake_timestamp(row[8]),\n        \"updated_at\": format_intake_timestamp(row[9]),\n        \"created_by\": row[10] or \"\u2014\",\n        \"status_label\": VALID_RECOMMENDATION_STATUSES.get(row[7], row[7]),\n    }"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "save_workflow_bridge_answers",
+          "line": 5084,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def save_workflow_bridge_answers(intake_id, workflow_key, form_data, created_by=None):\n    ensure_workflow_bridge_tables()\n\n    definition = get_workflow_bridge_definition(workflow_key)\n    if not definition:\n        raise ValueError(\"Unknown workflow bridge.\")\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n    firm_id = get_current_firm_id()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    try:\n        # Replace current bridge answers for this workflow/intake.\n        cur.execute(\"\"\"\n            DELETE FROM intake_workflow_bridge_answers\n            WHERE intake_id = ? AND workflow_key = ?\n        \"\"\", (intake_id, workflow_key))\n\n        for question in definition.get(\"questions\", []):\n            qkey = question.get(\"key\")\n            options = question.get(\"options\", {})\n            input_type = question.get(\"input_type\")\n\n            if input_type == \"checkbox\":\n                values = form_data.getlist(qkey) if hasattr(form_data, \"getlist\") else []\n            else:\n                value = form_data.get(qkey) if hasattr(form_data, \"get\") else None\n                values = [value] if value else []\n\n            for answer_key in values:\n                if not answer_key:\n                    continue\n\n                answer_label = options.get(answer_key, answer_key)\n\n                cur.execute(\"\"\"\n                    INSERT INTO intake_workflow_bridge_answers (\n                        intake_id, workflow_key, firm_id, question_key,\n                        answer_key, answer_label, created_at, updated_at, created_by\n                    )\n                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n                \"\"\", (\n                    intake_id,\n                    workflow_key,\n                    firm_id,\n                    qkey,\n                    answer_key,\n                    answer_label,\n                    now,\n                    now,\n                    created_by,\n                ))\n\n        # IMPORTANT:\n        # Do not call update_document_recommendation_status() here.\n        # That function opens another SQLite connection while this write transaction is open.\n        # On Windows SQLite, that can trigger \"database is locked.\"\n        cur.execute(\"\"\"\n            UPDATE intake_document_recommendations\n            SET status = ?,\n                updated_at = ?,\n                created_by = ?\n            WHERE intake_id = ? AND workflow_key = ?\n        \"\"\", (\n            \"launch_prepared\",\n            now,\n            created_by,\n            intake_id,\n            workflow_key,\n        ))\n\n        conn.commit()\n\n    finally:\n        conn.close()"
+        }
+      ],
+      "unscoped_reference_count": 8,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    },
+    {
+      "finding_id": "ISO-012",
+      "table": "intake_export_logs",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "references": [
+        {
+          "file": "services/services_intake.py",
+          "function": "ensure_intake_export_log_tables",
+          "line": 2913,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def ensure_intake_export_log_tables():\n    ensure_intake_snapshot_tables()\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS intake_export_logs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            intake_id TEXT NOT NULL,\n            firm_id TEXT DEFAULT 'FIRM-001',\n            export_type TEXT,\n            export_status TEXT,\n            file_path TEXT,\n            message TEXT,\n            created_at TEXT,\n            created_by TEXT\n        )\n    \"\"\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "log_intake_export",
+          "line": 2936,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def log_intake_export(intake_id, export_type, export_status, file_path=None, message=None, created_by=None):\n    ensure_intake_export_log_tables()\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n    firm_id = get_current_firm_id()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        INSERT INTO intake_export_logs (\n            intake_id, firm_id, export_type, export_status,\n            file_path, message, created_at, created_by\n        )\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        intake_id,\n        firm_id,\n        export_type,\n        export_status,\n        file_path,\n        message,\n        now,\n        created_by,\n    ))\n\n    conn.commit()\n    conn.close()\n\n    return {\n        \"intake_id\": intake_id,\n        \"export_type\": export_type,\n        \"export_status\": export_status,\n        \"file_path\": file_path,\n        \"message\": message,\n        \"created_at\": now,\n        \"created_by\": created_by,\n    }"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_intake_export_logs",
+          "line": 2976,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def list_intake_export_logs(intake_id):\n    ensure_intake_export_log_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT export_type, export_status, file_path, message, created_at, created_by\n        FROM intake_export_logs\n        WHERE intake_id = ?\n        ORDER BY id DESC\n        LIMIT 25\n    \"\"\", (intake_id,))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"export_type\": row[0],\n            \"export_status\": row[1],\n            \"file_path\": row[2],\n            \"message\": row[3],\n            \"created_at\": format_intake_timestamp(row[4]),\n            \"created_by\": row[5] or \"\u2014\",\n        }\n        for row in rows\n    ]"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "get_next_export_version",
+          "line": 3101,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def get_next_export_version(intake_id, export_type, packet_type=\"follow_up_packet\"):\n    ensure_intake_export_version_columns()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT COALESCE(MAX(version_number), 0)\n        FROM intake_export_logs\n        WHERE intake_id = ?\n          AND export_type = ?\n          AND packet_type = ?\n          AND export_status IN ('success', 'failed', 'error')\n    \"\"\", (intake_id, export_type, packet_type))\n\n    row = cur.fetchone()\n    conn.close()\n\n    current = row[0] if row and row[0] is not None else 0\n    return int(current) + 1"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "log_intake_export_versioned",
+          "line": 3123,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def log_intake_export_versioned(\n    intake_id,\n    export_type,\n    export_status,\n    file_path=None,\n    message=None,\n    created_by=None,\n    packet_type=\"follow_up_packet\",\n    version_number=None\n):\n    ensure_intake_export_version_columns()\n\n    if version_number is None:\n        version_number = get_next_export_version(intake_id, export_type, packet_type)\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n    firm_id = get_current_firm_id()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        INSERT INTO intake_export_logs (\n            intake_id, firm_id, export_type, export_status,\n            file_path, message, created_at, created_by,\n            version_number, packet_type\n        )\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        intake_id,\n        firm_id,\n        export_type,\n        export_status,\n        file_path,\n        message,\n        now,\n        created_by,\n        version_number,\n        packet_type,\n    ))\n\n    conn.commit()\n    conn.close()\n\n    return {\n        \"intake_id\": intake_id,\n        \"export_type\": export_type,\n        \"export_status\": export_status,\n        \"file_path\": file_path,\n        \"message\": message,\n        \"created_at\": now,\n        \"created_by\": created_by,\n        \"version_number\": version_number,\n        \"packet_type\": packet_type,\n    }"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_all_intake_export_logs",
+          "line": 3180,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def list_all_intake_export_logs(limit=100):\n    ensure_intake_export_version_columns()\n    firm_id = get_current_firm_id()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT intake_id, export_type, export_status, file_path, message,\n               created_at, created_by, version_number, packet_type\n        FROM intake_export_logs\n        WHERE firm_id = ?\n        ORDER BY id DESC\n        LIMIT ?\n    \"\"\", (firm_id, limit))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"intake_id\": row[0],\n            \"export_type\": row[1],\n            \"export_status\": row[2],\n            \"file_path\": row[3],\n            \"message\": row[4],\n            \"created_at\": format_intake_timestamp(row[5]),\n            \"created_by\": row[6] or \"\u2014\",\n            \"version_number\": row[7] or 1,\n            \"packet_type\": row[8] or \"follow_up_packet\",\n        }\n        for row in rows\n    ]"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_intake_export_logs_versioned",
+          "line": 3215,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def list_intake_export_logs_versioned(intake_id):\n    ensure_intake_export_version_columns()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT export_type, export_status, file_path, message,\n               created_at, created_by, version_number, packet_type\n        FROM intake_export_logs\n        WHERE intake_id = ?\n        ORDER BY id DESC\n        LIMIT 100\n    \"\"\", (intake_id,))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"intake_id\": intake_id,\n            \"export_type\": row[0],\n            \"export_status\": row[1],\n            \"file_path\": row[2],\n            \"message\": row[3],\n            \"created_at\": format_intake_timestamp(row[4]),\n            \"created_by\": row[5] or \"\u2014\",\n            \"version_number\": row[6] or 1,\n            \"packet_type\": row[7] or \"follow_up_packet\",\n        }\n        for row in rows\n    ]"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_all_intake_export_logs_any_scope",
+          "line": 3371,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def list_all_intake_export_logs_any_scope(limit=100):\n    \"\"\"\n    Admin/local fallback: returns export logs across all firm scopes.\n    Used only when the active firm-scoped export dashboard is empty.\n    \"\"\"\n    ensure_intake_export_version_columns()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT intake_id, export_type, export_status, file_path, message,\n               created_at, created_by, version_number, packet_type, firm_id\n        FROM intake_export_logs\n        ORDER BY id DESC\n        LIMIT ?\n    \"\"\", (limit,))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"intake_id\": row[0],\n            \"export_type\": row[1],\n            \"export_status\": row[2],\n            \"file_path\": row[3],\n            \"message\": row[4],\n            \"created_at\": format_intake_timestamp(row[5]),\n            \"created_by\": row[6] or \"\u2014\",\n            \"version_number\": row[7] or 1,\n            \"packet_type\": row[8] or \"follow_up_packet\",\n            \"firm_id\": row[9] or \"\u2014\",\n        }\n        for row in rows\n    ]"
+        }
+      ],
+      "unscoped_reference_count": 3,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    },
+    {
+      "finding_id": "ISO-013",
+      "table": "intake_final_draft_gate_actions",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "references": [
+        {
+          "file": "services/services_intake.py",
+          "function": "ensure_final_draft_resolution_tables",
+          "line": 7301,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def ensure_final_draft_resolution_tables():\n    ensure_final_draft_prep_gate_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS intake_final_draft_gate_actions (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            intake_id TEXT NOT NULL,\n            workflow_key TEXT NOT NULL,\n            document_key TEXT NOT NULL,\n            firm_id TEXT DEFAULT 'FIRM-001',\n            action_key TEXT,\n            action_label TEXT,\n            note TEXT,\n            created_at TEXT,\n            created_by TEXT\n        )\n    \"\"\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_final_draft_resolution_actions",
+          "line": 7326,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def list_final_draft_resolution_actions(intake_id, workflow_key, document_key):\n    ensure_final_draft_resolution_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT action_key, action_label, note, created_at, created_by\n        FROM intake_final_draft_gate_actions\n        WHERE intake_id = ?\n          AND workflow_key = ?\n          AND document_key = ?\n        ORDER BY id DESC\n    \"\"\", (intake_id, workflow_key, document_key))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"action_key\": row[0],\n            \"action_label\": row[1],\n            \"note\": row[2] or \"\",\n            \"created_at\": format_intake_timestamp(row[3]) if row[3] else \"\",\n            \"created_by\": row[4] or \"\u2014\",\n        }\n        for row in rows\n    ]"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "record_final_draft_resolution_actions",
+          "line": 7361,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def record_final_draft_resolution_actions(\n    intake_id,\n    workflow_key,\n    document_key,\n    action_keys,\n    note=\"\",\n    created_by=None\n):\n    ensure_final_draft_resolution_tables()\n\n    if not action_keys:\n        return []\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n    firm_id = get_current_firm_id()\n    recorded = []\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    try:\n        for action_key in action_keys:\n            if action_key not in FINAL_DRAFT_RESOLUTION_ACTIONS:\n                continue\n\n            action_label = FINAL_DRAFT_RESOLUTION_ACTIONS[action_key]\n\n            cur.execute(\"\"\"\n                INSERT INTO intake_final_draft_gate_actions (\n                    intake_id, workflow_key, document_key, firm_id,\n                    action_key, action_label, note, created_at, created_by\n                )\n                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n            \"\"\", (\n                intake_id,\n                workflow_key,\n                document_key,\n                firm_id,\n                action_key,\n                action_label,\n                note,\n                now,\n                created_by,\n            ))\n\n            recorded.append({\n                \"action_key\": action_key,\n                \"action_label\": action_label,\n                \"note\": note,\n                \"created_at\": now,\n                \"created_by\": created_by,\n            })\n\n        conn.commit()\n\n    finally:\n        conn.close()\n\n    # Re-evaluate gate after recording actions.\n    upsert_final_draft_prep_gate(\n        intake_id=intake_id,\n        workflow_key=workflow_key,\n        document_key=document_key,\n        updated_by=created_by,\n    )\n\n    return recorded"
+        }
+      ],
+      "unscoped_reference_count": 1,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    },
+    {
+      "finding_id": "ISO-014",
+      "table": "intake_review_gate_actions",
+      "identifier_column": "intake_id",
+      "identifier": "INTAKE-0005",
+      "references": [
+        {
+          "file": "services/services_intake.py",
+          "function": "ensure_review_gate_resolution_tables",
+          "line": 6718,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def ensure_review_gate_resolution_tables():\n    ensure_review_gate_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS intake_review_gate_actions (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            intake_id TEXT NOT NULL,\n            workflow_key TEXT NOT NULL,\n            document_key TEXT NOT NULL,\n            gate_name TEXT DEFAULT 'non_final_draft_review_gate',\n            firm_id TEXT DEFAULT 'FIRM-001',\n            action_key TEXT,\n            action_label TEXT,\n            resulting_status TEXT,\n            note TEXT,\n            created_at TEXT,\n            created_by TEXT\n        )\n    \"\"\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "list_review_gate_actions",
+          "line": 6789,
+          "scope_markers": [],
+          "routes": [],
+          "source": "def list_review_gate_actions(intake_id, workflow_key, document_key, gate_name=\"non_final_draft_review_gate\"):\n    ensure_review_gate_resolution_tables()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n        SELECT action_key, action_label, resulting_status, note, created_at, created_by\n        FROM intake_review_gate_actions\n        WHERE intake_id = ?\n          AND workflow_key = ?\n          AND document_key = ?\n          AND gate_name = ?\n        ORDER BY id DESC\n    \"\"\", (intake_id, workflow_key, document_key, gate_name))\n\n    rows = cur.fetchall()\n    conn.close()\n\n    return [\n        {\n            \"action_key\": row[0],\n            \"action_label\": row[1],\n            \"resulting_status\": row[2],\n            \"resulting_status_label\": VALID_REVIEW_GATE_STATUSES.get(row[2], row[2]),\n            \"note\": row[3] or \"\",\n            \"created_at\": format_intake_timestamp(row[4]) if row[4] else \"\",\n            \"created_by\": row[5] or \"\u2014\",\n        }\n        for row in rows\n    ]"
+        },
+        {
+          "file": "services/services_intake.py",
+          "function": "resolve_review_gate_action",
+          "line": 6822,
+          "scope_markers": [
+            "current_firm",
+            "firm_id",
+            "get_current_firm_id"
+          ],
+          "routes": [],
+          "source": "def resolve_review_gate_action(\n    intake_id,\n    workflow_key,\n    document_key,\n    action_key,\n    note=\"\",\n    created_by=None,\n    gate_name=\"non_final_draft_review_gate\"\n):\n    ensure_review_gate_resolution_tables()\n\n    if action_key not in VALID_REVIEW_GATE_ACTIONS:\n        raise ValueError(\"Invalid review gate action.\")\n\n    action_label = VALID_REVIEW_GATE_ACTIONS[action_key]\n\n    if action_key == \"missing_answers_resolved\":\n        resulting_status = \"review_required\"\n        reason = \"Missing answers marked resolved; remaining issues require review.\"\n    elif action_key == \"open_issues_reviewed\":\n        resulting_status = \"ready_for_review\"\n        reason = \"Open issues marked reviewed; gate is ready for review.\"\n    elif action_key == \"professional_review_required\":\n        resulting_status = \"professional_review_required\"\n        reason = \"Professional review required before final-draft preparation.\"\n    elif action_key == \"approved_for_final_draft_prep\":\n        resulting_status = \"approved_for_final_draft_prep\"\n        reason = \"Approved for final-draft preparation. Final execution is still not authorized.\"\n    elif action_key == \"blocked_hold\":\n        resulting_status = \"hold\"\n        reason = \"Gate placed on hold / blocked.\"\n    else:\n        resulting_status = \"review_required\"\n        reason = \"Gate action recorded.\"\n\n    now = datetime.utcnow().isoformat(timespec=\"seconds\")\n    firm_id = get_current_firm_id()\n\n    conn = get_connection()\n    cur = conn.cursor()\n\n    try:\n        cur.execute(\"\"\"\n            INSERT INTO intake_review_gate_actions (\n                intake_id, workflow_key, document_key, gate_name, firm_id,\n                action_key, action_label, resulting_status, note,\n                created_at, created_by\n            )\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n        \"\"\", (\n            intake_id,\n            workflow_key,\n            document_key,\n            gate_name,\n            firm_id,\n            action_key,\n            action_label,\n            resulting_status,\n            note,\n            now,\n            created_by,\n        ))\n\n        cur.execute(\"\"\"\n            UPDATE intake_review_gate_ledger\n            SET gate_status = ?,\n                gate_reason = ?,\n                updated_at = ?,\n                updated_by = ?,\n                notes = ?\n            WHERE intake_id = ?\n              AND workflow_key = ?\n              AND document_key = ?\n              AND gate_name = ?\n        \"\"\", (\n            resulting_status,\n            reason,\n            now,\n            created_by,\n            note,\n            intake_id,\n            workflow_key,\n            document_key,\n            gate_name,\n        ))\n\n        conn.commit()\n\n    finally:\n        conn.close()\n\n    return {\n        \"action_key\": action_key,\n        \"action_label\": action_label,\n        \"resulting_status\": resulting_status,\n        \"resulting_status_label\": VALID_REVIEW_GATE_STATUSES.get(resulting_status, resulting_status),\n        \"reason\": reason,\n        \"note\": note,\n        \"created_at\": now,\n        \"created_by\": created_by,\n    }"
+        }
+      ],
+      "unscoped_reference_count": 1,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    },
+    {
+      "finding_id": "ISO-015",
+      "table": "workspaces",
+      "identifier_column": "owner_id",
+      "identifier": "ADMIN_OWNER_001",
+      "references": [
+        {
+          "file": "app.py",
+          "function": "run_hosted_startup_self_heal",
+          "line": 318,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [],
+          "source": "def run_hosted_startup_self_heal():\n    \"\"\"\n    Permanent hosted startup self-heal.\n\n    Purpose:\n    - Repair hosted SQLite schema drift after Railway deploy/restart.\n    - Ensure the hosted admin user exists when ENSURE_HOSTED_ADMIN=1.\n    - Ensure Admin role has required permissions such as view_dashboard.\n    - Ensure firm_id columns exist on key firm-scoped tables.\n\n    This avoids relying on public one-time repair routes for normal hosted operation.\n    \"\"\"\n    if os.getenv(\"ENSURE_HOSTED_ADMIN\") != \"1\":\n        return\n\n    import sqlite3\n    from werkzeug.security import generate_password_hash\n\n    username = os.getenv(\"HOSTED_BOOTSTRAP_USERNAME\", \"admin123\").strip()\n    password = os.getenv(\"HOSTED_BOOTSTRAP_PASSWORD\", \"\").strip()\n    firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()\n\n    if not username or not password or not firm_id:\n        print(\"\u26a0\ufe0f Hosted startup self-heal skipped: missing username/password/firm_id.\")\n        return\n\n    try:\n        DB_PATH.parent.mkdir(parents=True, exist_ok=True)\n\n        conn = sqlite3.connect(DB_PATH)\n        conn.row_factory = sqlite3.Row\n        cur = conn.cursor()\n\n        # Core hosted user table.\n        cur.execute(\"\"\"\n            CREATE TABLE IF NOT EXISTS app_users (\n                user_id TEXT PRIMARY KEY,\n                username TEXT UNIQUE,\n                password_hash TEXT,\n                role_name TEXT,\n                status TEXT,\n                firm_id TEXT,\n                owner_id TEXT\n            )\n        \"\"\")\n\n        cur.execute(\"PRAGMA table_info(app_users)\")\n        app_user_cols = [r[\"name\"] for r in cur.fetchall()]\n        for col, col_type in [\n            (\"password_hash\", \"TEXT\"),\n            (\"role_name\", \"TEXT\"),\n            (\"status\", \"TEXT\"),\n            (\"firm_id\", \"TEXT\"),\n            (\"owner_id\", \"TEXT\"),\n        ]:\n            if col not in app_user_cols:\n                cur.execute(f\"ALTER TABLE app_users ADD COLUMN {col} {col_type}\")\n\n        # Create/update hosted admin user every startup while ENSURE_HOSTED_ADMIN=1.\n        password_hash = generate_password_hash(password)\n\n        cur.execute(\n            \"SELECT user_id FROM app_users WHERE TRIM(LOWER(username)) = TRIM(LOWER(?))\",\n            (username,)\n        )\n        existing = cur.fetchone()\n\n        if existing:\n            cur.execute(\"\"\"\n                UPDATE app_users\n                SET username = ?,\n                    password_hash = ?,\n                    role_name = 'Admin',\n                    status = 'active',\n                    firm_id = ?,\n                    owner_id = 'ADMIN_OWNER_001'\n                WHERE user_id = ?\n            \"\"\", (username, password_hash, firm_id, existing[\"user_id\"]))\n            user_action = \"updated\"\n        else:\n            cur.execute(\"SELECT COUNT(*) AS count FROM app_users\")\n            count = cur.fetchone()[\"count\"]\n            user_id = f\"USER-{count + 1:03d}\"\n            cur.execute(\"\"\"\n                INSERT INTO app_users (\n                    user_id, username, password_hash, role_name, status, firm_id, owner_id\n                ) VALUES (?, ?, ?, 'Admin', 'active', ?, 'ADMIN_OWNER_001')\n            \"\"\", (user_id, username, password_hash, firm_id))\n            user_action = \"created\"\n\n        # Permissions + role matrix.\n        cur.execute(\"\"\"\n            CREATE TABLE IF NOT EXISTS permissions (\n                permission_id TEXT PRIMARY KEY,\n                permission_name TEXT UNIQUE,\n                description TEXT\n            )\n        \"\"\")\n\n        cur.execute(\"\"\"\n            CREATE TABLE IF NOT EXISTS role_permissions (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                role_name TEXT,\n                permission_name TEXT,\n                UNIQUE(role_name, permission_name)\n            )\n        \"\"\")\n\n        default_permissions = [\n            (\"PERM-001\", \"view_dashboard\", \"View dashboards and core system pages\"),\n            (\"PERM-002\", \"create_trust\", \"Create trust records\"),\n            (\"PERM-003\", \"edit_trust\", \"Edit trust records\"),\n            (\"PERM-004\", \"view_documents\", \"View documents\"),\n            (\"PERM-005\", \"generate_documents\", \"Generate documents\"),\n            (\"PERM-006\", \"export_documents\", \"Export documents\"),\n            (\"PERM-007\", \"manage_tax_reports\", \"Manage tax reports\"),\n            (\"PERM-008\", \"view_audit\", \"View audit trail\"),\n            (\"PERM-009\", \"manage_users\", \"Manage users\"),\n            (\"PERM-010\", \"manage_roles\", \"Manage trust roles\"),\n            (\"PERM-011\", \"manage_permissions\", \"Manage permissions\"),\n            (\"PERM-012\", \"view_security\", \"View security dashboard\"),\n        ]\n\n        for permission_id, permission_name, description in default_permissions:\n            cur.execute(\"\"\"\n                INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)\n                VALUES (?, ?, ?)\n            \"\"\", (permission_id, permission_name, description))\n\n        admin_permissions = [\n            \"view_dashboard\",\n            \"create_trust\",\n            \"edit_trust\",\n            \"view_documents\",\n            \"generate_documents\",\n            \"export_documents\",\n            \"manage_tax_reports\",\n            \"view_audit\",\n            \"manage_users\",\n            \"manage_roles\",\n            \"manage_permissions\",\n            \"view_security\",\n        ]\n\n        for permission_name in admin_permissions:\n            cur.execute(\"\"\"\n                INSERT OR IGNORE INTO role_permissions (role_name, permission_name)\n                VALUES ('Admin', ?)\n            \"\"\", (permission_name,))\n\n        # Firm-scoped table repair.\n        firm_tables = [\n            \"trusts\",\n            \"audit_log\",\n            \"transfers\",\n            \"trust_minutes\",\n            \"documents\",\n            \"generated_documents\",\n            \"media_records\",\n            \"workspaces\",\n            \"workspace_notes\",\n            \"execution_tasks\",\n            \"user_roles\",\n            \"fiduciaries\",\n            \"properties\",\n            \"accounts\",\n            \"beneficiaries\",\n            \"distributions\",\n            \"instruments\",\n            \"ledger_entries\",\n        ]\n\n        for table in firm_tables:\n            cur.execute(\"SELECT name FROM sqlite_master WHERE type='table' AND name=?\", (table,))\n            if not cur.fetchone():\n                continue\n\n            cur.execute(f\"PRAGMA table_info({table})\")\n            cols = [r[\"name\"] for r in cur.fetchall()]\n            if \"firm_id\" not in cols:\n                cur.execute(f\"ALTER TABLE {table} ADD COLUMN firm_id TEXT\")\n\n            cur.execute(f\"\"\"\n                UPDATE {table}\n                SET firm_id = ?\n                WHERE firm_id IS NULL OR TRIM(firm_id) = ''\n            \"\"\", (firm_id,))\n\n        conn.commit()\n        conn.close()\n\n        login_attempts.pop(username, None)\n        print(f\"\u2705 Hosted startup self-heal complete: user={username}; action={user_action}; firm={firm_id}\")\n\n    except Exception as exc:\n        print(\"\u26a0\ufe0f Hosted startup self-heal failed:\", exc)"
+        },
+        {
+          "file": "app.py",
+          "function": "create_workspace",
+          "line": 8904,
+          "scope_markers": [
+            "firm_id",
+            "session.get(\"firm_id\")"
+          ],
+          "routes": [],
+          "source": "def create_workspace(payload):\n    payload = dict(payload)\n    payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")\n    payload.setdefault(\"owner_id\", get_current_owner())\n\n    conn = _learning_conn()\n    conn.execute(\"\"\"\n        INSERT INTO workspaces (\n            workspace_id, title, workspace_type, trust_type_focus, purpose, owner, status, owner_id, firm_id\n        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        payload.get(\"workspace_id\"),\n        payload.get(\"title\"),\n        payload.get(\"workspace_type\"),\n        payload.get(\"trust_type_focus\"),\n        payload.get(\"purpose\"),\n        payload.get(\"owner\"),\n        payload.get(\"status\"),\n        payload.get(\"owner_id\"),\n        payload.get(\"firm_id\"),\n    ))\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "app.py",
+          "function": "discussion_new",
+          "line": 10528,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/discussions/new",
+              "methods": [
+                "GET",
+                "POST"
+              ],
+              "decorators": [
+                "app.route('/discussions/new', methods=['GET', 'POST'])"
+              ]
+            }
+          ],
+          "source": "def discussion_new():\n    workspaces = get_all_workspaces()\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"discussion_form.html\", mode=\"new\", workspaces=workspaces, categories=get_discussion_categories(), error_message=\"Invalid or missing CSRF token.\")\n\n        thread_id = (request.form.get(\"thread_id\") or \"\").strip()\n        title = (request.form.get(\"title\") or \"\").strip()\n        if not thread_id or not title:\n            return render_template(\"discussion_form.html\", mode=\"new\", workspaces=workspaces, categories=get_discussion_categories(), error_message=\"Thread ID and Title are required.\")\n\n        payload = {\n            \"thread_id\": thread_id,\n            \"workspace_id\": request.form.get(\"workspace_id\"),\n            \"title\": title,\n            \"category\": request.form.get(\"category\"),\n            \"related_trust_type\": request.form.get(\"related_trust_type\"),\n            \"related_form\": request.form.get(\"related_form\"),\n            \"created_by\": session.get(\"username\") or \"unknown\",\n            \"status\": request.form.get(\"status\") or \"open\",\n            \"owner_id\": get_current_owner(),\n        }\n        create_discussion_thread(payload)\n        return redirect(url_for(\"discussion_thread\", thread_id=thread_id))\n\n    return render_template(\"discussion_form.html\", mode=\"new\", workspaces=workspaces, categories=get_discussion_categories())"
+        },
+        {
+          "file": "app.py",
+          "function": "document_generate",
+          "line": 10888,
+          "scope_markers": [],
+          "routes": [
+            {
+              "route": "/documents/generate",
+              "methods": [
+                "GET",
+                "POST"
+              ],
+              "decorators": [
+                "app.route('/documents/generate', methods=['GET', 'POST'])"
+              ]
+            }
+          ],
+          "source": "def document_generate():\n    templates = get_document_templates()\n    workspaces = get_all_workspaces()\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\n                \"document_generate_form.html\",\n                templates=templates,\n                workspaces=workspaces,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        document_id = (request.form.get(\"document_id\") or \"\").strip()\n        template_id = (request.form.get(\"template_id\") or \"\").strip()\n        title = (request.form.get(\"title\") or \"\").strip()\n\n        if not document_id or not template_id or not title:\n            return render_template(\n                \"document_generate_form.html\",\n                templates=templates,\n                workspaces=workspaces,\n                error_message=\"Document ID, Template, and Title are required.\"\n            )\n\n        template = get_document_template_by_id(template_id)\n        if not template:\n            return render_template(\n                \"document_generate_form.html\",\n                templates=templates,\n                workspaces=workspaces,\n                error_message=\"Selected template was not found.\"\n            )\n\n        values = {\n            \"title\": request.form.get(\"title\") or \"\",\n            \"purpose\": request.form.get(\"purpose\") or \"\",\n            \"trust_type_focus\": request.form.get(\"trust_type_focus\") or \"\",\n            \"notes\": request.form.get(\"notes\") or \"\",\n            \"trust_name\": request.form.get(\"trust_name\") or \"\",\n            \"trustee_name\": request.form.get(\"trustee_name\") or \"\",\n            \"authority_scope\": request.form.get(\"authority_scope\") or \"\",\n            \"related_forms\": request.form.get(\"related_forms\") or \"\",\n            \"related_reports\": request.form.get(\"related_reports\") or \"\",\n        }\n        content = render_document_template(template.get(\"template_body\"), values)\n\n        payload = {\n            \"document_id\": document_id,\n            \"workspace_id\": request.form.get(\"workspace_id\"),\n            \"trust_id\": request.form.get(\"trust_id\"),\n            \"template_id\": template_id,\n            \"title\": title,\n            \"content\": content,\n            \"status\": request.form.get(\"status\") or \"draft\",\n            \"created_by\": session.get(\"username\") or \"unknown\",\n            \"owner_id\": get_current_owner(),\n        }\n        create_generated_document(payload)\n        return redirect(url_for(\"document_detail\", document_id=document_id))\n\n    return render_template(\"document_generate_form.html\", templates=templates, workspaces=workspaces)"
+        },
+        {
+          "file": "app.py",
+          "function": "hosted_repair_admin_access_once",
+          "line": 14760,
+          "scope_markers": [
+            "firm_id"
+          ],
+          "routes": [
+            {
+              "route": "/hosted-repair-admin-access-once",
+              "methods": [
+                "GET"
+              ],
+              "decorators": [
+                "app.route('/hosted-repair-admin-access-once')"
+              ]
+            }
+          ],
+          "source": "def hosted_repair_admin_access_once():\n    \"\"\"\n    One-time hosted recovery route.\n    Guarded by ALLOW_HOSTED_ADMIN_BOOTSTRAP=1 and ALLOW_HOSTED_PERMISSION_RESEED=1.\n    Repairs hosted admin login, role permissions, login lockout, and firm_id columns.\n    Disable all hosted recovery switches immediately after use.\n    \"\"\"\n    if os.getenv(\"ALLOW_HOSTED_ADMIN_BOOTSTRAP\") != \"1\":\n        return render_template(\n            \"access_denied.html\",\n            reason=\"Hosted admin repair is disabled. Set ALLOW_HOSTED_ADMIN_BOOTSTRAP=1.\"\n        )\n\n    if os.getenv(\"ALLOW_HOSTED_PERMISSION_RESEED\") != \"1\":\n        return render_template(\n            \"access_denied.html\",\n            reason=\"Hosted permission repair is disabled. Set ALLOW_HOSTED_PERMISSION_RESEED=1.\"\n        )\n\n    import sqlite3\n    from werkzeug.security import generate_password_hash, check_password_hash\n\n    username = os.getenv(\"HOSTED_BOOTSTRAP_USERNAME\", \"admin123\").strip()\n    password = os.getenv(\"HOSTED_BOOTSTRAP_PASSWORD\", \"\").strip()\n    firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()\n\n    output = []\n    output.append(f\"DB_PATH={DB_PATH}\")\n    output.append(f\"USERNAME={username!r}\")\n    output.append(f\"PASSWORD_PRESENT={bool(password)}\")\n    output.append(f\"PASSWORD_LENGTH={len(password)}\")\n    output.append(f\"FIRM_ID={firm_id!r}\")\n\n    if not username or not password or not firm_id:\n        return \"<pre>REPAIR FAILED: username, password, and firm_id are required.</pre>\", 400\n\n    conn = sqlite3.connect(DB_PATH)\n    conn.row_factory = sqlite3.Row\n    cur = conn.cursor()\n\n    # 1. Ensure app_users exists and has required columns.\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS app_users (\n            user_id TEXT PRIMARY KEY,\n            username TEXT UNIQUE,\n            password_hash TEXT,\n            role_name TEXT,\n            status TEXT,\n            firm_id TEXT,\n            owner_id TEXT\n        )\n    \"\"\")\n\n    cur.execute(\"PRAGMA table_info(app_users)\")\n    user_cols = [r[\"name\"] for r in cur.fetchall()]\n    for col, col_type in [\n        (\"password_hash\", \"TEXT\"),\n        (\"role_name\", \"TEXT\"),\n        (\"status\", \"TEXT\"),\n        (\"firm_id\", \"TEXT\"),\n        (\"owner_id\", \"TEXT\"),\n    ]:\n        if col not in user_cols:\n            cur.execute(f\"ALTER TABLE app_users ADD COLUMN {col} {col_type}\")\n            output.append(f\"ADDED app_users.{col}\")\n\n    # 2. Create/update admin user.\n    password_hash = generate_password_hash(password)\n\n    cur.execute(\"SELECT user_id FROM app_users WHERE TRIM(LOWER(username)) = TRIM(LOWER(?))\", (username,))\n    existing = cur.fetchone()\n\n    if existing:\n        cur.execute(\"\"\"\n            UPDATE app_users\n            SET username = ?,\n                password_hash = ?,\n                role_name = 'Admin',\n                status = 'active',\n                firm_id = ?,\n                owner_id = 'ADMIN_OWNER_001'\n            WHERE user_id = ?\n        \"\"\", (username, password_hash, firm_id, existing[\"user_id\"]))\n        output.append(f\"USER_UPDATED={username}\")\n    else:\n        cur.execute(\"SELECT COUNT(*) AS count FROM app_users\")\n        count = cur.fetchone()[\"count\"]\n        user_id = f\"USER-{count + 1:03d}\"\n        cur.execute(\"\"\"\n            INSERT INTO app_users (\n                user_id, username, password_hash, role_name, status, firm_id, owner_id\n            ) VALUES (?, ?, ?, 'Admin', 'active', ?, 'ADMIN_OWNER_001')\n        \"\"\", (user_id, username, password_hash, firm_id))\n        output.append(f\"USER_CREATED={username}\")\n\n    conn.commit()\n\n    # 3. Ensure role permission tables and grant default Admin permissions.\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS permissions (\n            permission_id TEXT PRIMARY KEY,\n            permission_name TEXT UNIQUE,\n            description TEXT\n        )\n    \"\"\")\n\n    cur.execute(\"\"\"\n        CREATE TABLE IF NOT EXISTS role_permissions (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            role_name TEXT,\n            permission_name TEXT,\n            UNIQUE(role_name, permission_name)\n        )\n    \"\"\")\n\n    default_permissions = [\n        (\"PERM-001\", \"view_dashboard\", \"View dashboards and core system pages\"),\n        (\"PERM-002\", \"create_trust\", \"Create trust records\"),\n        (\"PERM-003\", \"edit_trust\", \"Edit trust records\"),\n        (\"PERM-004\", \"view_documents\", \"View documents\"),\n        (\"PERM-005\", \"generate_documents\", \"Generate documents\"),\n        (\"PERM-006\", \"export_documents\", \"Export documents\"),\n        (\"PERM-007\", \"manage_tax_reports\", \"Manage tax reports\"),\n        (\"PERM-008\", \"view_audit\", \"View audit trail\"),\n        (\"PERM-009\", \"manage_users\", \"Manage users\"),\n        (\"PERM-010\", \"manage_roles\", \"Manage trust roles\"),\n        (\"PERM-011\", \"manage_permissions\", \"Manage permissions\"),\n        (\"PERM-012\", \"view_security\", \"View security dashboard\"),\n    ]\n\n    for permission_id, permission_name, description in default_permissions:\n        cur.execute(\"\"\"\n            INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)\n            VALUES (?, ?, ?)\n        \"\"\", (permission_id, permission_name, description))\n\n    admin_permissions = [\n        \"view_dashboard\",\n        \"create_trust\",\n        \"edit_trust\",\n        \"view_documents\",\n        \"generate_documents\",\n        \"export_documents\",\n        \"manage_tax_reports\",\n        \"view_audit\",\n        \"manage_users\",\n        \"manage_roles\",\n        \"manage_permissions\",\n        \"view_security\",\n    ]\n\n    for permission_name in admin_permissions:\n        cur.execute(\"\"\"\n            INSERT OR IGNORE INTO role_permissions (role_name, permission_name)\n            VALUES ('Admin', ?)\n        \"\"\", (permission_name,))\n\n    conn.commit()\n    output.append(\"ADMIN_PERMISSIONS_RESEEDED=True\")\n\n    # 4. Self-heal firm_id columns on common hosted tables.\n    firm_tables = [\n        \"trusts\",\n        \"audit_log\",\n        \"transfers\",\n        \"trust_minutes\",\n        \"documents\",\n        \"generated_documents\",\n        \"media_records\",\n        \"workspaces\",\n        \"workspace_notes\",\n        \"execution_tasks\",\n        \"user_roles\",\n        \"fiduciaries\",\n        \"properties\",\n        \"accounts\",\n        \"beneficiaries\",\n        \"distributions\",\n        \"instruments\",\n        \"ledger_entries\",\n    ]\n\n    for table in firm_tables:\n        cur.execute(\"SELECT name FROM sqlite_master WHERE type='table' AND name=?\", (table,))\n        if not cur.fetchone():\n            output.append(f\"SKIP_MISSING_TABLE={table}\")\n            continue\n\n        cur.execute(f\"PRAGMA table_info({table})\")\n        cols = [r[\"name\"] for r in cur.fetchall()]\n        if \"firm_id\" not in cols:\n            cur.execute(f\"ALTER TABLE {table} ADD COLUMN firm_id TEXT\")\n            output.append(f\"ADDED_COLUMN={table}.firm_id\")\n\n        cur.execute(f\"\"\"\n            UPDATE {table}\n            SET firm_id = ?\n            WHERE firm_id IS NULL OR TRIM(firm_id) = ''\n        \"\"\", (firm_id,))\n        output.append(f\"{table}_DEFAULTED_ROWS={cur.rowcount}\")\n\n    conn.commit()\n\n    # 5. Verify user row and password match.\n    cur.execute(\"\"\"\n        SELECT username, password_hash, role_name, status, firm_id\n        FROM app_users\n        WHERE TRIM(LOWER(username)) = TRIM(LOWER(?))\n    \"\"\", (username,))\n    row = cur.fetchone()\n\n    if row:\n        output.append(\"USER_ROW=present\")\n        output.append(f\"ROW_USERNAME={row['username']}\")\n        output.append(f\"ROW_ROLE={row['role_name']}\")\n        output.append(f\"ROW_STATUS={row['status']}\")\n        output.append(f\"ROW_FIRM_ID={row['firm_id']}\")\n        output.append(f\"CHECK_PASSWORD_MATCH={check_password_hash(row['password_hash'], password)}\")\n    else:\n        output.append(\"USER_ROW=missing\")\n\n    cur.execute(\"\"\"\n        SELECT permission_name\n        FROM role_permissions\n        WHERE role_name = 'Admin'\n        ORDER BY permission_name\n    \"\"\")\n    admin_perms = [r[\"permission_name\"] for r in cur.fetchall()]\n    output.append(\"ADMIN_PERMISSIONS=\" + \", \".join(admin_perms))\n    output.append(f\"HAS_VIEW_DASHBOARD={'view_dashboard' in admin_perms}\")\n\n    conn.close()\n\n    # Clear in-memory lockout for this worker.\n    login_attempts.pop(username, None)\n    output.append(\"LOGIN_LOCKOUT_CLEARED=True\")\n    output.append(\"NEXT=Log in with username and HOSTED_BOOTSTRAP_PASSWORD, then disable hosted recovery variables.\")\n\n    return \"<pre>HOSTED ADMIN ACCESS REPAIR COMPLETE\\n\\n\" + \"\\n\".join(output) + \"</pre>\""
+        }
+      ],
+      "unscoped_reference_count": 2,
+      "runtime_test_required": true,
+      "test_rule": "Resolve the same identifier under Firm 1 and Firm 2 and verify that only the active firm's row is returned."
+    }
+  ],
+  "null_ownership": [
+    {
+      "finding_id": "ISO-016",
+      "table": "audit_log",
+      "record": {
+        "id": 114,
+        "entity_type": "auth",
+        "entity_id": "trustee",
+        "action": "login_success",
+        "note": "User logged in successfully",
+        "created_at": "2026-04-29 16:42:03",
+        "previous_hash": "f5d247f6a6faaa52f50c060bdbb8bda2760dca7b62663080257f80f7872dc89c",
+        "entry_hash": "58772444f918fa176739034f73f4452fd1bb7c7740d274873ec09c760223c12e",
+        "hash_algorithm": "sha256",
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-001",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-017",
+      "table": "audit_log",
+      "record": {
+        "id": 115,
+        "entity_type": "auth",
+        "entity_id": "trustee",
+        "action": "login_success",
+        "note": "User logged in successfully",
+        "created_at": "2026-04-29 16:43:36",
+        "previous_hash": "58772444f918fa176739034f73f4452fd1bb7c7740d274873ec09c760223c12e",
+        "entry_hash": "c3754a2db8fb998685c0bfdfcdb922c26ce38e2475ee592434150fddc9edbe6b",
+        "hash_algorithm": "sha256",
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-001",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-018",
+      "table": "audit_log",
+      "record": {
+        "id": 116,
+        "entity_type": "auth",
+        "entity_id": "admin",
+        "action": "login_success",
+        "note": "User logged in successfully",
+        "created_at": "2026-04-29 16:43:58",
+        "previous_hash": "c3754a2db8fb998685c0bfdfcdb922c26ce38e2475ee592434150fddc9edbe6b",
+        "entry_hash": "22ee34aafe54ee2be4d0e5819b2cca5d7a30345c66b07a07835a2add97568382",
+        "hash_algorithm": "sha256",
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-001",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-019",
+      "table": "documents",
+      "record": {
+        "document_id": "DOC-001",
+        "trust_id": "TR-022",
+        "property_id": "PR-001",
+        "account_id": "",
+        "document_category": "property_record",
+        "document_title": "PR-001 Supporting Evidence for PR-001",
+        "notes": "Test evidence upload for AC-1 readiness recovery.",
+        "original_filename": "PR-001_Continuity_Custody_Log (2).pdf",
+        "stored_filename": "DOC-001_PR-001_Continuity_Custody_Log_2.pdf",
+        "file_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\uploads\\DOC-001_PR-001_Continuity_Custody_Log_2.pdf",
+        "owner_id": null,
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-002",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-020",
+      "table": "documents",
+      "record": {
+        "document_id": "DOC-002",
+        "trust_id": "TR-022",
+        "property_id": "PR-001",
+        "account_id": "",
+        "document_category": "property_record",
+        "document_title": "Supporting Evidence for PR-001",
+        "notes": "",
+        "original_filename": "Continuity_Asset_Dashboard_Report (3).pdf",
+        "stored_filename": "DOC-002_Continuity_Asset_Dashboard_Report_3.pdf",
+        "file_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\uploads\\DOC-002_Continuity_Asset_Dashboard_Report_3.pdf",
+        "owner_id": null,
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-002",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    },
+    {
+      "finding_id": "ISO-021",
+      "table": "documents",
+      "record": {
+        "document_id": "DOC-003",
+        "trust_id": "TR-022",
+        "property_id": "PR-001",
+        "account_id": "",
+        "document_category": "property_record",
+        "document_title": "Supporting Evidence for PR-001",
+        "notes": "Test evidence upload for AC-1 readiness recovery.",
+        "original_filename": "PR-001_Continuity_Custody_Log (2).pdf",
+        "stored_filename": "DOC-003_PR-001_Continuity_Custody_Log_2.pdf",
+        "file_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\uploads\\DOC-003_PR-001_Continuity_Custody_Log_2.pdf",
+        "owner_id": null,
+        "firm_id": null
+      },
+      "proposed_firm_id": "FIRM-002",
+      "triage": "OWNERSHIP_MAP_READY_FOR_REVIEW"
+    }
+  ],
+  "schema_targets": [
+    {
+      "finding_id": "ISO-022",
+      "table": "chart_of_accounts",
+      "columns": [
+        "coa_id",
+        "trust_id",
+        "account_code",
+        "account_name",
+        "account_group",
+        "normal_balance",
+        "is_active"
+      ],
+      "row_count": 0,
+      "likely_design": "LIKELY_GLOBAL_ACCOUNT_CATALOG_OR_NEEDS_TRUST_PARENT",
+      "unscoped_references": [
+        {
+          "file": "database/db.py",
+          "function": "init_db",
+          "line": 219,
+          "has_firm_scope": false,
+          "source_excerpt": "def init_db():\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS trusts (\n        trust_id TEXT PRIMARY KEY,\n        trust_name TEXT,\n        short_name TEXT,\n        jurisdiction TEXT,\n        effective_date TEXT,\n        trust_type TEXT,\n        trust_purpose TEXT,\n        accounting_method TEXT,\n        workflow_mode TEXT,\n        settlor_name TEXT,\n        trustee_name TEXT,\n        successor_trustee_name TEXT,\n        beneficiary_name TEXT,\n        record_visibility TEXT,\n        workflow_mode_confirmed TEXT,\n        ai_explanations TEXT,\n        recommended_guidance TEXT,\n        initial_corpus_description TEXT,\n        property_mapping_timing TEXT,\n        asset_categories TEXT,\n        generate_schedule_recommendations TEXT,\n        status TEXT\n    )\n    \"\"\")\n\n    trust_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(trusts)\").fetchall()]\n    for col in [\n        (\"grantor_name\", \"TEXT\"),\n        (\"grantor_type\", \"TEXT\"),\n        (\"grantor_contact\", \"TEXT\"),\n        (\"seal_path\", \"TEXT\"),\n        (\"caf_number\", \"TEXT\"),\n        (\"crid_number\", \"TEXT\"),\n        (\"trust_motto\", \"TEXT\"),\n        (\"foundation_scripture\", \"TEXT\"),\n        (\"prepared_by\", \"TEXT\"),\n        (\"return_to\", \"TEXT\"),\n        (\"branding_style\", \"TEXT DEFAULT 'v3_minimal'\"),\n    ]:\n        if col[0] not in trust_cols:\n            cur.execute(f\"ALTER TABLE trusts ADD COLUMN {col[0]} {col[1]}\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS properties (\n        property_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_name TEXT,\n        property_type TEXT,\n        address_or_identifier TEXT,\n        acquisition_date TEXT,\n        title_notes TEXT,\n        beneficial_notes TEXT,\n        status TEXT,\n        asset_class TEXT,\n        asset_subtype TEXT,\n        established_date TEXT,\n        effective_date TEXT,\n        review_date TEXT,\n        expiration_date TEXT,\n        responsible_party TEXT,\n        custodian TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS accounts (\n        account_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_id TEXT,\n        account_type TEXT,\n        institution TEXT,\n        account_label TEXT,\n        masked_number TEXT,\n        purpose TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS documents (\n        document_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_id TEXT,\n        account_id TEXT,\n        document_category TEXT,\n        document_title TEXT,\n        notes TEXT,\n        original_filename TEXT,\n        stored_filename TEXT,\n        file_path TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS ledger_entries (\n        entry_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        property_id TEXT,\n        account_id TEXT,\n        entry_type TEXT,\n        amount TEXT,\n        entry_date TEXT,\n        description TEXT,\n        entry_category TEXT,\n        accounting_method TEXT,\n        recognition_date TEXT,\n        due_date TEXT,\n        paid_date TEXT,\n        chart_account TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS chart_of_accounts (\n        coa_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        account_code TEXT,\n        account_name TEXT,\n        account_group TEXT,\n        normal_balance TEXT,\n        is_active TEXT\n    )\n    \"\"\")\n\n    existing_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(documents)\").fetchall()]\n    if \"original_filename\" not in existing_cols:\n        cur.execute(\"ALTER TABLE documents ADD COLUMN original_filename TEXT\")\n    if \"stored_filename\" not in existing_cols:\n        cur.execute(\"ALTER TABLE documents ADD COLUMN stored_filename TEXT\")\n    if \"file_path\" not in existing_cols:\n        cur.execute(\"ALTER TABLE documents ADD COLUMN file_path TEXT\")\n\n    prop_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(properties)\").fetchall()]\n    for col in [\n        (\"asset_class\", \"TEXT\"),\n        (\"asset_subtype\", \"TEXT\"),\n        (\"established_date\", \"TEXT\"),\n        (\"effective_date\", \"TEXT\"),\n        (\"review_date\", \"TEXT\"),\n        (\"expiration_date\", \"TEXT\"),\n        (\"responsible_party\", \"TEXT\"),\n        (\"custodian\", \"TEXT\"),\n    ]:\n        if col[0] not in prop_cols:\n            cur.execute(f\"ALTER TABLE properties ADD COLUMN {col[0]} {col[1]}\")\n\n    ledger_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(ledger_entries)\").fetchall()]\n    for col in [\n        (\"entry_category\", \"TEXT\"),\n        (\"accounting_method\", \"TEXT\"),\n        (\"recognition_date\", \"TEXT\"),\n        (\"due_date\", \"TEXT\"),\n        (\"paid_date\", \"TEXT\"),\n        (\"chart_account\", \"TEXT\"),\n    ]:\n        if col[0] not in ledger_cols:\n            cur.execute(f\"ALTER TABLE ledger_entries ADD COLUMN {col[0]} {col[1]}\")\n\n    for table_name in [\"properties\", \"accounts\", \"documents\", \"ledger_entries\", \"trusts\"]:\n        cols = [row[\"name\"] for row in cur.execute(f\"PRAGMA table_info({table_name})\").fetchall()]\n        if \"owner_id\" not in cols:\n            cur.execute(f\"ALTER TABLE {table_name} ADD COLUMN owner_id TEXT\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "seed_chart_of_accounts_for_trust",
+          "line": 811,
+          "has_firm_scope": false,
+          "source_excerpt": "def seed_chart_of_accounts_for_trust(trust_id):\n    defaults = [\n        (\"1000\", \"Cash\", \"asset\", \"debit\"),\n        (\"1100\", \"Accounts Receivable\", \"asset\", \"debit\"),\n        (\"1200\", \"Prepaid Expense\", \"asset\", \"debit\"),\n        (\"2000\", \"Accounts Payable\", \"liability\", \"credit\"),\n        (\"2100\", \"Deferred Revenue\", \"liability\", \"credit\"),\n        (\"4000\", \"Trust Income\", \"income\", \"credit\"),\n        (\"5000\", \"Trust Expense\", \"expense\", \"debit\"),\n    ]\n    conn = get_connection()\n    cur = conn.cursor()\n    for code, name, grp, normal in defaults:\n        coa_id = f\"{trust_id}-{code}\"\n        cur.execute(\"\"\"\n            INSERT OR IGNORE INTO chart_of_accounts (\n                coa_id, trust_id, account_code, account_name,\n                account_group, normal_balance, is_active\n            ) VALUES (?, ?, ?, ?, ?, ?, ?)\n        \"\"\", (coa_id, trust_id, code, name, grp, normal, \"yes\"))\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_chart_of_accounts",
+          "line": 834,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_chart_of_accounts(trust_id):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"SELECT * FROM chart_of_accounts WHERE trust_id = ? ORDER BY account_code\", (trust_id,))\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        }
+      ]
+    },
+    {
+      "finding_id": "ISO-023",
+      "table": "discussion_threads",
+      "columns": [
+        "thread_id",
+        "workspace_id",
+        "title",
+        "category",
+        "related_trust_type",
+        "related_form",
+        "created_by",
+        "status",
+        "created_at",
+        "updated_at",
+        "owner_id"
+      ],
+      "row_count": 5,
+      "likely_design": "LIKELY_TENANT_DATA",
+      "unscoped_references": [
+        {
+          "file": "app.py",
+          "function": "get_visualization_metrics",
+          "line": 8461,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_visualization_metrics():\n    conn = _learning_conn()\n    metrics = {}\n    table_map = {\n        \"learning_articles\": \"learning_articles\",\n        \"form_guides\": \"tax_form_guides\",\n        \"tutorial_videos\": \"tutorial_videos\",\n        \"workspaces\": \"workspaces\",\n        \"workspace_notes\": \"workspace_notes\",\n        \"discussion_threads\": \"discussion_threads\",\n        \"discussion_messages\": \"discussion_messages\",\n        \"execution_tasks\": \"execution_tasks\",\n        \"document_templates\": \"document_templates\",\n        \"generated_documents\": \"generated_documents\",\n    }\n\n    for key, table_name in table_map.items():\n        try:\n            metrics[key] = conn.execute(f\"SELECT COUNT(*) FROM {table_name}\").fetchone()[0]\n        except Exception:\n            metrics[key] = 0\n\n    conn.close()\n\n    # pull from main app helpers where available\n    try:\n        metrics[\"trusts\"] = len(get_all_trusts())\n    except Exception:\n        metrics[\"trusts\"] = 0\n\n    try:\n        metrics[\"fiduciaries\"] = len(get_all_fiduciaries())\n    except Exception:\n        metrics[\"fiduciaries\"] = 0\n\n    try:\n        metrics[\"instruments\"] = len(get_all_instruments())\n    except Exception:\n        metrics[\"instruments\"] = 0\n\n    try:\n        metrics[\"media\"] = len(get_all_media())\n    except Exception:\n        metrics[\"media\"] = 0\n\n    return metrics"
+        },
+        {
+          "file": "app.py",
+          "function": "get_visualization_timeline",
+          "line": 8508,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_visualization_timeline():\n    conn = _learning_conn()\n    timeline = []\n\n    sources = [\n        (\"Workspace\", \"workspaces\", \"workspace_id\", \"title\"),\n        (\"Discussion Thread\", \"discussion_threads\", \"thread_id\", \"title\"),\n        (\"Execution Task\", \"execution_tasks\", \"task_id\", \"title\"),\n        (\"Generated Document\", \"generated_documents\", \"document_id\", \"title\"),\n        (\"Tutorial Video\", \"tutorial_videos\", \"video_id\", \"title\"),\n    ]\n\n    for label, table_name, id_col, title_col in sources:\n        try:\n            rows = conn.execute(\n                f\"SELECT {id_col} as item_id, {title_col} as item_title, created_at FROM {table_name} ORDER BY created_at DESC LIMIT 10\"\n            ).fetchall()\n            for row in rows:\n                timeline.append({\n                    \"kind\": label,\n                    \"item_id\": row[\"item_id\"],\n                    \"item_title\": row[\"item_title\"],\n                    \"created_at\": row[\"created_at\"],\n                })\n        except Exception:\n            continue\n\n    conn.close()\n    timeline.sort(key=lambda x: x.get(\"created_at\") or \"\", reverse=True)\n    return timeline[:30]"
+        },
+        {
+          "file": "app.py",
+          "function": "get_all_discussion_threads",
+          "line": 8796,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_all_discussion_threads():\n    conn = _learning_conn()\n    rows = conn.execute(\"\"\"\n        SELECT * FROM discussion_threads\n        WHERE owner_id = ?\n        ORDER BY created_at DESC, title\n    \"\"\", (get_current_owner(),)).fetchall()\n    conn.close()\n    return [dict(r) for r in rows]"
+        },
+        {
+          "file": "app.py",
+          "function": "get_discussion_threads_by_workspace",
+          "line": 8806,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_discussion_threads_by_workspace(workspace_id):\n    conn = _learning_conn()\n    rows = conn.execute(\"\"\"\n        SELECT * FROM discussion_threads\n        WHERE workspace_id = ?\n          AND owner_id = ?\n        ORDER BY created_at DESC, title\n    \"\"\", (workspace_id, get_current_owner())).fetchall()\n    conn.close()\n    return [dict(r) for r in rows]"
+        },
+        {
+          "file": "app.py",
+          "function": "get_discussion_thread_by_id",
+          "line": 8817,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_discussion_thread_by_id(thread_id):\n    conn = _learning_conn()\n    row = conn.execute(\"\"\"\n        SELECT * FROM discussion_threads\n        WHERE thread_id = ?\n    \"\"\", (thread_id,)).fetchone()\n    conn.close()\n    return dict(row) if row else None"
+        },
+        {
+          "file": "app.py",
+          "function": "create_discussion_thread",
+          "line": 8826,
+          "has_firm_scope": false,
+          "source_excerpt": "def create_discussion_thread(payload):\n    conn = _learning_conn()\n    conn.execute(\"\"\"\n        INSERT INTO discussion_threads (\n            thread_id, workspace_id, title, category, related_trust_type,\n            related_form, created_by, status\n        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        payload.get(\"thread_id\"),\n        payload.get(\"workspace_id\"),\n        payload.get(\"title\"),\n        payload.get(\"category\"),\n        payload.get(\"related_trust_type\"),\n        payload.get(\"related_form\"),\n        payload.get(\"created_by\"),\n        payload.get(\"status\"),\n    ))\n    conn.commit()\n    conn.close()"
+        }
+      ]
+    },
+    {
+      "finding_id": "ISO-024",
+      "table": "genealogy_records",
+      "columns": [
+        "genealogy_id",
+        "trust_id",
+        "full_name",
+        "lineage_role",
+        "birth_date",
+        "death_date",
+        "parent_1",
+        "parent_2",
+        "spouse",
+        "notes",
+        "evidence_notes",
+        "source_platform",
+        "source_title",
+        "source_reference",
+        "archive_date",
+        "verification_status",
+        "trace_summary",
+        "guidance_prompt"
+      ],
+      "row_count": 0,
+      "likely_design": "LIKELY_TENANT_DATA",
+      "unscoped_references": [
+        {
+          "file": "database/db.py",
+          "function": "ensure_genealogy_tables",
+          "line": 2419,
+          "has_firm_scope": false,
+          "source_excerpt": "def ensure_genealogy_tables():\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS genealogy_records (\n        genealogy_id TEXT PRIMARY KEY,\n        trust_id TEXT,\n        full_name TEXT,\n        lineage_role TEXT,\n        birth_date TEXT,\n        death_date TEXT,\n        parent_1 TEXT,\n        parent_2 TEXT,\n        spouse TEXT,\n        notes TEXT,\n        evidence_notes TEXT,\n        source_platform TEXT,\n        source_title TEXT,\n        source_reference TEXT,\n        archive_date TEXT,\n        verification_status TEXT,\n        trace_summary TEXT,\n        guidance_prompt TEXT\n    )\n    \"\"\")\n\n    existing_cols = [row[\"name\"] for row in cur.execute(\"PRAGMA table_info(genealogy_records)\").fetchall()]\n    for col in [\n        (\"source_platform\", \"TEXT\"),\n        (\"source_title\", \"TEXT\"),\n        (\"source_reference\", \"TEXT\"),\n        (\"archive_date\", \"TEXT\"),\n        (\"verification_status\", \"TEXT\"),\n        (\"trace_summary\", \"TEXT\"),\n        (\"guidance_prompt\", \"TEXT\"),\n    ]:\n        if col[0] not in existing_cols:\n            cur.execute(f\"ALTER TABLE genealogy_records ADD COLUMN {col[0]} {col[1]}\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_next_genealogy_id",
+          "line": 2463,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_next_genealogy_id():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"SELECT COUNT(*) AS count FROM genealogy_records\")\n    row = cur.fetchone()\n    conn.close()\n    return f\"GEN-{row['count'] + 1:03d}\""
+        },
+        {
+          "file": "database/db.py",
+          "function": "create_genealogy_record",
+          "line": 2472,
+          "has_firm_scope": false,
+          "source_excerpt": "def create_genealogy_record(data):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        INSERT INTO genealogy_records (\n            genealogy_id, trust_id, full_name, lineage_role,\n            birth_date, death_date, parent_1, parent_2,\n            spouse, notes, evidence_notes,\n            source_platform, source_title, source_reference,\n            archive_date, verification_status, trace_summary, guidance_prompt\n        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n    \"\"\", (\n        data[\"genealogy_id\"],\n        data.get(\"trust_id\"),\n        data.get(\"full_name\"),\n        data.get(\"lineage_role\"),\n        data.get(\"birth_date\"),\n        data.get(\"death_date\"),\n        data.get(\"parent_1\"),\n        data.get(\"parent_2\"),\n        data.get(\"spouse\"),\n        data.get(\"notes\"),\n        data.get(\"evidence_notes\"),\n        data.get(\"source_platform\"),\n        data.get(\"source_title\"),\n        data.get(\"source_reference\"),\n        data.get(\"archive_date\"),\n        data.get(\"verification_status\"),\n        data.get(\"trace_summary\"),\n        data.get(\"guidance_prompt\"),\n    ))\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_all_genealogy_records",
+          "line": 2507,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_all_genealogy_records():\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        SELECT * FROM genealogy_records\n        ORDER BY full_name\n    \"\"\")\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_genealogy_by_trust_id",
+          "line": 2519,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_genealogy_by_trust_id(trust_id):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        SELECT * FROM genealogy_records\n        WHERE trust_id = ?\n        ORDER BY full_name\n    \"\"\", (trust_id,))\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        }
+      ]
+    },
+    {
+      "finding_id": "ISO-025",
+      "table": "user_permission_overrides",
+      "columns": [
+        "id",
+        "username",
+        "permission_name",
+        "effect",
+        "created_at"
+      ],
+      "row_count": 1,
+      "likely_design": "LIKELY_FIRM_OR_USER_SCOPED",
+      "unscoped_references": [
+        {
+          "file": "database/db.py",
+          "function": "ensure_user_permission_override_tables",
+          "line": 2931,
+          "has_firm_scope": false,
+          "source_excerpt": "def ensure_user_permission_override_tables():\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS user_permission_overrides (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        username TEXT,\n        permission_name TEXT,\n        effect TEXT,\n        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n    )\n    \"\"\")\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "get_user_permission_overrides",
+          "line": 2949,
+          "has_firm_scope": false,
+          "source_excerpt": "def get_user_permission_overrides(username):\n    conn = get_connection()\n    cur = conn.cursor()\n    cur.execute(\"\"\"\n        SELECT * FROM user_permission_overrides\n        WHERE username = ?\n        ORDER BY permission_name\n    \"\"\", (username,))\n    rows = cur.fetchall()\n    conn.close()\n    return rows"
+        },
+        {
+          "file": "database/db.py",
+          "function": "replace_user_permission_overrides",
+          "line": 2962,
+          "has_firm_scope": false,
+          "source_excerpt": "def replace_user_permission_overrides(username, allow_permissions, deny_permissions):\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"DELETE FROM user_permission_overrides WHERE username = ?\", (username,))\n\n    for permission_name in allow_permissions:\n        cur.execute(\"\"\"\n            INSERT INTO user_permission_overrides (username, permission_name, effect)\n            VALUES (?, ?, 'allow')\n        \"\"\", (username, permission_name))\n\n    for permission_name in deny_permissions:\n        cur.execute(\"\"\"\n            INSERT INTO user_permission_overrides (username, permission_name, effect)\n            VALUES (?, ?, 'deny')\n        \"\"\", (username, permission_name))\n\n    conn.commit()\n    conn.close()"
+        },
+        {
+          "file": "database/db.py",
+          "function": "build_system_health_report",
+          "line": 3047,
+          "has_firm_scope": false,
+          "source_excerpt": "def build_system_health_report():\n    required_tables = {\n        \"audit_log\": [\"id\", \"entity_type\", \"entity_id\", \"action\", \"note\", \"created_at\", \"previous_hash\", \"entry_hash\", \"hash_algorithm\"],\n        \"permissions\": [\"permission_id\", \"permission_name\", \"description\"],\n        \"role_permissions\": [\"id\", \"role_name\", \"permission_name\"],\n        \"app_users\": [\"user_id\", \"username\", \"password_hash\", \"role_name\", \"status\"],\n        \"user_permission_overrides\": [\"id\", \"username\", \"permission_name\", \"effect\", \"created_at\"],\n    }\n\n    table_reports = []\n    overall_ok = True\n\n    for table_name, required_columns in required_tables.items():\n        exists = table_exists(table_name)\n        columns = get_table_columns(table_name) if exists else []\n        missing_columns = [col for col in required_columns if col not in columns]\n\n        ok = exists and not missing_columns\n        if not ok:\n            overall_ok = False\n\n        table_reports.append({\n            \"table_name\": table_name,\n            \"exists\": exists,\n            \"columns\": columns,\n            \"missing_columns\": missing_columns,\n            \"ok\": ok,\n        })\n\n    return {\n        \"overall_status\": \"OK\" if overall_ok else \"ATTENTION\",\n        \"tables\": table_reports,\n    }"
+        },
+        {
+          "file": "database/db.py",
+          "function": "run_safe_recovery_migrations",
+          "line": 3081,
+          "has_firm_scope": false,
+          "source_excerpt": "def run_safe_recovery_migrations():\n    \"\"\"\n    Re-runs safe startup migration/initialization routines.\n    This is intentionally non-destructive:\n    - creates missing tables\n    - adds missing columns where coded\n    - seeds missing default permissions\n    - does not delete user data\n    \"\"\"\n    results = []\n\n    try:\n        init_audit_table()\n        results.append({\"name\": \"audit_log\", \"status\": \"OK\", \"note\": \"Audit table and hash columns verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"audit_log\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    try:\n        ensure_role_tables()\n        results.append({\"name\": \"permissions\", \"status\": \"OK\", \"note\": \"Permission matrix tables and defaults verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"permissions\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    try:\n        ensure_user_tables()\n        results.append({\"name\": \"app_users\", \"status\": \"OK\", \"note\": \"User table verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"app_users\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    try:\n        ensure_user_permission_override_tables()\n        results.append({\"name\": \"user_permission_overrides\", \"status\": \"OK\", \"note\": \"User override table verified.\"})\n    except Exception as exc:\n        results.append({\"name\": \"user_permission_overrides\", \"status\": \"ERROR\", \"note\": str(exc)})\n\n    return {\n        \"overall_status\": \"OK\" if all(item[\"status\"] == \"OK\" for item in results) else \"ATTENTION\",\n        \"results\": results,\n    }"
+        },
+        {
+          "file": "database/db.py",
+          "function": "reseed_default_role_permissions",
+          "line": 3121,
+          "has_firm_scope": false,
+          "source_excerpt": "def reseed_default_role_permissions():\n    \"\"\"\n    Rebuilds the default role_permissions matrix.\n    This does not modify app_users or user_permission_overrides.\n    \"\"\"\n    conn = get_connection()\n    cur = conn.cursor()\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS permissions (\n        permission_id TEXT PRIMARY KEY,\n        permission_name TEXT UNIQUE,\n        description TEXT\n    )\n    \"\"\")\n\n    cur.execute(\"\"\"\n    CREATE TABLE IF NOT EXISTS role_permissions (\n        id INTEGER PRIMARY KEY AUTOINCREMENT,\n        role_name TEXT,\n        permission_name TEXT,\n        UNIQUE(role_name, permission_name)\n    )\n    \"\"\")\n\n    default_permissions = [\n        (\"PERM-001\", \"view_dashboard\", \"View dashboards and core system pages\"),\n        (\"PERM-002\", \"create_trust\", \"Create new trust records\"),\n        (\"PERM-003\", \"edit_trust\", \"Edit trust records\"),\n        (\"PERM-004\", \"view_documents\", \"View trust documents\"),\n        (\"PERM-005\", \"generate_documents\", \"Generate trust documents and packets\"),\n        (\"PERM-006\", \"export_documents\", \"Export documents, packets, and snapshots\"),\n        (\"PERM-007\", \"manage_users\", \"Create, edit, and reset app users\"),\n        (\"PERM-008\", \"manage_roles\", \"Create and manage fiduciary role records\"),\n        (\"PERM-009\", \"view_audit\", \"View audit and evidence logs\"),\n        (\"PERM-010\", \"manage_permissions\", \"View and manage permission matrix\"),\n        (\"PERM-011\", \"view_security\", \"View security dashboard and audit integrity\"),\n        (\"PERM-012\", \"manage_tax_reports\", \"Create, view, print, and export K-1 / 1041 reports\"),\n    ]\n\n    default_role_permissions = {\n        \"Admin\": [\n            \"view_dashboard\", \"create_trust\", \"edit_trust\", \"view_documents\",\n            \"generate_documents\", \"export_documents\", \"manage_users\",\n            \"manage_roles\", \"view_audit\", \"manage_permissions\",\n            \"view_security\", \"manage_tax_reports\"\n        ],\n        \"Trustee\": [\n            \"view_dashboard\", \"create_trust\", \"edit_trust\", \"view_documents\",\n            \"generate_documents\", \"export_documents\", \"view_audit\",\n            \"manage_tax_reports\"\n        ],\n        \"Viewer\": [\n            \"view_dashboard\", \"view_documents\"\n        ],\n    }\n\n    cur.executemany(\"\"\"\n        INSERT OR IGNORE INTO permissions (permission_id, permission_name, description)\n        VALUES (?, ?, ?)\n    \"\"\", default_permissions)\n\n    for role_name in default_role_permissions:\n        cur.execute(\"DELETE FROM role_permissions WHERE role_name = ?\", (role_name,))\n\n    inserted = 0\n    for role_name, permission_names in default_role_permissions.items():\n        for permission_name in permission_names:\n            cur.execute(\"\"\"\n                INSERT OR IGNORE INTO role_permissions (role_name, permission_name)\n                VALUES (?, ?)\n            \"\"\", (role_name, permission_name))\n            inserted += 1\n\n    conn.commit()\n    conn.close()\n\n    return {\n        \"overall_status\": \"OK\",\n        \"roles_seeded\": sorted(default_role_permissions.keys()),\n        \"permissions_inserted_or_verified\": len(default_permissions),\n        \"role_permission_rows_written\": inserted,\n        \"note\": \"Default role permission matrix restored. User-specific overrides preserved.\",\n    }"
+        }
+      ]
+    }
+  ]
+}

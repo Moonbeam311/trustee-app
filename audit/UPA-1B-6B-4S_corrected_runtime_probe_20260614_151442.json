@@ -1,0 +1,813 @@
+{
+  "generated_at": "2026-06-14T15:14:46.932360",
+  "status": "ROUTES_ISOLATED_STARTUP_MUTATION_WRONG_FIRM_DEFECT_CONFIRMED",
+  "sources": {
+    "4p": "audit\\UPA-1B-6B-4P_corrected_sandbox_rebuild_20260614_150738.json",
+    "4r": "audit\\UPA-1B-6B-4R_runtime_failure_trace_20260614_151205.json"
+  },
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "source_safety": {
+    "live_database_unchanged": true,
+    "certified_firm1_unchanged": true,
+    "certified_firm2_unchanged": true,
+    "passed": true
+  },
+  "firm1": {
+    "probe": {
+      "firm_id": "FIRM-001",
+      "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4S_20260614_151442\\firm1\\data\\trustee_app_firm1_validation.db",
+      "import_success": true,
+      "binding_verified": true,
+      "configured_cookie_name": "trustee_firm1_session",
+      "startup_error": null,
+      "route_results": [
+        {
+          "route": "/",
+          "status_code": 200,
+          "response_length": 756,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/matters",
+          "status_code": 200,
+          "response_length": 1016,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/trusts",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/workspaces",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/discussions",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/documents",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/workflow-hub",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        }
+      ],
+      "opposite_marker_events": [],
+      "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4S_20260614_151442\\firm1\\data\\trustee_app_firm1_validation.db",
+      "process_returncode": 0,
+      "process_stderr": ""
+    },
+    "route_summary": {
+      "attempted": 7,
+      "completed": 7,
+      "server_errors": 0,
+      "exceptions": 0,
+      "opposite_marker_routes": 0
+    },
+    "database_changes": {
+      "before_total": 24446,
+      "after_total": 24470,
+      "total_delta": 24,
+      "changed_tables": [
+        {
+          "table": "audit_log",
+          "before_count": 291,
+          "after_count": 293,
+          "row_delta": 2,
+          "added_rows": [
+            {
+              "locator": {
+                "id": 369
+              },
+              "values": {
+                "id": 369,
+                "entity_type": "security",
+                "entity_id": "admin123",
+                "action": "role_denied",
+                "note": "Endpoint=home; Role=admin; Allowed=['Admin', 'Trustee', 'Viewer']",
+                "created_at": "2026-06-14 19:14:44",
+                "previous_hash": "dd26cac34d60fce2e6af9a3cf64d2090dc4489e507bdde53d052361bd39d2b85",
+                "entry_hash": "a52080a99d13770ca1f0851dcf864c721e2b3979078fd3befddf2eddb94e3603",
+                "hash_algorithm": "sha256",
+                "firm_id": "FIRM-001"
+              },
+              "canonical": "{\"locator\":{\"id\":369},\"values\":{\"action\":\"role_denied\",\"created_at\":\"2026-06-14 19:14:44\",\"entity_id\":\"admin123\",\"entity_type\":\"security\",\"entry_hash\":\"a52080a99d13770ca1f0851dcf864c721e2b3979078fd3befddf2eddb94e3603\",\"firm_id\":\"FIRM-001\",\"hash_algorithm\":\"sha256\",\"id\":369,\"note\":\"Endpoint=home; Role=admin; Allowed=['Admin', 'Trustee', 'Viewer']\",\"previous_hash\":\"dd26cac34d60fce2e6af9a3cf64d2090dc4489e507bdde53d052361bd39d2b85\"}}"
+            },
+            {
+              "locator": {
+                "id": 370
+              },
+              "values": {
+                "id": 370,
+                "entity_type": "auth",
+                "entity_id": "unknown",
+                "action": "session_timeout",
+                "note": "Session expired due to inactivity",
+                "created_at": "2026-06-14 19:14:44",
+                "previous_hash": "a52080a99d13770ca1f0851dcf864c721e2b3979078fd3befddf2eddb94e3603",
+                "entry_hash": "2502976d3a33fa1f9ecac8d9142a9e57f451b979d3eaa3aaaa149388def0620f",
+                "hash_algorithm": "sha256",
+                "firm_id": "FIRM-001"
+              },
+              "canonical": "{\"locator\":{\"id\":370},\"values\":{\"action\":\"session_timeout\",\"created_at\":\"2026-06-14 19:14:44\",\"entity_id\":\"unknown\",\"entity_type\":\"auth\",\"entry_hash\":\"2502976d3a33fa1f9ecac8d9142a9e57f451b979d3eaa3aaaa149388def0620f\",\"firm_id\":\"FIRM-001\",\"hash_algorithm\":\"sha256\",\"id\":370,\"note\":\"Session expired due to inactivity\",\"previous_hash\":\"a52080a99d13770ca1f0851dcf864c721e2b3979078fd3befddf2eddb94e3603\"}}"
+            }
+          ],
+          "removed_rows": []
+        },
+        {
+          "table": "role_permissions",
+          "before_count": 23873,
+          "after_count": 23895,
+          "row_delta": 22,
+          "added_rows": [
+            {
+              "locator": {
+                "id": 24292
+              },
+              "values": {
+                "id": 24292,
+                "role_name": "Admin",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"locator\":{\"id\":24292},\"values\":{\"id\":24292,\"permission_name\":\"view_dashboard\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24293
+              },
+              "values": {
+                "id": 24293,
+                "role_name": "Admin",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24293},\"values\":{\"id\":24293,\"permission_name\":\"create_trust\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24294
+              },
+              "values": {
+                "id": 24294,
+                "role_name": "Admin",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24294},\"values\":{\"id\":24294,\"permission_name\":\"edit_trust\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24295
+              },
+              "values": {
+                "id": 24295,
+                "role_name": "Admin",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24295},\"values\":{\"id\":24295,\"permission_name\":\"view_documents\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24296
+              },
+              "values": {
+                "id": 24296,
+                "role_name": "Admin",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24296},\"values\":{\"id\":24296,\"permission_name\":\"generate_documents\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24297
+              },
+              "values": {
+                "id": 24297,
+                "role_name": "Admin",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24297},\"values\":{\"id\":24297,\"permission_name\":\"export_documents\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24298
+              },
+              "values": {
+                "id": 24298,
+                "role_name": "Admin",
+                "permission_name": "manage_users"
+              },
+              "canonical": "{\"locator\":{\"id\":24298},\"values\":{\"id\":24298,\"permission_name\":\"manage_users\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24299
+              },
+              "values": {
+                "id": 24299,
+                "role_name": "Admin",
+                "permission_name": "manage_roles"
+              },
+              "canonical": "{\"locator\":{\"id\":24299},\"values\":{\"id\":24299,\"permission_name\":\"manage_roles\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24300
+              },
+              "values": {
+                "id": 24300,
+                "role_name": "Admin",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"locator\":{\"id\":24300},\"values\":{\"id\":24300,\"permission_name\":\"view_audit\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24301
+              },
+              "values": {
+                "id": 24301,
+                "role_name": "Admin",
+                "permission_name": "manage_permissions"
+              },
+              "canonical": "{\"locator\":{\"id\":24301},\"values\":{\"id\":24301,\"permission_name\":\"manage_permissions\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24302
+              },
+              "values": {
+                "id": 24302,
+                "role_name": "Admin",
+                "permission_name": "view_security"
+              },
+              "canonical": "{\"locator\":{\"id\":24302},\"values\":{\"id\":24302,\"permission_name\":\"view_security\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24303
+              },
+              "values": {
+                "id": 24303,
+                "role_name": "Admin",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"locator\":{\"id\":24303},\"values\":{\"id\":24303,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24304
+              },
+              "values": {
+                "id": 24304,
+                "role_name": "Trustee",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"locator\":{\"id\":24304},\"values\":{\"id\":24304,\"permission_name\":\"view_dashboard\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24305
+              },
+              "values": {
+                "id": 24305,
+                "role_name": "Trustee",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24305},\"values\":{\"id\":24305,\"permission_name\":\"create_trust\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24306
+              },
+              "values": {
+                "id": 24306,
+                "role_name": "Trustee",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24306},\"values\":{\"id\":24306,\"permission_name\":\"edit_trust\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24307
+              },
+              "values": {
+                "id": 24307,
+                "role_name": "Trustee",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24307},\"values\":{\"id\":24307,\"permission_name\":\"view_documents\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24308
+              },
+              "values": {
+                "id": 24308,
+                "role_name": "Trustee",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24308},\"values\":{\"id\":24308,\"permission_name\":\"generate_documents\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24309
+              },
+              "values": {
+                "id": 24309,
+                "role_name": "Trustee",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24309},\"values\":{\"id\":24309,\"permission_name\":\"export_documents\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24310
+              },
+              "values": {
+                "id": 24310,
+                "role_name": "Trustee",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"locator\":{\"id\":24310},\"values\":{\"id\":24310,\"permission_name\":\"view_audit\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24311
+              },
+              "values": {
+                "id": 24311,
+                "role_name": "Trustee",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"locator\":{\"id\":24311},\"values\":{\"id\":24311,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24312
+              },
+              "values": {
+                "id": 24312,
+                "role_name": "Viewer",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"locator\":{\"id\":24312},\"values\":{\"id\":24312,\"permission_name\":\"view_dashboard\",\"role_name\":\"Viewer\"}}"
+            },
+            {
+              "locator": {
+                "id": 24313
+              },
+              "values": {
+                "id": 24313,
+                "role_name": "Viewer",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24313},\"values\":{\"id\":24313,\"permission_name\":\"view_documents\",\"role_name\":\"Viewer\"}}"
+            }
+          ],
+          "removed_rows": []
+        }
+      ]
+    },
+    "wrong_firm_insertions": [],
+    "routes_passed": true
+  },
+  "firm2": {
+    "probe": {
+      "firm_id": "FIRM-002",
+      "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4S_20260614_151442\\firm2\\data\\trustee_app_firm2_validation.db",
+      "import_success": true,
+      "binding_verified": true,
+      "configured_cookie_name": "trustee_firm2_session",
+      "startup_error": null,
+      "route_results": [
+        {
+          "route": "/",
+          "status_code": 200,
+          "response_length": 756,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/matters",
+          "status_code": 200,
+          "response_length": 1016,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/trusts",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/workspaces",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/discussions",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/documents",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        },
+        {
+          "route": "/workflow-hub",
+          "status_code": 200,
+          "response_length": 927,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": null
+        }
+      ],
+      "opposite_marker_events": [],
+      "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4S_20260614_151442\\firm2\\data\\trustee_app_firm2_validation.db",
+      "process_returncode": 0,
+      "process_stderr": ""
+    },
+    "route_summary": {
+      "attempted": 7,
+      "completed": 7,
+      "server_errors": 0,
+      "exceptions": 0,
+      "opposite_marker_routes": 0
+    },
+    "database_changes": {
+      "before_total": 24288,
+      "after_total": 24312,
+      "total_delta": 24,
+      "changed_tables": [
+        {
+          "table": "audit_log",
+          "before_count": 77,
+          "after_count": 79,
+          "row_delta": 2,
+          "added_rows": [
+            {
+              "locator": {
+                "id": 369
+              },
+              "values": {
+                "id": 369,
+                "entity_type": "security",
+                "entity_id": "admin123",
+                "action": "role_denied",
+                "note": "Endpoint=home; Role=admin; Allowed=['Admin', 'Trustee', 'Viewer']",
+                "created_at": "2026-06-14 19:14:45",
+                "previous_hash": "60c40b1d8279c816b3baea6a8cbbe59c859204925ae9c815048397482056b4bf",
+                "entry_hash": "2546d9bfc9b617fdb78c2567c743ab7ad7f42247762a8faa7a61e4a74b330ea7",
+                "hash_algorithm": "sha256",
+                "firm_id": "FIRM-002"
+              },
+              "canonical": "{\"locator\":{\"id\":369},\"values\":{\"action\":\"role_denied\",\"created_at\":\"2026-06-14 19:14:45\",\"entity_id\":\"admin123\",\"entity_type\":\"security\",\"entry_hash\":\"2546d9bfc9b617fdb78c2567c743ab7ad7f42247762a8faa7a61e4a74b330ea7\",\"firm_id\":\"FIRM-002\",\"hash_algorithm\":\"sha256\",\"id\":369,\"note\":\"Endpoint=home; Role=admin; Allowed=['Admin', 'Trustee', 'Viewer']\",\"previous_hash\":\"60c40b1d8279c816b3baea6a8cbbe59c859204925ae9c815048397482056b4bf\"}}"
+            },
+            {
+              "locator": {
+                "id": 370
+              },
+              "values": {
+                "id": 370,
+                "entity_type": "auth",
+                "entity_id": "unknown",
+                "action": "session_timeout",
+                "note": "Session expired due to inactivity",
+                "created_at": "2026-06-14 19:14:45",
+                "previous_hash": "2546d9bfc9b617fdb78c2567c743ab7ad7f42247762a8faa7a61e4a74b330ea7",
+                "entry_hash": "4d60e3b873e33edf6246a5356e68e8e3894e6f0dc5cb98264ef495dced156adf",
+                "hash_algorithm": "sha256",
+                "firm_id": "FIRM-001"
+              },
+              "canonical": "{\"locator\":{\"id\":370},\"values\":{\"action\":\"session_timeout\",\"created_at\":\"2026-06-14 19:14:45\",\"entity_id\":\"unknown\",\"entity_type\":\"auth\",\"entry_hash\":\"4d60e3b873e33edf6246a5356e68e8e3894e6f0dc5cb98264ef495dced156adf\",\"firm_id\":\"FIRM-001\",\"hash_algorithm\":\"sha256\",\"id\":370,\"note\":\"Session expired due to inactivity\",\"previous_hash\":\"2546d9bfc9b617fdb78c2567c743ab7ad7f42247762a8faa7a61e4a74b330ea7\"}}"
+            }
+          ],
+          "removed_rows": []
+        },
+        {
+          "table": "role_permissions",
+          "before_count": 23873,
+          "after_count": 23895,
+          "row_delta": 22,
+          "added_rows": [
+            {
+              "locator": {
+                "id": 24292
+              },
+              "values": {
+                "id": 24292,
+                "role_name": "Admin",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"locator\":{\"id\":24292},\"values\":{\"id\":24292,\"permission_name\":\"view_dashboard\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24293
+              },
+              "values": {
+                "id": 24293,
+                "role_name": "Admin",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24293},\"values\":{\"id\":24293,\"permission_name\":\"create_trust\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24294
+              },
+              "values": {
+                "id": 24294,
+                "role_name": "Admin",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24294},\"values\":{\"id\":24294,\"permission_name\":\"edit_trust\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24295
+              },
+              "values": {
+                "id": 24295,
+                "role_name": "Admin",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24295},\"values\":{\"id\":24295,\"permission_name\":\"view_documents\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24296
+              },
+              "values": {
+                "id": 24296,
+                "role_name": "Admin",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24296},\"values\":{\"id\":24296,\"permission_name\":\"generate_documents\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24297
+              },
+              "values": {
+                "id": 24297,
+                "role_name": "Admin",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24297},\"values\":{\"id\":24297,\"permission_name\":\"export_documents\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24298
+              },
+              "values": {
+                "id": 24298,
+                "role_name": "Admin",
+                "permission_name": "manage_users"
+              },
+              "canonical": "{\"locator\":{\"id\":24298},\"values\":{\"id\":24298,\"permission_name\":\"manage_users\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24299
+              },
+              "values": {
+                "id": 24299,
+                "role_name": "Admin",
+                "permission_name": "manage_roles"
+              },
+              "canonical": "{\"locator\":{\"id\":24299},\"values\":{\"id\":24299,\"permission_name\":\"manage_roles\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24300
+              },
+              "values": {
+                "id": 24300,
+                "role_name": "Admin",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"locator\":{\"id\":24300},\"values\":{\"id\":24300,\"permission_name\":\"view_audit\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24301
+              },
+              "values": {
+                "id": 24301,
+                "role_name": "Admin",
+                "permission_name": "manage_permissions"
+              },
+              "canonical": "{\"locator\":{\"id\":24301},\"values\":{\"id\":24301,\"permission_name\":\"manage_permissions\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24302
+              },
+              "values": {
+                "id": 24302,
+                "role_name": "Admin",
+                "permission_name": "view_security"
+              },
+              "canonical": "{\"locator\":{\"id\":24302},\"values\":{\"id\":24302,\"permission_name\":\"view_security\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24303
+              },
+              "values": {
+                "id": 24303,
+                "role_name": "Admin",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"locator\":{\"id\":24303},\"values\":{\"id\":24303,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Admin\"}}"
+            },
+            {
+              "locator": {
+                "id": 24304
+              },
+              "values": {
+                "id": 24304,
+                "role_name": "Trustee",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"locator\":{\"id\":24304},\"values\":{\"id\":24304,\"permission_name\":\"view_dashboard\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24305
+              },
+              "values": {
+                "id": 24305,
+                "role_name": "Trustee",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24305},\"values\":{\"id\":24305,\"permission_name\":\"create_trust\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24306
+              },
+              "values": {
+                "id": 24306,
+                "role_name": "Trustee",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"locator\":{\"id\":24306},\"values\":{\"id\":24306,\"permission_name\":\"edit_trust\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24307
+              },
+              "values": {
+                "id": 24307,
+                "role_name": "Trustee",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24307},\"values\":{\"id\":24307,\"permission_name\":\"view_documents\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24308
+              },
+              "values": {
+                "id": 24308,
+                "role_name": "Trustee",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24308},\"values\":{\"id\":24308,\"permission_name\":\"generate_documents\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24309
+              },
+              "values": {
+                "id": 24309,
+                "role_name": "Trustee",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24309},\"values\":{\"id\":24309,\"permission_name\":\"export_documents\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24310
+              },
+              "values": {
+                "id": 24310,
+                "role_name": "Trustee",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"locator\":{\"id\":24310},\"values\":{\"id\":24310,\"permission_name\":\"view_audit\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24311
+              },
+              "values": {
+                "id": 24311,
+                "role_name": "Trustee",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"locator\":{\"id\":24311},\"values\":{\"id\":24311,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Trustee\"}}"
+            },
+            {
+              "locator": {
+                "id": 24312
+              },
+              "values": {
+                "id": 24312,
+                "role_name": "Viewer",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"locator\":{\"id\":24312},\"values\":{\"id\":24312,\"permission_name\":\"view_dashboard\",\"role_name\":\"Viewer\"}}"
+            },
+            {
+              "locator": {
+                "id": 24313
+              },
+              "values": {
+                "id": 24313,
+                "role_name": "Viewer",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"locator\":{\"id\":24313},\"values\":{\"id\":24313,\"permission_name\":\"view_documents\",\"role_name\":\"Viewer\"}}"
+            }
+          ],
+          "removed_rows": []
+        }
+      ]
+    },
+    "wrong_firm_insertions": [
+      {
+        "table": "audit_log",
+        "locator": {
+          "id": 370
+        },
+        "firm_id": "FIRM-001",
+        "values": {
+          "id": 370,
+          "entity_type": "auth",
+          "entity_id": "unknown",
+          "action": "session_timeout",
+          "note": "Session expired due to inactivity",
+          "created_at": "2026-06-14 19:14:45",
+          "previous_hash": "2546d9bfc9b617fdb78c2567c743ab7ad7f42247762a8faa7a61e4a74b330ea7",
+          "entry_hash": "4d60e3b873e33edf6246a5356e68e8e3894e6f0dc5cb98264ef495dced156adf",
+          "hash_algorithm": "sha256",
+          "firm_id": "FIRM-001"
+        }
+      }
+    ],
+    "routes_passed": true
+  },
+  "authorization": {
+    "startup_mutation_source_trace": true,
+    "runtime_profile_build": false,
+    "production_cutover": false,
+    "live_database_replacement": false
+  }
+}

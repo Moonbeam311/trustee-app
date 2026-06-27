@@ -1,0 +1,239 @@
+{
+  "generated_at": "2026-06-14T12:02:47.694275",
+  "status": "THREE_APPLICATION_ALIGNMENT_REVIEW_REQUIRED",
+  "declared_roles": {
+    "trustee-app-clean": "Firm 1 / primary application",
+    "trustee-app-private": "Firm 2 / private testing application",
+    "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701": "Historical or alignment snapshot pending verification"
+  },
+  "summary": {
+    "applications_expected": 3,
+    "applications_found": 3,
+    "applications_missing": 0,
+    "firm2_only_database_candidates": 0,
+    "mixed_database_instances": 1,
+    "blockers": 2
+  },
+  "applications": {
+    "trustee-app-clean": {
+      "name": "trustee-app-clean",
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean",
+      "exists": true,
+      "is_directory": true,
+      "git": {
+        "is_repository": true,
+        "branch": "strapback/stable-661bb66",
+        "head": "1cf6497598d9d294bc0453847b896316f863c241",
+        "status": "?? audit/",
+        "last_commit": "1cf6497598d9d294bc0453847b896316f863c241|2026-06-13T14:41:22-04:00|Complete IC-1 relationship audit summary and closeout gate"
+      },
+      "files": {
+        "app_py_exists": true,
+        "db_py_exists": true,
+        "requirements_exists": true,
+        "app_py_sha256": "3c7a63c9d85602ba41a4e3eb92198df64c7b3f079ecd834491991deca34bfb7f",
+        "db_py_sha256": "f0e8e153b9cdd7710eecc803194744a368cb831e841a4077a47b87b02e39b1ba",
+        "requirements_sha256": "0728d0b6ccb014b1fbfc9a37b0310d8fa24d15358e3dcc047bb520fcf5333e89"
+      },
+      "config": {
+        "db_path_environment_driven": true,
+        "contains_firm_001": true,
+        "contains_firm_002": true,
+        "session_cookie_configured": false,
+        "secret_key_environment_driven": true,
+        "firm_switching_present": true
+      },
+      "databases": [
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db",
+          "size_bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "tables_with_firm_id": 0,
+          "firm_row_counts": {},
+          "firm_values": [],
+          "null_firm_rows": 0,
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db",
+          "size_bytes": 352256,
+          "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c",
+          "tables": 33,
+          "tables_with_firm_id": 2,
+          "firm_row_counts": {
+            "FIRM-001": 123
+          },
+          "firm_values": [
+            "FIRM-001"
+          ],
+          "null_firm_rows": 3,
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db",
+          "size_bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "tables_with_firm_id": 0,
+          "firm_row_counts": {},
+          "firm_values": [],
+          "null_firm_rows": 0,
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db",
+          "size_bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "tables_with_firm_id": 0,
+          "firm_row_counts": {},
+          "firm_values": [],
+          "null_firm_rows": 0,
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+          "size_bytes": 1667072,
+          "sha256": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+          "tables": 88,
+          "tables_with_firm_id": 68,
+          "firm_row_counts": {
+            "FIRM-001": 395,
+            "FIRM-002": 351
+          },
+          "firm_values": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "null_firm_rows": 6,
+          "errors": []
+        }
+      ]
+    },
+    "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701": {
+      "name": "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701",
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean_ALIGNED_PHASE8E_20260429_072701",
+      "exists": true,
+      "is_directory": true,
+      "git": {
+        "is_repository": true,
+        "branch": "strapback/stable-661bb66",
+        "head": "4a2b5882296981c96a4c8f15339799b7bbd78ff2",
+        "status": "D FULL_SYSTEM_HANDOFF.txt\n D KNOWN_ISSUES_WATCHLIST_V1.txt\n D PHASE9_TRACK_C_STATUS.txt\n D POST_CREATE_CONSOLE_CHECKPOINT.txt\n D QA_CHECKLIST_V1.txt\n D RELEASE_READINESS_V1.txt\n D REPORT_SUBSYSTEM_HANDOFF.txt\n D ROUTE_TEST_MATRIX_V1.txt\n D VERSION_SUMMARY_V1.txt\n D app.py\n D app.py.BACKUP_BEFORE_FIX\n D backups_sqlite_export_center/_nav.html.bak\n D backups_sqlite_export_center/admin_index.html.bak\n D backups_sqlite_export_center/app.py.bak\n D backups_sqlite_export_generation/app.py.bak\n D backups_sqlite_export_generation/export_center.html.bak\n D backups_sqlite_instruments/app.py.bak\n D backups_sqlite_instruments/db.py.bak\n D backups_sqlite_k1/app.py.bak\n D backups_sqlite_k1/db.py.bak\n D backups_sqlite_k1_phase_a/app.py.bak\n D backups_sqlite_k1_phase_a/db.py.bak\n D backups_sqlite_k1_phase_a/k1_readiness.html.bak\n D backups_sqlite_packaging/admin_index.html.bak\n D backups_sqlite_packaging/app.py.bak\n D backups_sqlite_route_cleanup/app.py.bak\n D backups_sqlite_ui_polish/_nav.html.bak\n D backups_sqlite_ui_polish/admin_index.html.bak\n D backups_sqlite_ui_polish/form1041_dashboard.html.bak\n D backups_sqlite_ui_polish/instrument_dashboard.html.bak\n D backups_sqlite_ui_polish/k1_dashboard.html.bak\n D backups_sqlite_ui_polish/workflow_hub.html.bak\n D data/trustee_app.db\n D database/app.db\n D database/db.py\n D deployment/DEPLOYMENT_CHECKLIST.txt\n D deployment/start_gunicorn_example.txt\n D extensions.py\n D pdf_utils.py\n D requirements.txt\n D roadmap/FEATURE_ROADMAP.md\n D roadmap/PRIORITY_QUEUE.txt\n D security/SECURITY_CHECKLIST.txt\n D static/trust_ui.css\n D templates/_create_trust_progress.html\n D templates/_platform_nav.html\n D templates/_platform_shell.html\n D templates/access_denied.html\n D templates/add_property.html\n D templates/admin_index.html\n D templates/analytics_dashboard.html\n D templates/audit_dashboard.html\n D templates/audit_log_viewer.html\n D templates/auth/login.html\n D templates/bootstrap_admin_once.html\n D templates/change_password.html\n D templates/create_trust_launch.html\n D templates/create_trust_step2_grantor.html\n D templates/decision_dashboard.html\n D templates/decision_result.html\n D templates/discussion_dashboard.html\n D templates/discussion_form.html\n D templates/discussion_thread.html\n D templates/document_dashboard.html\n D templates/document_detail.html\n D templates/document_generate_form.html\n D templates/execution_dashboard.html\n D templates/execution_task_detail.html\n D templates/execution_task_form.html\n D templates/fiduciary_dashboard.html\n D templates/financial_summary.html\n D templates/form1041_dashboard.html\n D templates/form1041_preview.html\n D templates/form_1041.html\n D templates/form_guide_form.html\n D templates/genealogy_dashboard.html\n D templates/genealogy_form.html\n D templates/guide_page.html\n D templates/instrument_create.html\n D templates/instrument_dashboard.html\n D templates/instrument_print.html\n D templates/k1_beneficiary_edit.html\n D templates/k1_dashboard.html\n D templates/k1_distribution_edit.html\n D templates/k1_year_end_summary.html\n D templates/learning_article.html\n D templates/learning_article_form.html\n D templates/learning_category.html\n D templates/learning_dashboard.html\n D templates/media_dashboard.html\n D templates/media_form.html\n D templates/portfolio_dashboard.html\n D templates/report_center.html\n D templates/role_dashboard.html\n D templates/security_dashboard.html\n D templates/tax_assistant.html\n D templates/transfer_asset.html\n D templates/transfer_assignment.html\n D templates/transfer_bank_support_docs.html\n D templates/transfer_classification.html\n D templates/transfer_control_evidence.html\n D templates/transfer_detail.html\n D templates/transfer_document_support_docs.html\n D templates/transfer_execution_dashboard.html\n D templates/transfer_instruction_template.html\n D templates/transfer_optional_support_docs.html\n D templates/transfer_personal_property_support_docs.html\n D templates/transfer_print_view.html\n D templates/transfer_recommended_support_docs.html\n D templates/transfer_records.html\n D templates/transfer_review.html\n D templates/transfer_start.html\n D templates/transfer_support_doc_edit.html\n D templates/transfer_template_center.html\n D templates/transfer_trustee_acceptance.html\n D templates/trust_articles_output_surface.html\n D templates/trust_formation_preview_hub.html\n D templates/trust_general_assignment_output_surface.html\n D templates/trust_general_assignment_preview.html\n D templates/trust_map_dashboard.html\n D templates/trust_organizational_minutes_output_surface.html\n D templates/trust_organizational_minutes_preview.html\n D templates/trust_packet_preview.html\n D templates/trust_successor_trustee_output_surface.html\n D templates/trust_successor_trustee_preview.html\n D templates/trust_trustee_acceptance_output_surface.html\n D templates/trust_trustee_acceptance_preview.html\n D templates/trust_type_index.html\n D templates/user_dashboard.html\n D templates/user_edit.html\n D templates/user_form.html\n D templates/user_reset_password.html\n D templates/video_category.html\n D templates/video_dashboard.html\n D templates/video_detail.html\n D templates/visualization_dashboard.html\n D templates/workflow_hub.html\n D templates/workspace_dashboard.html\n D templates/workspace_detail.html\n D templates/workspace_documents.html\n D templates/workspace_tasks.html",
+        "last_commit": "4a2b5882296981c96a4c8f15339799b7bbd78ff2|2026-04-29T07:18:08-04:00|Initialize permission matrix tables on startup"
+      },
+      "files": {
+        "app_py_exists": false,
+        "db_py_exists": false,
+        "requirements_exists": false,
+        "app_py_sha256": null,
+        "db_py_sha256": null,
+        "requirements_sha256": null
+      },
+      "config": {
+        "db_path_environment_driven": false,
+        "contains_firm_001": false,
+        "contains_firm_002": false,
+        "session_cookie_configured": false,
+        "secret_key_environment_driven": false,
+        "firm_switching_present": false
+      },
+      "databases": []
+    },
+    "trustee-app-private": {
+      "name": "trustee-app-private",
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private",
+      "exists": true,
+      "is_directory": true,
+      "git": {
+        "is_repository": true,
+        "branch": "main",
+        "head": "3d20171a529e7f9a6ae20fd616929021e6955a59",
+        "status": "",
+        "last_commit": "3d20171a529e7f9a6ae20fd616929021e6955a59|2026-05-06T13:21:58-04:00|Your message"
+      },
+      "files": {
+        "app_py_exists": true,
+        "db_py_exists": true,
+        "requirements_exists": true,
+        "app_py_sha256": "695c80c85f96a96011255e834582dbd9c07843557aa127d2aeb0be72dce24a47",
+        "db_py_sha256": "63a5f5ad1427cde5074dbd875acfc982d75761046bff931507678911f8d28054",
+        "requirements_sha256": "47d182929448314a27f5a052aed449de4249f33ad46bf0de8521e4b3af6e0c27"
+      },
+      "config": {
+        "db_path_environment_driven": true,
+        "contains_firm_001": true,
+        "contains_firm_002": false,
+        "session_cookie_configured": false,
+        "secret_key_environment_driven": true,
+        "firm_switching_present": true
+      },
+      "databases": [
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\data\\trustee_app.db",
+          "size_bytes": 352256,
+          "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c",
+          "tables": 33,
+          "tables_with_firm_id": 2,
+          "firm_row_counts": {
+            "FIRM-001": 123
+          },
+          "firm_values": [
+            "FIRM-001"
+          ],
+          "null_firm_rows": 3,
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\database\\app.db",
+          "size_bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "tables_with_firm_id": 0,
+          "firm_row_counts": {},
+          "firm_values": [],
+          "null_firm_rows": 0,
+          "errors": []
+        }
+      ]
+    }
+  },
+  "firm2_candidates": [],
+  "mixed_database_apps": [
+    {
+      "application": "trustee-app-clean",
+      "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+    }
+  ],
+  "code_comparisons": [
+    {
+      "left": "trustee-app-clean",
+      "right": "trustee-app-private",
+      "both_exist": true,
+      "app_py_same": false,
+      "db_py_same": false,
+      "requirements_same": false
+    },
+    {
+      "left": "trustee-app-clean",
+      "right": "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701",
+      "both_exist": true,
+      "app_py_same": false,
+      "db_py_same": false,
+      "requirements_same": false
+    },
+    {
+      "left": "trustee-app-private",
+      "right": "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701",
+      "both_exist": true,
+      "app_py_same": false,
+      "db_py_same": false,
+      "requirements_same": false
+    }
+  ],
+  "blockers": [
+    "1 database(s) contain both FIRM-001 and FIRM-002.",
+    "No database containing only FIRM-002 was identified."
+  ]
+}

@@ -1,0 +1,903 @@
+{
+  "generated_at": "2026-06-14T14:42:00.192963",
+  "status": "FINAL_POLICY_PARTIAL_TENANT_PARENT_RESOLUTION_REQUIRED",
+  "source_4h_report": "audit\\UPA-1B-6B-4H_quarantine_evidence_20260614_143925.json",
+  "source_4g_report": "audit\\UPA-1B-6B-4G_extraction_gate_20260614_143113.json",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "database": {
+    "integrity": "ok",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true
+  },
+  "summary": {
+    "rows_adjudicated": 59,
+    "reference_rows_approved_for_both": 32,
+    "tenant_rows_resolved": 0,
+    "tenant_rows_unresolved": 27,
+    "copy_to_both": 32,
+    "copy_to_firm1": 0,
+    "copy_to_firm2": 0,
+    "remaining_quarantine": 27
+  },
+  "action_counts": {
+    "COPY_TO_BOTH": 32,
+    "QUARANTINE_CONFLICT_REVIEW": 10,
+    "QUARANTINE_INTAKE_PARENT_REQUIRED": 16,
+    "QUARANTINE_PERMISSION_OWNER_REQUIRED": 1
+  },
+  "ownership_counts": {
+    "BOTH_GLOBAL": 32,
+    "UNRESOLVED_ACCOUNT": 1,
+    "UNRESOLVED_CONFLICT": 10,
+    "UNRESOLVED_TENANT": 16
+  },
+  "adjudicated_rows": [
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:47:02",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-002"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:47:02",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-003"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:47:02",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-004"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:47:02",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-005"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:47:02",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-001"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-12 22:44:16",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-002"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-12 22:44:16",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-010"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-13 02:11:23",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-011"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-13 02:11:23",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-012"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-13 02:11:23",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-001"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.workspace_id=WS-001 -> ['FIRM-001']",
+        "ID workspace_notes.workspace_id=WS-001 -> ['FIRM-001']",
+        "ID workspaces.workspace_id=WS-001 -> ['FIRM-001']",
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-12 22:44:16",
+        "updated_at=2026-04-12 22:44:16",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-002"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.workspace_id=WS-002 -> ['FIRM-001']",
+        "ID workspace_notes.workspace_id=WS-002 -> ['FIRM-001']",
+        "ID workspaces.workspace_id=WS-002 -> ['FIRM-001']",
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-12 22:44:16",
+        "updated_at=2026-04-12 22:44:16",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-010"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.workspace_id=WS-010 -> ['FIRM-001']",
+        "ID generated_documents.workspace_id=WS-010 -> ['FIRM-001']",
+        "ID workspace_notes.workspace_id=WS-010 -> ['FIRM-001']",
+        "ID workspaces.workspace_id=WS-010 -> ['FIRM-001']",
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-011"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.workspace_id=WS-011 -> ['FIRM-001']",
+        "ID generated_documents.workspace_id=WS-011 -> ['FIRM-001']",
+        "ID workspace_notes.workspace_id=WS-011 -> ['FIRM-001']",
+        "ID workspaces.workspace_id=WS-011 -> ['FIRM-001']",
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-012"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "policy_basis": [
+        "ID execution_tasks.workspace_id=WS-012 -> ['FIRM-001']",
+        "ID generated_documents.workspace_id=WS-012 -> ['FIRM-001']",
+        "ID workspace_notes.workspace_id=WS-012 -> ['FIRM-001']",
+        "ID workspaces.workspace_id=WS-012 -> ['FIRM-001']",
+        "ID execution_tasks.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID generated_documents.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspace_notes.owner_id=ADMIN_OWNER_001 -> ['FIRM-001']",
+        "ID workspaces.owner_id=ADMIN_OWNER_001 -> ['FIRM-001', 'FIRM-002']",
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Conflicting parent ownership."
+      ]
+    },
+    {
+      "table": "document_templates",
+      "row_locator": {
+        "template_id": "TPL-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:54:56",
+        "updated_at=2026-04-12 22:54:56",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "document_templates",
+      "row_locator": {
+        "template_id": "TPL-002"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:54:56",
+        "updated_at=2026-04-12 22:54:56",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "document_templates",
+      "row_locator": {
+        "template_id": "TPL-003"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:54:56",
+        "updated_at=2026-04-12 22:54:56",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 1
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 2
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 3
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 4
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 5
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 6
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 7
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 8
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 9
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 10
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 11
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 12
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 13
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 14
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 15
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:06",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 16
+      },
+      "ownership": "UNRESOLVED_TENANT",
+      "action": "QUARANTINE_INTAKE_PARENT_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "updated_at=2026-05-21T12:14:07",
+        "Operational intake ledger requires a conclusive intake/session parent."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-002"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-003"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-010"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-011"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-012"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-013"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-TRUST-BASICS-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-05-01 18:05:20",
+        "updated_at=2026-05-01 18:05:20",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-CERTIFICATES-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-05-01 18:05:20",
+        "updated_at=2026-05-01 18:05:20",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-1041"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-1040"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-1041X"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-8841"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:20:18",
+        "updated_at=2026-04-12 22:20:18",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-56"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-2848"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-8822B"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-K1"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-TRUST-MINUTES-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-05-01 18:05:20",
+        "updated_at=2026-05-01 18:05:20",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-CERT-REGISTRY-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-05-01 18:05:20",
+        "updated_at=2026-05-01 18:05:20",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-001"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:37:00",
+        "updated_at=2026-04-12 22:37:00",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-002"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-12 22:37:00",
+        "updated_at=2026-04-12 22:37:00",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-010"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-011"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-012"
+      },
+      "ownership": "BOTH_GLOBAL",
+      "action": "COPY_TO_BOTH",
+      "confidence": "HIGH",
+      "policy_basis": [
+        "created_at=2026-04-13 02:11:23",
+        "updated_at=2026-04-13 02:11:23",
+        "Approved reusable reference-content policy."
+      ]
+    },
+    {
+      "table": "user_permission_overrides",
+      "row_locator": {
+        "id": 2
+      },
+      "ownership": "UNRESOLVED_ACCOUNT",
+      "action": "QUARANTINE_PERMISSION_OWNER_REQUIRED",
+      "confidence": "LOW",
+      "policy_basis": [
+        "created_at=2026-04-28 19:26:59",
+        "User-specific permission override cannot be shared globally."
+      ]
+    }
+  ],
+  "sandbox_gate": {
+    "authorized": false,
+    "live_database_modification": "PROHIBITED",
+    "production_cutover": "NOT_AUTHORIZED"
+  }
+}

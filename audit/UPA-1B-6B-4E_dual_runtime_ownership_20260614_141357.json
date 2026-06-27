@@ -1,0 +1,5039 @@
+{
+  "generated_at": "2026-06-14T14:13:58.365775",
+  "status": "OWNERSHIP_MAP_COMPLETE_EXTRACTION_NOT_YET_AUTHORIZED",
+  "repository": {
+    "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean",
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "database": {
+    "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true,
+    "integrity_check": "ok",
+    "table_count": 88
+  },
+  "classification_summary": {
+    "ALL_NULL_FIRM": 1,
+    "DEPENDENT_PARENT_SCOPE": 1,
+    "EMPTY_SCHEMA_REVIEW": 15,
+    "FIRM1_EXPLICIT": 12,
+    "FIRM2_EXPLICIT": 34,
+    "MIXED_EXPLICIT": 11,
+    "PROBABLE_FIRM2_PRIVATE": 2,
+    "PROBABLE_GLOBAL": 2,
+    "UNCLASSIFIED_UNSCOPED": 6,
+    "UNSCOPED_SENSITIVE_TENANT_DATA": 4
+  },
+  "eligibility_summary": {
+    "COPY_SCHEMA_ONLY_PENDING_POLICY": 15,
+    "COPY_TO_BOTH_AFTER_GLOBAL_POLICY_REVIEW": 2,
+    "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS": 11,
+    "FIRM1_ONLY": 12,
+    "FIRM2_ONLY": 34,
+    "FIRM2_PENDING_PARENT_VALIDATION": 2,
+    "INHERIT_FROM_PARENT_AFTER_GRAPH_VALIDATION": 1,
+    "MANUAL_CLASSIFICATION_REQUIRED": 6,
+    "MANUAL_OR_PARENT_OWNERSHIP_REVIEW": 4,
+    "OWNERSHIP_REVIEW_REQUIRED": 1
+  },
+  "explicit_firm1_tables": [
+    "generated_documents",
+    "intake_draft_readiness_ledger",
+    "intake_final_draft_admin_approvals",
+    "intake_final_draft_completion_gate",
+    "intake_final_draft_prep_gate",
+    "intake_final_draft_sections",
+    "intake_final_draft_version_register",
+    "intake_review_gate_ledger",
+    "ledger_entries",
+    "media_records",
+    "trust_minutes",
+    "workspace_notes"
+  ],
+  "explicit_firm2_tables": [
+    "archive_packet_finalization",
+    "asset_intake",
+    "continuity_custody_log",
+    "controlled_docx_exports",
+    "controlled_export_prep",
+    "controlled_pdf_exports",
+    "document_intake",
+    "docx_verification_gate",
+    "draft_sessions",
+    "draft_variable_bindings",
+    "dynamic_draft_previews",
+    "execution_event_log",
+    "execution_packet_prep",
+    "final_record_archive",
+    "guided_draft_workspace",
+    "identity_intake",
+    "intake_answers",
+    "intake_deep_review",
+    "intake_document_draft_answers",
+    "intake_drafting_prep_gate",
+    "intake_followup_tasks",
+    "intake_lane_events",
+    "intake_orchestration",
+    "intake_review_notes",
+    "intake_scores",
+    "intake_sessions",
+    "intake_snapshots",
+    "intake_translations",
+    "intake_workflow_bridge_answers",
+    "matter_events",
+    "matter_relationships",
+    "matters",
+    "pdf_execution_approval_gate",
+    "section_review_gate"
+  ],
+  "mixed_tables": [
+    "app_users",
+    "audit_log",
+    "execution_tasks",
+    "intake_document_recommendations",
+    "intake_export_logs",
+    "intake_final_draft_gate_actions",
+    "intake_review_gate_actions",
+    "properties",
+    "transfers",
+    "trusts",
+    "workspaces"
+  ],
+  "probable_global_tables": [
+    "permissions",
+    "role_permissions"
+  ],
+  "dependent_tables": [
+    "transfer_actions"
+  ],
+  "probable_private_tables": [
+    "transfer_records",
+    "trust_article_assignments"
+  ],
+  "ambiguous_tables": [
+    "decision_rules",
+    "discussion_messages",
+    "discussion_threads",
+    "document_templates",
+    "documents",
+    "intake_module_ledger",
+    "learning_articles",
+    "tax_form_guides",
+    "trust_articles",
+    "tutorial_videos",
+    "user_permission_overrides"
+  ],
+  "null_firm_tables": {
+    "audit_log": 3,
+    "documents": 3
+  },
+  "admin123_summary": {
+    "FIRM-001": 11,
+    "FIRM-002": 231,
+    "[NO_FIRM_COLUMN]": 23
+  },
+  "table_map": {
+    "accounts": {
+      "row_count": 0,
+      "columns": [
+        "account_id",
+        "trust_id",
+        "property_id",
+        "account_type",
+        "institution",
+        "account_label",
+        "masked_number",
+        "purpose",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "account_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "app_users": {
+      "row_count": 7,
+      "columns": [
+        "user_id",
+        "username",
+        "password_hash",
+        "role_name",
+        "status",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "user_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 5,
+        "FIRM-002": 2
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "username",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "username": "admin",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "username": "trustee",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "username": "viewer",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "username": "trustee2",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "username": "testadmin1",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "username": "lim3",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "username": "admin123",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "archive_export_history": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "export_id",
+        "export_type",
+        "transfer_id",
+        "trust_id",
+        "firm_id",
+        "generated_by",
+        "generated_at",
+        "export_scope",
+        "export_hash",
+        "filename",
+        "route_path",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "archive_packet_finalization": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "finalization_id",
+        "property_id",
+        "trust_id",
+        "packet_status",
+        "integrity_status",
+        "resolution_status",
+        "archive_badge",
+        "finalized_status",
+        "finalized_by",
+        "finalized_at",
+        "notes",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "trust_id": "TR-022",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "asset_intake": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "asset_id",
+        "intake_id",
+        "firm_id",
+        "asset_category",
+        "asset_name",
+        "ownership_type",
+        "estimated_value",
+        "has_title_document",
+        "has_beneficiary_designation",
+        "has_existing_transfer_plan",
+        "risk_level",
+        "notes",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "audit_log": {
+      "row_count": 368,
+      "columns": [
+        "id",
+        "entity_type",
+        "entity_id",
+        "action",
+        "note",
+        "created_at",
+        "previous_hash",
+        "entry_hash",
+        "hash_algorithm",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "[NULL]": 3,
+        "FIRM-001": 288,
+        "FIRM-002": 77
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 3,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 4,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 5,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 6,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 7,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 8,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 9,
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 10,
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "beneficiaries": {
+      "row_count": 0,
+      "columns": [
+        "beneficiary_id",
+        "trust_id",
+        "full_name",
+        "tax_id",
+        "beneficiary_type",
+        "email",
+        "address",
+        "allocation_method",
+        "fixed_percentage",
+        "is_active",
+        "notes",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "beneficiary_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "chart_of_accounts": {
+      "row_count": 0,
+      "columns": [
+        "coa_id",
+        "trust_id",
+        "account_code",
+        "account_name",
+        "account_group",
+        "normal_balance",
+        "is_active"
+      ],
+      "primary_key_columns": [
+        "coa_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "continuity_custody_log": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "custody_event_id",
+        "property_id",
+        "trust_id",
+        "event_date",
+        "custody_action",
+        "from_party",
+        "to_party",
+        "acting_capacity",
+        "location_reference",
+        "supporting_document_reference",
+        "notes",
+        "recorded_by",
+        "firm_id",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 3
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "trust_id": "TR-022",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "trust_id": "TR-022",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "trust_id": "TR-022",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "controlled_docx_exports": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "export_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "export_prep_id",
+        "document_control_id",
+        "document_type",
+        "version_label",
+        "file_name",
+        "file_path",
+        "export_status",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "controlled_export_prep": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "export_prep_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_type",
+        "export_status",
+        "document_control_id",
+        "version_label",
+        "caf_number",
+        "crid_number",
+        "postal_tracking_reference",
+        "export_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "controlled_pdf_exports": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "pdf_export_id",
+        "export_id",
+        "verification_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_control_id",
+        "document_type",
+        "version_label",
+        "source_docx_file_name",
+        "source_docx_file_path",
+        "pdf_file_name",
+        "pdf_file_path",
+        "pdf_status",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "decision_rules": {
+      "row_count": 5,
+      "columns": [
+        "rule_id",
+        "goal",
+        "asset_type",
+        "control_level",
+        "suggested_trust_type",
+        "suggested_forms",
+        "considerations",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "rule_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "rule_id": "RULE-001",
+          "goal": "estate_planning",
+          "asset_type": "general_assets",
+          "control_level": "high_control"
+        },
+        {
+          "rule_id": "RULE-002",
+          "goal": "asset_protection",
+          "asset_type": "real_estate",
+          "control_level": "reduced_personal_control"
+        },
+        {
+          "rule_id": "RULE-003",
+          "goal": "real_property_holding",
+          "asset_type": "real_estate",
+          "control_level": "management_focus"
+        },
+        {
+          "rule_id": "RULE-004",
+          "goal": "insurance_planning",
+          "asset_type": "insurance_policy",
+          "control_level": "reduced_personal_control"
+        },
+        {
+          "rule_id": "RULE-005",
+          "goal": "tax_planning",
+          "asset_type": "mixed_assets",
+          "control_level": "structured_control"
+        }
+      ],
+      "classification": "UNCLASSIFIED_UNSCOPED",
+      "extraction_eligibility": "MANUAL_CLASSIFICATION_REQUIRED"
+    },
+    "discussion_messages": {
+      "row_count": 5,
+      "columns": [
+        "message_id",
+        "thread_id",
+        "parent_message_id",
+        "author",
+        "body",
+        "created_at",
+        "owner_id"
+      ],
+      "primary_key_columns": [
+        "message_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "message_id": "MSG-001",
+          "thread_id": "THREAD-001",
+          "parent_message_id": "",
+          "author": "admin"
+        },
+        {
+          "message_id": "MSG-002",
+          "thread_id": "THREAD-002",
+          "parent_message_id": "",
+          "author": "admin"
+        },
+        {
+          "message_id": "MSG-010",
+          "thread_id": "THREAD-010",
+          "parent_message_id": "",
+          "author": "admin"
+        },
+        {
+          "message_id": "MSG-011",
+          "thread_id": "THREAD-011",
+          "parent_message_id": "",
+          "author": "admin"
+        },
+        {
+          "message_id": "MSG-012",
+          "thread_id": "THREAD-012",
+          "parent_message_id": "",
+          "author": "admin"
+        }
+      ],
+      "classification": "UNCLASSIFIED_UNSCOPED",
+      "extraction_eligibility": "MANUAL_CLASSIFICATION_REQUIRED"
+    },
+    "discussion_threads": {
+      "row_count": 5,
+      "columns": [
+        "thread_id",
+        "workspace_id",
+        "title",
+        "category",
+        "related_trust_type",
+        "related_form",
+        "created_by",
+        "status",
+        "created_at",
+        "updated_at",
+        "owner_id"
+      ],
+      "primary_key_columns": [
+        "thread_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "workspace_id": "WS-001",
+          "title": "Revocable vs Irrevocable design questions"
+        },
+        {
+          "workspace_id": "WS-002",
+          "title": "Which filings matter first for fiduciary planning?"
+        },
+        {
+          "workspace_id": "WS-010",
+          "title": "How should land-holding questions be organized before formal drafting?"
+        },
+        {
+          "workspace_id": "WS-011",
+          "title": "What fiduciary questions arise in insurance planning structure?"
+        },
+        {
+          "workspace_id": "WS-012",
+          "title": "Which reports should be reviewed first in a filing-focused workspace?"
+        }
+      ],
+      "classification": "UNCLASSIFIED_UNSCOPED",
+      "extraction_eligibility": "MANUAL_CLASSIFICATION_REQUIRED"
+    },
+    "distributions": {
+      "row_count": 0,
+      "columns": [
+        "distribution_id",
+        "trust_id",
+        "beneficiary_id",
+        "tax_year",
+        "distribution_date",
+        "distribution_type",
+        "description",
+        "gross_amount",
+        "taxable_amount",
+        "principal_amount",
+        "source_reference",
+        "status",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "distribution_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "document_intake": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "document_id",
+        "intake_id",
+        "firm_id",
+        "document_category",
+        "document_name",
+        "file_name",
+        "upload_status",
+        "review_status",
+        "readiness_impact",
+        "notes",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "file_name",
+          "marker": "TR-022",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "document_id": "DOC-DE12751E",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "document_templates": {
+      "row_count": 3,
+      "columns": [
+        "template_id",
+        "name",
+        "category",
+        "trust_type",
+        "description",
+        "template_body",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "template_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "name": "Trust Planning Memo"
+        },
+        {
+          "name": "Trustee Acceptance Draft"
+        },
+        {
+          "name": "Filing Checklist Draft"
+        }
+      ],
+      "classification": "UNSCOPED_SENSITIVE_TENANT_DATA",
+      "extraction_eligibility": "MANUAL_OR_PARENT_OWNERSHIP_REVIEW"
+    },
+    "documents": {
+      "row_count": 3,
+      "columns": [
+        "document_id",
+        "trust_id",
+        "property_id",
+        "account_id",
+        "document_category",
+        "document_title",
+        "notes",
+        "original_filename",
+        "stored_filename",
+        "file_path",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "document_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "[NULL]": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 3
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "TR-022",
+          "document_id": "DOC-001",
+          "firm_id": null
+        },
+        {
+          "trust_id": "TR-022",
+          "document_id": "DOC-002",
+          "firm_id": null
+        },
+        {
+          "trust_id": "TR-022",
+          "document_id": "DOC-003",
+          "firm_id": null
+        }
+      ],
+      "classification": "ALL_NULL_FIRM",
+      "extraction_eligibility": "OWNERSHIP_REVIEW_REQUIRED"
+    },
+    "docx_verification_gate": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "verification_id",
+        "export_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_control_id",
+        "file_name",
+        "file_path",
+        "file_exists_status",
+        "reviewer_name",
+        "review_status",
+        "issue_flag",
+        "correction_required",
+        "reviewer_notes",
+        "pdf_gate",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "draft_sessions": {
+      "row_count": 2,
+      "columns": [
+        "id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_type",
+        "workflow_status",
+        "drafting_mode",
+        "launched_by",
+        "launch_notes",
+        "generated_document_count",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 2
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "draft_variable_bindings": {
+      "row_count": 8,
+      "columns": [
+        "id",
+        "binding_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_type",
+        "variable_key",
+        "variable_value",
+        "variable_source",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 8
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "variable_value",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 8,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "dynamic_draft_previews": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "preview_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_type",
+        "preview_status",
+        "preview_body",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "preview_body",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "execution_event_log": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "event_id",
+        "packet_id",
+        "pdf_export_id",
+        "export_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_control_id",
+        "document_type",
+        "version_label",
+        "signer_name",
+        "signer_capacity",
+        "signature_completed",
+        "witness_completed",
+        "witness_name",
+        "notary_completed",
+        "notary_name",
+        "notary_commission_reference",
+        "jurat_acknowledgment_completed",
+        "execution_date",
+        "execution_location",
+        "delivery_method",
+        "custody_status",
+        "postal_tracking_reference",
+        "caf_number",
+        "crid_number",
+        "finalization_status",
+        "finalization_gate",
+        "event_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "signer_name",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "execution_packet_prep": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "packet_id",
+        "approval_id",
+        "pdf_export_id",
+        "export_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_control_id",
+        "document_type",
+        "version_label",
+        "signer_name",
+        "signer_capacity",
+        "witness_required",
+        "notary_required",
+        "jurat_required",
+        "execution_location",
+        "execution_date",
+        "delivery_method",
+        "caf_number",
+        "crid_number",
+        "postal_tracking_reference",
+        "packet_status",
+        "execution_readiness",
+        "preparation_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "signer_name",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "execution_tasks": {
+      "row_count": 7,
+      "columns": [
+        "task_id",
+        "workspace_id",
+        "trust_id",
+        "title",
+        "task_type",
+        "description",
+        "related_form",
+        "related_report",
+        "priority",
+        "status",
+        "due_date",
+        "assigned_to",
+        "created_at",
+        "updated_at",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "task_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 6,
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "owner_id",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "trust_id": "",
+          "workspace_id": "WS-001",
+          "title": "Compare revocable and irrevocable structure",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "WS-002",
+          "title": "Review fiduciary filing sequence",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "",
+          "title": "Review Learning Hub foundation content",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "WS-010",
+          "title": "Review land trust article and guide set",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "WS-011",
+          "title": "Clarify fiduciary authority boundaries",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "WS-012",
+          "title": "Sequence filing guides for review",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "FIRM-002",
+          "title": "RevocableTrust Creation",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "fiduciaries": {
+      "row_count": 0,
+      "columns": [
+        "fiduciary_id",
+        "full_name",
+        "role_title",
+        "authority_scope",
+        "trust_id",
+        "appointment_date",
+        "effective_date",
+        "status",
+        "notes",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "fiduciary_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "final_record_archive": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "final_record_id",
+        "event_id",
+        "packet_id",
+        "pdf_export_id",
+        "export_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_control_id",
+        "document_type",
+        "version_label",
+        "final_status",
+        "archive_status",
+        "seal_reference",
+        "custody_status",
+        "delivery_method",
+        "postal_tracking_reference",
+        "caf_number",
+        "crid_number",
+        "final_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "genealogy_records": {
+      "row_count": 0,
+      "columns": [
+        "genealogy_id",
+        "trust_id",
+        "full_name",
+        "lineage_role",
+        "birth_date",
+        "death_date",
+        "parent_1",
+        "parent_2",
+        "spouse",
+        "notes",
+        "evidence_notes",
+        "source_platform",
+        "source_title",
+        "source_reference",
+        "archive_date",
+        "verification_status",
+        "trace_summary",
+        "guidance_prompt"
+      ],
+      "primary_key_columns": [
+        "genealogy_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "generated_documents": {
+      "row_count": 3,
+      "columns": [
+        "document_id",
+        "workspace_id",
+        "trust_id",
+        "template_id",
+        "title",
+        "content",
+        "status",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "document_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "",
+          "workspace_id": "WS-010",
+          "document_id": "DOC-010",
+          "title": "Land Holding Planning Memo",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "WS-011",
+          "document_id": "DOC-011",
+          "title": "Insurance Trustee Acceptance Draft",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "",
+          "workspace_id": "WS-012",
+          "document_id": "DOC-012",
+          "title": "Tax Workflow Filing Checklist",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "guided_draft_workspace": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_type",
+        "primary_person",
+        "trustee_candidate",
+        "successor_trustee_candidate",
+        "primary_goal",
+        "secondary_goal",
+        "asset_summary",
+        "document_summary",
+        "workspace_status",
+        "generated_output_status",
+        "draft_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trustee_candidate",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "identity_intake": {
+      "row_count": 2,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "intake_type",
+        "primary_full_name",
+        "preferred_name",
+        "marital_status",
+        "state_jurisdiction",
+        "has_spouse",
+        "has_children",
+        "trustee_candidate",
+        "successor_trustee_candidate",
+        "primary_goal",
+        "secondary_goal",
+        "notes",
+        "completion_status",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 2
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trustee_candidate",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 2
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-3D6CD73B",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "instruments": {
+      "row_count": 0,
+      "columns": [
+        "instrument_id",
+        "trust_id",
+        "instrument_number",
+        "instrument_type",
+        "issue_date",
+        "maturity_date",
+        "face_value",
+        "backing_type",
+        "backing_reference",
+        "status",
+        "affidavit_reference",
+        "custody_reference",
+        "notes",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "instrument_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "intake_answers": {
+      "row_count": 50,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "question_key",
+        "answer_key",
+        "answer_label",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 50
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 50
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_deep_review": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "review_id",
+        "intake_id",
+        "firm_id",
+        "reviewer_name",
+        "review_status",
+        "issue_flag",
+        "correction_required",
+        "reviewer_notes",
+        "drafting_gate",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_document_draft_answers": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "question_key",
+        "answer_key",
+        "answer_label",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 3
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_document_recommendations": {
+      "row_count": 15,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "workflow_key",
+        "title",
+        "workflow_type",
+        "priority",
+        "confidence",
+        "reason",
+        "source",
+        "status",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 8,
+        "FIRM-002": 7
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-001",
+          "count": 8
+        },
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 7
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "title": "Professional Review Checklist",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "title": "Beneficiary / Guardian Planning",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "title": "Asset Inventory Packet",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "title": "Next Session Agenda",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "title": "Business Continuity Packet",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "title": "Real Property Review",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "title": "Foundational Estate Planning Package",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0005",
+          "title": "Existing Document Audit",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0005",
+          "title": "Certificate of Trust",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0005",
+          "title": "Trust Articles / Article Builder",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "intake_draft_readiness_ledger": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "firm_id",
+        "draft_packet_type",
+        "readiness",
+        "open_issue_count",
+        "open_task_count",
+        "completed_task_count",
+        "document_count",
+        "drafting_question_count",
+        "status",
+        "created_at",
+        "updated_at",
+        "updated_by",
+        "notes"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "updated_by",
+          "firm_id": "FIRM-001",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_drafting_prep_gate": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "prep_id",
+        "intake_id",
+        "firm_id",
+        "selected_document_type",
+        "drafting_purpose",
+        "required_inputs",
+        "missing_inputs",
+        "reviewer_approval",
+        "drafting_status",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_export_logs": {
+      "row_count": 10,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "export_type",
+        "export_status",
+        "file_path",
+        "message",
+        "created_at",
+        "created_by",
+        "version_number",
+        "packet_type"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 7,
+        "FIRM-002": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 3
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "intake_final_draft_admin_approvals": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "approval_status",
+        "approval_note",
+        "gate_status_before",
+        "gate_status_after",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_final_draft_completion_actions": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "action_status",
+        "note",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "intake_final_draft_completion_gate": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "gate_status",
+        "gate_reason",
+        "total_sections",
+        "ready_sections",
+        "not_ready_sections",
+        "latest_version_label",
+        "completion_note",
+        "completed_at",
+        "completed_by",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_final_draft_gate_actions": {
+      "row_count": 6,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "action_key",
+        "action_label",
+        "note",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1,
+        "FIRM-002": 5
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 5
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "intake_final_draft_prep_gate": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "gate_status",
+        "gate_reason",
+        "questionnaire_complete",
+        "open_issues_reviewed",
+        "open_tasks_reviewed",
+        "professional_review_recorded",
+        "required_documents_acknowledged",
+        "admin_approved",
+        "approval_note",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_final_draft_sections": {
+      "row_count": 7,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "section_order",
+        "section_heading",
+        "section_source",
+        "section_body",
+        "section_status",
+        "created_at",
+        "updated_at",
+        "updated_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 7
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "updated_by",
+          "firm_id": "FIRM-001",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_final_draft_version_register": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "version_label",
+        "export_type",
+        "file_path",
+        "preview_status",
+        "ready_count",
+        "total_sections",
+        "preparation_classification",
+        "finality_status",
+        "created_at",
+        "created_by",
+        "notes"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_followup_tasks": {
+      "row_count": 28,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "task_type",
+        "priority",
+        "status",
+        "title",
+        "description",
+        "source",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "completed_at",
+        "completed_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 28
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 28
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Asset statements",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Titles",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Deeds or title records",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Tax notices",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Tax filings",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Operating agreement",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "title": "Gather document: Insurance policies",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0005",
+          "title": "Review flag: Minor child planning should be reviewed",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0005",
+          "title": "Review flag: Tax records should be reviewed by a qualified professional",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0005",
+          "title": "Review flag: Business liability should be reviewed",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_lane_events": {
+      "row_count": 5,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "event_type",
+        "event_label",
+        "event_value",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 5
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 5
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0002",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0004",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_module_ledger": {
+      "row_count": 16,
+      "columns": [
+        "id",
+        "module_code",
+        "module_name",
+        "status",
+        "status_label",
+        "description",
+        "locked_at",
+        "updated_at",
+        "updated_by",
+        "notes"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "updated_by",
+          "firm_id": "[NO_FIRM_COLUMN]",
+          "count": 16
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        }
+      ],
+      "classification": "UNSCOPED_SENSITIVE_TENANT_DATA",
+      "extraction_eligibility": "MANUAL_OR_PARENT_OWNERSHIP_REVIEW"
+    },
+    "intake_orchestration": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "identity_status",
+        "asset_status",
+        "document_status",
+        "review_status",
+        "drafting_status",
+        "execution_status",
+        "archive_status",
+        "overall_stage",
+        "readiness_label",
+        "next_recommended_action",
+        "next_route",
+        "complexity_level",
+        "urgency_level",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_review_gate_actions": {
+      "row_count": 2,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "gate_name",
+        "firm_id",
+        "action_key",
+        "action_label",
+        "resulting_status",
+        "note",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1,
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "intake_review_gate_ledger": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "document_key",
+        "firm_id",
+        "gate_name",
+        "gate_status",
+        "gate_reason",
+        "missing_answer_count",
+        "open_issue_count",
+        "open_task_count",
+        "document_status",
+        "created_at",
+        "updated_at",
+        "updated_by",
+        "notes"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "updated_by",
+          "firm_id": "FIRM-001",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "intake_review_notes": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "note_type",
+        "priority",
+        "followup_status",
+        "note_body",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_scores": {
+      "row_count": 4,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "complexity_score",
+        "complexity_level",
+        "urgency_score",
+        "urgency_level",
+        "readiness_score",
+        "readiness_level",
+        "scoring_notes",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 4
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 4
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0004",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0002",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_sessions": {
+      "row_count": 5,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "client_id",
+        "intake_lane",
+        "user_posture",
+        "default_depth",
+        "risk_posture",
+        "professional_review_recommended",
+        "automation_limits",
+        "next_screen",
+        "status",
+        "created_at",
+        "updated_at",
+        "completed_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 5
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 5
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0002",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0004",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_snapshots": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "snapshot_json",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0002",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_translations": {
+      "row_count": 97,
+      "columns": [
+        "id",
+        "intake_id",
+        "firm_id",
+        "source_key",
+        "system_category",
+        "system_meaning",
+        "module_trigger",
+        "document_request",
+        "next_session",
+        "risk_flag",
+        "created_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 97
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 97
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 10,
+          "intake_id": "INTAKE-0003",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "intake_workflow_bridge_answers": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "intake_id",
+        "workflow_key",
+        "firm_id",
+        "question_key",
+        "answer_key",
+        "answer_label",
+        "created_at",
+        "updated_at",
+        "created_by"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 3
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 7,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 8,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 9,
+          "intake_id": "INTAKE-0005",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "learning_articles": {
+      "row_count": 9,
+      "columns": [
+        "article_id",
+        "title",
+        "category",
+        "subcategory",
+        "trust_type",
+        "summary",
+        "body",
+        "difficulty_level",
+        "related_forms",
+        "related_reports",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "article_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "title": "What Is a Trust?"
+        },
+        {
+          "title": "Roles in Trust Administration"
+        },
+        {
+          "title": "Revocable vs Irrevocable Trusts"
+        },
+        {
+          "title": "Land Trust Overview"
+        },
+        {
+          "title": "Insurance Trust Overview"
+        },
+        {
+          "title": "Simple vs Complex Trusts"
+        },
+        {
+          "title": "Fiduciary Duties in Practice"
+        },
+        {
+          "title": "Trust Administration Basics"
+        },
+        {
+          "title": "Execution Certificates and Audit Trails"
+        }
+      ],
+      "classification": "UNCLASSIFIED_UNSCOPED",
+      "extraction_eligibility": "MANUAL_CLASSIFICATION_REQUIRED"
+    },
+    "ledger_entries": {
+      "row_count": 1,
+      "columns": [
+        "entry_id",
+        "trust_id",
+        "property_id",
+        "account_id",
+        "entry_type",
+        "amount",
+        "entry_date",
+        "description",
+        "entry_category",
+        "accounting_method",
+        "recognition_date",
+        "due_date",
+        "paid_date",
+        "chart_account",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "entry_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "TR-001",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "matter_events": {
+      "row_count": 15,
+      "columns": [
+        "id",
+        "event_id",
+        "matter_id",
+        "firm_id",
+        "event_type",
+        "actor",
+        "authority_basis",
+        "description",
+        "linked_record_type",
+        "linked_record_id",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 15
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "matter_id",
+          "marker": "MAT-000001",
+          "count": 15
+        },
+        {
+          "column": "actor",
+          "marker": "Luna Mishoe",
+          "count": 1
+        },
+        {
+          "column": "authority_basis",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "description",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        },
+        {
+          "column": "description",
+          "marker": "MOORE-MISHOE FAMILY TRUST",
+          "count": 7
+        },
+        {
+          "column": "description",
+          "marker": "LUNA ISAAC MISHOE III Revocable Trust",
+          "count": 1
+        },
+        {
+          "column": "description",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "description",
+          "marker": "MRL-000001",
+          "count": 10
+        },
+        {
+          "column": "description",
+          "marker": "TR-022",
+          "count": 4
+        },
+        {
+          "column": "linked_record_id",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "linked_record_id",
+          "marker": "TR-022",
+          "count": 4
+        }
+      ],
+      "admin123_distribution": [
+        {
+          "column": "actor",
+          "firm_id": "FIRM-002",
+          "count": 13
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 4,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 5,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 6,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 7,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 8,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 9,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 10,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "matter_relationships": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "relationship_id",
+        "matter_id",
+        "firm_id",
+        "relationship_type",
+        "linked_record_id",
+        "display_label",
+        "purpose_basis",
+        "created_by",
+        "status",
+        "created_at",
+        "updated_at",
+        "verification_status",
+        "verification_basis",
+        "verified_by",
+        "verified_at",
+        "link_validation_status",
+        "link_validation_message",
+        "link_validated_by",
+        "link_validated_at",
+        "previous_linked_record_id",
+        "relink_reason",
+        "relinked_by",
+        "relinked_at",
+        "governance_clearance_status",
+        "governance_clearance_note",
+        "governance_cleared_by",
+        "governance_cleared_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "relationship_id",
+          "marker": "MRL-000001",
+          "count": 1
+        },
+        {
+          "column": "matter_id",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "linked_record_id",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "display_label",
+          "marker": "MOORE-MISHOE FAMILY TRUST",
+          "count": 1
+        },
+        {
+          "column": "purpose_basis",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "verification_basis",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        },
+        {
+          "column": "verification_basis",
+          "marker": "LUNA ISAAC MISHOE III Revocable Trust",
+          "count": 1
+        },
+        {
+          "column": "verification_basis",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "verification_basis",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "link_validation_message",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "relink_reason",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "governance_clearance_note",
+          "marker": "MRL-000001",
+          "count": 1
+        },
+        {
+          "column": "governance_clearance_note",
+          "marker": "TR-022",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 1
+        },
+        {
+          "column": "verified_by",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "matter_id": "MAT-000001",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "matters": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "matter_id",
+        "firm_id",
+        "title",
+        "matter_type",
+        "status",
+        "priority",
+        "jurisdiction",
+        "lead_fiduciary",
+        "governance_state",
+        "risk_level",
+        "archive_status",
+        "purpose",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "matter_id",
+          "marker": "MAT-000001",
+          "count": 1
+        },
+        {
+          "column": "title",
+          "marker": "MOORE-MISHOE FAMILY TRUST",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "matter_id": "MAT-000001",
+          "title": "MOORE-MISHOE FAMILY TRUST",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "media_records": {
+      "row_count": 1,
+      "columns": [
+        "media_id",
+        "trust_id",
+        "related_entity_type",
+        "related_entity_id",
+        "media_type",
+        "file_path",
+        "category",
+        "description",
+        "created_at",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "media_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "TR-001",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "pdf_execution_approval_gate": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "approval_id",
+        "pdf_export_id",
+        "export_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_control_id",
+        "pdf_file_name",
+        "pdf_file_path",
+        "file_exists_status",
+        "reviewer_name",
+        "review_status",
+        "issue_flag",
+        "correction_required",
+        "reviewer_notes",
+        "execution_gate",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 3
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 2,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "id": 3,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "permissions": {
+      "row_count": 15,
+      "columns": [
+        "permission_id",
+        "permission_name",
+        "description"
+      ],
+      "primary_key_columns": [
+        "permission_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "permission_id": "PERM-001",
+          "permission_name": "view_dashboard",
+          "description": "View dashboards and core system pages"
+        },
+        {
+          "permission_id": "PERM-002",
+          "permission_name": "create_trust",
+          "description": "Create new trust records"
+        },
+        {
+          "permission_id": "PERM-003",
+          "permission_name": "edit_trust",
+          "description": "Edit trust records"
+        },
+        {
+          "permission_id": "PERM-004",
+          "permission_name": "view_documents",
+          "description": "View trust documents"
+        },
+        {
+          "permission_id": "PERM-005",
+          "permission_name": "generate_documents",
+          "description": "Generate trust documents and packets"
+        },
+        {
+          "permission_id": "PERM-006",
+          "permission_name": "export_documents",
+          "description": "Export documents, packets, and snapshots"
+        },
+        {
+          "permission_id": "PERM-007",
+          "permission_name": "manage_users",
+          "description": "Create, edit, and reset app users"
+        },
+        {
+          "permission_id": "PERM-008",
+          "permission_name": "manage_roles",
+          "description": "Create and manage fiduciary role records"
+        },
+        {
+          "permission_id": "PERM-009",
+          "permission_name": "view_audit",
+          "description": "View audit and evidence logs"
+        },
+        {
+          "permission_id": "PERM-010",
+          "permission_name": "manage_permissions",
+          "description": "View and manage permission matrix"
+        }
+      ],
+      "classification": "PROBABLE_GLOBAL",
+      "extraction_eligibility": "COPY_TO_BOTH_AFTER_GLOBAL_POLICY_REVIEW"
+    },
+    "properties": {
+      "row_count": 2,
+      "columns": [
+        "property_id",
+        "trust_id",
+        "property_name",
+        "property_type",
+        "address_or_identifier",
+        "acquisition_date",
+        "title_notes",
+        "beneficial_notes",
+        "status",
+        "asset_class",
+        "asset_subtype",
+        "established_date",
+        "effective_date",
+        "review_date",
+        "expiration_date",
+        "responsible_party",
+        "custodian",
+        "owner_id",
+        "firm_id",
+        "continuity_classification",
+        "custody_classification",
+        "continuity_priority",
+        "heritage_significance",
+        "preservation_requirements",
+        "restricted_access_level",
+        "lineage_association",
+        "memorial_status",
+        "sacred_status",
+        "continuity_notes"
+      ],
+      "primary_key_columns": [
+        "property_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 1,
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "TR-022",
+          "firm_id": "FIRM-002"
+        },
+        {
+          "trust_id": "TR-002",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "role_permissions": {
+      "row_count": 23873,
+      "columns": [
+        "id",
+        "role_name",
+        "permission_name"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 419
+        },
+        {
+          "id": 420
+        },
+        {
+          "id": 421
+        },
+        {
+          "id": 422
+        },
+        {
+          "id": 423
+        },
+        {
+          "id": 424
+        },
+        {
+          "id": 425
+        },
+        {
+          "id": 426
+        },
+        {
+          "id": 427
+        },
+        {
+          "id": 428
+        }
+      ],
+      "classification": "PROBABLE_GLOBAL",
+      "extraction_eligibility": "COPY_TO_BOTH_AFTER_GLOBAL_POLICY_REVIEW"
+    },
+    "section_review_gate": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "section_review_id",
+        "workspace_id",
+        "draft_session_id",
+        "intake_id",
+        "firm_id",
+        "document_type",
+        "section_name",
+        "clause_status",
+        "clause_flag",
+        "correction_required",
+        "reviewer_notes",
+        "export_gate",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "intake_id": "INT-7B72247C",
+          "workspace_id": "WS-FB7D4731",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "FIRM2_EXPLICIT",
+      "extraction_eligibility": "FIRM2_ONLY"
+    },
+    "tax_form_guides": {
+      "row_count": 10,
+      "columns": [
+        "guide_id",
+        "form_name",
+        "category",
+        "applies_to",
+        "summary",
+        "body",
+        "related_trust_types",
+        "status",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "guide_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "guide_id": "GUIDE-1041",
+          "form_name": "Form 1041",
+          "category": "trust_returns",
+          "applies_to": "Trusts and estates"
+        },
+        {
+          "guide_id": "GUIDE-1040",
+          "form_name": "Form 1040",
+          "category": "individual_returns",
+          "applies_to": "Individuals"
+        },
+        {
+          "guide_id": "GUIDE-1041X",
+          "form_name": "Form 1041-X",
+          "category": "amended_returns",
+          "applies_to": "Trusts and estates"
+        },
+        {
+          "guide_id": "GUIDE-8841",
+          "form_name": "Form 8841",
+          "category": "supporting_forms",
+          "applies_to": "Individuals and fiduciary context"
+        },
+        {
+          "guide_id": "GUIDE-56",
+          "form_name": "Form 56",
+          "category": "authority_and_notice",
+          "applies_to": "Fiduciaries"
+        },
+        {
+          "guide_id": "GUIDE-2848",
+          "form_name": "Form 2848",
+          "category": "authority_and_notice",
+          "applies_to": "Authorized representation"
+        },
+        {
+          "guide_id": "GUIDE-8822B",
+          "form_name": "Form 8822-B",
+          "category": "authority_and_notice",
+          "applies_to": "Entity address and responsible party changes"
+        },
+        {
+          "guide_id": "GUIDE-K1",
+          "form_name": "Schedule K-1",
+          "category": "supporting_forms",
+          "applies_to": "Trust beneficiaries"
+        },
+        {
+          "guide_id": "GUIDE-TRUST-MINUTES-001",
+          "form_name": "Trust Minutes",
+          "category": "Governance",
+          "applies_to": "Trustee decisions, approvals, executions, and archived governance records."
+        },
+        {
+          "guide_id": "GUIDE-CERT-REGISTRY-001",
+          "form_name": "Certificate Registry",
+          "category": "Governance",
+          "applies_to": "Executed or archived trust minutes with certificate IDs."
+        }
+      ],
+      "classification": "UNSCOPED_SENSITIVE_TENANT_DATA",
+      "extraction_eligibility": "MANUAL_OR_PARENT_OWNERSHIP_REVIEW"
+    },
+    "transfer_actions": {
+      "row_count": 95,
+      "columns": [
+        "id",
+        "transfer_id_fk",
+        "action_type",
+        "performed_by",
+        "capacity_used",
+        "notes",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "parent_table": "transfers",
+          "from_column": "transfer_id_fk",
+          "to_column": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE"
+        }
+      ],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [
+        {
+          "column": "performed_by",
+          "firm_id": "[NO_FIRM_COLUMN]",
+          "count": 7
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        }
+      ],
+      "classification": "DEPENDENT_PARENT_SCOPE",
+      "extraction_eligibility": "INHERIT_FROM_PARENT_AFTER_GRAPH_VALIDATION"
+    },
+    "transfer_archive_handoff": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "handoff_id",
+        "transfer_id",
+        "trust_id",
+        "firm_id",
+        "archive_status",
+        "custody_classification",
+        "seal_reference",
+        "handoff_by",
+        "handoff_capacity",
+        "ledger_verified",
+        "minute_verified",
+        "finalization_verified",
+        "archive_notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "transfer_archive_handoff_corrections": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "correction_id",
+        "handoff_id",
+        "transfer_id",
+        "trust_id",
+        "firm_id",
+        "corrected_archive_status",
+        "corrected_custody_classification",
+        "corrected_seal_reference",
+        "corrected_handoff_capacity",
+        "corrected_archive_notes",
+        "correction_reason",
+        "corrected_by",
+        "correction_capacity",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "transfer_records": {
+      "row_count": 11,
+      "columns": [
+        "id",
+        "transfer_id_fk",
+        "schedule_a_text",
+        "transfer_log_text",
+        "minutes_text",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "parent_table": "transfers",
+          "from_column": "transfer_id_fk",
+          "to_column": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE"
+        }
+      ],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "transfer_log_text",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "minutes_text",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        }
+      ],
+      "classification": "PROBABLE_FIRM2_PRIVATE",
+      "extraction_eligibility": "FIRM2_PENDING_PARENT_VALIDATION"
+    },
+    "transfer_support_docs": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "transfer_id_fk",
+        "category_key",
+        "category_label",
+        "status",
+        "notes",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "parent_table": "transfers",
+          "from_column": "transfer_id_fk",
+          "to_column": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE"
+        }
+      ],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "transfers": {
+      "row_count": 13,
+      "columns": [
+        "id",
+        "trust_id",
+        "transfer_id",
+        "mode",
+        "status",
+        "current_capacity",
+        "asset_type",
+        "asset_name",
+        "asset_description",
+        "estimated_value",
+        "current_owner",
+        "asset_notes",
+        "transfer_type",
+        "consideration_text",
+        "classification_notes",
+        "assignment_confirmed",
+        "assignment_text",
+        "trustee_name",
+        "trustee_decision",
+        "trustee_notes",
+        "control_change_status",
+        "control_evidence_notes",
+        "records_complete",
+        "created_by",
+        "created_at",
+        "updated_at",
+        "finalized_at",
+        "finalized_by",
+        "finalized_capacity",
+        "external_institution",
+        "external_account_ref",
+        "external_transfer_method",
+        "external_transaction_id",
+        "external_verified",
+        "external_verified_at",
+        "external_proof_notes",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 12,
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [
+        {
+          "child_table": "transfer_actions",
+          "id": 0,
+          "seq": 0,
+          "parent_table": "transfers",
+          "from_column": "transfer_id_fk",
+          "to_column": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE"
+        },
+        {
+          "child_table": "transfer_records",
+          "id": 0,
+          "seq": 0,
+          "parent_table": "transfers",
+          "from_column": "transfer_id_fk",
+          "to_column": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE"
+        },
+        {
+          "child_table": "transfer_support_docs",
+          "id": 0,
+          "seq": 0,
+          "parent_table": "transfers",
+          "from_column": "transfer_id_fk",
+          "to_column": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE"
+        }
+      ],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "assignment_text",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "trustee_name",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [
+        {
+          "column": "created_by",
+          "firm_id": "FIRM-002",
+          "count": 1
+        }
+      ],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "trust_id": "T001",
+          "transfer_id": "T-0001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 2,
+          "trust_id": "TR-002",
+          "transfer_id": "T-0002",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 3,
+          "trust_id": "TR-002",
+          "transfer_id": "T-0003",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 4,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0004",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 5,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 6,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0006",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 7,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0007",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 8,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0008",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 9,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0009",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "id": 10,
+          "trust_id": "TR-001",
+          "transfer_id": "T-0010",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "trust_article_assignments": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "trust_id",
+        "article_id",
+        "sort_order",
+        "is_enabled",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 3
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "trust_id": "TR-022"
+        },
+        {
+          "id": 2,
+          "trust_id": "TR-022"
+        },
+        {
+          "id": 3,
+          "trust_id": "TR-022"
+        }
+      ],
+      "classification": "PROBABLE_FIRM2_PRIVATE",
+      "extraction_eligibility": "FIRM2_PENDING_PARENT_VALIDATION"
+    },
+    "trust_article_conditions": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "article_id",
+        "condition_key",
+        "condition_operator",
+        "condition_value"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "trust_articles": {
+      "row_count": 3,
+      "columns": [
+        "id",
+        "article_id",
+        "title",
+        "category",
+        "article_type",
+        "content",
+        "is_required",
+        "is_active",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 1,
+          "title": "Trust Purpose"
+        },
+        {
+          "id": 2,
+          "title": "Trustee Powers"
+        },
+        {
+          "id": 3,
+          "title": "Beneficiary Administration"
+        }
+      ],
+      "classification": "UNSCOPED_SENSITIVE_TENANT_DATA",
+      "extraction_eligibility": "MANUAL_OR_PARENT_OWNERSHIP_REVIEW"
+    },
+    "trust_minutes": {
+      "row_count": 15,
+      "columns": [
+        "minute_id",
+        "trust_id",
+        "meeting_date",
+        "meeting_type",
+        "title",
+        "purpose",
+        "resolutions",
+        "action_items",
+        "status",
+        "created_by",
+        "created_at",
+        "trustee_1_name",
+        "trustee_1_signed_date",
+        "trustee_2_name",
+        "trustee_2_signed_date",
+        "trustee_3_name",
+        "trustee_3_signed_date",
+        "approved_at",
+        "executed_at",
+        "archived_at",
+        "locked",
+        "trustee_1_capacity",
+        "trustee_2_capacity",
+        "trustee_3_capacity",
+        "trustee_1_signature_image",
+        "trustee_2_signature_image",
+        "trustee_3_signature_image",
+        "certificate_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "minute_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 15
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "TR-004",
+          "title": "initial trust resolution ",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-001",
+          "title": "initial trust res",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-001",
+          "title": "qa test again",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-008",
+          "title": "QA Chat",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-003",
+          "title": "abc initial",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-003",
+          "title": "qa and more",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-001",
+          "title": "Transfer Finalization \u2014 T-0004",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-001",
+          "title": "Transfer Finalization \u2014 T-0005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-001",
+          "title": "Transfer Finalization \u2014 T-0006",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-001",
+          "title": "Transfer Finalization \u2014 T-0005",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "trust_template_types": {
+      "row_count": 0,
+      "columns": [
+        "id",
+        "template_code",
+        "template_name",
+        "description"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "trusts": {
+      "row_count": 22,
+      "columns": [
+        "trust_id",
+        "trust_name",
+        "short_name",
+        "jurisdiction",
+        "effective_date",
+        "trust_type",
+        "trust_purpose",
+        "accounting_method",
+        "workflow_mode",
+        "settlor_name",
+        "trustee_name",
+        "successor_trustee_name",
+        "beneficiary_name",
+        "record_visibility",
+        "workflow_mode_confirmed",
+        "ai_explanations",
+        "recommended_guidance",
+        "initial_corpus_description",
+        "property_mapping_timing",
+        "asset_categories",
+        "generate_schedule_recommendations",
+        "status",
+        "grantor_name",
+        "grantor_type",
+        "grantor_contact",
+        "owner_id",
+        "seal_path",
+        "caf_number",
+        "crid_number",
+        "trust_motto",
+        "foundation_scripture",
+        "prepared_by",
+        "return_to",
+        "branding_style",
+        "firm_id",
+        "firm_trust_number",
+        "firm_trust_code"
+      ],
+      "primary_key_columns": [
+        "trust_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 20,
+        "FIRM-002": 2
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "trust_id",
+          "marker": "TR-022",
+          "count": 1
+        },
+        {
+          "column": "trust_name",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        },
+        {
+          "column": "trust_name",
+          "marker": "LUNA ISAAC MISHOE III Revocable Trust",
+          "count": 1
+        },
+        {
+          "column": "trustee_name",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        },
+        {
+          "column": "beneficiary_name",
+          "marker": "Luna Isaac Mishoe III",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "trust_id": "TR-001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-002",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-003",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-004",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-005",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-006",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-007",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-008",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-009",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "trust_id": "TR-010",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    },
+    "tutorial_videos": {
+      "row_count": 5,
+      "columns": [
+        "video_id",
+        "title",
+        "category",
+        "trust_type",
+        "description",
+        "file_path",
+        "thumbnail_path",
+        "transcript_notes",
+        "visibility",
+        "created_at",
+        "updated_at"
+      ],
+      "primary_key_columns": [
+        "video_id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "title": "Trust Basics Introduction"
+        },
+        {
+          "title": "Revocable vs Irrevocable Overview"
+        },
+        {
+          "title": "Land Trust Walkthrough"
+        },
+        {
+          "title": "Fiduciary Duties Walkthrough"
+        },
+        {
+          "title": "How to Use the Workspace"
+        }
+      ],
+      "classification": "UNCLASSIFIED_UNSCOPED",
+      "extraction_eligibility": "MANUAL_CLASSIFICATION_REQUIRED"
+    },
+    "user_permission_overrides": {
+      "row_count": 1,
+      "columns": [
+        "id",
+        "username",
+        "permission_name",
+        "effect",
+        "created_at"
+      ],
+      "primary_key_columns": [
+        "id"
+      ],
+      "has_firm_id": false,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "id": 2,
+          "username": "trustee"
+        }
+      ],
+      "classification": "UNCLASSIFIED_UNSCOPED",
+      "extraction_eligibility": "MANUAL_CLASSIFICATION_REQUIRED"
+    },
+    "user_roles": {
+      "row_count": 0,
+      "columns": [
+        "role_id",
+        "full_name",
+        "role_name",
+        "trust_id",
+        "status",
+        "notes",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "role_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {},
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [],
+      "classification": "EMPTY_SCHEMA_REVIEW",
+      "extraction_eligibility": "COPY_SCHEMA_ONLY_PENDING_POLICY"
+    },
+    "workspace_notes": {
+      "row_count": 7,
+      "columns": [
+        "note_id",
+        "workspace_id",
+        "section_name",
+        "content",
+        "created_at",
+        "updated_at",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "note_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 7
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "workspace_id": "WS-001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-001",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-002",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-010",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-010",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-011",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-012",
+          "firm_id": "FIRM-001"
+        }
+      ],
+      "classification": "FIRM1_EXPLICIT",
+      "extraction_eligibility": "FIRM1_ONLY"
+    },
+    "workspaces": {
+      "row_count": 7,
+      "columns": [
+        "workspace_id",
+        "title",
+        "workspace_type",
+        "trust_type_focus",
+        "purpose",
+        "owner",
+        "status",
+        "created_at",
+        "updated_at",
+        "owner_id",
+        "firm_id"
+      ],
+      "primary_key_columns": [
+        "workspace_id"
+      ],
+      "has_firm_id": true,
+      "firm_counts": {
+        "FIRM-001": 6,
+        "FIRM-002": 1
+      },
+      "foreign_keys": [],
+      "children": [],
+      "private_marker_matches": [
+        {
+          "column": "title",
+          "marker": "Luna I Mishoe III",
+          "count": 1
+        },
+        {
+          "column": "owner",
+          "marker": "Luna Mishoe",
+          "count": 1
+        }
+      ],
+      "admin123_distribution": [],
+      "sample_identifiers": [
+        {
+          "workspace_id": "WS-001",
+          "title": "Family Trust Design Sandbox",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-002",
+          "title": "Fiduciary Filing Planning Sandbox",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-010",
+          "title": "Land Holding Structure Sandbox",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-011",
+          "title": "Insurance Planning Sandbox",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "WS-012",
+          "title": "Tax Workflow Sandbox",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "admin 01",
+          "title": "too much",
+          "firm_id": "FIRM-001"
+        },
+        {
+          "workspace_id": "FIRM-002",
+          "title": "Luna I Mishoe III Revocable Trust",
+          "firm_id": "FIRM-002"
+        }
+      ],
+      "classification": "MIXED_EXPLICIT",
+      "extraction_eligibility": "FILTER_BY_FIRM_AND_REVIEW_NULL_ROWS"
+    }
+  },
+  "continuity_model": {
+    "firm1": "Master/general trust platform",
+    "firm2": "Private personal trust platform",
+    "shared_codebase": true,
+    "separate_databases": true,
+    "separate_users": true,
+    "separate_sessions": true,
+    "separate_storage": true
+  },
+  "warnings": [
+    "Probable global tables require policy review before copying to both runtimes.",
+    "admin123 must become independent account records in Firm 1 and Firm 2.",
+    "Private marker matches are strong Firm 2 evidence but still require parent validation."
+  ],
+  "blockers": [
+    "11 table(s) contain explicit Firm 1 and Firm 2 records.",
+    "11 table(s) remain ambiguous or require parent/manual review.",
+    "6 null-firm row(s) exist across 2 table(s)."
+  ]
+}

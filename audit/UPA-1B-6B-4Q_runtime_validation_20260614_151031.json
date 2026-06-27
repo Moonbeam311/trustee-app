@@ -1,0 +1,221 @@
+{
+  "generated_at": "2026-06-14T15:10:36.639838",
+  "status": "DUAL_RUNTIME_VALIDATION_REVIEW_REQUIRED",
+  "source_report": "audit\\UPA-1B-6B-4P_corrected_sandbox_rebuild_20260614_150738.json",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "source_safety": {
+    "live_database_unchanged": true,
+    "certified_firm1_sandbox_unchanged": true,
+    "certified_firm2_sandbox_unchanged": true,
+    "passed": true
+  },
+  "firm1": {
+    "probe": {
+      "firm_id": "FIRM-001",
+      "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm1\\data\\trustee_app_firm1_validation.db",
+      "cookie_name_requested": "trustee_firm1_session",
+      "database_hash_before": "e760d64bd7b6564d661db92898d04c2232edd115f113718ea5f16a74fc49d211",
+      "row_total_before": 24446,
+      "import_success": true,
+      "binding_verified": true,
+      "configured_cookie_name": "trustee_firm1_session",
+      "route_results": [
+        {
+          "route": "/",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/matters",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/trusts",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/workspaces",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/discussions",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/documents",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/workflow-hub",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        }
+      ],
+      "opposite_marker_events": [],
+      "startup_error": null,
+      "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm1\\data\\trustee_app_firm1_validation.db",
+      "database_hash_after": "8c11c593ebaaed284108bd60c137b898e6ec1392cc9e67cd944f8db5b269595b",
+      "row_total_after": 24470,
+      "database_changed_during_probe": true,
+      "row_delta": 24,
+      "process_returncode": 0,
+      "process_stderr": ""
+    },
+    "route_summary": {
+      "attempted": 7,
+      "successful_or_redirected": 0,
+      "server_errors": 0,
+      "exceptions": 7,
+      "opposite_marker_routes": 0
+    },
+    "database_review": {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm1\\data\\trustee_app_firm1_validation.db",
+      "integrity": "ok",
+      "total_rows": 24470,
+      "explicit_firm_counts": {
+        "FIRM-001": 397
+      },
+      "opposite_firm_rows": []
+    },
+    "passed": false
+  },
+  "firm2": {
+    "probe": {
+      "firm_id": "FIRM-002",
+      "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm2\\data\\trustee_app_firm2_validation.db",
+      "cookie_name_requested": "trustee_firm2_session",
+      "database_hash_before": "3140c34b8409c45851152591ca610f52708bc9f522d2adf53b955dcc89ff3067",
+      "row_total_before": 24288,
+      "import_success": true,
+      "binding_verified": true,
+      "configured_cookie_name": "trustee_firm2_session",
+      "route_results": [
+        {
+          "route": "/",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/matters",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/trusts",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/workspaces",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/discussions",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/documents",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        },
+        {
+          "route": "/workflow-hub",
+          "status_code": null,
+          "response_length": 0,
+          "own_markers": [],
+          "opposite_markers": [],
+          "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'"
+        }
+      ],
+      "opposite_marker_events": [],
+      "startup_error": null,
+      "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm2\\data\\trustee_app_firm2_validation.db",
+      "database_hash_after": "cde8d84dbe2020bdbfac08591237b6ad2e39e464189aeba675bad80d6e2e1298",
+      "row_total_after": 24312,
+      "database_changed_during_probe": true,
+      "row_delta": 24,
+      "process_returncode": 0,
+      "process_stderr": ""
+    },
+    "route_summary": {
+      "attempted": 7,
+      "successful_or_redirected": 0,
+      "server_errors": 0,
+      "exceptions": 7,
+      "opposite_marker_routes": 0
+    },
+    "database_review": {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm2\\data\\trustee_app_firm2_validation.db",
+      "integrity": "ok",
+      "total_rows": 24312,
+      "explicit_firm_counts": {
+        "FIRM-001": 1,
+        "FIRM-002": 352
+      },
+      "opposite_firm_rows": [
+        {
+          "table": "audit_log",
+          "firm_value": "FIRM-001",
+          "count": 1
+        }
+      ]
+    },
+    "passed": false
+  },
+  "authorization": {
+    "runtime_profile_build": false,
+    "production_cutover": false,
+    "live_database_replacement": false,
+    "certified_sandbox_replacement": false
+  }
+}

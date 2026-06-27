@@ -1,0 +1,83 @@
+{
+  "audit_id": "MIA-1C-R5",
+  "created_at": "2026-06-14T21:53:18.041622",
+  "status": "STARTUP_ATTRIBUTION_VALIDATED",
+  "r4_report": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\MIA-1C-R4_validation_20260614_215139.json",
+  "firm1_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\MIA-1C-R5_20260614_215314\\firm1_startup.db",
+  "firm2_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\MIA-1C-R5_20260614_215314\\firm2_startup.db",
+  "firm1_before": {
+    "role_permissions": 23873,
+    "links": 1,
+    "events": 1
+  },
+  "firm1_after": {
+    "role_permissions": 23895,
+    "links": 1,
+    "events": 1
+  },
+  "firm1_role_permission_delta": 22,
+  "firm2_before": {
+    "role_permissions": 23873,
+    "links": 1,
+    "events": 1
+  },
+  "firm2_after": {
+    "role_permissions": 23895,
+    "links": 1,
+    "events": 1
+  },
+  "firm2_role_permission_delta": 22,
+  "firm1_probe": {
+    "returncode": 0,
+    "stdout": "{\"db_path\": \"C:\\\\Users\\\\LunaMishoe\\\\Desktop\\\\trustee-app-clean\\\\audit\\\\runtime_sandbox\\\\MIA-1C-R5_20260614_215314\\\\firm1_startup.db\", \"before\": {\"role_permissions\": 23873, \"matter_intake_links\": 1, \"matter_intake_link_events\": 1}, \"after\": {\"role_permissions\": 23895, \"matter_intake_links\": 1, \"matter_intake_link_events\": 1}}\n",
+    "stderr": "",
+    "probe": {
+      "db_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\MIA-1C-R5_20260614_215314\\firm1_startup.db",
+      "before": {
+        "role_permissions": 23873,
+        "matter_intake_links": 1,
+        "matter_intake_link_events": 1
+      },
+      "after": {
+        "role_permissions": 23895,
+        "matter_intake_links": 1,
+        "matter_intake_link_events": 1
+      }
+    }
+  },
+  "firm2_probe": {
+    "returncode": 0,
+    "stdout": "{\"db_path\": \"C:\\\\Users\\\\LunaMishoe\\\\Desktop\\\\trustee-app-clean\\\\audit\\\\runtime_sandbox\\\\MIA-1C-R5_20260614_215314\\\\firm2_startup.db\", \"before\": {\"role_permissions\": 23873, \"matter_intake_links\": 1, \"matter_intake_link_events\": 1}, \"after\": {\"role_permissions\": 23895, \"matter_intake_links\": 1, \"matter_intake_link_events\": 1}}\n",
+    "stderr": "",
+    "probe": {
+      "db_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\MIA-1C-R5_20260614_215314\\firm2_startup.db",
+      "before": {
+        "role_permissions": 23873,
+        "matter_intake_links": 1,
+        "matter_intake_link_events": 1
+      },
+      "after": {
+        "role_permissions": 23895,
+        "matter_intake_links": 1,
+        "matter_intake_link_events": 1
+      }
+    }
+  },
+  "checks": {
+    "firm1_import_success": true,
+    "firm2_import_success": true,
+    "firm1_binding_verified": true,
+    "firm2_binding_verified": true,
+    "firm1_integrity_ok": true,
+    "firm2_integrity_ok": true,
+    "live_database_unchanged": true,
+    "firm1_r4_source_unchanged": true,
+    "firm2_r4_source_unchanged": true,
+    "firm1_links_unchanged": true,
+    "firm2_links_unchanged": true,
+    "firm1_events_unchanged": true,
+    "firm2_events_unchanged": true,
+    "role_permission_delta_matches_legacy": true,
+    "matter_intake_migration_added_no_role_rows": true
+  }
+}

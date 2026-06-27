@@ -1,0 +1,1343 @@
+{
+  "generated_at": "2026-06-13T18:37:50.031805",
+  "status": "FIRM2_TESTING_GROUND_NOT_READY",
+  "governing_rule": {
+    "testing_instance": "FIRM-002",
+    "protected_baseline": "FIRM-001",
+    "shared_codebase": true,
+    "shared_live_database": false,
+    "firm2_first_promotion": true
+  },
+  "git": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "status": "?? audit/"
+  },
+  "active_configuration": {
+    "environment_db_path": null,
+    "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "default_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "db_path_assignment": "BASE_DIR / \"trustee_app.db\"",
+    "db_path_environment_driven": true
+  },
+  "summary": {
+    "database_candidates": 5,
+    "active_database_tables": 88,
+    "active_database_firms": 2,
+    "active_database_null_firm_rows": 6,
+    "firm_001_default_references": 35,
+    "firm_002_references": 29,
+    "firm_switching_references": 74,
+    "storage_references": 24,
+    "session_references": 15,
+    "configuration_references": 59,
+    "blockers": 4,
+    "warnings": 1,
+    "passed_controls": 3
+  },
+  "active_database": {
+    "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "exists": true,
+    "size_bytes": 1667072,
+    "sha256": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "tables": 88,
+    "tables_with_firm_id": 68,
+    "firm_row_counts": {
+      "FIRM-001": 395,
+      "FIRM-002": 351
+    },
+    "firm_values": [
+      "FIRM-001",
+      "FIRM-002"
+    ],
+    "null_firm_rows": 6,
+    "errors": []
+  },
+  "database_inventory": [
+    {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db",
+      "exists": true,
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tables": 0,
+      "tables_with_firm_id": 0,
+      "firm_row_counts": {},
+      "firm_values": [],
+      "null_firm_rows": 0,
+      "errors": []
+    },
+    {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db",
+      "exists": true,
+      "size_bytes": 352256,
+      "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c",
+      "tables": 33,
+      "tables_with_firm_id": 2,
+      "firm_row_counts": {
+        "FIRM-001": 123
+      },
+      "firm_values": [
+        "FIRM-001"
+      ],
+      "null_firm_rows": 3,
+      "errors": []
+    },
+    {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db",
+      "exists": true,
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tables": 0,
+      "tables_with_firm_id": 0,
+      "firm_row_counts": {},
+      "firm_values": [],
+      "null_firm_rows": 0,
+      "errors": []
+    },
+    {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db",
+      "exists": true,
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tables": 0,
+      "tables_with_firm_id": 0,
+      "firm_row_counts": {},
+      "firm_values": [],
+      "null_firm_rows": 0,
+      "errors": []
+    },
+    {
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+      "exists": true,
+      "size_bytes": 1667072,
+      "sha256": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+      "tables": 88,
+      "tables_with_firm_id": 68,
+      "firm_row_counts": {
+        "FIRM-001": 395,
+        "FIRM-002": 351
+      },
+      "firm_values": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "null_firm_rows": 6,
+      "errors": []
+    }
+  ],
+  "default_firm_001_references": [
+    {
+      "file": "database/db.py",
+      "line": 13,
+      "text": "Defaults to FIRM-001 only outside request context or legacy sessions."
+    },
+    {
+      "file": "database/db.py",
+      "line": 18,
+      "text": "return session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "database/db.py",
+      "line": 21,
+      "text": "return \"FIRM-001\""
+    },
+    {
+      "file": "database/db.py",
+      "line": 37,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 74,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 116,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 154,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 1978,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\""
+    },
+    {
+      "file": "database/db.py",
+      "line": 1980,
+      "text": "firm_id = \"FIRM-001\""
+    },
+    {
+      "file": "database/db.py",
+      "line": 3513,
+      "text": "firm_id=\"FIRM-001\","
+    },
+    {
+      "file": "database/db.py",
+      "line": 3581,
+      "text": "def get_intake_orchestration_state(intake_id, firm_id=\"FIRM-001\"):"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3598,
+      "text": "def build_intake_readiness_summary(intake_id, firm_id=\"FIRM-001\"):"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3707,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3738,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3769,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3803,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3839,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3883,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3915,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3947,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 3978,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4015,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4054,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4092,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4130,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4171,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4211,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4253,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4306,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4360,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4421,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4493,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4529,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4551,
+      "text": "def build_lifecycle_master_ledger(intake_id, firm_id=\"FIRM-001\"):"
+    },
+    {
+      "file": "database/db.py",
+      "line": 4731,
+      "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+    }
+  ],
+  "default_firm_002_references": [],
+  "firm_switching_references": [
+    {
+      "file": "app.py",
+      "line": 1006,
+      "text": "active_firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 1021,
+      "text": "return [t for t in trusts if trust_firm_id(t) == active_firm_id]"
+    },
+    {
+      "file": "app.py",
+      "line": 1051,
+      "text": "active_firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 1058,
+      "text": "return trust_firm_id == active_firm_id"
+    },
+    {
+      "file": "app.py",
+      "line": 1168,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 1176,
+      "text": "f\"Transfer outside active firm scope. User={session.get('username')}; Firm={firm_id}; TransferFirm={transfer.firm_id}\""
+    },
+    {
+      "file": "app.py",
+      "line": 2825,
+      "text": "f\"Trust not found in active firm scope. User={session.get('username')}; Firm={session.get('firm_id')}\""
+    },
+    {
+      "file": "app.py",
+      "line": 6636,
+      "text": "f\"Admin {session.get('username')} for firm {session.get('firm_id', 'FIRM-001')} set {policy_key} to {policy[policy_key]}\""
+    },
+    {
+      "file": "app.py",
+      "line": 6888,
+      "text": "f\"Attempted access to {reason_label} outside active firm scope. User={session.get('username')}; Firm={session.get('firm_id')}\""
+    },
+    {
+      "file": "app.py",
+      "line": 8607,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8619,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8632,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8644,
+      "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 8672,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8684,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8697,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8709,
+      "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 8738,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8883,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8894,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8906,
+      "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 8929,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8956,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 8969,
+      "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 11448,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 11680,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 11891,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 11966,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 12197,
+      "text": "firm_id=session.get(\"firm_id\") or \"FIRM-001\","
+    },
+    {
+      "file": "app.py",
+      "line": 12660,
+      "text": "transfer_firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 12884,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 12945,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 13046,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 13119,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 13467,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 13648,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 13827,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 13930,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 14095,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 14241,
+      "text": "session[\"firm_id\"] = user[\"firm_id\"] if \"firm_id\" in user.keys() and user[\"firm_id\"] else \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 14373,
+      "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "app.py",
+      "line": 15392,
+      "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15408,
+      "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15502,
+      "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15513,
+      "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15554,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 15593,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 15685,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 15820,
+      "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15832,
+      "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15959,
+      "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 15975,
+      "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 16046,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16143,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16309,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16438,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16587,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16772,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16824,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 16965,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 17156,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 17208,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 17350,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 17517,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 17707,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 17835,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 18825,
+      "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 18845,
+      "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+    },
+    {
+      "file": "app.py",
+      "line": 18876,
+      "text": "\"\"\", (intake_id, session.get(\"firm_id\", \"FIRM-001\")))"
+    },
+    {
+      "file": "app.py",
+      "line": 18887,
+      "text": "session.get(\"firm_id\", \"FIRM-001\")"
+    },
+    {
+      "file": "app.py",
+      "line": 18942,
+      "text": "body.append(f\"<p><strong>Current session firm:</strong> {session.get('firm_id')}</p>\")"
+    },
+    {
+      "file": "app.py",
+      "line": 19009,
+      "text": "body.append(f\"<p><strong>Firm:</strong> {session.get('firm_id')}</p>\")"
+    },
+    {
+      "file": "database/db.py",
+      "line": 18,
+      "text": "return session.get(\"firm_id\") or \"FIRM-001\""
+    },
+    {
+      "file": "database/db.py",
+      "line": 1978,
+      "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\""
+    }
+  ],
+  "configuration_references": [
+    {
+      "file": "app.py",
+      "line": 303,
+      "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+    },
+    {
+      "file": "app.py",
+      "line": 304,
+      "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", str(DEFAULT_DB_PATH))).resolve()"
+    },
+    {
+      "file": "app.py",
+      "line": 306,
+      "text": "app.config[\"SQLALCHEMY_DATABASE_URI\"] = f\"sqlite:///{DB_PATH.as_posix()}\""
+    },
+    {
+      "file": "app.py",
+      "line": 338,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 345,
+      "text": "DB_PATH.parent.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "file": "app.py",
+      "line": 347,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 562,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip() or \"FIRM-002\""
+    },
+    {
+      "file": "app.py",
+      "line": 566,
+      "text": "DB_PATH.parent.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "file": "app.py",
+      "line": 568,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 760,
+      "text": "DB_PATH.parent.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "file": "app.py",
+      "line": 762,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 7129,
+      "text": "db_file = Path(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 7133,
+      "text": "(\"DB_PATH\", str(db_file)),"
+    },
+    {
+      "file": "app.py",
+      "line": 7139,
+      "text": "(\"ENV DB_PATH\", os.getenv(\"DB_PATH\", \"\")),"
+    },
+    {
+      "file": "app.py",
+      "line": 7163,
+      "text": "db_file = Path(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 7169,
+      "text": "f\"Database ZIP backup failed; DB_PATH not found: {db_file}\""
+    },
+    {
+      "file": "app.py",
+      "line": 7173,
+      "text": "reason=f\"Database file not found at configured DB_PATH: {db_file}\""
+    },
+    {
+      "file": "app.py",
+      "line": 7188,
+      "text": "f\"Database ZIP backup downloaded from DB_PATH={db_file}; ZIP={zip_path}\""
+    },
+    {
+      "file": "app.py",
+      "line": 7205,
+      "text": "db_file = Path(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 7211,
+      "text": "f\"Database backup failed; DB_PATH not found: {db_file}\""
+    },
+    {
+      "file": "app.py",
+      "line": 7215,
+      "text": "reason=f\"Database file not found at configured DB_PATH: {db_file}\""
+    },
+    {
+      "file": "app.py",
+      "line": 7225,
+      "text": "f\"Database backup downloaded from DB_PATH={db_file}\""
+    },
+    {
+      "file": "app.py",
+      "line": 8340,
+      "text": "conn = sqlite3.connect(LEARNING_DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 9359,
+      "text": "LEARNING_DB_PATH = DB_PATH.as_posix()"
+    },
+    {
+      "file": "app.py",
+      "line": 10010,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 14483,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 14494,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 14565,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 14576,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 14715,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 14720,
+      "text": "output.append(f\"DB_PATH={DB_PATH}\")"
+    },
+    {
+      "file": "app.py",
+      "line": 14749,
+      "text": "output.append(f\"ROW_FIRM_ID={row['firm_id']}\")"
+    },
+    {
+      "file": "app.py",
+      "line": 14784,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 14787,
+      "text": "output.append(f\"DB_PATH={DB_PATH}\")"
+    },
+    {
+      "file": "app.py",
+      "line": 14791,
+      "text": "output.append(f\"FIRM_ID={firm_id!r}\")"
+    },
+    {
+      "file": "app.py",
+      "line": 14796,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "app.py",
+      "line": 14976,
+      "text": "output.append(f\"ROW_FIRM_ID={row['firm_id']}\")"
+    },
+    {
+      "file": "HOSTED_SMOKE_TEST_CHECKLIST.md",
+      "line": 53,
+      "text": "- DB_PATH points to persistent path."
+    },
+    {
+      "file": "database/db.py",
+      "line": 7,
+      "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+    },
+    {
+      "file": "database/db.py",
+      "line": 8,
+      "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", str(DEFAULT_DB_PATH))).resolve()"
+    },
+    {
+      "file": "database/db.py",
+      "line": 179,
+      "text": "db_path = Path(DB_PATH)"
+    },
+    {
+      "file": "database/db.py",
+      "line": 183,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 68,
+      "text": "HOSTED_BOOTSTRAP_FIRM_ID=FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 69,
+      "text": "DB_PATH=/data/trustee_app.db"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 28,
+      "text": "HOSTED_BOOTSTRAP_FIRM_ID=FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 29,
+      "text": "DB_PATH=/data/trustee_app.db"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 311,
+      "text": "DB_PATH output"
+    },
+    {
+      "file": "handoff/TOS_27_NEXT_DIRECTIVE.txt",
+      "line": 9,
+      "text": "TOS-28 STEP 1 \u2014 Inspect DB_PATH, Railway volume posture, and current export/backup routes."
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 5,
+      "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", \"trustee_app.db\")).resolve()"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 7,
+      "text": "TABLES_WITH_FIRM_ID = ["
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 48,
+      "text": "print(f\"Running hosted firm-scope migration on: {DB_PATH}\")"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 50,
+      "text": "if not DB_PATH.exists():"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 51,
+      "text": "raise SystemExit(f\"ERROR: database file not found: {DB_PATH}\")"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 53,
+      "text": "conn = sqlite3.connect(DB_PATH)"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 57,
+      "text": "for table in TABLES_WITH_FIRM_ID:"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 63,
+      "text": "for table in TABLES_WITH_FIRM_ID:"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 90,
+      "text": "for table in TABLES_WITH_FIRM_ID:"
+    },
+    {
+      "file": "templates/admin_index.html",
+      "line": 510,
+      "text": "<li>DB_PATH is configured as <strong>/app/data/trustee_app.db</strong>.</li>"
+    },
+    {
+      "file": "templates/admin_index.html",
+      "line": 705,
+      "text": "<p class=\"admin-muted\">Master Admin database backup control. Downloads the currently configured SQLite database file from DB_PATH. Use this before major changes, after hosted seeding, and before deployment-risk operations.</p>"
+    }
+  ],
+  "storage_references": [
+    {
+      "file": "app.py",
+      "line": 2614,
+      "text": "DEFAULT_UPLOAD_FOLDER = Path(__file__).resolve().parent / \"uploads\""
+    },
+    {
+      "file": "app.py",
+      "line": 2615,
+      "text": "UPLOAD_FOLDER = Path(os.getenv(\"UPLOAD_FOLDER\", str(DEFAULT_UPLOAD_FOLDER))).resolve()"
+    },
+    {
+      "file": "app.py",
+      "line": 2616,
+      "text": "UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "file": "app.py",
+      "line": 2622,
+      "text": "DOCX_EXPORT_DIR = EXPORT_ROOT / \"docx\""
+    },
+    {
+      "file": "app.py",
+      "line": 2623,
+      "text": "PDF_EXPORT_DIR = EXPORT_ROOT / \"pdf\""
+    },
+    {
+      "file": "app.py",
+      "line": 2624,
+      "text": "DOCX_EXPORT_DIR.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "file": "app.py",
+      "line": 2625,
+      "text": "PDF_EXPORT_DIR.mkdir(parents=True, exist_ok=True)"
+    },
+    {
+      "file": "app.py",
+      "line": 3176,
+      "text": "file_path = UPLOAD_FOLDER / stored_filename"
+    },
+    {
+      "file": "app.py",
+      "line": 3251,
+      "text": "uploads_root = UPLOAD_FOLDER.resolve()"
+    },
+    {
+      "file": "app.py",
+      "line": 3305,
+      "text": "branding_dir = UPLOAD_FOLDER / \"trust_branding\" / trust_id"
+    },
+    {
+      "file": "app.py",
+      "line": 7130,
+      "text": "upload_dir = Path(UPLOAD_FOLDER)"
+    },
+    {
+      "file": "app.py",
+      "line": 7136,
+      "text": "(\"UPLOAD_FOLDER\", str(upload_dir)),"
+    },
+    {
+      "file": "app.py",
+      "line": 7140,
+      "text": "(\"ENV UPLOAD_FOLDER\", os.getenv(\"UPLOAD_FOLDER\", \"\")),"
+    },
+    {
+      "file": "app.py",
+      "line": 9390,
+      "text": "filepath = os.path.join(UPLOAD_FOLDER, filename)"
+    },
+    {
+      "file": "app.py",
+      "line": 9427,
+      "text": "uploads_root = UPLOAD_FOLDER.resolve()"
+    },
+    {
+      "file": "app.py",
+      "line": 16648,
+      "text": "export_dir = DOCX_EXPORT_DIR"
+    },
+    {
+      "file": "app.py",
+      "line": 17017,
+      "text": "export_dir = PDF_EXPORT_DIR"
+    },
+    {
+      "file": "HOSTED_SMOKE_TEST_CHECKLIST.md",
+      "line": 54,
+      "text": "- UPLOAD_FOLDER points to persistent path."
+    },
+    {
+      "file": "handoff/PHASE_8_CLOSEOUT_NOTE.md",
+      "line": 12,
+      "text": "- Removed duplicate `UPLOAD_FOLDER` definition"
+    },
+    {
+      "file": "handoff/PHASE_8_CLOSEOUT_NOTE.md",
+      "line": 22,
+      "text": "- resolved path stays under `UPLOAD_FOLDER`"
+    },
+    {
+      "file": "handoff/PHASE_8_HARDENING_STATUS_NOTE.md",
+      "line": 11,
+      "text": "- Removed duplicate `UPLOAD_FOLDER` definition"
+    },
+    {
+      "file": "handoff/PHASE_8_HARDENING_STATUS_NOTE.md",
+      "line": 12,
+      "text": "- Standardized on `UPLOAD_FOLDER = Path(\"uploads\")`"
+    },
+    {
+      "file": "handoff/PHASE_8_HARDENING_STATUS_NOTE.md",
+      "line": 14,
+      "text": "- `UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)`"
+    },
+    {
+      "file": "handoff/PHASE_8_HARDENING_STATUS_NOTE.md",
+      "line": 23,
+      "text": "- file path resolves under `UPLOAD_FOLDER`"
+    }
+  ],
+  "session_references": [
+    {
+      "file": ".env.example",
+      "line": 8,
+      "text": "SECRET_KEY=REPLACE_WITH_LONG_RANDOM_SECRET_KEY"
+    },
+    {
+      "file": "app.py",
+      "line": 527,
+      "text": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"CHANGE_THIS_TO_RANDOM_SECRET_KEY\")"
+    },
+    {
+      "file": "app.py",
+      "line": 529,
+      "text": "if APP_ENV == \"production\" and SECRET_KEY == \"CHANGE_THIS_TO_RANDOM_SECRET_KEY\":"
+    },
+    {
+      "file": "app.py",
+      "line": 530,
+      "text": "raise RuntimeError(\"SECRET_KEY must be set to a strong value in production.\")"
+    },
+    {
+      "file": "app.py",
+      "line": 532,
+      "text": "app.secret_key = SECRET_KEY"
+    },
+    {
+      "file": "render.yaml",
+      "line": 12,
+      "text": "- key: SECRET_KEY"
+    },
+    {
+      "file": "deployment/DEPLOYMENT_CHECKLIST.txt",
+      "line": 12,
+      "text": "- SECRET_KEY=<real secret>"
+    },
+    {
+      "file": "handoff/PHASE_8_CLOSEOUT_NOTE.md",
+      "line": 41,
+      "text": "- `SECRET_KEY`"
+    },
+    {
+      "file": "handoff/PHASE_8_CLOSEOUT_NOTE.md",
+      "line": 56,
+      "text": "- set a real `SECRET_KEY`"
+    },
+    {
+      "file": "handoff/PHASE_8_HARDENING_STATUS_NOTE.md",
+      "line": 56,
+      "text": "- `SECRET_KEY` defaulting to a placeholder string"
+    },
+    {
+      "file": "handoff/PHASE_9_DEPLOYMENT_ALIGNMENT_NOTE.md",
+      "line": 25,
+      "text": "- `SECRET_KEY`"
+    },
+    {
+      "file": "handoff/PHASE_9_DEPLOYMENT_ALIGNMENT_NOTE.md",
+      "line": 32,
+      "text": "- require `SECRET_KEY`"
+    },
+    {
+      "file": "handoff/PHASE_9_DEPLOYMENT_ALIGNMENT_NOTE.md",
+      "line": 54,
+      "text": "- set a real `SECRET_KEY`"
+    },
+    {
+      "file": "handoff/PHASE_9_RENDER_DRY_RUN_PLAN.md",
+      "line": 26,
+      "text": "- `SECRET_KEY=<real long random secret>`"
+    },
+    {
+      "file": "handoff/PHASE_9_RENDER_DRY_RUN_PLAN.md",
+      "line": 52,
+      "text": "2. `SECRET_KEY` and env vars are wired correctly"
+    }
+  ],
+  "firm2_references": [
+    {
+      "file": "app.py",
+      "line": 338,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 551,
+      "text": "Permanent hosted FIRM-002 test trust seed."
+    },
+    {
+      "file": "app.py",
+      "line": 562,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip() or \"FIRM-002\""
+    },
+    {
+      "file": "app.py",
+      "line": 744,
+      "text": "Permanent hosted FIRM-002 portfolio seed."
+    },
+    {
+      "file": "app.py",
+      "line": 747,
+      "text": "for TR-001 under FIRM-002."
+    },
+    {
+      "file": "app.py",
+      "line": 756,
+      "text": "firm_id = \"FIRM-002\""
+    },
+    {
+      "file": "app.py",
+      "line": 10053,
+      "text": "AND firm_id = 'FIRM-002'"
+    },
+    {
+      "file": "app.py",
+      "line": 14483,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 14565,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "app.py",
+      "line": 14784,
+      "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 20,
+      "text": "- Firm scope is set to `FIRM-002`."
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 26,
+      "text": "### G-7E \u2014 Permanent hosted FIRM-002 test trust seed"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 32,
+      "text": "- Trust is assigned to `FIRM-002`."
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 58,
+      "text": "- FIRM-002 isolation is confirmed across Admin, Reports, PDF, and direct trust routes."
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 68,
+      "text": "HOSTED_BOOTSTRAP_FIRM_ID=FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 89,
+      "text": "Firm ID: FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 116,
+      "text": "- Create real FIRM-002 trust data beyond seeded test trust."
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G7H_HOSTED_PRODUCTION_LOCK_MEMO.md",
+      "line": 117,
+      "text": "- Add properties/accounts/documents/ledger records scoped to FIRM-002."
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 14,
+      "text": "Firm ID: FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 28,
+      "text": "HOSTED_BOOTSTRAP_FIRM_ID=FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 64,
+      "text": "Firm ID: FIRM-002"
+    },
+    {
+      "file": "docs/GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+      "line": 116,
+      "text": "Only FIRM-002 scoped data appears."
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 75,
+      "text": "# Ensure FIRM-002 test/admin users can exist if app_users table exists."
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 82,
+      "text": "SET firm_id = 'FIRM-002'"
+    },
+    {
+      "file": "scripts/migrate_hosted_firm_scope.py",
+      "line": 85,
+      "text": "print(\"app_users: assigned admin123/testadmin1 to FIRM-002:\", cur.rowcount)"
+    },
+    {
+      "file": "docs/security/GLOBAL_411_FIREWALL_PRODUCTION_HARDENING_CHECKLIST.md",
+      "line": 5,
+      "text": "The Global 411 Firewall is confirmed for restricted Admin 2 / FIRM-002."
+    },
+    {
+      "file": "docs/security/GLOBAL_411_FIREWALL_PRODUCTION_HARDENING_CHECKLIST.md",
+      "line": 8,
+      "text": "- FIRM-002 Admin can access own firm records."
+    },
+    {
+      "file": "docs/security/GLOBAL_411_FIREWALL_PRODUCTION_HARDENING_CHECKLIST.md",
+      "line": 9,
+      "text": "- FIRM-002 Admin cannot access FIRM-001 trust packet export."
+    },
+    {
+      "file": "docs/security/GLOBAL_411_FIREWALL_PRODUCTION_HARDENING_CHECKLIST.md",
+      "line": 10,
+      "text": "- FIRM-002 Admin cannot access FIRM-001 report by internal ID."
+    }
+  ],
+  "controls": {
+    "session_cookie_configured": false,
+    "secret_key_environment_driven": true,
+    "firm2_storage_separated": false,
+    "firm2_launch_profile_found": true,
+    "contains_only_firm_2": false,
+    "contains_firm_1_and_2": true
+  },
+  "passed_controls": [
+    "DB_PATH is environment-controllable.",
+    "The secret key appears environment-controlled.",
+    "A Firm 2 launch/configuration reference was detected."
+  ],
+  "blockers": [
+    "The currently resolved database contains both FIRM-001 and FIRM-002 records.",
+    "database/db.py still contains one or more FIRM-001 defaults.",
+    "Firm 2 does not have an explicitly separate SESSION_COOKIE_NAME.",
+    "No clearly Firm-2-specific storage/export/archive path was detected."
+  ],
+  "warnings": [
+    "Internal firm-session switching remains in the shared code. It may remain temporarily, but Firm 2 must not rely on it as its isolation boundary."
+  ]
+}

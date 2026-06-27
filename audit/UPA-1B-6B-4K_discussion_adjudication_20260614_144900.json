@@ -1,0 +1,396 @@
+{
+  "generated_at": "2026-06-14T14:49:00.132873",
+  "status": "DISCUSSION_OWNERSHIP_RESOLVED_SANDBOX_BUILD_AUTHORIZED",
+  "source_4j_report": "audit\\UPA-1B-6B-4J_tenant_parent_chain_20260614_144421.json",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "database": {
+    "integrity": "ok",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true
+  },
+  "summary": {
+    "discussion_rows_reviewed": 10,
+    "resolved_total": 10,
+    "resolved_firm1": 10,
+    "resolved_firm2": 0,
+    "remaining_quarantine": 0
+  },
+  "action_counts": {
+    "COPY_TO_FIRM1": 10
+  },
+  "table_action_counts": {
+    "discussion_messages": {
+      "COPY_TO_FIRM1": 5
+    },
+    "discussion_threads": {
+      "COPY_TO_FIRM1": 5
+    }
+  },
+  "results": [
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-001"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "thread_id": "THREAD-001",
+      "workspace_id": "",
+      "evidence": [
+        "Exact thread_id=THREAD-001 inherits ['FIRM-001']"
+      ],
+      "workspace_snapshot": {},
+      "row_snapshot": {
+        "message_id": "MSG-001",
+        "thread_id": "THREAD-001",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to compare control, flexibility, and reporting implications before final structure selection.",
+        "created_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-002"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "thread_id": "THREAD-002",
+      "workspace_id": "",
+      "evidence": [
+        "Exact thread_id=THREAD-002 inherits ['FIRM-001']"
+      ],
+      "workspace_snapshot": {},
+      "row_snapshot": {
+        "message_id": "MSG-002",
+        "thread_id": "THREAD-002",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to organize which filing guides and reports need to be reviewed first.",
+        "created_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-010"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "thread_id": "THREAD-010",
+      "workspace_id": "",
+      "evidence": [
+        "Exact thread_id=THREAD-010 inherits ['FIRM-001']"
+      ],
+      "workspace_snapshot": {},
+      "row_snapshot": {
+        "message_id": "MSG-010",
+        "thread_id": "THREAD-010",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to separate property-holding questions from reporting questions before moving into execution tasks.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-011"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "thread_id": "THREAD-011",
+      "workspace_id": "",
+      "evidence": [
+        "Exact thread_id=THREAD-011 inherits ['FIRM-001']"
+      ],
+      "workspace_snapshot": {},
+      "row_snapshot": {
+        "message_id": "MSG-011",
+        "thread_id": "THREAD-011",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to outline role and authority questions tied to insurance-oriented planning.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-012"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "thread_id": "THREAD-012",
+      "workspace_id": "",
+      "evidence": [
+        "Exact thread_id=THREAD-012 inherits ['FIRM-001']"
+      ],
+      "workspace_snapshot": {},
+      "row_snapshot": {
+        "message_id": "MSG-012",
+        "thread_id": "THREAD-012",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to decide which guides, reports, and generated drafts belong in the filing sequence.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-001"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "workspace_id": "WS-001",
+      "evidence": [
+        "Exact workspace_id=WS-001 has firm_id=FIRM-001",
+        "Workspace evidence: Firm 1 unique marker(s): family trust design sandbox, plan and compare family trust structure, ws-001",
+        "Firm 1 unique marker(s): ws-001"
+      ],
+      "workspace_snapshot": {
+        "workspace_id": "WS-001",
+        "title": "Family Trust Design Sandbox",
+        "workspace_type": "trust_design",
+        "trust_type_focus": "revocable",
+        "purpose": "Plan and compare family trust structure options before formal buildout.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-12 22:40:34",
+        "updated_at": "2026-04-12 22:40:34",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      "row_snapshot": {
+        "thread_id": "THREAD-001",
+        "workspace_id": "WS-001",
+        "title": "Revocable vs Irrevocable design questions",
+        "category": "trust_type_questions",
+        "related_trust_type": "revocable",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-12 22:44:16",
+        "updated_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-002"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "workspace_id": "WS-002",
+      "evidence": [
+        "Exact workspace_id=WS-002 has firm_id=FIRM-001",
+        "Workspace evidence: Firm 1 unique marker(s): fiduciary filing planning sandbox, organize filing questions, ws-002",
+        "Firm 1 unique marker(s): ws-002"
+      ],
+      "workspace_snapshot": {
+        "workspace_id": "WS-002",
+        "title": "Fiduciary Filing Planning Sandbox",
+        "workspace_type": "filing_planning",
+        "trust_type_focus": "other",
+        "purpose": "Organize filing questions, tax form links, and reporting workflow notes.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-12 22:40:34",
+        "updated_at": "2026-04-12 22:40:34",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      "row_snapshot": {
+        "thread_id": "THREAD-002",
+        "workspace_id": "WS-002",
+        "title": "Which filings matter first for fiduciary planning?",
+        "category": "tax_forms_questions",
+        "related_trust_type": "other",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-12 22:44:16",
+        "updated_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-010"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "workspace_id": "WS-010",
+      "evidence": [
+        "Exact workspace_id=WS-010 has firm_id=FIRM-001",
+        "Workspace evidence: Firm 1 unique marker(s): land holding structure sandbox, explore real-property holding structure, ws-010",
+        "Firm 1 unique marker(s): ws-010"
+      ],
+      "workspace_snapshot": {
+        "workspace_id": "WS-010",
+        "title": "Land Holding Structure Sandbox",
+        "workspace_type": "trust_design",
+        "trust_type_focus": "land",
+        "purpose": "Explore real-property holding structure and related recordkeeping questions.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      "row_snapshot": {
+        "thread_id": "THREAD-010",
+        "workspace_id": "WS-010",
+        "title": "How should land-holding questions be organized before formal drafting?",
+        "category": "asset_structuring_questions",
+        "related_trust_type": "land",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-011"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "workspace_id": "WS-011",
+      "evidence": [
+        "Exact workspace_id=WS-011 has firm_id=FIRM-001",
+        "Workspace evidence: Firm 1 unique marker(s): insurance planning sandbox, explore insurance-related trust planning, ws-011",
+        "Firm 1 unique marker(s): ws-011"
+      ],
+      "workspace_snapshot": {
+        "workspace_id": "WS-011",
+        "title": "Insurance Planning Sandbox",
+        "workspace_type": "trust_design",
+        "trust_type_focus": "insurance",
+        "purpose": "Explore insurance-related trust planning and documentation questions.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      "row_snapshot": {
+        "thread_id": "THREAD-011",
+        "workspace_id": "WS-011",
+        "title": "What fiduciary questions arise in insurance planning structure?",
+        "category": "fiduciary_process_questions",
+        "related_trust_type": "insurance",
+        "related_form": "Form 56",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-012"
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "workspace_id": "WS-012",
+      "evidence": [
+        "Exact workspace_id=WS-012 has firm_id=FIRM-001",
+        "Workspace evidence: Firm 1 unique marker(s): tax workflow sandbox, organize filing guides, ws-012",
+        "Firm 1 unique marker(s): ws-012"
+      ],
+      "workspace_snapshot": {
+        "workspace_id": "WS-012",
+        "title": "Tax Workflow Sandbox",
+        "workspace_type": "filing_planning",
+        "trust_type_focus": "complex",
+        "purpose": "Organize filing guides, reporting flow, and amendment considerations.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      "row_snapshot": {
+        "thread_id": "THREAD-012",
+        "workspace_id": "WS-012",
+        "title": "Which reports should be reviewed first in a filing-focused workspace?",
+        "category": "tax_forms_questions",
+        "related_trust_type": "complex",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    }
+  ],
+  "sandbox_gate": {
+    "authorized": true,
+    "live_database_modification": "PROHIBITED",
+    "production_cutover": "NOT_AUTHORIZED"
+  }
+}

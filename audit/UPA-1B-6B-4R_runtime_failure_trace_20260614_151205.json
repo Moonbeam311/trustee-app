@@ -1,0 +1,189 @@
+{
+  "generated_at": "2026-06-14T15:12:05.167254",
+  "status": "COMMON_RUNTIME_HARNESS_EXCEPTION_AND_SINGLE_FIRM2_SCOPE_ANOMALY_CONFIRMED",
+  "source_report": "audit\\UPA-1B-6B-4Q_runtime_validation_20260614_151031.json",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "summary": {
+    "firm1_route_exceptions": 7,
+    "firm2_route_exceptions": 7,
+    "distinct_exception_signatures": 1,
+    "common_exception_signature": true,
+    "firm1_opposite_rows": 0,
+    "firm2_opposite_rows": 1
+  },
+  "firm1": {
+    "import_success": true,
+    "binding_verified": true,
+    "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm1\\data\\trustee_app_firm1_validation.db",
+    "configured_cookie_name": "trustee_firm1_session",
+    "startup_error": null,
+    "traceback": null,
+    "process_returncode": 0,
+    "process_stderr": "",
+    "database_changed_during_probe": true,
+    "row_delta": 24,
+    "route_results": [
+      {
+        "route": "/",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/matters",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/trusts",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/workspaces",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/discussions",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/documents",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/workflow-hub",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      }
+    ],
+    "exception_groups": {
+      "TypeError: Response.get_data() got an unexpected keyword argument 'errors'": 7
+    },
+    "opposite_firm_rows": [],
+    "database_integrity": "ok",
+    "database_total_rows": 24470,
+    "explicit_firm_counts": {
+      "FIRM-001": 397
+    }
+  },
+  "firm2": {
+    "import_success": true,
+    "binding_verified": true,
+    "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4Q_20260614_151031\\firm2\\data\\trustee_app_firm2_validation.db",
+    "configured_cookie_name": "trustee_firm2_session",
+    "startup_error": null,
+    "traceback": null,
+    "process_returncode": 0,
+    "process_stderr": "",
+    "database_changed_during_probe": true,
+    "row_delta": 24,
+    "route_results": [
+      {
+        "route": "/",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/matters",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/trusts",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/workspaces",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/discussions",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/documents",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      },
+      {
+        "route": "/workflow-hub",
+        "status_code": null,
+        "exception": "TypeError: Response.get_data() got an unexpected keyword argument 'errors'",
+        "response_length": 0,
+        "own_markers": [],
+        "opposite_markers": []
+      }
+    ],
+    "exception_groups": {
+      "TypeError: Response.get_data() got an unexpected keyword argument 'errors'": 7
+    },
+    "opposite_firm_rows": [
+      {
+        "table": "audit_log",
+        "firm_value": "FIRM-001",
+        "count": 1
+      }
+    ],
+    "database_integrity": "ok",
+    "database_total_rows": 24312,
+    "explicit_firm_counts": {
+      "FIRM-001": 1,
+      "FIRM-002": 352
+    }
+  },
+  "authorization": {
+    "runtime_harness_correction": true,
+    "runtime_profile_build": false,
+    "production_cutover": false,
+    "live_database_replacement": false
+  }
+}

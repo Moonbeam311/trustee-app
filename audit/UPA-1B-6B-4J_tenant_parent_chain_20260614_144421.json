@@ -1,0 +1,4079 @@
+{
+  "generated_at": "2026-06-14T14:44:21.628321",
+  "status": "TENANT_PARENT_CHAIN_COMPLETE_FINAL_EXCEPTIONS_REMAIN",
+  "source_4i_report": "audit\\UPA-1B-6B-4I_final_policy_gate_20260614_144159.json",
+  "source_4g_report": "audit\\UPA-1B-6B-4G_extraction_gate_20260614_143113.json",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "database": {
+    "integrity": "ok",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true
+  },
+  "summary": {
+    "tenant_rows_reviewed": 27,
+    "resolved_total": 17,
+    "resolved_firm1": 17,
+    "resolved_firm2": 0,
+    "conflicts": 10,
+    "remaining_quarantine": 10
+  },
+  "action_counts": {
+    "COPY_TO_FIRM1": 17,
+    "QUARANTINE_CONFLICT_REVIEW": 10
+  },
+  "table_action_counts": {
+    "discussion_messages": {
+      "QUARANTINE_CONFLICT_REVIEW": 5
+    },
+    "discussion_threads": {
+      "QUARANTINE_CONFLICT_REVIEW": 5
+    },
+    "intake_module_ledger": {
+      "COPY_TO_FIRM1": 16
+    },
+    "user_permission_overrides": {
+      "COPY_TO_FIRM1": 1
+    }
+  },
+  "results": [
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-001"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-001",
+        "thread_id": "THREAD-001",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to compare control, flexibility, and reporting implications before final structure selection.",
+        "created_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-002"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-002",
+        "thread_id": "THREAD-002",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to organize which filing guides and reports need to be reviewed first.",
+        "created_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-010"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-010",
+        "thread_id": "THREAD-010",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to separate property-holding questions from reporting questions before moving into execution tasks.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-011"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-011",
+        "thread_id": "THREAD-011",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to outline role and authority questions tied to insurance-oriented planning.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-012"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-012",
+        "thread_id": "THREAD-012",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to decide which guides, reports, and generated drafts belong in the filing sequence.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-001"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "workspace_id",
+          "value": "WS-001",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "created_by",
+          "value": "admin",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 2
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 3
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 4
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 5
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 6
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 7
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 8
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 9
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 10
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 11
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 12
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-001"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-002"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-003"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-004"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-005"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-001",
+        "workspace_id": "WS-001",
+        "title": "Revocable vs Irrevocable design questions",
+        "category": "trust_type_questions",
+        "related_trust_type": "revocable",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-12 22:44:16",
+        "updated_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-002"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "workspace_id",
+          "value": "WS-002",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "created_by",
+          "value": "admin",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 2
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 3
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 4
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 5
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 6
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 7
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 8
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 9
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 10
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 11
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 12
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-001"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-002"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-003"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-004"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-005"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-002",
+        "workspace_id": "WS-002",
+        "title": "Which filings matter first for fiduciary planning?",
+        "category": "tax_forms_questions",
+        "related_trust_type": "other",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-12 22:44:16",
+        "updated_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-010"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "workspace_id",
+          "value": "WS-010",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "created_by",
+          "value": "admin",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 2
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 3
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 4
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 5
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 6
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 7
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 8
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 9
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 10
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 11
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 12
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-001"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-002"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-003"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-004"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-005"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-010",
+        "workspace_id": "WS-010",
+        "title": "How should land-holding questions be organized before formal drafting?",
+        "category": "asset_structuring_questions",
+        "related_trust_type": "land",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-011"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "workspace_id",
+          "value": "WS-011",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "created_by",
+          "value": "admin",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 2
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 3
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 4
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 5
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 6
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 7
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 8
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 9
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 10
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 11
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 12
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-001"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-002"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-003"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-004"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-005"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-011",
+        "workspace_id": "WS-011",
+        "title": "What fiduciary questions arise in insurance planning structure?",
+        "category": "fiduciary_process_questions",
+        "related_trust_type": "insurance",
+        "related_form": "Form 56",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-012"
+      },
+      "ownership": "UNRESOLVED_CONFLICT",
+      "action": "QUARANTINE_CONFLICT_REVIEW",
+      "confidence": "LOW",
+      "candidate_owners": [
+        "FIRM-001",
+        "FIRM-002"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "workspace_id",
+          "value": "WS-012",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "workspace_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-012"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "created_by",
+          "value": "admin",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 2
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 3
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 4
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 5
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 6
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 7
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 8
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 9
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 10
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 11
+              }
+            },
+            {
+              "table": "transfers",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 12
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-001"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-002"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-003"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-004"
+              }
+            },
+            {
+              "table": "trust_minutes",
+              "column": "created_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "minute_id": "MIN-005"
+              }
+            }
+          ]
+        },
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "owner_id",
+          "value": "ADMIN_OWNER_001",
+          "owners": [
+            "FIRM-001",
+            "FIRM-002"
+          ],
+          "sources": [
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-001"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-002"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-003"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-010"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-011"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "task_id": "TASK-012"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-010"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-011"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "document_id": "DOC-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-001"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-002"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-003"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-010"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-011"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-012"
+              }
+            },
+            {
+              "table": "workspace_notes",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "note_id": "NOTE-013"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-001"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-002"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-010"
+              }
+            },
+            {
+              "table": "workspaces",
+              "column": "owner_id",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "workspace_id": "WS-011"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-012",
+        "workspace_id": "WS-012",
+        "title": "Which reports should be reviewed first in a filing-focused workspace?",
+        "category": "tax_forms_questions",
+        "related_trust_type": "complex",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 1
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 1,
+        "module_code": "INT-1A",
+        "module_name": "Intake Lane Map",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Classifies the user into the correct intake lane.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 2
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 2,
+        "module_code": "INT-1B",
+        "module_name": "Intake Translation Map",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Translates plain-language answers into categories, modules, document requests, and risk flags.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 3
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 3,
+        "module_code": "INT-1C",
+        "module_name": "Intake Scoring Engine",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Scores complexity, urgency, and readiness.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 4
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 4,
+        "module_code": "INT-1D",
+        "module_name": "Client-Facing Fiduciary Snapshot",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Creates calm client-facing intake snapshot.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 5
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 5,
+        "module_code": "INT-1E",
+        "module_name": "Save Snapshot + Intake Dashboard List",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Stores and lists intake records.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 6
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 6,
+        "module_code": "INT-1F",
+        "module_name": "Resume + Completion Status Controls",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Separates completed and incomplete intakes.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 7
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 7,
+        "module_code": "INT-1G",
+        "module_name": "Dashboard Polish + Print/Export Prep",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds dashboard filters, print view, and export-prep screen.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 8
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 8,
+        "module_code": "INT-1H",
+        "module_name": "Internal Review Notes",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds internal staff/fiduciary notes.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 9
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 9,
+        "module_code": "INT-1I",
+        "module_name": "Follow-Up Task Builder",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Creates structured follow-up tasks from intake outputs.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 10
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 10,
+        "module_code": "INT-1J",
+        "module_name": "Task Filters + Workflow Polish",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Groups and summarizes follow-up tasks.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 11
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 11,
+        "module_code": "INT-1K",
+        "module_name": "Follow-Up Packet / Checklist Export Prep",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Compiles packet-prep printable checklist view.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 12
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 12,
+        "module_code": "INT-1L-DOCX",
+        "module_name": "Follow-Up Packet DOCX Export",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Generates downloadable DOCX follow-up packet.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 13
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 13,
+        "module_code": "INT-1L-PDF",
+        "module_name": "Follow-Up Packet PDF Export",
+        "status": "fallback",
+        "status_label": "Fallback / Limited",
+        "description": "Automatic PDF export requires LibreOffice or Word/pywin32; browser print-to-PDF remains available.",
+        "locked_at": null,
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 14
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 14,
+        "module_code": "INT-1M",
+        "module_name": "Export Gitignore + Audit Log",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Ignores generated exports and logs export attempts.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 15
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 15,
+        "module_code": "INT-1N",
+        "module_name": "Export History Dashboard + Packet Versioning",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds versioned export history.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 16
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "updated_by",
+          "value": "admin123",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "intake_draft_readiness_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_final_draft_sections",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            },
+            {
+              "table": "intake_review_gate_ledger",
+              "column": "updated_by",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "id": 1
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 16,
+        "module_code": "INT-1N-SCOPE",
+        "module_name": "Export History Firm Scope Repair",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds local fallback for all-export dashboard scope.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:07",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "user_permission_overrides",
+      "row_locator": {
+        "id": 2
+      },
+      "ownership": "FIRM-001",
+      "action": "COPY_TO_FIRM1",
+      "confidence": "HIGH",
+      "candidate_owners": [
+        "FIRM-001"
+      ],
+      "evidence": [
+        {
+          "type": "IDENTIFIER_MATCH",
+          "column": "username",
+          "value": "trustee",
+          "owners": [
+            "FIRM-001"
+          ],
+          "sources": [
+            {
+              "table": "app_users",
+              "column": "username",
+              "ownership": "FIRM-001",
+              "row_locator": {
+                "user_id": "USR-002"
+              }
+            }
+          ]
+        }
+      ],
+      "row_snapshot": {
+        "id": 2,
+        "username": "trustee",
+        "permission_name": "export_documents",
+        "effect": "deny",
+        "created_at": "2026-04-28 19:26:59"
+      }
+    }
+  ],
+  "sandbox_gate": {
+    "authorized": false,
+    "live_database_modification": "PROHIBITED",
+    "production_cutover": "NOT_AUTHORIZED"
+  }
+}

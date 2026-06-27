@@ -1,0 +1,276 @@
+{
+  "generated_at": "2026-06-13T18:27:57.687671",
+  "trace_source": "audit\\UPA-1B-6B-1_workspace_exposure_trace_20260613_182614.json",
+  "runtime_source": "audit\\UPA-1B-6B_runtime_verification_20260613_182046.json",
+  "status": "PRIOR_ADMIN_MARKER_RESULT_NOT_REPRODUCED_WITH_STRONG_MARKERS",
+  "git": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "status": "?? audit/"
+  },
+  "database_safety": {
+    "live_sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "live_sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "live_unchanged": true,
+    "sandbox_sha256_before": "38ec1890eeea4beca3b9bea74799237b5cb5034a79fc1f46558175a78f72b729",
+    "sandbox_sha256_after": "ab36dd59840749b49eac59bf23f70c9f8278ec35ad2feb31a4899069e889ca14",
+    "sandbox_changed": true,
+    "binding": {
+      "expected_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B_sandbox_20260613_182046.db",
+      "connected_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B_sandbox_20260613_182046.db",
+      "verified": true,
+      "errors": []
+    }
+  },
+  "summary": {
+    "workspace_rows": 7,
+    "firm_001_rows": 6,
+    "firm_002_rows": 1,
+    "firm_001_unique_markers": 26,
+    "firm_002_unique_markers": 6,
+    "routes_tested": 2,
+    "requests_completed": 4,
+    "confirmed_exposure_events": 0
+  },
+  "workspace_rows_by_firm": {
+    "FIRM-001": [
+      {
+        "workspace_id": "WS-001",
+        "title": "Family Trust Design Sandbox",
+        "workspace_type": "trust_design",
+        "trust_type_focus": "revocable",
+        "purpose": "Plan and compare family trust structure options before formal buildout.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-12 22:40:34",
+        "updated_at": "2026-04-12 22:40:34",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      {
+        "workspace_id": "WS-002",
+        "title": "Fiduciary Filing Planning Sandbox",
+        "workspace_type": "filing_planning",
+        "trust_type_focus": "other",
+        "purpose": "Organize filing questions, tax form links, and reporting workflow notes.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-12 22:40:34",
+        "updated_at": "2026-04-12 22:40:34",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      {
+        "workspace_id": "WS-010",
+        "title": "Land Holding Structure Sandbox",
+        "workspace_type": "trust_design",
+        "trust_type_focus": "land",
+        "purpose": "Explore real-property holding structure and related recordkeeping questions.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      {
+        "workspace_id": "WS-011",
+        "title": "Insurance Planning Sandbox",
+        "workspace_type": "trust_design",
+        "trust_type_focus": "insurance",
+        "purpose": "Explore insurance-related trust planning and documentation questions.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      {
+        "workspace_id": "WS-012",
+        "title": "Tax Workflow Sandbox",
+        "workspace_type": "filing_planning",
+        "trust_type_focus": "complex",
+        "purpose": "Organize filing guides, reporting flow, and amendment considerations.",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      },
+      {
+        "workspace_id": "admin 01",
+        "title": "too much",
+        "workspace_type": "too short",
+        "trust_type_focus": "too long",
+        "purpose": "too fat",
+        "owner": "admin",
+        "status": "draft",
+        "created_at": "2026-04-14 22:43:10",
+        "updated_at": "2026-04-14 22:43:10",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-001"
+      }
+    ],
+    "FIRM-002": [
+      {
+        "workspace_id": "FIRM-002",
+        "title": "Luna I Mishoe III Revocable Trust",
+        "workspace_type": "Trust Creation",
+        "trust_type_focus": "Beneficiary",
+        "purpose": "Too Create a Trust",
+        "owner": "Luna Mishoe",
+        "status": "draft",
+        "created_at": "2026-05-12 03:52:31",
+        "updated_at": "2026-05-12 03:52:31",
+        "owner_id": "ADMIN_OWNER_001",
+        "firm_id": "FIRM-002"
+      }
+    ]
+  },
+  "unique_markers": {
+    "FIRM-001": [
+      "Explore real-property holding structure and related recordkeeping questions.",
+      "Organize filing questions, tax form links, and reporting workflow notes.",
+      "Plan and compare family trust structure options before formal buildout.",
+      "Explore insurance-related trust planning and documentation questions.",
+      "Organize filing guides, reporting flow, and amendment considerations.",
+      "Fiduciary Filing Planning Sandbox",
+      "Land Holding Structure Sandbox",
+      "Family Trust Design Sandbox",
+      "Insurance Planning Sandbox",
+      "Tax Workflow Sandbox",
+      "filing_planning",
+      "trust_design",
+      "insurance",
+      "revocable",
+      "too short",
+      "admin 01",
+      "too long",
+      "too much",
+      "complex",
+      "too fat",
+      "WS-001",
+      "WS-002",
+      "WS-010",
+      "WS-011",
+      "WS-012",
+      "other"
+    ],
+    "FIRM-002": [
+      "Luna I Mishoe III Revocable Trust",
+      "Too Create a Trust",
+      "Trust Creation",
+      "Beneficiary",
+      "Luna Mishoe",
+      "FIRM-002"
+    ]
+  },
+  "route_results": [
+    {
+      "route": "/discussions/new",
+      "firm_results": [
+        {
+          "active_firm": "FIRM-001",
+          "status_code": 200,
+          "location": null,
+          "response_length": 756,
+          "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+          "own_firm_marker_hits": [],
+          "opposite_firm_marker_hits": [],
+          "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_password\">Change Password</a> | <a href=\"/logout\">Logout</a></p>\n\n<h1>Access Denied</h1>\n\n<div class=\"box\">\n  <p>Role admin is not allowed for this page.</p>\n  <p>Your current session role does not have permission to access this page.</p>\n</div>\n\n</body>\n</html>"
+        },
+        {
+          "active_firm": "FIRM-002",
+          "status_code": 200,
+          "location": null,
+          "response_length": 756,
+          "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+          "own_firm_marker_hits": [],
+          "opposite_firm_marker_hits": [],
+          "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_password\">Change Password</a> | <a href=\"/logout\">Logout</a></p>\n\n<h1>Access Denied</h1>\n\n<div class=\"box\">\n  <p>Role admin is not allowed for this page.</p>\n  <p>Your current session role does not have permission to access this page.</p>\n</div>\n\n</body>\n</html>"
+        }
+      ]
+    },
+    {
+      "route": "/documents/generate",
+      "firm_results": [
+        {
+          "active_firm": "FIRM-001",
+          "status_code": 200,
+          "location": null,
+          "response_length": 756,
+          "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+          "own_firm_marker_hits": [],
+          "opposite_firm_marker_hits": [],
+          "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_password\">Change Password</a> | <a href=\"/logout\">Logout</a></p>\n\n<h1>Access Denied</h1>\n\n<div class=\"box\">\n  <p>Role admin is not allowed for this page.</p>\n  <p>Your current session role does not have permission to access this page.</p>\n</div>\n\n</body>\n</html>"
+        },
+        {
+          "active_firm": "FIRM-002",
+          "status_code": 200,
+          "location": null,
+          "response_length": 756,
+          "response_sha256": "defa4e20cbd4198cc98695b800e2a9dd78d34cfa2b57ecaed399d4eb6095ef5f",
+          "own_firm_marker_hits": [],
+          "opposite_firm_marker_hits": [],
+          "body_preview": "<!DOCTYPE html>\n<html>\n<head>\n  <title>Access Denied</title>\n  <style>\n    body { font-family: Arial, sans-serif; margin: 24px; background: #f6f8fa; }\n    .box { border: 1px solid #cf222e; padding: 18px; margin-bottom: 18px; border-radius: 10px; background: #fff5f5; color: #cf222e; }\n  </style>\n</head>\n<body>\n\n<div style=\"border-bottom:1px solid #d0d7de; padding:14px 0; margin-bottom:24px;\">\n  <a href=\"/\">Home</a> |\n  <a href=\"/guide\">Guide</a> |\n  \n  \n\n  \n\n  \n</div>\n\n\n<p><a href=\"/change_password\">Change Password</a> | <a href=\"/logout\">Logout</a></p>\n\n<h1>Access Denied</h1>\n\n<div class=\"box\">\n  <p>Role admin is not allowed for this page.</p>\n  <p>Your current session role does not have permission to access this page.</p>\n</div>\n\n</body>\n</html>"
+        }
+      ]
+    }
+  ],
+  "confirmed_events": [],
+  "route_source": [
+    {
+      "function": "discussion_new",
+      "line": 10528,
+      "end_line": 10553,
+      "calls": [
+        "(request.form.get('thread_id') or '').strip",
+        "(request.form.get('title') or '').strip",
+        "app.route",
+        "create_discussion_thread",
+        "get_all_workspaces",
+        "get_current_owner",
+        "get_discussion_categories",
+        "redirect",
+        "render_template",
+        "request.form.get",
+        "session.get",
+        "url_for",
+        "validate_csrf_token"
+      ],
+      "contains_firm_id": false,
+      "contains_current_firm": false,
+      "source": "def discussion_new():\n    workspaces = get_all_workspaces()\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\"discussion_form.html\", mode=\"new\", workspaces=workspaces, categories=get_discussion_categories(), error_message=\"Invalid or missing CSRF token.\")\n\n        thread_id = (request.form.get(\"thread_id\") or \"\").strip()\n        title = (request.form.get(\"title\") or \"\").strip()\n        if not thread_id or not title:\n            return render_template(\"discussion_form.html\", mode=\"new\", workspaces=workspaces, categories=get_discussion_categories(), error_message=\"Thread ID and Title are required.\")\n\n        payload = {\n            \"thread_id\": thread_id,\n            \"workspace_id\": request.form.get(\"workspace_id\"),\n            \"title\": title,\n            \"category\": request.form.get(\"category\"),\n            \"related_trust_type\": request.form.get(\"related_trust_type\"),\n            \"related_form\": request.form.get(\"related_form\"),\n            \"created_by\": session.get(\"username\") or \"unknown\",\n            \"status\": request.form.get(\"status\") or \"open\",\n            \"owner_id\": get_current_owner(),\n        }\n        create_discussion_thread(payload)\n        return redirect(url_for(\"discussion_thread\", thread_id=thread_id))\n\n    return render_template(\"discussion_form.html\", mode=\"new\", workspaces=workspaces, categories=get_discussion_categories())"
+    },
+    {
+      "function": "document_generate",
+      "line": 10888,
+      "end_line": 10949,
+      "calls": [
+        "(request.form.get('document_id') or '').strip",
+        "(request.form.get('template_id') or '').strip",
+        "(request.form.get('title') or '').strip",
+        "app.route",
+        "create_generated_document",
+        "get_all_workspaces",
+        "get_current_owner",
+        "get_document_template_by_id",
+        "get_document_templates",
+        "redirect",
+        "render_document_template",
+        "render_template",
+        "request.form.get",
+        "session.get",
+        "template.get",
+        "url_for",
+        "validate_csrf_token"
+      ],
+      "contains_firm_id": false,
+      "contains_current_firm": false,
+      "source": "def document_generate():\n    templates = get_document_templates()\n    workspaces = get_all_workspaces()\n\n    if request.method == \"POST\":\n        if not validate_csrf_token():\n            return render_template(\n                \"document_generate_form.html\",\n                templates=templates,\n                workspaces=workspaces,\n                error_message=\"Invalid or missing CSRF token.\"\n            )\n\n        document_id = (request.form.get(\"document_id\") or \"\").strip()\n        template_id = (request.form.get(\"template_id\") or \"\").strip()\n        title = (request.form.get(\"title\") or \"\").strip()\n\n        if not document_id or not template_id or not title:\n            return render_template(\n                \"document_generate_form.html\",\n                templates=templates,\n                workspaces=workspaces,\n                error_message=\"Document ID, Template, and Title are required.\"\n            )\n\n        template = get_document_template_by_id(template_id)\n        if not template:\n            return render_template(\n                \"document_generate_form.html\",\n                templates=templates,\n                workspaces=workspaces,\n                error_message=\"Selected template was not found.\"\n            )\n\n        values = {\n            \"title\": request.form.get(\"title\") or \"\",\n            \"purpose\": request.form.get(\"purpose\") or \"\",\n            \"trust_type_focus\": request.form.get(\"trust_type_focus\") or \"\",\n            \"notes\": request.form.get(\"notes\") or \"\",\n            \"trust_name\": request.form.get(\"trust_name\") or \"\",\n            \"trustee_name\": request.form.get(\"trustee_name\") or \"\",\n            \"authority_scope\": request.form.get(\"authority_scope\") or \"\",\n            \"related_forms\": request.form.get(\"related_forms\") or \"\",\n            \"related_reports\": request.form.get(\"related_reports\") or \"\",\n        }\n        content = render_document_template(template.get(\"template_body\"), values)\n\n        payload = {\n            \"document_id\": document_id,\n            \"workspace_id\": request.form.get(\"workspace_id\"),\n            \"trust_id\": request.form.get(\"trust_id\"),\n            \"template_id\": template_id,\n            \"title\": title,\n            \"content\": content,\n            \"status\": request.form.get(\"status\") or \"draft\",\n            \"created_by\": session.get(\"username\") or \"unknown\",\n            \"owner_id\": get_current_owner(),\n        }\n        create_generated_document(payload)\n        return redirect(url_for(\"document_detail\", document_id=document_id))\n\n    return render_template(\"document_generate_form.html\", templates=templates, workspaces=workspaces)"
+    }
+  ],
+  "helper_source": []
+}

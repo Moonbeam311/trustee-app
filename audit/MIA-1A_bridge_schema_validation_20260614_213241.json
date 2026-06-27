@@ -1,0 +1,64 @@
+{
+  "audit_id": "MIA-1A",
+  "status": "BRIDGE_SCHEMA_VALIDATED_LIVE_DATABASE_UNCHANGED",
+  "created_at": "2026-06-14T21:32:42.031646",
+  "live_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+  "live_sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+  "live_sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+  "live_database_unchanged": true,
+  "sandbox_database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\MIA-1A_bridge_schema_20260614_213241.db",
+  "sandbox_integrity_before": "ok",
+  "sandbox_integrity_after": "ok",
+  "first_install": {
+    "tables": [
+      "matter_intake_link_events",
+      "matter_intake_links"
+    ],
+    "indexes": [
+      "ix_matter_intake_events_bridge",
+      "ix_matter_intake_links_intake",
+      "ix_matter_intake_links_matter",
+      "uq_matter_intake_active_pair",
+      "uq_matter_intake_primary_intake"
+    ],
+    "triggers": [
+      "trg_matter_intake_event_immutable_delete",
+      "trg_matter_intake_event_immutable_update",
+      "trg_matter_intake_event_same_firm",
+      "trg_matter_intake_insert_same_firm",
+      "trg_matter_intake_update_same_firm"
+    ],
+    "link_rows": 0,
+    "event_rows": 0,
+    "schema_complete": true
+  },
+  "second_install": {
+    "tables": [
+      "matter_intake_link_events",
+      "matter_intake_links"
+    ],
+    "indexes": [
+      "ix_matter_intake_events_bridge",
+      "ix_matter_intake_links_intake",
+      "ix_matter_intake_links_matter",
+      "uq_matter_intake_active_pair",
+      "uq_matter_intake_primary_intake"
+    ],
+    "triggers": [
+      "trg_matter_intake_event_immutable_delete",
+      "trg_matter_intake_event_immutable_update",
+      "trg_matter_intake_event_same_firm",
+      "trg_matter_intake_insert_same_firm",
+      "trg_matter_intake_update_same_firm"
+    ],
+    "link_rows": 0,
+    "event_rows": 0,
+    "schema_complete": true
+  },
+  "source_and_bridge_tables": [
+    "intake_sessions",
+    "matter_intake_link_events",
+    "matter_intake_links",
+    "matters"
+  ]
+}

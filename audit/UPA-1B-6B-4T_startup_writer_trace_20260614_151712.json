@@ -1,0 +1,4985 @@
+{
+  "generated_at": "2026-06-14T15:17:27.830959",
+  "status": "STARTUP_WRITER_TRACE_REVIEW_REQUIRED",
+  "sources": {
+    "4p": "audit\\UPA-1B-6B-4P_corrected_sandbox_rebuild_20260614_150738.json",
+    "4s": "audit\\UPA-1B-6B-4S_corrected_runtime_probe_20260614_151442.json"
+  },
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "source_safety": {
+    "live_database_unchanged": true,
+    "certified_firm1_unchanged": true,
+    "certified_firm2_unchanged": true,
+    "passed": true
+  },
+  "source_findings": {
+    "session_timeout": [
+      {
+        "path": "app.py",
+        "line": 522,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "SESSION_TIMEOUT_SECONDS = 900  # 15 minutes",
+        "context_before": "login_attempts = {}",
+        "context_after": "app.config[\"PERMANENT_SESSION_LIFETIME\"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)"
+      },
+      {
+        "path": "app.py",
+        "line": 523,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "app.config[\"PERMANENT_SESSION_LIFETIME\"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)",
+        "context_before": "SESSION_TIMEOUT_SECONDS = 900  # 15 minutes",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 9771,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "def enforce_session_timeout():",
+        "context_before": "@app.before_request",
+        "context_after": "# \ud83d\udd12 GLOBAL AUTHENTICATION LOCK"
+      },
+      {
+        "path": "app.py",
+        "line": 9890,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "if now_ts - float(last_activity) > SESSION_TIMEOUT_SECONDS:",
+        "context_before": "now_ts = datetime.now(UTC).timestamp()",
+        "context_after": "session.clear()"
+      },
+      {
+        "path": "app.py",
+        "line": 14276,
+        "matched_terms": [
+          "session_timeout",
+          "Session expired due to inactivity"
+        ],
+        "text": "log_change(\"auth\", \"unknown\", \"session_timeout\", \"Session expired due to inactivity\")",
+        "context_before": "if timeout == \"1\":",
+        "context_after": "return render_template(\"auth/login.html\", error=\"Your session expired due to inactivity. Please log in again.\")"
+      },
+      {
+        "path": "app.py",
+        "line": 14277,
+        "matched_terms": [
+          "Session expired due to inactivity"
+        ],
+        "text": "return render_template(\"auth/login.html\", error=\"Your session expired due to inactivity. Please log in again.\")",
+        "context_before": "log_change(\"auth\", \"unknown\", \"session_timeout\", \"Session expired due to inactivity\")",
+        "context_after": ""
+      },
+      {
+        "path": "handoff\\NATION1_AUTH_TIMEOUT_HANDOFF.txt",
+        "line": 12,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "- Step 42 completed: SESSION_TIMEOUT_SECONDS config added to app.py",
+        "context_before": "- Session timeout phase started",
+        "context_after": ""
+      },
+      {
+        "path": "handoff\\NATION1_PYTHON_HANDOFF.py",
+        "line": 15,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "- Step 42 complete: SESSION_TIMEOUT_SECONDS = 900 added to app.py",
+        "context_before": "- Session timeout phase started",
+        "context_after": ""
+      },
+      {
+        "path": "handoff\\NATION1_PYTHON_HANDOFF.py",
+        "line": 31,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "\"session_timeout_config\": \"started\",",
+        "context_before": "\"seeded_roles\": [\"Admin\", \"Trustee\", \"Viewer\"],",
+        "context_after": "\"step_42\": \"complete\""
+      },
+      {
+        "path": "handoff\\NATION1_PYTHON_HANDOFF.py",
+        "line": 73,
+        "matched_terms": [
+          "session_timeout"
+        ],
+        "text": "\"SESSION_TIMEOUT_SECONDS = 900 added to app.py\"",
+        "context_before": "\"completed\": [",
+        "context_after": "],"
+      }
+    ],
+    "role_permissions": [
+      {
+        "path": "app.py",
+        "line": 166,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "replace_role_permissions,",
+        "context_before": "role_has_permission,",
+        "context_after": "ensure_user_permission_override_tables,"
+      },
+      {
+        "path": "app.py",
+        "line": 175,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "reseed_default_role_permissions,",
+        "context_before": "run_safe_recovery_migrations,",
+        "context_after": "ensure_firm_columns,"
+      },
+      {
+        "path": "app.py",
+        "line": 418,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "CREATE TABLE IF NOT EXISTS role_permissions (",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      },
+      {
+        "path": "app.py",
+        "line": 464,
+        "matched_terms": [
+          "role_permissions",
+          "INSERT OR IGNORE INTO role_permissions"
+        ],
+        "text": "INSERT OR IGNORE INTO role_permissions (role_name, permission_name)",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "VALUES ('Admin', ?)"
+      },
+      {
+        "path": "app.py",
+        "line": 7078,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "result = reseed_default_role_permissions()",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 9640,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "replace_role_permissions(target_role, selected_permissions)",
+        "context_before": "if target_role in permission_roles:",
+        "context_after": "log_change("
+      },
+      {
+        "path": "app.py",
+        "line": 14680,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "result = reseed_default_role_permissions()",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 14867,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "CREATE TABLE IF NOT EXISTS role_permissions (",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      },
+      {
+        "path": "app.py",
+        "line": 14913,
+        "matched_terms": [
+          "role_permissions",
+          "INSERT OR IGNORE INTO role_permissions"
+        ],
+        "text": "INSERT OR IGNORE INTO role_permissions (role_name, permission_name)",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "VALUES ('Admin', ?)"
+      },
+      {
+        "path": "app.py",
+        "line": 14983,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "FROM role_permissions",
+        "context_before": "SELECT permission_name",
+        "context_after": "WHERE role_name = 'Admin'"
+      },
+      {
+        "path": "HANDOFF_PHASE8E_ALIGNED.md",
+        "line": 31,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "- Added permissions and role_permissions startup initialization",
+        "context_before": "- Added audit_log hash-column migrations",
+        "context_after": "- Seeded default permission matrix for Admin, Trustee, Viewer"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2652,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "CREATE TABLE IF NOT EXISTS role_permissions (",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2680,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "default_role_permissions = {",
+        "context_before": "",
+        "context_after": "\"Admin\": ["
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2697,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "for role_name, permission_names in default_role_permissions.items():",
+        "context_before": "",
+        "context_after": "for permission_name in permission_names:"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2700,
+        "matched_terms": [
+          "role_permissions",
+          "INSERT OR IGNORE INTO role_permissions"
+        ],
+        "text": "INSERT OR IGNORE INTO role_permissions (role_name, permission_name)",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "VALUES (?, ?)"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2904,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "FROM role_permissions",
+        "context_before": "SELECT permission_name",
+        "context_after": "WHERE role_name = ?"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2916,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "def replace_role_permissions(role_name, permission_names):",
+        "context_before": "",
+        "context_after": "conn = get_connection()"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2920,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "cur.execute(\"DELETE FROM role_permissions WHERE role_name = ?\", (role_name,))",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 2924,
+        "matched_terms": [
+          "role_permissions",
+          "INSERT INTO role_permissions"
+        ],
+        "text": "INSERT INTO role_permissions (role_name, permission_name)",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "VALUES (?, ?)"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3051,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "\"role_permissions\": [\"id\", \"role_name\", \"permission_name\"],",
+        "context_before": "\"permissions\": [\"permission_id\", \"permission_name\", \"description\"],",
+        "context_after": "\"app_users\": [\"user_id\", \"username\", \"password_hash\", \"role_name\", \"status\"],"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3121,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "def reseed_default_role_permissions():",
+        "context_before": "",
+        "context_after": "\"\"\""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3123,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "Rebuilds the default role_permissions matrix.",
+        "context_before": "\"\"\"",
+        "context_after": "This does not modify app_users or user_permission_overrides."
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3138,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "CREATE TABLE IF NOT EXISTS role_permissions (",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3161,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "default_role_permissions = {",
+        "context_before": "",
+        "context_after": "\"Admin\": ["
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3183,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "for role_name in default_role_permissions:",
+        "context_before": "",
+        "context_after": "cur.execute(\"DELETE FROM role_permissions WHERE role_name = ?\", (role_name,))"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3184,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "cur.execute(\"DELETE FROM role_permissions WHERE role_name = ?\", (role_name,))",
+        "context_before": "for role_name in default_role_permissions:",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3187,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "for role_name, permission_names in default_role_permissions.items():",
+        "context_before": "inserted = 0",
+        "context_after": "for permission_name in permission_names:"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3190,
+        "matched_terms": [
+          "role_permissions",
+          "INSERT OR IGNORE INTO role_permissions"
+        ],
+        "text": "INSERT OR IGNORE INTO role_permissions (role_name, permission_name)",
+        "context_before": "cur.execute(\"\"\"",
+        "context_after": "VALUES (?, ?)"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3200,
+        "matched_terms": [
+          "role_permissions"
+        ],
+        "text": "\"roles_seeded\": sorted(default_role_permissions.keys()),",
+        "context_before": "\"overall_status\": \"OK\",",
+        "context_after": "\"permissions_inserted_or_verified\": len(default_permissions),"
+      }
+    ],
+    "firm1_defaults": [
+      {
+        "path": "app.py",
+        "line": 1006,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "active_firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 1010,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "return trust.get(\"firm_id\") or trust.get(\"firm\") or \"FIRM-001\"",
+        "context_before": "try:",
+        "context_after": "except Exception:"
+      },
+      {
+        "path": "app.py",
+        "line": 1013,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "return getattr(trust, \"firm_id\", None) or getattr(trust, \"firm\", None) or \"FIRM-001\"",
+        "context_before": "try:",
+        "context_after": "except Exception:"
+      },
+      {
+        "path": "app.py",
+        "line": 1015,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "return \"FIRM-001\"",
+        "context_before": "except Exception:",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 1051,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "active_firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "trust = get_trust_by_id(trust_id)",
+        "context_after": "if not trust:"
+      },
+      {
+        "path": "app.py",
+        "line": 1055,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "trust_firm_id = trust.get(\"firm_id\") or trust.get(\"firm\") or \"FIRM-001\"",
+        "context_before": "try:",
+        "context_after": "except Exception:"
+      },
+      {
+        "path": "app.py",
+        "line": 1057,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "trust_firm_id = getattr(trust, \"firm_id\", None) or getattr(trust, \"firm\", None) or \"FIRM-001\"",
+        "context_before": "except Exception:",
+        "context_after": "return trust_firm_id == active_firm_id"
+      },
+      {
+        "path": "app.py",
+        "line": 1168,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_transfer_for_active_firm_or_404(transfer_id):",
+        "context_after": "transfer = Transfer.query.filter_by(transfer_id=transfer_id).first_or_404()"
+      },
+      {
+        "path": "app.py",
+        "line": 6636,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "f\"Admin {session.get('username')} for firm {session.get('firm_id', 'FIRM-001')} set {policy_key} to {policy[policy_key]}\"",
+        "context_before": "\"toggle\",",
+        "context_after": ")"
+      },
+      {
+        "path": "app.py",
+        "line": 8607,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_generated_documents():",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8619,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_generated_documents_by_workspace(workspace_id):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8632,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_generated_document_by_id(document_id):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8644,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")",
+        "context_before": "payload = dict(payload)",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 8672,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_all_execution_tasks():",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8684,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_execution_tasks_by_workspace(workspace_id):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8697,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_execution_task_by_id(task_id):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8709,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")",
+        "context_before": "payload = dict(payload)",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 8738,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def update_execution_task_status(task_id, status):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8883,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_all_workspaces():",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8894,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_workspace_by_id(workspace_id):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8906,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")",
+        "context_before": "payload = dict(payload)",
+        "context_after": "payload.setdefault(\"owner_id\", get_current_owner())"
+      },
+      {
+        "path": "app.py",
+        "line": 8929,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def update_workspace(workspace_id, payload):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8956,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def get_workspace_notes(workspace_id):",
+        "context_after": "conn = _learning_conn()"
+      },
+      {
+        "path": "app.py",
+        "line": 8969,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")",
+        "context_before": "payload = dict(payload)",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 11448,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "active_export_filter = request.args.get(\"export_filter\", \"all\")"
+      },
+      {
+        "path": "app.py",
+        "line": 11680,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 11891,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "conn = get_connection()"
+      },
+      {
+        "path": "app.py",
+        "line": 11966,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 12197,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=session.get(\"firm_id\") or \"FIRM-001\",",
+        "context_before": "transfer_id=generate_transfer_id(),",
+        "context_after": "mode=mode,"
+      },
+      {
+        "path": "app.py",
+        "line": 12660,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "transfer_firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "transfer_intake_id = getattr(transfer, \"intake_id\", None) or \"\"",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 12884,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 12945,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 13046,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 13119,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "generated_by = session.get(\"username\") or session.get(\"user_email\") or \"System User\""
+      },
+      {
+        "path": "app.py",
+        "line": 13467,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "generated_by = session.get(\"username\") or session.get(\"user_email\") or \"System User\""
+      },
+      {
+        "path": "app.py",
+        "line": 13648,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 13827,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 13930,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_transfer_archive_handoff_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 14095,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "minute_like = f\"%{transfer.transfer_id}%\""
+      },
+      {
+        "path": "app.py",
+        "line": 14241,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session[\"firm_id\"] = user[\"firm_id\"] if \"firm_id\" in user.keys() and user[\"firm_id\"] else \"FIRM-001\"",
+        "context_before": "session[\"username\"] = user[\"username\"]",
+        "context_after": "session[\"last_activity\"] = datetime.now(UTC).timestamp()"
+      },
+      {
+        "path": "app.py",
+        "line": 14373,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "def resume_process():",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 15392,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id,",
+        "context_after": "request.form.get(\"asset_category\"),"
+      },
+      {
+        "path": "app.py",
+        "line": 15408,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id=intake_id,",
+        "context_after": "asset_status=\"in_progress\","
+      },
+      {
+        "path": "app.py",
+        "line": 15502,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id,",
+        "context_after": "request.form.get(\"document_category\"),"
+      },
+      {
+        "path": "app.py",
+        "line": 15513,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id=intake_id,",
+        "context_after": "document_status=\"in_progress\","
+      },
+      {
+        "path": "app.py",
+        "line": 15554,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "summary = build_intake_readiness_summary(intake_id, firm_id)"
+      },
+      {
+        "path": "app.py",
+        "line": 15593,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_deep_review_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 15685,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_drafting_prep_gate_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 15820,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id,",
+        "context_after": "document_type,"
+      },
+      {
+        "path": "app.py",
+        "line": 15832,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id=intake_id,",
+        "context_after": "drafting_status=\"draft_session_active\","
+      },
+      {
+        "path": "app.py",
+        "line": 15959,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id,",
+        "context_after": "draft_session[\"document_type\"],"
+      },
+      {
+        "path": "app.py",
+        "line": 15975,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id=intake_id,",
+        "context_after": "drafting_status=\"workspace_active\","
+      },
+      {
+        "path": "app.py",
+        "line": 16046,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "draft_session_id = workspace[\"draft_session_id\"]",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 16143,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 16309,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 16438,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 16587,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 16772,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 16824,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_docx_verification_gate_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 16965,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 17156,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 17208,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ensure_pdf_execution_approval_table()"
+      },
+      {
+        "path": "app.py",
+        "line": 17350,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 17517,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 17707,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": ""
+      },
+      {
+        "path": "app.py",
+        "line": 17835,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "",
+        "context_after": "ledger = build_lifecycle_master_ledger(intake_id, firm_id)"
+      },
+      {
+        "path": "app.py",
+        "line": 18825,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id,",
+        "context_after": "request.form.get(\"intake_type\"),"
+      },
+      {
+        "path": "app.py",
+        "line": 18845,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),",
+        "context_before": "intake_id=intake_id,",
+        "context_after": "identity_status=\"complete\","
+      },
+      {
+        "path": "app.py",
+        "line": 18876,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "\"\"\", (intake_id, session.get(\"firm_id\", \"FIRM-001\")))",
+        "context_before": "WHERE intake_id = ? AND firm_id = ?",
+        "context_after": "intake = cur.fetchone()"
+      },
+      {
+        "path": "app.py",
+        "line": 18887,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "session.get(\"firm_id\", \"FIRM-001\")",
+        "context_before": "intake_id,",
+        "context_after": ")"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 13,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "Defaults to FIRM-001 only outside request context or legacy sessions.",
+        "context_before": "Return the active tenant/firm scope for the current request.",
+        "context_after": "\"\"\""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 18,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "return session.get(\"firm_id\") or \"FIRM-001\"",
+        "context_before": "if has_request_context():",
+        "context_after": "except Exception:"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 21,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "return \"FIRM-001\"",
+        "context_before": "pass",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 37,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT UNIQUE,",
+        "context_after": "intake_type TEXT,"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 74,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT UNIQUE,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 116,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 154,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 1978,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\"",
+        "context_before": "from flask import has_request_context, session",
+        "context_after": "except Exception:"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 1980,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id = \"FIRM-001\"",
+        "context_before": "except Exception:",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3513,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id=\"FIRM-001\",",
+        "context_before": "intake_id,",
+        "context_after": "identity_status=None,"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3581,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "def get_intake_orchestration_state(intake_id, firm_id=\"FIRM-001\"):",
+        "context_before": "",
+        "context_after": "ensure_intake_orchestration_table()"
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3598,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "def build_intake_readiness_summary(intake_id, firm_id=\"FIRM-001\"):",
+        "context_before": "",
+        "context_after": "\"\"\""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3707,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3738,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3769,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3803,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3839,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3883,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3915,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3947,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 3978,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4015,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4054,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4092,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4130,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4171,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4211,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4253,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4306,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4360,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4421,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4493,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "trust_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4529,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "trust_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4551,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "def build_lifecycle_master_ledger(intake_id, firm_id=\"FIRM-001\"):",
+        "context_before": "",
+        "context_after": "\"\"\""
+      },
+      {
+        "path": "database\\db.py",
+        "line": 4731,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT,",
+        "context_after": ""
+      },
+      {
+        "path": "docs\\GLOBAL_411_FIREWALL_G8D_HOSTED_REGRESSION_CHECKLIST.md",
+        "line": 140,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "Dropdown shows FIRM-001 records",
+        "context_before": "Dropdown shows only TR-002",
+        "context_after": "Internal Server Error"
+      },
+      {
+        "path": "scripts\\migrate_hosted_firm_scope.py",
+        "line": 62,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "# Default legacy hosted rows to FIRM-001.",
+        "context_before": "",
+        "context_after": "for table in TABLES_WITH_FIRM_ID:"
+      },
+      {
+        "path": "scripts\\migrate_hosted_firm_scope.py",
+        "line": 68,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "SET firm_id = 'FIRM-001'",
+        "context_before": "UPDATE {table}",
+        "context_after": "WHERE firm_id IS NULL OR TRIM(firm_id) = ''"
+      },
+      {
+        "path": "scripts\\migrate_hosted_firm_scope.py",
+        "line": 71,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "print(f\"{table}: defaulted rows to FIRM-001:\", cur.rowcount)",
+        "context_before": "\"\"\")",
+        "context_after": ""
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 80,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT UNIQUE NOT NULL,",
+        "context_after": "client_id TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 101,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "event_type TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 863,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "question_key TEXT NOT NULL,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 876,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "source_key TEXT NOT NULL,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 1169,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "complexity_score INTEGER DEFAULT 0,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 1567,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT UNIQUE NOT NULL,",
+        "context_after": "snapshot_json TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 2033,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "note_type TEXT DEFAULT 'general',"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 2229,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "task_type TEXT DEFAULT 'staff_action',"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 2922,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "export_type TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 3915,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "intake_id TEXT NOT NULL,",
+        "context_after": "workflow_key TEXT NOT NULL,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 5070,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "workflow_key TEXT NOT NULL,",
+        "context_after": "question_key TEXT NOT NULL,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 5445,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "workflow_key TEXT NOT NULL,",
+        "context_after": "draft_packet_type TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 6070,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "question_key TEXT NOT NULL,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 6417,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "gate_name TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 6731,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "gate_name TEXT DEFAULT 'non_final_draft_review_gate',",
+        "context_after": "action_key TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 6941,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "gate_status TEXT DEFAULT 'blocked',"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 7313,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "action_key TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 7615,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "approval_status TEXT DEFAULT 'approved_for_final_draft_preparation',"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 7996,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "section_order INTEGER,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 8420,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "version_label TEXT,"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 8628,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "gate_status TEXT DEFAULT 'blocked',"
+      },
+      {
+        "path": "services\\services_intake.py",
+        "line": 8651,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "document_key TEXT NOT NULL,",
+        "context_after": "action_status TEXT,"
+      },
+      {
+        "path": "services\\services_matters.py",
+        "line": 12,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "matter_id TEXT UNIQUE NOT NULL,",
+        "context_after": "title TEXT NOT NULL,"
+      },
+      {
+        "path": "services\\services_matters.py",
+        "line": 34,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "firm_id TEXT DEFAULT 'FIRM-001',",
+        "context_before": "matter_id TEXT NOT NULL,",
+        "context_after": "event_type TEXT NOT NULL,"
+      },
+      {
+        "path": "docs\\security\\GLOBAL_411_FIREWALL_PRODUCTION_HARDENING_CHECKLIST.md",
+        "line": 9,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "- FIRM-002 Admin cannot access FIRM-001 trust packet export.",
+        "context_before": "- FIRM-002 Admin can access own firm records.",
+        "context_after": "- FIRM-002 Admin cannot access FIRM-001 report by internal ID."
+      },
+      {
+        "path": "docs\\security\\GLOBAL_411_FIREWALL_PRODUCTION_HARDENING_CHECKLIST.md",
+        "line": 10,
+        "matched_terms": [
+          "FIRM-001"
+        ],
+        "text": "- FIRM-002 Admin cannot access FIRM-001 report by internal ID.",
+        "context_before": "- FIRM-002 Admin cannot access FIRM-001 trust packet export.",
+        "context_after": "- System health is Master Admin only."
+      }
+    ],
+    "function_context": [
+      {
+        "path": "app.py",
+        "function": "run_hosted_startup_self_heal",
+        "start_line": 318,
+        "end_line": 513,
+        "matched_lines": [
+          418,
+          464
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_visible_trusts_for_current_operator",
+        "start_line": 999,
+        "end_line": 1036,
+        "matched_lines": [
+          1006,
+          1010,
+          1013,
+          1015
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "operator_can_access_trust",
+        "start_line": 1038,
+        "end_line": 1066,
+        "matched_lines": [
+          1051,
+          1055,
+          1057
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_transfer_for_active_firm_or_404",
+        "start_line": 1167,
+        "end_line": 1183,
+        "matched_lines": [
+          1168
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "admin_toggle_export_policy",
+        "start_line": 6606,
+        "end_line": 6639,
+        "matched_lines": [
+          6636
+        ],
+        "decorators": [
+          "app.route('/admin/export-policy/toggle', methods=['POST'])"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "system_recovery_reseed_permissions",
+        "start_line": 7073,
+        "end_line": 7092,
+        "matched_lines": [
+          7078
+        ],
+        "decorators": [
+          "app.route('/system/recovery/reseed-permissions', methods=['POST'])"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "get_generated_documents",
+        "start_line": 8606,
+        "end_line": 8616,
+        "matched_lines": [
+          8607
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_generated_documents_by_workspace",
+        "start_line": 8618,
+        "end_line": 8629,
+        "matched_lines": [
+          8619
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_generated_document_by_id",
+        "start_line": 8631,
+        "end_line": 8640,
+        "matched_lines": [
+          8632
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "create_generated_document",
+        "start_line": 8642,
+        "end_line": 8663,
+        "matched_lines": [
+          8644
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_all_execution_tasks",
+        "start_line": 8671,
+        "end_line": 8681,
+        "matched_lines": [
+          8672
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_execution_tasks_by_workspace",
+        "start_line": 8683,
+        "end_line": 8694,
+        "matched_lines": [
+          8684
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_execution_task_by_id",
+        "start_line": 8696,
+        "end_line": 8705,
+        "matched_lines": [
+          8697
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "create_execution_task",
+        "start_line": 8707,
+        "end_line": 8735,
+        "matched_lines": [
+          8709
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "update_execution_task_status",
+        "start_line": 8737,
+        "end_line": 8747,
+        "matched_lines": [
+          8738
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_all_workspaces",
+        "start_line": 8882,
+        "end_line": 8891,
+        "matched_lines": [
+          8883
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_workspace_by_id",
+        "start_line": 8893,
+        "end_line": 8902,
+        "matched_lines": [
+          8894
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "create_workspace",
+        "start_line": 8904,
+        "end_line": 8926,
+        "matched_lines": [
+          8906
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "update_workspace",
+        "start_line": 8928,
+        "end_line": 8953,
+        "matched_lines": [
+          8929
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "get_workspace_notes",
+        "start_line": 8955,
+        "end_line": 8965,
+        "matched_lines": [
+          8956
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "create_workspace_note",
+        "start_line": 8967,
+        "end_line": 8984,
+        "matched_lines": [
+          8969
+        ],
+        "decorators": []
+      },
+      {
+        "path": "app.py",
+        "function": "permissions_dashboard",
+        "start_line": 9631,
+        "end_line": 9674,
+        "matched_lines": [
+          9640
+        ],
+        "decorators": [
+          "app.route('/permissions', methods=['GET', 'POST'])"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "enforce_session_timeout",
+        "start_line": 9771,
+        "end_line": 9894,
+        "matched_lines": [
+          9771,
+          9890
+        ],
+        "decorators": [
+          "app.before_request"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "archive_handoff_export_index_csv",
+        "start_line": 11436,
+        "end_line": 11668,
+        "matched_lines": [
+          11448
+        ],
+        "decorators": [
+          "app.route('/trust/<trust_id>/archive-handoff/export-index/export.csv')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "archive_handoff_export_index",
+        "start_line": 11672,
+        "end_line": 11806,
+        "matched_lines": [
+          11680
+        ],
+        "decorators": [
+          "app.route('/trust/<trust_id>/archive-handoff/export-index')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "trust_execution_dashboard",
+        "start_line": 11810,
+        "end_line": 12173,
+        "matched_lines": [
+          11891,
+          11966
+        ],
+        "decorators": [
+          "app.route('/trust/<trust_id>/execution')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_start",
+        "start_line": 12177,
+        "end_line": 12224,
+        "matched_lines": [
+          12197
+        ],
+        "decorators": [
+          "app.route('/trust/<trust_id>/execution/transfers/new', methods=['GET', 'POST'])"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_review",
+        "start_line": 12530,
+        "end_line": 12708,
+        "matched_lines": [
+          12660
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/review', methods=['GET', 'POST'])"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_correction_detail",
+        "start_line": 12872,
+        "end_line": 12927,
+        "matched_lines": [
+          12884
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>/correction/<correction_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_correction",
+        "start_line": 12932,
+        "end_line": 13034,
+        "matched_lines": [
+          12945
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>/correction', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_detail",
+        "start_line": 13038,
+        "end_line": 13097,
+        "matched_lines": [
+          13046
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/<handoff_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_export_package",
+        "start_line": 13101,
+        "end_line": 13448,
+        "matched_lines": [
+          13119
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/export-package.zip')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_audit_export_pdf",
+        "start_line": 13452,
+        "end_line": 13630,
+        "matched_lines": [
+          13467
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/audit-trail/export.pdf')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_audit_export_txt",
+        "start_line": 13634,
+        "end_line": 13811,
+        "matched_lines": [
+          13648
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/audit-trail/export.txt')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff_audit_trail",
+        "start_line": 13815,
+        "end_line": 13916,
+        "matched_lines": [
+          13827
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff/audit-trail')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_archive_handoff",
+        "start_line": 13921,
+        "end_line": 14066,
+        "matched_lines": [
+          13930
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/archive-handoff', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "transfer_detail",
+        "start_line": 14070,
+        "end_line": 14148,
+        "matched_lines": [
+          14095
+        ],
+        "decorators": [
+          "app.route('/execution/transfers/<transfer_id>/detail')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "login",
+        "start_line": 14220,
+        "end_line": 14279,
+        "matched_lines": [
+          14241,
+          14276,
+          14277
+        ],
+        "decorators": [
+          "app.route('/login', methods=['GET', 'POST'])"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "resume_process",
+        "start_line": 14372,
+        "end_line": 14387,
+        "matched_lines": [
+          14373
+        ],
+        "decorators": [
+          "app.route('/resume')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "hosted_reseed_permissions_once",
+        "start_line": 14673,
+        "end_line": 14682,
+        "matched_lines": [
+          14680
+        ],
+        "decorators": [
+          "app.route('/hosted-reseed-permissions-once')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "hosted_repair_admin_access_once",
+        "start_line": 14760,
+        "end_line": 14998,
+        "matched_lines": [
+          14867,
+          14913,
+          14983
+        ],
+        "decorators": [
+          "app.route('/hosted-repair-admin-access-once')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "asset_intake",
+        "start_line": 15334,
+        "end_line": 15435,
+        "matched_lines": [
+          15392,
+          15408
+        ],
+        "decorators": [
+          "app.route('/intake/assets/<intake_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "document_intake",
+        "start_line": 15443,
+        "end_line": 15538,
+        "matched_lines": [
+          15502,
+          15513
+        ],
+        "decorators": [
+          "app.route('/intake/documents/<intake_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "intake_readiness_review",
+        "start_line": 15545,
+        "end_line": 15571,
+        "matched_lines": [
+          15554
+        ],
+        "decorators": [
+          "app.route('/intake/readiness/<intake_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "intake_deep_review",
+        "start_line": 15579,
+        "end_line": 15663,
+        "matched_lines": [
+          15593
+        ],
+        "decorators": [
+          "app.route('/intake/deep-review/<intake_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "intake_drafting_prep",
+        "start_line": 15671,
+        "end_line": 15758,
+        "matched_lines": [
+          15685
+        ],
+        "decorators": [
+          "app.route('/intake/drafting-prep/<intake_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "launch_draft_session",
+        "start_line": 15766,
+        "end_line": 15857,
+        "matched_lines": [
+          15820,
+          15832
+        ],
+        "decorators": [
+          "app.route('/draft-launch/<intake_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "guided_draft_workspace",
+        "start_line": 15865,
+        "end_line": 16003,
+        "matched_lines": [
+          15959,
+          15975
+        ],
+        "decorators": [
+          "app.route('/guided-draft/<draft_session_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "draft_variable_binding",
+        "start_line": 16011,
+        "end_line": 16120,
+        "matched_lines": [
+          16046
+        ],
+        "decorators": [
+          "app.route('/draft-bind/<workspace_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "dynamic_draft_preview",
+        "start_line": 16128,
+        "end_line": 16286,
+        "matched_lines": [
+          16143
+        ],
+        "decorators": [
+          "app.route('/draft-preview/<workspace_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "section_review_gate",
+        "start_line": 16294,
+        "end_line": 16415,
+        "matched_lines": [
+          16309
+        ],
+        "decorators": [
+          "app.route('/section-review/<workspace_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "controlled_export_prep",
+        "start_line": 16423,
+        "end_line": 16559,
+        "matched_lines": [
+          16438
+        ],
+        "decorators": [
+          "app.route('/export-prep/<workspace_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "controlled_docx_export",
+        "start_line": 16567,
+        "end_line": 16755,
+        "matched_lines": [
+          16587
+        ],
+        "decorators": [
+          "app.route('/docx-export/<workspace_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "download_controlled_docx_export",
+        "start_line": 16762,
+        "end_line": 16801,
+        "matched_lines": [
+          16772
+        ],
+        "decorators": [
+          "app.route('/docx-export/download/<export_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "docx_verification_gate",
+        "start_line": 16809,
+        "end_line": 16937,
+        "matched_lines": [
+          16824
+        ],
+        "decorators": [
+          "app.route('/docx-verify/<export_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "controlled_pdf_conversion",
+        "start_line": 16945,
+        "end_line": 17139,
+        "matched_lines": [
+          16965
+        ],
+        "decorators": [
+          "app.route('/pdf-convert/<export_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "download_controlled_pdf_export",
+        "start_line": 17146,
+        "end_line": 17185,
+        "matched_lines": [
+          17156
+        ],
+        "decorators": [
+          "app.route('/pdf-export/download/<pdf_export_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "pdf_execution_approval_gate",
+        "start_line": 17193,
+        "end_line": 17326,
+        "matched_lines": [
+          17208
+        ],
+        "decorators": [
+          "app.route('/pdf-execution-approval/<pdf_export_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "execution_packet_prep",
+        "start_line": 17334,
+        "end_line": 17494,
+        "matched_lines": [
+          17350
+        ],
+        "decorators": [
+          "app.route('/execution-packet/<pdf_export_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "execution_event_log",
+        "start_line": 17502,
+        "end_line": 17684,
+        "matched_lines": [
+          17517
+        ],
+        "decorators": [
+          "app.route('/execution-event/<packet_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "final_record_archive_gate",
+        "start_line": 17692,
+        "end_line": 17821,
+        "matched_lines": [
+          17707
+        ],
+        "decorators": [
+          "app.route('/final-archive/<event_id>', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "lifecycle_master_ledger",
+        "start_line": 17828,
+        "end_line": 17845,
+        "matched_lines": [
+          17835
+        ],
+        "decorators": [
+          "app.route('/lifecycle-ledger/<intake_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "identity_intake",
+        "start_line": 18804,
+        "end_line": 18860,
+        "matched_lines": [
+          18825,
+          18845
+        ],
+        "decorators": [
+          "app.route('/intake/identity', methods=['GET', 'POST'])",
+          "csrf.exempt"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "identity_intake_summary",
+        "start_line": 18864,
+        "end_line": 18894,
+        "matched_lines": [
+          18876,
+          18887
+        ],
+        "decorators": [
+          "app.route('/intake/identity/<intake_id>')"
+        ]
+      },
+      {
+        "path": "app.py",
+        "function": "trust_firm_id",
+        "start_line": 1008,
+        "end_line": 1015,
+        "matched_lines": [
+          1010,
+          1013,
+          1015
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_current_firm_id",
+        "start_line": 10,
+        "end_line": 21,
+        "matched_lines": [
+          10,
+          13,
+          18,
+          21
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_identity_intake_table",
+        "start_line": 26,
+        "end_line": 56,
+        "matched_lines": [
+          37
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_intake_orchestration_table",
+        "start_line": 61,
+        "end_line": 98,
+        "matched_lines": [
+          74
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_asset_intake_table",
+        "start_line": 103,
+        "end_line": 135,
+        "matched_lines": [
+          116
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_document_intake_table",
+        "start_line": 140,
+        "end_line": 172,
+        "matched_lines": [
+          154
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_next_firm_trust_number",
+        "start_line": 390,
+        "end_line": 421,
+        "matched_lines": [
+          391
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_trust_record",
+        "start_line": 436,
+        "end_line": 483,
+        "matched_lines": [
+          438
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_table_firm_id_column",
+        "start_line": 485,
+        "end_line": 512,
+        "matched_lines": [
+          485,
+          490
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_trusts",
+        "start_line": 515,
+        "end_line": 538,
+        "matched_lines": [
+          516
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_trust_by_id",
+        "start_line": 541,
+        "end_line": 551,
+        "matched_lines": [
+          542
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_property_record",
+        "start_line": 570,
+        "end_line": 593,
+        "matched_lines": [
+          572
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_property_by_id",
+        "start_line": 595,
+        "end_line": 605,
+        "matched_lines": [
+          596
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_properties_by_trust_id",
+        "start_line": 607,
+        "end_line": 619,
+        "matched_lines": [
+          608
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_assets",
+        "start_line": 621,
+        "end_line": 634,
+        "matched_lines": [
+          622
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_asset_class_counts",
+        "start_line": 636,
+        "end_line": 649,
+        "matched_lines": [
+          637
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_account_record",
+        "start_line": 659,
+        "end_line": 676,
+        "matched_lines": [
+          661
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_accounts_by_trust_id",
+        "start_line": 678,
+        "end_line": 690,
+        "matched_lines": [
+          679
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_accounts_by_property_id",
+        "start_line": 692,
+        "end_line": 702,
+        "matched_lines": [
+          693
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_documents_by_trust_id",
+        "start_line": 729,
+        "end_line": 741,
+        "matched_lines": [
+          730
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_beneficiary_record",
+        "start_line": 1169,
+        "end_line": 1187,
+        "matched_lines": [
+          1171
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_beneficiary_by_id",
+        "start_line": 1200,
+        "end_line": 1210,
+        "matched_lines": [
+          1201
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_beneficiaries_by_trust_id",
+        "start_line": 1213,
+        "end_line": 1223,
+        "matched_lines": [
+          1214
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_distribution_record",
+        "start_line": 1226,
+        "end_line": 1245,
+        "matched_lines": [
+          1228
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_distribution_by_id",
+        "start_line": 1258,
+        "end_line": 1268,
+        "matched_lines": [
+          1259
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_distributions_by_trust_id",
+        "start_line": 1271,
+        "end_line": 1293,
+        "matched_lines": [
+          1272
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_ledger_entries_by_trust_id",
+        "start_line": 1444,
+        "end_line": 1456,
+        "matched_lines": [
+          1445
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_instruments",
+        "start_line": 1713,
+        "end_line": 1726,
+        "matched_lines": [
+          1714
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_instrument_record",
+        "start_line": 1774,
+        "end_line": 1795,
+        "matched_lines": [
+          1776
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "update_instrument_record",
+        "start_line": 1798,
+        "end_line": 1806,
+        "matched_lines": [
+          1799
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_instrument_by_id",
+        "start_line": 1809,
+        "end_line": 1819,
+        "matched_lines": [
+          1810
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_instruments_by_trust_id",
+        "start_line": 1822,
+        "end_line": 1833,
+        "matched_lines": [
+          1823
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_instruments",
+        "start_line": 1836,
+        "end_line": 1849,
+        "matched_lines": [
+          1837
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_instrument_status_counts",
+        "start_line": 1863,
+        "end_line": 1890,
+        "matched_lines": [
+          1864
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_trust_count",
+        "start_line": 1893,
+        "end_line": 1903,
+        "matched_lines": [
+          1894
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_beneficiary_count",
+        "start_line": 1906,
+        "end_line": 1915,
+        "matched_lines": [
+          1907
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_distribution_count",
+        "start_line": 1917,
+        "end_line": 1926,
+        "matched_lines": [
+          1918
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_instrument_count",
+        "start_line": 1928,
+        "end_line": 1937,
+        "matched_lines": [
+          1929
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "log_change",
+        "start_line": 1973,
+        "end_line": 2027,
+        "matched_lines": [
+          1978,
+          1980,
+          1992
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_audit_log",
+        "start_line": 2029,
+        "end_line": 2041,
+        "matched_lines": [
+          2030
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_audit_log_by_entity",
+        "start_line": 2044,
+        "end_line": 2073,
+        "matched_lines": [
+          2045
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_fiduciary_record",
+        "start_line": 2365,
+        "end_line": 2389,
+        "matched_lines": [
+          2367
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_fiduciaries",
+        "start_line": 2392,
+        "end_line": 2403,
+        "matched_lines": [
+          2393
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_fiduciaries_by_trust_id",
+        "start_line": 2406,
+        "end_line": 2417,
+        "matched_lines": [
+          2407
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_media_record",
+        "start_line": 2562,
+        "end_line": 2587,
+        "matched_lines": [
+          2564
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_media",
+        "start_line": 2590,
+        "end_line": 2600,
+        "matched_lines": [
+          2591
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_media_by_entity",
+        "start_line": 2602,
+        "end_line": 2613,
+        "matched_lines": [
+          2603
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_media_by_trust_id",
+        "start_line": 2615,
+        "end_line": 2626,
+        "matched_lines": [
+          2616
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_role_tables",
+        "start_line": 2628,
+        "end_line": 2705,
+        "matched_lines": [
+          2652,
+          2680,
+          2697,
+          2700
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_role_record",
+        "start_line": 2717,
+        "end_line": 2737,
+        "matched_lines": [
+          2719
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_roles",
+        "start_line": 2740,
+        "end_line": 2750,
+        "matched_lines": [
+          2741
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_roles_by_trust_id",
+        "start_line": 2752,
+        "end_line": 2763,
+        "matched_lines": [
+          2753
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "create_app_user",
+        "start_line": 2821,
+        "end_line": 2840,
+        "matched_lines": [
+          2823
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_permissions_by_role",
+        "start_line": 2899,
+        "end_line": 2909,
+        "matched_lines": [
+          2904
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "replace_role_permissions",
+        "start_line": 2916,
+        "end_line": 2929,
+        "matched_lines": [
+          2916,
+          2920,
+          2924
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "build_system_health_report",
+        "start_line": 3047,
+        "end_line": 3079,
+        "matched_lines": [
+          3051
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "reseed_default_role_permissions",
+        "start_line": 3121,
+        "end_line": 3204,
+        "matched_lines": [
+          3121,
+          3123,
+          3138,
+          3161,
+          3183,
+          3184,
+          3187,
+          3190,
+          3200
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_all_trust_minutes",
+        "start_line": 3366,
+        "end_line": 3378,
+        "matched_lines": [
+          3367
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_trust_minutes_by_trust_id",
+        "start_line": 3381,
+        "end_line": 3393,
+        "matched_lines": [
+          3382
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_trust_minute_by_id",
+        "start_line": 3396,
+        "end_line": 3406,
+        "matched_lines": [
+          3397
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "upsert_intake_orchestration_state",
+        "start_line": 3511,
+        "end_line": 3578,
+        "matched_lines": [
+          3513
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "get_intake_orchestration_state",
+        "start_line": 3581,
+        "end_line": 3596,
+        "matched_lines": [
+          3581
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "build_intake_readiness_summary",
+        "start_line": 3598,
+        "end_line": 3692,
+        "matched_lines": [
+          3598
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_deep_review_table",
+        "start_line": 3694,
+        "end_line": 3723,
+        "matched_lines": [
+          3707
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_deep_review_table",
+        "start_line": 3725,
+        "end_line": 3754,
+        "matched_lines": [
+          3738
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_drafting_prep_gate_table",
+        "start_line": 3756,
+        "end_line": 3787,
+        "matched_lines": [
+          3769
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_draft_session_table",
+        "start_line": 3789,
+        "end_line": 3822,
+        "matched_lines": [
+          3803
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_guided_draft_workspace_table",
+        "start_line": 3824,
+        "end_line": 3865,
+        "matched_lines": [
+          3839
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_variable_binding_table",
+        "start_line": 3867,
+        "end_line": 3897,
+        "matched_lines": [
+          3883
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_variable_binding_table",
+        "start_line": 3899,
+        "end_line": 3929,
+        "matched_lines": [
+          3915
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_dynamic_draft_preview_table",
+        "start_line": 3931,
+        "end_line": 3960,
+        "matched_lines": [
+          3947
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_section_review_gate_table",
+        "start_line": 3962,
+        "end_line": 3996,
+        "matched_lines": [
+          3978
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_controlled_export_prep_table",
+        "start_line": 3998,
+        "end_line": 4035,
+        "matched_lines": [
+          4015
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_controlled_export_prep_table",
+        "start_line": 4037,
+        "end_line": 4074,
+        "matched_lines": [
+          4054
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_controlled_docx_export_table",
+        "start_line": 4076,
+        "end_line": 4110,
+        "matched_lines": [
+          4092
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_docx_verification_gate_table",
+        "start_line": 4113,
+        "end_line": 4151,
+        "matched_lines": [
+          4130
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_controlled_pdf_export_table",
+        "start_line": 4153,
+        "end_line": 4191,
+        "matched_lines": [
+          4171
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_pdf_execution_approval_table",
+        "start_line": 4193,
+        "end_line": 4232,
+        "matched_lines": [
+          4211
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_execution_packet_prep_table",
+        "start_line": 4234,
+        "end_line": 4285,
+        "matched_lines": [
+          4253
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_execution_packet_prep_table",
+        "start_line": 4287,
+        "end_line": 4338,
+        "matched_lines": [
+          4306
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_execution_event_log_table",
+        "start_line": 4340,
+        "end_line": 4399,
+        "matched_lines": [
+          4360
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_final_record_archive_table",
+        "start_line": 4401,
+        "end_line": 4445,
+        "matched_lines": [
+          4421
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_transfer_archive_handoff_correction_table",
+        "start_line": 4477,
+        "end_line": 4511,
+        "matched_lines": [
+          4493
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_transfer_archive_handoff_table",
+        "start_line": 4513,
+        "end_line": 4549,
+        "matched_lines": [
+          4529
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "build_lifecycle_master_ledger",
+        "start_line": 4551,
+        "end_line": 4713,
+        "matched_lines": [
+          4551
+        ],
+        "decorators": []
+      },
+      {
+        "path": "database\\db.py",
+        "function": "ensure_draft_variable_binding_table",
+        "start_line": 4715,
+        "end_line": 4743,
+        "matched_lines": [
+          4731
+        ],
+        "decorators": []
+      },
+      {
+        "path": "scripts\\migrate_hosted_firm_scope.py",
+        "function": "main",
+        "start_line": 47,
+        "end_line": 104,
+        "matched_lines": [
+          62,
+          68,
+          71
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_tables",
+        "start_line": 72,
+        "end_line": 111,
+        "matched_lines": [
+          80,
+          101
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "create_intake_session",
+        "start_line": 136,
+        "end_line": 205,
+        "matched_lines": [
+          144
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_translation_tables",
+        "start_line": 854,
+        "end_line": 890,
+        "matched_lines": [
+          863,
+          876
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "save_universal_profile_answers",
+        "start_line": 918,
+        "end_line": 1025,
+        "matched_lines": [
+          922
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_scoring_tables",
+        "start_line": 1160,
+        "end_line": 1184,
+        "matched_lines": [
+          1169
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "save_intake_scores",
+        "start_line": 1263,
+        "end_line": 1304,
+        "matched_lines": [
+          1268
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_snapshot_tables",
+        "start_line": 1558,
+        "end_line": 1576,
+        "matched_lines": [
+          1567
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "save_client_snapshot",
+        "start_line": 1579,
+        "end_line": 1620,
+        "matched_lines": [
+          1584
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "list_intake_dashboard",
+        "start_line": 1658,
+        "end_line": 1702,
+        "matched_lines": [
+          1660
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_review_note_tables",
+        "start_line": 2024,
+        "end_line": 2045,
+        "matched_lines": [
+          2033
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "create_intake_review_note",
+        "start_line": 2048,
+        "end_line": 2112,
+        "matched_lines": [
+          2072
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "get_intake_review_note_counts",
+        "start_line": 2151,
+        "end_line": 2168,
+        "matched_lines": [
+          2153
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_followup_task_tables",
+        "start_line": 2220,
+        "end_line": 2245,
+        "matched_lines": [
+          2229
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "create_intake_followup_task",
+        "start_line": 2248,
+        "end_line": 2320,
+        "matched_lines": [
+          2276
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "get_intake_followup_task_counts",
+        "start_line": 2381,
+        "end_line": 2408,
+        "matched_lines": [
+          2383
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_export_log_tables",
+        "start_line": 2913,
+        "end_line": 2933,
+        "matched_lines": [
+          2922
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "log_intake_export",
+        "start_line": 2936,
+        "end_line": 2973,
+        "matched_lines": [
+          2940
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "log_intake_export_versioned",
+        "start_line": 3123,
+        "end_line": 3177,
+        "matched_lines": [
+          3139
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "list_all_intake_export_logs",
+        "start_line": 3180,
+        "end_line": 3212,
+        "matched_lines": [
+          3182
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_intake_document_recommendation_tables",
+        "start_line": 3905,
+        "end_line": 3931,
+        "matched_lines": [
+          3915
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "save_document_recommendations",
+        "start_line": 3966,
+        "end_line": 4048,
+        "matched_lines": [
+          3970
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_workflow_bridge_tables",
+        "start_line": 5059,
+        "end_line": 5081,
+        "matched_lines": [
+          5070
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "save_workflow_bridge_answers",
+        "start_line": 5084,
+        "end_line": 5160,
+        "matched_lines": [
+          5092
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_draft_readiness_tables",
+        "start_line": 5434,
+        "end_line": 5463,
+        "matched_lines": [
+          5445
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "upsert_draft_readiness_record",
+        "start_line": 5466,
+        "end_line": 5525,
+        "matched_lines": [
+          5470
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_document_draft_questionnaire_tables",
+        "start_line": 6058,
+        "end_line": 6081,
+        "matched_lines": [
+          6070
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "save_document_draft_answers",
+        "start_line": 6084,
+        "end_line": 6143,
+        "matched_lines": [
+          6092
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_review_gate_tables",
+        "start_line": 6405,
+        "end_line": 6434,
+        "matched_lines": [
+          6417
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "upsert_review_gate_record",
+        "start_line": 6471,
+        "end_line": 6520,
+        "matched_lines": [
+          6476
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_review_gate_resolution_tables",
+        "start_line": 6718,
+        "end_line": 6742,
+        "matched_lines": [
+          6731
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "resolve_review_gate_action",
+        "start_line": 6822,
+        "end_line": 6922,
+        "matched_lines": [
+          6858
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_final_draft_prep_gate_tables",
+        "start_line": 6929,
+        "end_line": 6959,
+        "matched_lines": [
+          6941
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "upsert_final_draft_prep_gate",
+        "start_line": 7059,
+        "end_line": 7142,
+        "matched_lines": [
+          7067
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_final_draft_resolution_tables",
+        "start_line": 7301,
+        "end_line": 7323,
+        "matched_lines": [
+          7313
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "record_final_draft_resolution_actions",
+        "start_line": 7361,
+        "end_line": 7427,
+        "matched_lines": [
+          7375
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "upsert_final_draft_prep_gate_with_resolutions",
+        "start_line": 7486,
+        "end_line": 7568,
+        "matched_lines": [
+          7494
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_final_draft_admin_approval_tables",
+        "start_line": 7603,
+        "end_line": 7626,
+        "matched_lines": [
+          7615
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "record_final_draft_admin_approval",
+        "start_line": 7629,
+        "end_line": 7725,
+        "matched_lines": [
+          7660
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_final_draft_section_tables",
+        "start_line": 7984,
+        "end_line": 8010,
+        "matched_lines": [
+          7996
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "seed_final_draft_sections",
+        "start_line": 8013,
+        "end_line": 8058,
+        "matched_lines": [
+          8021
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_final_draft_version_register_tables",
+        "start_line": 8408,
+        "end_line": 8436,
+        "matched_lines": [
+          8420
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "record_final_draft_version_export",
+        "start_line": 8459,
+        "end_line": 8525,
+        "matched_lines": [
+          8475
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "ensure_final_draft_completion_gate_tables",
+        "start_line": 8616,
+        "end_line": 8660,
+        "matched_lines": [
+          8628,
+          8651
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "upsert_final_draft_completion_gate",
+        "start_line": 8756,
+        "end_line": 8836,
+        "matched_lines": [
+          8764
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_intake.py",
+        "function": "record_final_draft_completion",
+        "start_line": 8866,
+        "end_line": 8938,
+        "matched_lines": [
+          8887
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "ensure_matter_tables",
+        "start_line": 4,
+        "end_line": 223,
+        "matched_lines": [
+          12,
+          34
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "create_matter",
+        "start_line": 233,
+        "end_line": 275,
+        "matched_lines": [
+          237
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "add_matter_event",
+        "start_line": 277,
+        "end_line": 298,
+        "matched_lines": [
+          281
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "list_matters",
+        "start_line": 300,
+        "end_line": 314,
+        "matched_lines": [
+          302
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "update_governance_state",
+        "start_line": 318,
+        "end_line": 365,
+        "matched_lines": [
+          321
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "update_matter_risk",
+        "start_line": 370,
+        "end_line": 455,
+        "matched_lines": [
+          396
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "add_matter_relationship",
+        "start_line": 489,
+        "end_line": 618,
+        "matched_lines": [
+          531
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "update_matter_relationship_status",
+        "start_line": 623,
+        "end_line": 733,
+        "matched_lines": [
+          647
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "get_matter_relationship",
+        "start_line": 738,
+        "end_line": 789,
+        "matched_lines": [
+          741
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "update_matter_relationship_verification",
+        "start_line": 792,
+        "end_line": 918,
+        "matched_lines": [
+          824
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "validate_matter_relationship_link",
+        "start_line": 923,
+        "end_line": 1055,
+        "matched_lines": [
+          931
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "relink_matter_relationship",
+        "start_line": 1060,
+        "end_line": 1222,
+        "matched_lines": [
+          1085
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "build_relationship_audit_summary",
+        "start_line": 1227,
+        "end_line": 1360,
+        "matched_lines": [
+          1233
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "clear_relationship_governance",
+        "start_line": 1363,
+        "end_line": 1456,
+        "matched_lines": [
+          1399
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "list_matter_relationships",
+        "start_line": 1459,
+        "end_line": 1489,
+        "matched_lines": [
+          1462
+        ],
+        "decorators": []
+      },
+      {
+        "path": "services\\services_matters.py",
+        "function": "get_matter",
+        "start_line": 1492,
+        "end_line": 1507,
+        "matched_lines": [
+          1494
+        ],
+        "decorators": []
+      }
+    ]
+  },
+  "firm1": {
+    "summary": {
+      "first_audit_delta": 0,
+      "first_role_permission_delta": 22,
+      "second_audit_delta": 0,
+      "second_role_permission_delta": 22,
+      "second_cycle_idempotent": false
+    },
+    "cycles": {
+      "first_probe": {
+        "firm_id": "FIRM-001",
+        "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm1\\trustee_app_firm1_idempotency.db",
+        "import_success": true,
+        "binding_verified": true,
+        "configured_cookie_name": "trustee_firm1_session",
+        "error": null,
+        "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm1\\trustee_app_firm1_idempotency.db",
+        "returncode": 0,
+        "stderr": ""
+      },
+      "second_probe": {
+        "firm_id": "FIRM-001",
+        "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm1\\trustee_app_firm1_idempotency.db",
+        "import_success": true,
+        "binding_verified": true,
+        "configured_cookie_name": "trustee_firm1_session",
+        "error": null,
+        "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm1\\trustee_app_firm1_idempotency.db",
+        "returncode": 0,
+        "stderr": ""
+      },
+      "first_cycle_changes": {
+        "audit_log": {
+          "before_count": 291,
+          "after_count": 291,
+          "delta": 0,
+          "added_rows": [],
+          "removed_rows": []
+        },
+        "role_permissions": {
+          "before_count": 23873,
+          "after_count": 23895,
+          "delta": 22,
+          "added_rows": [
+            {
+              "rowid": 24292,
+              "values": {
+                "id": 24292,
+                "role_name": "Admin",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24292,\"permission_name\":\"view_dashboard\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24293,
+              "values": {
+                "id": 24293,
+                "role_name": "Admin",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24293,\"permission_name\":\"create_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24294,
+              "values": {
+                "id": 24294,
+                "role_name": "Admin",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24294,\"permission_name\":\"edit_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24295,
+              "values": {
+                "id": 24295,
+                "role_name": "Admin",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24295,\"permission_name\":\"view_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24296,
+              "values": {
+                "id": 24296,
+                "role_name": "Admin",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24296,\"permission_name\":\"generate_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24297,
+              "values": {
+                "id": 24297,
+                "role_name": "Admin",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24297,\"permission_name\":\"export_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24298,
+              "values": {
+                "id": 24298,
+                "role_name": "Admin",
+                "permission_name": "manage_users"
+              },
+              "canonical": "{\"id\":24298,\"permission_name\":\"manage_users\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24299,
+              "values": {
+                "id": 24299,
+                "role_name": "Admin",
+                "permission_name": "manage_roles"
+              },
+              "canonical": "{\"id\":24299,\"permission_name\":\"manage_roles\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24300,
+              "values": {
+                "id": 24300,
+                "role_name": "Admin",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24300,\"permission_name\":\"view_audit\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24301,
+              "values": {
+                "id": 24301,
+                "role_name": "Admin",
+                "permission_name": "manage_permissions"
+              },
+              "canonical": "{\"id\":24301,\"permission_name\":\"manage_permissions\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24302,
+              "values": {
+                "id": 24302,
+                "role_name": "Admin",
+                "permission_name": "view_security"
+              },
+              "canonical": "{\"id\":24302,\"permission_name\":\"view_security\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24303,
+              "values": {
+                "id": 24303,
+                "role_name": "Admin",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24303,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24304,
+              "values": {
+                "id": 24304,
+                "role_name": "Trustee",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24304,\"permission_name\":\"view_dashboard\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24305,
+              "values": {
+                "id": 24305,
+                "role_name": "Trustee",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24305,\"permission_name\":\"create_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24306,
+              "values": {
+                "id": 24306,
+                "role_name": "Trustee",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24306,\"permission_name\":\"edit_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24307,
+              "values": {
+                "id": 24307,
+                "role_name": "Trustee",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24307,\"permission_name\":\"view_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24308,
+              "values": {
+                "id": 24308,
+                "role_name": "Trustee",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24308,\"permission_name\":\"generate_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24309,
+              "values": {
+                "id": 24309,
+                "role_name": "Trustee",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24309,\"permission_name\":\"export_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24310,
+              "values": {
+                "id": 24310,
+                "role_name": "Trustee",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24310,\"permission_name\":\"view_audit\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24311,
+              "values": {
+                "id": 24311,
+                "role_name": "Trustee",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24311,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24312,
+              "values": {
+                "id": 24312,
+                "role_name": "Viewer",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24312,\"permission_name\":\"view_dashboard\",\"role_name\":\"Viewer\"}"
+            },
+            {
+              "rowid": 24313,
+              "values": {
+                "id": 24313,
+                "role_name": "Viewer",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24313,\"permission_name\":\"view_documents\",\"role_name\":\"Viewer\"}"
+            }
+          ],
+          "removed_rows": []
+        }
+      },
+      "second_cycle_changes": {
+        "audit_log": {
+          "before_count": 291,
+          "after_count": 291,
+          "delta": 0,
+          "added_rows": [],
+          "removed_rows": []
+        },
+        "role_permissions": {
+          "before_count": 23895,
+          "after_count": 23917,
+          "delta": 22,
+          "added_rows": [
+            {
+              "rowid": 24314,
+              "values": {
+                "id": 24314,
+                "role_name": "Admin",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24314,\"permission_name\":\"view_dashboard\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24315,
+              "values": {
+                "id": 24315,
+                "role_name": "Admin",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24315,\"permission_name\":\"create_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24316,
+              "values": {
+                "id": 24316,
+                "role_name": "Admin",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24316,\"permission_name\":\"edit_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24317,
+              "values": {
+                "id": 24317,
+                "role_name": "Admin",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24317,\"permission_name\":\"view_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24318,
+              "values": {
+                "id": 24318,
+                "role_name": "Admin",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24318,\"permission_name\":\"generate_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24319,
+              "values": {
+                "id": 24319,
+                "role_name": "Admin",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24319,\"permission_name\":\"export_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24320,
+              "values": {
+                "id": 24320,
+                "role_name": "Admin",
+                "permission_name": "manage_users"
+              },
+              "canonical": "{\"id\":24320,\"permission_name\":\"manage_users\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24321,
+              "values": {
+                "id": 24321,
+                "role_name": "Admin",
+                "permission_name": "manage_roles"
+              },
+              "canonical": "{\"id\":24321,\"permission_name\":\"manage_roles\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24322,
+              "values": {
+                "id": 24322,
+                "role_name": "Admin",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24322,\"permission_name\":\"view_audit\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24323,
+              "values": {
+                "id": 24323,
+                "role_name": "Admin",
+                "permission_name": "manage_permissions"
+              },
+              "canonical": "{\"id\":24323,\"permission_name\":\"manage_permissions\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24324,
+              "values": {
+                "id": 24324,
+                "role_name": "Admin",
+                "permission_name": "view_security"
+              },
+              "canonical": "{\"id\":24324,\"permission_name\":\"view_security\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24325,
+              "values": {
+                "id": 24325,
+                "role_name": "Admin",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24325,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24326,
+              "values": {
+                "id": 24326,
+                "role_name": "Trustee",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24326,\"permission_name\":\"view_dashboard\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24327,
+              "values": {
+                "id": 24327,
+                "role_name": "Trustee",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24327,\"permission_name\":\"create_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24328,
+              "values": {
+                "id": 24328,
+                "role_name": "Trustee",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24328,\"permission_name\":\"edit_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24329,
+              "values": {
+                "id": 24329,
+                "role_name": "Trustee",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24329,\"permission_name\":\"view_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24330,
+              "values": {
+                "id": 24330,
+                "role_name": "Trustee",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24330,\"permission_name\":\"generate_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24331,
+              "values": {
+                "id": 24331,
+                "role_name": "Trustee",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24331,\"permission_name\":\"export_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24332,
+              "values": {
+                "id": 24332,
+                "role_name": "Trustee",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24332,\"permission_name\":\"view_audit\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24333,
+              "values": {
+                "id": 24333,
+                "role_name": "Trustee",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24333,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24334,
+              "values": {
+                "id": 24334,
+                "role_name": "Viewer",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24334,\"permission_name\":\"view_dashboard\",\"role_name\":\"Viewer\"}"
+            },
+            {
+              "rowid": 24335,
+              "values": {
+                "id": 24335,
+                "role_name": "Viewer",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24335,\"permission_name\":\"view_documents\",\"role_name\":\"Viewer\"}"
+            }
+          ],
+          "removed_rows": []
+        }
+      }
+    },
+    "wrong_firm_audit_rows": []
+  },
+  "firm2": {
+    "summary": {
+      "first_audit_delta": 0,
+      "first_role_permission_delta": 22,
+      "second_audit_delta": 0,
+      "second_role_permission_delta": 22,
+      "second_cycle_idempotent": false
+    },
+    "cycles": {
+      "first_probe": {
+        "firm_id": "FIRM-002",
+        "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm2\\trustee_app_firm2_idempotency.db",
+        "import_success": true,
+        "binding_verified": true,
+        "configured_cookie_name": "trustee_firm2_session",
+        "error": null,
+        "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm2\\trustee_app_firm2_idempotency.db",
+        "returncode": 0,
+        "stderr": ""
+      },
+      "second_probe": {
+        "firm_id": "FIRM-002",
+        "database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm2\\trustee_app_firm2_idempotency.db",
+        "import_success": true,
+        "binding_verified": true,
+        "configured_cookie_name": "trustee_firm2_session",
+        "error": null,
+        "resolved_database_path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\audit\\runtime_sandbox\\UPA-1B-6B-4T_20260614_151712\\firm2\\trustee_app_firm2_idempotency.db",
+        "returncode": 0,
+        "stderr": ""
+      },
+      "first_cycle_changes": {
+        "audit_log": {
+          "before_count": 77,
+          "after_count": 77,
+          "delta": 0,
+          "added_rows": [],
+          "removed_rows": []
+        },
+        "role_permissions": {
+          "before_count": 23873,
+          "after_count": 23895,
+          "delta": 22,
+          "added_rows": [
+            {
+              "rowid": 24292,
+              "values": {
+                "id": 24292,
+                "role_name": "Admin",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24292,\"permission_name\":\"view_dashboard\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24293,
+              "values": {
+                "id": 24293,
+                "role_name": "Admin",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24293,\"permission_name\":\"create_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24294,
+              "values": {
+                "id": 24294,
+                "role_name": "Admin",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24294,\"permission_name\":\"edit_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24295,
+              "values": {
+                "id": 24295,
+                "role_name": "Admin",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24295,\"permission_name\":\"view_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24296,
+              "values": {
+                "id": 24296,
+                "role_name": "Admin",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24296,\"permission_name\":\"generate_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24297,
+              "values": {
+                "id": 24297,
+                "role_name": "Admin",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24297,\"permission_name\":\"export_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24298,
+              "values": {
+                "id": 24298,
+                "role_name": "Admin",
+                "permission_name": "manage_users"
+              },
+              "canonical": "{\"id\":24298,\"permission_name\":\"manage_users\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24299,
+              "values": {
+                "id": 24299,
+                "role_name": "Admin",
+                "permission_name": "manage_roles"
+              },
+              "canonical": "{\"id\":24299,\"permission_name\":\"manage_roles\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24300,
+              "values": {
+                "id": 24300,
+                "role_name": "Admin",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24300,\"permission_name\":\"view_audit\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24301,
+              "values": {
+                "id": 24301,
+                "role_name": "Admin",
+                "permission_name": "manage_permissions"
+              },
+              "canonical": "{\"id\":24301,\"permission_name\":\"manage_permissions\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24302,
+              "values": {
+                "id": 24302,
+                "role_name": "Admin",
+                "permission_name": "view_security"
+              },
+              "canonical": "{\"id\":24302,\"permission_name\":\"view_security\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24303,
+              "values": {
+                "id": 24303,
+                "role_name": "Admin",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24303,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24304,
+              "values": {
+                "id": 24304,
+                "role_name": "Trustee",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24304,\"permission_name\":\"view_dashboard\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24305,
+              "values": {
+                "id": 24305,
+                "role_name": "Trustee",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24305,\"permission_name\":\"create_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24306,
+              "values": {
+                "id": 24306,
+                "role_name": "Trustee",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24306,\"permission_name\":\"edit_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24307,
+              "values": {
+                "id": 24307,
+                "role_name": "Trustee",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24307,\"permission_name\":\"view_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24308,
+              "values": {
+                "id": 24308,
+                "role_name": "Trustee",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24308,\"permission_name\":\"generate_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24309,
+              "values": {
+                "id": 24309,
+                "role_name": "Trustee",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24309,\"permission_name\":\"export_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24310,
+              "values": {
+                "id": 24310,
+                "role_name": "Trustee",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24310,\"permission_name\":\"view_audit\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24311,
+              "values": {
+                "id": 24311,
+                "role_name": "Trustee",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24311,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24312,
+              "values": {
+                "id": 24312,
+                "role_name": "Viewer",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24312,\"permission_name\":\"view_dashboard\",\"role_name\":\"Viewer\"}"
+            },
+            {
+              "rowid": 24313,
+              "values": {
+                "id": 24313,
+                "role_name": "Viewer",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24313,\"permission_name\":\"view_documents\",\"role_name\":\"Viewer\"}"
+            }
+          ],
+          "removed_rows": []
+        }
+      },
+      "second_cycle_changes": {
+        "audit_log": {
+          "before_count": 77,
+          "after_count": 77,
+          "delta": 0,
+          "added_rows": [],
+          "removed_rows": []
+        },
+        "role_permissions": {
+          "before_count": 23895,
+          "after_count": 23917,
+          "delta": 22,
+          "added_rows": [
+            {
+              "rowid": 24314,
+              "values": {
+                "id": 24314,
+                "role_name": "Admin",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24314,\"permission_name\":\"view_dashboard\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24315,
+              "values": {
+                "id": 24315,
+                "role_name": "Admin",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24315,\"permission_name\":\"create_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24316,
+              "values": {
+                "id": 24316,
+                "role_name": "Admin",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24316,\"permission_name\":\"edit_trust\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24317,
+              "values": {
+                "id": 24317,
+                "role_name": "Admin",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24317,\"permission_name\":\"view_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24318,
+              "values": {
+                "id": 24318,
+                "role_name": "Admin",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24318,\"permission_name\":\"generate_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24319,
+              "values": {
+                "id": 24319,
+                "role_name": "Admin",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24319,\"permission_name\":\"export_documents\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24320,
+              "values": {
+                "id": 24320,
+                "role_name": "Admin",
+                "permission_name": "manage_users"
+              },
+              "canonical": "{\"id\":24320,\"permission_name\":\"manage_users\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24321,
+              "values": {
+                "id": 24321,
+                "role_name": "Admin",
+                "permission_name": "manage_roles"
+              },
+              "canonical": "{\"id\":24321,\"permission_name\":\"manage_roles\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24322,
+              "values": {
+                "id": 24322,
+                "role_name": "Admin",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24322,\"permission_name\":\"view_audit\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24323,
+              "values": {
+                "id": 24323,
+                "role_name": "Admin",
+                "permission_name": "manage_permissions"
+              },
+              "canonical": "{\"id\":24323,\"permission_name\":\"manage_permissions\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24324,
+              "values": {
+                "id": 24324,
+                "role_name": "Admin",
+                "permission_name": "view_security"
+              },
+              "canonical": "{\"id\":24324,\"permission_name\":\"view_security\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24325,
+              "values": {
+                "id": 24325,
+                "role_name": "Admin",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24325,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Admin\"}"
+            },
+            {
+              "rowid": 24326,
+              "values": {
+                "id": 24326,
+                "role_name": "Trustee",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24326,\"permission_name\":\"view_dashboard\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24327,
+              "values": {
+                "id": 24327,
+                "role_name": "Trustee",
+                "permission_name": "create_trust"
+              },
+              "canonical": "{\"id\":24327,\"permission_name\":\"create_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24328,
+              "values": {
+                "id": 24328,
+                "role_name": "Trustee",
+                "permission_name": "edit_trust"
+              },
+              "canonical": "{\"id\":24328,\"permission_name\":\"edit_trust\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24329,
+              "values": {
+                "id": 24329,
+                "role_name": "Trustee",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24329,\"permission_name\":\"view_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24330,
+              "values": {
+                "id": 24330,
+                "role_name": "Trustee",
+                "permission_name": "generate_documents"
+              },
+              "canonical": "{\"id\":24330,\"permission_name\":\"generate_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24331,
+              "values": {
+                "id": 24331,
+                "role_name": "Trustee",
+                "permission_name": "export_documents"
+              },
+              "canonical": "{\"id\":24331,\"permission_name\":\"export_documents\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24332,
+              "values": {
+                "id": 24332,
+                "role_name": "Trustee",
+                "permission_name": "view_audit"
+              },
+              "canonical": "{\"id\":24332,\"permission_name\":\"view_audit\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24333,
+              "values": {
+                "id": 24333,
+                "role_name": "Trustee",
+                "permission_name": "manage_tax_reports"
+              },
+              "canonical": "{\"id\":24333,\"permission_name\":\"manage_tax_reports\",\"role_name\":\"Trustee\"}"
+            },
+            {
+              "rowid": 24334,
+              "values": {
+                "id": 24334,
+                "role_name": "Viewer",
+                "permission_name": "view_dashboard"
+              },
+              "canonical": "{\"id\":24334,\"permission_name\":\"view_dashboard\",\"role_name\":\"Viewer\"}"
+            },
+            {
+              "rowid": 24335,
+              "values": {
+                "id": 24335,
+                "role_name": "Viewer",
+                "permission_name": "view_documents"
+              },
+              "canonical": "{\"id\":24335,\"permission_name\":\"view_documents\",\"role_name\":\"Viewer\"}"
+            }
+          ],
+          "removed_rows": []
+        }
+      }
+    },
+    "wrong_firm_audit_rows": []
+  },
+  "authorization": {
+    "firm_default_code_repair": false,
+    "role_seed_repair": true,
+    "runtime_profile_build": false,
+    "production_cutover": false,
+    "live_database_replacement": false
+  }
+}

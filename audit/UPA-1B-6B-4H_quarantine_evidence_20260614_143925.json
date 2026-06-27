@@ -1,0 +1,1866 @@
+{
+  "generated_at": "2026-06-14T14:39:25.495779",
+  "status": "QUARANTINE_EVIDENCE_COMPLETE_FINAL_POLICY_REQUIRED",
+  "source_4g_report": "audit\\UPA-1B-6B-4G_extraction_gate_20260614_143113.json",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "database": {
+    "integrity": "ok",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true
+  },
+  "summary": {
+    "quarantined_rows_reviewed": 59,
+    "high_confidence": 0,
+    "medium_confidence": 32,
+    "low_confidence": 27,
+    "remaining_manual": 27
+  },
+  "proposal_counts": {
+    "COPY_TO_BOTH_REFERENCE_CANDIDATE": 32,
+    "QUARANTINE_TENANT_ADJUDICATION_REQUIRED": 27
+  },
+  "table_counts": {
+    "decision_rules": 5,
+    "discussion_messages": 5,
+    "discussion_threads": 5,
+    "document_templates": 3,
+    "intake_module_ledger": 16,
+    "learning_articles": 9,
+    "tax_form_guides": 10,
+    "tutorial_videos": 5,
+    "user_permission_overrides": 1
+  },
+  "evidence_rows": [
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "suggested_trust_type"
+      ],
+      "row_snapshot": {
+        "rule_id": "RULE-001",
+        "goal": "estate_planning",
+        "asset_type": "general_assets",
+        "control_level": "high_control",
+        "suggested_trust_type": "revocable",
+        "suggested_forms": "Form 1040;Form 1041",
+        "considerations": "Revocable structures are often explored where flexibility and ongoing control are priorities.",
+        "created_at": "2026-04-12 22:47:02"
+      }
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-002"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "suggested_trust_type"
+      ],
+      "row_snapshot": {
+        "rule_id": "RULE-002",
+        "goal": "asset_protection",
+        "asset_type": "real_estate",
+        "control_level": "reduced_personal_control",
+        "suggested_trust_type": "irrevocable",
+        "suggested_forms": "Form 1041;Form 56",
+        "considerations": "Irrevocable structures are often explored where stronger separation and reduced unilateral control are part of the objective.",
+        "created_at": "2026-04-12 22:47:02"
+      }
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-003"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "suggested_trust_type"
+      ],
+      "row_snapshot": {
+        "rule_id": "RULE-003",
+        "goal": "real_property_holding",
+        "asset_type": "real_estate",
+        "control_level": "management_focus",
+        "suggested_trust_type": "land",
+        "suggested_forms": "Form 1041",
+        "considerations": "Land trust discussions often arise where title holding and real property management structure are central.",
+        "created_at": "2026-04-12 22:47:02"
+      }
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-004"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "suggested_trust_type"
+      ],
+      "row_snapshot": {
+        "rule_id": "RULE-004",
+        "goal": "insurance_planning",
+        "asset_type": "insurance_policy",
+        "control_level": "reduced_personal_control",
+        "suggested_trust_type": "insurance",
+        "suggested_forms": "Form 1041",
+        "considerations": "Insurance trust structures are often discussed where policy ownership and insurance-related planning objectives are involved.",
+        "created_at": "2026-04-12 22:47:02"
+      }
+    },
+    {
+      "table": "decision_rules",
+      "row_locator": {
+        "rule_id": "RULE-005"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "suggested_trust_type"
+      ],
+      "row_snapshot": {
+        "rule_id": "RULE-005",
+        "goal": "tax_planning",
+        "asset_type": "mixed_assets",
+        "control_level": "structured_control",
+        "suggested_trust_type": "complex",
+        "suggested_forms": "Form 1041;Form 1041-X;Form 8841",
+        "considerations": "Complex trust discussions often require careful review of distributions, retained activity, and reporting implications.",
+        "created_at": "2026-04-12 22:47:02"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-001"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-001",
+        "thread_id": "THREAD-001",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to compare control, flexibility, and reporting implications before final structure selection.",
+        "created_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-002"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-002",
+        "thread_id": "THREAD-002",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to organize which filing guides and reports need to be reviewed first.",
+        "created_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-010"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-010",
+        "thread_id": "THREAD-010",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to separate property-holding questions from reporting questions before moving into execution tasks.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-011"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-011",
+        "thread_id": "THREAD-011",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to outline role and authority questions tied to insurance-oriented planning.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_messages",
+      "row_locator": {
+        "message_id": "MSG-012"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "message_id": "MSG-012",
+        "thread_id": "THREAD-012",
+        "parent_message_id": "",
+        "author": "admin",
+        "body": "Use this thread to decide which guides, reports, and generated drafts belong in the filing sequence.",
+        "created_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-001"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "workspace_id",
+        "related_trust_type",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-001",
+        "workspace_id": "WS-001",
+        "title": "Revocable vs Irrevocable design questions",
+        "category": "trust_type_questions",
+        "related_trust_type": "revocable",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-12 22:44:16",
+        "updated_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-002"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "workspace_id",
+        "related_trust_type",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-002",
+        "workspace_id": "WS-002",
+        "title": "Which filings matter first for fiduciary planning?",
+        "category": "tax_forms_questions",
+        "related_trust_type": "other",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-12 22:44:16",
+        "updated_at": "2026-04-12 22:44:16",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-010"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "workspace_id",
+        "related_trust_type",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-010",
+        "workspace_id": "WS-010",
+        "title": "How should land-holding questions be organized before formal drafting?",
+        "category": "asset_structuring_questions",
+        "related_trust_type": "land",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-011"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "workspace_id",
+        "related_trust_type",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-011",
+        "workspace_id": "WS-011",
+        "title": "What fiduciary questions arise in insurance planning structure?",
+        "category": "fiduciary_process_questions",
+        "related_trust_type": "insurance",
+        "related_form": "Form 56",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "discussion_threads",
+      "row_locator": {
+        "thread_id": "THREAD-012"
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "thread_id",
+        "workspace_id",
+        "related_trust_type",
+        "owner_id"
+      ],
+      "row_snapshot": {
+        "thread_id": "THREAD-012",
+        "workspace_id": "WS-012",
+        "title": "Which reports should be reviewed first in a filing-focused workspace?",
+        "category": "tax_forms_questions",
+        "related_trust_type": "complex",
+        "related_form": "Form 1041",
+        "created_by": "admin",
+        "status": "open",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23",
+        "owner_id": "ADMIN_OWNER_001"
+      }
+    },
+    {
+      "table": "document_templates",
+      "row_locator": {
+        "template_id": "TPL-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "template_id": "TPL-001",
+        "name": "Trust Planning Memo",
+        "category": "planning",
+        "trust_type": "other",
+        "description": "Internal planning memo for comparing trust structure options before formal drafting.",
+        "template_body": "TRUST PLANNING MEMO\\n\\nTitle: {{title}}\\n\\nPurpose:\\n{{purpose}}\\n\\nTrust Type Focus:\\n{{trust_type_focus}}\\n\\nNotes:\\n{{notes}}",
+        "status": "active",
+        "created_at": "2026-04-12 22:54:56",
+        "updated_at": "2026-04-12 22:54:56"
+      }
+    },
+    {
+      "table": "document_templates",
+      "row_locator": {
+        "template_id": "TPL-002"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "template_id": "TPL-002",
+        "name": "Trustee Acceptance Draft",
+        "category": "fiduciary",
+        "trust_type": "other",
+        "description": "Starter draft for acknowledging trustee role and authority scope.",
+        "template_body": "TRUSTEE ACCEPTANCE DRAFT\\n\\nTrust Name: {{trust_name}}\\nTrustee: {{trustee_name}}\\n\\nAuthority Scope:\\n{{authority_scope}}\\n\\nNotes:\\n{{notes}}",
+        "status": "active",
+        "created_at": "2026-04-12 22:54:56",
+        "updated_at": "2026-04-12 22:54:56"
+      }
+    },
+    {
+      "table": "document_templates",
+      "row_locator": {
+        "template_id": "TPL-003"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "template_id": "TPL-003",
+        "name": "Filing Checklist Draft",
+        "category": "filing",
+        "trust_type": "other",
+        "description": "Starter internal checklist for identifying forms, reports, and supporting items.",
+        "template_body": "FILING CHECKLIST DRAFT\\n\\nTitle: {{title}}\\n\\nRelated Forms:\\n{{related_forms}}\\n\\nRelated Reports:\\n{{related_reports}}\\n\\nOpen Questions:\\n{{notes}}",
+        "status": "active",
+        "created_at": "2026-04-12 22:54:56",
+        "updated_at": "2026-04-12 22:54:56"
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 1
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 1,
+        "module_code": "INT-1A",
+        "module_name": "Intake Lane Map",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Classifies the user into the correct intake lane.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 2
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 2,
+        "module_code": "INT-1B",
+        "module_name": "Intake Translation Map",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Translates plain-language answers into categories, modules, document requests, and risk flags.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 3
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 3,
+        "module_code": "INT-1C",
+        "module_name": "Intake Scoring Engine",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Scores complexity, urgency, and readiness.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 4
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 4,
+        "module_code": "INT-1D",
+        "module_name": "Client-Facing Fiduciary Snapshot",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Creates calm client-facing intake snapshot.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 5
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 5,
+        "module_code": "INT-1E",
+        "module_name": "Save Snapshot + Intake Dashboard List",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Stores and lists intake records.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 6
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 6,
+        "module_code": "INT-1F",
+        "module_name": "Resume + Completion Status Controls",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Separates completed and incomplete intakes.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 7
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 7,
+        "module_code": "INT-1G",
+        "module_name": "Dashboard Polish + Print/Export Prep",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds dashboard filters, print view, and export-prep screen.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 8
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 8,
+        "module_code": "INT-1H",
+        "module_name": "Internal Review Notes",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds internal staff/fiduciary notes.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 9
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 9,
+        "module_code": "INT-1I",
+        "module_name": "Follow-Up Task Builder",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Creates structured follow-up tasks from intake outputs.",
+        "locked_at": "2026-05-21T12:13:33",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 10
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 10,
+        "module_code": "INT-1J",
+        "module_name": "Task Filters + Workflow Polish",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Groups and summarizes follow-up tasks.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 11
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 11,
+        "module_code": "INT-1K",
+        "module_name": "Follow-Up Packet / Checklist Export Prep",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Compiles packet-prep printable checklist view.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 12
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 12,
+        "module_code": "INT-1L-DOCX",
+        "module_name": "Follow-Up Packet DOCX Export",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Generates downloadable DOCX follow-up packet.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 13
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 13,
+        "module_code": "INT-1L-PDF",
+        "module_name": "Follow-Up Packet PDF Export",
+        "status": "fallback",
+        "status_label": "Fallback / Limited",
+        "description": "Automatic PDF export requires LibreOffice or Word/pywin32; browser print-to-PDF remains available.",
+        "locked_at": null,
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 14
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 14,
+        "module_code": "INT-1M",
+        "module_name": "Export Gitignore + Audit Log",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Ignores generated exports and logs export attempts.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 15
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 15,
+        "module_code": "INT-1N",
+        "module_name": "Export History Dashboard + Packet Versioning",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds versioned export history.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:06",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "intake_module_ledger",
+      "row_locator": {
+        "id": 16
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [],
+      "row_snapshot": {
+        "id": 16,
+        "module_code": "INT-1N-SCOPE",
+        "module_name": "Export History Firm Scope Repair",
+        "status": "locked",
+        "status_label": "Locked",
+        "description": "Adds local fallback for all-export dashboard scope.",
+        "locked_at": "2026-05-21T12:13:34",
+        "updated_at": "2026-05-21T12:14:07",
+        "updated_by": "admin123",
+        "notes": "Seeded from confirmed INT-1 build sequence."
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-001",
+        "title": "What Is a Trust?",
+        "category": "Foundations",
+        "subcategory": "Basics",
+        "trust_type": "other",
+        "summary": "Introductory overview of what a trust is, why it exists, and the major parties involved.",
+        "body": "A trust is a legal relationship in which one party holds or manages property for the benefit of another according to defined terms. Common roles include settlor, trustee, and beneficiary.",
+        "difficulty_level": "Beginner",
+        "related_forms": "Form 1041;Form 56",
+        "related_reports": "Trust Summary PDF",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-002"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-002",
+        "title": "Roles in Trust Administration",
+        "category": "Foundations",
+        "subcategory": "Roles",
+        "trust_type": "other",
+        "summary": "Explains settlor, trustee, beneficiary, fiduciary, and related administrative roles.",
+        "body": "Trust administration depends on clearly defined roles. The settlor creates the trust, the trustee administers it, and the beneficiary receives benefit according to the trust terms.",
+        "difficulty_level": "Beginner",
+        "related_forms": "Form 56;Form 2848",
+        "related_reports": "Fiduciary Report PDF",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-003"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-003",
+        "title": "Revocable vs Irrevocable Trusts",
+        "category": "Trust Types",
+        "subcategory": "Comparison",
+        "trust_type": "revocable",
+        "summary": "Side-by-side conceptual comparison of revocable and irrevocable trusts.",
+        "body": "Revocable trusts generally allow modification during life, while irrevocable trusts are generally structured for permanence and reduced unilateral change. Exact consequences depend on governing law and trust terms.",
+        "difficulty_level": "Intermediate",
+        "related_forms": "Form 1041;Form 1040",
+        "related_reports": "Trust Summary PDF;1041 Report PDF",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-010"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-010",
+        "title": "Land Trust Overview",
+        "category": "Trust Types",
+        "subcategory": "Land",
+        "trust_type": "land",
+        "summary": "Introduces land trust structure in relation to title holding and property management planning.",
+        "body": "Land trusts are commonly discussed where real property holding structure is central. They should be studied together with trustee roles, title handling, and reporting implications.",
+        "difficulty_level": "Intermediate",
+        "related_forms": "Form 1041",
+        "related_reports": "Trust Summary PDF",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-011"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-011",
+        "title": "Insurance Trust Overview",
+        "category": "Trust Types",
+        "subcategory": "Insurance",
+        "trust_type": "insurance",
+        "summary": "Introduces insurance trust structure and policy ownership planning concepts.",
+        "body": "Insurance trusts are often studied where policy ownership and insurance-related planning structure are central considerations.",
+        "difficulty_level": "Intermediate",
+        "related_forms": "Form 1041",
+        "related_reports": "Trust Summary PDF",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-012"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-012",
+        "title": "Simple vs Complex Trusts",
+        "category": "Trust Types",
+        "subcategory": "Comparison",
+        "trust_type": "complex",
+        "summary": "Compares the concepts commonly associated with simple and complex trust classifications.",
+        "body": "Simple and complex trust discussions are often linked to distribution patterns, retained activity, and broader reporting implications.",
+        "difficulty_level": "Intermediate",
+        "related_forms": "Form 1041;Form 1041-X",
+        "related_reports": "1041 Report PDF",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-LEARN-013"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-LEARN-013",
+        "title": "Fiduciary Duties in Practice",
+        "category": "Foundations",
+        "subcategory": "Duties",
+        "trust_type": "other",
+        "summary": "Practical overview of fiduciary administration duties inside a trust system.",
+        "body": "Fiduciary duties include recordkeeping, acting within granted authority, following the governing terms, and maintaining accountability across reports and decisions.",
+        "difficulty_level": "Beginner",
+        "related_forms": "Form 56",
+        "related_reports": "Fiduciary Report PDF",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-TRUST-BASICS-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-TRUST-BASICS-001",
+        "title": "Trust Administration Basics",
+        "category": "Trust Administration",
+        "subcategory": "Foundations",
+        "trust_type": "general",
+        "summary": "A starter guide explaining the basic records and workflow surfaces used in the Trustee App.",
+        "body": "This article introduces trust identity, parties, property mapping, minutes, certificates, and packet review as separate workflow layers.",
+        "difficulty_level": "beginner",
+        "related_forms": "Trust Minutes, Certificate Registry, Formation Preview Hub",
+        "related_reports": "Report Center, System Health",
+        "status": "published",
+        "created_at": "2026-05-01 18:05:20",
+        "updated_at": "2026-05-01 18:05:20"
+      }
+    },
+    {
+      "table": "learning_articles",
+      "row_locator": {
+        "article_id": "ART-CERTIFICATES-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "article_id": "ART-CERTIFICATES-001",
+        "title": "Execution Certificates and Audit Trails",
+        "category": "Governance Records",
+        "subcategory": "Certificates",
+        "trust_type": "general",
+        "summary": "A starter guide for understanding executed minutes, certificate IDs, packet exports, and audit trail records.",
+        "body": "Execution certificates summarize completed governance records and connect them to signer roles, packet exports, and audit trail entries.",
+        "difficulty_level": "beginner",
+        "related_forms": "Trust Minutes",
+        "related_reports": "Certificate Registry, Audit Trail",
+        "status": "published",
+        "created_at": "2026-05-01 18:05:20",
+        "updated_at": "2026-05-01 18:05:20"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-1041"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-1041",
+        "form_name": "Form 1041",
+        "category": "trust_returns",
+        "applies_to": "Trusts and estates",
+        "summary": "U.S. Income Tax Return for Estates and Trusts.",
+        "body": "Form 1041 is generally used to report income, deductions, gains, losses, and distributions for trusts and estates. Whether it applies depends on structure and activity.",
+        "related_trust_types": "simple;complex;irrevocable;revocable;foreign;other",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-1040"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-1040",
+        "form_name": "Form 1040",
+        "category": "individual_returns",
+        "applies_to": "Individuals",
+        "summary": "U.S. Individual Income Tax Return.",
+        "body": "Form 1040 is the main individual income tax return. It may still matter in broader trust/estate planning discussions when individual and fiduciary matters intersect.",
+        "related_trust_types": "other",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-1041X"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-1041X",
+        "form_name": "Form 1041-X",
+        "category": "amended_returns",
+        "applies_to": "Trusts and estates",
+        "summary": "Amended return workflow for trust and estate returns.",
+        "body": "Use this guide page to track and explain amended return workflow for trust and estate filings where applicable.",
+        "related_trust_types": "simple;complex;irrevocable;revocable;other",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-8841"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-8841",
+        "form_name": "Form 8841",
+        "category": "supporting_forms",
+        "applies_to": "Individuals and fiduciary context",
+        "summary": "Credit for Prior Year Minimum Tax.",
+        "body": "Form 8841 concerns prior year minimum tax credit issues. It should be treated as a supporting form guide and linked carefully to the relevant tax context.",
+        "related_trust_types": "other",
+        "status": "published",
+        "created_at": "2026-04-12 22:20:18",
+        "updated_at": "2026-04-12 22:20:18"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-56"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-56",
+        "form_name": "Form 56",
+        "category": "authority_and_notice",
+        "applies_to": "Fiduciaries",
+        "summary": "Notice concerning fiduciary relationship.",
+        "body": "Form 56 is used in fiduciary relationship contexts and should be understood together with trust administration and authority notice workflow.",
+        "related_trust_types": "other",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-2848"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-2848",
+        "form_name": "Form 2848",
+        "category": "authority_and_notice",
+        "applies_to": "Authorized representation",
+        "summary": "Power of attorney and declaration of representative guide.",
+        "body": "Form 2848 is often studied when understanding authority delegation and representative appointment issues.",
+        "related_trust_types": "other",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-8822B"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-8822B",
+        "form_name": "Form 8822-B",
+        "category": "authority_and_notice",
+        "applies_to": "Entity address and responsible party changes",
+        "summary": "Change of address or responsible party update guide.",
+        "body": "Form 8822-B is relevant when entity identification or address details change and must be maintained accurately.",
+        "related_trust_types": "other",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-K1"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-K1",
+        "form_name": "Schedule K-1",
+        "category": "supporting_forms",
+        "applies_to": "Trust beneficiaries",
+        "summary": "Beneficiary allocation and reporting guide.",
+        "body": "Schedule K-1 is commonly associated with reporting beneficiary allocations and should be studied together with trust distribution workflow.",
+        "related_trust_types": "simple;complex;irrevocable;revocable;other",
+        "status": "published",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-TRUST-MINUTES-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-TRUST-MINUTES-001",
+        "form_name": "Trust Minutes",
+        "category": "Governance",
+        "applies_to": "Trustee decisions, approvals, executions, and archived governance records.",
+        "summary": "Explains how trust minutes preserve decisions and connect to execution certificates.",
+        "body": "Use trust minutes to record trustee decisions, approval, execution, signer capacity, and certificate generation.",
+        "related_trust_types": "general, revocable, irrevocable, business",
+        "status": "published",
+        "created_at": "2026-05-01 18:05:20",
+        "updated_at": "2026-05-01 18:05:20"
+      }
+    },
+    {
+      "table": "tax_form_guides",
+      "row_locator": {
+        "guide_id": "GUIDE-CERT-REGISTRY-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "related_trust_types"
+      ],
+      "row_snapshot": {
+        "guide_id": "GUIDE-CERT-REGISTRY-001",
+        "form_name": "Certificate Registry",
+        "category": "Governance",
+        "applies_to": "Executed or archived trust minutes with certificate IDs.",
+        "summary": "Explains how the certificate registry indexes executed trust records.",
+        "body": "The certificate registry lists certificate IDs, minute references, execution status, packet exports, and verification links.",
+        "related_trust_types": "general",
+        "status": "published",
+        "created_at": "2026-05-01 18:05:20",
+        "updated_at": "2026-05-01 18:05:20"
+      }
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-001"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "video_id": "VID-001",
+        "title": "Trust Basics Introduction",
+        "category": "Foundations",
+        "trust_type": "other",
+        "description": "Starter overview explaining what a trust is and how the core roles fit together.",
+        "file_path": "",
+        "thumbnail_path": "",
+        "transcript_notes": "Use this for beginning users who need a conceptual introduction before opening a workspace.",
+        "visibility": "internal",
+        "created_at": "2026-04-12 22:37:00",
+        "updated_at": "2026-04-12 22:37:00"
+      }
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-002"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "video_id": "VID-002",
+        "title": "Revocable vs Irrevocable Overview",
+        "category": "Trust Types",
+        "trust_type": "revocable",
+        "description": "Basic comparison video for revocable and irrevocable trust concepts.",
+        "file_path": "",
+        "thumbnail_path": "",
+        "transcript_notes": "Good companion to the trust types explorer and foundational article pages.",
+        "visibility": "internal",
+        "created_at": "2026-04-12 22:37:00",
+        "updated_at": "2026-04-12 22:37:00"
+      }
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-010"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "video_id": "VID-010",
+        "title": "Land Trust Walkthrough",
+        "category": "Trust Types",
+        "trust_type": "land",
+        "description": "Introduces the basic concepts behind land trust planning discussions.",
+        "file_path": "",
+        "thumbnail_path": "",
+        "transcript_notes": "Suggested companion to the Land Trust overview article.",
+        "visibility": "internal",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-011"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "video_id": "VID-011",
+        "title": "Fiduciary Duties Walkthrough",
+        "category": "Fiduciary Duties",
+        "trust_type": "other",
+        "description": "Explains practical fiduciary administration concepts inside the platform.",
+        "file_path": "",
+        "thumbnail_path": "",
+        "transcript_notes": "Suggested companion to the fiduciary duties article and fiduciary report screens.",
+        "visibility": "internal",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "tutorial_videos",
+      "row_locator": {
+        "video_id": "VID-012"
+      },
+      "current_action": "QUARANTINE_GLOBAL_POLICY_REVIEW",
+      "current_ownership": "GLOBAL_REVIEW",
+      "proposed_resolution": "COPY_TO_BOTH_REFERENCE_CANDIDATE",
+      "confidence": "MEDIUM",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "trust_type"
+      ],
+      "row_snapshot": {
+        "video_id": "VID-012",
+        "title": "How to Use the Workspace",
+        "category": "Workspace",
+        "trust_type": "other",
+        "description": "Explains how to use the planning sandbox before creating formal records.",
+        "file_path": "",
+        "thumbnail_path": "",
+        "transcript_notes": "Suggested first video before using workspace, discussions, and execution tasks.",
+        "visibility": "internal",
+        "created_at": "2026-04-13 02:11:23",
+        "updated_at": "2026-04-13 02:11:23"
+      }
+    },
+    {
+      "table": "user_permission_overrides",
+      "row_locator": {
+        "id": 2
+      },
+      "current_action": "QUARANTINE_OWNERSHIP_REVIEW",
+      "current_ownership": "UNRESOLVED_TENANT",
+      "proposed_resolution": "QUARANTINE_TENANT_ADJUDICATION_REQUIRED",
+      "confidence": "LOW",
+      "marker_evidence": {
+        "firm1": [],
+        "firm2": []
+      },
+      "parent_evidence": [],
+      "parent_owners": [],
+      "schema_evidence": [
+        "username"
+      ],
+      "row_snapshot": {
+        "id": 2,
+        "username": "trustee",
+        "permission_name": "export_documents",
+        "effect": "deny",
+        "created_at": "2026-04-28 19:26:59"
+      }
+    }
+  ],
+  "gate": {
+    "database_extraction": "NOT_AUTHORIZED",
+    "sandbox_build": "NOT_AUTHORIZED",
+    "live_database_modification": "PROHIBITED"
+  }
+}

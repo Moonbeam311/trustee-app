@@ -1,0 +1,3417 @@
+{
+  "generated_at": "2026-06-14T12:06:54.264774",
+  "status": "RUNTIME_IDENTITY_REVIEW_REQUIRED",
+  "declared_roles": {
+    "trustee-app-clean": "Firm 1 / main application",
+    "trustee-app-private": "Firm 2 / private testing application",
+    "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701": "historical alignment snapshot"
+  },
+  "applications": {
+    "trustee-app-clean": {
+      "name": "trustee-app-clean",
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean",
+      "exists": true,
+      "git": {
+        "branch": "strapback/stable-661bb66",
+        "head": "1cf6497598d9d294bc0453847b896316f863c241",
+        "status": "?? audit/",
+        "remote": "origin\thttps://github.com/Moonbeam311/trustee-app.git (fetch)\norigin\thttps://github.com/Moonbeam311/trustee-app.git (push)",
+        "last_commit": "1cf6497598d9d294bc0453847b896316f863c241|2026-06-13T14:41:22-04:00|Complete IC-1 relationship audit summary and closeout gate"
+      },
+      "runtime_references": [
+        {
+          "file": ".env.example",
+          "line": 8,
+          "text": "SECRET_KEY=REPLACE_WITH_LONG_RANDOM_SECRET_KEY"
+        },
+        {
+          "file": "app.py",
+          "line": 44,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 303,
+          "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+        },
+        {
+          "file": "app.py",
+          "line": 304,
+          "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", str(DEFAULT_DB_PATH))).resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 306,
+          "text": "app.config[\"SQLALCHEMY_DATABASE_URI\"] = f\"sqlite:///{DB_PATH.as_posix()}\""
+        },
+        {
+          "file": "app.py",
+          "line": 338,
+          "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+        },
+        {
+          "file": "app.py",
+          "line": 345,
+          "text": "DB_PATH.parent.mkdir(parents=True, exist_ok=True)"
+        },
+        {
+          "file": "app.py",
+          "line": 347,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 527,
+          "text": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"CHANGE_THIS_TO_RANDOM_SECRET_KEY\")"
+        },
+        {
+          "file": "app.py",
+          "line": 529,
+          "text": "if APP_ENV == \"production\" and SECRET_KEY == \"CHANGE_THIS_TO_RANDOM_SECRET_KEY\":"
+        },
+        {
+          "file": "app.py",
+          "line": 530,
+          "text": "raise RuntimeError(\"SECRET_KEY must be set to a strong value in production.\")"
+        },
+        {
+          "file": "app.py",
+          "line": 532,
+          "text": "app.secret_key = SECRET_KEY"
+        },
+        {
+          "file": "app.py",
+          "line": 551,
+          "text": "Permanent hosted FIRM-002 test trust seed."
+        },
+        {
+          "file": "app.py",
+          "line": 562,
+          "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip() or \"FIRM-002\""
+        },
+        {
+          "file": "app.py",
+          "line": 566,
+          "text": "DB_PATH.parent.mkdir(parents=True, exist_ok=True)"
+        },
+        {
+          "file": "app.py",
+          "line": 568,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 744,
+          "text": "Permanent hosted FIRM-002 portfolio seed."
+        },
+        {
+          "file": "app.py",
+          "line": 747,
+          "text": "for TR-001 under FIRM-002."
+        },
+        {
+          "file": "app.py",
+          "line": 756,
+          "text": "firm_id = \"FIRM-002\""
+        },
+        {
+          "file": "app.py",
+          "line": 760,
+          "text": "DB_PATH.parent.mkdir(parents=True, exist_ok=True)"
+        },
+        {
+          "file": "app.py",
+          "line": 762,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 1006,
+          "text": "active_firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1010,
+          "text": "return trust.get(\"firm_id\") or trust.get(\"firm\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1013,
+          "text": "return getattr(trust, \"firm_id\", None) or getattr(trust, \"firm\", None) or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1015,
+          "text": "return \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1051,
+          "text": "active_firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1055,
+          "text": "trust_firm_id = trust.get(\"firm_id\") or trust.get(\"firm\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1057,
+          "text": "trust_firm_id = getattr(trust, \"firm_id\", None) or getattr(trust, \"firm\", None) or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 1111,
+          "text": "from database.db import get_connection, ensure_archive_export_history_table"
+        },
+        {
+          "file": "app.py",
+          "line": 1168,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 2614,
+          "text": "DEFAULT_UPLOAD_FOLDER = Path(__file__).resolve().parent / \"uploads\""
+        },
+        {
+          "file": "app.py",
+          "line": 2615,
+          "text": "UPLOAD_FOLDER = Path(os.getenv(\"UPLOAD_FOLDER\", str(DEFAULT_UPLOAD_FOLDER))).resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 2616,
+          "text": "UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)"
+        },
+        {
+          "file": "app.py",
+          "line": 3176,
+          "text": "file_path = UPLOAD_FOLDER / stored_filename"
+        },
+        {
+          "file": "app.py",
+          "line": 3251,
+          "text": "uploads_root = UPLOAD_FOLDER.resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 3305,
+          "text": "branding_dir = UPLOAD_FOLDER / \"trust_branding\" / trust_id"
+        },
+        {
+          "file": "app.py",
+          "line": 6636,
+          "text": "f\"Admin {session.get('username')} for firm {session.get('firm_id', 'FIRM-001')} set {policy_key} to {policy[policy_key]}\""
+        },
+        {
+          "file": "app.py",
+          "line": 7129,
+          "text": "db_file = Path(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 7130,
+          "text": "upload_dir = Path(UPLOAD_FOLDER)"
+        },
+        {
+          "file": "app.py",
+          "line": 7133,
+          "text": "(\"DB_PATH\", str(db_file)),"
+        },
+        {
+          "file": "app.py",
+          "line": 7136,
+          "text": "(\"UPLOAD_FOLDER\", str(upload_dir)),"
+        },
+        {
+          "file": "app.py",
+          "line": 7139,
+          "text": "(\"ENV DB_PATH\", os.getenv(\"DB_PATH\", \"\")),"
+        },
+        {
+          "file": "app.py",
+          "line": 7140,
+          "text": "(\"ENV UPLOAD_FOLDER\", os.getenv(\"UPLOAD_FOLDER\", \"\")),"
+        },
+        {
+          "file": "app.py",
+          "line": 7163,
+          "text": "db_file = Path(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 7169,
+          "text": "f\"Database ZIP backup failed; DB_PATH not found: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 7173,
+          "text": "reason=f\"Database file not found at configured DB_PATH: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 7182,
+          "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+        },
+        {
+          "file": "app.py",
+          "line": 7188,
+          "text": "f\"Database ZIP backup downloaded from DB_PATH={db_file}; ZIP={zip_path}\""
+        },
+        {
+          "file": "app.py",
+          "line": 7205,
+          "text": "db_file = Path(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 7211,
+          "text": "f\"Database backup failed; DB_PATH not found: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 7215,
+          "text": "reason=f\"Database file not found at configured DB_PATH: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 7225,
+          "text": "f\"Database backup downloaded from DB_PATH={db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 8340,
+          "text": "conn = sqlite3.connect(LEARNING_DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 8607,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8619,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8632,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8644,
+          "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 8672,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8684,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8697,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8709,
+          "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 8738,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8883,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8894,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8906,
+          "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 8929,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8956,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 8969,
+          "text": "payload.setdefault(\"firm_id\", session.get(\"firm_id\") or \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 9359,
+          "text": "LEARNING_DB_PATH = DB_PATH.as_posix()"
+        },
+        {
+          "file": "app.py",
+          "line": 9390,
+          "text": "filepath = os.path.join(UPLOAD_FOLDER, filename)"
+        },
+        {
+          "file": "app.py",
+          "line": 9427,
+          "text": "uploads_root = UPLOAD_FOLDER.resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 10010,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 10053,
+          "text": "AND firm_id = 'FIRM-002'"
+        },
+        {
+          "file": "app.py",
+          "line": 11442,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 11448,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 11674,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 11680,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 11889,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "app.py",
+          "line": 11891,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 11960,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 11966,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 12197,
+          "text": "firm_id=session.get(\"firm_id\") or \"FIRM-001\","
+        },
+        {
+          "file": "app.py",
+          "line": 12657,
+          "text": "from database.db import upsert_intake_orchestration_state"
+        },
+        {
+          "file": "app.py",
+          "line": 12660,
+          "text": "transfer_firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 12878,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 12884,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 12939,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 12945,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 13044,
+          "text": "from database.db import get_connection, ensure_transfer_archive_handoff_table"
+        },
+        {
+          "file": "app.py",
+          "line": 13046,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 13067,
+          "text": "from database.db import ensure_transfer_archive_handoff_correction_table"
+        },
+        {
+          "file": "app.py",
+          "line": 13113,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 13119,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 13461,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 13467,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 13642,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 13648,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 13821,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 13827,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 13928,
+          "text": "from database.db import get_connection, ensure_transfer_archive_handoff_table"
+        },
+        {
+          "file": "app.py",
+          "line": 13930,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 14093,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "app.py",
+          "line": 14095,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 14241,
+          "text": "session[\"firm_id\"] = user[\"firm_id\"] if \"firm_id\" in user.keys() and user[\"firm_id\"] else \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 14373,
+          "text": "firm_id = session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "app.py",
+          "line": 14483,
+          "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+        },
+        {
+          "file": "app.py",
+          "line": 14494,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 14565,
+          "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+        },
+        {
+          "file": "app.py",
+          "line": 14576,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 14715,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 14720,
+          "text": "output.append(f\"DB_PATH={DB_PATH}\")"
+        },
+        {
+          "file": "app.py",
+          "line": 14784,
+          "text": "firm_id = os.getenv(\"HOSTED_BOOTSTRAP_FIRM_ID\", \"FIRM-002\").strip()"
+        },
+        {
+          "file": "app.py",
+          "line": 14787,
+          "text": "output.append(f\"DB_PATH={DB_PATH}\")"
+        },
+        {
+          "file": "app.py",
+          "line": 14796,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 15342,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15392,
+          "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15408,
+          "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15451,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15502,
+          "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15513,
+          "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15549,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15554,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 15586,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15593,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 15678,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15685,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 15774,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15820,
+          "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15832,
+          "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15873,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 15959,
+          "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 15975,
+          "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 16019,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16046,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16136,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16143,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16302,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16309,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16431,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16438,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16572,
+          "text": "from database.db import ensure_controlled_docx_export_table"
+        },
+        {
+          "file": "app.py",
+          "line": 16580,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16587,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16770,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "app.py",
+          "line": 16772,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16818,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16824,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 16950,
+          "text": "from database.db import ensure_controlled_docx_export_table, ensure_controlled_pdf_export_table"
+        },
+        {
+          "file": "app.py",
+          "line": 16958,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 16965,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 17154,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "app.py",
+          "line": 17156,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 17202,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 17208,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 17343,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 17350,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 17510,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 17517,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 17700,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 17707,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 17833,
+          "text": "from database.db import build_lifecycle_master_ledger"
+        },
+        {
+          "file": "app.py",
+          "line": 17835,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 18807,
+          "text": "from database.db import ensure_identity_intake_table, get_connection"
+        },
+        {
+          "file": "app.py",
+          "line": 18825,
+          "text": "session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 18842,
+          "text": "from database.db import upsert_intake_orchestration_state"
+        },
+        {
+          "file": "app.py",
+          "line": 18845,
+          "text": "firm_id=session.get(\"firm_id\", \"FIRM-001\"),"
+        },
+        {
+          "file": "app.py",
+          "line": 18868,
+          "text": "from database.db import ensure_identity_intake_table, get_connection"
+        },
+        {
+          "file": "app.py",
+          "line": 18876,
+          "text": "\"\"\", (intake_id, session.get(\"firm_id\", \"FIRM-001\")))"
+        },
+        {
+          "file": "app.py",
+          "line": 18884,
+          "text": "from database.db import get_intake_orchestration_state"
+        },
+        {
+          "file": "app.py",
+          "line": 18887,
+          "text": "session.get(\"firm_id\", \"FIRM-001\")"
+        },
+        {
+          "file": "app.py",
+          "line": 18905,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "render.yaml",
+          "line": 12,
+          "text": "- key: SECRET_KEY"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 7,
+          "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 8,
+          "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", str(DEFAULT_DB_PATH))).resolve()"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 13,
+          "text": "Defaults to FIRM-001 only outside request context or legacy sessions."
+        },
+        {
+          "file": "database\\db.py",
+          "line": 18,
+          "text": "return session.get(\"firm_id\") or \"FIRM-001\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 21,
+          "text": "return \"FIRM-001\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 37,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 74,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 116,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 154,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 179,
+          "text": "db_path = Path(DB_PATH)"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 180,
+          "text": "if db_path.parent and str(db_path.parent) not in (\"\", \".\"):"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 181,
+          "text": "db_path.parent.mkdir(parents=True, exist_ok=True)"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 183,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 485,
+          "text": "def ensure_table_firm_id_column(table_name, default_firm_id=None):"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 490,
+          "text": "firm_id = default_firm_id or get_current_firm_id()"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 1978,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 1980,
+          "text": "firm_id = \"FIRM-001\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3513,
+          "text": "firm_id=\"FIRM-001\","
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3581,
+          "text": "def get_intake_orchestration_state(intake_id, firm_id=\"FIRM-001\"):"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3598,
+          "text": "def build_intake_readiness_summary(intake_id, firm_id=\"FIRM-001\"):"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3707,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3738,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3769,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3803,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3839,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3883,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3915,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3947,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 3978,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4015,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4054,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4092,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4130,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4171,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4211,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4253,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4306,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4360,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4421,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4493,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4529,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4551,
+          "text": "def build_lifecycle_master_ledger(intake_id, firm_id=\"FIRM-001\"):"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 4731,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "migrations\\add_archive_packet_finalization.py",
+          "line": 4,
+          "text": "db_path = Path(\"trustee_app.db\")"
+        },
+        {
+          "file": "migrations\\add_archive_packet_finalization.py",
+          "line": 6,
+          "text": "conn = sqlite3.connect(db_path)"
+        },
+        {
+          "file": "migrations\\add_article_registry_tables.py",
+          "line": 4,
+          "text": "db_path = Path(\"trustee_app.db\")"
+        },
+        {
+          "file": "migrations\\add_article_registry_tables.py",
+          "line": 6,
+          "text": "conn = sqlite3.connect(db_path)"
+        },
+        {
+          "file": "migrations\\add_continuity_asset_fields.py",
+          "line": 4,
+          "text": "db_path = Path(\"trustee_app.db\")"
+        },
+        {
+          "file": "migrations\\add_continuity_asset_fields.py",
+          "line": 6,
+          "text": "conn = sqlite3.connect(db_path)"
+        },
+        {
+          "file": "migrations\\add_continuity_custody_log.py",
+          "line": 4,
+          "text": "db_path = Path(\"trustee_app.db\")"
+        },
+        {
+          "file": "migrations\\add_continuity_custody_log.py",
+          "line": 6,
+          "text": "conn = sqlite3.connect(db_path)"
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 2,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 79,
+          "text": "UPLOAD_FOLDER = Path(\"uploads\")"
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 357,
+          "text": "file_path = UPLOAD_FOLDER / stored_filename"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 5,
+          "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", \"trustee_app.db\")).resolve()"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 48,
+          "text": "print(f\"Running hosted firm-scope migration on: {DB_PATH}\")"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 50,
+          "text": "if not DB_PATH.exists():"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 51,
+          "text": "raise SystemExit(f\"ERROR: database file not found: {DB_PATH}\")"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 53,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 62,
+          "text": "# Default legacy hosted rows to FIRM-001."
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 68,
+          "text": "SET firm_id = 'FIRM-001'"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 71,
+          "text": "print(f\"{table}: defaulted rows to FIRM-001:\", cur.rowcount)"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 75,
+          "text": "# Ensure FIRM-002 test/admin users can exist if app_users table exists."
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 82,
+          "text": "SET firm_id = 'FIRM-002'"
+        },
+        {
+          "file": "scripts\\migrate_hosted_firm_scope.py",
+          "line": 85,
+          "text": "print(\"app_users: assigned admin123/testadmin1 to FIRM-002:\", cur.rowcount)"
+        },
+        {
+          "file": "services\\services_articles.py",
+          "line": 1,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "services\\services_continuity_assets.py",
+          "line": 1,
+          "text": "from database.db import get_connection"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 2,
+          "text": "from database.db import get_connection, get_current_firm_id"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 80,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 101,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 863,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 876,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 1169,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 1567,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 2033,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 2229,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 2922,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 3915,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 5070,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 5445,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 6070,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 6417,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 6731,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 6941,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 7313,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 7615,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 7996,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 8420,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 8628,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_intake.py",
+          "line": 8651,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_matters.py",
+          "line": 2,
+          "text": "from database.db import get_connection, get_current_firm_id"
+        },
+        {
+          "file": "services\\services_matters.py",
+          "line": 12,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_matters.py",
+          "line": 34,
+          "text": "firm_id TEXT DEFAULT 'FIRM-001',"
+        },
+        {
+          "file": "services\\services_transfer.py",
+          "line": 7,
+          "text": "from database.db import get_media_by_entity"
+        },
+        {
+          "file": "package_export\\database\\db.py",
+          "line": 6,
+          "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+        },
+        {
+          "file": "package_export\\database\\db.py",
+          "line": 9,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        }
+      ],
+      "environment_files": [
+        ".env.example"
+      ],
+      "database_files": [
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db",
+          "size_bytes": 0,
+          "modified": "2026-05-05T09:45:34.862024",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "firm_counts": {},
+          "sample_identity_rows": [],
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db",
+          "size_bytes": 352256,
+          "modified": "2026-04-29T13:58:59.425558",
+          "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c",
+          "tables": 33,
+          "firm_counts": {
+            "FIRM-001": 123,
+            "[NULL]": 3
+          },
+          "sample_identity_rows": [
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "admin"
+              }
+            },
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "trustee"
+              }
+            },
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "viewer"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "Revocable vs Irrevocable design questions"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "Which filings matter first for fiduciary planning?"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "How should land-holding questions be organized before formal drafting?"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Trust Planning Memo"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Trustee Acceptance Draft"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Filing Checklist Draft"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "values": {
+                "title": "Compare revocable and irrevocable structure"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "values": {
+                "title": "Review fiduciary filing sequence"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "values": {
+                "title": "Review Learning Hub foundation content"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "values": {
+                "title": "Land Holding Planning Memo"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "values": {
+                "title": "Insurance Trustee Acceptance Draft"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "values": {
+                "title": "Tax Workflow Filing Checklist"
+              }
+            },
+            {
+              "table": "learning_articles",
+              "values": {
+                "title": "What Is a Trust?"
+              }
+            },
+            {
+              "table": "learning_articles",
+              "values": {
+                "title": "Roles in Trust Administration"
+              }
+            },
+            {
+              "table": "learning_articles",
+              "values": {
+                "title": "Revocable vs Irrevocable Trusts"
+              }
+            },
+            {
+              "table": "trusts",
+              "values": {
+                "trust_name": "ABC"
+              }
+            },
+            {
+              "table": "trusts",
+              "values": {
+                "trust_name": "ABC"
+              }
+            },
+            {
+              "table": "trusts",
+              "values": {
+                "trust_name": "ABC"
+              }
+            },
+            {
+              "table": "tutorial_videos",
+              "values": {
+                "title": "Trust Basics Introduction"
+              }
+            },
+            {
+              "table": "tutorial_videos",
+              "values": {
+                "title": "Revocable vs Irrevocable Overview"
+              }
+            },
+            {
+              "table": "tutorial_videos",
+              "values": {
+                "title": "Land Trust Walkthrough"
+              }
+            },
+            {
+              "table": "user_permission_overrides",
+              "values": {
+                "username": "trustee"
+              }
+            },
+            {
+              "table": "workspaces",
+              "values": {
+                "title": "Family Trust Design Sandbox"
+              }
+            },
+            {
+              "table": "workspaces",
+              "values": {
+                "title": "Fiduciary Filing Planning Sandbox"
+              }
+            },
+            {
+              "table": "workspaces",
+              "values": {
+                "title": "Land Holding Structure Sandbox"
+              }
+            }
+          ],
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db",
+          "size_bytes": 0,
+          "modified": "2026-04-15T14:26:03.092022",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "firm_counts": {},
+          "sample_identity_rows": [],
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db",
+          "size_bytes": 0,
+          "modified": "2026-05-05T09:45:34.860052",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "firm_counts": {},
+          "sample_identity_rows": [],
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+          "size_bytes": 1667072,
+          "modified": "2026-06-13T14:43:29.989199",
+          "sha256": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+          "tables": 88,
+          "firm_counts": {
+            "FIRM-001": 395,
+            "FIRM-002": 351,
+            "[NULL]": 6
+          },
+          "sample_identity_rows": [
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "admin"
+              }
+            },
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "trustee"
+              }
+            },
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "viewer"
+              }
+            },
+            {
+              "table": "archive_packet_finalization",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "asset_intake",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "continuity_custody_log",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "continuity_custody_log",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "continuity_custody_log",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "controlled_docx_exports",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "controlled_export_prep",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "controlled_pdf_exports",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "Revocable vs Irrevocable design questions"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "Which filings matter first for fiduciary planning?"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "How should land-holding questions be organized before formal drafting?"
+              }
+            },
+            {
+              "table": "document_intake",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Trust Planning Memo"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Trustee Acceptance Draft"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Filing Checklist Draft"
+              }
+            },
+            {
+              "table": "documents",
+              "values": {
+                "firm_id": null
+              }
+            },
+            {
+              "table": "documents",
+              "values": {
+                "firm_id": null
+              }
+            },
+            {
+              "table": "documents",
+              "values": {
+                "firm_id": null
+              }
+            },
+            {
+              "table": "docx_verification_gate",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "draft_sessions",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "draft_sessions",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "draft_variable_bindings",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "draft_variable_bindings",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            },
+            {
+              "table": "draft_variable_bindings",
+              "values": {
+                "firm_id": "FIRM-002"
+              }
+            }
+          ],
+          "errors": []
+        }
+      ],
+      "likely_database_paths": [
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 44,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 44,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 303,
+            "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 303,
+            "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 303,
+            "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 1111,
+            "text": "from database.db import get_connection, ensure_archive_export_history_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 1111,
+            "text": "from database.db import get_connection, ensure_archive_export_history_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 7182,
+            "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 7182,
+            "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 7182,
+            "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11442,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11442,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11674,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11674,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11889,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11889,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11960,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 11960,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 12657,
+            "text": "from database.db import upsert_intake_orchestration_state"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 12657,
+            "text": "from database.db import upsert_intake_orchestration_state"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 12878,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 12878,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 12939,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 12939,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13044,
+            "text": "from database.db import get_connection, ensure_transfer_archive_handoff_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13044,
+            "text": "from database.db import get_connection, ensure_transfer_archive_handoff_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13067,
+            "text": "from database.db import ensure_transfer_archive_handoff_correction_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13067,
+            "text": "from database.db import ensure_transfer_archive_handoff_correction_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13113,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13113,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13461,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13461,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13642,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13642,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13821,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13821,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13928,
+            "text": "from database.db import get_connection, ensure_transfer_archive_handoff_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 13928,
+            "text": "from database.db import get_connection, ensure_transfer_archive_handoff_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 14093,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 14093,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15342,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15342,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15451,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15451,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15549,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15549,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15586,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15586,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15678,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15678,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15774,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15774,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15873,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 15873,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16019,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16019,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16136,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16136,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16302,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16302,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16431,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16431,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16572,
+            "text": "from database.db import ensure_controlled_docx_export_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16572,
+            "text": "from database.db import ensure_controlled_docx_export_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16580,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16580,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16770,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16770,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16818,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16818,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16950,
+            "text": "from database.db import ensure_controlled_docx_export_table, ensure_controlled_pdf_export_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16950,
+            "text": "from database.db import ensure_controlled_docx_export_table, ensure_controlled_pdf_export_table"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16958,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 16958,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17154,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17154,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17202,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17202,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17343,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17343,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17510,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17510,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17700,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17700,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17833,
+            "text": "from database.db import build_lifecycle_master_ledger"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 17833,
+            "text": "from database.db import build_lifecycle_master_ledger"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18807,
+            "text": "from database.db import ensure_identity_intake_table, get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18807,
+            "text": "from database.db import ensure_identity_intake_table, get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18842,
+            "text": "from database.db import upsert_intake_orchestration_state"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18842,
+            "text": "from database.db import upsert_intake_orchestration_state"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18868,
+            "text": "from database.db import ensure_identity_intake_table, get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18868,
+            "text": "from database.db import ensure_identity_intake_table, get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18884,
+            "text": "from database.db import get_intake_orchestration_state"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18884,
+            "text": "from database.db import get_intake_orchestration_state"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18905,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 18905,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "database\\db.py",
+            "line": 7,
+            "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "database\\db.py",
+            "line": 7,
+            "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "database\\db.py",
+            "line": 7,
+            "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_archive_packet_finalization.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_archive_packet_finalization.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_archive_packet_finalization.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_article_registry_tables.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_article_registry_tables.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_article_registry_tables.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_continuity_asset_fields.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_continuity_asset_fields.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_continuity_asset_fields.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_continuity_custody_log.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_continuity_custody_log.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "migrations\\add_continuity_custody_log.py",
+            "line": 4,
+            "text": "db_path = Path(\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\app.py",
+            "line": 2,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\app.py",
+            "line": 2,
+            "text": "from database.db import ("
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "scripts\\migrate_hosted_firm_scope.py",
+            "line": 5,
+            "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", \"trustee_app.db\")).resolve()"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "scripts\\migrate_hosted_firm_scope.py",
+            "line": 5,
+            "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", \"trustee_app.db\")).resolve()"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "scripts\\migrate_hosted_firm_scope.py",
+            "line": 5,
+            "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", \"trustee_app.db\")).resolve()"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_articles.py",
+            "line": 1,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_articles.py",
+            "line": 1,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_continuity_assets.py",
+            "line": 1,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_continuity_assets.py",
+            "line": 1,
+            "text": "from database.db import get_connection"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_intake.py",
+            "line": 2,
+            "text": "from database.db import get_connection, get_current_firm_id"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_intake.py",
+            "line": 2,
+            "text": "from database.db import get_connection, get_current_firm_id"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_matters.py",
+            "line": 2,
+            "text": "from database.db import get_connection, get_current_firm_id"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_matters.py",
+            "line": 2,
+            "text": "from database.db import get_connection, get_current_firm_id"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_transfer.py",
+            "line": 7,
+            "text": "from database.db import get_media_by_entity"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\database.db"
+        },
+        {
+          "reference": {
+            "file": "services\\services_transfer.py",
+            "line": 7,
+            "text": "from database.db import get_media_by_entity"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\database\\db.py",
+            "line": 6,
+            "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\database\\db.py",
+            "line": 6,
+            "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\database\\db.py",
+            "line": 6,
+            "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db"
+        }
+      ]
+    },
+    "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701": {
+      "name": "trustee-app-clean_ALIGNED_PHASE8E_20260429_072701",
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean_ALIGNED_PHASE8E_20260429_072701",
+      "exists": true,
+      "git": {
+        "branch": "strapback/stable-661bb66",
+        "head": "4a2b5882296981c96a4c8f15339799b7bbd78ff2",
+        "status": "D FULL_SYSTEM_HANDOFF.txt\n D KNOWN_ISSUES_WATCHLIST_V1.txt\n D PHASE9_TRACK_C_STATUS.txt\n D POST_CREATE_CONSOLE_CHECKPOINT.txt\n D QA_CHECKLIST_V1.txt\n D RELEASE_READINESS_V1.txt\n D REPORT_SUBSYSTEM_HANDOFF.txt\n D ROUTE_TEST_MATRIX_V1.txt\n D VERSION_SUMMARY_V1.txt\n D app.py\n D app.py.BACKUP_BEFORE_FIX\n D backups_sqlite_export_center/_nav.html.bak\n D backups_sqlite_export_center/admin_index.html.bak\n D backups_sqlite_export_center/app.py.bak\n D backups_sqlite_export_generation/app.py.bak\n D backups_sqlite_export_generation/export_center.html.bak\n D backups_sqlite_instruments/app.py.bak\n D backups_sqlite_instruments/db.py.bak\n D backups_sqlite_k1/app.py.bak\n D backups_sqlite_k1/db.py.bak\n D backups_sqlite_k1_phase_a/app.py.bak\n D backups_sqlite_k1_phase_a/db.py.bak\n D backups_sqlite_k1_phase_a/k1_readiness.html.bak\n D backups_sqlite_packaging/admin_index.html.bak\n D backups_sqlite_packaging/app.py.bak\n D backups_sqlite_route_cleanup/app.py.bak\n D backups_sqlite_ui_polish/_nav.html.bak\n D backups_sqlite_ui_polish/admin_index.html.bak\n D backups_sqlite_ui_polish/form1041_dashboard.html.bak\n D backups_sqlite_ui_polish/instrument_dashboard.html.bak\n D backups_sqlite_ui_polish/k1_dashboard.html.bak\n D backups_sqlite_ui_polish/workflow_hub.html.bak\n D data/trustee_app.db\n D database/app.db\n D database/db.py\n D deployment/DEPLOYMENT_CHECKLIST.txt\n D deployment/start_gunicorn_example.txt\n D extensions.py\n D pdf_utils.py\n D requirements.txt\n D roadmap/FEATURE_ROADMAP.md\n D roadmap/PRIORITY_QUEUE.txt\n D security/SECURITY_CHECKLIST.txt\n D static/trust_ui.css\n D templates/_create_trust_progress.html\n D templates/_platform_nav.html\n D templates/_platform_shell.html\n D templates/access_denied.html\n D templates/add_property.html\n D templates/admin_index.html\n D templates/analytics_dashboard.html\n D templates/audit_dashboard.html\n D templates/audit_log_viewer.html\n D templates/auth/login.html\n D templates/bootstrap_admin_once.html\n D templates/change_password.html\n D templates/create_trust_launch.html\n D templates/create_trust_step2_grantor.html\n D templates/decision_dashboard.html\n D templates/decision_result.html\n D templates/discussion_dashboard.html\n D templates/discussion_form.html\n D templates/discussion_thread.html\n D templates/document_dashboard.html\n D templates/document_detail.html\n D templates/document_generate_form.html\n D templates/execution_dashboard.html\n D templates/execution_task_detail.html\n D templates/execution_task_form.html\n D templates/fiduciary_dashboard.html\n D templates/financial_summary.html\n D templates/form1041_dashboard.html\n D templates/form1041_preview.html\n D templates/form_1041.html\n D templates/form_guide_form.html\n D templates/genealogy_dashboard.html\n D templates/genealogy_form.html\n D templates/guide_page.html\n D templates/instrument_create.html\n D templates/instrument_dashboard.html\n D templates/instrument_print.html\n D templates/k1_beneficiary_edit.html\n D templates/k1_dashboard.html\n D templates/k1_distribution_edit.html\n D templates/k1_year_end_summary.html\n D templates/learning_article.html\n D templates/learning_article_form.html\n D templates/learning_category.html\n D templates/learning_dashboard.html\n D templates/media_dashboard.html\n D templates/media_form.html\n D templates/portfolio_dashboard.html\n D templates/report_center.html\n D templates/role_dashboard.html\n D templates/security_dashboard.html\n D templates/tax_assistant.html\n D templates/transfer_asset.html\n D templates/transfer_assignment.html\n D templates/transfer_bank_support_docs.html\n D templates/transfer_classification.html\n D templates/transfer_control_evidence.html\n D templates/transfer_detail.html\n D templates/transfer_document_support_docs.html\n D templates/transfer_execution_dashboard.html\n D templates/transfer_instruction_template.html\n D templates/transfer_optional_support_docs.html\n D templates/transfer_personal_property_support_docs.html\n D templates/transfer_print_view.html\n D templates/transfer_recommended_support_docs.html\n D templates/transfer_records.html\n D templates/transfer_review.html\n D templates/transfer_start.html\n D templates/transfer_support_doc_edit.html\n D templates/transfer_template_center.html\n D templates/transfer_trustee_acceptance.html\n D templates/trust_articles_output_surface.html\n D templates/trust_formation_preview_hub.html\n D templates/trust_general_assignment_output_surface.html\n D templates/trust_general_assignment_preview.html\n D templates/trust_map_dashboard.html\n D templates/trust_organizational_minutes_output_surface.html\n D templates/trust_organizational_minutes_preview.html\n D templates/trust_packet_preview.html\n D templates/trust_successor_trustee_output_surface.html\n D templates/trust_successor_trustee_preview.html\n D templates/trust_trustee_acceptance_output_surface.html\n D templates/trust_trustee_acceptance_preview.html\n D templates/trust_type_index.html\n D templates/user_dashboard.html\n D templates/user_edit.html\n D templates/user_form.html\n D templates/user_reset_password.html\n D templates/video_category.html\n D templates/video_dashboard.html\n D templates/video_detail.html\n D templates/visualization_dashboard.html\n D templates/workflow_hub.html\n D templates/workspace_dashboard.html\n D templates/workspace_detail.html\n D templates/workspace_documents.html\n D templates/workspace_tasks.html",
+        "remote": "origin\thttps://github.com/Moonbeam311/trustee-app.git (fetch)\norigin\thttps://github.com/Moonbeam311/trustee-app.git (push)",
+        "last_commit": "4a2b5882296981c96a4c8f15339799b7bbd78ff2|2026-04-29T07:18:08-04:00|Initialize permission matrix tables on startup"
+      },
+      "runtime_references": [
+        {
+          "file": ".env.example",
+          "line": 8,
+          "text": "SECRET_KEY=REPLACE_WITH_LONG_RANDOM_SECRET_KEY"
+        },
+        {
+          "file": "render.yaml",
+          "line": 12,
+          "text": "- key: SECRET_KEY"
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 2,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 79,
+          "text": "UPLOAD_FOLDER = Path(\"uploads\")"
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 357,
+          "text": "file_path = UPLOAD_FOLDER / stored_filename"
+        },
+        {
+          "file": "package_export\\database\\db.py",
+          "line": 6,
+          "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+        },
+        {
+          "file": "package_export\\database\\db.py",
+          "line": 9,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        }
+      ],
+      "environment_files": [
+        ".env.example"
+      ],
+      "database_files": [],
+      "likely_database_paths": []
+    },
+    "trustee-app-private": {
+      "name": "trustee-app-private",
+      "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private",
+      "exists": true,
+      "git": {
+        "branch": "main",
+        "head": "3d20171a529e7f9a6ae20fd616929021e6955a59",
+        "status": "",
+        "remote": "origin\thttps://github.com/Moonbeam311/trustee-app-private.git (fetch)\norigin\thttps://github.com/Moonbeam311/trustee-app-private.git (push)\npublic\thttps://github.com/Moonbeam311/trustee-app.git (fetch)\npublic\thttps://github.com/Moonbeam311/trustee-app.git (push)",
+        "last_commit": "3d20171a529e7f9a6ae20fd616929021e6955a59|2026-05-06T13:21:58-04:00|Your message"
+      },
+      "runtime_references": [
+        {
+          "file": ".env.example",
+          "line": 8,
+          "text": "SECRET_KEY=REPLACE_WITH_LONG_RANDOM_SECRET_KEY"
+        },
+        {
+          "file": "app.py",
+          "line": 8,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "app.py",
+          "line": 191,
+          "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+        },
+        {
+          "file": "app.py",
+          "line": 192,
+          "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", str(DEFAULT_DB_PATH))).resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 194,
+          "text": "app.config[\"SQLALCHEMY_DATABASE_URI\"] = f\"sqlite:///{DB_PATH.as_posix()}\""
+        },
+        {
+          "file": "app.py",
+          "line": 214,
+          "text": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"CHANGE_THIS_TO_RANDOM_SECRET_KEY\")"
+        },
+        {
+          "file": "app.py",
+          "line": 216,
+          "text": "app.secret_key = SECRET_KEY"
+        },
+        {
+          "file": "app.py",
+          "line": 1603,
+          "text": "DEFAULT_UPLOAD_FOLDER = Path(__file__).resolve().parent / \"uploads\""
+        },
+        {
+          "file": "app.py",
+          "line": 1604,
+          "text": "UPLOAD_FOLDER = Path(os.getenv(\"UPLOAD_FOLDER\", str(DEFAULT_UPLOAD_FOLDER))).resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 1605,
+          "text": "UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)"
+        },
+        {
+          "file": "app.py",
+          "line": 2112,
+          "text": "file_path = UPLOAD_FOLDER / stored_filename"
+        },
+        {
+          "file": "app.py",
+          "line": 2181,
+          "text": "uploads_root = UPLOAD_FOLDER.resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 2235,
+          "text": "branding_dir = UPLOAD_FOLDER / \"trust_branding\" / trust_id"
+        },
+        {
+          "file": "app.py",
+          "line": 3180,
+          "text": "db_file = Path(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 3181,
+          "text": "upload_dir = Path(UPLOAD_FOLDER)"
+        },
+        {
+          "file": "app.py",
+          "line": 3184,
+          "text": "(\"DB_PATH\", str(db_file)),"
+        },
+        {
+          "file": "app.py",
+          "line": 3187,
+          "text": "(\"UPLOAD_FOLDER\", str(upload_dir)),"
+        },
+        {
+          "file": "app.py",
+          "line": 3190,
+          "text": "(\"ENV DB_PATH\", os.getenv(\"DB_PATH\", \"\")),"
+        },
+        {
+          "file": "app.py",
+          "line": 3191,
+          "text": "(\"ENV UPLOAD_FOLDER\", os.getenv(\"UPLOAD_FOLDER\", \"\")),"
+        },
+        {
+          "file": "app.py",
+          "line": 3214,
+          "text": "db_file = Path(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 3220,
+          "text": "f\"Database ZIP backup failed; DB_PATH not found: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 3224,
+          "text": "reason=f\"Database file not found at configured DB_PATH: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 3233,
+          "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+        },
+        {
+          "file": "app.py",
+          "line": 3239,
+          "text": "f\"Database ZIP backup downloaded from DB_PATH={db_file}; ZIP={zip_path}\""
+        },
+        {
+          "file": "app.py",
+          "line": 3256,
+          "text": "db_file = Path(DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 3262,
+          "text": "f\"Database backup failed; DB_PATH not found: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 3266,
+          "text": "reason=f\"Database file not found at configured DB_PATH: {db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 3276,
+          "text": "f\"Database backup downloaded from DB_PATH={db_file}\""
+        },
+        {
+          "file": "app.py",
+          "line": 4379,
+          "text": "conn = sqlite3.connect(LEARNING_DB_PATH)"
+        },
+        {
+          "file": "app.py",
+          "line": 5367,
+          "text": "LEARNING_DB_PATH = DB_PATH.as_posix()"
+        },
+        {
+          "file": "app.py",
+          "line": 5398,
+          "text": "filepath = os.path.join(UPLOAD_FOLDER, filename)"
+        },
+        {
+          "file": "app.py",
+          "line": 5435,
+          "text": "uploads_root = UPLOAD_FOLDER.resolve()"
+        },
+        {
+          "file": "app.py",
+          "line": 8172,
+          "text": "session[\"firm_id\"] = user[\"firm_id\"] if \"firm_id\" in user.keys() and user[\"firm_id\"] else \"FIRM-001\""
+        },
+        {
+          "file": "render.yaml",
+          "line": 12,
+          "text": "- key: SECRET_KEY"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 7,
+          "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 8,
+          "text": "DB_PATH = Path(os.getenv(\"DB_PATH\", str(DEFAULT_DB_PATH))).resolve()"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 11,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        },
+        {
+          "file": "database\\db.py",
+          "line": 1612,
+          "text": "firm_id = session.get(\"firm_id\", \"FIRM-001\") if has_request_context() else \"FIRM-001\""
+        },
+        {
+          "file": "database\\db.py",
+          "line": 1614,
+          "text": "firm_id = \"FIRM-001\""
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 2,
+          "text": "from database.db import ("
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 79,
+          "text": "UPLOAD_FOLDER = Path(\"uploads\")"
+        },
+        {
+          "file": "package_export\\app.py",
+          "line": 357,
+          "text": "file_path = UPLOAD_FOLDER / stored_filename"
+        },
+        {
+          "file": "package_export\\database\\db.py",
+          "line": 6,
+          "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+        },
+        {
+          "file": "package_export\\database\\db.py",
+          "line": 9,
+          "text": "conn = sqlite3.connect(DB_PATH)"
+        }
+      ],
+      "environment_files": [
+        ".env.example"
+      ],
+      "database_files": [
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\data\\trustee_app.db",
+          "size_bytes": 352256,
+          "modified": "2026-05-06T12:54:34.975322",
+          "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c",
+          "tables": 33,
+          "firm_counts": {
+            "FIRM-001": 123,
+            "[NULL]": 3
+          },
+          "sample_identity_rows": [
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "admin"
+              }
+            },
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "trustee"
+              }
+            },
+            {
+              "table": "app_users",
+              "values": {
+                "firm_id": "FIRM-001",
+                "username": "viewer"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "audit_log",
+              "values": {
+                "firm_id": "FIRM-001"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "Revocable vs Irrevocable design questions"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "Which filings matter first for fiduciary planning?"
+              }
+            },
+            {
+              "table": "discussion_threads",
+              "values": {
+                "title": "How should land-holding questions be organized before formal drafting?"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Trust Planning Memo"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Trustee Acceptance Draft"
+              }
+            },
+            {
+              "table": "document_templates",
+              "values": {
+                "name": "Filing Checklist Draft"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "values": {
+                "title": "Compare revocable and irrevocable structure"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "values": {
+                "title": "Review fiduciary filing sequence"
+              }
+            },
+            {
+              "table": "execution_tasks",
+              "values": {
+                "title": "Review Learning Hub foundation content"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "values": {
+                "title": "Land Holding Planning Memo"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "values": {
+                "title": "Insurance Trustee Acceptance Draft"
+              }
+            },
+            {
+              "table": "generated_documents",
+              "values": {
+                "title": "Tax Workflow Filing Checklist"
+              }
+            },
+            {
+              "table": "learning_articles",
+              "values": {
+                "title": "What Is a Trust?"
+              }
+            },
+            {
+              "table": "learning_articles",
+              "values": {
+                "title": "Roles in Trust Administration"
+              }
+            },
+            {
+              "table": "learning_articles",
+              "values": {
+                "title": "Revocable vs Irrevocable Trusts"
+              }
+            },
+            {
+              "table": "trusts",
+              "values": {
+                "trust_name": "ABC"
+              }
+            },
+            {
+              "table": "trusts",
+              "values": {
+                "trust_name": "ABC"
+              }
+            },
+            {
+              "table": "trusts",
+              "values": {
+                "trust_name": "ABC"
+              }
+            },
+            {
+              "table": "tutorial_videos",
+              "values": {
+                "title": "Trust Basics Introduction"
+              }
+            },
+            {
+              "table": "tutorial_videos",
+              "values": {
+                "title": "Revocable vs Irrevocable Overview"
+              }
+            },
+            {
+              "table": "tutorial_videos",
+              "values": {
+                "title": "Land Trust Walkthrough"
+              }
+            },
+            {
+              "table": "user_permission_overrides",
+              "values": {
+                "username": "trustee"
+              }
+            },
+            {
+              "table": "workspaces",
+              "values": {
+                "title": "Family Trust Design Sandbox"
+              }
+            },
+            {
+              "table": "workspaces",
+              "values": {
+                "title": "Fiduciary Filing Planning Sandbox"
+              }
+            },
+            {
+              "table": "workspaces",
+              "values": {
+                "title": "Land Holding Structure Sandbox"
+              }
+            }
+          ],
+          "errors": []
+        },
+        {
+          "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\database\\app.db",
+          "size_bytes": 0,
+          "modified": "2026-05-06T12:54:34.975889",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "tables": 0,
+          "firm_counts": {},
+          "sample_identity_rows": [],
+          "errors": []
+        }
+      ],
+      "likely_database_paths": [
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 191,
+            "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 191,
+            "text": "DEFAULT_DB_PATH = Path(__file__).resolve().parent / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 3233,
+            "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "app.py",
+            "line": 3233,
+            "text": "zf.write(db_file, arcname=\"trustee_app.db\")"
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "database\\db.py",
+            "line": 7,
+            "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "database\\db.py",
+            "line": 7,
+            "text": "DEFAULT_DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\database\\app.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\database\\db.py",
+            "line": 6,
+            "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\data\\trustee_app.db"
+        },
+        {
+          "reference": {
+            "file": "package_export\\database\\db.py",
+            "line": 6,
+            "text": "DB_PATH = BASE_DIR / \"trustee_app.db\""
+          },
+          "database": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-private\\database\\app.db"
+        }
+      ]
+    }
+  },
+  "findings": [
+    "The declared Firm 2 application folder exists.",
+    "The private application contains 1 populated database candidate(s)."
+  ],
+  "warnings": [
+    "The private application's populated records are labeled FIRM-001. This may be a legacy internal label rather than proof that the folder is Firm 1.",
+    "Clean and private applications are on different Git commits.",
+    "The aligned snapshot differs from the clean application's Git commit."
+  ],
+  "blockers": []
+}

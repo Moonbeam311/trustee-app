@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-06-14T14:53:46.450179",
+  "status": "MANIFEST_GAP_TRACE_REVIEW_REQUIRED",
+  "repository": {
+    "branch": "strapback/stable-661bb66",
+    "head": "1cf6497598d9d294bc0453847b896316f863c241",
+    "git_status": "?? audit/"
+  },
+  "source_database": {
+    "path": "C:\\Users\\LunaMishoe\\Desktop\\trustee-app-clean\\trustee_app.db",
+    "integrity": "ok",
+    "sha256_before": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "sha256_after": "eb2b318824be70aa2e37a5a9d7c8c5c1767a7bb7cbf9922f459128751cbf26f8",
+    "unchanged": true,
+    "current_row_total": 24811
+  },
+  "manifest": {
+    "row_total": 24809,
+    "unmanifested_source_rows": 0,
+    "manifest_rows_missing_from_source": 0
+  },
+  "mismatch_tables": [
+    "permissions"
+  ],
+  "firm1_count_mismatches": [
+    {
+      "table": "permissions",
+      "expected": 13,
+      "actual": 15,
+      "difference": 2
+    }
+  ],
+  "firm2_count_mismatches": [
+    {
+      "table": "permissions",
+      "expected": 13,
+      "actual": 15,
+      "difference": 2
+    }
+  ],
+  "sandbox_table_counts": {
+    "FIRM-001": {
+      "permissions": 15
+    },
+    "FIRM-002": {
+      "permissions": 15
+    }
+  },
+  "unmanifested_rows": [],
+  "missing_source_keys": [],
+  "authorization": {
+    "sandbox_rebuild": false,
+    "runtime_validation": false,
+    "production_cutover": false,
+    "live_database_modification": false
+  }
+}
