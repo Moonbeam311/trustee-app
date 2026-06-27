@@ -1622,6 +1622,103 @@ def get_1041_dataset(trust_id, tax_year):
         "readiness_flags": readiness_flags,
     }
 
+
+
+def ensure_instrument_registry_tables():
+    """
+    IOP-1D: Institutional Instrument Registry schema.
+
+    This extends the existing instruments system without replacing it.
+    Registry tables support future instrument templates, matter-level instrument
+    selection, custom instruments, execution requirements, and archive linkage.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS instrument_registry (
+            registry_id TEXT PRIMARY KEY,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            category TEXT,
+            instrument_type TEXT,
+            instrument_name TEXT NOT NULL,
+            purpose TEXT,
+            description TEXT,
+            default_status TEXT DEFAULT 'available',
+            is_active INTEGER DEFAULT 1,
+            is_custom INTEGER DEFAULT 0,
+            template_source TEXT,
+            required_signers TEXT,
+            required_witnesses TEXT,
+            notary_required INTEGER DEFAULT 0,
+            funding_related INTEGER DEFAULT 0,
+            execution_related INTEGER DEFAULT 0,
+            governance_related INTEGER DEFAULT 0,
+            archive_required INTEGER DEFAULT 0,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS instrument_templates (
+            template_id TEXT PRIMARY KEY,
+            registry_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            template_name TEXT NOT NULL,
+            template_version TEXT DEFAULT '1.0',
+            template_format TEXT DEFAULT 'html',
+            template_body TEXT,
+            template_path TEXT,
+            output_docx_enabled INTEGER DEFAULT 0,
+            output_pdf_enabled INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'draft',
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT,
+            FOREIGN KEY (registry_id) REFERENCES instrument_registry(registry_id)
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS matter_instruments (
+            matter_instrument_id TEXT PRIMARY KEY,
+            matter_id TEXT,
+            trust_id TEXT,
+            estate_id TEXT,
+            instrument_id TEXT,
+            registry_id TEXT,
+            template_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            selection_type TEXT DEFAULT 'recommended',
+            instrument_name TEXT,
+            category TEXT,
+            instrument_type TEXT,
+            purpose TEXT,
+            status TEXT DEFAULT 'selected',
+            version TEXT DEFAULT '1.0',
+            required_signers TEXT,
+            required_witnesses TEXT,
+            notary_required INTEGER DEFAULT 0,
+            funding_related INTEGER DEFAULT 0,
+            execution_related INTEGER DEFAULT 0,
+            governance_related INTEGER DEFAULT 0,
+            archive_required INTEGER DEFAULT 0,
+            related_instruments TEXT,
+            notes TEXT,
+            created_by TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT,
+            FOREIGN KEY (registry_id) REFERENCES instrument_registry(registry_id),
+            FOREIGN KEY (template_id) REFERENCES instrument_templates(template_id)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
 def ensure_instrument_tables():
     conn = get_connection()
     cur = conn.cursor()
