@@ -327,6 +327,58 @@
  </style>
 
 <style>
+/* ADR-6B institutional shell color system */
+:root {
+  --shell-navy: #0f172a;
+  --shell-blue: #1d4ed8;
+  --shell-indigo: #4338ca;
+  --shell-gold: #facc15;
+  --shell-green: #15803d;
+  --shell-purple: #7e22ce;
+  --shell-red: #b91c1c;
+  --shell-slate: #475569;
+  --shell-soft: #f8fafc;
+}
+
+.workspace-grid a:nth-child(1) { border-top: 5px solid var(--shell-navy); }
+.workspace-grid a:nth-child(2) { border-top: 5px solid var(--shell-blue); }
+.workspace-grid a:nth-child(3) { border-top: 5px solid var(--shell-green); }
+.workspace-grid a:nth-child(4) { border-top: 5px solid var(--shell-purple); }
+.workspace-grid a:nth-child(5) { border-top: 5px solid var(--shell-indigo); }
+.workspace-grid a:nth-child(6) { border-top: 5px solid var(--shell-gold); }
+.workspace-grid a:nth-child(7) { border-top: 5px solid var(--shell-red); }
+
+.workspace-grid a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
+}
+
+.admin-recommended-start {
+  border-left: 6px solid var(--shell-blue);
+}
+
+.admin-pilot-notice {
+  border-left: 6px solid var(--shell-gold);
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+}
+
+.legacy-quick-launch,
+.legacy-command-map {
+  border-left: 6px solid var(--shell-slate);
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.railway-readiness-card {
+  border-left: 6px solid var(--shell-red);
+}
+
+.admin-section-label {
+  color: var(--shell-slate);
+}
+</style>
+
+
+<style>
 .admin-command-map .admin-action-grid,
 .intake-command-center .admin-action-grid {
   display: flex;
