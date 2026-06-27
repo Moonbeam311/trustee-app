@@ -6715,12 +6715,21 @@ def admin_ios_workspace(workspace_key):
         workspace_key = "home"
 
     title, description = IOS_WORKSPACE_META[workspace_key]
+
+    report = {
+        "trust_count": get_trust_count(),
+        "beneficiary_count": get_beneficiary_count(),
+        "distribution_count": get_distribution_count(),
+        "instrument_count": get_instrument_count(),
+    }
+
     return render_template(
         "ios_workspace.html",
         workspace_key=workspace_key,
         workspace_title=title,
         workspace_description=description,
         workspace_template=f"ios_workspaces/{workspace_key}.html",
+        report=report,
     )
 
 
