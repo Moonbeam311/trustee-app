@@ -609,118 +609,43 @@
 
 {% include "_institutional_workspace_map.html" %}
 
-<div class="admin-card admin-pilot-notice">
-  <h2>Institution Status Notice</h2>
+<!-- ADR-7C legacy compatibility center -->
+<details class="admin-card legacy-compatibility-center">
+  <summary>Legacy Compatibility Center</summary>
   <p class="admin-muted">
-    This hosted deployment should be treated as a controlled pilot until storage persistence,
-    role permissions, backups, security posture, and sensitive-data handling are fully verified.
+    Older shortcuts, pilot notices, and command-map links are preserved here during the executive dashboard rebuild.
+    Prefer the Executive Home and Institutional Command Center above for normal navigation.
   </p>
-</div>
 
-
-<details class="admin-card legacy-quick-launch">
-  <summary>Legacy Quick Launch / Compatibility Shortcuts</summary>
-  <p class="admin-muted">
-    These older shortcuts are preserved for continuity. Use the Institutional Command Center above for normal navigation.
-  </p>
-<div class="shortcut-strip">
- <a href="/resume">Resume Process<span>Continue the latest active transfer</span></a>
- <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
- <a href="/learning">Learning Hub<span>Guides, trust types, forms, and videos</span></a>
- <a href="{{ url_for('certificate_registry') }}">Certificates<span>Execution certificates and packet records</span></a>
- <a href="/reports">Report Center<span>PDFs and guided reports</span></a>
- <a href="/execution">Execution<span>Tasks and workflow</span></a>
- </div>
-
- 
-
-</details>
-
-<details class="admin-card legacy-command-map">
-  <summary>Legacy Shortcut Map</summary>
-  <p class="admin-muted">
-    Preserved for continuity during dashboard consolidation. Prefer the Institutional Command Center above for normal navigation.
-  </p>
-  <div class="admin-action-grid">
-    <a class="primary-action" href="#intake-command-center">Intake & Lifecycle</a>
-    <a class="primary-action" href="#trust-operations">Trust Operations</a>
-    <a class="primary-action" href="#document-export-center">Documents & Exports</a>
-    <a class="primary-action" href="#learning-guidance">Learning & Guidance</a>
-    <a class="primary-action" href="#system-security">System Health & Security</a>
-    <a class="primary-action" href="#admin-tools">Admin Tools</a>
+  <div class="admin-actions">
+    <a href="/resume">Resume Process</a>
+    <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
+    <a href="/learning">Learning Hub</a>
+    <a href="{{ url_for('certificate_registry') }}">Certificates</a>
+    <a href="/reports">Report Center</a>
+    <a href="/execution">Execution</a>
   </div>
-</details>
 
-<div class="admin-card admin-pilot-notice">
-  <h2>Pilot Mode Notice</h2>
-  <p class="admin-muted">
-    This hosted deployment should be treated as a controlled pilot until storage persistence,
-    role permissions, backups, security posture, and sensitive-data handling are fully verified.
-  </p>
-</div>
+  <hr>
 
-
-<details class="admin-card legacy-quick-launch">
-  <summary>Legacy Quick Launch Shortcuts</summary>
-  <p class="admin-muted">
-    These older shortcuts are preserved for continuity. Use the Institutional Command Center above for normal navigation.
-  </p>
-<div class="shortcut-strip">
- <a href="/resume">Resume Process<span>Continue the latest active transfer</span></a>
- <a href="{{ url_for('create_trust_launch') }}">Create Trust<span>Start a new trust record</span></a>
- <a href="/learning">Learning Hub<span>Guides, trust types, forms, and videos</span></a>
- <a href="{{ url_for('certificate_registry') }}">Certificates<span>Execution certificates and packet records</span></a>
- <a href="/reports">Report Center<span>PDFs and guided reports</span></a>
- <a href="/execution">Execution<span>Tasks and workflow</span></a>
- </div>
-
- 
-
-</details>
-
-<section class="admin-card admin-command-map">
-  <h2>Legacy Shortcut Map</h2>
-  <p>
-    Legacy shortcuts preserved for continuity. Primary navigation now begins with the Institutional Command Center above.
-  </p>
-
-  <div class="admin-action-grid">
+  <h3>Legacy Shortcut Map</h3>
+  <div class="admin-actions">
     <a class="primary-action" href="#intake-command-center">Intake & Lifecycle</a>
-    <a class="primary-action" href="#trust-operations">Trust Operations</a>
-    <a class="primary-action" href="#document-export-center">Documents & Exports</a>
-    <a class="primary-action" href="#learning-guidance">Learning & Guidance</a>
-    <a class="primary-action" href="#system-security">System Health & Security</a>
-    <a class="primary-action" href="#admin-tools">Admin Tools</a>
+    <a href="#trust-operations">Trust Operations</a>
+    <a href="#document-export-center">Documents & Exports</a>
+    <a href="#learning-guidance">Learning & Guidance</a>
+    <a href="#system-security">System Health & Security</a>
+    <a href="#admin-tools">Admin Tools</a>
   </div>
-</section>
 
+  <hr>
 
-
-
-<div class="admin-card admin-pilot-notice">
-  <h2>Deployment Safety Notice</h2>
+  <h3>Deployment Notice</h3>
   <p class="admin-muted">
-    This hosted deployment is a controlled pilot. Use test or mock records until persistence,
-    backups, permissions, export controls, and sensitive-data handling are fully verified.
+    This hosted deployment remains a controlled pilot until persistence, backups, permissions,
+    export controls, and sensitive-data handling are fully verified.
   </p>
-</div>
-
-<div class="admin-card railway-readiness-card">
-  <h2>Railway Readiness Checklist</h2>
-  <p class="admin-muted">
-    Confirm these items before live sensitive-data use:
-  </p>
-  <ul>
-    <li>DB_PATH is configured as <strong>/app/data/trustee_app.db</strong>.</li>
-    <li>Railway volume is mounted at <strong>/app/data</strong>.</li>
-    <li>Database Backup ZIP has been downloaded and opened successfully.</li>
-    <li>Logged-out route protection has been tested.</li>
-    <li>Global export policy is enforced before DOCX/PDF generation.</li>
-    <li>Read-only mode blocks POST actions when enabled.</li>
-    <li>DOCX/PDF exports survive redeploy or are stored under persistent storage.</li>
-  </ul>
-</div>
-
+</details>
 
 <div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center</div>
 <div class="admin-card intake-command-center promoted-intake-panel">
