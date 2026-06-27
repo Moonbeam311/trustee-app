@@ -6689,8 +6689,6 @@ def seed_hosted_baseline_route():
     return redirect(url_for("admin_index"))
 
 
-@app.route("/admin")
-
 IOS_WORKSPACE_META = {
     "home": ("HOME Workspace", "Executive overview, health, activity, recommendations, and resume work."),
     "create": ("CREATE Workspace", "Start new matters, trusts, documents, templates, and institutional records."),
@@ -6726,6 +6724,7 @@ def admin_ios_workspace(workspace_key):
     )
 
 
+@app.route("/admin")
 def admin_index():
     trusts = get_visible_trusts_for_current_operator()
 
