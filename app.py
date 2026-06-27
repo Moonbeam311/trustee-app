@@ -6690,6 +6690,42 @@ def seed_hosted_baseline_route():
 
 
 @app.route("/admin")
+
+IOS_WORKSPACE_META = {
+    "home": ("HOME Workspace", "Executive overview, health, activity, recommendations, and resume work."),
+    "create": ("CREATE Workspace", "Start new matters, trusts, documents, templates, and institutional records."),
+    "administer": ("ADMINISTER Workspace", "Operate trusts, matters, funding, execution, assets, and fiduciary records."),
+    "people": ("PEOPLE Workspace", "Individuals, families, organizations, trustees, beneficiaries, grantors, advisors, witnesses, and notaries."),
+    "governance": ("GOVERNANCE Workspace", "Governance states, verification, approvals, risk, decisions, findings, and recommendations."),
+    "compliance": ("COMPLIANCE Workspace", "Execution readiness, missing items, signatures, witness/notary status, reviews, legal holds, and compliance alerts."),
+    "legacy": ("LEGACY Workspace", "Genealogy, family history, media, artifacts, scholarships, foundation records, and institutional story."),
+    "library": ("LIBRARY Workspace", "Guides, forms, videos, playbooks, trust encyclopedia, policies, templates, and training."),
+    "research": ("RESEARCH Workspace", "Private trust research, ILIT, dynasty, pet, firearms, business, ecclesiastical, and future trust concepts."),
+    "archive": ("ARCHIVE Workspace", "Evidence, provenance, chain of custody, snapshots, retention, continuity packages, and digital vault."),
+    "reports": ("REPORTS Workspace", "Executive reports, trust reports, audit reports, certificates, exports, and evidence packages."),
+    "system": ("SYSTEM Workspace", "Users, roles, permissions, security, backups, deployment, database, feature flags, and maintenance."),
+    "developer": ("DEVELOPER Workspace", "ADR library, route registry, diagnostics, migrations, seed data, testing, and experimental features."),
+}
+
+@app.route("/admin/workspace/<workspace_key>")
+def admin_ios_workspace(workspace_key):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    workspace_key = (workspace_key or "home").lower().strip()
+    if workspace_key not in IOS_WORKSPACE_META:
+        workspace_key = "home"
+
+    title, description = IOS_WORKSPACE_META[workspace_key]
+    return render_template(
+        "ios_workspace.html",
+        workspace_key=workspace_key,
+        workspace_title=title,
+        workspace_description=description,
+        workspace_template=f"ios_workspaces/{workspace_key}.html",
+    )
+
+
 def admin_index():
     trusts = get_visible_trusts_for_current_operator()
 

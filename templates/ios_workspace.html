@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "_platform_shell.html" %}
+  <title>{{ workspace_title }}</title>
+</head>
+<body>
+<div class="page-shell admin-wrap">
+  {% include "_platform_nav.html" %}
+
+  {% include "_ios_shell.html" %}
+
+  <section class="admin-card">
+    <h1>{{ workspace_title }}</h1>
+    <p class="admin-muted">{{ workspace_description }}</p>
+  </section>
+
+  {% include workspace_template %}
+</div>
+</body>
+</html>
