@@ -551,10 +551,66 @@
   </p>
 </div>
 
+
+<!-- ADR-7 executive dashboard scaffold -->
+<section class="admin-card executive-home">
+  <h2>Executive Home</h2>
+  <p class="admin-muted">
+    This home workspace answers four questions: where was I, what needs attention,
+    what should I do next, and is the institution healthy?
+  </p>
+
+  <div class="admin-grid">
+    <div class="metric">
+      <h3>Institution Health</h3>
+      <p>Pilot</p>
+    </div>
+    <div class="metric">
+      <h3>Trust Portfolio</h3>
+      <p>{{ report.trust_count }}</p>
+    </div>
+    <div class="metric">
+      <h3>Pending Reviews</h3>
+      <p>0</p>
+    </div>
+    <div class="metric">
+      <h3>Audit Exceptions</h3>
+      <p>0</p>
+    </div>
+  </div>
+</section>
+
+<section class="admin-card continue-work-panel">
+  <h2>Continue Where You Left Off</h2>
+  <p class="admin-muted">
+    Resume the latest matter, trust, execution packet, funding review, or lifecycle ledger.
+  </p>
+  <div class="admin-actions">
+    <a class="primary-action" href="/resume">Resume Process</a>
+    <a href="{{ url_for('intake_dashboard') }}">Review Saved Intakes</a>
+    <a href="{{ url_for('create_trust_launch') }}">Start Trust Creation</a>
+    <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
+  </div>
+</section>
+
+<section class="admin-card institutional-activity-panel">
+  <h2>Recent Institutional Activity</h2>
+  <p class="admin-muted">
+    Activity timeline placeholder. ADR-7E will connect this panel to audit, matter,
+    trust, document, execution, and archive events.
+  </p>
+  <ul>
+    <li>Dashboard reconstruction active.</li>
+    <li>Institutional workspace map installed.</li>
+    <li>Instrument registry schema added.</li>
+  </ul>
+</section>
+
+
 {% include "_institutional_workspace_map.html" %}
 
 <div class="admin-card admin-pilot-notice">
-  <h2>Pilot Mode Notice</h2>
+  <h2>Institution Status Notice</h2>
   <p class="admin-muted">
     This hosted deployment should be treated as a controlled pilot until storage persistence,
     role permissions, backups, security posture, and sensitive-data handling are fully verified.
