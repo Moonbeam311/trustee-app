@@ -1,6 +1,29 @@
 <section class="admin-card">
-  <h2>ADMINISTER Workspace</h2>
-  <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
-  </p>
+  <h2>Existing Trust Operations</h2>
+  <div class="admin-actions">
+    <a class="primary-action" href="/trusts">Trust Registry</a>
+    <a href="/matters">Matter Operations</a>
+    <a href="/assets">Assets</a>
+    <a href="/funding">Funding</a>
+    <a href="/execution">Execution</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>Administration Records</h2>
+  <div class="admin-actions">
+    <a href="/trust-minutes">Trust Minutes</a>
+    <a href="/certificates">Certificates</a>
+    <a href="/matter-relationships">Relationships</a>
+    <a href="/admin">Legacy Admin Dashboard</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>ADMINISTER Notes</h2>
+  <ul>
+    <li>This workspace uses the existing IOS route spine: <code>/admin/workspace/administer</code>.</li>
+    <li>No legacy admin dashboard route was removed.</li>
+    <li>Operational trust-management surfaces are grouped here for migration.</li>
+  </ul>
 </section>
