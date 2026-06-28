@@ -6,13 +6,13 @@
 <p>
   Object: {{ context.session.object_type }}: {{ context.session.object_id }}
   | Document: {{ context.session.document_title or context.session.document_type }}
-  | Status: {{ context.session.status or context.session.execution_status }}
-  | Archive: {{ context.session.archive_status or context.session.freeze_status }}
+  | Status: {{ context.session.status or context.session.execution_status or context.session.session_status }}
+  | Archive: {% if context.freezes %}frozen{% else %}{{ context.session.archive_status or context.session.freeze_status or "open" }}{% endif %}
 </p>
 
 <h2>Guided Ceremony Actions</h2>
 {% set archive_state = context.session.archive_status or context.session.freeze_status %}
-{% set is_frozen = archive_state == 'frozen' %}
+{% set is_frozen = context.freezes or archive_state == 'frozen' %}
 
 {% if is_frozen %}
 <section class="admin-card">
