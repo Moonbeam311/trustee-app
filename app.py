@@ -20147,3 +20147,38 @@ if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
 app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endpoint
+
+
+@app.route("/admin/diag/seed-execution-objects")
+def admin_diag_seed_execution_objects():
+    from services.services_execution_objects import create_execution_object, list_execution_objects_for_linked_object
+
+    created = []
+
+    if not list_execution_objects_for_linked_object("trust", "TR-022"):
+        for obj_type, label in [
+            ("signature", "Primary Trustee Signature Profile"),
+            ("seal", "Primary Institutional Seal"),
+            ("certificate", "Trust Execution Certificate Placeholder"),
+        ]:
+            created.append(create_execution_object(
+                obj_type, label, None, "trust", "TR-022", session.get("username") or "admin123",
+                f"Runtime diagnostic seed for {label}."
+            ))
+
+    if not list_execution_objects_for_linked_object("matter", "MAT-000001"):
+        for obj_type, label in [
+            ("execution_session", "Matter Execution Readiness Session"),
+            ("evidence_package", "Matter Execution Evidence Package"),
+        ]:
+            created.append(create_execution_object(
+                obj_type, label, None, "matter", "MAT-000001", session.get("username") or "admin123",
+                f"Runtime diagnostic seed for {label}."
+            ))
+
+    return {
+        "created": created,
+        "trust": list_execution_objects_for_linked_object("trust", "TR-022"),
+        "matter": list_execution_objects_for_linked_object("matter", "MAT-000001"),
+    }
+
