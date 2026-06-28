@@ -404,29 +404,61 @@ def list_execution_sessions_for_object(object_type, object_id):
         conn.row_factory = None
         cur = conn.cursor()
 
-        rows = cur.execute("""
-            SELECT execution_id, document_type, execution_status, signer_name, signer_capacity, created_at
+        cols = cur.execute("PRAGMA table_info(institutional_execution_sessions)").fetchall()
+        col_names = [c[1] for c in cols]
+
+        def pick(*names):
+            for name in names:
+                if name in col_names:
+                    return name
+            return None
+
+        execution_id_col = pick("execution_id", "session_id", "id")
+        document_type_col = pick("document_type", "document_name", "execution_type", "title")
+        status_col = pick("execution_status", "status", "session_status")
+        signer_name_col = pick("signer_name", "primary_signer", "created_by")
+        signer_capacity_col = pick("signer_capacity", "capacity")
+        created_at_col = pick("created_at", "created", "timestamp")
+        object_type_col = pick("object_type", "linked_object_type")
+        object_id_col = pick("object_id", "linked_object_id")
+
+        if not execution_id_col or not object_type_col or not object_id_col:
+            conn.close()
+            return []
+
+        select_cols = [
+            execution_id_col,
+            document_type_col or "NULL",
+            status_col or "NULL",
+            signer_name_col or "NULL",
+            signer_capacity_col or "NULL",
+            created_at_col or "NULL",
+        ]
+
+        rows = cur.execute(f"""
+            SELECT {", ".join(select_cols)}
             FROM institutional_execution_sessions
-            WHERE object_type = ? AND object_id = ?
-            ORDER BY created_at DESC
+            WHERE {object_type_col} = ? AND {object_id_col} = ?
+            ORDER BY {created_at_col or execution_id_col} DESC
             LIMIT 10
         """, (object_type, object_id)).fetchall()
+
+        conn.close()
 
         return [
             {
                 "execution_id": r[0],
-                "document_type": r[1],
-                "status": r[2],
-                "signer_name": r[3],
-                "signer_capacity": r[4],
-                "created_at": r[5],
+                "document_type": r[1] or "",
+                "status": r[2] or "",
+                "signer_name": r[3] or "",
+                "signer_capacity": r[4] or "",
+                "created_at": r[5] or "",
                 "url": f"/execution/sessions/{r[0]}",
             }
             for r in rows
         ]
     except Exception as exc:
-        return [{"execution_id": "ERROR", "document_type": "Execution lookup failed", "status": str(exc), "url": ""}]
-
+        return []
 
 def build_object_dashboard_context(object_type, object_id):
     if object_type == "execution_object":
