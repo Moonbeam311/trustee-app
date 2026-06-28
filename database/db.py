@@ -4838,3 +4838,115 @@ def ensure_draft_variable_binding_table():
 
     conn.commit()
     conn.close()
+
+
+def ensure_institutional_execution_layer_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_execution_sessions (
+        execution_id TEXT PRIMARY KEY,
+        object_type TEXT,
+        object_id TEXT,
+        matter_id TEXT,
+        trust_id TEXT,
+        document_type TEXT,
+        document_title TEXT,
+        ceremony_status TEXT DEFAULT 'draft',
+        current_step TEXT DEFAULT 'prepared',
+        execution_date TEXT,
+        execution_location TEXT,
+        created_by TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        archive_freeze_status TEXT DEFAULT 'not_frozen',
+        final_hash TEXT,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_signature_records (
+        signature_id TEXT PRIMARY KEY,
+        execution_id TEXT NOT NULL,
+        signer_name TEXT,
+        signer_role TEXT,
+        signer_capacity TEXT,
+        signature_status TEXT DEFAULT 'pending',
+        signature_method TEXT,
+        signed_at TEXT,
+        signed_location TEXT,
+        identity_verified TEXT DEFAULT 'not_checked',
+        certificate_id TEXT,
+        signature_hash TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_witness_notary_records (
+        record_id TEXT PRIMARY KEY,
+        execution_id TEXT NOT NULL,
+        participant_type TEXT,
+        participant_name TEXT,
+        participant_role TEXT,
+        participant_address TEXT,
+        verification_status TEXT DEFAULT 'pending',
+        signed_at TEXT,
+        commission_number TEXT,
+        commission_expires TEXT,
+        jurat_acknowledgment_type TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_seal_ledger (
+        seal_event_id TEXT PRIMARY KEY,
+        execution_id TEXT,
+        seal_id TEXT,
+        seal_style TEXT,
+        seal_status TEXT DEFAULT 'applied',
+        applied_to TEXT,
+        applied_by TEXT,
+        applied_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        seal_hash TEXT,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_execution_ledger (
+        ledger_id TEXT PRIMARY KEY,
+        execution_id TEXT NOT NULL,
+        event_type TEXT,
+        event_label TEXT,
+        event_actor TEXT,
+        event_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        event_sequence INTEGER,
+        provenance_hash TEXT,
+        previous_hash TEXT,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_archive_freezes (
+        freeze_id TEXT PRIMARY KEY,
+        execution_id TEXT NOT NULL,
+        object_type TEXT,
+        object_id TEXT,
+        archive_status TEXT DEFAULT 'frozen',
+        freeze_hash TEXT,
+        frozen_by TEXT,
+        frozen_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        package_path TEXT,
+        notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
