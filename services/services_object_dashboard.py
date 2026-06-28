@@ -7,6 +7,7 @@ Legacy matter routes remain preserved.
 """
 
 from database.db import get_connection
+from services.services_object_presentation import present_context
 
 
 def _empty_context(object_type, object_id):
@@ -397,10 +398,10 @@ def build_object_dashboard_context(object_type, object_id):
     object_type = (object_type or "").lower().strip()
 
     if object_type == "matter":
-        return build_matter_dashboard_context(object_id)
+        return present_context(build_matter_dashboard_context(object_id))
 
     if object_type == "trust":
-        return build_trust_dashboard_context(object_id)
+        return present_context(build_trust_dashboard_context(object_id))
 
     ctx = _empty_context(object_type or "object", object_id)
     ctx["summary"] = "Universal dashboard support for this object type has not been implemented yet."
