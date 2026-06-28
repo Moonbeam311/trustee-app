@@ -55,6 +55,40 @@
 </section>
 
 <section class="admin-card">
+  <h2>Create / Capture Signature Asset</h2>
+  <p class="admin-muted">
+    This block prepares a signature asset record for the vault. Uploaded image support is active.
+    Draw-pad capture will be connected in the next pass.
+  </p>
+
+  <form method="post" action="/institutional-assets/upload" enctype="multipart/form-data">
+    <input type="hidden" name="asset_type" value="signature">
+    <input type="hidden" name="firm_id" value="FIRM-002">
+    <input type="hidden" name="related_object_type" value="person">
+
+    <label>Signer / Person Name</label>
+    <input name="related_object_id" value="LUNA ISAAC MISHOE III">
+
+    <label>Signature Label</label>
+    <input name="asset_label" value="Trustee Digital Signature">
+
+    <label>Signature Method</label>
+    <select name="notes">
+      <option value="Stored digital signature image">Stored Digital Signature Image</option>
+      <option value="Typed signature pending render">Typed Signature</option>
+      <option value="Drawn signature pending capture">Drawn Signature</option>
+      <option value="Wet signature scan">Wet Signature Scan</option>
+      <option value="PKI certificate reference pending">PKI / Digital Certificate</option>
+    </select>
+
+    <label>Upload Signature Image</label>
+    <input type="file" name="asset_file">
+
+    <button type="submit">Upload Signature Asset</button>
+  </form>
+</section>
+
+<section class="admin-card">
   <h2>Stored Institutional Assets</h2>
   {% if assets %}
     <table class="admin-table">
