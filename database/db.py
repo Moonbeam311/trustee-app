@@ -4999,3 +4999,31 @@ def ensure_institutional_identity_branding_tables():
 
     conn.commit()
     conn.close()
+
+
+def ensure_institutional_asset_vault_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_identity_assets (
+        asset_id TEXT PRIMARY KEY,
+        asset_type TEXT,
+        asset_label TEXT,
+        firm_id TEXT,
+        related_object_type TEXT,
+        related_object_id TEXT,
+        file_name TEXT,
+        file_path TEXT,
+        mime_type TEXT,
+        file_size INTEGER,
+        asset_status TEXT DEFAULT 'active',
+        asset_hash TEXT,
+        uploaded_by TEXT,
+        uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
