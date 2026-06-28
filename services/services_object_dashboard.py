@@ -275,7 +275,13 @@ def build_trust_dashboard_context(trust_id):
             "title": title,
             "status": str(status).lower().replace(" ", "_"),
             "status_label": str(status).replace("_", " ").title(),
-            "summary": trust.get("purpose") or trust.get("description") or "",
+            "summary": (
+                trust.get("purpose")
+                or trust.get("description")
+                or trust.get("trust_purpose")
+                or trust.get("trust_type")
+                or ""
+            ),
             "identity": {
                 "name": title,
                 "display_id": trust.get("trust_id") or trust.get("id") or trust_id,
