@@ -10,7 +10,7 @@
       <tbody>
       {% for s in context.execution_sessions %}
         <tr>
-          <td><a href="{{ s.url }}">{{ s.execution_id }}</a></td>
+          <td><a href="{{ s.url }}"><a href="/execution/sessions/{{ s.execution_id }}">{{ s.execution_id }}</a></a></td>
           <td>{{ s.document_type }}</td>
           <td>{{ s.status }}</td>
           <td>{{ s.signer_name }}</td>
