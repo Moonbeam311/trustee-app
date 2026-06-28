@@ -321,6 +321,9 @@ def build_trust_dashboard_context(trust_id):
         except Exception:
             ctx["relationships"] = []
 
+        ctx["execution_sessions"] = list_execution_sessions_for_object("trust", trust_id)
+        ctx["execution_objects"] = list_execution_objects_for_linked_object("trust", trust_id)
+
         # Best-effort matter events where this trust is referenced.
         try:
             event_rows = cur.execute(
