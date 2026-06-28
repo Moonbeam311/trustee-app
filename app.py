@@ -7,6 +7,7 @@ import base64
 import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
+from services.services_object_dashboard import build_object_dashboard_context
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
 from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
@@ -6731,6 +6732,15 @@ def admin_ios_workspace(workspace_key):
         workspace_template=f"ios_workspaces/{workspace_key}.html",
         report=report,
     )
+
+
+@app.route("/objects/<object_type>/<object_id>")
+def universal_object_dashboard(object_type, object_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    context = build_object_dashboard_context(object_type, object_id)
+    return render_template("object_dashboard.html", context=context)
 
 
 @app.route("/admin")
