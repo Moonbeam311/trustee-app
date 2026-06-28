@@ -24,14 +24,21 @@
 
 <section class="admin-card">
   <h2>Guided Ceremony Actions</h2>
+{% set is_frozen = context.session.archive_status == 'frozen' %}
 {% if is_frozen %}
-  <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded from this page.</p>
+  <section class="admin-card">
+    <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
+  </section>
 {% else %}
+
+
+  <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded from this page.</p>
+
 
   <form method="post"
     {% if csrf_token is defined %}
     data-csrf="enabled"
-    {% endif %} action="/execution/sessions/{{ execution_id }}/signature">
+     action="/execution/sessions/{{ execution_id }}/signature">
     <h3>Record Signature</h3>
     <input name="signer_name" placeholder="Signer name">
     <input name="signer_role" placeholder="Role, e.g. Trustee">
@@ -43,7 +50,7 @@
   <form method="post"
     {% if csrf_token is defined %}
     data-csrf="enabled"
-    {% endif %} action="/execution/sessions/{{ execution_id }}/participant">
+     action="/execution/sessions/{{ execution_id }}/participant">
     <h3>Record Witness / Notary</h3>
     <select name="participant_type">
       <option value="witness">Witness</option>
@@ -58,7 +65,7 @@
   <form method="post"
     {% if csrf_token is defined %}
     data-csrf="enabled"
-    {% endif %} action="/execution/sessions/{{ execution_id }}/seal">
+     action="/execution/sessions/{{ execution_id }}/seal">
     <h3>Apply Institutional Seal</h3>
     <input name="seal_id" value="SEAL-DEFAULT">
     <input name="seal_style" value="v3_minimal">
@@ -70,7 +77,7 @@
   <form method="post"
     {% if csrf_token is defined %}
     data-csrf="enabled"
-    {% endif %} action="/execution/sessions/{{ execution_id }}/freeze">
+     action="/execution/sessions/{{ execution_id }}/freeze">
     <h3>Freeze Archive</h3>
     <input name="object_type" value="{{ s.object_type if s else '' }}">
     <input name="object_id" value="{{ s.object_id if s else '' }}">
@@ -81,7 +88,10 @@
 </section>
 
 <section class="admin-card">
-  {% endif %}
+  
+
+
+{% endif %}
 
 <h2>Signatures</h2>
   {% if context.signatures %}
