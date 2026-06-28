@@ -6,12 +6,13 @@
 <p>
   Object: {{ context.session.object_type }}: {{ context.session.object_id }}
   | Document: {{ context.session.document_title or context.session.document_type }}
-  | Status: {{ context.session.status }}
-  | Archive: {{ context.session.archive_status }}
+  | Status: {{ context.session.status or context.session.execution_status }}
+  | Archive: {{ context.session.archive_status or context.session.freeze_status }}
 </p>
 
 <h2>Guided Ceremony Actions</h2>
-{% set is_frozen = context.session.archive_status == 'frozen' %}
+{% set archive_state = context.session.archive_status or context.session.freeze_status %}
+{% set is_frozen = archive_state == 'frozen' %}
 
 {% if is_frozen %}
 <section class="admin-card">
@@ -73,7 +74,7 @@
 <table>
 <tr><th>ID</th><th>Type</th><th>Name</th><th>Role</th><th>Status</th><th>Signed At</th></tr>
 {% for w in context.participants %}
-<tr><td>{{ w.participant_id }}</td><td>{{ w.participant_type }}</td><td>{{ w.participant_name }}</td><td>{{ w.participant_role }}</td><td>{{ w.status }}</td><td>{{ w.recorded_at }}</td></tr>
+<tr><td>{{ w.participant_id or w.witness_id }}</td><td>{{ w.participant_type }}</td><td>{{ w.participant_name }}</td><td>{{ w.participant_role }}</td><td>{{ w.status or w.record_status }}</td><td>{{ w.recorded_at or w.signed_at }}</td></tr>
 {% endfor %}
 </table>
 
@@ -81,20 +82,20 @@
 <table>
 <tr><th>ID</th><th>Seal</th><th>Style</th><th>Applied To</th><th>Applied At</th><th>Hash</th></tr>
 {% for seal in context.seals %}
-<tr><td>{{ seal.seal_entry_id }}</td><td>{{ seal.seal_id }}</td><td>{{ seal.seal_style }}</td><td>{{ seal.applied_to }}</td><td>{{ seal.applied_at }}</td><td>{{ seal.seal_hash }}</td></tr>
+<tr><td>{{ seal.seal_entry_id or seal.ledger_id }}</td><td>{{ seal.seal_id }}</td><td>{{ seal.seal_style }}</td><td>{{ seal.applied_to }}</td><td>{{ seal.applied_at }}</td><td>{{ seal.seal_hash }}</td></tr>
 {% endfor %}
 </table>
 
 <h2>Execution Ledger / Timeline Replay</h2>
 {% for led in context.ledger %}
-<p><strong>{{ loop.index }}. {{ led.event_type }}</strong><br>{{ led.ledger_id }} · {{ led.created_at }} · {{ led.actor }}<br>{{ led.description }}<br>Hash: {{ led.event_hash }}</p>
+<p><strong>{{ loop.index }}. {{ led.event_type }}</strong><br>{{ led.ledger_id }} · {{ led.created_at or led.event_timestamp }} · {{ led.actor or led.created_by }}<br>{{ led.description or led.event_description }}<br>Hash: {{ led.event_hash or led.ledger_hash }}</p>
 {% endfor %}
 
 <h2>Archive Freezes</h2>
 <table>
 <tr><th>ID</th><th>Status</th><th>Frozen By</th><th>Frozen At</th><th>Hash</th></tr>
 {% for f in context.freezes %}
-<tr><td>{{ f.freeze_id }}</td><td>{{ f.freeze_status }}</td><td>{{ f.frozen_by }}</td><td>{{ f.frozen_at }}</td><td>{{ f.freeze_hash }}</td></tr>
+<tr><td>{{ f.freeze_id }}</td><td>{{ f.freeze_status or f.status }}</td><td>{{ f.frozen_by }}</td><td>{{ f.frozen_at }}</td><td>{{ f.freeze_hash }}</td></tr>
 {% endfor %}
 </table>
 
