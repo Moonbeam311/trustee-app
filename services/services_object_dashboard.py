@@ -221,7 +221,6 @@ def build_matter_dashboard_context(matter_id):
         ctx["execution_sessions"] = list_execution_sessions_for_object("matter", matter_id)
         ctx["execution_sessions"] = list_execution_sessions_for_object("trust", matter_id)
         ctx["execution_objects"] = list_execution_objects_for_linked_object("matter", matter_id)
-        ctx["execution_objects"] = list_execution_objects_for_linked_object("trust", trust_id)
         ctx["actions"] = [
             {"label": "Legacy Matter Detail", "url": f"/matters/{matter_id}", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
             {"label": "Matter Operations", "url": "/matters", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
@@ -257,6 +256,7 @@ def build_trust_dashboard_context(trust_id):
             ctx["summary"] = "Trust record was not found. Legacy routes remain preserved."
             ctx["lifecycle"]["blocked"] = True
             ctx["lifecycle"]["blockers"].append("Trust record not found.")
+        ctx["execution_objects"] = list_execution_objects_for_linked_object("trust", trust_id)
             ctx["actions"] = [
                 {"label": "ADMINISTER Workspace", "url": "/admin/workspace/administer", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
             ]
