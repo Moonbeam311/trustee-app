@@ -88,7 +88,12 @@
 
 <h2>Execution Ledger / Timeline Replay</h2>
 {% for led in context.ledger %}
-<p><strong>{{ loop.index }}. {{ led.event_type }}</strong><br>{{ led.ledger_id }} · {{ led.created_at or led.event_timestamp }} · {{ led.actor or led.created_by }}<br>{{ led.description or led.event_description }}<br>Hash: {{ led.event_hash or led.ledger_hash }}</p>
+<p>
+  <strong>{{ loop.index }}. {{ led.event_type or led.action_type or led.ledger_event_type }}</strong><br>
+  {{ led.ledger_id }} · {{ led.created_at or led.occurred_at or led.recorded_at or led.event_timestamp }} · {{ led.actor or led.created_by or led.recorded_by }}<br>
+  {{ led.description or led.event_description or led.notes or led.summary }}<br>
+  Hash: {{ led.event_hash or led.ledger_hash or led.hash_value or led.record_hash }}
+</p>
 {% endfor %}
 
 <h2>Archive Freezes</h2>
