@@ -5027,3 +5027,55 @@ def ensure_institutional_asset_vault_tables():
 
     conn.commit()
     conn.close()
+
+
+def ensure_execution_object_model_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_execution_objects (
+        execution_object_id TEXT PRIMARY KEY,
+        object_type TEXT NOT NULL,
+        object_label TEXT,
+        parent_execution_id TEXT,
+        linked_object_type TEXT,
+        linked_object_id TEXT,
+        status TEXT DEFAULT 'active',
+        version_label TEXT DEFAULT 'v1',
+        hash_value TEXT,
+        verification_status TEXT DEFAULT 'unverified',
+        created_by TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        retired_at TEXT,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_execution_object_relationships (
+        relationship_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        execution_object_id TEXT NOT NULL,
+        related_object_type TEXT,
+        related_object_id TEXT,
+        relationship_type TEXT,
+        relationship_status TEXT DEFAULT 'active',
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_execution_object_events (
+        event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        execution_object_id TEXT NOT NULL,
+        event_type TEXT,
+        event_label TEXT,
+        event_actor TEXT,
+        event_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        event_notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()

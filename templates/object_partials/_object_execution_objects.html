@@ -1,0 +1,35 @@
+<section class="admin-card" id="execution-objects">
+  <h2>Execution Objects</h2>
+  <p class="admin-muted">
+    First-class execution artifacts linked to this institutional object.
+  </p>
+
+  {% if context.execution_objects %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Object ID</th>
+          <th>Type</th>
+          <th>Label</th>
+          <th>Status</th>
+          <th>Verification</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for obj in context.execution_objects %}
+          <tr>
+            <td><a href="{{ obj.url }}">{{ obj.execution_object_id }}</a></td>
+            <td>{{ obj.object_type_label }}</td>
+            <td>{{ obj.object_label }}</td>
+            <td>{{ obj.status }}</td>
+            <td>{{ obj.verification_status }}</td>
+            <td>{{ obj.created_at }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="admin-muted">No execution objects are linked yet.</p>
+  {% endif %}
+</section>

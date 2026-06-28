@@ -1,3 +1,4 @@
+from services.services_execution_objects import get_execution_object_dashboard_context, list_execution_objects_for_linked_object
 """
 Universal Institutional Object Dashboard Builder.
 
@@ -429,6 +430,9 @@ def list_execution_sessions_for_object(object_type, object_id):
 
 
 def build_object_dashboard_context(object_type, object_id):
+    if object_type == "execution_object":
+        return get_execution_object_dashboard_context(object_id)
+
     object_type = (object_type or "").lower().strip()
 
     if object_type == "matter":
