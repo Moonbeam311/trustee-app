@@ -8,6 +8,13 @@ import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_object_dashboard import build_object_dashboard_context
+from services.services_institutional_identity import (
+    ensure_institutional_identity_branding_tables,
+    list_brand_packages,
+    list_signature_profiles,
+    create_brand_package,
+    create_signature_profile,
+)
 from services.services_institutional_execution import (
     ensure_institutional_execution_layer_tables,
     create_execution_session,
@@ -10807,6 +10814,67 @@ def decision_run():
         control_level=control_level,
         matches=matches
     )
+
+
+
+@app.route("/institutional-identity")
+def institutional_identity_dashboard():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    ensure_institutional_identity_branding_tables()
+    return render_template(
+        "institutional_identity_dashboard.html",
+        brand_packages=list_brand_packages(),
+        signature_profiles=list_signature_profiles(),
+    )
+
+
+@csrf.exempt
+@app.route("/institutional-identity/brand-package/new", methods=["POST"])
+def institutional_identity_brand_package_new():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    create_brand_package({
+        "package_name": request.form.get("package_name") or "Default Institution Brand",
+        "institution_name": request.form.get("institution_name") or "",
+        "firm_id": request.form.get("firm_id") or "FIRM-002",
+        "logo_path": request.form.get("logo_path") or "",
+        "seal_path": request.form.get("seal_path") or "",
+        "watermark_path": request.form.get("watermark_path") or "",
+        "letterhead_style": request.form.get("letterhead_style") or "v3_minimal",
+        "footer_style": request.form.get("footer_style") or "fiduciary_footer",
+        "qr_style": request.form.get("qr_style") or "governance_qr",
+        "barcode_style": request.form.get("barcode_style") or "chain_of_custody",
+        "color_theme": request.form.get("color_theme") or "gold_black",
+        "created_by": session.get("username") or session.get("user_id") or "",
+        "notes": request.form.get("notes") or "",
+    })
+    return redirect(url_for("institutional_identity_dashboard"))
+
+
+@csrf.exempt
+@app.route("/institutional-identity/signature-profile/new", methods=["POST"])
+def institutional_identity_signature_profile_new():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    create_signature_profile({
+        "person_name": request.form.get("person_name") or "",
+        "person_role": request.form.get("person_role") or "",
+        "firm_id": request.form.get("firm_id") or "FIRM-002",
+        "signature_method": request.form.get("signature_method") or "stored_digital_signature",
+        "signature_image_path": request.form.get("signature_image_path") or "",
+        "initials_image_path": request.form.get("initials_image_path") or "",
+        "typed_signature": request.form.get("typed_signature") or "",
+        "title_block": request.form.get("title_block") or "",
+        "credential_block": request.form.get("credential_block") or "",
+        "certificate_reference": request.form.get("certificate_reference") or "",
+        "created_by": session.get("username") or session.get("user_id") or "",
+        "notes": request.form.get("notes") or "",
+    })
+    return redirect(url_for("institutional_identity_dashboard"))
 
 
 @app.route("/execution/sessions")

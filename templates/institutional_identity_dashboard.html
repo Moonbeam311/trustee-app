@@ -1,0 +1,97 @@
+{% include "_platform_shell.html" %}
+{% include "_ios_shell.html" %}
+
+<section class="admin-card">
+  <h1>Institutional Identity & Branding</h1>
+  <p class="admin-muted">
+    Central registry for reusable brand packages, seals, watermarks, letterhead styles,
+    and digital signature profiles.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h2>Create Brand Package</h2>
+  <form method="post" action="/institutional-identity/brand-package/new">
+    <input name="package_name" value="Default Institution Brand">
+    <input name="institution_name" value="LUNA ISAAC MISHOE III Revocable Trust">
+    <input name="firm_id" value="FIRM-002">
+    <input name="logo_path" placeholder="Logo asset path">
+    <input name="seal_path" placeholder="Seal asset path">
+    <input name="watermark_path" placeholder="Watermark asset path">
+    <input name="letterhead_style" value="v3_minimal">
+    <input name="footer_style" value="fiduciary_footer">
+    <input name="qr_style" value="governance_qr">
+    <input name="barcode_style" value="chain_of_custody">
+    <input name="color_theme" value="gold_black">
+    <input name="notes" placeholder="Brand notes">
+    <button type="submit">Create Brand Package</button>
+  </form>
+</section>
+
+<section class="admin-card">
+  <h2>Create Digital Signature Profile</h2>
+  <form method="post" action="/institutional-identity/signature-profile/new">
+    <input name="person_name" value="LUNA ISAAC MISHOE III">
+    <input name="person_role" value="Trustee">
+    <input name="firm_id" value="FIRM-002">
+    <select name="signature_method">
+      <option value="stored_digital_signature">Stored Digital Signature</option>
+      <option value="typed_signature">Typed Signature</option>
+      <option value="uploaded_signature_image">Uploaded Signature Image</option>
+      <option value="drawn_signature">Drawn Signature</option>
+      <option value="wet_signature">Wet Ink Signature</option>
+      <option value="pki_certificate">PKI / Digital Certificate</option>
+      <option value="institutional_approval">Institutional Approval</option>
+    </select>
+    <input name="signature_image_path" placeholder="Signature image asset path">
+    <input name="initials_image_path" placeholder="Initials image asset path">
+    <input name="typed_signature" value="Luna Isaac Mishoe III">
+    <input name="title_block" value="Trustee">
+    <input name="credential_block" placeholder="Credentials">
+    <input name="certificate_reference" placeholder="Certificate reference">
+    <input name="notes" placeholder="Signature notes">
+    <button type="submit">Create Signature Profile</button>
+  </form>
+</section>
+
+<section class="admin-card">
+  <h2>Brand Packages</h2>
+  {% if brand_packages %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Name</th><th>Institution</th><th>Seal</th><th>Letterhead</th><th>Status</th></tr>
+      {% for b in brand_packages %}
+        <tr>
+          <td>{{ b.brand_package_id }}</td>
+          <td>{{ b.package_name }}</td>
+          <td>{{ b.institution_name }}</td>
+          <td>{{ b.seal_path or "No asset path recorded" }}</td>
+          <td>{{ b.letterhead_style }}</td>
+          <td>{{ b.status }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No brand packages yet.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Signature Profiles</h2>
+  {% if signature_profiles %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Name</th><th>Role</th><th>Method</th><th>Title Block</th><th>Status</th></tr>
+      {% for s in signature_profiles %}
+        <tr>
+          <td>{{ s.signature_profile_id }}</td>
+          <td>{{ s.person_name }}</td>
+          <td>{{ s.person_role }}</td>
+          <td>{{ s.signature_method }}</td>
+          <td>{{ s.title_block }}</td>
+          <td>{{ s.status }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No signature profiles yet.</p>
+  {% endif %}
+</section>
