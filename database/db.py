@@ -52,6 +52,48 @@ def ensure_identity_intake_table():
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    # IEL-3K-2 additive participant enrichment columns
+    for col, spec in [
+        ("participant_capacity", "TEXT"),
+        ("identity_verification_method", "TEXT"),
+        ("identity_verification_status", "TEXT"),
+        ("signature_method", "TEXT"),
+        ("typed_signature", "TEXT"),
+        ("drawn_signature_data", "TEXT"),
+        ("signature_hash", "TEXT"),
+        ("evidence_reference", "TEXT"),
+        ("custody_reference", "TEXT"),
+        ("execution_mode", "TEXT"),
+        ("participant_sequence", "INTEGER DEFAULT 0"),
+    ]:
+        try:
+            cur.execute(f"ALTER TABLE institutional_witness_notary_records ADD COLUMN {col} {spec}")
+        except Exception:
+            pass
+
+    # IEL-3K-2 surgical data cleanup
+    try:
+        cur.execute("""
+            UPDATE institutional_witness_notary_records
+            SET participant_role = 'Notary',
+                participant_type = CASE
+                    WHEN lower(participant_type) = 'witness' THEN 'notary'
+                    ELSE participant_type
+                END
+            WHERE lower(participant_role) = 'botary'
+        """)
+    except Exception:
+        pass
+
+    try:
+        cur.execute("""
+            UPDATE institutional_witness_notary_records
+            SET verification_status = COALESCE(NULLIF(verification_status, ''), 'recorded')
+        """)
+    except Exception:
+        pass
+
     conn.commit()
     conn.close()
 
