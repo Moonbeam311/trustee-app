@@ -24,6 +24,9 @@
 
 <section class="admin-card">
   <h2>Guided Ceremony Actions</h2>
+{% if is_frozen %}
+  <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded from this page.</p>
+{% else %}
 
   <form method="post"
     {% if csrf_token is defined %}
@@ -78,7 +81,9 @@
 </section>
 
 <section class="admin-card">
-  <h2>Signatures</h2>
+  {% endif %}
+
+<h2>Signatures</h2>
   {% if context.signatures %}
     <table class="admin-table">
       <tr><th>ID</th><th>Signer</th><th>Role</th><th>Status</th><th>Signed At</th><th>Hash</th></tr>
