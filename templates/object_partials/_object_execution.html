@@ -1,0 +1,43 @@
+<section class="admin-card" id="execution">
+  <h2>Execution Sessions</h2>
+
+  <div class="admin-actions">
+    <a class="primary-action" href="/execution/sessions/new?object_type={{ context.object_type }}&object_id={{ context.object_id }}">Start Execution Session</a>
+    <a href="/execution">Execution Center</a>
+  </div>
+
+  {% if context.execution_sessions %}
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Execution ID</th>
+          <th>Document Type</th>
+          <th>Status</th>
+          <th>Signer</th>
+          <th>Capacity</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in context.execution_sessions %}
+          <tr>
+            <td>
+              {% if s.url %}
+                <a href="{{ s.url }}">{{ s.execution_id }}</a>
+              {% else %}
+                {{ s.execution_id }}
+              {% endif %}
+            </td>
+            <td>{{ s.document_type }}</td>
+            <td>{{ s.status }}</td>
+            <td>{{ s.signer_name }}</td>
+            <td>{{ s.signer_capacity }}</td>
+            <td>{{ s.created_at }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="admin-muted">No execution sessions are linked to this object yet.</p>
+  {% endif %}
+</section>

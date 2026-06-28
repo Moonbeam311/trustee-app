@@ -217,6 +217,8 @@ def build_matter_dashboard_context(matter_id):
             },
         }
 
+        ctx["execution_sessions"] = list_execution_sessions_for_object("matter", matter_id)
+        ctx["execution_sessions"] = list_execution_sessions_for_object("trust", trust_id)
         ctx["actions"] = [
             {"label": "Legacy Matter Detail", "url": f"/matters/{matter_id}", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
             {"label": "Matter Operations", "url": "/matters", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
@@ -392,6 +394,38 @@ def build_trust_dashboard_context(trust_id):
         ctx["lifecycle"]["blocked"] = True
         ctx["lifecycle"]["blockers"].append(str(exc))
         return ctx
+
+
+def list_execution_sessions_for_object(object_type, object_id):
+    try:
+        from database.db import get_connection, ensure_institutional_execution_layer_tables
+        ensure_institutional_execution_layer_tables()
+        conn = get_connection()
+        conn.row_factory = None
+        cur = conn.cursor()
+
+        rows = cur.execute("""
+            SELECT execution_id, document_type, execution_status, signer_name, signer_capacity, created_at
+            FROM institutional_execution_sessions
+            WHERE object_type = ? AND object_id = ?
+            ORDER BY created_at DESC
+            LIMIT 10
+        """, (object_type, object_id)).fetchall()
+
+        return [
+            {
+                "execution_id": r[0],
+                "document_type": r[1],
+                "status": r[2],
+                "signer_name": r[3],
+                "signer_capacity": r[4],
+                "created_at": r[5],
+                "url": f"/execution/sessions/{r[0]}",
+            }
+            for r in rows
+        ]
+    except Exception as exc:
+        return [{"execution_id": "ERROR", "document_type": "Execution lookup failed", "status": str(exc), "url": ""}]
 
 
 def build_object_dashboard_context(object_type, object_id):
