@@ -1,8 +1,17 @@
 <section class="admin-card" id="timeline">
-  <h2>Timeline</h2>
+  <h2>Recent Timeline</h2>
+
+  {% set event_count = context.events|length %}
+  <p class="admin-muted">
+    Showing latest {{ 5 if event_count > 5 else event_count }} of {{ event_count }} institutional events.
+    {% if event_count > 5 %}
+      <a href="#full-timeline">Jump to Full Timeline</a>
+    {% endif %}
+  </p>
+
   {% if context.events %}
     <div class="timeline">
-      {% for e in context.events %}
+      {% for e in context.events[:5] %}
         <div class="timeline-item">
           <h3>{{ e.event_type }}</h3>
           <p class="admin-muted">{{ e.event_id }} · {{ e.created_at }}</p>
@@ -15,3 +24,21 @@
     <p class="admin-muted">No events loaded.</p>
   {% endif %}
 </section>
+
+{% if context.events|length > 5 %}
+<section class="admin-card" id="full-timeline">
+  <h2>Full Timeline</h2>
+  <p class="admin-muted">Complete institutional event history for this object.</p>
+
+  <div class="timeline">
+    {% for e in context.events %}
+      <div class="timeline-item">
+        <h3>{{ e.event_type }}</h3>
+        <p class="admin-muted">{{ e.event_id }} · {{ e.created_at }}</p>
+        <p>{{ e.description }}</p>
+        <p><strong>Actor:</strong> {{ e.actor }} | <strong>Authority:</strong> {{ e.authority_basis }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
