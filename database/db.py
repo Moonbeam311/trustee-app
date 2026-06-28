@@ -4950,3 +4950,52 @@ def ensure_institutional_execution_layer_tables():
 
     conn.commit()
     conn.close()
+
+
+def ensure_institutional_identity_branding_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_brand_packages (
+        brand_package_id TEXT PRIMARY KEY,
+        package_name TEXT,
+        institution_name TEXT,
+        firm_id TEXT,
+        logo_path TEXT,
+        seal_path TEXT,
+        watermark_path TEXT,
+        letterhead_style TEXT DEFAULT 'v3_minimal',
+        footer_style TEXT DEFAULT 'fiduciary_footer',
+        qr_style TEXT DEFAULT 'governance_qr',
+        barcode_style TEXT DEFAULT 'chain_of_custody',
+        color_theme TEXT DEFAULT 'gold_black',
+        status TEXT DEFAULT 'active',
+        created_by TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        notes TEXT
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS institutional_signature_profiles (
+        signature_profile_id TEXT PRIMARY KEY,
+        person_name TEXT,
+        person_role TEXT,
+        firm_id TEXT,
+        signature_method TEXT DEFAULT 'stored_digital_signature',
+        signature_image_path TEXT,
+        initials_image_path TEXT,
+        typed_signature TEXT,
+        title_block TEXT,
+        credential_block TEXT,
+        certificate_reference TEXT,
+        status TEXT DEFAULT 'active',
+        created_by TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        notes TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
