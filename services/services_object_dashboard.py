@@ -241,8 +241,8 @@ def build_trust_dashboard_context(trust_id):
         cur = conn.cursor()
 
         row = cur.execute(
-            "SELECT * FROM trusts WHERE trust_id = ? OR id = ? LIMIT 1",
-            (trust_id, trust_id),
+            "SELECT * FROM trusts WHERE trust_id = ? LIMIT 1",
+            (trust_id,),
         ).fetchone()
 
         trust = _row_to_dict(row)
