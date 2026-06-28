@@ -6,7 +6,7 @@
 <p>
   Object: {{ context.session.object_type }}: {{ context.session.object_id }}
   | Document: {{ context.session.document_title or context.session.document_type }}
-  | Status: {{ context.session.status or context.session.execution_status or context.session.session_status }}
+  | Status: {{ context.session.status or context.session.execution_status or context.session.session_status or "draft" }}
   | Archive: {% if context.freezes %}frozen{% else %}{{ context.session.archive_status or context.session.freeze_status or "open" }}{% endif %}
 </p>
 
@@ -95,7 +95,7 @@
 <table>
 <tr><th>ID</th><th>Status</th><th>Frozen By</th><th>Frozen At</th><th>Hash</th></tr>
 {% for f in context.freezes %}
-<tr><td>{{ f.freeze_id }}</td><td>{{ f.freeze_status or f.status }}</td><td>{{ f.frozen_by }}</td><td>{{ f.frozen_at }}</td><td>{{ f.freeze_hash }}</td></tr>
+<tr><td>{{ f.freeze_id }}</td><td>{{ f.freeze_status or f.status or "frozen" }}</td><td>{{ f.frozen_by }}</td><td>{{ f.frozen_at }}</td><td>{{ f.freeze_hash }}</td></tr>
 {% endfor %}
 </table>
 
