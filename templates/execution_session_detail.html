@@ -31,6 +31,13 @@
   </section>
 {% else %}
 
+{% set is_frozen = context.session.archive_status == 'frozen' %}
+
+  <section class="admin-card">
+    <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
+  </section>
+
+
 
   <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded from this page.</p>
 
@@ -89,6 +96,9 @@
 
 <section class="admin-card">
   
+
+
+
 
 
 {% endif %}
