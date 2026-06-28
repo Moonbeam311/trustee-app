@@ -4,6 +4,10 @@
 {% set s = context.session %}
 
 <section class="admin-card">
+    {% if csrf_token is defined %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% endif %}
+    <input type="hidden" name="_csrf_token" value="{{ session.get('_csrf_token', '') }}">
   <h1>Execution Session {{ execution_id }}</h1>
   {% if s %}
     <p>
@@ -21,7 +25,10 @@
 <section class="admin-card">
   <h2>Guided Ceremony Actions</h2>
 
-  <form method="post" action="/execution/sessions/{{ execution_id }}/signature">
+  <form method="post"
+    {% if csrf_token is defined %}
+    data-csrf="enabled"
+    {% endif %} action="/execution/sessions/{{ execution_id }}/signature">
     <h3>Record Signature</h3>
     <input name="signer_name" placeholder="Signer name">
     <input name="signer_role" placeholder="Role, e.g. Trustee">
@@ -30,7 +37,10 @@
     <button type="submit">Record Signature</button>
   </form>
 
-  <form method="post" action="/execution/sessions/{{ execution_id }}/participant">
+  <form method="post"
+    {% if csrf_token is defined %}
+    data-csrf="enabled"
+    {% endif %} action="/execution/sessions/{{ execution_id }}/participant">
     <h3>Record Witness / Notary</h3>
     <select name="participant_type">
       <option value="witness">Witness</option>
@@ -42,7 +52,10 @@
     <button type="submit">Record Participant</button>
   </form>
 
-  <form method="post" action="/execution/sessions/{{ execution_id }}/seal">
+  <form method="post"
+    {% if csrf_token is defined %}
+    data-csrf="enabled"
+    {% endif %} action="/execution/sessions/{{ execution_id }}/seal">
     <h3>Apply Institutional Seal</h3>
     <input name="seal_id" value="SEAL-DEFAULT">
     <input name="seal_style" value="v3_minimal">
@@ -51,7 +64,10 @@
     <button type="submit">Apply Seal</button>
   </form>
 
-  <form method="post" action="/execution/sessions/{{ execution_id }}/freeze">
+  <form method="post"
+    {% if csrf_token is defined %}
+    data-csrf="enabled"
+    {% endif %} action="/execution/sessions/{{ execution_id }}/freeze">
     <h3>Freeze Archive</h3>
     <input name="object_type" value="{{ s.object_type if s else '' }}">
     <input name="object_id" value="{{ s.object_id if s else '' }}">
