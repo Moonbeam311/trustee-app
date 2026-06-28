@@ -82,7 +82,7 @@
 <table>
 <tr><th>ID</th><th>Seal</th><th>Style</th><th>Applied To</th><th>Applied At</th><th>Hash</th></tr>
 {% for seal in context.seals %}
-<tr><td>{{ seal.seal_entry_id or seal.ledger_id }}</td><td>{{ seal.seal_id }}</td><td>{{ seal.seal_style }}</td><td>{{ seal.applied_to }}</td><td>{{ seal.applied_at }}</td><td>{{ seal.seal_hash }}</td></tr>
+<tr><td>{{ seal.seal_event_id or seal.seal_entry_id or seal.ledger_id }}</td><td>{{ seal.seal_id }}</td><td>{{ seal.seal_style }}</td><td>{{ seal.applied_to }}</td><td>{{ seal.applied_at }}</td><td>{{ seal.seal_hash }}</td></tr>
 {% endfor %}
 </table>
 
