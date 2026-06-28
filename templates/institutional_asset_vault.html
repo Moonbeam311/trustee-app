@@ -1,0 +1,85 @@
+{% include "_platform_shell.html" %}
+{% include "_ios_shell.html" %}
+
+<section class="admin-card">
+  <h1>Institutional Asset Vault</h1>
+  <p class="admin-muted">
+    Upload and preserve reusable institutional identity assets: seals, signatures,
+    initials, logos, watermarks, letterhead, certificate borders, QR styles, and barcode styles.
+  </p>
+  <div class="admin-actions">
+    <a href="/institutional-identity">Identity & Branding Registry</a>
+    <a href="/execution/sessions">Execution Sessions</a>
+    <a href="/admin/workspace/administer">ADMINISTER Workspace</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>Upload Institutional Asset</h2>
+  <form method="post" action="/institutional-assets/upload" enctype="multipart/form-data">
+    <label>Asset Type</label>
+    <select name="asset_type">
+      <option value="seal">Seal</option>
+      <option value="signature">Signature</option>
+      <option value="initials">Initials</option>
+      <option value="logo">Logo</option>
+      <option value="watermark">Watermark</option>
+      <option value="letterhead">Letterhead</option>
+      <option value="footer">Footer</option>
+      <option value="certificate_border">Certificate Border</option>
+      <option value="qr_style">QR Style</option>
+      <option value="barcode_style">Barcode Style</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label>Asset Label</label>
+    <input name="asset_label" placeholder="e.g. Primary Gold Fiduciary Seal">
+
+    <label>Firm ID</label>
+    <input name="firm_id" value="FIRM-002">
+
+    <label>Related Object Type</label>
+    <input name="related_object_type" placeholder="trust, matter, institution, person">
+
+    <label>Related Object ID</label>
+    <input name="related_object_id" placeholder="TR-022, MAT-000001, etc.">
+
+    <label>Asset File</label>
+    <input type="file" name="asset_file">
+
+    <label>Notes</label>
+    <textarea name="notes"></textarea>
+
+    <button type="submit">Upload Asset</button>
+  </form>
+</section>
+
+<section class="admin-card">
+  <h2>Stored Institutional Assets</h2>
+  {% if assets %}
+    <table class="admin-table">
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Label</th>
+        <th>File</th>
+        <th>Related</th>
+        <th>Hash</th>
+        <th>Uploaded</th>
+      </tr>
+      {% for a in assets %}
+        <tr>
+          <td>{{ a.asset_id }}</td>
+          <td>{{ a.asset_type }}</td>
+          <td>{{ a.asset_label }}</td>
+          <td>{{ a.file_path }}</td>
+          <td>{{ a.related_object_type }} {{ a.related_object_id }}</td>
+          <td>{{ a.asset_hash[:16] }}...</td>
+          <td>{{ a.uploaded_at }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No institutional assets uploaded yet.</p>
+  {% endif %}
+</section>

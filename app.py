@@ -8,6 +8,12 @@ import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_object_dashboard import build_object_dashboard_context
+from services.services_institutional_assets import (
+    ensure_institutional_asset_vault_tables,
+    list_identity_assets,
+    get_identity_asset,
+    save_identity_asset,
+)
 from services.services_institutional_identity import (
     ensure_institutional_identity_branding_tables,
     list_brand_packages,
@@ -10815,6 +10821,43 @@ def decision_run():
         matches=matches
     )
 
+
+
+
+@app.route("/institutional-assets")
+def institutional_asset_vault_dashboard():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    ensure_institutional_asset_vault_tables()
+    return render_template(
+        "institutional_asset_vault.html",
+        assets=list_identity_assets(),
+    )
+
+
+@csrf.exempt
+@app.route("/institutional-assets/upload", methods=["POST"])
+def institutional_asset_upload():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    uploaded = request.files.get("asset_file")
+    if not uploaded or not uploaded.filename:
+        flash("No asset file selected.", "warning")
+        return redirect(url_for("institutional_asset_vault_dashboard"))
+
+    save_identity_asset(uploaded, {
+        "asset_type": request.form.get("asset_type") or "other",
+        "asset_label": request.form.get("asset_label") or uploaded.filename,
+        "firm_id": request.form.get("firm_id") or "FIRM-002",
+        "related_object_type": request.form.get("related_object_type") or "",
+        "related_object_id": request.form.get("related_object_id") or "",
+        "uploaded_by": session.get("username") or session.get("user_id") or "",
+        "notes": request.form.get("notes") or "",
+    })
+
+    return redirect(url_for("institutional_asset_vault_dashboard"))
 
 
 @app.route("/institutional-identity")
