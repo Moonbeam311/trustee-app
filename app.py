@@ -10829,6 +10829,7 @@ def institutional_execution_sessions_index():
     return render_template("execution_sessions_index.html", sessions=sessions)
 
 
+@csrf.exempt
 @app.route("/execution/sessions/new", methods=["GET", "POST"])
 def institutional_execution_session_new():
     if not session.get("user_id") and not session.get("username"):
@@ -10860,6 +10861,7 @@ def institutional_execution_session_detail(execution_id):
     return render_template("execution_session_detail.html", context=context, execution_id=execution_id)
 
 
+@csrf.exempt
 @app.route("/execution/sessions/<execution_id>/signature", methods=["POST"])
 def institutional_execution_add_signature(execution_id):
     if not session.get("user_id") and not session.get("username"):
@@ -10876,6 +10878,7 @@ def institutional_execution_add_signature(execution_id):
     return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
 
+@csrf.exempt
 @app.route("/execution/sessions/<execution_id>/participant", methods=["POST"])
 def institutional_execution_add_participant(execution_id):
     if not session.get("user_id") and not session.get("username"):
@@ -10892,6 +10895,7 @@ def institutional_execution_add_participant(execution_id):
     return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
 
+@csrf.exempt
 @app.route("/execution/sessions/<execution_id>/seal", methods=["POST"])
 def institutional_execution_apply_seal(execution_id):
     if not session.get("user_id") and not session.get("username"):
@@ -10908,6 +10912,7 @@ def institutional_execution_apply_seal(execution_id):
     return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
 
+@csrf.exempt
 @app.route("/execution/sessions/<execution_id>/freeze", methods=["POST"])
 def institutional_execution_freeze_archive(execution_id):
     if not session.get("user_id") and not session.get("username"):
