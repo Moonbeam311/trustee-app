@@ -219,7 +219,7 @@ def build_matter_dashboard_context(matter_id):
         }
 
         ctx["execution_sessions"] = list_execution_sessions_for_object("matter", matter_id)
-        ctx["execution_sessions"] = list_execution_sessions_for_object("trust", trust_id)
+        ctx["execution_sessions"] = list_execution_sessions_for_object("trust", matter_id)
         ctx["actions"] = [
             {"label": "Legacy Matter Detail", "url": f"/matters/{matter_id}", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
             {"label": "Matter Operations", "url": "/matters", "method": "GET", "requires_confirmation": False, "permission": "", "disabled": False, "disabled_reason": ""},
@@ -233,7 +233,6 @@ def build_matter_dashboard_context(matter_id):
         ctx["lifecycle"]["blocked"] = True
         ctx["lifecycle"]["blockers"].append(str(exc))
         return ctx
-
 
 
 def build_trust_dashboard_context(trust_id):
