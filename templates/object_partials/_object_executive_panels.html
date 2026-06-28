@@ -1,0 +1,15 @@
+{% set panels = context.extensions.get("executive_panels", {}) %}
+{% if panels %}
+<section class="admin-card">
+  <h2>Executive Panels</h2>
+  <div class="admin-grid">
+    {% for key, panel in panels.items() %}
+      <div class="metric">
+        <h3>{{ panel.label }}</h3>
+        <p><strong>{{ panel.value }}</strong></p>
+        <p class="admin-muted">{{ panel.detail }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
