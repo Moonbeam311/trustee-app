@@ -74,7 +74,7 @@
 <table>
 <tr><th>ID</th><th>Type</th><th>Name</th><th>Role</th><th>Status</th><th>Signed At</th></tr>
 {% for w in context.participants %}
-<tr><td>{{ w.participant_id or w.witness_id }}</td><td>{{ w.participant_type }}</td><td>{{ w.participant_name }}</td><td>{{ w.participant_role }}</td><td>{{ w.status or w.record_status }}</td><td>{{ w.recorded_at or w.signed_at }}</td></tr>
+<tr><td>{{ w.record_id or w.participant_id or w.witness_id }}</td><td>{{ w.participant_type }}</td><td>{{ w.participant_name }}</td><td>{{ w.participant_role }}</td><td>{{ w.verification_status or w.status or w.record_status or 'recorded' }}</td><td>{{ w.signed_at or w.recorded_at or w.created_at }}</td></tr>
 {% endfor %}
 </table>
 
