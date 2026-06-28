@@ -3,6 +3,13 @@
 
 <h1>Execution Session {{ execution_id }}</h1>
 
+{% set back_object_type = context.session.object_type or context.session.linked_object_type %}
+{% set back_object_id = context.session.object_id or context.session.linked_object_id %}
+{% if back_object_type and back_object_id %}
+  <p><a href="/objects/{{ back_object_type }}/{{ back_object_id }}">← Back to {{ back_object_type|title }} Dashboard</a></p>
+{% endif %}
+
+
 <p>
   Object: {{ context.session.object_type }}: {{ context.session.object_id }}
   | Document: {{ context.session.document_title or context.session.document_type }}
