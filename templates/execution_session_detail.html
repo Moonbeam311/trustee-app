@@ -17,7 +17,7 @@
       <strong>Archive:</strong> {{ s.archive_freeze_status }}
     </p>
     <p class="admin-muted">{{ s.notes }}</p>
-  {% else %}
+  
     <p class="admin-muted">Execution session not found.</p>
   {% endif %}
 </section>
@@ -26,12 +26,19 @@
   <h2>Guided Ceremony Actions</h2>
 {% set is_frozen = context.session.archive_status == 'frozen' %}
 {% if is_frozen %}
+<section class="admin-card">
+  <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
+</section>
+{% else %}
+
+
+
   <section class="admin-card">
     <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
   </section>
 {% else %}
 
-{% set is_frozen = context.session.archive_status == 'frozen' %}
+
 
   <section class="admin-card">
     <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
@@ -99,6 +106,9 @@
 
 
 
+
+
+{% endif %}
 
 
 {% endif %}
@@ -173,5 +183,5 @@
     </table>
   {% else %}
     <p class="admin-muted">No archive freeze yet.</p>
-  {% endif %}
+  
 </section>
