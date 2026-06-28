@@ -201,9 +201,13 @@ def freeze_execution_archive(execution_id, object_type, object_id, frozen_by="",
     ))
     cur.execute("""
         UPDATE institutional_execution_sessions
-        SET archive_freeze_status = ?, final_hash = ?, updated_at = CURRENT_TIMESTAMP
+        SET archive_freeze_status = ?,
+            ceremony_status = ?,
+            current_step = ?,
+            final_hash = ?,
+            updated_at = CURRENT_TIMESTAMP
         WHERE execution_id = ?
-    """, ("frozen", freeze_hash, execution_id))
+    """, ("frozen", "finalized", "archive_frozen", freeze_hash, execution_id))
     conn.commit()
     conn.close()
 
