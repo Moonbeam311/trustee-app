@@ -1,0 +1,17 @@
+<section class="admin-card">
+  <h2>Timeline</h2>
+  {% if context.events %}
+    <div class="timeline">
+      {% for e in context.events %}
+        <div class="timeline-item">
+          <h3>{{ e.event_type }}</h3>
+          <p class="admin-muted">{{ e.event_id }} · {{ e.created_at }}</p>
+          <p>{{ e.description }}</p>
+          <p><strong>Actor:</strong> {{ e.actor }} | <strong>Authority:</strong> {{ e.authority_basis }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="admin-muted">No events loaded.</p>
+  {% endif %}
+</section>

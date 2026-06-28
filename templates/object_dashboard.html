@@ -15,65 +15,8 @@
   {% endif %}
 </section>
 
-<section class="admin-card">
-  <h2>Identity</h2>
-  <table class="admin-table">
-    {% for key, value in context.identity.items() %}
-      <tr><th>{{ key.replace("_", " ")|title }}</th><td>{{ value }}</td></tr>
-    {% endfor %}
-  </table>
-</section>
-
-<section class="admin-card">
-  <h2>Lifecycle</h2>
-  <p><strong>Current:</strong> {{ context.lifecycle.status_label }}</p>
-  {% if context.lifecycle.blocked %}
-    <p><strong>Blocked:</strong> Yes</p>
-    <ul>
-      {% for blocker in context.lifecycle.blockers %}
-        <li>{{ blocker }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p><strong>Blocked:</strong> No</p>
-  {% endif %}
-</section>
-
-<section class="admin-card">
-  <h2>Relationships</h2>
-  {% if context.relationships %}
-    <ul>
-      {% for item in context.relationships %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="admin-muted">No relationships loaded into universal context yet.</p>
-  {% endif %}
-</section>
-
-<section class="admin-card">
-  <h2>Events</h2>
-  {% if context.events %}
-    <ul>
-      {% for item in context.events %}
-        <li>{{ item }}</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="admin-muted">No events loaded into universal context yet.</p>
-  {% endif %}
-</section>
-
-<section class="admin-card">
-  <h2>Actions</h2>
-  <div class="admin-actions">
-    {% for action in context.actions %}
-      {% if action.disabled %}
-        <span>{{ action.label }} — {{ action.disabled_reason }}</span>
-      {% else %}
-        <a href="{{ action.url }}">{{ action.label }}</a>
-      {% endif %}
-    {% endfor %}
-  </div>
-</section>
+{% include "object_partials/_object_identity.html" %}
+{% include "object_partials/_object_lifecycle.html" %}
+{% include "object_partials/_object_relationships.html" %}
+{% include "object_partials/_object_events.html" %}
+{% include "object_partials/_object_actions.html" %}

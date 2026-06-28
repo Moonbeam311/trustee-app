@@ -1,0 +1,12 @@
+<section class="admin-card">
+  <h2>Actions</h2>
+  <div class="admin-actions">
+    {% for action in context.actions %}
+      {% if action.disabled %}
+        <span>{{ action.label }} — {{ action.disabled_reason }}</span>
+      {% else %}
+        <a href="{{ action.url }}">{{ action.label }}</a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>

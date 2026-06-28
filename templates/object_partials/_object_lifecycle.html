@@ -1,0 +1,12 @@
+<section class="admin-card">
+  <h2>Lifecycle</h2>
+  <p><strong>Current:</strong> {{ context.lifecycle.status_label }}</p>
+  <p><strong>Blocked:</strong> {{ "Yes" if context.lifecycle.blocked else "No" }}</p>
+  {% if context.lifecycle.blockers %}
+    <ul>
+      {% for blocker in context.lifecycle.blockers %}
+        <li>{{ blocker }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</section>

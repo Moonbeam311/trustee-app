@@ -1,0 +1,8 @@
+<section class="admin-card">
+  <h2>Identity</h2>
+  <table class="admin-table">
+    {% for key, value in context.identity.items() %}
+      <tr><th>{{ key.replace("_", " ")|title }}</th><td>{{ value }}</td></tr>
+    {% endfor %}
+  </table>
+</section>

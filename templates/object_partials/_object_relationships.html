@@ -1,0 +1,20 @@
+<section class="admin-card">
+  <h2>Relationships</h2>
+  {% if context.relationships %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Type</th><th>Linked Record</th><th>Status</th><th>Verification</th><th>Validation</th></tr>
+      {% for r in context.relationships %}
+        <tr>
+          <td>{{ r.relationship_id or r.id }}</td>
+          <td>{{ r.relationship_type }}</td>
+          <td>{{ r.linked_record_id or r.target_id }}</td>
+          <td>{{ r.status }}</td>
+          <td>{{ r.verification_status }}</td>
+          <td>{{ r.link_validation_status }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No relationships loaded.</p>
+  {% endif %}
+</section>
