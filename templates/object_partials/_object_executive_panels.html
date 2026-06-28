@@ -1,6 +1,6 @@
 {% set panels = context.extensions.get("executive_panels", {}) %}
 {% if panels %}
-<section class="admin-card">
+<section class="admin-card" id="executive-panels">
   <h2>Executive Panels</h2>
   <div class="admin-grid">
     {% for key, panel in panels.items() %}

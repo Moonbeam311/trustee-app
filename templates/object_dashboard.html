@@ -1,7 +1,7 @@
 {% include "_platform_shell.html" %}
 {% include "_ios_shell.html" %}
 
-<section class="admin-card">
+<section class="admin-card" id="overview">
   <p class="admin-muted">Universal Institutional Object Dashboard</p>
   <h1>{{ context.title }}</h1>
   <p>
@@ -15,6 +15,7 @@
   {% endif %}
 </section>
 
+{% include "object_partials/_object_section_nav.html" %}
 {% include "object_partials/_object_executive_panels.html" %}
 {% include "object_partials/_object_identity.html" %}
 {% include "object_partials/_object_lifecycle.html" %}
