@@ -25,91 +25,54 @@
 <section class="admin-card">
   <h2>Guided Ceremony Actions</h2>
 {% set is_frozen = context.session.archive_status == 'frozen' %}
+
 {% if is_frozen %}
 <section class="admin-card">
   <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
 </section>
 {% else %}
 
+<h3>Record Signature</h3>
+<form method="post" action="/execution/sessions/{{ execution_id }}/signature">
+  <label>Signer name</label>
+  <input name="signer_name">
+  <label>Role, e.g. Trustee</label>
+  <input name="signer_role">
+  <label>Capacity</label>
+  <input name="capacity">
+  <input name="signature_method" value="wet_signature">
+  <button type="submit">Record Signature</button>
+</form>
 
+<h3>Record Witness / Notary</h3>
+<form method="post" action="/execution/sessions/{{ execution_id }}/participant">
+  <select name="participant_type">
+    <option value="witness">Witness</option>
+    <option value="notary">Notary</option>
+  </select>
+  <input name="participant_name" placeholder="Participant name">
+  <input name="participant_role" placeholder="Role">
+  <textarea name="notes" placeholder="Notes"></textarea>
+  <button type="submit">Record Participant</button>
+</form>
 
-  <section class="admin-card">
-    <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
-  </section>
-{% else %}
+<h3>Apply Institutional Seal</h3>
+<form method="post" action="/execution/sessions/{{ execution_id }}/seal">
+  <input name="seal_id" value="SEAL-DEFAULT">
+  <input name="seal_style" value="v3_minimal">
+  <input name="applied_to" value="{{ context.session.document_title or context.session.document_type }}">
+  <textarea name="notes" placeholder="Seal notes"></textarea>
+  <button type="submit">Apply Seal</button>
+</form>
 
-
-
-  <section class="admin-card">
-    <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded.</p>
-  </section>
-
-
-
-  <p><strong>Archive Frozen:</strong> this execution session is locked. No additional signatures, witnesses, seals, or archive actions may be recorded from this page.</p>
-
-
-  <form method="post"
-    {% if csrf_token is defined %}
-    data-csrf="enabled"
-     action="/execution/sessions/{{ execution_id }}/signature">
-    <h3>Record Signature</h3>
-    <input name="signer_name" placeholder="Signer name">
-    <input name="signer_role" placeholder="Role, e.g. Trustee">
-    <input name="signer_capacity" placeholder="Capacity">
-    <input name="signature_method" value="wet_signature">
-    <button type="submit">Record Signature</button>
-  </form>
-
-  <form method="post"
-    {% if csrf_token is defined %}
-    data-csrf="enabled"
-     action="/execution/sessions/{{ execution_id }}/participant">
-    <h3>Record Witness / Notary</h3>
-    <select name="participant_type">
-      <option value="witness">Witness</option>
-      <option value="notary">Notary</option>
-    </select>
-    <input name="participant_name" placeholder="Participant name">
-    <input name="participant_role" placeholder="Role">
-    <input name="notes" placeholder="Notes">
-    <button type="submit">Record Participant</button>
-  </form>
-
-  <form method="post"
-    {% if csrf_token is defined %}
-    data-csrf="enabled"
-     action="/execution/sessions/{{ execution_id }}/seal">
-    <h3>Apply Institutional Seal</h3>
-    <input name="seal_id" value="SEAL-DEFAULT">
-    <input name="seal_style" value="v3_minimal">
-    <input name="applied_to" value="{{ s.document_title if s else '' }}">
-    <input name="notes" placeholder="Seal notes">
-    <button type="submit">Apply Seal</button>
-  </form>
-
-  <form method="post"
-    {% if csrf_token is defined %}
-    data-csrf="enabled"
-     action="/execution/sessions/{{ execution_id }}/freeze">
-    <h3>Freeze Archive</h3>
-    <input name="object_type" value="{{ s.object_type if s else '' }}">
-    <input name="object_id" value="{{ s.object_id if s else '' }}">
-    <input name="package_path" placeholder="Package path or archive reference">
-    <input name="notes" placeholder="Freeze notes">
-    <button type="submit">Freeze Archive</button>
-  </form>
-</section>
-
-<section class="admin-card">
-  
-
-
-
-
-
-{% endif %}
-
+<h3>Freeze Archive</h3>
+<form method="post" action="/execution/sessions/{{ execution_id }}/freeze">
+  <input name="object_type" value="{{ context.session.object_type }}">
+  <input name="object_id" value="{{ context.session.object_id }}">
+  <input name="package_path" placeholder="Package path or archive reference">
+  <textarea name="notes" placeholder="Freeze notes"></textarea>
+  <button type="submit">Freeze Archive</button>
+</form>
 
 {% endif %}
 
