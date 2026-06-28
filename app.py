@@ -10815,6 +10815,7 @@ def institutional_execution_sessions_index():
         return redirect(url_for("login"))
 
     ensure_institutional_execution_layer_tables()
+    from database.db import get_connection
     conn = get_connection()
     cur = conn.cursor()
     rows = cur.execute("""
