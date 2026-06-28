@@ -1,0 +1,33 @@
+{% include "_platform_shell.html" %}
+{% include "_ios_shell.html" %}
+
+<section class="admin-card">
+  <h1>New Execution Session</h1>
+  <form method="post">
+    <label>Object Type</label>
+    <input name="object_type" value="trust">
+
+    <label>Object ID</label>
+    <input name="object_id" value="TR-022">
+
+    <label>Matter ID</label>
+    <input name="matter_id" value="MAT-000001">
+
+    <label>Trust ID</label>
+    <input name="trust_id" value="TR-022">
+
+    <label>Document Type</label>
+    <input name="document_type" value="trustee_acceptance">
+
+    <label>Document Title</label>
+    <input name="document_title" value="Trustee Acceptance of Appointment">
+
+    <label>Execution Location</label>
+    <input name="execution_location" placeholder="City, State">
+
+    <label>Notes</label>
+    <textarea name="notes"></textarea>
+
+    <button type="submit">Create Execution Session</button>
+  </form>
+</section>

@@ -1,0 +1,136 @@
+{% include "_platform_shell.html" %}
+{% include "_ios_shell.html" %}
+
+{% set s = context.session %}
+
+<section class="admin-card">
+  <h1>Execution Session {{ execution_id }}</h1>
+  {% if s %}
+    <p>
+      <strong>Object:</strong> {{ s.object_type }}: {{ s.object_id }} |
+      <strong>Document:</strong> {{ s.document_title }} |
+      <strong>Status:</strong> {{ s.ceremony_status }} |
+      <strong>Archive:</strong> {{ s.archive_freeze_status }}
+    </p>
+    <p class="admin-muted">{{ s.notes }}</p>
+  {% else %}
+    <p class="admin-muted">Execution session not found.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Guided Ceremony Actions</h2>
+
+  <form method="post" action="/execution/sessions/{{ execution_id }}/signature">
+    <h3>Record Signature</h3>
+    <input name="signer_name" placeholder="Signer name">
+    <input name="signer_role" placeholder="Role, e.g. Trustee">
+    <input name="signer_capacity" placeholder="Capacity">
+    <input name="signature_method" value="wet_signature">
+    <button type="submit">Record Signature</button>
+  </form>
+
+  <form method="post" action="/execution/sessions/{{ execution_id }}/participant">
+    <h3>Record Witness / Notary</h3>
+    <select name="participant_type">
+      <option value="witness">Witness</option>
+      <option value="notary">Notary</option>
+    </select>
+    <input name="participant_name" placeholder="Participant name">
+    <input name="participant_role" placeholder="Role">
+    <input name="notes" placeholder="Notes">
+    <button type="submit">Record Participant</button>
+  </form>
+
+  <form method="post" action="/execution/sessions/{{ execution_id }}/seal">
+    <h3>Apply Institutional Seal</h3>
+    <input name="seal_id" value="SEAL-DEFAULT">
+    <input name="seal_style" value="v3_minimal">
+    <input name="applied_to" value="{{ s.document_title if s else '' }}">
+    <input name="notes" placeholder="Seal notes">
+    <button type="submit">Apply Seal</button>
+  </form>
+
+  <form method="post" action="/execution/sessions/{{ execution_id }}/freeze">
+    <h3>Freeze Archive</h3>
+    <input name="object_type" value="{{ s.object_type if s else '' }}">
+    <input name="object_id" value="{{ s.object_id if s else '' }}">
+    <input name="package_path" placeholder="Package path or archive reference">
+    <input name="notes" placeholder="Freeze notes">
+    <button type="submit">Freeze Archive</button>
+  </form>
+</section>
+
+<section class="admin-card">
+  <h2>Signatures</h2>
+  {% if context.signatures %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Signer</th><th>Role</th><th>Status</th><th>Signed At</th><th>Hash</th></tr>
+      {% for r in context.signatures %}
+        <tr><td>{{ r.signature_id }}</td><td>{{ r.signer_name }}</td><td>{{ r.signer_role }}</td><td>{{ r.signature_status }}</td><td>{{ r.signed_at }}</td><td>{{ r.signature_hash[:16] }}...</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No signature records yet.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Witness / Notary Records</h2>
+  {% if context.participants %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Type</th><th>Name</th><th>Role</th><th>Status</th><th>Signed At</th></tr>
+      {% for r in context.participants %}
+        <tr><td>{{ r.record_id }}</td><td>{{ r.participant_type }}</td><td>{{ r.participant_name }}</td><td>{{ r.participant_role }}</td><td>{{ r.verification_status }}</td><td>{{ r.signed_at }}</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No witness or notary records yet.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Seal Ledger</h2>
+  {% if context.seals %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Seal</th><th>Style</th><th>Applied To</th><th>Applied At</th><th>Hash</th></tr>
+      {% for r in context.seals %}
+        <tr><td>{{ r.seal_event_id }}</td><td>{{ r.seal_id }}</td><td>{{ r.seal_style }}</td><td>{{ r.applied_to }}</td><td>{{ r.applied_at }}</td><td>{{ r.seal_hash[:16] }}...</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No seal events yet.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Execution Ledger / Timeline Replay</h2>
+  {% if context.ledger %}
+    <div class="timeline">
+      {% for r in context.ledger %}
+        <div class="timeline-item">
+          <h3>{{ r.event_sequence }}. {{ r.event_label }}</h3>
+          <p class="admin-muted">{{ r.ledger_id }} · {{ r.event_at }} · {{ r.event_actor }}</p>
+          <p>{{ r.notes }}</p>
+          <p><strong>Hash:</strong> {{ r.provenance_hash[:24] }}...</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="admin-muted">No ledger events yet.</p>
+  {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Archive Freezes</h2>
+  {% if context.freezes %}
+    <table class="admin-table">
+      <tr><th>ID</th><th>Status</th><th>Frozen By</th><th>Frozen At</th><th>Hash</th></tr>
+      {% for r in context.freezes %}
+        <tr><td>{{ r.freeze_id }}</td><td>{{ r.archive_status }}</td><td>{{ r.frozen_by }}</td><td>{{ r.frozen_at }}</td><td>{{ r.freeze_hash[:16] }}...</td></tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No archive freeze yet.</p>
+  {% endif %}
+</section>

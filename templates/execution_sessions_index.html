@@ -1,0 +1,33 @@
+{% include "_platform_shell.html" %}
+{% include "_ios_shell.html" %}
+
+<section class="admin-card">
+  <h1>Institutional Execution Sessions</h1>
+  <p class="admin-muted">Guided execution sessions, signatures, witnesses, notary records, seal events, ledger, and archive freezes.</p>
+  <div class="admin-actions">
+    <a class="primary-action" href="/execution/sessions/new">New Execution Session</a>
+    <a href="/execution">Legacy Execution Dashboard</a>
+    <a href="/admin/workspace/administer">ADMINISTER Workspace</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>Recent Sessions</h2>
+  {% if sessions %}
+    <table class="admin-table">
+      <tr><th>Execution ID</th><th>Object</th><th>Document</th><th>Status</th><th>Archive</th><th>Created</th></tr>
+      {% for s in sessions %}
+        <tr>
+          <td><a href="/execution/sessions/{{ s.execution_id }}">{{ s.execution_id }}</a></td>
+          <td>{{ s.object_type }}: {{ s.object_id }}</td>
+          <td>{{ s.document_title }}</td>
+          <td>{{ s.ceremony_status }}</td>
+          <td>{{ s.archive_freeze_status }}</td>
+          <td>{{ s.created_at }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p class="admin-muted">No institutional execution sessions yet.</p>
+  {% endif %}
+</section>

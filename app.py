@@ -8,6 +8,15 @@ import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_object_dashboard import build_object_dashboard_context
+from services.services_institutional_execution import (
+    ensure_institutional_execution_layer_tables,
+    create_execution_session,
+    get_execution_session,
+    add_signature_record,
+    add_witness_or_notary_record,
+    apply_institutional_seal,
+    freeze_execution_archive,
+)
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
 from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
@@ -10798,6 +10807,121 @@ def decision_run():
         control_level=control_level,
         matches=matches
     )
+
+
+@app.route("/execution/sessions")
+def institutional_execution_sessions_index():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    ensure_institutional_execution_layer_tables()
+    conn = get_connection()
+    cur = conn.cursor()
+    rows = cur.execute("""
+        SELECT * FROM institutional_execution_sessions
+        ORDER BY created_at DESC
+        LIMIT 50
+    """).fetchall()
+    sessions = [dict(r) for r in rows]
+    conn.close()
+
+    return render_template("execution_sessions_index.html", sessions=sessions)
+
+
+@app.route("/execution/sessions/new", methods=["GET", "POST"])
+def institutional_execution_session_new():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        execution_id = create_execution_session(
+            object_type=request.form.get("object_type") or "trust",
+            object_id=request.form.get("object_id") or "",
+            matter_id=request.form.get("matter_id") or "",
+            trust_id=request.form.get("trust_id") or "",
+            document_type=request.form.get("document_type") or "",
+            document_title=request.form.get("document_title") or "",
+            created_by=session.get("username") or session.get("user_id") or "",
+            execution_location=request.form.get("execution_location") or "",
+            notes=request.form.get("notes") or "",
+        )
+        return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
+
+    return render_template("execution_session_form.html")
+
+
+@app.route("/execution/sessions/<execution_id>")
+def institutional_execution_session_detail(execution_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    context = get_execution_session(execution_id)
+    return render_template("execution_session_detail.html", context=context, execution_id=execution_id)
+
+
+@app.route("/execution/sessions/<execution_id>/signature", methods=["POST"])
+def institutional_execution_add_signature(execution_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    add_signature_record(
+        execution_id=execution_id,
+        signer_name=request.form.get("signer_name") or "",
+        signer_role=request.form.get("signer_role") or "",
+        signer_capacity=request.form.get("signer_capacity") or "",
+        method=request.form.get("signature_method") or "wet_signature",
+        actor=session.get("username") or session.get("user_id") or "",
+    )
+    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
+
+
+@app.route("/execution/sessions/<execution_id>/participant", methods=["POST"])
+def institutional_execution_add_participant(execution_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    add_witness_or_notary_record(
+        execution_id=execution_id,
+        participant_type=request.form.get("participant_type") or "witness",
+        participant_name=request.form.get("participant_name") or "",
+        participant_role=request.form.get("participant_role") or "",
+        actor=session.get("username") or session.get("user_id") or "",
+        notes=request.form.get("notes") or "",
+    )
+    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
+
+
+@app.route("/execution/sessions/<execution_id>/seal", methods=["POST"])
+def institutional_execution_apply_seal(execution_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    apply_institutional_seal(
+        execution_id=execution_id,
+        seal_id=request.form.get("seal_id") or "SEAL-DEFAULT",
+        seal_style=request.form.get("seal_style") or "v3_minimal",
+        applied_to=request.form.get("applied_to") or "",
+        applied_by=session.get("username") or session.get("user_id") or "",
+        notes=request.form.get("notes") or "",
+    )
+    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
+
+
+@app.route("/execution/sessions/<execution_id>/freeze", methods=["POST"])
+def institutional_execution_freeze_archive(execution_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    freeze_execution_archive(
+        execution_id=execution_id,
+        object_type=request.form.get("object_type") or "",
+        object_id=request.form.get("object_id") or "",
+        frozen_by=session.get("username") or session.get("user_id") or "",
+        package_path=request.form.get("package_path") or "",
+        notes=request.form.get("notes") or "",
+    )
+    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
+
 
 @app.route("/execution")
 def execution_dashboard():
