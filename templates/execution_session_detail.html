@@ -13,12 +13,12 @@
 <p>
   Object: {{ context.session.object_type }}: {{ context.session.object_id }}
   | Document: {{ context.session.document_title or context.session.document_type }}
-  | Status: {{ context.session.status or context.session.execution_status or context.session.session_status or "draft" }}
-  | Archive: {% if context.freezes %}frozen{% else %}{{ context.session.archive_status or context.session.freeze_status or "open" }}{% endif %}
+  | Status: {{ context.session.ceremony_status or context.session.status or context.session.execution_status or context.session.session_status or "draft" }}
+  | Archive: {{ context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status or ("frozen" if context.freezes else "open") }}
 </p>
 
 <h2>Guided Ceremony Actions</h2>
-{% set archive_state = context.session.archive_status or context.session.freeze_status %}
+{% set archive_state = context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status %}
 {% set is_frozen = context.freezes or archive_state == 'frozen' %}
 
 {% if is_frozen %}
