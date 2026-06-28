@@ -1,24 +1,36 @@
-{% include "_platform_shell.html" %}
-{% include "_ios_shell.html" %}
+<!DOCTYPE html>
+<html>
+<head>
+  {% include "_platform_shell.html" %}
+  <title>{{ context.title }}</title>
+</head>
+<body>
+<div class="page-shell admin-wrap">
 
-<section class="admin-card" id="overview">
-  <p class="admin-muted">Universal Institutional Object Dashboard</p>
-  <h1>{{ context.title }}</h1>
-  <p>
-    <strong>Object:</strong> {{ context.object_type|title }} |
-    <strong>ID:</strong> {{ context.object_id }} |
-    <strong>Status:</strong> {{ context.status_label }} |
-    <strong>Workspace:</strong> {{ context.workspace_owner }}
-  </p>
-  {% if context.summary %}
+  {% include "_platform_nav.html" %}
+
+  <section class="admin-card" id="overview">
+    <h1>Universal Institutional Object Dashboard</h1>
+    <h2>{{ context.title }}</h2>
+    <p class="admin-muted">
+      Object: {{ context.object_type|title }} |
+      ID: {{ context.object_id }} |
+      Status: {{ context.status_label }} |
+      Workspace: {{ context.workspace_owner }}
+    </p>
     <p>{{ context.summary }}</p>
-  {% endif %}
-</section>
+  </section>
 
-{% include "object_partials/_object_section_nav.html" %}
-{% include "object_partials/_object_executive_panels.html" %}
-{% include "object_partials/_object_identity.html" %}
-{% include "object_partials/_object_lifecycle.html" %}
-{% include "object_partials/_object_relationships.html" %}
-{% include "object_partials/_object_events.html" %}
-{% include "object_partials/_object_actions.html" %}
+  {% include 'object_partials/_object_section_nav.html' %}
+  {% include 'object_partials/_object_executive_panels.html' %}
+  {% include 'object_partials/_object_identity.html' %}
+  {% include 'object_partials/_object_lifecycle.html' %}
+  {% include 'object_partials/_object_relationships.html' %}
+  {% include 'object_partials/_object_execution.html' %}
+  {% include 'object_partials/_object_execution_objects.html' %}
+  {% include 'object_partials/_object_events.html' %}
+  {% include 'object_partials/_object_actions.html' %}
+
+</div>
+</body>
+</html>
