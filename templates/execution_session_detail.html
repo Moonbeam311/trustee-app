@@ -97,11 +97,7 @@
   <tr>
     <th>Evidence Package</th>
     <td>
-      PKG-{% if context.session.execution_id %}
-      {{ context.session.execution_id.replace("EXE-","") }}
-      {% else %}
-      000000
-      {% endif %}
+      PKG-{{ context.session.execution_id.replace("EXE-","") if context.session.execution_id else "000000" }}
     </td>
   </tr>
 
@@ -294,6 +290,28 @@
   This execution package has been accepted into the Institutional Evidence Vault.
   The package is maintained under the institutional archive policy and is governed
   by immutable execution records, custody records, and provenance verification.
+</p>
+
+
+
+<h2>Package Barcode / QR Verification Registry</h2>
+
+<table class="table table-bordered">
+  <tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
+  <tr><th>Barcode Status</th><td>Pending Generation</td></tr>
+  <tr><th>Barcode Value</th><td>BAR-{{ context.evidence_vault.package.package_id }}</td></tr>
+  <tr><th>QR Verification Status</th><td>Pending Generation</td></tr>
+  <tr><th>QR Verification Target</th><td>/execution/sessions/{{ context.session.execution_id }}/certificate</td></tr>
+  <tr><th>Verification Sheet</th><td>Pending IEL-4F</td></tr>
+  <tr><th>External Verification</th><td>Pending IEL-4F</td></tr>
+  <tr><th>Package Label</th><td>Pending IEL-4G</td></tr>
+</table>
+
+<p>
+  <strong>Barcode / QR Registry Note:</strong>
+  this panel reserves institutional identifier space for package barcode,
+  QR verification, and future external validation workflows. No barcode or QR
+  image has been generated yet.
 </p>
 
 
