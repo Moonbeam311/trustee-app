@@ -17,6 +17,32 @@
   | Archive: {{ context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status or ("frozen" if context.freezes else "open") }}
 </p>
 
+{% set ceremony_finalized = (context.session.ceremony_status == 'finalized') %}
+{% set archive_frozen = ((context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status) == 'frozen') %}
+{% set has_signature = context.signatures|length > 0 %}
+{% set has_seal = context.seals|length > 0 %}
+{% set has_freeze = context.freezes|length > 0 %}
+{% set has_ledger = context.ledger|length > 0 %}
+{% set integrity_complete = ceremony_finalized and archive_frozen and has_signature and has_seal and has_freeze and has_ledger %}
+
+<section class="admin-card">
+  <h2>Execution Integrity Summary</h2>
+  <table>
+    <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
+    <tr><th>Object</th><td>{{ context.session.object_type }} : {{ context.session.object_id }}</td></tr>
+    <tr><th>Document</th><td>{{ context.session.document_title or context.session.document_type }}</td></tr>
+    <tr><th>Ceremony Status</th><td>{{ context.session.ceremony_status|title }}</td></tr>
+    <tr><th>Archive Status</th><td>{{ context.session.archive_freeze_status|title }}</td></tr>
+    <tr><th>Signatures</th><td>{{ context.signatures|length }}</td></tr>
+    <tr><th>Witnesses / Notaries</th><td>{{ context.participants|length }}</td></tr>
+    <tr><th>Institutional Seals</th><td>{{ context.seals|length }}</td></tr>
+    <tr><th>Ledger Events</th><td>{{ context.ledger|length }}</td></tr>
+    <tr><th>Archive Freezes</th><td>{{ context.freezes|length }}</td></tr>
+    <tr><th>Final Provenance Hash</th><td>{{ context.session.final_hash or "" }}</td></tr>
+    <tr><th>Execution Integrity</th><td>{% if integrity_complete %}✓ Complete{% else %}Incomplete{% endif %}</td></tr>
+  </table>
+</section>
+
 <h2>Guided Ceremony Actions</h2>
 {% set archive_state = context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status %}
 {% set is_frozen = context.freezes or archive_state == 'frozen' %}
