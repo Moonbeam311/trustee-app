@@ -36,69 +36,12 @@
 
 <section class="admin-card">
   <h2>
-<h2>Execution Master Index</h2>
-
-<table class="table table-bordered">
-  <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
-  <tr><th>Evidence Package</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>Certificate</th><td>CERT-{{ context.session.execution_id }}</td></tr>
-  <tr><th>Verification</th><td>{% if context.verification.verified %}✓ Verified{% else %}Review Required{% endif %}</td></tr>
-  <tr><th>Archive Status</th><td>{{ context.session.archive_freeze_status|title }}</td></tr>
-  <tr><th>Export Status</th><td>Ready</td></tr>
-  <tr><th>Final Provenance Hash</th><td><code>{{ context.session.final_hash }}</code></td></tr>
-</table>
-
-<h3>Certified Institutional Documents</h3>
-
-<table class="table table-striped table-bordered">
-  <tr><th>Document</th><th>Status</th><th>Route</th></tr>
-  <tr>
-    <td>Certified Execution Certificate</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/certificate" target="_blank">Open Certificate</a></td>
-  </tr>
-  <tr>
-    <td>Institutional Evidence Binder</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/binder" target="_blank">Open Binder</a></td>
-  </tr>
-  <tr>
-    <td>Institutional Verification Report</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/verification" target="_blank">Open Verification</a></td>
-  </tr>
-  <tr>
-    <td>Institutional Export Package</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/export" target="_blank">Open Export</a></td>
-  </tr>
-  <tr>
-    <td>Chain of Custody Report</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/custody" target="_blank">Open Custody</a></td>
-  </tr>
-  <tr>
-    <td>Evidence Vault Registration</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/vault" target="_blank">Open Vault</a></td>
-  </tr>
-  <tr>
-    <td>Execution Ledger Replay</td>
-    <td>Available</td>
-    <td><a href="/execution/sessions/{{ context.session.execution_id }}/ledger" target="_blank">Open Ledger</a></td>
-  </tr>
-</table>
-
-<p>
-  <strong>Master Index Note:</strong>
-  this execution session is now the institutional index for all execution package documents.
-  Dedicated printable routes are now available for binder, verification, export, custody, vault, and ledger documents.
-</p>
 
 
 
 
-<h2>Execution Dossier Dashboard</h2>
+
+<h2>Institutional Execution Dashboard</h2>
 
 <table class="table table-bordered">
   <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
@@ -175,7 +118,7 @@
   </tbody>
 </table>
 
-<h2>Execution Package Statistics</h2>
+<h2>Institutional Execution Statistics</h2>
 
 <table class="table table-bordered">
   <tr><th>Signatures</th><td>{{ context.signatures|length }}</td></tr>
@@ -197,17 +140,17 @@
 </form>
 
 <p>
-  <strong>Dossier Dashboard Note:</strong>
+  <strong>Institutional Dashboard Note:</strong>
   this page is now the master institutional index for the execution package.
   Detailed evidence, verification, custody, vault, export, and ledger records are maintained in dedicated printable documents.
 </p>
 
-<h2>Execution Completion Status</h2>
+<h2>Institutional Execution Status</h2>
 
 <div class="alert alert-success" style="margin:20px 0;padding:18px;border:2px solid #2e7d32;">
   <h3 style="margin-top:0;">✓ EXECUTION COMPLETE</h3>
   <p>This execution package has successfully completed ceremony, ledger recording, evidence registration, verification, custody continuity, archive freeze, vault registration, and export readiness.</p>
-  <p><strong>Further modifications require creation of a new execution session.</strong></p>
+  <p><strong>This execution package is institutionally closed. Any future amendments, corrections, supplements, or superseding actions must occur through a newly created execution session while preserving this permanent historical record.</strong></p>
 </div>
 
 
