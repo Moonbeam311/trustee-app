@@ -143,7 +143,7 @@
   </tr>
 
   <tr><th>Evidence Manifest</th><td>✓ Attached</td></tr>
-  <tr><th>Chain of Custody</th><td>Attached</td></tr>
+  <tr><th>Chain of Custody</th><td>✓ Attached</td></tr>
   <tr><th>Verification Report</th><td>Pending (IEL-4F)</td></tr>
   <tr><th>Export Package</th><td>Pending (IEL-4H)</td></tr>
 
@@ -306,12 +306,12 @@ Institutional Custody Certification:</strong>
 </p>
 
 <table class="table table-bordered">
-  <tr><th>Physical Custodian</th><td>Pending IEL-4D</td></tr>
+  <tr><th>Physical Custodian</th><td>Institutional Archive</td></tr>
   <tr><th>Evidence Vault</th><td>{{ context.evidence_vault.package.vault_name if context.evidence_vault else "Pending IEL-4D" }}</td></tr>
   <tr><th>Vault Location</th><td>Pending</td></tr>
-  <tr><th>Package Barcode</th><td>Pending IEL-4E</td></tr>
-  <tr><th>QR Verification</th><td>Pending IEL-4E</td></tr>
-  <tr><th>External Verification</th><td>Pending IEL-4F</td></tr>
+  <tr><th>Package Barcode</th><td>BAR-{{ context.evidence_vault.package.package_id if context.evidence_vault else "PKG-" ~ context.session.execution_id.replace("EXE-", "") }}</td></tr>
+  <tr><th>QR Verification</th><td>Reserved</td></tr>
+  <tr><th>External Verification</th><td>Pending Verification Report</td></tr>
   <tr><th>Export Package</th><td>Pending IEL-4H</td></tr>
 </table>
 
@@ -339,7 +339,7 @@ Institutional Evidence Vault & Custodian Registry</h2>
   <tr><th>Disaster Recovery Copy</th><td>Pending IEL-4J</td></tr>
   <tr><th>Off-site Archive</th><td>Pending</td></tr>
   <tr><th>Geographic Location</th><td>Pending</td></tr>
-  <tr><th>Archive Medium</th><td>Digital Institutional Repository Institutional Repository</td></tr>
+  <tr><th>Archive Medium</th><td>Digital Institutional Repository</td></tr>
 </table>
 
 <h3>Custodian Registry</h3>
@@ -388,7 +388,7 @@ Institutional Evidence Vault & Custodian Registry</h2>
   <tr><th>QR Verification Status</th><td>Reserved</td></tr>
   <tr><th>QR Verification Target</th><td>/execution/sessions/{{ context.session.execution_id }}/certificate</td></tr>
   <tr><th>Verification Sheet</th><td>Pending Verification Report</td></tr>
-  <tr><th>External Verification</th><td>Pending IEL-4F</td></tr>
+  <tr><th>External Verification</th><td>Pending Verification Report</td></tr>
   <tr><th>Package Label</th><td>Pending IEL-4G</td></tr>
 </table>
 
