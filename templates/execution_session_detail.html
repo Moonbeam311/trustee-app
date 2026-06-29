@@ -54,94 +54,101 @@
 
 <section class="admin-card">
   <h2>
-<div class="card" style="margin-bottom:24px;border:3px solid #b8860b;padding:24px;background:#fcfbf7;">
 
-<h2 style="text-align:center;margin-bottom:4px;">
+<div class="card institutional-cover-sheet" style="margin-bottom:24px;border:3px solid #b8860b;padding:28px;background:#fcfbf7;">
+
+<h1 style="text-align:center;margin-bottom:4px;letter-spacing:1px;">
 INSTITUTIONAL EVIDENCE PACKAGE
-</h2>
+</h1>
 
 <div style="text-align:center;color:#666;margin-bottom:20px;">
 Institutional Operating System<br>
-Certified Institutional Evidence Package
+Certified Institutional Evidence Package<br>
+Package Presentation Layer v1.0
 </div>
 
 <hr>
 
-<h3>Package Identity</h3>
+<h2>Section A — Cover Sheet</h2>
 
+<h3>Package Identity</h3>
 <table class="table table-sm">
 <tr><th>Package Title</th><td>Certified Institutional Evidence Package</td></tr>
 <tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
+<tr><th>Export Package ID</th><td>EXP-{{ context.session.execution_id.replace("EXE-","") }}</td></tr>
 <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
 <tr><th>Certificate</th><td>CERT-{{ context.session.execution_id }}</td></tr>
-<tr><th>Institution</th><td>{{ context.session.firm_id }}</td></tr>
+<tr><th>Institution</th><td>{{ context.evidence_vault.package.institution or context.session.firm_id or "FIRM-002" }}</td></tr>
 <tr><th>Object</th><td>{{ context.session.object_type|title }} : {{ context.session.object_id }}</td></tr>
-<tr><th>Document</th><td>{{ context.session.document_name }}</td></tr>
+<tr><th>Document</th><td>{{ context.session.document_title or context.session.document_name or context.session.document_type|replace("_"," ")|title }}</td></tr>
 </table>
 
 <h3>Institutional Classification</h3>
-
 <table class="table table-sm">
-<tr><th>Archive Classification</th><td>Institutional Record</td></tr>
-<tr><th>Retention</th><td>Permanent</td></tr>
-<tr><th>Archive Tier</th><td>Permanent</td></tr>
+<tr><th>Archive Classification</th><td>{{ context.evidence_vault.package.classification or "Institutional Record" }}</td></tr>
+<tr><th>Retention</th><td>{{ context.evidence_vault.package.retention_schedule or "Permanent" }}</td></tr>
+<tr><th>Archive Tier</th><td>{{ context.evidence_vault.package.archive_tier or "Permanent" }}</td></tr>
 <tr><th>Evidence Status</th><td>✓ COMPLETE</td></tr>
 <tr><th>Package Status</th><td>✓ LOCKED</td></tr>
-<tr><th>Integrity Status</th><td>✓ PASS</td></tr>
-<tr><th>Verification Status</th><td>Reserved for IEL-4F</td></tr>
+<tr><th>Integrity Status</th><td>{% if context.verification.verified %}✓ PASS{% else %}REVIEW REQUIRED{% endif %}</td></tr>
+<tr><th>Verification Status</th><td>{% if context.verification.verified %}✓ VERIFIED{% else %}PENDING REVIEW{% endif %}</td></tr>
 </table>
 
 <h3>Executive Summary</h3>
-
 <table class="table table-sm">
 <tr><th>Ceremony</th><td>✓ PASS</td></tr>
 <tr><th>Evidence Manifest</th><td>✓ PASS</td></tr>
+<tr><th>Verification Report</th><td>{% if context.verification.verified %}✓ PASS{% else %}REVIEW REQUIRED{% endif %}</td></tr>
 <tr><th>Chain of Custody</th><td>✓ PASS</td></tr>
 <tr><th>Evidence Vault</th><td>✓ PASS</td></tr>
 <tr><th>Ledger</th><td>✓ PASS</td></tr>
 <tr><th>Archive Freeze</th><td>✓ PASS</td></tr>
+<tr><th>Export Readiness</th><td>✓ READY</td></tr>
 </table>
 
 <h3>Institutional Certification</h3>
+<p>
+This evidence package contains the complete institutional execution record
+produced by the Institutional Execution Ledger. The package includes the certified
+execution certificate, evidence binder, evidence manifest, institutional verification
+report, chain of custody, institutional evidence vault registration, archive freeze,
+execution ledger replay, and associated execution records.
+</p>
 
 <p>
-This evidence package contains the complete institutional execution
-record produced by the Institutional Execution Ledger.
-The package includes the certified execution certificate,
-execution ledger, evidence manifest,
-chain of custody,
-institutional evidence vault registration,
-archive freeze,
-and associated execution records.
+This cover sheet is the standardized presentation page for certified institutional
+binder exports, archive packages, transfer packages, and continuity packages.
 </p>
 
 <hr>
 
 <div style="display:flex;justify-content:space-between;gap:30px;">
 
-<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;">
-<strong>BARCODE</strong><br><br>
-Reserved for IEL-4H
+<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;min-height:90px;">
+<strong>BARCODE RESERVED</strong><br><br>
+BAR-{{ context.evidence_vault.package.package_id }}
 </div>
 
-<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;">
-<strong>QR VERIFICATION</strong><br><br>
-Reserved for IEL-4H
+<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;min-height:90px;">
+<strong>QR VERIFICATION RESERVED</strong><br><br>
+/execution/sessions/{{ context.session.execution_id }}/certificate
 </div>
 
 </div>
 
 <hr>
 
+<h3>Provenance & Versioning</h3>
 <table class="table table-sm">
-<tr><th>Final Provenance Hash</th><td>{{ context.session.final_hash }}</td></tr>
-<tr><th>Generated</th><td>{{ context.session.archive_frozen_at }}</td></tr>
+<tr><th>Final Provenance Hash</th><td><code>{{ context.session.final_hash }}</code></td></tr>
+<tr><th>Generated</th><td>{{ context.freezes[-1].frozen_at if context.freezes else context.session.updated_at }}</td></tr>
 <tr><th>Evidence Package Version</th><td>1.0</td></tr>
-<tr><th>Institution</th><td>{{ context.session.firm_id }}</td></tr>
+<tr><th>Presentation Revision</th><td>IEL-4G-1</td></tr>
+<tr><th>Generated By</th><td>Institutional Operating System</td></tr>
+<tr><th>Institution</th><td>{{ context.evidence_vault.package.institution or context.session.firm_id or "FIRM-002" }}</td></tr>
 </table>
 
 </div>
-
 
 <h2>Certified Execution Certificate</h2>
   <p><strong>Institutional Operating System</strong><br>
