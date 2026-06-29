@@ -90,6 +90,70 @@
 
 <h2>
 
+
+<h2>Institutional Evidence Binder</h2>
+
+<table class="table table-bordered">
+  <tr>
+    <th>Evidence Package</th>
+    <td>
+      PKG-{% if context.session.execution_id %}
+      {{ context.session.execution_id.replace("EXE-","") }}
+      {% else %}
+      000000
+      {% endif %}
+    </td>
+  </tr>
+
+  <tr>
+    <th>Evidence Status</th>
+    <td>
+      {% set integrity_pass =
+          (context.session.ceremony_status == "finalized")
+          and context.freezes
+          and context.signatures
+          and context.ledger
+          and context.session.final_hash %}
+      {% if integrity_pass %}
+        ✓ Complete
+      {% else %}
+        Incomplete
+      {% endif %}
+    </td>
+  </tr>
+
+  <tr><th>Certificate</th><td>Attached</td></tr>
+  <tr><th>Executed Instrument</th><td>Attached</td></tr>
+  <tr><th>Execution Ledger</th><td>{{ context.ledger|length }}</td></tr>
+  <tr><th>Signature Records</th><td>{{ context.signatures|length }}</td></tr>
+  <tr><th>Witness / Notary Records</th><td>{{ context.participants|length }}</td></tr>
+  <tr><th>Institutional Seal Records</th><td>{{ context.seals|length }}</td></tr>
+  <tr><th>Archive Freeze Events</th><td>{{ context.freezes|length }}</td></tr>
+
+  <tr>
+    <th>Final Provenance Hash</th>
+    <td><code>{{ context.session.final_hash }}</code></td>
+  </tr>
+
+  <tr>
+    <th>Institutional Integrity</th>
+    <td>
+      {% if integrity_pass %}
+        ✓ PASS
+      {% else %}
+        INCOMPLETE
+      {% endif %}
+    </td>
+  </tr>
+
+  <tr><th>Evidence Manifest</th><td>Pending (IEL-4B)</td></tr>
+  <tr><th>Chain of Custody</th><td>Pending (IEL-4C)</td></tr>
+  <tr><th>Verification Report</th><td>Pending (IEL-4F)</td></tr>
+  <tr><th>Export Package</th><td>Pending (IEL-4H)</td></tr>
+
+</table>
+
+
 Guided Ceremony Actions</h2>
 {% set archive_state = context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status %}
 {% set is_frozen = context.freezes or archive_state == 'frozen' %}
