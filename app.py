@@ -10963,9 +10963,8 @@ def institutional_execution_session_new():
     return render_template("execution_session_form.html")
 
 
-@app.route("/execution/sessions/<execution_id>")
 @app.route("/execution/sessions/<execution_id>/certificate")
-@login_required
+@admin_required
 def institutional_execution_certificate_preview(execution_id):
     context = get_execution_session(execution_id)
     if not context or not context.get("session"):
@@ -10973,80 +10972,13 @@ def institutional_execution_certificate_preview(execution_id):
     return render_template("execution_certificate_print.html", context=context, execution_id=execution_id)
 
 
+@app.route("/execution/sessions/<execution_id>")
+@admin_required
 def institutional_execution_session_detail(execution_id):
-    if not session.get("user_id") and not session.get("username"):
-        return redirect(url_for("login"))
-
     context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
     return render_template("execution_session_detail.html", context=context, execution_id=execution_id)
-
-
-@csrf.exempt
-@app.route("/execution/sessions/<execution_id>/signature", methods=["POST"])
-def institutional_execution_add_signature(execution_id):
-    if not session.get("user_id") and not session.get("username"):
-        return redirect(url_for("login"))
-
-    add_signature_record(
-        execution_id=execution_id,
-        signer_name=request.form.get("signer_name") or "",
-        signer_role=request.form.get("signer_role") or "",
-        signer_capacity=request.form.get("signer_capacity") or "",
-        method=request.form.get("signature_method") or "wet_signature",
-        actor=session.get("username") or session.get("user_id") or "",
-    )
-    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
-
-
-@csrf.exempt
-@app.route("/execution/sessions/<execution_id>/participant", methods=["POST"])
-def institutional_execution_add_participant(execution_id):
-    if not session.get("user_id") and not session.get("username"):
-        return redirect(url_for("login"))
-
-    add_witness_or_notary_record(
-        execution_id=execution_id,
-        participant_type=request.form.get("participant_type") or "witness",
-        participant_name=request.form.get("participant_name") or "",
-        participant_role=request.form.get("participant_role") or "",
-        actor=session.get("username") or session.get("user_id") or "",
-        notes=request.form.get("notes") or "",
-    )
-    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
-
-
-@csrf.exempt
-@app.route("/execution/sessions/<execution_id>/seal", methods=["POST"])
-def institutional_execution_apply_seal(execution_id):
-    if not session.get("user_id") and not session.get("username"):
-        return redirect(url_for("login"))
-
-    apply_institutional_seal(
-        execution_id=execution_id,
-        seal_id=request.form.get("seal_id") or "SEAL-DEFAULT",
-        seal_style=request.form.get("seal_style") or "v3_minimal",
-        applied_to=request.form.get("applied_to") or "",
-        applied_by=session.get("username") or session.get("user_id") or "",
-        notes=request.form.get("notes") or "",
-    )
-    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
-
-
-@csrf.exempt
-@app.route("/execution/sessions/<execution_id>/freeze", methods=["POST"])
-def institutional_execution_freeze_archive(execution_id):
-    if not session.get("user_id") and not session.get("username"):
-        return redirect(url_for("login"))
-
-    freeze_execution_archive(
-        execution_id=execution_id,
-        object_type=request.form.get("object_type") or "",
-        object_id=request.form.get("object_id") or "",
-        frozen_by=session.get("username") or session.get("user_id") or "",
-        package_path=request.form.get("package_path") or "",
-        notes=request.form.get("notes") or "",
-    )
-    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
 
 @app.route("/execution")
