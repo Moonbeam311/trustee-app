@@ -9,6 +9,15 @@
   <p><a href="/objects/{{ back_object_type }}/{{ back_object_id }}">← Back to {{ back_object_type|title }} Dashboard</a></p>
 {% endif %}
 
+<div class="execution-toolbar" style="margin:12px 0 18px 0;">
+  <a class="btn btn-primary"
+     href="/execution/sessions/{{ context.session.execution_id }}/certificate"
+     target="_blank">
+     🖨 Printable Certificate
+  </a>
+</div>
+
+
 
 <p>
   Object: {{ context.session.object_type }}: {{ context.session.object_id }}
@@ -80,13 +89,6 @@
 </section>
 
 <h2>
-<div class="execution-toolbar" style="margin:12px 0 18px 0;">
-  <a class="btn btn-primary"
-     href="/execution/sessions/{{ context.session.execution_id }}/certificate"
-     target="_blank">
-     🖨 Printable Certificate
-  </a>
-</div>
 
 Guided Ceremony Actions</h2>
 {% set archive_state = context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status %}
