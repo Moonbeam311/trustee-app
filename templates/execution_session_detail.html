@@ -561,7 +561,14 @@ Institutional Evidence Vault & Custodian Registry</h2>
 
 <div class="alert alert-success" style="margin:20px 0;padding:18px;border:2px solid #2e7d32;">
 <h2 style="margin-top:0;">
-<h2>Institutional Export Package</h2>
+<h2>Institutional Export Package
+
+<form method="post" action="/execution/sessions/{{ context.session.execution_id }}/export/generate" style="margin:12px 0 18px 0;">
+  <button type="submit" class="btn btn-primary">
+    Generate Certified Export Package
+  </button>
+</form>
+</h2>
 
 <table class="table table-bordered">
   <tr><th>Export Package ID</th><td>EXP-{{ context.session.execution_id.replace("EXE-","") }}</td></tr>

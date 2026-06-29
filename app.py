@@ -1,3 +1,4 @@
+from services.services_execution_exports import generate_execution_export_package
 from services.services_intake import build_instrument_workflow_bridge_context, is_trust_instrument_workflow
 from services.services_intake import build_instrument_draft_packet
 import json
@@ -10961,6 +10962,15 @@ def institutional_execution_session_new():
         return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
     return render_template("execution_session_form.html")
+
+
+
+
+@app.route("/execution/sessions/<execution_id>/export/generate", methods=["POST"])
+def institutional_execution_generate_export(execution_id):
+    result = generate_execution_export_package(execution_id, generated_by=session.get("username", "admin123"))
+    flash(f"Certified export package generated: {result['export_id']} ({result['file_count']} files).")
+    return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
 
 @app.route("/execution/sessions/<execution_id>/certificate")
