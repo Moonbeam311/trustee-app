@@ -11011,6 +11011,16 @@ def institutional_execution_custody_document(execution_id):
 
 
 
+
+
+@app.route("/execution/sessions/<execution_id>/replication")
+def institutional_execution_replication_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_replication.html", context=context)
+
+
 @app.route("/execution/sessions/<execution_id>/recovery")
 def institutional_execution_recovery_document(execution_id):
     context = get_execution_session(execution_id)

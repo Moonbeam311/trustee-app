@@ -116,6 +116,12 @@
       <td><a href="/execution/sessions/{{ context.session.execution_id }}/recovery" target="_blank">Open Recovery</a></td>
     </tr>
     <tr>
+      <td>Archive Replication Ledger</td>
+      <td>✓ Registered</td>
+      <td>Replication paths from primary archive to redundant repositories</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/replication" target="_blank">Open Replication</a></td>
+    </tr>
+    <tr>
       <td>Execution Ledger Replay</td>
       <td>✓ Available</td>
       <td>Forensic timeline replay with event hashes</td>
@@ -146,6 +152,8 @@
   <tr><th>Recovery Copy</th><td>{{ context.archive_topology.disaster_recovery.summary.recovery_copy_id }}</td></tr>
   <tr><th>Recovery Status</th><td>{{ context.archive_topology.disaster_recovery.summary.recovery_status|replace("_"," ")|title }}</td></tr>
   <tr><th>Restore Status</th><td>{{ context.archive_topology.disaster_recovery.summary.restore_status|replace("_"," ")|title }}</td></tr>
+  <tr><th>Replication Paths</th><td>{{ context.archive_topology.replication.summary.replication_paths }}</td></tr>
+  <tr><th>Replication Readiness</th><td>{{ context.archive_topology.replication.summary.replication_readiness }}</td></tr>
   <tr><th>Export Status</th><td>Ready</td></tr>
 </table>
 

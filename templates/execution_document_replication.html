@@ -1,0 +1,49 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Archive Replication Ledger" %}
+{% block document_body %}
+
+<h2>Replication Summary</h2>
+<table class="table table-bordered">
+<tr><th>Replication Status</th><td>{{ context.archive_topology.replication.summary.replication_status }}</td></tr>
+<tr><th>Replication Readiness</th><td>{{ context.archive_topology.replication.summary.replication_readiness }}</td></tr>
+<tr><th>Replication Paths</th><td>{{ context.archive_topology.replication.summary.replication_paths }}</td></tr>
+<tr><th>Completed</th><td>{{ context.archive_topology.replication.summary.completed }}</td></tr>
+<tr><th>Pending</th><td>{{ context.archive_topology.replication.summary.pending }}</td></tr>
+<tr><th>Failed</th><td>{{ context.archive_topology.replication.summary.failed }}</td></tr>
+</table>
+
+<h2>Replication Ledger</h2>
+<table class="table table-bordered">
+<tr>
+  <th>Replication ID</th>
+  <th>Source</th>
+  <th>Destination</th>
+  <th>Destination Type</th>
+  <th>Status</th>
+  <th>Result</th>
+  <th>Operator</th>
+  <th>Registered At</th>
+</tr>
+{% for r in context.archive_topology.replication.items %}
+<tr>
+  <td>{{ r.replication_id }}</td>
+  <td>{{ r.source_repository_name }} ({{ r.source_repository_id }})</td>
+  <td>{{ r.destination_repository_name }} ({{ r.destination_repository_id }})</td>
+  <td>{{ r.destination_repository_type }}</td>
+  <td>{{ r.replication_status|replace("_"," ")|title }}</td>
+  <td>{{ r.replication_result|replace("_"," ")|title }}</td>
+  <td>{{ r.operator }}</td>
+  <td>{{ r.replicated_at }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Replication Certification</h2>
+<p>
+This replication ledger records the registered continuity paths between the primary
+institutional archive and all redundant repositories. Future replication events,
+hash validations, completed copies, failed attempts, and archive synchronization
+records will be recorded against this ledger.
+</p>
+
+{% endblock %}

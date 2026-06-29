@@ -80,6 +80,21 @@ def ensure_execution_recovery_tables():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS institutional_archive_replication_ledger (
+            replication_id TEXT PRIMARY KEY,
+            execution_id TEXT,
+            source_repository_id TEXT,
+            destination_repository_id TEXT,
+            replication_status TEXT DEFAULT 'registered',
+            replication_result TEXT DEFAULT 'pending',
+            replication_hash TEXT,
+            operator TEXT,
+            replicated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -245,6 +260,7 @@ def get_archive_topology(execution_id):
         }
     }
     result["disaster_recovery"] = get_or_create_disaster_recovery_registry(execution_id, result)
+    result["replication"] = get_replication_ledger(execution_id, result)
     return result
 
 
@@ -339,5 +355,125 @@ def get_or_create_disaster_recovery_registry(execution_id, topology):
             "recovery_copy_id": registry.get("recovery_copy_id") or "",
             "recovery_point_objective": registry.get("recovery_point_objective") or "",
             "recovery_time_objective": registry.get("recovery_time_objective") or "",
+        }
+    }
+
+
+def seed_replication_ledger(execution_id, topology):
+    ensure_execution_recovery_tables()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    repositories = topology.get("repositories", [])
+    primary = None
+    for repo in repositories:
+        if (repo.get("topology_role") or "").lower() == "primary":
+            primary = repo
+            break
+
+    if not primary:
+        conn.close()
+        return
+
+    for repo in repositories:
+        if repo.get("repository_id") == primary.get("repository_id"):
+            continue
+
+        existing = cur.execute("""
+            SELECT replication_id
+            FROM institutional_archive_replication_ledger
+            WHERE execution_id = ?
+              AND source_repository_id = ?
+              AND destination_repository_id = ?
+            LIMIT 1
+        """, (
+            execution_id,
+            primary.get("repository_id"),
+            repo.get("repository_id"),
+        )).fetchone()
+
+        if existing:
+            continue
+
+        replication_id = _next_id_from_cursor(cur, "REPLOG", "institutional_archive_replication_ledger", "replication_id")
+
+        cur.execute("""
+            INSERT INTO institutional_archive_replication_ledger (
+                replication_id,
+                execution_id,
+                source_repository_id,
+                destination_repository_id,
+                replication_status,
+                replication_result,
+                replication_hash,
+                operator,
+                notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            replication_id,
+            execution_id,
+            primary.get("repository_id"),
+            repo.get("repository_id"),
+            "registered",
+            "pending",
+            "",
+            "Institutional Operating System",
+            f"Replication path registered from {primary.get('repository_name')} to {repo.get('repository_name')}."
+        ))
+
+    conn.commit()
+    conn.close()
+
+
+def get_replication_ledger(execution_id, topology):
+    seed_replication_ledger(execution_id, topology)
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    rows = cur.execute("""
+        SELECT
+            l.replication_id,
+            l.execution_id,
+            l.source_repository_id,
+            src.repository_name AS source_repository_name,
+            l.destination_repository_id,
+            dst.repository_name AS destination_repository_name,
+            dst.repository_type AS destination_repository_type,
+            l.replication_status,
+            l.replication_result,
+            l.replication_hash,
+            l.operator,
+            l.replicated_at,
+            l.notes
+        FROM institutional_archive_replication_ledger l
+        LEFT JOIN institutional_archive_repositories src
+          ON src.repository_id = l.source_repository_id
+        LEFT JOIN institutional_archive_repositories dst
+          ON dst.repository_id = l.destination_repository_id
+        WHERE l.execution_id = ?
+        ORDER BY l.replication_id
+    """, (execution_id,)).fetchall()
+
+    conn.close()
+
+    items = [dict(r) for r in rows]
+    total = len(items)
+    completed = sum(1 for r in items if (r.get("replication_result") or "").lower() in ("completed", "verified", "pass"))
+    pending = sum(1 for r in items if (r.get("replication_result") or "").lower() == "pending")
+    failed = sum(1 for r in items if (r.get("replication_result") or "").lower() in ("failed", "fail"))
+
+    return {
+        "items": items,
+        "summary": {
+            "replication_paths": total,
+            "completed": completed,
+            "pending": pending,
+            "failed": failed,
+            "replication_status": "Registered" if total else "Not Registered",
+            "replication_readiness": "Ready" if total and failed == 0 else "Review Required",
         }
     }
