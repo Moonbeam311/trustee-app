@@ -104,6 +104,12 @@
       <td><a href="/execution/sessions/{{ context.session.execution_id }}/vault" target="_blank">Open Vault</a></td>
     </tr>
     <tr>
+      <td>Institutional Archive Topology</td>
+      <td>✓ Registered</td>
+      <td>Repository topology, redundancy status, continuity readiness, and recovery priority</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/topology" target="_blank">Open Topology</a></td>
+    </tr>
+    <tr>
       <td>Execution Ledger Replay</td>
       <td>✓ Available</td>
       <td>Forensic timeline replay with event hashes</td>
@@ -128,6 +134,9 @@
   <tr><th>Archive Freezes</th><td>{{ context.freezes|length }}</td></tr>
   <tr><th>Verification Checks</th><td>{{ context.verification.checks_passed }} / {{ context.verification.checks_total }}</td></tr>
   <tr><th>Custody Breaks</th><td>0</td></tr>
+  <tr><th>Archive Repositories</th><td>{{ context.archive_topology.summary.repositories_registered }}</td></tr>
+  <tr><th>Continuity Status</th><td>{{ context.archive_topology.summary.continuity_status }}</td></tr>
+  <tr><th>Repository Health</th><td>{{ context.archive_topology.summary.repository_health_score }}%</td></tr>
   <tr><th>Export Status</th><td>Ready</td></tr>
 </table>
 

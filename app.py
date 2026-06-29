@@ -11007,6 +11007,16 @@ def institutional_execution_custody_document(execution_id):
     return render_template("execution_document_custody.html", context=context)
 
 
+
+
+@app.route("/execution/sessions/<execution_id>/topology")
+def institutional_execution_topology_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_topology.html", context=context)
+
+
 @app.route("/execution/sessions/<execution_id>/vault")
 def institutional_execution_vault_document(execution_id):
     context = get_execution_session(execution_id)

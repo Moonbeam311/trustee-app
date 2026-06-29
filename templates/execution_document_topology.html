@@ -1,0 +1,49 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Institutional Archive Topology" %}
+{% block document_body %}
+
+<h2>Archive Topology Summary</h2>
+<table class="table table-bordered">
+<tr><th>Repositories Registered</th><td>{{ context.archive_topology.summary.repositories_registered }}</td></tr>
+<tr><th>Topology Status</th><td>{{ context.archive_topology.summary.topology_status }}</td></tr>
+<tr><th>Continuity Status</th><td>{{ context.archive_topology.summary.continuity_status }}</td></tr>
+<tr><th>Redundancy Level</th><td>{{ context.archive_topology.summary.redundancy_level }}</td></tr>
+<tr><th>Repository Health Score</th><td>{{ context.archive_topology.summary.repository_health_score }}%</td></tr>
+<tr><th>Recovery Priority</th><td>{{ context.archive_topology.summary.recovery_priority }}</td></tr>
+</table>
+
+<h2>Repository Registry</h2>
+<table class="table table-bordered">
+<tr>
+  <th>Repository ID</th>
+  <th>Name</th>
+  <th>Role</th>
+  <th>Status</th>
+  <th>Medium</th>
+  <th>Region</th>
+  <th>Replication</th>
+  <th>Integrity</th>
+</tr>
+{% for r in context.archive_topology.repositories %}
+<tr>
+  <td>{{ r.repository_id }}</td>
+  <td>{{ r.repository_name }}</td>
+  <td>{{ r.topology_role }}</td>
+  <td>{{ r.current_status|title }}</td>
+  <td>{{ r.storage_medium }}</td>
+  <td>{{ r.geographic_region }}</td>
+  <td>{{ r.replication_status|replace("_"," ")|title }}</td>
+  <td>{{ r.integrity_status|title }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Continuity Certification</h2>
+<p>
+This archive topology record identifies the institutional repositories intended to preserve,
+replicate, recover, and maintain continuity for this execution package. The primary archive
+is active and verified; additional repositories are registered for staged replication,
+off-site redundancy, cold preservation, and cyber recovery.
+</p>
+
+{% endblock %}

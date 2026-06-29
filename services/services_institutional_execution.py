@@ -1,3 +1,4 @@
+from services.services_execution_recovery import get_archive_topology
 from services.services_execution_verification import verify_execution_package
 import sqlite3
 """
@@ -243,6 +244,7 @@ def get_execution_session(execution_id):
     conn.close()
     result["evidence_vault"] = get_or_create_evidence_package(execution_id, result)
     result["verification"] = verify_execution_package(execution_id, result)
+    result["archive_topology"] = get_archive_topology(execution_id)
     return result
 
 
