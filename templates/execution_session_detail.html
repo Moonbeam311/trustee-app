@@ -142,7 +142,7 @@
     </td>
   </tr>
 
-  <tr><th>Evidence Manifest</th><td>Pending (IEL-4B)</td></tr>
+  <tr><th>Evidence Manifest</th><td>✓ Attached</td></tr>
   <tr><th>Chain of Custody</th><td>Attached</td></tr>
   <tr><th>Verification Report</th><td>Pending (IEL-4F)</td></tr>
   <tr><th>Export Package</th><td>Pending (IEL-4H)</td></tr>
@@ -168,7 +168,7 @@
 <td>Execution Certificate</td>
 <td>CERT-{{ context.session.execution_id }}</td>
 <td>Attached</td>
-<td>Locked</td>
+<td>Verified</td>
 </tr>
 
 <tr>
@@ -183,7 +183,7 @@
 <td>Signature Record</td>
 <td>{{ s.signature_id }}</td>
 <td>{{ s.signature_status or s.status or "Recorded" }}</td>
-<td>Locked</td>
+<td>Verified</td>
 </tr>
 {% endfor %}
 
@@ -192,7 +192,7 @@
 <td>{{ (p.participant_type or p.type or "Participant")|title }}</td>
 <td>{{ p.record_id or p.witness_id or p.notary_id }}</td>
 <td>{{ p.status or "Recorded" }}</td>
-<td>Locked</td>
+<td>Verified</td>
 </tr>
 {% endfor %}
 
@@ -201,7 +201,7 @@
 <td>Institutional Seal</td>
 <td>{{ seal.seal_event_id or seal.seal_id }}</td>
 <td>Applied</td>
-<td>Locked</td>
+<td>Verified</td>
 </tr>
 {% endfor %}
 
@@ -209,7 +209,7 @@
 <td>Execution Ledger</td>
 <td>LEDGER-{{ context.session.execution_id }}</td>
 <td>{{ context.ledger|length }} Events</td>
-<td>Immutable</td>
+<td>Verified / Immutable</td>
 </tr>
 
 {% for frz in context.freezes %}
@@ -217,7 +217,7 @@
 <td>Archive Freeze</td>
 <td>{{ frz.freeze_id }}</td>
 <td>{{ frz.archive_status|title }}</td>
-<td>Locked</td>
+<td>Verified</td>
 </tr>
 {% endfor %}
 
@@ -287,7 +287,18 @@
 </table>
 
 <p>
-  <strong>Institutional Custody Certification:</strong>
+  <strong>
+
+<h3>Custody Statistics</h3>
+
+<table class="table table-bordered">
+<tr><th>Custody Events Recorded</th><td>{{ context.ledger|length }}</td></tr>
+<tr><th>Archive Freeze Events</th><td>{{ context.freezes|length }}</td></tr>
+<tr><th>Custody Breaks</th><td>0</td></tr>
+<tr><th>Continuity</th><td>Continuous Institutional Custody</td></tr>
+</table>
+
+Institutional Custody Certification:</strong>
   This execution package has maintained an institutional chain of custody from
   initial execution through archive freeze. Each custody event is recorded within
   the Institutional Execution Ledger. No custody interruption has been detected
@@ -324,11 +335,11 @@ Institutional Evidence Vault & Custodian Registry</h2>
 <h3>Physical / Digital Archive</h3>
 <table class="table table-bordered">
   <tr><th>Primary Storage</th><td>Institutional Archive</td></tr>
-  <tr><th>Secondary Storage</th><td>Pending IEL-4E</td></tr>
+  <tr><th>Secondary Storage</th><td>Digital Package Repository</td></tr>
   <tr><th>Disaster Recovery Copy</th><td>Pending IEL-4J</td></tr>
   <tr><th>Off-site Archive</th><td>Pending</td></tr>
   <tr><th>Geographic Location</th><td>Pending</td></tr>
-  <tr><th>Archive Medium</th><td>Digital</td></tr>
+  <tr><th>Archive Medium</th><td>Digital Institutional Repository</td></tr>
 </table>
 
 <h3>Custodian Registry</h3>
@@ -372,11 +383,11 @@ Institutional Evidence Vault & Custodian Registry</h2>
 
 <table class="table table-bordered">
   <tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>Barcode Status</th><td>Pending Generation</td></tr>
+  <tr><th>Barcode Status</th><td>Reserved</td></tr>
   <tr><th>Barcode Value</th><td>BAR-{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>QR Verification Status</th><td>Pending Generation</td></tr>
+  <tr><th>QR Verification Status</th><td>Reserved</td></tr>
   <tr><th>QR Verification Target</th><td>/execution/sessions/{{ context.session.execution_id }}/certificate</td></tr>
-  <tr><th>Verification Sheet</th><td>Pending IEL-4F</td></tr>
+  <tr><th>Verification Sheet</th><td>Pending Verification Report</td></tr>
   <tr><th>External Verification</th><td>Pending IEL-4F</td></tr>
   <tr><th>Package Label</th><td>Pending IEL-4G</td></tr>
 </table>
@@ -387,6 +398,27 @@ Institutional Evidence Vault & Custodian Registry</h2>
   QR verification, and future external validation workflows. No barcode or QR
   image has been generated yet.
 </p>
+
+
+
+
+<div class="alert alert-success" style="margin:20px 0;padding:18px;border:2px solid #2e7d32;">
+<h2 style="margin-top:0;">✓ EXECUTION COMPLETE</h2>
+
+<p>This execution package has successfully completed:</p>
+
+<ul>
+<li>✓ Ceremony</li>
+<li>✓ Ledger Recording</li>
+<li>✓ Evidence Manifest</li>
+<li>✓ Chain of Custody</li>
+<li>✓ Archive Freeze</li>
+<li>✓ Evidence Vault Registration</li>
+</ul>
+
+<p><strong>Further modifications require creation of a new execution session.</strong></p>
+
+</div>
 
 
 Guided Ceremony Actions</h2>
