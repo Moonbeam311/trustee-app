@@ -296,7 +296,7 @@ def get_or_create_evidence_package(execution_id, context):
     integrity_status = "Verified" if ceremony_finalized and archive_frozen and has_hash and has_ledger and has_freeze else "Pending"
 
     conn = get_connection()
-    conn.row_factory = None
+    conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
     existing = cur.execute(
@@ -338,7 +338,6 @@ def get_or_create_evidence_package(execution_id, context):
         """, (integrity_status, package_id))
 
     conn.commit()
-    conn.row_factory = sqlite3.Row
     pkg = cur.execute(
         "SELECT * FROM institutional_evidence_packages WHERE package_id = ?",
         (package_id,)
