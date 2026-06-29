@@ -53,7 +53,97 @@
 </section>
 
 <section class="admin-card">
-  <h2>Certified Execution Certificate</h2>
+  <h2>
+<div class="card" style="margin-bottom:24px;border:3px solid #b8860b;padding:24px;background:#fcfbf7;">
+
+<h2 style="text-align:center;margin-bottom:4px;">
+INSTITUTIONAL EVIDENCE PACKAGE
+</h2>
+
+<div style="text-align:center;color:#666;margin-bottom:20px;">
+Institutional Operating System<br>
+Certified Institutional Evidence Package
+</div>
+
+<hr>
+
+<h3>Package Identity</h3>
+
+<table class="table table-sm">
+<tr><th>Package Title</th><td>Certified Institutional Evidence Package</td></tr>
+<tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
+<tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
+<tr><th>Certificate</th><td>CERT-{{ context.session.execution_id }}</td></tr>
+<tr><th>Institution</th><td>{{ context.session.firm_id }}</td></tr>
+<tr><th>Object</th><td>{{ context.session.object_type|title }} : {{ context.session.object_id }}</td></tr>
+<tr><th>Document</th><td>{{ context.session.document_name }}</td></tr>
+</table>
+
+<h3>Institutional Classification</h3>
+
+<table class="table table-sm">
+<tr><th>Archive Classification</th><td>Institutional Record</td></tr>
+<tr><th>Retention</th><td>Permanent</td></tr>
+<tr><th>Archive Tier</th><td>Permanent</td></tr>
+<tr><th>Evidence Status</th><td>✓ COMPLETE</td></tr>
+<tr><th>Package Status</th><td>✓ LOCKED</td></tr>
+<tr><th>Integrity Status</th><td>✓ PASS</td></tr>
+<tr><th>Verification Status</th><td>Reserved for IEL-4F</td></tr>
+</table>
+
+<h3>Executive Summary</h3>
+
+<table class="table table-sm">
+<tr><th>Ceremony</th><td>✓ PASS</td></tr>
+<tr><th>Evidence Manifest</th><td>✓ PASS</td></tr>
+<tr><th>Chain of Custody</th><td>✓ PASS</td></tr>
+<tr><th>Evidence Vault</th><td>✓ PASS</td></tr>
+<tr><th>Ledger</th><td>✓ PASS</td></tr>
+<tr><th>Archive Freeze</th><td>✓ PASS</td></tr>
+</table>
+
+<h3>Institutional Certification</h3>
+
+<p>
+This evidence package contains the complete institutional execution
+record produced by the Institutional Execution Ledger.
+The package includes the certified execution certificate,
+execution ledger, evidence manifest,
+chain of custody,
+institutional evidence vault registration,
+archive freeze,
+and associated execution records.
+</p>
+
+<hr>
+
+<div style="display:flex;justify-content:space-between;gap:30px;">
+
+<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;">
+<strong>BARCODE</strong><br><br>
+Reserved for IEL-4H
+</div>
+
+<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;">
+<strong>QR VERIFICATION</strong><br><br>
+Reserved for IEL-4H
+</div>
+
+</div>
+
+<hr>
+
+<table class="table table-sm">
+<tr><th>Final Provenance Hash</th><td>{{ context.session.final_hash }}</td></tr>
+<tr><th>Generated</th><td>{{ context.session.archive_frozen_at }}</td></tr>
+<tr><th>Evidence Package Version</th><td>1.0</td></tr>
+<tr><th>Institution</th><td>{{ context.session.firm_id }}</td></tr>
+</table>
+
+</div>
+
+
+<h2>Certified Execution Certificate</h2>
   <p><strong>Institutional Operating System</strong><br>
   Execution Certification Layer</p>
 
