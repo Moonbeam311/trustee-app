@@ -10973,6 +10973,64 @@ def institutional_execution_generate_export(execution_id):
     return redirect(url_for("institutional_execution_session_detail", execution_id=execution_id))
 
 
+
+
+@app.route("/execution/sessions/<execution_id>/binder")
+def institutional_execution_binder_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_binder.html", context=context)
+
+
+@app.route("/execution/sessions/<execution_id>/verification")
+def institutional_execution_verification_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_verification.html", context=context)
+
+
+@app.route("/execution/sessions/<execution_id>/manifest")
+def institutional_execution_manifest_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_manifest.html", context=context)
+
+
+@app.route("/execution/sessions/<execution_id>/custody")
+def institutional_execution_custody_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_custody.html", context=context)
+
+
+@app.route("/execution/sessions/<execution_id>/vault")
+def institutional_execution_vault_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_vault.html", context=context)
+
+
+@app.route("/execution/sessions/<execution_id>/ledger")
+def institutional_execution_ledger_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_ledger.html", context=context)
+
+
+@app.route("/execution/sessions/<execution_id>/export")
+def institutional_execution_export_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_export.html", context=context)
+
+
 @app.route("/execution/sessions/<execution_id>/certificate")
 def institutional_execution_certificate_preview(execution_id):
     context = get_execution_session(execution_id)

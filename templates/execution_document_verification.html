@@ -1,0 +1,26 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Institutional Verification Report" %}
+{% block document_body %}
+<h2>Verification Summary</h2>
+<table class="table table-bordered">
+<tr><th>Verification ID</th><td>{{ context.verification.verification_id }}</td></tr>
+<tr><th>Status</th><td>{% if context.verification.verified %}✓ PASS{% else %}FAIL{% endif %}</td></tr>
+<tr><th>Checks Passed</th><td>{{ context.verification.checks_passed }} / {{ context.verification.checks_total }}</td></tr>
+<tr><th>Integrity Score</th><td>{{ context.verification.score }}%</td></tr>
+<tr><th>Verified By</th><td>{{ context.verification.verified_by }}</td></tr>
+<tr><th>Verification Time</th><td>{{ context.verification.verified_at }}</td></tr>
+</table>
+
+<h2>Integrity Matrix</h2>
+<table class="table table-bordered">
+<tr><th>Check</th><th>Source</th><th>Result</th><th>Detail</th></tr>
+{% for check in context.verification.checks %}
+<tr>
+<td>{{ check.name }}</td>
+<td>{{ check.source }}</td>
+<td>{% if check.passed %}✓ PASS{% else %}FAIL{% endif %}</td>
+<td>{{ check.detail }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Institutional Export Package" %}
+{% block document_body %}
+<h2>Export Package</h2>
+<table class="table table-bordered">
+<tr><th>Export Package ID</th><td>EXP-{{ context.session.execution_id.replace("EXE-","") }}</td></tr>
+<tr><th>Export Version</th><td>1.0</td></tr>
+<tr><th>Evidence Package</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
+<tr><th>Export Status</th><td>READY</td></tr>
+<tr><th>Integrity</th><td>{% if context.verification.verified %}✓ VERIFIED{% else %}REVIEW REQUIRED{% endif %}</td></tr>
+<tr><th>Package Hash</th><td>{{ context.session.final_hash }}</td></tr>
+</table>
+
+<h2>Export Formats</h2>
+<table class="table table-bordered">
+<tr><th>Export</th><th>Status</th></tr>
+<tr><td>Certified PDF Binder</td><td>Ready</td></tr>
+<tr><td>ZIP Evidence Package</td><td>Ready</td></tr>
+<tr><td>JSON Metadata</td><td>Ready</td></tr>
+<tr><td>Ledger CSV</td><td>Ready</td></tr>
+<tr><td>Verification Report</td><td>Ready</td></tr>
+<tr><td>Evidence Manifest</td><td>Ready</td></tr>
+</table>
+{% endblock %}

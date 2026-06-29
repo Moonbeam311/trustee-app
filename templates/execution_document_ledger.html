@@ -1,0 +1,20 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Execution Ledger Replay" %}
+{% block document_body %}
+<h2>Execution Ledger / Timeline Replay</h2>
+{% for e in context.ledger %}
+<div style="margin-bottom:18px;">
+<strong>{{ e.event_sequence }}. {{ e.event_label }}</strong><br>
+{{ e.event_id }} · {{ e.event_at }} · {{ e.event_actor }}<br>
+{{ e.event_description }}<br>
+Hash: {{ e.provenance_hash }}
+</div>
+{% endfor %}
+<h2>Archive Freezes</h2>
+<table class="table table-bordered">
+<tr><th>ID</th><th>Status</th><th>Frozen By</th><th>Frozen At</th><th>Hash</th></tr>
+{% for f in context.freezes %}
+<tr><td>{{ f.freeze_id }}</td><td>{{ f.archive_status }}</td><td>{{ f.frozen_by }}</td><td>{{ f.frozen_at }}</td><td>{{ f.freeze_hash }}</td></tr>
+{% endfor %}
+</table>
+{% endblock %}

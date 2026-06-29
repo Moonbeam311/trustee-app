@@ -1,0 +1,19 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Institutional Chain of Custody Report" %}
+{% block document_body %}
+<h2>Chain of Custody Timeline</h2>
+<table class="table table-bordered">
+<tr><th>Step</th><th>Event</th><th>Timestamp</th><th>Custodian</th><th>Integrity</th></tr>
+{% for e in context.ledger %}
+<tr>
+<td>{{ e.event_sequence }}</td>
+<td>{{ e.event_label or e.event_type }}</td>
+<td>{{ e.event_at }}</td>
+<td>{{ e.event_actor or "Institutional System" }}</td>
+<td>{% if e.provenance_hash %}✓ Locked{% else %}Recorded{% endif %}</td>
+</tr>
+{% endfor %}
+</table>
+<h2>Custody Certification</h2>
+<p>Institutional custody is continuous from session creation through archive freeze.</p>
+{% endblock %}

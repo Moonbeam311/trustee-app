@@ -1,0 +1,17 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Evidence Vault Registration" %}
+{% block document_body %}
+<h2>Vault Registration</h2>
+<table class="table table-bordered">
+{% for k,v in context.evidence_vault.package.items() %}
+<tr><th>{{ k|replace("_"," ")|title }}</th><td>{{ v }}</td></tr>
+{% endfor %}
+</table>
+<h2>Custodian Registry</h2>
+<table class="table table-bordered">
+<tr><th>Date</th><th>Custodian</th><th>Action</th><th>Status</th></tr>
+{% for t in context.evidence_vault.transfers %}
+<tr><td>{{ t.transfer_at }}</td><td>{{ t.custodian }}</td><td>{{ t.action }}</td><td>{{ t.status }}</td></tr>
+{% endfor %}
+</table>
+{% endblock %}

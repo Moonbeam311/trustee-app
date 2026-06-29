@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}">
+  <style>
+    body { max-width: 980px; margin: 30px auto; padding: 20px; }
+    .doc-header { border-bottom: 3px solid #222; margin-bottom: 20px; padding-bottom: 12px; }
+    .doc-footer { border-top: 1px solid #999; margin-top: 30px; padding-top: 10px; font-size: 0.9em; color: #555; }
+    @media print {
+      .no-print { display: none; }
+      body { margin: 0.5in; }
+    }
+  </style>
+</head>
+<body>
+<div class="no-print">
+  <a href="/execution/sessions/{{ context.session.execution_id }}">← Back to Execution Session</a>
+  |
+  <a href="#" onclick="window.print(); return false;">Print / Save as PDF</a>
+</div>
+
+<div class="doc-header">
+  <h1>{{ title }}</h1>
+  <p>
+    Institutional Operating System<br>
+    Execution Session: {{ context.session.execution_id }} |
+    Evidence Package: {{ context.evidence_vault.package.package_id }} |
+    Status: {{ context.session.ceremony_status|title }} /
+    {{ context.session.archive_freeze_status|title }}
+  </p>
+</div>
+
+{% block document_body %}{% endblock %}
+
+<div class="doc-footer">
+  <p>
+    Package: {{ context.evidence_vault.package.package_id }} |
+    Certificate: CERT-{{ context.session.execution_id }} |
+    Final Hash: {{ context.session.final_hash }}
+  </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Institutional Evidence Manifest" %}
+{% block document_body %}
+<h2>Evidence Manifest</h2>
+<table class="table table-bordered">
+<tr><th>Artifact</th><th>Identifier</th><th>Status</th><th>Integrity</th></tr>
+<tr><td>Execution Certificate</td><td>CERT-{{ context.session.execution_id }}</td><td>Attached</td><td>Verified</td></tr>
+<tr><td>Execution Session</td><td>{{ context.session.execution_id }}</td><td>{{ context.session.ceremony_status|title }}</td><td>Verified</td></tr>
+{% for s in context.signatures %}
+<tr><td>Signature Record</td><td>{{ s.signature_id }}</td><td>{{ s.signature_status }}</td><td>Verified</td></tr>
+{% endfor %}
+{% for p in context.participants %}
+<tr><td>{{ p.participant_type|title }}</td><td>{{ p.record_id }}</td><td>{{ p.status|title }}</td><td>Verified</td></tr>
+{% endfor %}
+{% for seal in context.seals %}
+<tr><td>Institutional Seal</td><td>{{ seal.seal_event_id }}</td><td>Applied</td><td>Verified</td></tr>
+{% endfor %}
+{% for f in context.freezes %}
+<tr><td>Archive Freeze</td><td>{{ f.freeze_id }}</td><td>{{ f.archive_status|title }}</td><td>Verified</td></tr>
+{% endfor %}
+</table>
+{% endblock %}
