@@ -154,6 +154,87 @@
 </table>
 
 
+
+<h2>Institutional Evidence Manifest</h2>
+
+<table class="table table-striped table-bordered">
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Identifier</th>
+<th>Status</th>
+<th>Integrity</th>
+</tr>
+</thead>
+<tbody>
+
+<tr>
+<td>Execution Certificate</td>
+<td>CERT-{{ context.session.execution_id }}</td>
+<td>Attached</td>
+<td>Locked</td>
+</tr>
+
+<tr>
+<td>Execution Session</td>
+<td>{{ context.session.execution_id }}</td>
+<td>{{ context.session.ceremony_status|title }}</td>
+<td>✓</td>
+</tr>
+
+{% for s in context.signatures %}
+<tr>
+<td>Signature Record</td>
+<td>{{ s.signature_id }}</td>
+<td>{{ s.signature_status or s.status or "Recorded" }}</td>
+<td>Locked</td>
+</tr>
+{% endfor %}
+
+{% for p in context.participants %}
+<tr>
+<td>{{ (p.participant_type or p.type or "Participant")|title }}</td>
+<td>{{ p.record_id or p.witness_id or p.notary_id }}</td>
+<td>{{ p.status or "Recorded" }}</td>
+<td>Locked</td>
+</tr>
+{% endfor %}
+
+{% for seal in context.seals %}
+<tr>
+<td>Institutional Seal</td>
+<td>{{ seal.seal_event_id or seal.seal_id }}</td>
+<td>Applied</td>
+<td>Locked</td>
+</tr>
+{% endfor %}
+
+<tr>
+<td>Execution Ledger</td>
+<td>LEDGER-{{ context.session.execution_id }}</td>
+<td>{{ context.ledger|length }} Events</td>
+<td>Immutable</td>
+</tr>
+
+{% for frz in context.freezes %}
+<tr>
+<td>Archive Freeze</td>
+<td>{{ frz.freeze_id }}</td>
+<td>{{ frz.archive_status|title }}</td>
+<td>Locked</td>
+</tr>
+{% endfor %}
+
+<tr>
+<td>Final Provenance Hash</td>
+<td colspan="2"><code>{{ context.session.final_hash }}</code></td>
+<td>Verified</td>
+</tr>
+
+</tbody>
+</table>
+
+
 Guided Ceremony Actions</h2>
 {% set archive_state = context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status %}
 {% set is_frozen = context.freezes or archive_state == 'frozen' %}
