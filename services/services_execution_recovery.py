@@ -64,6 +64,19 @@ def ensure_execution_recovery_tables():
     conn.close()
 
 
+def _next_id_from_cursor(cur, prefix, table, column):
+    row = cur.execute(f"SELECT {column} FROM {table} ORDER BY {column} DESC LIMIT 1").fetchone()
+    if not row:
+        return f"{prefix}-000001"
+
+    last = row[0] if not hasattr(row, "keys") else row[column]
+    try:
+        n = int(str(last).split("-")[-1]) + 1
+    except Exception:
+        n = 1
+    return f"{prefix}-{n:06d}"
+
+
 def _next_id(prefix, table, column):
     conn = get_connection()
     cur = conn.cursor()
@@ -106,7 +119,7 @@ def seed_default_archive_topology(execution_id):
         if existing:
             repository_id = existing["repository_id"]
         else:
-            repository_id = _next_id("REP", "institutional_archive_repositories", "repository_id")
+            repository_id = _next_id_from_cursor(cur, "REP", "institutional_archive_repositories", "repository_id")
             cur.execute("""
                 INSERT INTO institutional_archive_repositories (
                     repository_id, repository_name, repository_type, storage_medium,
@@ -125,7 +138,7 @@ def seed_default_archive_topology(execution_id):
         """, (execution_id, repository_id)).fetchone()
 
         if not topology_exists:
-            topology_id = _next_id("TOP", "institutional_archive_topology", "topology_id")
+            topology_id = _next_id_from_cursor(cur, "TOP", "institutional_archive_topology", "topology_id")
             cur.execute("""
                 INSERT INTO institutional_archive_topology (
                     topology_id, execution_id, repository_id, topology_role,
