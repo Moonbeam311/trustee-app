@@ -60,6 +60,26 @@ def ensure_execution_recovery_tables():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS institutional_disaster_recovery_registry (
+            recovery_id TEXT PRIMARY KEY,
+            execution_id TEXT,
+            recovery_copy_id TEXT,
+            recovery_status TEXT DEFAULT 'registered',
+            recovery_repository_id TEXT,
+            recovery_point_objective TEXT,
+            recovery_time_objective TEXT,
+            last_recovery_validation_at TEXT,
+            recovery_operator TEXT,
+            restore_status TEXT DEFAULT 'not_tested',
+            recovery_package_hash TEXT,
+            continuity_risk_level TEXT DEFAULT 'moderate',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -209,7 +229,7 @@ def get_archive_topology(execution_id):
     redundancy_level = "Multi-Repository" if total >= 3 else "Single Repository"
     health_score = round((verified / total) * 100) if total else 0
 
-    return {
+    result = {
         "repositories": topology,
         "recovery_events": events,
         "summary": {
@@ -222,5 +242,102 @@ def get_archive_topology(execution_id):
             "repository_health_score": health_score,
             "recovery_priority": "Critical",
             "topology_status": "Registered",
+        }
+    }
+    result["disaster_recovery"] = get_or_create_disaster_recovery_registry(execution_id, result)
+    return result
+
+
+def get_or_create_disaster_recovery_registry(execution_id, topology):
+    ensure_execution_recovery_tables()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    existing = cur.execute("""
+        SELECT * FROM institutional_disaster_recovery_registry
+        WHERE execution_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (execution_id,)).fetchone()
+
+    if not existing:
+        dr_repo = None
+        for repo in topology.get("repositories", []):
+            if (repo.get("topology_role") or "").lower() == "disaster recovery":
+                dr_repo = repo
+                break
+
+        recovery_id = _next_id_from_cursor(cur, "DRR", "institutional_disaster_recovery_registry", "recovery_id")
+        recovery_copy_id = "DRC-" + str(execution_id).replace("EXE-", "")
+
+        cur.execute("""
+            INSERT INTO institutional_disaster_recovery_registry (
+                recovery_id,
+                execution_id,
+                recovery_copy_id,
+                recovery_status,
+                recovery_repository_id,
+                recovery_point_objective,
+                recovery_time_objective,
+                last_recovery_validation_at,
+                recovery_operator,
+                restore_status,
+                recovery_package_hash,
+                continuity_risk_level,
+                notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            recovery_id,
+            execution_id,
+            recovery_copy_id,
+            "registered",
+            dr_repo.get("repository_id") if dr_repo else "",
+            "24 hours",
+            "4 hours",
+            None,
+            "Institutional Operating System",
+            "not_tested",
+            "",
+            "moderate",
+            "Initial disaster recovery registry created by IEL-4J-2."
+        ))
+        conn.commit()
+
+    row = cur.execute("""
+        SELECT * FROM institutional_disaster_recovery_registry
+        WHERE execution_id = ?
+        ORDER BY created_at DESC
+        LIMIT 1
+    """, (execution_id,)).fetchone()
+
+    events = cur.execute("""
+        SELECT * FROM institutional_recovery_events
+        WHERE execution_id = ?
+        ORDER BY event_at DESC
+    """, (execution_id,)).fetchall()
+
+    conn.close()
+
+    registry = dict(row) if row else {}
+    event_rows = [dict(e) for e in events]
+
+    recovery_ready = bool(registry.get("recovery_repository_id"))
+    restore_tested = (registry.get("restore_status") or "").lower() in ("tested", "verified", "passed")
+    risk = registry.get("continuity_risk_level") or "moderate"
+
+    return {
+        "registry": registry,
+        "events": event_rows,
+        "summary": {
+            "recovery_ready": recovery_ready,
+            "restore_tested": restore_tested,
+            "recovery_status": registry.get("recovery_status") or "unregistered",
+            "restore_status": registry.get("restore_status") or "not_tested",
+            "continuity_risk_level": risk,
+            "recovery_copy_id": registry.get("recovery_copy_id") or "",
+            "recovery_point_objective": registry.get("recovery_point_objective") or "",
+            "recovery_time_objective": registry.get("recovery_time_objective") or "",
         }
     }

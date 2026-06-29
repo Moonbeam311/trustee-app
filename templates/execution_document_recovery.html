@@ -1,0 +1,51 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Disaster Recovery Registry" %}
+{% block document_body %}
+
+<h2>Disaster Recovery Summary</h2>
+<table class="table table-bordered">
+<tr><th>Recovery Copy ID</th><td>{{ context.archive_topology.disaster_recovery.summary.recovery_copy_id }}</td></tr>
+<tr><th>Recovery Status</th><td>{{ context.archive_topology.disaster_recovery.summary.recovery_status|replace("_"," ")|title }}</td></tr>
+<tr><th>Restore Status</th><td>{{ context.archive_topology.disaster_recovery.summary.restore_status|replace("_"," ")|title }}</td></tr>
+<tr><th>Recovery Ready</th><td>{% if context.archive_topology.disaster_recovery.summary.recovery_ready %}YES{% else %}NO{% endif %}</td></tr>
+<tr><th>Restore Tested</th><td>{% if context.archive_topology.disaster_recovery.summary.restore_tested %}YES{% else %}NO{% endif %}</td></tr>
+<tr><th>Continuity Risk Level</th><td>{{ context.archive_topology.disaster_recovery.summary.continuity_risk_level|title }}</td></tr>
+<tr><th>Recovery Point Objective</th><td>{{ context.archive_topology.disaster_recovery.summary.recovery_point_objective }}</td></tr>
+<tr><th>Recovery Time Objective</th><td>{{ context.archive_topology.disaster_recovery.summary.recovery_time_objective }}</td></tr>
+</table>
+
+<h2>Recovery Registry</h2>
+<table class="table table-bordered">
+{% for k, v in context.archive_topology.disaster_recovery.registry.items() %}
+<tr><th>{{ k|replace("_"," ")|title }}</th><td>{{ v }}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Recovery Event History</h2>
+{% if context.archive_topology.disaster_recovery.events %}
+<table class="table table-bordered">
+<tr><th>Event</th><th>Repository</th><th>Action</th><th>Result</th><th>Operator</th><th>At</th></tr>
+{% for e in context.archive_topology.disaster_recovery.events %}
+<tr>
+<td>{{ e.recovery_event_id }}</td>
+<td>{{ e.repository_id }}</td>
+<td>{{ e.recovery_action }}</td>
+<td>{{ e.recovery_result }}</td>
+<td>{{ e.operator }}</td>
+<td>{{ e.event_at }}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p>No recovery exercises or restore events have been recorded yet.</p>
+{% endif %}
+
+<h2>Recovery Certification</h2>
+<p>
+This disaster recovery registry establishes the recovery copy identity, recovery objectives,
+continuity risk level, and restoration status for this execution package. Future recovery
+tests, restore validations, replication events, and continuity exercises will be recorded
+against this registry.
+</p>
+
+{% endblock %}
