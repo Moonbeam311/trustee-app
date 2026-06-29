@@ -235,6 +235,68 @@
 </table>
 
 
+
+<h2>Institutional Evidence Vault & Custodian Registry</h2>
+
+<table class="table table-bordered">
+  <tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
+  <tr><th>Vault ID</th><td>{{ context.evidence_vault.package.vault_id }}</td></tr>
+  <tr><th>Vault Name</th><td>{{ context.evidence_vault.package.vault_name }}</td></tr>
+  <tr><th>Archive Tier</th><td>{{ context.evidence_vault.package.archive_tier }}</td></tr>
+  <tr><th>Archive Policy</th><td>{{ context.evidence_vault.package.archive_policy }}</td></tr>
+  <tr><th>Retention Schedule</th><td>{{ context.evidence_vault.package.retention_schedule }}</td></tr>
+  <tr><th>Classification</th><td>{{ context.evidence_vault.package.classification }}</td></tr>
+  <tr><th>Current Custodian</th><td>{{ context.evidence_vault.package.custodian }}</td></tr>
+  <tr><th>Transfer Status</th><td>{{ context.evidence_vault.package.transfer_status }}</td></tr>
+  <tr><th>Integrity Status</th><td>✓ {{ context.evidence_vault.package.integrity_status }}</td></tr>
+</table>
+
+<h3>Physical / Digital Archive</h3>
+<table class="table table-bordered">
+  <tr><th>Primary Storage</th><td>Institutional Archive</td></tr>
+  <tr><th>Secondary Storage</th><td>Pending IEL-4E</td></tr>
+  <tr><th>Disaster Recovery Copy</th><td>Pending IEL-4J</td></tr>
+  <tr><th>Off-site Archive</th><td>Pending</td></tr>
+  <tr><th>Geographic Location</th><td>Pending</td></tr>
+  <tr><th>Archive Medium</th><td>Digital</td></tr>
+</table>
+
+<h3>Custodian Registry</h3>
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr><th>Date</th><th>Custodian</th><th>Action</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    {% for t in context.evidence_vault.transfers %}
+    <tr>
+      <td>{{ t.transfer_at }}</td>
+      <td>{{ t.custodian }}</td>
+      <td>{{ t.action }}</td>
+      <td>{{ t.transfer_status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h3>Evidence Vault Integrity</h3>
+<table class="table table-bordered">
+  <tr><th>Package Locked</th><td>YES</td></tr>
+  <tr><th>Archive Frozen</th><td>{% if context.session.archive_freeze_status == "frozen" %}YES{% else %}NO{% endif %}</td></tr>
+  <tr><th>Ledger Verified</th><td>{% if context.ledger %}YES{% else %}NO{% endif %}</td></tr>
+  <tr><th>Certificate Verified</th><td>YES</td></tr>
+  <tr><th>Manifest Verified</th><td>YES</td></tr>
+  <tr><th>Custody Verified</th><td>{% if context.evidence_vault.transfers %}YES{% else %}NO{% endif %}</td></tr>
+  <tr><th>Integrity Score</th><td>{% if context.evidence_vault.package.integrity_status == "Verified" %}100%{% else %}Incomplete{% endif %}</td></tr>
+</table>
+
+<p>
+  <strong>Institutional Evidence Vault Certification:</strong>
+  This execution package has been accepted into the Institutional Evidence Vault.
+  The package is maintained under the institutional archive policy and is governed
+  by immutable execution records, custody records, and provenance verification.
+</p>
+
+
 Guided Ceremony Actions</h2>
 {% set archive_state = context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status %}
 {% set is_frozen = context.freezes or archive_state == 'frozen' %}

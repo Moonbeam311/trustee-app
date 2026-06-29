@@ -239,4 +239,118 @@ def get_execution_session(execution_id):
         "freezes": [d(r) for r in freezes],
     }
     conn.close()
+    result["evidence_vault"] = get_or_create_evidence_package(execution_id, result)
+    return result
+
+
+def ensure_evidence_vault_tables():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS institutional_evidence_packages (
+            package_id TEXT PRIMARY KEY,
+            execution_id TEXT,
+            vault_id TEXT,
+            vault_name TEXT,
+            archive_tier TEXT,
+            archive_policy TEXT,
+            retention_schedule TEXT,
+            custodian TEXT,
+            transfer_status TEXT,
+            classification TEXT,
+            integrity_status TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT
+        )
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS institutional_custody_transfers (
+            transfer_id TEXT PRIMARY KEY,
+            package_id TEXT,
+            execution_id TEXT,
+            custodian TEXT,
+            action TEXT,
+            transfer_status TEXT,
+            transfer_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def get_or_create_evidence_package(execution_id, context):
+    ensure_evidence_vault_tables()
+
+    session = context.get("session") or {}
+    package_id = "PKG-" + str(execution_id).replace("EXE-", "")
+    vault_id = "VLT-" + str(execution_id).replace("EXE-", "")
+
+    ceremony_finalized = session.get("ceremony_status") == "finalized"
+    archive_frozen = session.get("archive_freeze_status") == "frozen"
+    has_hash = bool(session.get("final_hash"))
+    has_ledger = bool(context.get("ledger"))
+    has_freeze = bool(context.get("freezes"))
+    integrity_status = "Verified" if ceremony_finalized and archive_frozen and has_hash and has_ledger and has_freeze else "Pending"
+
+    conn = get_connection()
+    conn.row_factory = None
+    cur = conn.cursor()
+
+    existing = cur.execute(
+        "SELECT package_id FROM institutional_evidence_packages WHERE package_id = ?",
+        (package_id,)
+    ).fetchone()
+
+    if not existing:
+        cur.execute("""
+            INSERT INTO institutional_evidence_packages (
+                package_id, execution_id, vault_id, vault_name, archive_tier,
+                archive_policy, retention_schedule, custodian, transfer_status,
+                classification, integrity_status, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            package_id, execution_id, vault_id, "Institutional Execution Vault",
+            "Permanent", "Immutable Institutional Archive", "Permanent",
+            "Institutional Archive", "No Transfers Recorded",
+            "Institutional Record", integrity_status,
+            "Auto-created from finalized institutional execution session."
+        ))
+
+        transfer_id = "CUST-" + str(execution_id).replace("EXE-", "")
+        cur.execute("""
+            INSERT OR IGNORE INTO institutional_custody_transfers (
+                transfer_id, package_id, execution_id, custodian, action,
+                transfer_status, notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            transfer_id, package_id, execution_id, session.get("created_by") or "admin123",
+            "Archive Accepted", "Active",
+            "Initial evidence package accepted into institutional archive."
+        ))
+    else:
+        cur.execute("""
+            UPDATE institutional_evidence_packages
+            SET integrity_status = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE package_id = ?
+        """, (integrity_status, package_id))
+
+    conn.commit()
+    conn.row_factory = sqlite3.Row
+    pkg = cur.execute(
+        "SELECT * FROM institutional_evidence_packages WHERE package_id = ?",
+        (package_id,)
+    ).fetchone()
+    transfers = cur.execute(
+        "SELECT * FROM institutional_custody_transfers WHERE package_id = ? ORDER BY transfer_at",
+        (package_id,)
+    ).fetchall()
+
+    result = {
+        "package": dict(pkg) if pkg else {},
+        "transfers": [dict(r) for r in transfers],
+    }
+
+    conn.close()
     return result
