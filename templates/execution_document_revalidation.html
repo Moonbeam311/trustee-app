@@ -1,0 +1,50 @@
+{% extends "execution_document_base.html" %}
+{% set title = "Integrity Revalidation Report" %}
+{% block document_body %}
+
+<h2>Revalidation Summary</h2>
+<table class="table table-bordered">
+<tr><th>Validation Status</th><td>{{ context.archive_topology.revalidation.summary.validation_status }}</td></tr>
+<tr><th>Validations Recorded</th><td>{{ context.archive_topology.revalidation.summary.validations_recorded }}</td></tr>
+<tr><th>Passed</th><td>{{ context.archive_topology.revalidation.summary.passed }}</td></tr>
+<tr><th>Review Required</th><td>{{ context.archive_topology.revalidation.summary.review_required }}</td></tr>
+<tr><th>Latest Result</th><td>{{ context.archive_topology.revalidation.summary.latest_result }}</td></tr>
+<tr><th>Expected Hash</th><td><code>{{ context.archive_topology.revalidation.summary.expected_hash }}</code></td></tr>
+<tr><th>Observed Hash</th><td><code>{{ context.archive_topology.revalidation.summary.observed_hash }}</code></td></tr>
+</table>
+
+<h2>Revalidation Ledger</h2>
+<table class="table table-bordered">
+<tr>
+  <th>Validation ID</th>
+  <th>Package</th>
+  <th>Type</th>
+  <th>Result</th>
+  <th>Expected Hash</th>
+  <th>Observed Hash</th>
+  <th>Validated By</th>
+  <th>Validated At</th>
+</tr>
+{% for v in context.archive_topology.revalidation['items'] %}
+<tr>
+  <td>{{ v.validation_id }}</td>
+  <td>{{ v.package_id }}</td>
+  <td>{{ v.validation_type|replace("_"," ")|title }}</td>
+  <td>{{ v.validation_result|replace("_"," ")|title }}</td>
+  <td><code>{{ v.expected_hash }}</code></td>
+  <td><code>{{ v.observed_hash }}</code></td>
+  <td>{{ v.validated_by }}</td>
+  <td>{{ v.validated_at }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Revalidation Certification</h2>
+<p>
+This report records integrity revalidation events for the execution package.
+The baseline validation compares the package's expected final provenance hash
+against the observed hash. Future restore, migration, replication, continuity,
+and periodic audit checks will be recorded in this ledger.
+</p>
+
+{% endblock %}

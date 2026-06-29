@@ -11013,6 +11013,16 @@ def institutional_execution_custody_document(execution_id):
 
 
 
+
+
+@app.route("/execution/sessions/<execution_id>/revalidation")
+def institutional_execution_revalidation_document(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_document_revalidation.html", context=context)
+
+
 @app.route("/execution/sessions/<execution_id>/replication")
 def institutional_execution_replication_document(execution_id):
     context = get_execution_session(execution_id)

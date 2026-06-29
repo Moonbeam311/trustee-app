@@ -244,7 +244,7 @@ def get_execution_session(execution_id):
     conn.close()
     result["evidence_vault"] = get_or_create_evidence_package(execution_id, result)
     result["verification"] = verify_execution_package(execution_id, result)
-    result["archive_topology"] = get_archive_topology(execution_id)
+    result["archive_topology"] = get_archive_topology(execution_id, expected_hash=(result.get("session") or {}).get("final_hash", ""))
     return result
 
 

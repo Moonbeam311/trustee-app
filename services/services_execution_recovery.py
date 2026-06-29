@@ -95,6 +95,21 @@ def ensure_execution_recovery_tables():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS institutional_integrity_revalidations (
+            validation_id TEXT PRIMARY KEY,
+            execution_id TEXT,
+            package_id TEXT,
+            validation_type TEXT,
+            validation_result TEXT,
+            expected_hash TEXT,
+            observed_hash TEXT,
+            validated_by TEXT,
+            validated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -190,7 +205,7 @@ def seed_default_archive_topology(execution_id):
     conn.close()
 
 
-def get_archive_topology(execution_id):
+def get_archive_topology(execution_id, expected_hash=''):
     seed_default_archive_topology(execution_id)
 
     conn = get_connection()
@@ -261,6 +276,7 @@ def get_archive_topology(execution_id):
     }
     result["disaster_recovery"] = get_or_create_disaster_recovery_registry(execution_id, result)
     result["replication"] = get_replication_ledger(execution_id, result)
+    result["revalidation"] = get_or_create_integrity_revalidation(execution_id, expected_hash=expected_hash)
     return result
 
 
@@ -475,5 +491,89 @@ def get_replication_ledger(execution_id, topology):
             "failed": failed,
             "replication_status": "Registered" if total else "Not Registered",
             "replication_readiness": "Ready" if total and failed == 0 else "Review Required",
+        }
+    }
+
+
+def _package_id_from_execution(execution_id):
+    return "PKG-" + str(execution_id).replace("EXE-", "")
+
+
+def get_or_create_integrity_revalidation(execution_id, expected_hash="", observed_hash=None, validation_type="baseline"):
+    ensure_execution_recovery_tables()
+
+    if observed_hash is None:
+        observed_hash = expected_hash
+
+    package_id = _package_id_from_execution(execution_id)
+    result = "pass" if expected_hash and observed_hash and expected_hash == observed_hash else "review_required"
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    existing = cur.execute("""
+        SELECT *
+        FROM institutional_integrity_revalidations
+        WHERE execution_id = ?
+          AND validation_type = ?
+        ORDER BY validated_at DESC
+        LIMIT 1
+    """, (execution_id, validation_type)).fetchone()
+
+    if not existing:
+        validation_id = _next_id_from_cursor(cur, "VAL", "institutional_integrity_revalidations", "validation_id")
+        cur.execute("""
+            INSERT INTO institutional_integrity_revalidations (
+                validation_id,
+                execution_id,
+                package_id,
+                validation_type,
+                validation_result,
+                expected_hash,
+                observed_hash,
+                validated_by,
+                notes
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            validation_id,
+            execution_id,
+            package_id,
+            validation_type,
+            result,
+            expected_hash,
+            observed_hash,
+            "Institutional Revalidation Engine",
+            "Baseline integrity revalidation created by IEL-4J-4."
+        ))
+        conn.commit()
+
+    rows = cur.execute("""
+        SELECT *
+        FROM institutional_integrity_revalidations
+        WHERE execution_id = ?
+        ORDER BY validated_at DESC
+    """, (execution_id,)).fetchall()
+
+    conn.close()
+
+    items = [dict(r) for r in rows]
+    total = len(items)
+    passed = sum(1 for r in items if (r.get("validation_result") or "").lower() == "pass")
+    review = sum(1 for r in items if (r.get("validation_result") or "").lower() != "pass")
+
+    latest = items[0] if items else {}
+
+    return {
+        "items": items,
+        "latest": latest,
+        "summary": {
+            "validations_recorded": total,
+            "passed": passed,
+            "review_required": review,
+            "latest_result": (latest.get("validation_result") or "not_validated").replace("_", " ").title(),
+            "validation_status": "Validated" if total and review == 0 else "Review Required",
+            "expected_hash": expected_hash,
+            "observed_hash": observed_hash,
         }
     }

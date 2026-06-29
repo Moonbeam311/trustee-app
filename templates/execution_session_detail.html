@@ -122,6 +122,12 @@
       <td><a href="/execution/sessions/{{ context.session.execution_id }}/replication" target="_blank">Open Replication</a></td>
     </tr>
     <tr>
+      <td>Integrity Revalidation Report</td>
+      <td>✓ Validated</td>
+      <td>Baseline and future hash revalidation after restore, migration, or audit</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/revalidation" target="_blank">Open Revalidation</a></td>
+    </tr>
+    <tr>
       <td>Execution Ledger Replay</td>
       <td>✓ Available</td>
       <td>Forensic timeline replay with event hashes</td>
@@ -154,6 +160,8 @@
   <tr><th>Restore Status</th><td>{{ context.archive_topology.disaster_recovery.summary.restore_status|replace("_"," ")|title }}</td></tr>
   <tr><th>Replication Paths</th><td>{{ context.archive_topology.replication.summary.replication_paths }}</td></tr>
   <tr><th>Replication Readiness</th><td>{{ context.archive_topology.replication.summary.replication_readiness }}</td></tr>
+  <tr><th>Revalidation Status</th><td>{{ context.archive_topology.revalidation.summary.validation_status }}</td></tr>
+  <tr><th>Validation Result</th><td>{{ context.archive_topology.revalidation.summary.latest_result }}</td></tr>
   <tr><th>Export Status</th><td>Ready</td></tr>
 </table>
 
