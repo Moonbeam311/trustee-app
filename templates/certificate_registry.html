@@ -3,35 +3,555 @@
 <head>
   <title>Certificate Registry</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f6f8fa; padding:30px; color:#24292f; }
-    .box { background:white; padding:20px; border-radius:8px; border:1px solid #d0d7de; margin-bottom:20px; }
-    table { width:100%; border-collapse:collapse; background:white; }
-    th, td { border:1px solid #d0d7de; padding:8px; text-align:left; vertical-align:top; }
-    th { background:#f1f3f5; }
-    a.button { display:inline-block; padding:8px 12px; border:1px solid #d0d7de; border-radius:6px; text-decoration:none; background:#fff; color:#24292f; }
-    .muted { color:#57606a; }
-    .status { font-weight:bold; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f8fa;
+      padding: 30px;
+      color: #24292f;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #d0d7de;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th,
+    td {
+      border: 1px solid #d0d7de;
+      padding: 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f3f5;
+    }
+
+    a.button,
+    button.button {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      text-decoration: none;
+      background: #fff;
+      color: #24292f;
+      cursor: pointer;
+      margin: 2px;
+    }
+
+    .muted {
+      color: #57606a;
+    }
+
+    .status {
+      font-weight: bold;
+    }
+
+    .verified {
+      font-weight: bold;
+      color: #1a7f37;
+    }
+
+    .review {
+      font-weight: bold;
+      color: #9a6700;
+    }
+
+    .inactive {
+      color: #8c959f;
+    }
+
+    .registry-summary {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
+    .summary-card {
+      min-width: 170px;
+      padding: 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      background: #f6f8fa;
+    }
+
+    .summary-value {
+      display: block;
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+
+    .hash {
+      font-family: monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .badge-current,
+    .badge-verified,
+    .badge-active {
+      background: #dafbe1;
+      color: #116329;
+      border: 1px solid #aceebb;
+    }
+
+    .badge-superseded {
+      background: #fff8c5;
+      color: #7d4e00;
+      border: 1px solid #f0d98c;
+    }
+
+    .badge-revoked,
+    .badge-review {
+      background: #ffebe9;
+      color: #82071e;
+      border: 1px solid #ffb3ad;
+    }
+
+    .badge-certified {
+      background: #ddf4ff;
+      color: #0969da;
+      border: 1px solid #b6e3ff;
+    }
+
+    .summary-card.current {
+      border-left: 5px solid #1a7f37;
+    }
+
+    .summary-card.superseded {
+      border-left: 5px solid #bf8700;
+    }
+
+    .summary-card.trust-minute {
+      border-left: 5px solid #0969da;
+    }
+
+    .summary-label {
+      color: #57606a;
+      font-size: 0.85rem;
+    }
+
+
+    .registry-filter {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 16px 0;
+      padding: 12px;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      background: #f6f8fa;
+    }
+
+    .registry-filter input,
+    .registry-filter select {
+      padding: 8px;
+      border: 1px solid #d0d7de;
+      border-radius: 6px;
+      min-width: 220px;
+    }
+
+    .filter-count {
+      font-weight: bold;
+      color: #57606a;
+    }
+
+    .hidden-row {
+      display: none;
+    }
+
+
+    th.cert-sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    th.cert-sortable::after {
+      content: " ⇅";
+      color: #8c959f;
+      font-size: 0.75rem;
+    }
+
+    th.cert-sortable.sorted-asc::after {
+      content: " ↑";
+      color: #0969da;
+    }
+
+    th.cert-sortable.sorted-desc::after {
+      content: " ↓";
+      color: #0969da;
+    }
+
+
+    .wide-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: visible;
+      border: 1px solid #d0d7de;
+      border-radius: 8px;
+      background: #fff;
+      margin-top: 12px;
+    }
+
+    .wide-table-wrapper table {
+      min-width: 1750px;
+      margin: 0;
+    }
+
+    .wide-table-wrapper th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f1f3f5;
+    }
+
+    .wide-table-wrapper td,
+    .wide-table-wrapper th {
+      white-space: nowrap;
+    }
+
+    .wide-table-wrapper td:nth-child(14),
+    .wide-table-wrapper th:nth-child(14) {
+      position: sticky;
+      right: 0;
+      z-index: 3;
+      background: #fff;
+      box-shadow: -4px 0 8px rgba(0,0,0,0.05);
+    }
+
+    .wide-table-wrapper th:nth-child(14) {
+      background: #f1f3f5;
+      z-index: 4;
+    }
+
+
+
+    #institutionalCertificateTable {
+      table-layout: fixed;
+      min-width: 1900px;
+    }
+
+    #institutionalCertificateTable th,
+    #institutionalCertificateTable td {
+      min-width: 135px;
+      max-width: 220px;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    #institutionalCertificateTable th:nth-child(1),
+    #institutionalCertificateTable td:nth-child(1) {
+      min-width: 170px;
+      width: 170px;
+    }
+
+    #institutionalCertificateTable th:nth-child(2),
+    #institutionalCertificateTable td:nth-child(2) {
+      min-width: 130px;
+      width: 130px;
+    }
+
+    #institutionalCertificateTable th:nth-child(3),
+    #institutionalCertificateTable td:nth-child(3) {
+      min-width: 150px;
+      width: 150px;
+    }
+
+    #institutionalCertificateTable th:nth-child(4),
+    #institutionalCertificateTable td:nth-child(4),
+    #institutionalCertificateTable th:nth-child(11),
+    #institutionalCertificateTable td:nth-child(11),
+    #institutionalCertificateTable th:nth-child(12),
+    #institutionalCertificateTable td:nth-child(12),
+    #institutionalCertificateTable th:nth-child(13),
+    #institutionalCertificateTable td:nth-child(13) {
+      min-width: 135px;
+      width: 135px;
+    }
+
+    #institutionalCertificateTable th:nth-child(8),
+    #institutionalCertificateTable td:nth-child(8) {
+      min-width: 175px;
+      width: 175px;
+    }
+
+    #institutionalCertificateTable th:nth-child(14),
+    #institutionalCertificateTable td:nth-child(14) {
+      min-width: 190px;
+      width: 190px;
+    }
+
   </style>
 </head>
 <body>
 
   <p>
     <a href="{{ url_for('admin_index') }}">Back to Admin</a> |
-    <a href="{{ url_for('trust_minutes_dashboard') }}">Trust Minutes</a>
+    <a href="{{ url_for('trust_minutes_dashboard') }}">Trust Minutes</a> |
+    <a href="/continuity/certificates/verify">Verify Institutional Certificate</a>
   </p>
 
   <div class="box">
     <h1>Certificate Registry</h1>
-    <p class="muted">Index of executed and archived Trust Minute certificates, certificate IDs, execution status, and export links.</p>
 
-    <form method="POST" action="{{ url_for('backfill_certificate_ids_route') }}" style="margin-top:12px;">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="button">Backfill Missing Certificate IDs</button>
-    </form>
+    <p class="muted">
+      Unified institutional index of continuity certifications and executed or
+      archived Trust Minute certificates.
+    </p>
+
+    <div class="registry-summary">
+      {% set current_count = institutional_certificates | selectattr("superseded_by_certification_id", "equalto", None) | list | length %}
+      {% set superseded_count = (institutional_certificates | length) - current_count %}
+
+      <div class="summary-card">
+        <span class="summary-label">Institutional Certifications</span>
+        <span class="summary-value">
+          {{ institutional_certificates | length }}
+        </span>
+      </div>
+
+      <div class="summary-card current">
+        <span class="summary-label">Current Institutional</span>
+        <span class="summary-value">
+          {{ current_count }}
+        </span>
+      </div>
+
+      <div class="summary-card superseded">
+        <span class="summary-label">Superseded Institutional</span>
+        <span class="summary-value">
+          {{ superseded_count }}
+        </span>
+      </div>
+
+      <div class="summary-card trust-minute">
+        <span class="summary-label">Trust Minute Certificates</span>
+        <span class="summary-value">
+          {{ records | length }}
+        </span>
+      </div>
+    </div>
   </div>
 
   <div class="box">
-    <h2>Recorded Certificates</h2>
+    <h2>Institutional Certifications</h2>
+
+    <p class="muted">
+      Immutable institutional certification records generated by continuity,
+      execution, governance, archive, compliance, or related certification engines.
+    </p>
+
+    {% if institutional_certificates %}
+    <p class="muted">
+      Use search and chain-status filtering to narrow institutional certificates.
+      The record cards/table below preserve certificate identity, verification status,
+      supersession chain, and available actions.
+    </p>
+
+
+
+    <div class="registry-filter">
+      <label for="institutionalCertificateSearch">
+        Search Institutional Certificates
+      </label>
+
+      <input
+        type="text"
+        id="institutionalCertificateSearch"
+        placeholder="Search CERT, Continuity, EXE, VAL, admin123, CURRENT..."
+        oninput="filterInstitutionalCertificates()"
+      >
+
+      <select id="institutionalCertificateChainFilter" onchange="filterInstitutionalCertificates()">
+        <option value="">All Chain Statuses</option>
+        <option value="CURRENT">Current Only</option>
+        <option value="SUPERSEDED">Superseded Only</option>
+      </select>
+
+      <span class="filter-count">
+        Showing <span id="institutionalCertificateVisibleCount">{{ institutional_certificates | length }}</span>
+        of {{ institutional_certificates | length }}
+      </span>
+
+      <button class="button" type="button" onclick="clearInstitutionalCertificateFilters()">
+        Clear
+      </button>
+    </div>
+
+      <div class="wide-table-wrapper">
+      <table id="institutionalCertificateTable">
+        <thead>
+          <tr>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(0, 'text', this)">Certification ID</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(1, 'text', this)">Type</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(2, 'text', this)">Execution Session</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(3, 'text', this)">Status</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(4, 'number', this)">Score</th>
+            <th>Validation ID</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(6, 'text', this)">Certified By</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(7, 'date', this)">Certified At</th>
+            <th>Supersedes</th>
+            <th>Superseded By</th>
+            <th class="cert-sortable" onclick="sortInstitutionalCertificates(10, 'text', this)">Chain Status</th>
+            <th>Verification</th>
+            <th>Record Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for certificate in institutional_certificates %}
+            {% set chain_status = "SUPERSEDED" if certificate.superseded_by_certification_id else "CURRENT" %}
+            <tr class="institutional-certificate-row"
+                data-chain-status="{{ chain_status }}"
+                data-search="{{ certificate.certification_id }} {{ certificate.certificate_type }} {{ certificate.execution_id }} {{ certificate.certification_status }} {{ certificate.validation_id }} {{ certificate.certified_by }} {{ chain_status }}">
+              <td>
+                <strong>{{ certificate.certification_id }}</strong>
+              </td>
+
+              <td>{{ certificate.certificate_type or "—" }}</td>
+
+              <td>{{ certificate.execution_id or "—" }}</td>
+
+              <td class="status">
+                {% if certificate.certification_status == "Certified" %}
+                  <span class="badge badge-certified">CERTIFIED</span>
+                {% else %}
+                  <span class="badge badge-review">{{ certificate.certification_status or "REVIEW" }}</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% if certificate.continuity_score is not none %}
+                  {{ certificate.continuity_score }}%
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <td>{{ certificate.validation_id or "—" }}</td>
+
+              <td>{{ certificate.certified_by or "—" }}</td>
+
+              <td>{{ certificate.certified_at or "—" }}</td>
+
+              <td>
+                {% if certificate.supersedes_certification_id %}
+                  <a href="/continuity/certificates/{{ certificate.supersedes_certification_id }}">
+                    {{ certificate.supersedes_certification_id }}
+                  </a>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <td>
+                {% if certificate.superseded_by_certification_id %}
+                  <a href="/continuity/certificates/{{ certificate.superseded_by_certification_id }}">
+                    {{ certificate.superseded_by_certification_id }}
+                  </a>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+              <td>
+                {% if certificate.superseded_by_certification_id %}
+                  <span class="badge badge-superseded">SUPERSEDED</span>
+                {% else %}
+                  <span class="badge badge-current">CURRENT</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% if certificate.verification_status == "verified" %}
+                  <span class="badge badge-verified">VERIFIED</span>
+                {% else %}
+                  <span class="badge badge-review">
+                    {{ certificate.verification_status or "REVIEW" }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% if certificate.revocation_status == "active" %}
+                  <span class="badge badge-active">ACTIVE</span>
+                {% else %}
+                  <span class="badge badge-revoked">
+                    {{ certificate.revocation_status or "—" }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <td>
+                <a class="button"
+                   href="/continuity/certificates/{{ certificate.certification_id }}">
+                  View
+                </a>
+
+                <a class="button"
+                   href="/continuity/certificates/{{ certificate.certification_id }}/verify">
+                  Verify
+                </a>
+
+                <a class="button"
+                   href="/continuity/certificates/{{ certificate.certification_id }}/pdf">
+                  PDF
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted">
+        No institutional certifications are currently recorded.
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Trust Minute Certificates</h2>
+
+    <p class="muted">
+      Executed and archived Trust Minute certificates, execution status,
+      signer capacities, verification links, and packet exports.
+    </p>
+
+    <form method="POST"
+          action="{{ url_for('backfill_certificate_ids_route') }}"
+          style="margin-bottom:16px;">
+      <input type="hidden"
+             name="_csrf_token"
+             value="{{ csrf_token() }}">
+
+      <button type="submit" class="button">
+        Backfill Missing Trust Minute Certificate IDs
+      </button>
+    </form>
 
     {% if records %}
       <table>
@@ -49,38 +569,212 @@
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           {% for record in records %}
             {% set cert_id = record.certificate_id or ("CERT-" ~ record.minute_id) %}
             {% set roles = [] %}
-            {% if record.trustee_1_capacity %}{% set _ = roles.append(record.trustee_1_capacity) %}{% endif %}
-            {% if record.trustee_2_capacity %}{% set _ = roles.append(record.trustee_2_capacity) %}{% endif %}
-            {% if record.trustee_3_capacity %}{% set _ = roles.append(record.trustee_3_capacity) %}{% endif %}
+
+            {% if record.trustee_1_capacity %}
+              {% set _ = roles.append(record.trustee_1_capacity) %}
+            {% endif %}
+
+            {% if record.trustee_2_capacity %}
+              {% set _ = roles.append(record.trustee_2_capacity) %}
+            {% endif %}
+
+            {% if record.trustee_3_capacity %}
+              {% set _ = roles.append(record.trustee_3_capacity) %}
+            {% endif %}
 
             <tr>
               <td><strong>{{ cert_id }}</strong></td>
-              <td><a href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">{{ record.minute_id }}</a></td>
-              <td>{{ record.trust_id }}</td>
-              <td>{{ record.title }}</td>
-              <td class="status">{{ record.status }}</td>
-              <td>{{ record.executed_at or "Not recorded" }}</td>
-              <td>{{ record.archived_at or "" }}</td>
-              <td>{{ roles | join(", ") }}</td>
-              <td>{% if record.locked %}Yes{% else %}No{% endif %}</td>
+
               <td>
-                <a class="button" href="{{ url_for('verify_certificate', certificate_id=cert_id) }}">Verify</a>
-                <a class="button" href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">View</a>
-                <a class="button" href="{{ url_for('trust_minute_certificate_pdf', minute_id=record.minute_id) }}">Certificate PDF</a>
-                <a class="button" href="{{ url_for('trust_minute_execution_packet_pdf', minute_id=record.minute_id) }}">Packet PDF</a>
+                <a href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">
+                  {{ record.minute_id }}
+                </a>
+              </td>
+
+              <td>{{ record.trust_id }}</td>
+
+              <td>{{ record.title }}</td>
+
+              <td class="status">{{ record.status }}</td>
+
+              <td>{{ record.executed_at or "Not recorded" }}</td>
+
+              <td>{{ record.archived_at or "" }}</td>
+
+              <td>{{ roles | join(", ") }}</td>
+
+              <td>
+                {% if record.locked %}
+                  Yes
+                {% else %}
+                  No
+                {% endif %}
+              </td>
+
+              <td>
+                <a class="button"
+                   href="{{ url_for('verify_certificate', certificate_id=cert_id) }}">
+                  Verify
+                </a>
+
+                <a class="button"
+                   href="{{ url_for('trust_minute_detail', minute_id=record.minute_id) }}">
+                  View
+                </a>
+
+                <a class="button"
+                   href="{{ url_for('trust_minute_certificate_pdf', minute_id=record.minute_id) }}">
+                  Certificate PDF
+                </a>
+
+                <a class="button"
+                   href="{{ url_for('trust_minute_execution_packet_pdf', minute_id=record.minute_id) }}">
+                  Packet PDF
+                </a>
               </td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     {% else %}
-      <p class="muted">No executed or archived certificates are currently recorded.</p>
+      <p class="muted">
+        No executed or archived Trust Minute certificates are currently recorded.
+      </p>
     {% endif %}
   </div>
+
+
+<script>
+function filterInstitutionalCertificates() {
+  const searchInput = document.getElementById("institutionalCertificateSearch");
+  const chainFilter = document.getElementById("institutionalCertificateChainFilter");
+  const visibleCount = document.getElementById("institutionalCertificateVisibleCount");
+  const rows = document.querySelectorAll(".institutional-certificate-row");
+
+  const query = (searchInput.value || "").toLowerCase().trim();
+  const chain = (chainFilter.value || "").toUpperCase().trim();
+
+  let shown = 0;
+
+  rows.forEach(function(row) {
+    const searchable = (row.getAttribute("data-search") || "").toLowerCase();
+    const rowChain = (row.getAttribute("data-chain-status") || "").toUpperCase();
+
+    const matchesSearch = !query || searchable.includes(query);
+    const matchesChain = !chain || rowChain === chain;
+
+    if (matchesSearch && matchesChain) {
+      row.classList.remove("hidden-row");
+      shown += 1;
+    } else {
+      row.classList.add("hidden-row");
+    }
+  });
+
+  if (visibleCount) {
+    visibleCount.textContent = shown;
+  }
+}
+
+function clearInstitutionalCertificateFilters() {
+  const searchInput = document.getElementById("institutionalCertificateSearch");
+  const chainFilter = document.getElementById("institutionalCertificateChainFilter");
+
+  if (searchInput) {
+    searchInput.value = "";
+  }
+
+  if (chainFilter) {
+    chainFilter.value = "";
+  }
+
+  filterInstitutionalCertificates();
+}
+</script>
+
+
+<script>
+let institutionalCertificateSortState = {
+  column: null,
+  direction: "asc"
+};
+
+function getCellText(row, columnIndex) {
+  const cell = row.children[columnIndex];
+  return cell ? cell.innerText.trim() : "";
+}
+
+function normalizeSortValue(value, type) {
+  if (type === "number") {
+    const n = parseFloat(value.replace("%", "").replace(/,/g, ""));
+    return isNaN(n) ? -Infinity : n;
+  }
+
+  if (type === "date") {
+    const t = Date.parse(value);
+    return isNaN(t) ? 0 : t;
+  }
+
+  return value.toLowerCase();
+}
+
+function sortInstitutionalCertificates(columnIndex, type, header) {
+  const table = document.getElementById("institutionalCertificateTable");
+  if (!table) {
+    return;
+  }
+
+  const tbody = table.querySelector("tbody");
+  if (!tbody) {
+    return;
+  }
+
+  const rows = Array.from(tbody.querySelectorAll("tr.institutional-certificate-row"));
+
+  let direction = "asc";
+
+  if (institutionalCertificateSortState.column === columnIndex) {
+    direction = institutionalCertificateSortState.direction === "asc" ? "desc" : "asc";
+  }
+
+  institutionalCertificateSortState.column = columnIndex;
+  institutionalCertificateSortState.direction = direction;
+
+  rows.sort(function(a, b) {
+    const aValue = normalizeSortValue(getCellText(a, columnIndex), type);
+    const bValue = normalizeSortValue(getCellText(b, columnIndex), type);
+
+    if (aValue < bValue) {
+      return direction === "asc" ? -1 : 1;
+    }
+
+    if (aValue > bValue) {
+      return direction === "asc" ? 1 : -1;
+    }
+
+    return 0;
+  });
+
+  rows.forEach(function(row) {
+    tbody.appendChild(row);
+  });
+
+  document.querySelectorAll("#institutionalCertificateTable th.cert-sortable").forEach(function(th) {
+    th.classList.remove("sorted-asc", "sorted-desc");
+  });
+
+  if (header) {
+    header.classList.add(direction === "asc" ? "sorted-asc" : "sorted-desc");
+  }
+
+  filterInstitutionalCertificates();
+}
+</script>
 
 </body>
 </html>

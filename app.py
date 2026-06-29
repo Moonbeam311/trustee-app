@@ -1,3 +1,4 @@
+from services.services_certifications import list_institutional_certifications, verify_institutional_certification
 from datetime import datetime
 from io import BytesIO
 from flask import send_file
@@ -8047,14 +8048,20 @@ def transfer_certificate_pdf(transfer_id):
 
 @app.route("/certificates")
 def certificate_registry():
-    gate = require_master_admin()
-    if gate:
-        return gate
+    # ICP-3H-1:
+    # Certificate Registry is read-only and available to authenticated operators.
+    # Mutating certificate actions such as backfill remain separately protected.
+    if not session.get("username"):
+        return redirect(url_for("login"))
 
     records = get_certificate_registry_records()
 
+    institutional_certificates = list_institutional_certifications()
+
+
     return render_template(
         "certificate_registry.html",
+        institutional_certificates=institutional_certificates,
         records=records
     )
 

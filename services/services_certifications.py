@@ -235,3 +235,136 @@ def create_continuity_certification(execution_id, certified_by="Institutional Ce
 
     return cert
 
+
+
+def get_latest_active_certification(certificate_type=None, execution_id=None):
+    """
+    ICP-3I:
+    Returns latest active certificate for a type/execution pair.
+    """
+    rows = list_institutional_certifications(
+        certificate_type=certificate_type,
+        execution_id=execution_id,
+    )
+
+    for row in rows:
+        if (row.get("revocation_status") or "active").lower() == "active":
+            return row
+
+    return None
+
+
+def create_successor_institutional_certification(data, supersedes_certification_id=None):
+    """
+    ICP-3I:
+    Creates a new immutable certificate and links it to the prior certificate.
+    Existing certificates are not edited except for controlled supersession pointer.
+    """
+    prior = None
+
+    if supersedes_certification_id:
+        prior = get_institutional_certification(supersedes_certification_id)
+
+    cert = create_institutional_certification({
+        **data,
+        "supersedes_certification_id": supersedes_certification_id,
+    })
+
+    if prior:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            UPDATE institutional_certifications
+            SET superseded_by_certification_id = ?
+            WHERE certification_id = ?
+        """, (
+            cert.get("certification_id"),
+            prior.get("certification_id"),
+        ))
+
+        conn.commit()
+        conn.close()
+
+    return cert
+
+
+def create_successor_continuity_certification(execution_id, certified_by="Institutional Certification Engine", notes=""):
+    """
+    ICP-3I:
+    Issues the next continuity certificate and links it to the latest active
+    prior continuity certificate for this execution session.
+    """
+    prior = get_latest_active_certification(
+        certificate_type="Continuity",
+        execution_id=execution_id,
+    )
+
+    new_cert = create_continuity_certification(
+        execution_id=execution_id,
+        certified_by=certified_by,
+        notes=notes or "Successor continuity certification issued under ICP-3I immutable certificate policy.",
+    )
+
+    if prior:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        cur.execute("""
+            UPDATE institutional_certifications
+            SET supersedes_certification_id = ?
+            WHERE certification_id = ?
+        """, (
+            prior.get("certification_id"),
+            new_cert.get("certification_id"),
+        ))
+
+        cur.execute("""
+            UPDATE institutional_certifications
+            SET superseded_by_certification_id = ?
+            WHERE certification_id = ?
+        """, (
+            new_cert.get("certification_id"),
+            prior.get("certification_id"),
+        ))
+
+        conn.commit()
+        conn.close()
+
+        new_cert = get_institutional_certification(new_cert.get("certification_id"))
+
+    return new_cert
+
+
+def get_certificate_chain(certification_id):
+    """
+    ICP-3I:
+    Returns current certificate, direct predecessor, and direct successor.
+    """
+    cert = get_institutional_certification(certification_id)
+
+    if not cert:
+        return {
+            "certificate": None,
+            "supersedes": None,
+            "superseded_by": None,
+        }
+
+    supersedes = (
+        get_institutional_certification(cert.get("supersedes_certification_id"))
+        if cert.get("supersedes_certification_id")
+        else None
+    )
+
+    superseded_by = (
+        get_institutional_certification(cert.get("superseded_by_certification_id"))
+        if cert.get("superseded_by_certification_id")
+        else None
+    )
+
+    return {
+        "certificate": cert,
+        "supersedes": supersedes,
+        "superseded_by": superseded_by,
+    }
+
