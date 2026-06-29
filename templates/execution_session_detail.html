@@ -97,615 +97,119 @@
 
 
 
-Execution Integrity Summary</h2>
-  <table>
-    <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
-    <tr><th>Object</th><td>{{ context.session.object_type }} : {{ context.session.object_id }}</td></tr>
-    <tr><th>Document</th><td>{{ context.session.document_title or context.session.document_type }}</td></tr>
-    <tr><th>Ceremony Status</th><td>{{ context.session.ceremony_status|title }}</td></tr>
-    <tr><th>Archive Status</th><td>{{ context.session.archive_freeze_status|title }}</td></tr>
-    <tr><th>Signatures</th><td>{{ context.signatures|length }}</td></tr>
-    <tr><th>Witnesses / Notaries</th><td>{{ context.participants|length }}</td></tr>
-    <tr><th>Institutional Seals</th><td>{{ context.seals|length }}</td></tr>
-    <tr><th>Ledger Events</th><td>{{ context.ledger|length }}</td></tr>
-    <tr><th>Archive Freezes</th><td>{{ context.freezes|length }}</td></tr>
-    <tr><th>Final Provenance Hash</th><td>{{ context.session.final_hash or "" }}</td></tr>
-    <tr><th>Execution Integrity</th><td>{% if integrity_complete %}✓ Complete{% else %}Incomplete{% endif %}</td></tr>
-  </table>
-</section>
 
-<section class="admin-card">
-  <h2>
-
-<div class="card institutional-cover-sheet" style="margin-bottom:24px;border:3px solid #b8860b;padding:28px;background:#fcfbf7;">
-
-<h1 style="text-align:center;margin-bottom:4px;letter-spacing:1px;">
-INSTITUTIONAL EVIDENCE PACKAGE
-</h1>
-
-<div style="text-align:center;color:#666;margin-bottom:20px;">
-Institutional Operating System<br>
-Certified Institutional Evidence Package<br>
-Package Presentation Layer v1.0
-</div>
-
-<hr>
-
-<h2>Section A — Cover Sheet</h2>
-
-<h3>Package Identity</h3>
-<table class="table table-sm">
-<tr><th>Package Title</th><td>Certified Institutional Evidence Package</td></tr>
-<tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
-<tr><th>Export Package ID</th><td>EXP-{{ context.session.execution_id.replace("EXE-","") }}</td></tr>
-<tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
-<tr><th>Certificate</th><td>CERT-{{ context.session.execution_id }}</td></tr>
-<tr><th>Institution</th><td>{{ context.evidence_vault.package.institution or context.session.firm_id or "FIRM-002" }}</td></tr>
-<tr><th>Object</th><td>{{ context.session.object_type|title }} : {{ context.session.object_id }}</td></tr>
-<tr><th>Document</th><td>{{ context.session.document_title or context.session.document_name or context.session.document_type|replace("_"," ")|title }}</td></tr>
-</table>
-
-<h3>Institutional Classification</h3>
-<table class="table table-sm">
-<tr><th>Archive Classification</th><td>{{ context.evidence_vault.package.classification or "Institutional Record" }}</td></tr>
-<tr><th>Retention</th><td>{{ context.evidence_vault.package.retention_schedule or "Permanent" }}</td></tr>
-<tr><th>Archive Tier</th><td>{{ context.evidence_vault.package.archive_tier or "Permanent" }}</td></tr>
-<tr><th>Evidence Status</th><td>✓ COMPLETE</td></tr>
-<tr><th>Package Status</th><td>✓ LOCKED</td></tr>
-<tr><th>Integrity Status</th><td>{% if context.verification.verified %}✓ PASS{% else %}REVIEW REQUIRED{% endif %}</td></tr>
-<tr><th>Verification Status</th><td>{% if context.verification.verified %}✓ VERIFIED{% else %}PENDING REVIEW{% endif %}</td></tr>
-</table>
-
-<h3>Executive Summary</h3>
-<table class="table table-sm">
-<tr><th>Ceremony</th><td>✓ PASS</td></tr>
-<tr><th>Evidence Manifest</th><td>✓ PASS</td></tr>
-<tr><th>Verification Report</th><td>{% if context.verification.verified %}✓ PASS{% else %}REVIEW REQUIRED{% endif %}</td></tr>
-<tr><th>Chain of Custody</th><td>✓ PASS</td></tr>
-<tr><th>Evidence Vault</th><td>✓ PASS</td></tr>
-<tr><th>Ledger</th><td>✓ PASS</td></tr>
-<tr><th>Archive Freeze</th><td>✓ PASS</td></tr>
-<tr><th>Export Readiness</th><td>✓ READY</td></tr>
-</table>
-
-<h3>Institutional Certification</h3>
-<p>
-This evidence package contains the complete institutional execution record
-produced by the Institutional Execution Ledger. The package includes the certified
-execution certificate, evidence binder, evidence manifest, institutional verification
-report, chain of custody, institutional evidence vault registration, archive freeze,
-execution ledger replay, and associated execution records.
-</p>
-
-<p>
-This cover sheet is the standardized presentation page for certified institutional
-binder exports, archive packages, transfer packages, and continuity packages.
-</p>
-
-<hr>
-
-<div style="display:flex;justify-content:space-between;gap:30px;">
-
-<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;min-height:90px;">
-<strong>BARCODE RESERVED</strong><br><br>
-BAR-{{ context.evidence_vault.package.package_id }}
-</div>
-
-<div style="width:50%;text-align:center;border:1px dashed #999;padding:25px;min-height:90px;">
-<strong>QR VERIFICATION RESERVED</strong><br><br>
-/execution/sessions/{{ context.session.execution_id }}/certificate
-</div>
-
-</div>
-
-<hr>
-
-<h3>Provenance & Versioning</h3>
-<table class="table table-sm">
-<tr><th>Final Provenance Hash</th><td><code>{{ context.session.final_hash }}</code></td></tr>
-<tr><th>Generated</th><td>{{ context.freezes[-1].frozen_at if context.freezes else context.session.updated_at }}</td></tr>
-<tr><th>Evidence Package Version</th><td>1.0</td></tr>
-<tr><th>Presentation Revision</th><td>IEL-4G-1</td></tr>
-<tr><th>Generated By</th><td>Institutional Operating System</td></tr>
-<tr><th>Institution</th><td>{{ context.evidence_vault.package.institution or context.session.firm_id or "FIRM-002" }}</td></tr>
-</table>
-
-</div>
-
-<h2>Certified Execution Certificate</h2>
-  <p><strong>Institutional Operating System</strong><br>
-  Execution Certification Layer</p>
-
-  <table>
-    <tr><th>Certificate No.</th><td>CERT-{{ context.session.execution_id }}</td></tr>
-    <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
-    <tr><th>Object</th><td>{{ context.session.object_type|title }} : {{ context.session.object_id }}</td></tr>
-    <tr><th>Document</th><td>{{ context.session.document_title or context.session.document_type }}</td></tr>
-    <tr><th>Ceremony Status</th><td>{% if ceremony_finalized %}✓ Ceremony Finalized{% else %}Incomplete{% endif %}</td></tr>
-    <tr><th>Archive Status</th><td>{% if archive_frozen %}✓ Institutional Archive Frozen{% else %}Open{% endif %}</td></tr>
-    <tr><th>Execution Integrity</th><td>{% if integrity_complete %}✓ Integrity Complete{% else %}Incomplete{% endif %}</td></tr>
-    <tr><th>Trustee Signatures</th><td>{{ context.signatures|length }}</td></tr>
-    <tr><th>Witness / Notary Records</th><td>{{ context.participants|length }}</td></tr>
-    <tr><th>Institutional Seals</th><td>{{ context.seals|length }}</td></tr>
-    <tr><th>Ledger Events</th><td>{{ context.ledger|length }}</td></tr>
-    <tr><th>Archive Freeze Events</th><td>{{ context.freezes|length }}</td></tr>
-    <tr><th>Final Provenance Hash</th><td>{{ context.session.final_hash or "" }}</td></tr>
-    <tr><th>Generated</th><td>{{ context.session.updated_at or context.session.created_at }}</td></tr>
-    <tr><th>Institution</th><td>{{ context.session.firm_id or "FIRM-002" }}</td></tr>
-  </table>
-
-  <p>
-    This certificate is generated directly from the Institutional Execution Ledger.
-    The execution session reached finalized status, the archive was frozen, and all
-    execution artifacts displayed on this page are institutionally linked to
-    Execution Session {{ context.session.execution_id }}.
-  </p>
-
-  <p>
-    This certificate is informational and reflects the institutional execution
-    record at the time rendered.
-  </p>
-</section>
-
-<h2>
-
-
-<h2>Institutional Evidence Binder</h2>
+<h2>Execution Dossier Dashboard</h2>
 
 <table class="table table-bordered">
-  <tr>
-    <th>Evidence Package</th>
-    <td>
-      PKG-{{ context.session.execution_id.replace("EXE-","") if context.session.execution_id else "000000" }}
-    </td>
-  </tr>
-
-  <tr>
-    <th>Evidence Status</th>
-    <td>
-      {% set integrity_pass =
-          (context.session.ceremony_status == "finalized")
-          and context.freezes
-          and context.signatures
-          and context.ledger
-          and context.session.final_hash %}
-      {% if integrity_pass %}
-        ✓ Complete
-      {% else %}
-        Incomplete
-      {% endif %}
-    </td>
-  </tr>
-
-  <tr><th>Certificate</th><td>Attached</td></tr>
-  <tr><th>Executed Instrument</th><td>Attached</td></tr>
-  <tr><th>Execution Ledger</th><td>{{ context.ledger|length }}</td></tr>
-  <tr><th>Signature Records</th><td>{{ context.signatures|length }}</td></tr>
-  <tr><th>Witness / Notary Records</th><td>{{ context.participants|length }}</td></tr>
-  <tr><th>Institutional Seal Records</th><td>{{ context.seals|length }}</td></tr>
-  <tr><th>Archive Freeze Events</th><td>{{ context.freezes|length }}</td></tr>
-
-  <tr>
-    <th>Final Provenance Hash</th>
-    <td><code>{{ context.session.final_hash }}</code></td>
-  </tr>
-
-  <tr>
-    <th>Institutional Integrity</th>
-    <td>
-      {% if integrity_pass %}
-        ✓ PASS
-      {% else %}
-        INCOMPLETE
-      {% endif %}
-    </td>
-  </tr>
-
-  <tr><th>Evidence Manifest</th><td>✓ Attached</td></tr>
-  <tr><th>Chain of Custody</th><td>✓ Attached</td></tr>
-  <tr><th>Verification Report</th><td>✓ Verified</td></tr>
-  <tr><th>Export Package</th><td>Pending (IEL-4H)</td></tr>
-
-</table>
-
-
-
-<h2>Institutional Evidence Manifest</h2>
-
-<table class="table table-striped table-bordered">
-<thead>
-<tr>
-<th>Artifact</th>
-<th>Identifier</th>
-<th>Status</th>
-<th>Integrity</th>
-</tr>
-</thead>
-<tbody>
-
-<tr>
-<td>Execution Certificate</td>
-<td>CERT-{{ context.session.execution_id }}</td>
-<td>Attached</td>
-<td>Verified</td>
-</tr>
-
-<tr>
-<td>Execution Session</td>
-<td>{{ context.session.execution_id }}</td>
-<td>{{ context.session.ceremony_status|title }}</td>
-<td>✓</td>
-</tr>
-
-{% for s in context.signatures %}
-<tr>
-<td>Signature Record</td>
-<td>{{ s.signature_id }}</td>
-<td>{{ s.signature_status or s.status or "Recorded" }}</td>
-<td>Verified</td>
-</tr>
-{% endfor %}
-
-{% for p in context.participants %}
-<tr>
-<td>{{ (p.participant_type or p.type or "Participant")|title }}</td>
-<td>{{ p.record_id or p.witness_id or p.notary_id }}</td>
-<td>{{ p.status or "Recorded" }}</td>
-<td>Verified</td>
-</tr>
-{% endfor %}
-
-{% for seal in context.seals %}
-<tr>
-<td>Institutional Seal</td>
-<td>{{ seal.seal_event_id or seal.seal_id }}</td>
-<td>Applied</td>
-<td>Verified</td>
-</tr>
-{% endfor %}
-
-<tr>
-<td>Execution Ledger</td>
-<td>LEDGER-{{ context.session.execution_id }}</td>
-<td>{{ context.ledger|length }} Events</td>
-<td>Verified / Immutable</td>
-</tr>
-
-{% for frz in context.freezes %}
-<tr>
-<td>Archive Freeze</td>
-<td>{{ frz.freeze_id }}</td>
-<td>{{ frz.archive_status|title }}</td>
-<td>Verified</td>
-</tr>
-{% endfor %}
-
-<tr>
-<td>Final Provenance Hash</td>
-<td colspan="2"><code>{{ context.session.final_hash }}</code></td>
-<td>Verified</td>
-</tr>
-
-</tbody>
-</table>
-
-
-
-<h2>
-<h2>
-<h2>Institutional Verification Report</h2>
-
-<table class="table table-bordered">
-  <tr><th>Verification ID</th><td>{{ context.verification.verification_id }}</td></tr>
-  <tr><th>Verification Status</th><td>{% if context.verification.verified %}✓ PASS{% else %}FAIL{% endif %}</td></tr>
-  <tr><th>Evidence Package</th><td>{{ context.verification.package_id }}</td></tr>
-  <tr><th>Execution Session</th><td>{{ context.verification.execution_id }}</td></tr>
-  <tr><th>Verified By</th><td>{{ context.verification.verified_by }}</td></tr>
-  <tr><th>Verification Standard</th><td>{{ context.verification.verification_standard }}</td></tr>
-  <tr><th>Verification Time</th><td>{{ context.verification.verified_at }}</td></tr>
-  <tr><th>Checks Passed</th><td>{{ context.verification.checks_passed }} / {{ context.verification.checks_total }}</td></tr>
+  <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
+  <tr><th>Object</th><td>{{ context.session.object_type }} : {{ context.session.object_id }}</td></tr>
+  <tr><th>Document</th><td>{{ context.session.document_title or context.session.document_type|replace("_"," ")|title }}</td></tr>
+  <tr><th>Ceremony Status</th><td>{{ context.session.ceremony_status|title }}</td></tr>
+  <tr><th>Archive Status</th><td>{{ context.session.archive_freeze_status|title }}</td></tr>
+  <tr><th>Evidence Package</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
+  <tr><th>Verification</th><td>{% if context.verification.verified %}✓ Verified{% else %}Review Required{% endif %}</td></tr>
   <tr><th>Integrity Score</th><td>{{ context.verification.score }}%</td></tr>
+  <tr><th>Final Provenance Hash</th><td><code>{{ context.session.final_hash }}</code></td></tr>
 </table>
 
-<h3>Integrity Matrix</h3>
-<table class="table table-striped table-bordered">
-  <thead>
-    <tr>
-      <th>Verification Check</th>
-      <th>Source</th>
-      <th>Result</th>
-      <th>Detail</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for check in context.verification.checks %}
-    <tr>
-      <td>{{ check.name }}</td>
-      <td>{{ check.source }}</td>
-      <td>{% if check.passed %}✓ PASS{% else %}FAIL{% endif %}</td>
-      <td>{{ check.detail }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<h3>Verification Summary</h3>
-<table class="table table-bordered">
-  <tr><th>Overall Result</th><td>{% if context.verification.verified %}✓ VERIFIED{% else %}FAILED{% endif %}</td></tr>
-  <tr><th>Checks Passed</th><td>{{ context.verification.checks_passed }}</td></tr>
-  <tr><th>Checks Failed</th><td>{{ context.verification.checks_total - context.verification.checks_passed }}</td></tr>
-  <tr><th>Institutional Confidence</th><td>{% if context.verification.score == 100 %}EXCELLENT{% elif context.verification.score >= 80 %}GOOD{% else %}REVIEW REQUIRED{% endif %}</td></tr>
-</table>
-
-<p>
-  <strong>Institutional Verification Certification:</strong>
-  This execution package has been evaluated by the Institutional Verification Engine.
-  The execution session, execution ledger, evidence manifest, custody timeline,
-  archive freeze, evidence vault registration, and final provenance hash were
-  reconciled for internal consistency.
-  {% if context.verification.verified %}
-    No verification failures or integrity discrepancies were detected.
-  {% else %}
-    One or more verification checks failed and require review.
-  {% endif %}
-</p>
-
-
-
-Institutional Chain of Custody Timeline</h2>
+<h2>Institutional Document Index</h2>
 
 <table class="table table-striped table-bordered">
   <thead>
     <tr>
-      <th>Step</th>
-      <th>Custody Event</th>
-      <th>Timestamp</th>
-      <th>Custodian</th>
-      <th>Integrity</th>
+      <th>Document</th>
+      <th>Status</th>
+      <th>Institutional Function</th>
+      <th>Open</th>
     </tr>
   </thead>
   <tbody>
-    {% for e in context.ledger %}
     <tr>
-      <td>
-        {% if e.event_type == "session_created" %}🟢
-        {% elif e.event_type == "signature_recorded" %}✍
-        {% elif e.event_type == "witness_recorded" %}👥
-        {% elif e.event_type == "seal_applied" %}🛡
-        {% elif e.event_type == "archive_frozen" %}🔒
-        {% else %}✓
-        {% endif %}
-        {{ e.event_sequence }}
-      </td>
-      <td>{{ e.event_label or e.event_type|replace("_", " ")|title }}</td>
-      <td>{{ e.event_at }}</td>
-      <td>{{ e.event_actor or "Institutional System" }}</td>
-      <td>{% if e.provenance_hash %}✓ Locked{% else %}Recorded{% endif %}</td>
+      <td>Certified Execution Certificate</td>
+      <td>✓ Available</td>
+      <td>Execution certification and archive freeze attestation</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/certificate" target="_blank">Open Certificate</a></td>
     </tr>
-    {% endfor %}
-
     <tr>
-      <td>✓ Final</td>
-      <td>Final Provenance Hash Locked</td>
-      <td>{{ context.session.updated_at or context.session.created_at }}</td>
-      <td>Institutional System</td>
-      <td>{% if context.session.final_hash %}✓ Verified{% else %}Pending{% endif %}</td>
+      <td>Institutional Evidence Binder</td>
+      <td>✓ Available</td>
+      <td>Evidence package summary and binder certification</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/binder" target="_blank">Open Binder</a></td>
+    </tr>
+    <tr>
+      <td>Evidence Manifest</td>
+      <td>✓ Available</td>
+      <td>Artifact inventory and record integrity listing</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/manifest" target="_blank">Open Manifest</a></td>
+    </tr>
+    <tr>
+      <td>Institutional Verification Report</td>
+      <td>✓ Available</td>
+      <td>Verification engine report and integrity matrix</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/verification" target="_blank">Open Verification</a></td>
+    </tr>
+    <tr>
+      <td>Chain of Custody Report</td>
+      <td>✓ Available</td>
+      <td>Custody continuity and ledger-derived custody replay</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/custody" target="_blank">Open Custody</a></td>
+    </tr>
+    <tr>
+      <td>Evidence Vault Registration</td>
+      <td>✓ Available</td>
+      <td>Vault registration, custodian, archive policy, and retention</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/vault" target="_blank">Open Vault</a></td>
+    </tr>
+    <tr>
+      <td>Execution Ledger Replay</td>
+      <td>✓ Available</td>
+      <td>Forensic timeline replay with event hashes</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/ledger" target="_blank">Open Ledger</a></td>
+    </tr>
+    <tr>
+      <td>Institutional Export Package</td>
+      <td>✓ Ready</td>
+      <td>Export readiness, formats, package contents, and export certification</td>
+      <td><a href="/execution/sessions/{{ context.session.execution_id }}/export" target="_blank">Open Export</a></td>
     </tr>
   </tbody>
 </table>
 
-<h3>Custody Summary</h3>
-<table class="table table-bordered">
-  <tr><th>Evidence Package</th><td>{{ context.evidence_vault.package.package_id if context.evidence_vault else "PKG-" ~ context.session.execution_id.replace("EXE-","") }}</td></tr>
-  <tr><th>Current Custodian</th><td>{{ context.evidence_vault.package.custodian if context.evidence_vault else "Institutional Archive" }}</td></tr>
-  <tr><th>Custody Status</th><td>{% if context.session.archive_freeze_status == "frozen" %}Locked{% else %}Open{% endif %}</td></tr>
-  <tr><th>Custody Continuity</th><td>{% if context.ledger and context.freezes %}Continuous{% else %}Incomplete{% endif %}</td></tr>
-  <tr><th>Transfer Events</th><td>{{ context.evidence_vault.transfers|length if context.evidence_vault else 0 }}</td></tr>
-  <tr><th>Last Custody Event</th><td>{% if context.freezes %}Archive Frozen{% else %}Pending Archive Freeze{% endif %}</td></tr>
-  <tr><th>Integrity Status</th><td>{% if context.session.final_hash and context.ledger and context.freezes %}✓ PASS{% else %}INCOMPLETE{% endif %}</td></tr>
-</table>
-
-<p>
-  <strong>
-
-<h3>Custody Statistics</h3>
+<h2>Execution Package Statistics</h2>
 
 <table class="table table-bordered">
-<tr><th>Custody Events Recorded</th><td>{{ context.ledger|length }}</td></tr>
-<tr><th>Archive Freeze Events</th><td>{{ context.freezes|length }}</td></tr>
-<tr><th>Custody Breaks</th><td>0</td></tr>
-<tr><th>Continuity</th><td>Continuous Institutional Custody</td></tr>
+  <tr><th>Signatures</th><td>{{ context.signatures|length }}</td></tr>
+  <tr><th>Witness / Notary Records</th><td>{{ context.participants|length }}</td></tr>
+  <tr><th>Institutional Seals</th><td>{{ context.seals|length }}</td></tr>
+  <tr><th>Ledger Events</th><td>{{ context.ledger|length }}</td></tr>
+  <tr><th>Archive Freezes</th><td>{{ context.freezes|length }}</td></tr>
+  <tr><th>Verification Checks</th><td>{{ context.verification.checks_passed }} / {{ context.verification.checks_total }}</td></tr>
+  <tr><th>Custody Breaks</th><td>0</td></tr>
+  <tr><th>Export Status</th><td>Ready</td></tr>
 </table>
 
-Institutional Custody Certification:</strong>
-  This execution package has maintained an institutional chain of custody from
-  initial execution through archive freeze. Each custody event is recorded within
-  the Institutional Execution Ledger. No custody interruption has been detected
-  from the available institutional records.
-</p>
-
-<table class="table table-bordered">
-  <tr><th>Physical Custodian</th><td>Institutional Archive</td></tr>
-  <tr><th>Evidence Vault</th><td>{{ context.evidence_vault.package.vault_name if context.evidence_vault else "Pending IEL-4D" }}</td></tr>
-  <tr><th>Vault Location</th><td>Pending</td></tr>
-  <tr><th>Package Barcode</th><td>BAR-{{ context.evidence_vault.package.package_id if context.evidence_vault else "PKG-" ~ context.session.execution_id.replace("EXE-", "") }}</td></tr>
-  <tr><th>QR Verification</th><td>Reserved</td></tr>
-  <tr><th>External Verification</th><td>Pending Verification Report</td></tr>
-  <tr><th>Export Package</th><td>Pending IEL-4H</td></tr>
-</table>
-
-
-
-Institutional Evidence Vault & Custodian Registry</h2>
-
-<table class="table table-bordered">
-  <tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>Vault ID</th><td>{{ context.evidence_vault.package.vault_id }}</td></tr>
-  <tr><th>Vault Name</th><td>{{ context.evidence_vault.package.vault_name }}</td></tr>
-  <tr><th>Archive Tier</th><td>{{ context.evidence_vault.package.archive_tier }}</td></tr>
-  <tr><th>Archive Policy</th><td>{{ context.evidence_vault.package.archive_policy }}</td></tr>
-  <tr><th>Retention Schedule</th><td>{{ context.evidence_vault.package.retention_schedule }}</td></tr>
-  <tr><th>Classification</th><td>{{ context.evidence_vault.package.classification }}</td></tr>
-  <tr><th>Current Custodian</th><td>{{ context.evidence_vault.package.custodian }}</td></tr>
-  <tr><th>Transfer Status</th><td>{{ context.evidence_vault.package.transfer_status }}</td></tr>
-  <tr><th>Integrity Status</th><td>✓ {{ context.evidence_vault.package.integrity_status }}</td></tr>
-</table>
-
-<h3>Physical / Digital Archive</h3>
-<table class="table table-bordered">
-  <tr><th>Primary Storage</th><td>Institutional Archive</td></tr>
-  <tr><th>Secondary Storage</th><td>Digital Package Repository</td></tr>
-  <tr><th>Disaster Recovery Copy</th><td>Pending IEL-4J</td></tr>
-  <tr><th>Off-site Archive</th><td>Pending</td></tr>
-  <tr><th>Geographic Location</th><td>Pending</td></tr>
-  <tr><th>Archive Medium</th><td>Digital Institutional Repository</td></tr>
-</table>
-
-<h3>Custodian Registry</h3>
-<table class="table table-striped table-bordered">
-  <thead>
-    <tr><th>Date</th><th>Custodian</th><th>Action</th><th>Status</th></tr>
-  </thead>
-  <tbody>
-    {% for t in context.evidence_vault.transfers %}
-    <tr>
-      <td>{{ t.transfer_at }}</td>
-      <td>{{ t.custodian }}</td>
-      <td>{{ t.action }}</td>
-      <td>{{ t.transfer_status }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<h3>Evidence Vault Integrity</h3>
-<table class="table table-bordered">
-  <tr><th>Package Locked</th><td>YES</td></tr>
-  <tr><th>Archive Frozen</th><td>{% if context.session.archive_freeze_status == "frozen" %}YES{% else %}NO{% endif %}</td></tr>
-  <tr><th>Ledger Verified</th><td>{% if context.ledger %}YES{% else %}NO{% endif %}</td></tr>
-  <tr><th>Certificate Verified</th><td>YES</td></tr>
-  <tr><th>Manifest Verified</th><td>YES</td></tr>
-  <tr><th>Custody Verified</th><td>{% if context.evidence_vault.transfers %}YES{% else %}NO{% endif %}</td></tr>
-  <tr><th>Integrity Score</th><td>{% if context.evidence_vault.package.integrity_status == "Verified" %}100%{% else %}Incomplete{% endif %}</td></tr>
-</table>
-
-<p>
-  <strong>Institutional Evidence Vault Certification:</strong>
-  This execution package has been accepted into the Institutional Evidence Vault.
-  The package is maintained under the institutional archive policy and is governed
-  by immutable execution records, custody records, and provenance verification.
-</p>
-
-
-
-<h2>Package Barcode / QR Verification Registry</h2>
-
-<table class="table table-bordered">
-  <tr><th>Package ID</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>Barcode Status</th><td>Reserved</td></tr>
-  <tr><th>Barcode Value</th><td>BAR-{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>QR Verification Status</th><td>Reserved</td></tr>
-  <tr><th>QR Verification Target</th><td>/execution/sessions/{{ context.session.execution_id }}/certificate</td></tr>
-  <tr><th>Verification Sheet</th><td>Pending Verification Report</td></tr>
-  <tr><th>External Verification</th><td>Pending Verification Report</td></tr>
-  <tr><th>Package Label</th><td>Pending IEL-4G</td></tr>
-</table>
-
-<p>
-  <strong>Barcode / QR Registry Note:</strong>
-  this panel reserves institutional identifier space for package barcode,
-  QR verification, and future external validation workflows. No barcode or QR
-  image has been generated yet.
-</p>
-
-
-
-
-<div class="alert alert-success" style="margin:20px 0;padding:18px;border:2px solid #2e7d32;">
-<h2 style="margin-top:0;">
-<h2>Institutional Export Package
+<h2>Certified Export Action</h2>
 
 <form method="post" action="/execution/sessions/{{ context.session.execution_id }}/export/generate" style="margin:12px 0 18px 0;">
   <button type="submit" class="btn btn-primary">
     Generate Certified Export Package
   </button>
 </form>
-</h2>
-
-<table class="table table-bordered">
-  <tr><th>Export Package ID</th><td>EXP-{{ context.session.execution_id.replace("EXE-","") }}</td></tr>
-  <tr><th>Export Version</th><td>1.0</td></tr>
-  <tr><th>Evidence Package</th><td>{{ context.evidence_vault.package.package_id }}</td></tr>
-  <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
-  <tr><th>Generated By</th><td>Institutional Operating System</td></tr>
-  <tr><th>Export Status</th><td>READY</td></tr>
-  <tr><th>Integrity</th><td>{% if context.verification.verified %}✓ VERIFIED{% else %}REVIEW REQUIRED{% endif %}</td></tr>
-</table>
-
-<h3>Export Formats</h3>
-<table class="table table-striped table-bordered">
-  <tr><th>Export</th><th>Status</th></tr>
-  <tr><td>Certified PDF Binder</td><td>Ready</td></tr>
-  <tr><td>ZIP Evidence Package</td><td>Ready</td></tr>
-  <tr><td>JSON Metadata</td><td>Ready</td></tr>
-  <tr><td>Ledger CSV</td><td>Ready</td></tr>
-  <tr><td>Verification Report</td><td>Ready</td></tr>
-  <tr><td>Evidence Manifest</td><td>Ready</td></tr>
-  <tr><td>Certificate</td><td>Ready</td></tr>
-  <tr><td>Executed Instrument Registry</td><td>Ready</td></tr>
-</table>
-
-<h3>Export Package Contents</h3>
-<table class="table table-bordered">
-  <tr><th>Cover Sheet</th><td>✓ Included</td></tr>
-  <tr><th>Certificate</th><td>✓ Included</td></tr>
-  <tr><th>Evidence Binder</th><td>✓ Included</td></tr>
-  <tr><th>Manifest</th><td>✓ Included</td></tr>
-  <tr><th>Verification Report</th><td>✓ Included</td></tr>
-  <tr><th>Custody Timeline</th><td>✓ Included</td></tr>
-  <tr><th>Vault Registration</th><td>✓ Included</td></tr>
-  <tr><th>Ledger Replay</th><td>✓ Included</td></tr>
-  <tr><th>Signature Records</th><td>✓ Included</td></tr>
-  <tr><th>Witness / Notary Records</th><td>✓ Included</td></tr>
-  <tr><th>Seal Records</th><td>✓ Included</td></tr>
-  <tr><th>Archive Freeze</th><td>✓ Included</td></tr>
-</table>
-
-<h3>Export Integrity</h3>
-<table class="table table-bordered">
-  <tr><th>Package Hash</th><td><code>{{ context.session.final_hash }}</code></td></tr>
-  <tr><th>Verification</th><td>{% if context.verification.verified %}✓ PASS{% else %}FAIL{% endif %}</td></tr>
-  <tr><th>Archive Status</th><td>{{ context.session.archive_freeze_status|title }}</td></tr>
-  <tr><th>Evidence Status</th><td>Complete</td></tr>
-  <tr><th>Certification</th><td>Institutionally Export Ready</td></tr>
-</table>
 
 <p>
-  <strong>Institutional Export Certification:</strong>
-  This execution package satisfies the Institutional Export Standard.
-  All required execution records, verification records, custody records,
-  ledger records, archive records, and provenance records are present.
-  The package is certified for institutional export.
+  <strong>Dossier Dashboard Note:</strong>
+  this page is now the master institutional index for the execution package.
+  Detailed evidence, verification, custody, vault, export, and ledger records are maintained in dedicated printable documents.
 </p>
 
+<h2>Execution Completion Status</h2>
 
-
-✓ EXECUTION COMPLETE</h2>
-
-<p>This execution package has successfully completed:</p>
-
-<ul>
-<li>✓ Ceremony</li>
-<li>✓ Ledger Recording</li>
-<li>✓ Evidence Manifest</li>
-<li>✓ Chain of Custody</li>
-<li>✓ Archive Freeze</li>
-<li>✓ Evidence Vault Registration</li>
-</ul>
-
-<p><strong>Further modifications require creation of a new execution session.</strong></p>
-
+<div class="alert alert-success" style="margin:20px 0;padding:18px;border:2px solid #2e7d32;">
+  <h3 style="margin-top:0;">✓ EXECUTION COMPLETE</h3>
+  <p>This execution package has successfully completed ceremony, ledger recording, evidence registration, verification, custody continuity, archive freeze, vault registration, and export readiness.</p>
+  <p><strong>Further modifications require creation of a new execution session.</strong></p>
 </div>
+
 
 
 Guided Ceremony Actions</h2>
