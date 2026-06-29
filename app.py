@@ -10964,6 +10964,15 @@ def institutional_execution_session_new():
 
 
 @app.route("/execution/sessions/<execution_id>")
+@app.route("/execution/sessions/<execution_id>/certificate")
+@login_required
+def institutional_execution_certificate_preview(execution_id):
+    context = get_execution_session(execution_id)
+    if not context or not context.get("session"):
+        abort(404)
+    return render_template("execution_certificate_print.html", context=context, execution_id=execution_id)
+
+
 def institutional_execution_session_detail(execution_id):
     if not session.get("user_id") and not session.get("username"):
         return redirect(url_for("login"))

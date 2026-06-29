@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Certified Execution Certificate {{ execution_id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}">
+  <style>
+    @media print {
+      .no-print { display: none; }
+      body { margin: 0.5in; }
+    }
+    .certificate-box { max-width: 900px; margin: 24px auto; padding: 32px; border: 2px solid #222; }
+    .certificate-title { text-align: center; text-transform: uppercase; letter-spacing: 0.08em; }
+    .hash { word-break: break-all; font-family: monospace; }
+  </style>
+</head>
+<body>
+<div class="no-print">
+  <p><a href="/execution/sessions/{{ execution_id }}">← Back to Execution Session</a> | <button onclick="window.print()">Print / Save as PDF</button></p>
+</div>
+
+{% set ceremony_finalized = (context.session.ceremony_status == 'finalized') %}
+{% set archive_frozen = ((context.session.archive_freeze_status or context.session.archive_status or context.session.freeze_status) == 'frozen') %}
+{% set integrity_complete = ceremony_finalized and archive_frozen and context.signatures|length > 0 and context.seals|length > 0 and context.freezes|length > 0 and context.ledger|length > 0 %}
+
+<section class="certificate-box">
+  <h1 class="certificate-title">Certified Execution Certificate</h1>
+  <p style="text-align:center;"><strong>Institutional Operating System</strong><br>Execution Certification Layer</p>
+  <hr>
+  <table>
+    <tr><th>Certificate No.</th><td>CERT-{{ context.session.execution_id }}</td></tr>
+    <tr><th>Execution Session</th><td>{{ context.session.execution_id }}</td></tr>
+    <tr><th>Object</th><td>{{ context.session.object_type|title }} : {{ context.session.object_id }}</td></tr>
+    <tr><th>Document</th><td>{{ context.session.document_title or context.session.document_type }}</td></tr>
+    <tr><th>Ceremony Status</th><td>{% if ceremony_finalized %}✓ Ceremony Finalized{% else %}Incomplete{% endif %}</td></tr>
+    <tr><th>Archive Status</th><td>{% if archive_frozen %}✓ Institutional Archive Frozen{% else %}Open{% endif %}</td></tr>
+    <tr><th>Execution Integrity</th><td>{% if integrity_complete %}✓ Integrity Complete{% else %}Incomplete{% endif %}</td></tr>
+    <tr><th>Trustee Signatures</th><td>{{ context.signatures|length }}</td></tr>
+    <tr><th>Witness / Notary Records</th><td>{{ context.participants|length }}</td></tr>
+    <tr><th>Institutional Seals</th><td>{{ context.seals|length }}</td></tr>
+    <tr><th>Ledger Events</th><td>{{ context.ledger|length }}</td></tr>
+    <tr><th>Archive Freeze Events</th><td>{{ context.freezes|length }}</td></tr>
+    <tr><th>Generated</th><td>{{ context.session.updated_at or context.session.created_at }}</td></tr>
+    <tr><th>Institution</th><td>{{ context.session.firm_id or "FIRM-002" }}</td></tr>
+  </table>
+
+  <h2>Final Provenance Hash</h2>
+  <p class="hash">{{ context.session.final_hash or "" }}</p>
+
+  <h2>Certification</h2>
+  <p>This certificate is generated directly from the Institutional Execution Ledger. The execution session reached finalized status, the archive was frozen, and all execution artifacts summarized here are institutionally linked to Execution Session {{ context.session.execution_id }}.</p>
+  <p>This certificate is informational and reflects the institutional execution record at the time rendered.</p>
+</section>
+</body>
+</html>
