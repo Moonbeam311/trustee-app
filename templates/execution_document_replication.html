@@ -24,7 +24,7 @@
   <th>Operator</th>
   <th>Registered At</th>
 </tr>
-{% for r in context.archive_topology.replication.items %}
+{% for r in context.archive_topology.replication['items'] %}
 <tr>
   <td>{{ r.replication_id }}</td>
   <td>{{ r.source_repository_name }} ({{ r.source_repository_id }})</td>
