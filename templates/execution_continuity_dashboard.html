@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Institutional Continuity Readiness</h1>
+
+<p>
+Execution Session:
+<strong>{{ dashboard.execution_id }}</strong>
+</p>
+
+<div class="card">
+    <h2>Overall Continuity Status</h2>
+    <h1>{{ dashboard.overall_status }}</h1>
+    <h2>{{ dashboard.continuity_score }}%</h2>
+</div>
+
+
+<h2>Continuity Certification</h2>
+
+{% if dashboard.latest_certificate %}
+<table class="table">
+<tr><td>Certification ID</td><td><a href="/continuity/certificates/{{ dashboard.latest_certificate.certification_id }}">{{ dashboard.latest_certificate.certification_id }}</a></td></tr>
+<tr><td>Status</td><td>{{ dashboard.latest_certificate.certification_status }}</td></tr>
+<tr><td>Score</td><td>{{ dashboard.latest_certificate.continuity_score }}%</td></tr>
+<tr><td>Version</td><td>{{ dashboard.latest_certificate.certificate_version }}</td></tr>
+<tr><td>Certified By</td><td>{{ dashboard.latest_certificate.certified_by }}</td></tr>
+<tr><td>Certified At</td><td>{{ dashboard.latest_certificate.certified_at }}</td></tr>
+<tr><td>Verification</td><td>{{ dashboard.latest_certificate_verification.verification_status or "—" }}</td></tr>
+</table>
+{% else %}
+<p>No continuity certificate has been issued for this execution session.</p>
+
+<p>
+<a class="btn btn-primary" href="/execution/sessions/{{ dashboard.execution_id }}/continuity/certify">
+Generate Continuity Certificate
+</a>
+</p>
+{% endif %}
+
+<h2>Readiness Matrix</h2>
+
+<table class="table">
+<tr>
+    <th>Capability</th>
+    <th>Status</th>
+</tr>
+<tr>
+    <td>Archive Topology</td>
+    <td>{% if dashboard.topology_ready %}PASS{% else %}FAIL{% endif %}</td>
+</tr>
+<tr>
+    <td>Recovery Registry</td>
+    <td>{% if dashboard.recovery_ready %}PASS{% else %}FAIL{% endif %}</td>
+</tr>
+<tr>
+    <td>Replication Ledger</td>
+    <td>{% if dashboard.replication_ready %}PASS{% else %}FAIL{% endif %}</td>
+</tr>
+<tr>
+    <td>Integrity Revalidation</td>
+    <td>{% if dashboard.revalidation_ready %}PASS{% else %}FAIL{% endif %}</td>
+</tr>
+</table>
+
+<h2>Archive Topology</h2>
+
+<table class="table">
+<tr>
+    <th>Repository</th>
+    <th>Role</th>
+    <th>Status</th>
+    <th>Integrity</th>
+    <th>Continuity</th>
+</tr>
+
+{% for repo in dashboard.repositories %}
+<tr>
+    <td>{{ repo.repository_name }}</td>
+    <td>{{ repo.topology_role }}</td>
+    <td>{{ repo.current_status }}</td>
+    <td>{{ repo.integrity_status }}</td>
+    <td>{{ repo.continuity_status }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Recovery Registry</h2>
+
+<table class="table">
+<tr><td>Recovery ID</td><td>{{ dashboard.recovery_registry.recovery_id or "—" }}</td></tr>
+<tr><td>Status</td><td>{{ dashboard.recovery_summary.recovery_status or "—" }}</td></tr>
+<tr><td>Recovery Copy ID</td><td>{{ dashboard.recovery_summary.recovery_copy_id or "—" }}</td></tr>
+<tr><td>RPO</td><td>{{ dashboard.recovery_summary.recovery_point_objective or "—" }}</td></tr>
+<tr><td>RTO</td><td>{{ dashboard.recovery_summary.recovery_time_objective or "—" }}</td></tr>
+<tr><td>Risk Level</td><td>{{ dashboard.recovery_summary.continuity_risk_level or "—" }}</td></tr>
+</table>
+
+<h2>Replication Ledger</h2>
+
+<table class="table">
+<tr>
+    <th>Replication ID</th>
+    <th>Source</th>
+    <th>Destination</th>
+    <th>Status</th>
+    <th>Result</th>
+</tr>
+
+{% for item in dashboard.replication_items %}
+<tr>
+    <td>{{ item.replication_id }}</td>
+    <td>{{ item.source_repository_name }}</td>
+    <td>{{ item.destination_repository_name }}</td>
+    <td>{{ item.replication_status }}</td>
+    <td>{{ item.replication_result }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<h2>Integrity Revalidation</h2>
+
+<table class="table">
+<tr><td>Validation ID</td><td>{{ dashboard.revalidation_latest.validation_id or "—" }}</td></tr>
+<tr><td>Validation Status</td><td>{{ dashboard.revalidation_summary.validation_status or "—" }}</td></tr>
+<tr><td>Latest Result</td><td>{{ dashboard.revalidation_summary.latest_result or "—" }}</td></tr>
+<tr><td>Expected Hash</td><td>{{ dashboard.revalidation_latest.expected_hash or "—" }}</td></tr>
+<tr><td>Observed Hash</td><td>{{ dashboard.revalidation_latest.observed_hash or "—" }}</td></tr>
+<tr><td>Validated At</td><td>{{ dashboard.revalidation_latest.validated_at or "—" }}</td></tr>
+</table>
+
+<h2>Recommendations</h2>
+
+{% if dashboard.continuity_score == 100 %}
+<p>Institution is fully continuity ready.</p>
+{% else %}
+<ul>
+    {% if not dashboard.topology_ready %}<li>Review archive topology readiness.</li>{% endif %}
+    {% if not dashboard.recovery_ready %}<li>Review disaster recovery registry.</li>{% endif %}
+    {% if not dashboard.replication_ready %}<li>Review archive replication ledger.</li>{% endif %}
+    {% if not dashboard.revalidation_ready %}<li>Review integrity revalidation result.</li>{% endif %}
+</ul>
+{% endif %}
+
+<p>
+<a href="/execution/sessions/{{ dashboard.execution_id }}">Back to Execution Session</a>
+</p>
+
+{% endblock %}

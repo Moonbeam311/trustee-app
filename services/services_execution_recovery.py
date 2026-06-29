@@ -577,3 +577,90 @@ def get_or_create_integrity_revalidation(execution_id, expected_hash="", observe
             "observed_hash": observed_hash,
         }
     }
+
+
+def build_continuity_dashboard_profile(execution_id):
+    """
+    ICP-2:
+    Normalizes archive topology, disaster recovery, replication,
+    and revalidation into one dashboard-ready profile.
+    """
+    profile = get_archive_topology(execution_id)
+
+    summary = profile.get("summary") or {}
+    disaster = profile.get("disaster_recovery") or {}
+    recovery_registry = disaster.get("registry") or {}
+    recovery_summary = disaster.get("summary") or {}
+
+    replication = profile.get("replication") or {}
+    replication_items = replication.get("items") or []
+    replication_summary = replication.get("summary") or {}
+
+    revalidation = profile.get("revalidation") or {}
+    revalidation_items = revalidation.get("items") or []
+    revalidation_latest = revalidation.get("latest") or {}
+    revalidation_summary = revalidation.get("summary") or {}
+
+    topology_ready = (summary.get("continuity_status") or "").lower() in ["ready", "operational", "validated"]
+    recovery_ready = bool(recovery_summary.get("recovery_ready")) or (recovery_registry.get("recovery_status") or "").lower() in ["registered", "ready", "validated"]
+    replication_ready = (replication_summary.get("replication_readiness") or "").lower() in ["ready", "validated", "operational"]
+    revalidation_ready = (revalidation_summary.get("validation_status") or "").lower() in ["validated", "ready"] or (revalidation_summary.get("latest_result") or "").lower() == "pass"
+
+    checks = [topology_ready, recovery_ready, replication_ready, revalidation_ready]
+    continuity_score = int((sum(checks) / len(checks)) * 100)
+
+    if continuity_score == 100:
+        overall_status = "Institution Certified"
+    elif continuity_score >= 95:
+        overall_status = "Operational"
+    elif continuity_score >= 80:
+        overall_status = "Developing"
+    elif continuity_score >= 60:
+        overall_status = "Needs Attention"
+    else:
+        overall_status = "At Risk"
+
+    try:
+        from services.services_certifications import list_institutional_certifications, verify_institutional_certification
+        continuity_certificates = list_institutional_certifications(
+            certificate_type="Continuity",
+            execution_id=execution_id
+        )
+        latest_certificate = continuity_certificates[0] if continuity_certificates else {}
+        latest_certificate_verification = (
+            verify_institutional_certification(latest_certificate.get("certification_id"))
+            if latest_certificate else {}
+        )
+    except Exception:
+        continuity_certificates = []
+        latest_certificate = {}
+        latest_certificate_verification = {}
+
+    return {
+        "execution_id": execution_id,
+        "continuity_score": continuity_score,
+        "overall_status": overall_status,
+
+        "continuity_certificates": continuity_certificates,
+        "latest_certificate": latest_certificate,
+        "latest_certificate_verification": latest_certificate_verification,
+
+        "topology_ready": topology_ready,
+        "recovery_ready": recovery_ready,
+        "replication_ready": replication_ready,
+        "revalidation_ready": revalidation_ready,
+
+        "repositories": profile.get("repositories") or [],
+        "topology_summary": summary,
+
+        "recovery_registry": recovery_registry,
+        "recovery_summary": recovery_summary,
+
+        "replication_items": replication_items,
+        "replication_summary": replication_summary,
+
+        "revalidation_items": revalidation_items,
+        "revalidation_latest": revalidation_latest,
+        "revalidation_summary": revalidation_summary,
+    }
+

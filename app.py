@@ -1,13 +1,22 @@
+from datetime import datetime
+from io import BytesIO
+from flask import send_file
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+import zipfile
+from services.services_certifications import get_institutional_certification, verify_institutional_certification
 from services.services_execution_exports import generate_execution_export_package
 from services.services_intake import build_instrument_workflow_bridge_context, is_trust_instrument_workflow
 from services.services_intake import build_instrument_draft_packet
 import json
-import zipfile
 import os
 import base64
 import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
+from services.services_execution_recovery import get_archive_topology, build_continuity_dashboard_profile
 from services.services_object_dashboard import build_object_dashboard_context
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
@@ -280,11 +289,8 @@ from werkzeug.utils import secure_filename
 from pdf_utils import build_pdf_response, trust_summary_story, k1_readiness_story, fiduciary_report_story, ledger_report_story, form1041_report_story, instrument_detail_story, portfolio_report_story, audit_log_report_story
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import UTC, date, datetime, timedelta
-from io import BytesIO
 
 from reportlab.lib.pagesizes import LETTER
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 try:
     from PIL import Image as PILImage
@@ -1947,8 +1953,7 @@ def generate_transfer_certificate_pdf(transfer, trust=None, asset=None):
     - Does not create routes.
     - Designed for completed transfers only, with graceful fallback display.
     """
-    from io import BytesIO
-
+    
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -3527,8 +3532,7 @@ def get_filtered_continuity_asset_rows():
 
 def generate_continuity_asset_dashboard_pdf(assets, total_asset_count, filters=None):
 
-    from io import BytesIO
-
+    
     filters = filters or {}
 
     buffer = BytesIO()
@@ -3777,8 +3781,7 @@ def continuity_asset_dashboard():
 
 def generate_continuity_asset_pdf(prop, trust=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
 
@@ -3957,8 +3960,7 @@ def property_continuity_profile_pdf(property_id):
 
 def generate_custody_log_pdf(prop, trust=None, custody_events=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     custody_events = custody_events or []
@@ -4171,8 +4173,7 @@ def property_custody_log_pdf(property_id):
 
 def generate_evidence_custody_timeline_pdf(prop, trust=None, timeline_profile=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     timeline_profile = timeline_profile or build_property_evidence_custody_timeline(prop_data.get("property_id"))
@@ -4432,8 +4433,7 @@ def property_evidence_custody_timeline_pdf(property_id):
 
 def generate_resolution_queue_pdf(prop, trust=None, queue_profile=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     queue_profile = queue_profile or build_property_resolution_queue(prop_data.get("property_id"))
@@ -4613,8 +4613,7 @@ def property_resolution_queue_pdf(property_id):
 # ===================================================
 
 def generate_ac1_completion_report_pdf(prop, trust=None):
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
 
@@ -4836,8 +4835,7 @@ def generate_ac1_completion_report_pdf(prop, trust=None):
 
 def generate_archive_packet_manifest_pdf(prop, trust=None, archive_packet=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     archive_packet = archive_packet or build_asset_continuity_archive_packet(prop_data.get("property_id"))
@@ -5022,10 +5020,7 @@ def generate_archive_packet_manifest_pdf(prop, trust=None, archive_packet=None):
 
 def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
 
-    from io import BytesIO
     import json
-    import zipfile
-    from pathlib import Path
 
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
@@ -5216,8 +5211,7 @@ def generate_archive_packet_zip(prop, trust=None, archive_packet=None):
 # ===================================================
 
 def build_archive_integrity_from_generated_zip(prop_data, linked_trust=None, archive_packet=None):
-    import zipfile
-
+    
     property_id = prop_data.get("property_id")
     archive_packet = archive_packet or build_asset_continuity_archive_packet(property_id)
 
@@ -5240,8 +5234,7 @@ def build_archive_integrity_from_generated_zip(prop_data, linked_trust=None, arc
 
 def generate_archive_integrity_report_pdf(prop, trust=None, archive_packet=None, integrity_profile=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     property_id = prop_data.get("property_id")
@@ -5377,8 +5370,7 @@ def generate_archive_integrity_report_pdf(prop, trust=None, archive_packet=None,
 
 def generate_archive_finalization_certificate_pdf(prop, trust=None, archive_packet=None, integrity_profile=None, latest_finalization=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     property_id = prop_data.get("property_id")
@@ -5559,8 +5551,7 @@ def generate_archive_finalization_certificate_pdf(prop, trust=None, archive_pack
 
 def generate_archive_finalization_history_pdf(prop, trust=None, finalizations=None, archive_packet=None, integrity_profile=None):
 
-    from io import BytesIO
-
+    
     prop_data = dict(prop)
     trust_data = dict(trust) if trust else {}
     property_id = prop_data.get("property_id")
@@ -7076,8 +7067,7 @@ def export_zip_snapshot():
     gate = require_export_permission("export_documents", "zip_snapshot")
     if gate:
         return gate
-    from flask import send_file
-    return send_file("Trustee_App_Export_Package.zip", as_attachment=True)
+        return send_file("Trustee_App_Export_Package.zip", as_attachment=True)
 
 
 @app.route("/exports/k1/<trust_id>.csv")
@@ -7337,10 +7327,7 @@ def system_health_export_zip():
     if gate:
         return gate
 
-    import zipfile
-    from io import BytesIO
-    from flask import send_file
-
+            
     health = build_system_health_report()
     integrity = verify_audit_log_chain()
     policy = get_export_policy()
@@ -9532,8 +9519,7 @@ def media_file(media_id):
     if not stored_path.exists() or not stored_path.is_file():
         return "Media file missing", 404
 
-    from flask import send_file
-    return send_file(stored_path)
+        return send_file(stored_path)
 
 
 
@@ -13539,8 +13525,6 @@ def transfer_archive_handoff_export_package(transfer_id):
     import hashlib
     import io
     import sqlite3
-    import zipfile
-    from datetime import datetime
     from flask import Response
     from database.db import (
         get_connection,
@@ -15509,8 +15493,7 @@ def trust_dynamic_declaration(trust_id):
 
 def generate_dynamic_declaration_pdf(dynamic_document):
 
-    from io import BytesIO
-
+    
     buffer = BytesIO()
 
     doc = SimpleDocTemplate(
@@ -17479,8 +17462,7 @@ It remains a controlled draft unless separately approved for execution.
 
         try:
             from reportlab.pdfgen import canvas
-            from reportlab.lib.pagesizes import letter
-
+            
             c = canvas.Canvas(str(pdf_file_path), pagesize=letter)
             width, height = letter
             y = height - 72
@@ -20259,6 +20241,266 @@ def new_matter_event(matter_id):
 # ---- END IC-1 Institutional Matter / Case Engine ----
 
 
+
+
+
+@app.route("/execution/sessions/<execution_id>/continuity")
+def execution_continuity_dashboard(execution_id):
+    dashboard = build_continuity_dashboard_profile(execution_id)
+
+    return render_template(
+        "execution_continuity_dashboard.html",
+        dashboard=dashboard,
+        execution_id=execution_id,
+    )
+
+
+
+@app.route("/continuity/certificates/<certification_id>")
+def continuity_certificate_detail(certification_id):
+    certificate = get_institutional_certification(certification_id)
+
+    if not certificate:
+        return "Continuity certificate not found.", 404
+
+    verification = verify_institutional_certification(certification_id)
+
+    return render_template(
+        "continuity_certificate_detail.html",
+        certificate=certificate,
+        verification=verification,
+    )
+
+
+
+@app.route("/continuity/certificates/<certification_id>/pdf")
+def continuity_certificate_pdf(certification_id):
+    certificate = get_institutional_certification(certification_id)
+
+    if not certificate:
+        return "Continuity certificate not found.", 404
+
+    verification = verify_institutional_certification(certification_id)
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        "ContinuityCertificateTitle",
+        parent=styles["Title"],
+        fontSize=20,
+        leading=24,
+        alignment=1,
+        spaceAfter=18,
+    )
+
+    section_style = ParagraphStyle(
+        "ContinuityCertificateSection",
+        parent=styles["Heading2"],
+        fontSize=12,
+        leading=15,
+        spaceBefore=12,
+        spaceAfter=8,
+    )
+
+    body_style = ParagraphStyle(
+        "ContinuityCertificateBody",
+        parent=styles["BodyText"],
+        fontSize=9,
+        leading=12,
+    )
+
+    small_style = ParagraphStyle(
+        "ContinuityCertificateSmall",
+        parent=styles["BodyText"],
+        fontSize=7,
+        leading=9,
+    )
+
+    story = []
+
+    story.append(Paragraph("INSTITUTIONAL CONTINUITY CERTIFICATE", title_style))
+    story.append(Paragraph("Institutional Operating System", body_style))
+    story.append(Spacer(1, 12))
+
+    verification_text = "VERIFIED" if verification.get("verified") else "REVIEW REQUIRED"
+
+    summary_data = [
+        ["Certification ID", certificate.get("certification_id")],
+        ["Certificate Type", certificate.get("certificate_type")],
+        ["Execution Session", certificate.get("execution_id")],
+        ["Certification Status", certificate.get("certification_status")],
+        ["Continuity Score", f"{certificate.get('continuity_score')}%"],
+        ["Verification Status", verification_text],
+        ["Certificate Version", certificate.get("certificate_version")],
+        ["Certified By", certificate.get("certified_by")],
+        ["Certified At", certificate.get("certified_at")],
+    ]
+
+    summary_table = Table(summary_data, colWidths=[150, 330])
+    summary_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("LEADING", (0, 0), (-1, -1), 10),
+    ]))
+
+    story.append(summary_table)
+
+    story.append(Paragraph("Validation Record", section_style))
+
+    validation_data = [
+        ["Validation ID", certificate.get("validation_id") or "-"],
+        ["Expected Hash", certificate.get("expected_hash") or "-"],
+        ["Observed Hash", certificate.get("observed_hash") or "-"],
+    ]
+
+    validation_table = Table(validation_data, colWidths=[150, 330])
+    validation_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("LEADING", (0, 0), (-1, -1), 9),
+    ]))
+
+    story.append(validation_table)
+
+    story.append(Paragraph("Tamper-Evident Certification Hashes", section_style))
+
+    hash_data = [
+        ["Dashboard Hash", certificate.get("dashboard_hash") or "-"],
+        ["Certificate Hash", certificate.get("certificate_hash") or "-"],
+        ["Stored Hash", verification.get("stored_hash") or "-"],
+        ["Recalculated Hash", verification.get("recalculated_hash") or "-"],
+    ]
+
+    hash_table = Table(hash_data, colWidths=[150, 330])
+    hash_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("BACKGROUND", (0, 0), (0, -1), colors.whitesmoke),
+        ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("FONTSIZE", (0, 0), (-1, -1), 7),
+        ("LEADING", (0, 0), (-1, -1), 9),
+    ]))
+
+    story.append(hash_table)
+
+    story.append(Paragraph("Certification Statement", section_style))
+
+    statement = (
+        "This certificate records that the Institutional Operating System generated an "
+        "immutable continuity certification from the normalized continuity dashboard profile. "
+        "The certification references the archive topology, recovery registry, replication ledger, "
+        "and integrity revalidation state existing at the time of certification. This record is "
+        "append-only and should not be edited; later continuity states require a new certificate."
+    )
+
+    story.append(Paragraph(statement, body_style))
+    story.append(Spacer(1, 18))
+
+    seal_data = [
+        ["Institutional Seal", "QR / Verification Placeholder", "Authorized Signature"],
+        ["[ SEAL ]", "[ QR ]", "______________________________"],
+    ]
+
+    seal_table = Table(seal_data, colWidths=[160, 160, 160])
+    seal_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.whitesmoke),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 1), (-1, 1), 24),
+        ("TOPPADDING", (0, 1), (-1, 1), 24),
+    ]))
+
+    story.append(seal_table)
+    story.append(Spacer(1, 12))
+
+    story.append(Paragraph(
+        f"Certificate ID: {certificate.get('certification_id')} | Verification: {verification_text}",
+        small_style
+    ))
+
+    doc.build(story)
+
+    buffer.seek(0)
+
+    filename = f"Institutional_Continuity_Certificate_{certification_id}.pdf"
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=filename,
+        mimetype="application/pdf",
+    )
+
+
+@app.route("/continuity/certificates/verify", methods=["GET", "POST"])
+def continuity_certificate_verify():
+    certification_id = ""
+
+    if request.method == "POST":
+        certification_id = (request.form.get("certification_id") or "").strip()
+    else:
+        certification_id = (request.args.get("certification_id") or "").strip()
+
+    certificate = None
+    verification = None
+
+    if certification_id:
+        certificate = get_institutional_certification(certification_id)
+        verification = verify_institutional_certification(certification_id)
+
+    return render_template(
+        "continuity_certificate_verify.html",
+        certification_id=certification_id,
+        certificate=certificate,
+        verification=verification,
+    )
+
+
+@app.route("/continuity/certificates/<certification_id>/verify")
+def continuity_certificate_verify_direct(certification_id):
+    certificate = get_institutional_certification(certification_id)
+
+    if not certificate:
+        return render_template(
+            "continuity_certificate_verify.html",
+            certification_id=certification_id,
+            certificate=None,
+            verification={
+                "verified": False,
+                "verification_status": "missing",
+                "message": "Certification record not found.",
+            },
+        ), 404
+
+    verification = verify_institutional_certification(certification_id)
+
+    return render_template(
+        "continuity_certificate_verify.html",
+        certification_id=certification_id,
+        certificate=certificate,
+        verification=verification,
+    )
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
@@ -20297,4 +20539,7 @@ def admin_diag_seed_execution_objects():
         "trust": list_execution_objects_for_linked_object("trust", "TR-022"),
         "matter": list_execution_objects_for_linked_object("matter", "MAT-000001"),
     }
+
+
+
 

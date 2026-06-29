@@ -5121,3 +5121,43 @@ def ensure_execution_object_model_tables():
 
     conn.commit()
     conn.close()
+
+
+def ensure_institutional_certifications_table():
+    """
+    ICP-3A:
+    General institutional certification table.
+    Continuity is the first certificate_type.
+    Records are immutable. New states require new certificates.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS institutional_certifications (
+            certification_id TEXT PRIMARY KEY,
+            certificate_type TEXT NOT NULL,
+            execution_id TEXT,
+            source_record_id TEXT,
+            continuity_score INTEGER,
+            certification_status TEXT,
+            validation_id TEXT,
+            expected_hash TEXT,
+            observed_hash TEXT,
+            dashboard_hash TEXT,
+            certificate_hash TEXT,
+            certificate_version TEXT DEFAULT '1.0',
+            certified_by TEXT,
+            certified_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            verification_status TEXT DEFAULT 'verified',
+            supersedes_certification_id TEXT,
+            superseded_by_certification_id TEXT,
+            revocation_status TEXT DEFAULT 'active',
+            revocation_reason TEXT,
+            notes TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+

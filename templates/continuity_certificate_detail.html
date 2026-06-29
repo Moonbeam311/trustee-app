@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Institutional Continuity Certificate</h1>
+
+{% if verification.verified %}
+<div class="card">
+    <h2>Verification Status: VERIFIED</h2>
+    <p>This certificate hash was recalculated and matches the stored certificate hash.</p>
+</div>
+{% else %}
+<div class="card">
+    <h2>Verification Status: REVIEW REQUIRED</h2>
+    <p>The certificate could not be verified against the stored hash.</p>
+</div>
+{% endif %}
+
+
+<p>
+<a class="btn btn-primary" href="/continuity/certificates/{{ certificate.certification_id }}/pdf">
+Download Certificate PDF
+</a>
+</p>
+
+
+<p>
+<a class="btn btn-secondary" href="/continuity/certificates/{{ certificate.certification_id }}/verify">
+Verify Certificate
+</a>
+</p>
+
+<h2>Certificate Summary</h2>
+
+<table class="table">
+<tr><td>Certification ID</td><td>{{ certificate.certification_id }}</td></tr>
+<tr><td>Certificate Type</td><td>{{ certificate.certificate_type }}</td></tr>
+<tr><td>Execution Session</td><td>{{ certificate.execution_id }}</td></tr>
+<tr><td>Certification Status</td><td>{{ certificate.certification_status }}</td></tr>
+<tr><td>Continuity Score</td><td>{{ certificate.continuity_score }}%</td></tr>
+<tr><td>Certificate Version</td><td>{{ certificate.certificate_version }}</td></tr>
+<tr><td>Certified By</td><td>{{ certificate.certified_by }}</td></tr>
+<tr><td>Certified At</td><td>{{ certificate.certified_at }}</td></tr>
+<tr><td>Revocation Status</td><td>{{ certificate.revocation_status }}</td></tr>
+</table>
+
+<h2>Validation Record</h2>
+
+<table class="table">
+<tr><td>Validation ID</td><td>{{ certificate.validation_id or "—" }}</td></tr>
+<tr><td>Expected Hash</td><td>{{ certificate.expected_hash or "—" }}</td></tr>
+<tr><td>Observed Hash</td><td>{{ certificate.observed_hash or "—" }}</td></tr>
+</table>
+
+<h2>Certification Hashes</h2>
+
+<table class="table">
+<tr><td>Dashboard Hash</td><td>{{ certificate.dashboard_hash or "—" }}</td></tr>
+<tr><td>Certificate Hash</td><td>{{ certificate.certificate_hash or "—" }}</td></tr>
+<tr><td>Stored Hash</td><td>{{ verification.stored_hash or "—" }}</td></tr>
+<tr><td>Recalculated Hash</td><td>{{ verification.recalculated_hash or "—" }}</td></tr>
+<tr><td>Verification Result</td><td>{{ verification.verification_status }}</td></tr>
+</table>
+
+<h2>Notes</h2>
+
+<p>{{ certificate.notes or "No notes recorded." }}</p>
+
+<p>
+<a href="/execution/sessions/{{ certificate.execution_id }}/continuity">Back to Continuity Dashboard</a>
+</p>
+
+{% endblock %}
