@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificates/unified">Unified Registry</a> |
+  <a href="/admin/certificate-api/status">Certificate API</a> |
+  <a href="/admin/certificate-event-bus">Event Bus</a> |
+  <a href="/admin/certificate-policies">Governance Policies</a>
+</p>
+
+<h1>Institutional Certificate Studio</h1>
+
+<p>
+  Unified workspace for institutional certificates, verification, lifecycle governance,
+  evidence packets, relationships, policy controls, event activity, and future certificate issuance.
+</p>
+
+<h2>Studio Health</h2>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>API Status</strong><br>{{ api_status.status }}</div>
+  <div class="stat-card"><strong>Registered Types</strong><br>{{ api_status.registered_types }}</div>
+  <div class="stat-card"><strong>Total Certificates</strong><br>{{ registry.summary.total }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ registry.summary.verified }}</div>
+  <div class="stat-card"><strong>Current</strong><br>{{ registry.summary.current }}</div>
+  <div class="stat-card"><strong>Superseded</strong><br>{{ registry.summary.superseded }}</div>
+  <div class="stat-card"><strong>Event Bus Events</strong><br>{{ event_summary.total }}</div>
+  <div class="stat-card"><strong>Event Warnings</strong><br>{{ event_summary.warnings }}</div>
+  <div class="stat-card"><strong>Event Errors</strong><br>{{ event_summary.errors }}</div>
+</div>
+
+<h2>Studio Actions</h2>
+
+<table class="table">
+  <tr>
+    <th>Action</th>
+    <th>Purpose</th>
+    <th>Open</th>
+  </tr>
+  <tr>
+    <td><strong>Browse Certificates</strong></td>
+    <td>Search and filter certificates through the Universal Certificate Explorer.</td>
+    <td><a href="/certificate-studio/explorer">Open Explorer</a></td>
+  </tr>
+  <tr>
+    <td><strong>Verify Certificate</strong></td>
+    <td>Review API verification status and validation behavior.</td>
+    <td><a href="/admin/certificate-api/status">Open API Status</a></td>
+  </tr>
+  <tr>
+    <td><strong>Governance Policies</strong></td>
+    <td>Review certificate immutability, supersession, revocation, and retention rules.</td>
+    <td><a href="/admin/certificate-policies">Open Policies</a></td>
+  </tr>
+  <tr>
+    <td><strong>Event Stream</strong></td>
+    <td>Review the append-only Certificate Event Bus.</td>
+    <td><a href="/admin/certificate-event-bus">Open Event Bus</a></td>
+  </tr>
+  <tr>
+    <td><strong>Certificate Types</strong></td>
+    <td>Review certificate classes, modules, capabilities, and engines.</td>
+    <td><a href="/admin/certificate-types">Open Framework</a></td>
+  </tr>
+  <tr>
+    <td><strong>Build Certificate</strong></td>
+    <td>Open the Dynamic Certificate Builder shell for adapter-controlled future issuance.</td>
+    <td><a href="/certificate-studio/builder">Open Builder</a></td>
+  </tr>
+  <tr>
+    <td><strong>Relationship Graph</strong></td>
+    <td>Explore certificate links to execution sessions, validation records, institutions, and future objects.</td>
+    <td><a href="/certificate-studio/relationships">Open Graph</a></td>
+  </tr>
+  <tr>
+    <td><strong>Governance Console</strong></td>
+    <td>Review policy enforcement, immutability, supersession, revocation, and retention posture.</td>
+    <td><a href="/certificate-studio/governance">Open Governance</a></td>
+  </tr>
+  <tr>
+    <td><strong>Event Monitor</strong></td>
+    <td>Filter and review certificate event activity across the Event Bus.</td>
+    <td><a href="/certificate-studio/events">Open Monitor</a></td>
+  </tr>
+  <tr>
+    <td><strong>Packet Studio</strong></td>
+    <td>Generate and review certificate evidence packets and packet activity.</td>
+    <td><a href="/certificate-studio/packets">Open Packets</a></td>
+  </tr>
+  <tr>
+    <td><strong>Template Manager</strong></td>
+    <td>Review institutional certificate templates, visual capabilities, and default assignments.</td>
+    <td><a href="/certificate-studio/templates">Open Templates</a></td>
+  </tr>
+  <tr>
+    <td><strong>Institutional Analytics</strong></td>
+    <td>Review certificate metrics, verification posture, event activity, relationships, timelines, and governance distribution.</td>
+    <td><a href="/certificate-studio/analytics">Open Analytics</a></td>
+  </tr>
+</table>
+
+<h2>Certificate Type Counts</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate Type</th>
+    <th>Count</th>
+  </tr>
+  {% for cert_type, count in registry.summary.type_counts.items() %}
+  <tr>
+    <td>{{ cert_type }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Recent Certificates</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Verification</th>
+    <th>Chain</th>
+    <th>Policy</th>
+    <th>Actions</th>
+  </tr>
+  {% for obj in registry.objects[:5] %}
+  <tr>
+    <td><strong>{{ obj.identity.certificate_id }}</strong></td>
+    <td>{{ obj.identity.certificate_type }}</td>
+    <td>{{ obj.status.certification_status }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.status.chain_status }}</td>
+    <td>{{ obj.policy.display_name }}</td>
+    <td>
+      <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">Workspace</a>
+      |
+      <a href="/admin/certificate-object-model/{{ obj.identity.certificate_id }}/pdf">PDF</a>
+      |
+      <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}/packet">Packet</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Recent Event Bus Activity</h2>
+
+<table class="table">
+  <tr>
+    <th>Event ID</th>
+    <th>Certificate</th>
+    <th>Event</th>
+    <th>Status</th>
+    <th>Severity</th>
+    <th>At</th>
+  </tr>
+  {% for e in recent_events %}
+  <tr>
+    <td>{{ e.bus_event_id }}</td>
+    <td>{{ e.certification_id or "—" }}</td>
+    <td>{{ e.event_name }}</td>
+    <td>{{ e.event_status or "—" }}</td>
+    <td>{{ e.severity }}</td>
+    <td>{{ e.created_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

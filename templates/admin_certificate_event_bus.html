@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> | 
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-api/status">Certificate API</a> |
+  <a href="/admin/certificates/unified">Unified Registry</a> |
+  <a href="/admin/certificate-policies">Governance Policies</a>
+</p>
+
+<h1>Certificate Event Bus</h1>
+
+<p>
+  Central append-only event stream for institutional certificate activity.
+  Feeds future Certificate Studio, audit, analytics, reporting, notifications,
+  lifecycle governance, and institutional logs.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Events</strong><br>{{ summary.total }}</div>
+  <div class="stat-card"><strong>Warnings</strong><br>{{ summary.warnings }}</div>
+  <div class="stat-card"><strong>Errors</strong><br>{{ summary.errors }}</div>
+</div>
+
+<h2>Events by Certificate Type</h2>
+
+<table class="table">
+  <tr><th>Certificate Type</th><th>Count</th></tr>
+  {% for row in summary.by_type %}
+  <tr>
+    <td>{{ row.certificate_type }}</td>
+    <td>{{ row.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Events by Name</h2>
+
+<table class="table">
+  <tr><th>Event Name</th><th>Count</th></tr>
+  {% for row in summary.by_event %}
+  <tr>
+    <td>{{ row.event_name }}</td>
+    <td>{{ row.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Event Stream</h2>
+
+<table class="table">
+  <tr>
+    <th>Event ID</th>
+    <th>Certificate</th>
+    <th>Type</th>
+    <th>Category</th>
+    <th>Name</th>
+    <th>Status</th>
+    <th>Summary</th>
+    <th>Actor</th>
+    <th>Authority</th>
+    <th>Engine</th>
+    <th>Severity</th>
+    <th>At</th>
+  </tr>
+
+  {% for e in events %}
+  <tr>
+    <td>{{ e.bus_event_id }}</td>
+    <td>{{ e.certification_id or "—" }}</td>
+    <td>{{ e.certificate_type or "—" }}</td>
+    <td>{{ e.event_category or "—" }}</td>
+    <td>{{ e.event_name }}</td>
+    <td>{{ e.event_status or "—" }}</td>
+    <td>{{ e.event_summary or "—" }}</td>
+    <td>{{ e.actor or "—" }}</td>
+    <td>{{ e.authority or "—" }}</td>
+    <td>{{ e.source_engine or "—" }}</td>
+    <td>{{ e.severity }}</td>
+    <td>{{ e.created_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

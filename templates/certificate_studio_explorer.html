@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Back to Certificate Studio</a> |
+  <a href="/admin/certificates/unified">Unified Registry</a> |
+  <a href="/admin/certificate-api/status">Certificate API</a> |
+  <a href="/admin/certificate-event-bus">Event Bus</a>
+</p>
+
+<h1>Universal Certificate Explorer</h1>
+
+<p>
+  Search and filter all institutional certificates through the shared Certificate API object model.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Certificates</strong><br>{{ registry.summary.total }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ registry.summary.verified }}</div>
+  <div class="stat-card"><strong>Current</strong><br>{{ registry.summary.current }}</div>
+  <div class="stat-card"><strong>Superseded</strong><br>{{ registry.summary.superseded }}</div>
+</div>
+
+<h2>Explorer Filters</h2>
+
+<div class="filter-bar">
+  <input
+    id="certificateExplorerSearch"
+    type="text"
+    placeholder="Search certificate ID, type, module, status, policy, authority, engine..."
+    oninput="filterCertificateExplorer()"
+  >
+
+  <select id="certificateExplorerType" onchange="filterCertificateExplorer()">
+    <option value="">All Types</option>
+    {% for value in certificate_types %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="certificateExplorerModule" onchange="filterCertificateExplorer()">
+    <option value="">All Modules</option>
+    {% for value in modules %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="certificateExplorerVerification" onchange="filterCertificateExplorer()">
+    <option value="">All Verification</option>
+    {% for value in verification_statuses %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="certificateExplorerChain" onchange="filterCertificateExplorer()">
+    <option value="">All Chain Statuses</option>
+    {% for value in chain_statuses %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="certificateExplorerPolicy" onchange="filterCertificateExplorer()">
+    <option value="">All Policies</option>
+    {% for value in policies %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <span class="filter-count">
+    Showing <span id="certificateExplorerVisibleCount">{{ registry.objects | length }}</span>
+    of {{ registry.objects | length }}
+  </span>
+
+  <button class="button" type="button" onclick="clearCertificateExplorerFilters()">Clear</button>
+</div>
+
+<h2>Certificates</h2>
+
+<table class="table" id="certificateExplorerTable">
+  <thead>
+    <tr>
+      <th>Certificate ID</th>
+      <th>Type</th>
+      <th>Module</th>
+      <th>Status</th>
+      <th>Verification</th>
+      <th>Lifecycle</th>
+      <th>Chain</th>
+      <th>Policy</th>
+      <th>Relationships</th>
+      <th>Timeline Events</th>
+      <th>Authority</th>
+      <th>Engine</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for obj in registry.objects %}
+    <tr
+      class="certificate-explorer-row"
+      data-type="{{ obj.identity.certificate_type }}"
+      data-module="{{ obj.identity.module_name }}"
+      data-verification="{{ obj.status.verification_status }}"
+      data-chain="{{ obj.status.chain_status }}"
+      data-policy="{{ obj.policy.display_name }}"
+      data-search="{{ obj.identity.certificate_id }} {{ obj.identity.certificate_type }} {{ obj.identity.display_name }} {{ obj.identity.module_name }} {{ obj.status.certification_status }} {{ obj.status.verification_status }} {{ obj.status.lifecycle_status }} {{ obj.status.chain_status }} {{ obj.policy.display_name }} {{ obj.governance.issuance_authority }} {{ obj.governance.generation_engine }} {{ obj.governance.issuance_reason }}"
+    >
+      <td><strong>{{ obj.identity.certificate_id }}</strong></td>
+      <td>{{ obj.identity.certificate_type }}</td>
+      <td>{{ obj.identity.module_name }}</td>
+      <td>{{ obj.status.certification_status }}</td>
+      <td>{{ obj.status.verification_status }}</td>
+      <td>{{ obj.status.lifecycle_status }}</td>
+      <td>{{ obj.status.chain_status }}</td>
+      <td>{{ obj.policy.display_name }}</td>
+      <td>{{ obj.relationships.count }}</td>
+      <td>{{ obj.timeline.event_count }}</td>
+      <td>{{ obj.governance.issuance_authority or "—" }}</td>
+      <td>{{ obj.governance.generation_engine or "—" }}</td>
+      <td>
+        <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">Workspace</a>
+        |
+        <a href="/admin/certificate-object-model/{{ obj.identity.certificate_id }}/pdf">PDF</a>
+        |
+        <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}/packet">Packet</a>
+        |
+        <a href="/api/certificates/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">JSON</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function certificateExplorerValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim().toLowerCase() : "";
+}
+
+function filterCertificateExplorer() {
+  const q = certificateExplorerValue("certificateExplorerSearch");
+  const type = certificateExplorerValue("certificateExplorerType");
+  const module = certificateExplorerValue("certificateExplorerModule");
+  const verification = certificateExplorerValue("certificateExplorerVerification");
+  const chain = certificateExplorerValue("certificateExplorerChain");
+  const policy = certificateExplorerValue("certificateExplorerPolicy");
+
+  let visible = 0;
+
+  document.querySelectorAll(".certificate-explorer-row").forEach(function(row) {
+    const rowSearch = (row.dataset.search || "").toLowerCase();
+    const rowType = (row.dataset.type || "").toLowerCase();
+    const rowModule = (row.dataset.module || "").toLowerCase();
+    const rowVerification = (row.dataset.verification || "").toLowerCase();
+    const rowChain = (row.dataset.chain || "").toLowerCase();
+    const rowPolicy = (row.dataset.policy || "").toLowerCase();
+
+    const matches =
+      (!q || rowSearch.includes(q)) &&
+      (!type || rowType === type) &&
+      (!module || rowModule === module) &&
+      (!verification || rowVerification === verification) &&
+      (!chain || rowChain === chain) &&
+      (!policy || rowPolicy === policy);
+
+    row.style.display = matches ? "" : "none";
+
+    if (matches) {
+      visible += 1;
+    }
+  });
+
+  const count = document.getElementById("certificateExplorerVisibleCount");
+  if (count) {
+    count.innerText = visible;
+  }
+}
+
+function clearCertificateExplorerFilters() {
+  [
+    "certificateExplorerSearch",
+    "certificateExplorerType",
+    "certificateExplorerModule",
+    "certificateExplorerVerification",
+    "certificateExplorerChain",
+    "certificateExplorerPolicy"
+  ].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = "";
+    }
+  });
+
+  filterCertificateExplorer();
+}
+</script>
+
+{% endblock %}

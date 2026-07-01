@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> | 
+  <a href="/admin">Back to Admin</a> |
+  <a href="/certificates">Certificate Registry</a>
+</p>
+
+<h1>Institutional Certificate Framework</h1>
+
+<p>
+  Master framework registry for certificate classes, ownership modules,
+  verification engines, lifecycle support, chain behavior, provenance, packet capability,
+  and governance policy.
+</p>
+
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Certificate Types</strong><br>{{ certificate_types | length }}</div>
+  <div class="stat-card"><strong>Lifecycle Enabled</strong><br>{{ certificate_types | selectattr("supports_lifecycle") | list | length }}</div>
+  <div class="stat-card"><strong>PDF Enabled</strong><br>{{ certificate_types | selectattr("supports_pdf") | list | length }}</div>
+  <div class="stat-card"><strong>Packet Enabled</strong><br>{{ certificate_types | selectattr("supports_packet") | list | length }}</div>
+  <div class="stat-card"><strong>Supersession Enabled</strong><br>{{ certificate_types | selectattr("supports_supersession") | list | length }}</div>
+  <div class="stat-card"><strong>Relationship Enabled</strong><br>{{ certificate_types | selectattr("supports_relationships") | list | length }}</div>
+</div>
+
+
+<table class="table">
+  <tr>
+    <th>Type ID</th>
+    <th>Certificate Type</th>
+    <th>Display Name</th>
+    <th>Module</th>
+    <th>Verification Engine</th>
+    <th>Capabilities</th>
+    <th>Governance Policy</th>
+    <th>Retention Policy</th>
+    <th>Status</th>
+  </tr>
+
+  {% for row in certificate_types %}
+  <tr>
+    <td>{{ row.type_id }}</td>
+    <td><strong>{{ row.certificate_type }}</strong></td>
+    <td>{{ row.display_name }}</td>
+    <td>{{ row.module_name or "—" }}</td>
+    <td>{{ row.verification_engine or "—" }}</td>
+    <td>
+      {% if row.supports_lifecycle %}<span class="badge">Lifecycle</span>{% endif %}
+      {% if row.supports_timeline %}<span class="badge">Timeline</span>{% endif %}
+      {% if row.supports_chain %}<span class="badge">Chain</span>{% endif %}
+      {% if row.supports_pdf %}<span class="badge">PDF</span>{% endif %}
+      {% if row.supports_packet %}<span class="badge">Packet</span>{% endif %}
+      {% if row.supports_supersession %}<span class="badge">Supersession</span>{% endif %}
+      {% if row.supports_relationships %}<span class="badge">Relationships</span>{% endif %}
+      {% if row.supports_provenance %}<span class="badge">Provenance</span>{% endif %}
+    </td>
+    <td>{{ row.governance_policy or "—" }}</td>
+    <td>{{ row.retention_policy or "—" }}</td>
+    <td>{{ "ACTIVE" if row.active else "INACTIVE" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

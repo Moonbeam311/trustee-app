@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/admin/certificate-interface/status">Service Interface</a> |
+  <a href="/admin/certificate-object-model/status">Object Model</a> |
+  <a href="/certificates">Certificate Registry</a>
+</p>
+
+<h1>Unified Institutional Certificate Detail</h1>
+
+<p>
+  Framework-rendered certificate detail page powered by the shared ICP-5C
+  certificate object model.
+</p>
+
+<h2>{{ certificate_object.identity.display_name }}</h2>
+
+<table class="table">
+  <tr><th>Certificate ID</th><td>{{ certificate_object.identity.certificate_id }}</td></tr>
+  <tr><th>Certificate Type</th><td>{{ certificate_object.identity.certificate_type }}</td></tr>
+  <tr><th>Module</th><td>{{ certificate_object.identity.module_name }}</td></tr>
+  <tr><th>Execution Session</th><td>{{ certificate_object.identity.execution_id or "—" }}</td></tr>
+  <tr><th>Certificate Version</th><td>{{ certificate_object.identity.certificate_version or "—" }}</td></tr>
+</table>
+
+<h2>Status</h2>
+
+<table class="table">
+  {% for key, value in certificate_object.status.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Governance</h2>
+
+<table class="table">
+  {% for key, value in certificate_object.governance.items() %}
+  <tr><th>{{ key }}</th><td>{{ value or "—" }}</td></tr>
+  {% endfor %}
+</table>
+
+
+<h2>Governance Policy</h2>
+
+<table class="table">
+  <tr><th>Policy ID</th><td>{{ certificate_object.policy.policy_id or "—" }}</td></tr>
+  <tr><th>Policy Name</th><td>{{ certificate_object.policy.display_name or "—" }}</td></tr>
+  <tr><th>Category</th><td>{{ certificate_object.policy.policy_category or "—" }}</td></tr>
+  <tr><th>Description</th><td>{{ certificate_object.policy.description or "—" }}</td></tr>
+  <tr><th>Allows Edit</th><td>{{ certificate_object.policy.allows_edit }}</td></tr>
+  <tr><th>Allows Delete</th><td>{{ certificate_object.policy.allows_delete }}</td></tr>
+  <tr><th>Allows Supersession</th><td>{{ certificate_object.policy.allows_supersession }}</td></tr>
+  <tr><th>Allows Revocation</th><td>{{ certificate_object.policy.allows_revocation }}</td></tr>
+  <tr><th>Requires Lifecycle Event</th><td>{{ certificate_object.policy.requires_lifecycle_event }}</td></tr>
+  <tr><th>Requires Reason</th><td>{{ certificate_object.policy.requires_reason }}</td></tr>
+  <tr><th>Requires Authority</th><td>{{ certificate_object.policy.requires_authority }}</td></tr>
+  <tr><th>Retention Rule</th><td>{{ certificate_object.policy.retention_rule or "—" }}</td></tr>
+</table>
+
+
+<h2>Verification</h2>
+
+<table class="table">
+  <tr><th>Verified</th><td>{{ certificate_object.verification.verified }}</td></tr>
+  <tr><th>Verification Status</th><td>{{ certificate_object.status.verification_status }}</td></tr>
+  <tr><th>Validation ID</th><td>{{ certificate_object.verification.validation_id or "—" }}</td></tr>
+  <tr><th>Hash Algorithm</th><td>{{ certificate_object.verification.hash_algorithm }}</td></tr>
+  <tr><th>Certificate Hash</th><td>{{ certificate_object.verification.certificate_hash or "—" }}</td></tr>
+  <tr><th>Stored Hash</th><td>{{ certificate_object.verification.stored_hash or "—" }}</td></tr>
+  <tr><th>Recalculated Hash</th><td>{{ certificate_object.verification.recalculated_hash or "—" }}</td></tr>
+  <tr><th>Dashboard Hash</th><td>{{ certificate_object.verification.dashboard_hash or "—" }}</td></tr>
+  <tr><th>Expected Hash</th><td>{{ certificate_object.verification.expected_hash or "—" }}</td></tr>
+  <tr><th>Observed Hash</th><td>{{ certificate_object.verification.observed_hash or "—" }}</td></tr>
+</table>
+
+<h2>Certificate Chain</h2>
+
+<table class="table">
+  <tr><th>Supersedes</th><td>{{ certificate_object.chain.supersedes_certification_id or "—" }}</td></tr>
+  <tr><th>Superseded By</th><td>{{ certificate_object.chain.superseded_by_certification_id or "—" }}</td></tr>
+</table>
+
+<h2>Lifecycle Timeline</h2>
+
+{% if certificate_object.timeline.events %}
+<table class="table">
+  <tr>
+    <th>Event ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Reason</th>
+    <th>Authority</th>
+    <th>Engine</th>
+    <th>Actor</th>
+    <th>At</th>
+  </tr>
+  {% for event in certificate_object.timeline.events %}
+  <tr>
+    <td>{{ event.event_id }}</td>
+    <td>{{ event.event_type }}</td>
+    <td>{{ event.event_status or "—" }}</td>
+    <td>{{ event.event_reason or "—" }}</td>
+    <td>{{ event.event_authority or "—" }}</td>
+    <td>{{ event.generation_engine or "—" }}</td>
+    <td>{{ event.actor or "—" }}</td>
+    <td>{{ event.event_at or "—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No lifecycle events recorded.</p>
+{% endif %}
+
+
+<h2>Institutional Relationships</h2>
+
+{% if certificate_object.relationships['items'] %}
+<table class="table">
+  <tr>
+    <th>Relationship ID</th>
+    <th>Related Object Type</th>
+    <th>Related Object ID</th>
+    <th>Relationship Type</th>
+    <th>Label</th>
+    <th>Basis</th>
+    <th>Status</th>
+  </tr>
+  {% for rel in certificate_object.relationships['items'] %}
+  <tr>
+    <td>{{ rel.relationship_id }}</td>
+    <td>{{ rel.related_object_type }}</td>
+    <td>{{ rel.related_object_id }}</td>
+    <td>{{ rel.relationship_type }}</td>
+    <td>{{ rel.relationship_label or "—" }}</td>
+    <td>{{ rel.relationship_basis or "—" }}</td>
+    <td>{{ rel.relationship_status }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No institutional relationships recorded for this certificate.</p>
+{% endif %}
+
+
+<h2>Capabilities</h2>
+
+<table class="table">
+  {% for key, value in certificate_object.capabilities.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<p>
+  <a href="/admin/certificate-object-model/{{ certificate_object.identity.certificate_id }}/pdf">
+    Download Unified PDF
+  </a>
+  |
+  <a href="/admin/certificates/unified/{{ certificate_object.identity.certificate_type }}/{{ certificate_object.identity.certificate_id }}/packet">
+    Download Evidence Packet ZIP
+  </a>
+</p>
+
+{% endblock %}

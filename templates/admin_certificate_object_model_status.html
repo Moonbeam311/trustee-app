@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> | 
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/admin/certificate-interface/status">Service Interface</a> |
+  <a href="/certificates">Certificate Registry</a>
+</p>
+
+<h1>Institutional Certificate Object Model</h1>
+
+<p>
+  Canonical object envelope for institutional certificates. This model normalizes
+  identity, status, governance, verification, chain, timeline, capabilities, and payload.
+</p>
+
+<h2>Object Model Status</h2>
+
+<table class="table">
+  <tr><th>Interface</th><td>{{ status.interface }}</td></tr>
+  <tr><th>Status</th><td>{{ status.status }}</td></tr>
+  <tr><th>Reference Type</th><td>{{ status.reference_type }}</td></tr>
+  <tr><th>Reference Certificate</th><td>{{ status.reference_certificate }}</td></tr>
+  <tr><th>Reference Found</th><td>{{ status.reference_found }}</td></tr>
+  <tr><th>Object Sections</th><td>{{ status.object_sections | join(", ") }}</td></tr>
+</table>
+
+<h2>Identity</h2>
+<table class="table">
+{% for key, value in certificate_object.identity.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Status</h2>
+<table class="table">
+{% for key, value in certificate_object.status.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Governance</h2>
+<table class="table">
+{% for key, value in certificate_object.governance.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Verification</h2>
+<table class="table">
+{% for key, value in certificate_object.verification.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+{% endfor %}
+</table>
+
+<h2>Chain</h2>
+<table class="table">
+  <tr><th>Supersedes</th><td>{{ certificate_object.chain.supersedes_certification_id or "—" }}</td></tr>
+  <tr><th>Superseded By</th><td>{{ certificate_object.chain.superseded_by_certification_id or "—" }}</td></tr>
+</table>
+
+<h2>Timeline</h2>
+<p><strong>Events:</strong> {{ certificate_object.timeline.event_count }}</p>
+
+<h2>Capabilities</h2>
+<table class="table">
+{% for key, value in certificate_object.capabilities.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+{% endfor %}
+</table>
+
+{% endblock %}

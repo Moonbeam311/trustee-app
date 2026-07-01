@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> | 
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/admin/certificate-policies">Governance Policies</a> |
+  <a href="/admin/certificates/unified">Unified Registry</a>
+</p>
+
+<h1>Institutional Certificate API</h1>
+
+<p>
+  Mandatory institutional façade for certificate registry, lookup, verification,
+  object model, timeline, relationships, chain, PDF, packet, validation,
+  supersession, revocation, search, and future issuance.
+</p>
+
+<h2>API Status</h2>
+
+<table class="table">
+  <tr><th>API</th><td>{{ status.api }}</td></tr>
+  <tr><th>Status</th><td>{{ status.status }}</td></tr>
+  <tr><th>Supported Types</th><td>{{ status.supported_types | join(", ") }}</td></tr>
+  <tr><th>Registered Types</th><td>{{ status.registered_types }}</td></tr>
+  <tr><th>Registry Objects</th><td>{{ status.registry_objects }}</td></tr>
+  <tr><th>Verified Objects</th><td>{{ status.verified }}</td></tr>
+</table>
+
+<h2>Reference Validation</h2>
+
+<table class="table">
+  <tr><th>Certificate ID</th><td>{{ validation.certificate_id }}</td></tr>
+  <tr><th>Certificate Type</th><td>{{ validation.certificate_type }}</td></tr>
+  <tr><th>Valid</th><td>{{ validation.valid }}</td></tr>
+  <tr><th>Issues</th><td>{{ validation.issues | join(", ") if validation.issues else "None" }}</td></tr>
+  <tr><th>Verification</th><td>{{ validation.verification.verification_status }}</td></tr>
+</table>
+
+<h2>API Endpoints</h2>
+
+<table class="table">
+  <tr><th>Endpoint</th><th>Purpose</th></tr>
+  <tr><td>/api/certificates</td><td>Unified certificate registry JSON</td></tr>
+  <tr><td>/api/certificate-types</td><td>Certificate type definitions JSON</td></tr>
+  <tr><td>/api/certificates/Continuity/CERT-000003</td><td>Certificate object JSON</td></tr>
+  <tr><td>/api/certificates/Continuity/CERT-000003/verify</td><td>Verification JSON</td></tr>
+  <tr><td>/api/certificates/Continuity/CERT-000003/timeline</td><td>Timeline JSON</td></tr>
+  <tr><td>/api/certificates/Continuity/CERT-000003/relationships</td><td>Relationships JSON</td></tr>
+  <tr><td>/api/certificates/Continuity/CERT-000003/chain</td><td>Chain JSON</td></tr>
+  <tr><td>/api/certificates/search?q=CERT-000003</td><td>Search JSON</td></tr>
+</table>
+
+{% endblock %}

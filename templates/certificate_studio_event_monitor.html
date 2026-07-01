@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/certificate-studio/governance">Governance Console</a> |
+  <a href="/admin/certificate-event-bus">Admin Event Bus</a>
+</p>
+
+<h1>Certificate Event Monitor</h1>
+
+<p>
+  Studio event monitor for certificate activity, API calls, packet generation,
+  verification, governance observations, relationship observations, and future workflow activity.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Events</strong><br>{{ summary.total }}</div>
+  <div class="stat-card"><strong>Warnings</strong><br>{{ summary.warnings }}</div>
+  <div class="stat-card"><strong>Errors</strong><br>{{ summary.errors }}</div>
+</div>
+
+<h2>Event Filters</h2>
+
+<div class="filter-bar">
+  <input
+    id="eventMonitorSearch"
+    type="text"
+    placeholder="Search event ID, certificate ID, event name, status, actor, authority, engine..."
+    oninput="filterEventMonitor()"
+  >
+
+  <select id="eventMonitorType" onchange="filterEventMonitor()">
+    <option value="">All Certificate Types</option>
+    {% for value in certificate_types %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="eventMonitorCategory" onchange="filterEventMonitor()">
+    <option value="">All Categories</option>
+    {% for value in event_categories %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="eventMonitorName" onchange="filterEventMonitor()">
+    <option value="">All Event Names</option>
+    {% for value in event_names %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="eventMonitorSeverity" onchange="filterEventMonitor()">
+    <option value="">All Severities</option>
+    {% for value in severities %}
+      <option value="{{ value }}">{{ value }}</option>
+    {% endfor %}
+  </select>
+
+  <span class="filter-count">
+    Showing <span id="eventMonitorVisibleCount">{{ events | length }}</span>
+    of {{ events | length }}
+  </span>
+
+  <button class="button" type="button" onclick="clearEventMonitorFilters()">Clear</button>
+</div>
+
+<h2>Events by Name</h2>
+
+<table class="table">
+  <tr>
+    <th>Event Name</th>
+    <th>Count</th>
+  </tr>
+  {% for row in summary.by_event %}
+  <tr>
+    <td>{{ row.event_name }}</td>
+    <td>{{ row.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Event Stream</h2>
+
+<table class="table" id="eventMonitorTable">
+  <thead>
+    <tr>
+      <th>Event ID</th>
+      <th>Certificate</th>
+      <th>Type</th>
+      <th>Category</th>
+      <th>Name</th>
+      <th>Status</th>
+      <th>Summary</th>
+      <th>Actor</th>
+      <th>Authority</th>
+      <th>Engine</th>
+      <th>Severity</th>
+      <th>At</th>
+      <th>Open</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in events %}
+    <tr
+      class="event-monitor-row"
+      data-type="{{ e.certificate_type or '' }}"
+      data-category="{{ e.event_category or '' }}"
+      data-name="{{ e.event_name or '' }}"
+      data-severity="{{ e.severity or '' }}"
+      data-search="{{ e.bus_event_id }} {{ e.certification_id }} {{ e.certificate_type }} {{ e.event_category }} {{ e.event_name }} {{ e.event_status }} {{ e.event_summary }} {{ e.actor }} {{ e.authority }} {{ e.source_engine }} {{ e.severity }}"
+    >
+      <td>{{ e.bus_event_id }}</td>
+      <td>{{ e.certification_id or "—" }}</td>
+      <td>{{ e.certificate_type or "—" }}</td>
+      <td>{{ e.event_category or "—" }}</td>
+      <td>{{ e.event_name }}</td>
+      <td>{{ e.event_status or "—" }}</td>
+      <td>{{ e.event_summary or "—" }}</td>
+      <td>{{ e.actor or "—" }}</td>
+      <td>{{ e.authority or "—" }}</td>
+      <td>{{ e.source_engine or "—" }}</td>
+      <td>{{ e.severity }}</td>
+      <td>{{ e.created_at }}</td>
+      <td>
+        {% if e.certification_id and e.certificate_type %}
+          <a href="/certificate-studio/workspace/{{ e.certificate_type }}/{{ e.certification_id }}">Workspace</a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function eventMonitorValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim().toLowerCase() : "";
+}
+
+function filterEventMonitor() {
+  const q = eventMonitorValue("eventMonitorSearch");
+  const type = eventMonitorValue("eventMonitorType");
+  const category = eventMonitorValue("eventMonitorCategory");
+  const name = eventMonitorValue("eventMonitorName");
+  const severity = eventMonitorValue("eventMonitorSeverity");
+
+  let visible = 0;
+
+  document.querySelectorAll(".event-monitor-row").forEach(function(row) {
+    const rowSearch = (row.dataset.search || "").toLowerCase();
+    const rowType = (row.dataset.type || "").toLowerCase();
+    const rowCategory = (row.dataset.category || "").toLowerCase();
+    const rowName = (row.dataset.name || "").toLowerCase();
+    const rowSeverity = (row.dataset.severity || "").toLowerCase();
+
+    const matches =
+      (!q || rowSearch.includes(q)) &&
+      (!type || rowType === type) &&
+      (!category || rowCategory === category) &&
+      (!name || rowName === name) &&
+      (!severity || rowSeverity === severity);
+
+    row.style.display = matches ? "" : "none";
+
+    if (matches) {
+      visible += 1;
+    }
+  });
+
+  const count = document.getElementById("eventMonitorVisibleCount");
+  if (count) {
+    count.innerText = visible;
+  }
+}
+
+function clearEventMonitorFilters() {
+  [
+    "eventMonitorSearch",
+    "eventMonitorType",
+    "eventMonitorCategory",
+    "eventMonitorName",
+    "eventMonitorSeverity"
+  ].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = "";
+    }
+  });
+
+  filterEventMonitor();
+}
+</script>
+
+{% endblock %}

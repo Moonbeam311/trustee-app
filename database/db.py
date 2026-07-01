@@ -5161,3 +5161,251 @@ def ensure_institutional_certifications_table():
     conn.commit()
     conn.close()
 
+
+
+def ensure_certificate_lifecycle_fields():
+    """
+    ICP-4B-1:
+    Adds lifecycle governance fields to institutional_certifications.
+    Safe additive migration only.
+    """
+    ensure_institutional_certifications_table()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    existing = {
+        row["name"]
+        for row in cur.execute("PRAGMA table_info(institutional_certifications)").fetchall()
+    }
+
+    additions = {
+        "lifecycle_status": "TEXT DEFAULT 'Issued'",
+        "issuance_reason": "TEXT",
+        "issuance_authority": "TEXT",
+        "generation_engine": "TEXT",
+        "lifecycle_notes": "TEXT",
+    }
+
+    for column, definition in additions.items():
+        if column not in existing:
+            cur.execute(
+                f"ALTER TABLE institutional_certifications ADD COLUMN {column} {definition}"
+            )
+            print(f"ADDED COLUMN: {column}")
+        else:
+            print(f"SKIP COLUMN EXISTS: {column}")
+
+    conn.commit()
+    conn.close()
+
+
+
+def ensure_certificate_lifecycle_events_table():
+    """
+    ICP-4B-3:
+    Creates immutable lifecycle event ledger for institutional certificates.
+    """
+    ensure_certificate_lifecycle_fields()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS certificate_lifecycle_events (
+            event_id TEXT PRIMARY KEY,
+            certification_id TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            event_status TEXT,
+            event_reason TEXT,
+            event_authority TEXT,
+            generation_engine TEXT,
+            event_notes TEXT,
+            actor TEXT,
+            event_at TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
+def ensure_certificate_type_registry_table():
+    """
+    ICP-5A:
+    Registry of institutional certificate types and capabilities.
+    This defines certificate classes, not issued certificate records.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS certificate_type_registry (
+            type_id TEXT PRIMARY KEY,
+            certificate_type TEXT UNIQUE NOT NULL,
+            display_name TEXT NOT NULL,
+            module_name TEXT,
+            verification_engine TEXT,
+            pdf_builder TEXT,
+            detail_template TEXT,
+            supports_lifecycle INTEGER DEFAULT 1,
+            supports_timeline INTEGER DEFAULT 1,
+            supports_chain INTEGER DEFAULT 0,
+            supports_pdf INTEGER DEFAULT 1,
+            supports_packet INTEGER DEFAULT 0,
+            supports_supersession INTEGER DEFAULT 0,
+            supports_relationships INTEGER DEFAULT 0,
+            supports_provenance INTEGER DEFAULT 1,
+            governance_policy TEXT,
+            retention_policy TEXT,
+            active INTEGER DEFAULT 1,
+            notes TEXT,
+            created_at TEXT,
+            updated_at TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
+def ensure_certificate_relationships_table():
+    """
+    ICP-5G:
+    Relationship graph for institutional certificates.
+    Links certificates to execution sessions, matters, trusts, assets, archives,
+    transfers, people, institutions, or future institutional objects.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS certificate_relationships (
+            relationship_id TEXT PRIMARY KEY,
+            certification_id TEXT NOT NULL,
+            certificate_type TEXT,
+            related_object_type TEXT NOT NULL,
+            related_object_id TEXT NOT NULL,
+            relationship_type TEXT,
+            relationship_label TEXT,
+            relationship_basis TEXT,
+            relationship_status TEXT DEFAULT 'active',
+            created_by TEXT,
+            created_at TEXT,
+            updated_at TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
+def ensure_certificate_governance_policies_table():
+    """
+    ICP-5I:
+    Governance policy registry for institutional certificate behavior.
+    Defines policy classes such as Immutable, Supersedable, Revocable,
+    Append Only, Permanent, Historical, Public, Private, Evidence Only.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS certificate_governance_policies (
+            policy_id TEXT PRIMARY KEY,
+            policy_name TEXT UNIQUE NOT NULL,
+            display_name TEXT NOT NULL,
+            policy_category TEXT,
+            description TEXT,
+            allows_edit INTEGER DEFAULT 0,
+            allows_delete INTEGER DEFAULT 0,
+            allows_supersession INTEGER DEFAULT 1,
+            allows_revocation INTEGER DEFAULT 0,
+            requires_lifecycle_event INTEGER DEFAULT 1,
+            requires_reason INTEGER DEFAULT 1,
+            requires_authority INTEGER DEFAULT 1,
+            retention_rule TEXT DEFAULT 'Permanent',
+            active INTEGER DEFAULT 1,
+            created_at TEXT,
+            updated_at TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
+def ensure_certificate_event_bus_table():
+    """
+    ICP-5K:
+    Central event bus for institutional certificate activity.
+    Feeds future Certificate Studio, audit, analytics, notifications,
+    reporting, and lifecycle governance.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS certificate_event_bus (
+            bus_event_id TEXT PRIMARY KEY,
+            certification_id TEXT,
+            certificate_type TEXT,
+            event_category TEXT,
+            event_name TEXT NOT NULL,
+            event_status TEXT,
+            event_summary TEXT,
+            event_payload TEXT,
+            related_object_type TEXT,
+            related_object_id TEXT,
+            actor TEXT,
+            authority TEXT,
+            source_engine TEXT,
+            source_route TEXT,
+            severity TEXT DEFAULT 'info',
+            created_at TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+
+def ensure_certificate_templates_table():
+    """
+    ICP-6I:
+    Registry for certificate visual/layout templates.
+    Allows future PDF/detail rendering to be assigned by certificate type.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS certificate_templates (
+            template_id TEXT PRIMARY KEY,
+            template_name TEXT UNIQUE NOT NULL,
+            display_name TEXT NOT NULL,
+            template_category TEXT,
+            description TEXT,
+            layout_engine TEXT DEFAULT 'Unified PDF Builder',
+            page_size TEXT DEFAULT 'Letter',
+            supports_seal INTEGER DEFAULT 1,
+            supports_signature INTEGER DEFAULT 1,
+            supports_qr INTEGER DEFAULT 1,
+            supports_watermark INTEGER DEFAULT 1,
+            supports_packet_cover INTEGER DEFAULT 1,
+            default_for_type TEXT,
+            active INTEGER DEFAULT 1,
+            created_at TEXT,
+            updated_at TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/admin/certificate-api/status">Certificate API</a>
+</p>
+
+<h1>Dynamic Certificate Builder</h1>
+
+<p>
+  Studio builder shell for selecting a certificate type, inspecting its registry definition,
+  staging issuance metadata, and preparing future adapter-controlled certificate issuance.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>API Status</strong><br>{{ api_status.status }}</div>
+  <div class="stat-card"><strong>Registered Types</strong><br>{{ api_status.registered_types }}</div>
+  <div class="stat-card"><strong>Supported Adapters</strong><br>{{ api_status.supported_types | join(", ") }}</div>
+</div>
+
+<h2>Select Certificate Type</h2>
+
+<form method="get">
+  <label for="certificate_type">Certificate Type</label>
+  <select id="certificate_type" name="certificate_type" onchange="this.form.submit()">
+    {% for row in certificate_types %}
+      <option value="{{ row.certificate_type }}" {% if row.certificate_type == selected_type %}selected{% endif %}>
+        {{ row.display_name }} — {{ row.certificate_type }}
+      </option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if definition %}
+<h2>Certificate Type Definition</h2>
+
+<table class="table">
+  <tr><th>Type ID</th><td>{{ definition.type_id }}</td></tr>
+  <tr><th>Certificate Type</th><td>{{ definition.certificate_type }}</td></tr>
+  <tr><th>Display Name</th><td>{{ definition.display_name }}</td></tr>
+  <tr><th>Module</th><td>{{ definition.module_name }}</td></tr>
+  <tr><th>Verification Engine</th><td>{{ definition.verification_engine }}</td></tr>
+  <tr><th>Governance Policy</th><td>{{ definition.governance_policy }}</td></tr>
+  <tr><th>Retention Policy</th><td>{{ definition.retention_policy }}</td></tr>
+  <tr><th>Detail Template</th><td>{{ definition.detail_template or "Studio default" }}</td></tr>
+  <tr><th>PDF Builder</th><td>{{ definition.pdf_builder or "Unified PDF Builder" }}</td></tr>
+  <tr><th>Status</th><td>{{ "ACTIVE" if definition.active else "INACTIVE" }}</td></tr>
+</table>
+
+<h2>Capabilities</h2>
+
+<table class="table">
+  <tr><th>Lifecycle</th><td>{{ definition.supports_lifecycle }}</td></tr>
+  <tr><th>Timeline</th><td>{{ definition.supports_timeline }}</td></tr>
+  <tr><th>Chain</th><td>{{ definition.supports_chain }}</td></tr>
+  <tr><th>PDF</th><td>{{ definition.supports_pdf }}</td></tr>
+  <tr><th>Packet</th><td>{{ definition.supports_packet }}</td></tr>
+  <tr><th>Supersession</th><td>{{ definition.supports_supersession }}</td></tr>
+  <tr><th>Relationships</th><td>{{ definition.supports_relationships }}</td></tr>
+  <tr><th>Provenance</th><td>{{ definition.supports_provenance }}</td></tr>
+</table>
+{% endif %}
+
+<h2>Stage Certificate Issuance Payload</h2>
+
+<p>
+  This builder currently stages the issuance payload only. Actual issuance remains disabled until each certificate type has a registered adapter.
+</p>
+
+<form method="post">
+  <input type="hidden" name="certificate_type" value="{{ selected_type }}">
+
+  <label>Source Module</label><br>
+  <input type="text" name="source_module" placeholder="Execution Continuity, Trust Minutes, Transfers, Archive..." value="{{ definition.module_name if definition else '' }}"><br><br>
+
+  <label>Source Record ID</label><br>
+  <input type="text" name="source_record_id" placeholder="EXE-000001, MIN-001, TRF-000001..."><br><br>
+
+  <label>Related Object Type</label><br>
+  <input type="text" name="related_object_type" placeholder="trust, matter, execution_session, validation_record, asset..."><br><br>
+
+  <label>Related Object ID</label><br>
+  <input type="text" name="related_object_id" placeholder="TR-001, MAT-000001, EXE-000001..."><br><br>
+
+  <label>Issuance Authority</label><br>
+  <input type="text" name="issuance_authority" placeholder="admin123, trustee, governance engine..."><br><br>
+
+  <label>Issuance Reason</label><br>
+  <textarea name="issuance_reason" rows="4" placeholder="Reason for certificate issuance"></textarea><br><br>
+
+  <label>Notes</label><br>
+  <textarea name="notes" rows="4" placeholder="Optional certificate notes"></textarea><br><br>
+
+  <button type="submit">Stage Builder Payload</button>
+</form>
+
+{% if draft_payload %}
+<h2>Staged Payload</h2>
+<table class="table">
+  {% for key, value in draft_payload.items() %}
+  <tr><th>{{ key }}</th><td>{{ value or "—" }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+{% if issue_result %}
+<h2>Issue Result</h2>
+<table class="table">
+  <tr><th>Supported</th><td>{{ issue_result.supported }}</td></tr>
+  <tr><th>Message</th><td>{{ issue_result.message }}</td></tr>
+  <tr><th>Certificate Type</th><td>{{ issue_result.certificate_type }}</td></tr>
+  <tr><th>Authority</th><td>{{ issue_result.authority or "—" }}</td></tr>
+</table>
+{% endif %}
+
+{% endblock %}

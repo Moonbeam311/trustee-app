@@ -1,4 +1,4 @@
-from database.db import get_connection, ensure_institutional_certifications_table
+from database.db import get_connection, ensure_institutional_certifications_table, ensure_certificate_lifecycle_events_table
 from datetime import datetime
 import hashlib
 import json
@@ -367,4 +367,414 @@ def get_certificate_chain(certification_id):
         "supersedes": supersedes,
         "superseded_by": superseded_by,
     }
+
+
+
+def update_certificate_lifecycle(
+    certification_id,
+    lifecycle_status=None,
+    issuance_reason=None,
+    issuance_authority=None,
+    generation_engine=None,
+    lifecycle_notes=None,
+):
+    """
+    ICP-4B-2:
+    Updates governance metadata only.
+    Does not modify certificate_hash or immutable certification facts.
+    """
+    ensure_institutional_certifications_table()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cert = get_institutional_certification(certification_id)
+    if not cert:
+        conn.close()
+        return None
+
+    updates = []
+    params = []
+
+    allowed = {
+        "lifecycle_status": lifecycle_status,
+        "issuance_reason": issuance_reason,
+        "issuance_authority": issuance_authority,
+        "generation_engine": generation_engine,
+        "lifecycle_notes": lifecycle_notes,
+    }
+
+    for field, value in allowed.items():
+        if value is not None:
+            updates.append(f"{field} = ?")
+            params.append(value)
+
+    if not updates:
+        conn.close()
+        return cert
+
+    params.append(certification_id)
+
+    cur.execute(
+        f"""
+        UPDATE institutional_certifications
+        SET {", ".join(updates)}
+        WHERE certification_id = ?
+        """,
+        params,
+    )
+
+    conn.commit()
+    conn.close()
+
+    return get_institutional_certification(certification_id)
+
+
+def get_certificate_lifecycle(certification_id):
+    """
+    ICP-4B-2:
+    Returns lifecycle metadata and chain state for one certificate.
+    """
+    cert = get_institutional_certification(certification_id)
+
+    if not cert:
+        return None
+
+    chain_status = "Superseded" if cert.get("superseded_by_certification_id") else "Current"
+
+    return {
+        "certification_id": cert.get("certification_id"),
+        "lifecycle_status": cert.get("lifecycle_status") or "Issued",
+        "issuance_reason": cert.get("issuance_reason"),
+        "issuance_authority": cert.get("issuance_authority"),
+        "generation_engine": cert.get("generation_engine"),
+        "lifecycle_notes": cert.get("lifecycle_notes"),
+        "chain_status": chain_status,
+        "supersedes_certification_id": cert.get("supersedes_certification_id"),
+        "superseded_by_certification_id": cert.get("superseded_by_certification_id"),
+    }
+
+
+def backfill_certificate_lifecycle_defaults():
+    """
+    ICP-4B-2:
+    Adds default lifecycle governance metadata to existing certificates.
+    Safe metadata-only backfill.
+    """
+    ensure_institutional_certifications_table()
+
+    rows = list_institutional_certifications()
+    updated = []
+
+    for row in rows:
+        lifecycle_status = row.get("lifecycle_status") or "Issued"
+
+        generation_engine = row.get("generation_engine")
+        if not generation_engine:
+            if row.get("certificate_type") == "Continuity":
+                generation_engine = "Continuity Certification Engine"
+            else:
+                generation_engine = "Institutional Certification Engine"
+
+        issuance_reason = row.get("issuance_reason") or "Initial lifecycle governance backfill."
+        issuance_authority = row.get("issuance_authority") or row.get("certified_by") or "Institutional Operator"
+
+        cert = update_certificate_lifecycle(
+            row.get("certification_id"),
+            lifecycle_status=lifecycle_status,
+            issuance_reason=issuance_reason,
+            issuance_authority=issuance_authority,
+            generation_engine=generation_engine,
+            lifecycle_notes=row.get("lifecycle_notes") or "Lifecycle metadata added under ICP-4B-2.",
+        )
+
+        updated.append(cert)
+
+    return updated
+
+
+
+def _next_lifecycle_event_id():
+    ensure_certificate_lifecycle_events_table()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    row = cur.execute(
+        "SELECT COUNT(*) AS count FROM certificate_lifecycle_events"
+    ).fetchone()
+
+    conn.close()
+
+    count = row["count"] if hasattr(row, "keys") else row[0]
+    return f"CEVT-{count + 1:06d}"
+
+
+def record_certificate_lifecycle_event(
+    certification_id,
+    event_type,
+    event_status=None,
+    event_reason=None,
+    event_authority=None,
+    generation_engine=None,
+    event_notes=None,
+    actor=None,
+):
+    """
+    ICP-4B-3:
+    Appends immutable lifecycle event for a certificate.
+    """
+    ensure_certificate_lifecycle_events_table()
+
+    cert = get_institutional_certification(certification_id)
+    if not cert:
+        return None
+
+    event_id = _next_lifecycle_event_id()
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO certificate_lifecycle_events (
+            event_id,
+            certification_id,
+            event_type,
+            event_status,
+            event_reason,
+            event_authority,
+            generation_engine,
+            event_notes,
+            actor,
+            event_at,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event_id,
+        certification_id,
+        event_type,
+        event_status,
+        event_reason,
+        event_authority,
+        generation_engine,
+        event_notes,
+        actor,
+        now,
+        now,
+    ))
+
+    conn.commit()
+
+    row = cur.execute("""
+        SELECT *
+        FROM certificate_lifecycle_events
+        WHERE event_id = ?
+    """, (event_id,)).fetchone()
+
+    conn.close()
+
+    return dict(row) if row else None
+
+
+def list_certificate_lifecycle_events(certification_id):
+    """
+    ICP-4B-3:
+    Lists lifecycle events for a certificate in chronological order.
+    """
+    ensure_certificate_lifecycle_events_table()
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    rows = cur.execute("""
+        SELECT *
+        FROM certificate_lifecycle_events
+        WHERE certification_id = ?
+        ORDER BY event_at ASC, event_id ASC
+    """, (certification_id,)).fetchall()
+
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+def backfill_certificate_lifecycle_events(actor="system"):
+    """
+    ICP-4B-3:
+    Seeds lifecycle event history for existing certificates.
+    Idempotent by certification_id + event_type.
+    """
+    ensure_certificate_lifecycle_events_table()
+
+    rows = list_institutional_certifications()
+    created = []
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    for cert in rows:
+        certification_id = cert.get("certification_id")
+
+        existing_types = {
+            row["event_type"]
+            for row in cur.execute("""
+                SELECT event_type
+                FROM certificate_lifecycle_events
+                WHERE certification_id = ?
+            """, (certification_id,)).fetchall()
+        }
+
+        planned = [
+            (
+                "Created",
+                cert.get("certification_status") or "Certified",
+                cert.get("issuance_reason") or "Certificate record created.",
+                cert.get("issuance_authority") or cert.get("certified_by"),
+                cert.get("generation_engine") or "Institutional Certification Engine",
+                "Backfilled certificate creation lifecycle event.",
+            ),
+            (
+                "Issued",
+                cert.get("lifecycle_status") or "Issued",
+                cert.get("issuance_reason") or "Certificate issued.",
+                cert.get("issuance_authority") or cert.get("certified_by"),
+                cert.get("generation_engine") or "Institutional Certification Engine",
+                "Backfilled certificate issuance lifecycle event.",
+            ),
+            (
+                "Verified",
+                cert.get("verification_status") or "verified",
+                "Certificate hash verification recorded.",
+                cert.get("issuance_authority") or cert.get("certified_by"),
+                cert.get("generation_engine") or "Institutional Certification Engine",
+                "Backfilled certificate verification lifecycle event.",
+            ),
+        ]
+
+        if cert.get("superseded_by_certification_id"):
+            planned.append((
+                "Superseded",
+                "Superseded",
+                f"Certificate superseded by {cert.get('superseded_by_certification_id')}.",
+                cert.get("issuance_authority") or cert.get("certified_by"),
+                cert.get("generation_engine") or "Institutional Certification Engine",
+                "Backfilled supersession lifecycle event.",
+            ))
+
+        for event_type, event_status, reason, authority, engine, notes in planned:
+            if event_type in existing_types:
+                continue
+
+            event = record_certificate_lifecycle_event(
+                certification_id,
+                event_type=event_type,
+                event_status=event_status,
+                event_reason=reason,
+                event_authority=authority,
+                generation_engine=engine,
+                event_notes=notes,
+                actor=actor,
+            )
+
+            if event:
+                created.append(event)
+
+    conn.close()
+    return created
+
+
+
+def set_certificate_supersession_reason(
+    certification_id,
+    reason,
+    authority=None,
+    actor=None,
+    notes=None,
+):
+    """
+    ICP-4B-4:
+    Captures why a certificate was superseded or why a successor certificate
+    was issued. Metadata-only update. Certificate hash remains unchanged.
+    """
+    cert = get_institutional_certification(certification_id)
+    if not cert:
+        return None
+
+    updated = update_certificate_lifecycle(
+        certification_id,
+        issuance_reason=reason,
+        issuance_authority=authority or cert.get("issuance_authority") or cert.get("certified_by"),
+        lifecycle_notes=notes or "Supersession reason captured under ICP-4B-4.",
+    )
+
+    record_certificate_lifecycle_event(
+        certification_id,
+        event_type="Supersession Reason Captured",
+        event_status=updated.get("lifecycle_status") or "Issued",
+        event_reason=reason,
+        event_authority=authority or updated.get("issuance_authority"),
+        generation_engine=updated.get("generation_engine") or "Institutional Certification Engine",
+        event_notes=notes or "Supersession reason captured.",
+        actor=actor or authority or updated.get("certified_by") or "system",
+    )
+
+    return updated
+
+
+def backfill_supersession_reasons(
+    execution_id="EXE-000001",
+    certificate_type="Continuity",
+    authority="admin123",
+):
+    """
+    ICP-4B-4:
+    Backfills explanation metadata for an existing supersession chain.
+    """
+    rows = list_institutional_certifications(
+        certificate_type=certificate_type,
+        execution_id=execution_id,
+    )
+
+    updated = []
+
+    for row in rows:
+        cert_id = row.get("certification_id")
+        supersedes = row.get("supersedes_certification_id")
+        superseded_by = row.get("superseded_by_certification_id")
+
+        if supersedes:
+            reason = (
+                f"Successor certificate issued to supersede {supersedes} "
+                f"after continuity certification refresh."
+            )
+            notes = (
+                f"{cert_id} is part of the continuity certification chain and "
+                f"supersedes {supersedes}."
+            )
+        elif superseded_by:
+            reason = (
+                f"Certificate superseded by {superseded_by} during continuity "
+                f"certification chain update."
+            )
+            notes = (
+                f"{cert_id} remains an immutable historical certificate and is "
+                f"superseded by {superseded_by}."
+            )
+        else:
+            reason = "Initial continuity certificate issuance."
+            notes = f"{cert_id} is the current active certificate in its chain."
+
+        updated_cert = set_certificate_supersession_reason(
+            cert_id,
+            reason=reason,
+            authority=authority,
+            actor=authority,
+            notes=notes,
+        )
+
+        updated.append(updated_cert)
+
+    return updated
 

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> | 
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/admin/certificate-interface/status">Service Interface</a> |
+  <a href="/admin/certificate-object-model/status">Object Model</a> |
+  <a href="/certificates">Legacy Certificate Registry</a>
+</p>
+
+<h1>Unified Institutional Certificate Registry</h1>
+
+<p>
+  Framework-level registry rendered from the shared ICP-5C certificate object model.
+  This is the migration target for all institutional certificate types.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Certificates</strong><br>{{ summary.total }}</div>
+  <div class="stat-card"><strong>Current</strong><br>{{ summary.current }}</div>
+  <div class="stat-card"><strong>Superseded</strong><br>{{ summary.superseded }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ summary.verified }}</div>
+</div>
+
+<h2>Certificate Type Counts</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate Type</th>
+    <th>Count</th>
+  </tr>
+  {% for cert_type, count in summary.type_counts.items() %}
+  <tr>
+    <td>{{ cert_type }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Unified Certificates</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Display Name</th>
+    <th>Module</th>
+    <th>Status</th>
+    <th>Verification</th>
+    <th>Lifecycle</th>
+    <th>Chain</th>
+    <th>Authority</th>
+    <th>Engine</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for obj in certificate_objects %}
+  <tr>
+    <td><strong>{{ obj.identity.certificate_id }}</strong></td>
+    <td>{{ obj.identity.certificate_type }}</td>
+    <td>{{ obj.identity.display_name }}</td>
+    <td>{{ obj.identity.module_name }}</td>
+    <td>{{ obj.status.certification_status }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.status.lifecycle_status }}</td>
+    <td>{{ obj.status.chain_status }}</td>
+    <td>{{ obj.governance.issuance_authority or "—" }}</td>
+    <td>{{ obj.governance.generation_engine or "—" }}</td>
+    <td>
+      <a href="/admin/certificates/unified/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">Unified Detail</a>
+      |
+      <a href="/admin/certificate-object-model/{{ obj.identity.certificate_id }}/pdf">Unified PDF</a>
+      |
+      <a href="/admin/certificates/unified/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}/packet">Packet ZIP</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

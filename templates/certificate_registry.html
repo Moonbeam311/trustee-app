@@ -418,6 +418,10 @@
             <th class="cert-sortable" onclick="sortInstitutionalCertificates(10, 'text', this)">Chain Status</th>
             <th>Verification</th>
             <th>Record Status</th>
+            <th>Lifecycle</th>
+            <th>Reason</th>
+            <th>Authority</th>
+            <th>Engine</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -505,6 +509,14 @@
                   </span>
                 {% endif %}
               </td>
+
+              <td>{{ certificate.lifecycle_status or "Issued" }}</td>
+
+              <td>{{ certificate.issuance_reason or "—" }}</td>
+
+              <td>{{ certificate.issuance_authority or "—" }}</td>
+
+              <td>{{ certificate.generation_engine or "—" }}</td>
 
               <td>
                 <a class="button"

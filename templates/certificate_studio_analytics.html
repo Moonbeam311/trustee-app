@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/certificate-studio/events">Event Monitor</a> |
+  <a href="/certificate-studio/governance">Governance Console</a> |
+  <a href="/certificate-studio/packets">Packet Studio</a> |
+  <a href="/certificate-studio/templates">Template Manager</a>
+</p>
+
+<h1>Institutional Certificate Analytics</h1>
+
+<p>
+  Read-only institutional analytics for certificate activity, verification posture,
+  supersession chains, packet readiness, governance policy distribution, relationships,
+  timelines, engines, modules, and event bus activity.
+</p>
+
+<h2>Institutional Snapshot</h2>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Certificates</strong><br>{{ analytics.total_certificates }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ analytics.verified }}</div>
+  <div class="stat-card"><strong>Current</strong><br>{{ analytics.current }}</div>
+  <div class="stat-card"><strong>Superseded</strong><br>{{ analytics.superseded }}</div>
+  <div class="stat-card"><strong>Packet Capable</strong><br>{{ analytics.packet_capable }}</div>
+  <div class="stat-card"><strong>Relationships</strong><br>{{ analytics.total_relationships }}</div>
+  <div class="stat-card"><strong>Timeline Events</strong><br>{{ analytics.total_timeline_events }}</div>
+  <div class="stat-card"><strong>Event Bus Events</strong><br>{{ analytics.event_total }}</div>
+  <div class="stat-card"><strong>Warnings</strong><br>{{ analytics.event_warnings }}</div>
+  <div class="stat-card"><strong>Errors</strong><br>{{ analytics.event_errors }}</div>
+  <div class="stat-card"><strong>Packet Events</strong><br>{{ analytics.packet_events }}</div>
+  <div class="stat-card"><strong>Verification Events</strong><br>{{ analytics.verification_events }}</div>
+</div>
+
+<h2>Certificate Type Distribution</h2>
+
+<table class="table">
+  <tr><th>Certificate Type</th><th>Count</th></tr>
+  {% for key, value in analytics.by_type.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Chain Status Distribution</h2>
+
+<table class="table">
+  <tr><th>Chain Status</th><th>Count</th></tr>
+  {% for key, value in analytics.by_chain.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Verification Distribution</h2>
+
+<table class="table">
+  <tr><th>Verification Status</th><th>Count</th></tr>
+  {% for key, value in analytics.by_verification.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Governance Policy Distribution</h2>
+
+<table class="table">
+  <tr><th>Policy</th><th>Count</th></tr>
+  {% for key, value in analytics.by_policy.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Module Distribution</h2>
+
+<table class="table">
+  <tr><th>Module</th><th>Count</th></tr>
+  {% for key, value in analytics.by_module.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Generation Engine Distribution</h2>
+
+<table class="table">
+  <tr><th>Engine</th><th>Count</th></tr>
+  {% for key, value in analytics.by_engine.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Event Bus Activity by Name</h2>
+
+<table class="table">
+  <tr><th>Event Name</th><th>Count</th></tr>
+  {% for row in analytics.events_by_name %}
+  <tr>
+    <td>{{ row.event_name }}</td>
+    <td>{{ row.count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Certificate Analytics Detail</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Verification</th>
+    <th>Chain</th>
+    <th>Policy</th>
+    <th>Relationships</th>
+    <th>Timeline</th>
+    <th>Packet</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for obj in registry.objects %}
+  <tr>
+    <td><strong>{{ obj.identity.certificate_id }}</strong></td>
+    <td>{{ obj.identity.certificate_type }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.status.chain_status }}</td>
+    <td>{{ obj.policy.display_name }}</td>
+    <td>{{ obj.relationships.count }}</td>
+    <td>{{ obj.timeline.event_count }}</td>
+    <td>{{ obj.capabilities.supports_packet }}</td>
+    <td>
+      <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">Open</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

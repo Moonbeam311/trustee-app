@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> | 
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/admin/certificates/unified">Unified Registry</a> |
+  <a href="/certificates">Legacy Registry</a>
+</p>
+
+<h1>Certificate Governance Policies</h1>
+
+<p>
+  Policy registry controlling certificate behavior, lifecycle rules, edit/delete restrictions,
+  supersession authority, revocation allowance, retention, and evidence treatment.
+</p>
+
+<p><strong>Total Policies:</strong> {{ policies | length }}</p>
+
+<table class="table">
+  <tr>
+    <th>Policy ID</th>
+    <th>Name</th>
+    <th>Category</th>
+    <th>Description</th>
+    <th>Edit</th>
+    <th>Delete</th>
+    <th>Supersession</th>
+    <th>Revocation</th>
+    <th>Lifecycle Event</th>
+    <th>Reason</th>
+    <th>Authority</th>
+    <th>Retention</th>
+    <th>Status</th>
+  </tr>
+
+  {% for p in policies %}
+  <tr>
+    <td>{{ p.policy_id }}</td>
+    <td><strong>{{ p.display_name }}</strong><br><small>{{ p.policy_name }}</small></td>
+    <td>{{ p.policy_category or "—" }}</td>
+    <td>{{ p.description or "—" }}</td>
+    <td>{{ "YES" if p.allows_edit else "NO" }}</td>
+    <td>{{ "YES" if p.allows_delete else "NO" }}</td>
+    <td>{{ "YES" if p.allows_supersession else "NO" }}</td>
+    <td>{{ "YES" if p.allows_revocation else "NO" }}</td>
+    <td>{{ "YES" if p.requires_lifecycle_event else "NO" }}</td>
+    <td>{{ "YES" if p.requires_reason else "NO" }}</td>
+    <td>{{ "YES" if p.requires_authority else "NO" }}</td>
+    <td>{{ p.retention_rule }}</td>
+    <td>{{ "ACTIVE" if p.active else "INACTIVE" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

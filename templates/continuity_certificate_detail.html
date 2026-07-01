@@ -65,6 +65,39 @@ Verify Certificate
 
 <p>{{ certificate.notes or "No notes recorded." }}</p>
 
+
+<h2>Lifecycle Timeline</h2>
+
+{% if lifecycle_events %}
+<table class="table">
+  <tr>
+    <th>Event ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Reason</th>
+    <th>Authority</th>
+    <th>Engine</th>
+    <th>Actor</th>
+    <th>At</th>
+  </tr>
+  {% for event in lifecycle_events %}
+  <tr>
+    <td>{{ event.event_id }}</td>
+    <td>{{ event.event_type }}</td>
+    <td>{{ event.event_status or "—" }}</td>
+    <td>{{ event.event_reason or "—" }}</td>
+    <td>{{ event.event_authority or "—" }}</td>
+    <td>{{ event.generation_engine or "—" }}</td>
+    <td>{{ event.actor or "—" }}</td>
+    <td>{{ event.event_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No lifecycle events recorded for this certificate.</p>
+{% endif %}
+
+
 <p>
 <a href="/execution/sessions/{{ certificate.execution_id }}/continuity">Back to Continuity Dashboard</a>
 </p>

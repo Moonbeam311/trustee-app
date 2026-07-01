@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/certificate-studio/events">Event Monitor</a> |
+  <a href="/certificate-studio/governance">Governance Console</a>
+</p>
+
+<h1>Packet Studio</h1>
+
+<p>
+  Evidence packet workspace for certificate PDFs, object JSON, verification reports,
+  lifecycle reports, relationship reports, chain reports, manifests, and packet activity.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Certificates</strong><br>{{ packet_summary.total_certificates }}</div>
+  <div class="stat-card"><strong>Packet Ready</strong><br>{{ packet_summary.packet_ready }}</div>
+  <div class="stat-card"><strong>Packet Blocked</strong><br>{{ packet_summary.packet_blocked }}</div>
+  <div class="stat-card"><strong>Verified Packet Ready</strong><br>{{ packet_summary.verified_packet_ready }}</div>
+</div>
+
+<h2>Packet-Ready Certificates</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Verification</th>
+    <th>Chain</th>
+    <th>Policy</th>
+    <th>Relationships</th>
+    <th>Timeline</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for obj in packet_ready %}
+  <tr>
+    <td><strong>{{ obj.identity.certificate_id }}</strong></td>
+    <td>{{ obj.identity.certificate_type }}</td>
+    <td>{{ obj.status.certification_status }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.status.chain_status }}</td>
+    <td>{{ obj.policy.display_name }}</td>
+    <td>{{ obj.relationships.count }}</td>
+    <td>{{ obj.timeline.event_count }}</td>
+    <td>
+      <a href="/admin/certificates/unified/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}/packet">Download Packet</a>
+      |
+      <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">Workspace</a>
+      |
+      <a href="/admin/certificate-object-model/{{ obj.identity.certificate_id }}/pdf">PDF</a>
+      |
+      <a href="/api/certificates/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">JSON</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Packet Activity</h2>
+
+{% if packet_events %}
+<table class="table">
+  <tr>
+    <th>Event ID</th>
+    <th>Certificate</th>
+    <th>Type</th>
+    <th>Name</th>
+    <th>Status</th>
+    <th>Summary</th>
+    <th>Actor</th>
+    <th>Severity</th>
+    <th>At</th>
+  </tr>
+
+  {% for e in packet_events %}
+  <tr>
+    <td>{{ e.bus_event_id }}</td>
+    <td>{{ e.certification_id or "—" }}</td>
+    <td>{{ e.certificate_type or "—" }}</td>
+    <td>{{ e.event_name }}</td>
+    <td>{{ e.event_status or "—" }}</td>
+    <td>{{ e.event_summary or "—" }}</td>
+    <td>{{ e.actor or "—" }}</td>
+    <td>{{ e.severity }}</td>
+    <td>{{ e.created_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No packet activity recorded yet.</p>
+{% endif %}
+
+<h2>Packet Contents Standard</h2>
+
+<table class="table">
+  <tr><th>File</th><th>Purpose</th></tr>
+  <tr><td>certificate.pdf</td><td>Unified certificate PDF rendered from the object model.</td></tr>
+  <tr><td>certificate_object.json</td><td>Complete canonical certificate object model.</td></tr>
+  <tr><td>verification_report.json</td><td>Hash and verification report.</td></tr>
+  <tr><td>lifecycle_report.json</td><td>Status, governance, and timeline report.</td></tr>
+  <tr><td>relationship_report.json</td><td>Certificate relationship graph report.</td></tr>
+  <tr><td>chain_report.json</td><td>Supersession and chain report.</td></tr>
+  <tr><td>manifest.json</td><td>Packet inventory and metadata.</td></tr>
+</table>
+
+{% if packet_blocked %}
+<h2>Packet Blocked Certificates</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Reason</th>
+  </tr>
+  {% for obj in packet_blocked %}
+  <tr>
+    <td>{{ obj.identity.certificate_id }}</td>
+    <td>{{ obj.identity.certificate_type }}</td>
+    <td>Certificate type does not support packets.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}

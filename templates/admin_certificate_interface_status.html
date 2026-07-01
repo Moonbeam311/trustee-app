@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Back to Admin</a> |
+  <a href="/admin/certificate-types">Certificate Framework</a> |
+  <a href="/certificates">Certificate Registry</a>
+</p>
+
+<h1>Institutional Certificate Service Interface</h1>
+
+<p>
+  Shared framework interface for certificate lookup, verification, lifecycle,
+  timeline, chain, detail context, and future PDF/packet adapters.
+</p>
+
+<h2>Interface Status</h2>
+
+<table class="table">
+  <tr><th>Interface</th><td>{{ status.interface }}</td></tr>
+  <tr><th>Status</th><td>{{ status.status }}</td></tr>
+  <tr><th>Reference Type</th><td>{{ status.reference_type }}</td></tr>
+  <tr><th>Reference Registered</th><td>{{ status.reference_type_registered }}</td></tr>
+  <tr><th>Supported Adapters</th><td>{{ status.supported_adapters | join(", ") }}</td></tr>
+</table>
+
+<h2>Reference Context Test</h2>
+
+<table class="table">
+  <tr><th>Certificate Type</th><td>{{ context.certificate_type }}</td></tr>
+  <tr><th>Definition</th><td>{{ context.definition.display_name if context.definition else "—" }}</td></tr>
+  <tr><th>Certificate ID</th><td>{{ context.record.certification_id if context.record else "—" }}</td></tr>
+  <tr><th>Verification</th><td>{{ context.verification.verification_status }}</td></tr>
+  <tr><th>Lifecycle</th><td>{{ context.lifecycle.lifecycle_status if context.lifecycle else "—" }}</td></tr>
+  <tr><th>Timeline Events</th><td>{{ context.timeline | length }}</td></tr>
+  <tr>
+    <th>Chain</th>
+    <td>
+      Supersedes:
+      {{ context.chain.supersedes.certification_id if context.chain.supersedes else "—" }}
+      |
+      Superseded By:
+      {{ context.chain.superseded_by.certification_id if context.chain.superseded_by else "—" }}
+    </td>
+  </tr>
+</table>
+
+{% endblock %}

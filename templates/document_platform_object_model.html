@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Universal Document Object Model</h1>
+
+<p>
+  ICP-8A foundation for treating trust instruments, certificates, minutes,
+  transfers, archive records, reports, affidavits, letters, packets, and future
+  institutional documents as canonical objects.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Status</strong><br>{{ status.status }}</div>
+  <div class="stat-card"><strong>Interface</strong><br>{{ status.interface }}</div>
+  <div class="stat-card"><strong>Sections</strong><br>{{ status.sections | length }}</div>
+</div>
+
+<h2>Object Sections</h2>
+
+<table class="table">
+  <tr><th>Section</th></tr>
+  {% for section in status.sections %}
+  <tr><td>{{ section }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Sample Document Object</h2>
+
+<table class="table">
+  <tr><th>Document ID</th><td>{{ sample.identity.document_id }}</td></tr>
+  <tr><th>Document Type</th><td>{{ sample.identity.document_type }}</td></tr>
+  <tr><th>Title</th><td>{{ sample.identity.title }}</td></tr>
+  <tr><th>Module</th><td>{{ sample.identity.module_name }}</td></tr>
+  <tr><th>Status</th><td>{{ sample.status.status }}</td></tr>
+  <tr><th>Lifecycle</th><td>{{ sample.status.lifecycle_status }}</td></tr>
+  <tr><th>Governance Policy</th><td>{{ sample.governance.governance_policy }}</td></tr>
+  <tr><th>Retention</th><td>{{ sample.governance.retention_policy }}</td></tr>
+</table>
+
+<h2>Rendering Capabilities</h2>
+
+<table class="table">
+  {% for key, value in sample.rendering.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>System Capabilities</h2>
+
+<table class="table">
+  {% for key, value in sample.capabilities.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

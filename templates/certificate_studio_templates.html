@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/certificate-studio/packets">Packet Studio</a> |
+  <a href="/certificate-studio/governance">Governance Console</a>
+</p>
+
+<h1>Certificate Template Manager</h1>
+
+<p>
+  Registry for institutional certificate layouts, visual capabilities, packet covers,
+  public verification formats, private internal formats, and future branding controls.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Templates</strong><br>{{ summary.templates }}</div>
+  <div class="stat-card"><strong>Active Templates</strong><br>{{ summary.active_templates }}</div>
+  <div class="stat-card"><strong>Assignments</strong><br>{{ summary.assignments }}</div>
+</div>
+
+<h2>Registered Templates</h2>
+
+<table class="table">
+  <tr>
+    <th>Template ID</th>
+    <th>Name</th>
+    <th>Category</th>
+    <th>Description</th>
+    <th>Engine</th>
+    <th>Page Size</th>
+    <th>Seal</th>
+    <th>Signature</th>
+    <th>QR</th>
+    <th>Watermark</th>
+    <th>Packet Cover</th>
+    <th>Default For</th>
+    <th>Status</th>
+  </tr>
+
+  {% for tpl in templates %}
+  <tr>
+    <td>{{ tpl.template_id }}</td>
+    <td><strong>{{ tpl.display_name }}</strong><br><small>{{ tpl.template_name }}</small></td>
+    <td>{{ tpl.template_category or "—" }}</td>
+    <td>{{ tpl.description or "—" }}</td>
+    <td>{{ tpl.layout_engine }}</td>
+    <td>{{ tpl.page_size }}</td>
+    <td>{{ "YES" if tpl.supports_seal else "NO" }}</td>
+    <td>{{ "YES" if tpl.supports_signature else "NO" }}</td>
+    <td>{{ "YES" if tpl.supports_qr else "NO" }}</td>
+    <td>{{ "YES" if tpl.supports_watermark else "NO" }}</td>
+    <td>{{ "YES" if tpl.supports_packet_cover else "NO" }}</td>
+    <td>{{ tpl.default_for_type or "—" }}</td>
+    <td>{{ "ACTIVE" if tpl.active else "INACTIVE" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Certificate Template Assignments</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Display Name</th>
+    <th>Chain</th>
+    <th>Assigned Template</th>
+    <th>Engine</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for row in assignments %}
+  <tr>
+    <td><strong>{{ row.certificate_id }}</strong></td>
+    <td>{{ row.certificate_type }}</td>
+    <td>{{ row.display_name }}</td>
+    <td>{{ row.chain_status }}</td>
+    <td>{{ row.template.display_name if row.template else "—" }}</td>
+    <td>{{ row.template.layout_engine if row.template else "—" }}</td>
+    <td>
+      <a href="/certificate-studio/workspace/{{ row.certificate_type }}/{{ row.certificate_id }}">Open</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Template Manager Notes</h2>
+
+<p>
+  This phase registers and displays template capability assignments. PDF rendering
+  still uses the current unified PDF builder. Later phases may connect this registry
+  directly to rendering, branding, seals, QR codes, watermarks, and packet covers.
+</p>
+
+{% endblock %}

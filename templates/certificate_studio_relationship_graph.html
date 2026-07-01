@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/certificate-studio/builder">Builder</a> |
+  <a href="/admin/certificate-event-bus">Event Bus</a>
+</p>
+
+<h1>Relationship Graph Explorer</h1>
+
+<p>
+  Institutional relationship map connecting certificates to execution sessions,
+  validation records, institutions, and future trust, matter, asset, person,
+  archive, transfer, and funding objects.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Certificates</strong><br>{{ graph_summary.certificates }}</div>
+  <div class="stat-card"><strong>Related Objects</strong><br>{{ graph_summary.related_objects }}</div>
+  <div class="stat-card"><strong>Total Nodes</strong><br>{{ graph_summary.nodes }}</div>
+  <div class="stat-card"><strong>Edges</strong><br>{{ graph_summary.edges }}</div>
+</div>
+
+<h2>Graph Map</h2>
+
+<div style="border: 1px solid #ccc; padding: 1rem; overflow-x: auto;">
+  {% for obj in registry.objects %}
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-weight: bold; padding: .5rem; border: 1px solid #999; display: inline-block;">
+        {{ obj.identity.certificate_id }}<br>
+        <small>{{ obj.identity.certificate_type }} | {{ obj.status.chain_status }}</small>
+      </div>
+
+      <div style="margin-left: 2rem; margin-top: .75rem;">
+        {% for rel in obj.relationships['items'] %}
+          <div style="margin-bottom: .5rem;">
+            <span>↳ {{ rel.relationship_type }}</span>
+            <span style="padding: .4rem; border: 1px solid #bbb; display: inline-block; margin-left: .5rem;">
+              {{ rel.related_object_type }}: {{ rel.related_object_id }}
+            </span>
+            <small> — {{ rel.relationship_label or "No label" }}</small>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<h2>Nodes</h2>
+
+<table class="table">
+  <tr>
+    <th>Node ID</th>
+    <th>Node Type</th>
+    <th>Label</th>
+    <th>Description</th>
+  </tr>
+  {% for node in graph_nodes %}
+  <tr>
+    <td>{{ node.node_id }}</td>
+    <td>{{ node.node_type }}</td>
+    <td>{{ node.label }}</td>
+    <td>{{ node.description or "—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Edges</h2>
+
+<table class="table">
+  <tr>
+    <th>From</th>
+    <th>Relationship</th>
+    <th>To</th>
+    <th>Label</th>
+    <th>Basis</th>
+  </tr>
+  {% for edge in graph_edges %}
+  <tr>
+    <td>{{ edge.from }}</td>
+    <td>{{ edge.relationship_type }}</td>
+    <td>{{ edge.to }}</td>
+    <td>{{ edge.relationship_label or "—" }}</td>
+    <td>{{ edge.relationship_basis or "—" }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

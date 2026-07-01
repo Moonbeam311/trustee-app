@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% include "_certificate_studio_nav.html" %}
+
+<p>
+  <a href="/certificate-studio">Certificate Studio</a> |
+  <a href="/certificate-studio/explorer">Explorer</a> |
+  <a href="/certificate-studio/relationships">Relationship Graph</a> |
+  <a href="/admin/certificate-policies">Policy Registry</a>
+</p>
+
+<h1>Governance Console</h1>
+
+<p>
+  Institutional certificate governance console for immutability, policy enforcement,
+  supersession authority, revocation rules, retention, warnings, and certificate-level review.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Certificates</strong><br>{{ governance_summary.total_certificates }}</div>
+  <div class="stat-card"><strong>Policies</strong><br>{{ governance_summary.policy_count }}</div>
+  <div class="stat-card"><strong>Immutable Locked</strong><br>{{ governance_summary.immutable_locked }}</div>
+  <div class="stat-card"><strong>Supersedable</strong><br>{{ governance_summary.supersedable }}</div>
+  <div class="stat-card"><strong>Revocable</strong><br>{{ governance_summary.revocable }}</div>
+  <div class="stat-card"><strong>Warnings</strong><br>{{ governance_summary.warnings }}</div>
+</div>
+
+<h2>Policy Distribution</h2>
+
+<table class="table">
+  <tr>
+    <th>Policy</th>
+    <th>Certificates</th>
+  </tr>
+  {% for policy, count in governance_summary.policy_counts.items() %}
+  <tr>
+    <td>{{ policy }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Governance Warnings</h2>
+
+{% if governance_warnings %}
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Issue</th>
+    <th>Severity</th>
+  </tr>
+  {% for warning in governance_warnings %}
+  <tr>
+    <td>{{ warning.certificate_id }}</td>
+    <td>{{ warning.issue }}</td>
+    <td>{{ warning.severity }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>No governance warnings detected.</p>
+{% endif %}
+
+<h2>Certificate Governance Review</h2>
+
+<table class="table">
+  <tr>
+    <th>Certificate ID</th>
+    <th>Type</th>
+    <th>Verification</th>
+    <th>Chain</th>
+    <th>Policy</th>
+    <th>Edit</th>
+    <th>Delete</th>
+    <th>Supersession</th>
+    <th>Revocation</th>
+    <th>Reason Required</th>
+    <th>Authority Required</th>
+    <th>Retention</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for obj in registry.objects %}
+  <tr>
+    <td><strong>{{ obj.identity.certificate_id }}</strong></td>
+    <td>{{ obj.identity.certificate_type }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.status.chain_status }}</td>
+    <td>{{ obj.policy.display_name }}</td>
+    <td>{{ obj.policy.allows_edit }}</td>
+    <td>{{ obj.policy.allows_delete }}</td>
+    <td>{{ obj.policy.allows_supersession }}</td>
+    <td>{{ obj.policy.allows_revocation }}</td>
+    <td>{{ obj.policy.requires_reason }}</td>
+    <td>{{ obj.policy.requires_authority }}</td>
+    <td>{{ obj.policy.retention_rule }}</td>
+    <td>
+      <a href="/certificate-studio/workspace/{{ obj.identity.certificate_type }}/{{ obj.identity.certificate_id }}">
+        Open
+      </a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Policy Registry Snapshot</h2>
+
+<table class="table">
+  <tr>
+    <th>Policy ID</th>
+    <th>Name</th>
+    <th>Category</th>
+    <th>Edit</th>
+    <th>Delete</th>
+    <th>Supersession</th>
+    <th>Revocation</th>
+    <th>Retention</th>
+  </tr>
+
+  {% for p in policies %}
+  <tr>
+    <td>{{ p.policy_id }}</td>
+    <td>{{ p.display_name }}</td>
+    <td>{{ p.policy_category or "—" }}</td>
+    <td>{{ "YES" if p.allows_edit else "NO" }}</td>
+    <td>{{ "YES" if p.allows_delete else "NO" }}</td>
+    <td>{{ "YES" if p.allows_supersession else "NO" }}</td>
+    <td>{{ "YES" if p.allows_revocation else "NO" }}</td>
+    <td>{{ p.retention_rule }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

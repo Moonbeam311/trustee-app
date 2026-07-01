@@ -1,7 +1,17 @@
-from services.services_certifications import list_institutional_certifications, verify_institutional_certification
+from services.services_document_object_model import build_document_object, document_object_model_status
+from services.services_certificate_templates import seed_certificate_templates, list_certificate_templates, resolve_template_for_certificate_object
+from services.services_certificate_event_bus import certificate_event_bus_summary, list_certificate_bus_events
+from services.services_certificate_event_bus import backfill_certificate_event_bus, list_certificate_bus_events, certificate_event_bus_summary
+from services.services_certificate_api import CertificateAPI, certificate_api_status
+from services.services_certificate_policies import seed_certificate_governance_policies, list_certificate_policies
+from services.services_certificate_packet import build_certificate_evidence_packet
+from services.services_certificate_interface import build_certificate_pdf_buffer, list_unified_certificate_objects, unified_certificate_registry_summary
+from services.services_certificate_interface import certificate_interface_status, build_certificate_detail_context, build_certificate_object, certificate_object_model_status
+from services.services_certificate_registry import list_certificate_types, seed_certificate_type_registry
+from services.services_certifications import list_institutional_certifications, verify_institutional_certification, list_certificate_lifecycle_events
 from datetime import datetime
 from io import BytesIO
-from flask import send_file
+from flask import jsonify, send_file
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -2841,7 +2851,26 @@ ROLE_RULES = {
 
 
 def is_master_admin():
-    return (session.get("username") or "").strip().lower() == "admin" and session.get("role") == "Admin"
+    """
+    Master admin check.
+
+    Firm 1 universal baseline:
+    - username admin + Admin role
+
+    Firm 2 development/private build:
+    - allow Admin role inside FIRM-002 during active development
+    """
+    username = (session.get("username") or "").strip().lower()
+    role = session.get("role")
+    firm_id = session.get("firm_id") or "FIRM-001"
+
+    if username == "admin" and role == "Admin":
+        return True
+
+    if firm_id == "FIRM-002" and role == "Admin":
+        return True
+
+    return False
 
 def require_master_admin():
     if not session.get("username"):
@@ -20263,6 +20292,703 @@ def execution_continuity_dashboard(execution_id):
 
 
 
+
+
+
+
+@app.route("/admin/certificate-object-model/CERT-000003/pdf")
+def admin_certificate_object_model_pdf_test():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    buffer = build_certificate_pdf_buffer("CERT-000003", "Continuity")
+
+    if not buffer:
+        return "Unified certificate PDF could not be generated.", 404
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="Unified_Institutional_Certificate_CERT-000003.pdf",
+        mimetype="application/pdf",
+    )
+
+
+
+@app.route("/admin/certificates/unified")
+def admin_unified_certificate_registry():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    certificate_objects = list_unified_certificate_objects()
+    summary = unified_certificate_registry_summary()
+
+    return render_template(
+        "admin_unified_certificate_registry.html",
+        certificate_objects=certificate_objects,
+        summary=summary,
+    )
+
+
+@app.route("/admin/certificates/unified/<certificate_type>/<certificate_id>/packet")
+def admin_unified_certificate_packet(certificate_type, certificate_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    packet = build_certificate_evidence_packet(certificate_id, certificate_type)
+
+    if not packet:
+        return "Certificate packet could not be generated.", 404
+
+    return send_file(
+        packet["buffer"],
+        as_attachment=True,
+        download_name=packet["filename"],
+        mimetype="application/zip",
+    )
+
+@app.route("/admin/certificates/unified/<certificate_type>/<certificate_id>")
+def admin_unified_certificate_detail(certificate_type, certificate_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    certificate_object = build_certificate_object(certificate_id, certificate_type)
+
+    if not certificate_object.get("found"):
+        return "Unified certificate record not found.", 404
+
+    return render_template(
+        "admin_unified_certificate_detail.html",
+        certificate_object=certificate_object,
+    )
+
+@app.route("/admin/certificate-object-model/status")
+def admin_certificate_object_model_status():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    status = certificate_object_model_status()
+    certificate_object = build_certificate_object("CERT-000003", "Continuity")
+
+    return render_template(
+        "admin_certificate_object_model_status.html",
+        status=status,
+        certificate_object=certificate_object,
+    )
+
+@app.route("/admin/certificate-interface/status")
+def admin_certificate_interface_status():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    status = certificate_interface_status()
+    context = build_certificate_detail_context("CERT-000003", "Continuity")
+
+    return render_template(
+        "admin_certificate_interface_status.html",
+        status=status,
+        context=context,
+    )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/certificate-studio/analytics")
+def certificate_studio_analytics():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = CertificateAPI.registry()
+    event_summary = certificate_event_bus_summary()
+    events = list_certificate_bus_events(limit=1000)
+
+    by_type = {}
+    by_chain = {}
+    by_verification = {}
+    by_policy = {}
+    by_module = {}
+    by_engine = {}
+
+    total_relationships = 0
+    total_timeline_events = 0
+    packet_capable = 0
+
+    for obj in registry["objects"]:
+        cert_type = obj["identity"].get("certificate_type") or "Unknown"
+        chain = obj["status"].get("chain_status") or "Unknown"
+        verification = obj["status"].get("verification_status") or "Unknown"
+        policy = obj["policy"].get("display_name") or "Unknown"
+        module = obj["identity"].get("module_name") or "Unknown"
+        engine = obj["governance"].get("generation_engine") or "Unknown"
+
+        by_type[cert_type] = by_type.get(cert_type, 0) + 1
+        by_chain[chain] = by_chain.get(chain, 0) + 1
+        by_verification[verification] = by_verification.get(verification, 0) + 1
+        by_policy[policy] = by_policy.get(policy, 0) + 1
+        by_module[module] = by_module.get(module, 0) + 1
+        by_engine[engine] = by_engine.get(engine, 0) + 1
+
+        total_relationships += obj.get("relationships", {}).get("count", 0)
+        total_timeline_events += obj.get("timeline", {}).get("event_count", 0)
+
+        if obj.get("capabilities", {}).get("supports_packet"):
+            packet_capable += 1
+
+    packet_events = [
+        e for e in events
+        if e.get("event_category") == "packet"
+        or "packet" in (e.get("event_name") or "").lower()
+    ]
+
+    verification_events = [
+        e for e in events
+        if e.get("event_category") == "verification"
+        or "verification" in (e.get("event_name") or "").lower()
+    ]
+
+    analytics = {
+        "total_certificates": registry["summary"]["total"],
+        "verified": registry["summary"]["verified"],
+        "current": registry["summary"]["current"],
+        "superseded": registry["summary"]["superseded"],
+        "packet_capable": packet_capable,
+        "total_relationships": total_relationships,
+        "total_timeline_events": total_timeline_events,
+        "event_total": event_summary["total"],
+        "event_warnings": event_summary["warnings"],
+        "event_errors": event_summary["errors"],
+        "packet_events": len(packet_events),
+        "verification_events": len(verification_events),
+        "by_type": by_type,
+        "by_chain": by_chain,
+        "by_verification": by_verification,
+        "by_policy": by_policy,
+        "by_module": by_module,
+        "by_engine": by_engine,
+        "events_by_name": event_summary["by_event"],
+        "events_by_type": event_summary["by_type"],
+    }
+
+    return render_template(
+        "certificate_studio_analytics.html",
+        analytics=analytics,
+        registry=registry,
+    )
+
+@app.route("/certificate-studio/templates")
+def certificate_studio_template_manager():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    seed_certificate_templates()
+
+    registry = CertificateAPI.registry()
+    templates = list_certificate_templates()
+
+    assignments = []
+
+    for obj in registry["objects"]:
+        assignments.append({
+            "certificate_id": obj["identity"]["certificate_id"],
+            "certificate_type": obj["identity"]["certificate_type"],
+            "display_name": obj["identity"]["display_name"],
+            "chain_status": obj["status"]["chain_status"],
+            "template": resolve_template_for_certificate_object(obj),
+        })
+
+    summary = {
+        "templates": len(templates),
+        "active_templates": len([t for t in templates if t.get("active")]),
+        "assignments": len(assignments),
+    }
+
+    return render_template(
+        "certificate_studio_templates.html",
+        templates=templates,
+        assignments=assignments,
+        summary=summary,
+    )
+
+@app.route("/certificate-studio/packets")
+def certificate_studio_packet_studio():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = CertificateAPI.registry()
+
+    packet_ready = []
+    packet_blocked = []
+
+    for obj in registry["objects"]:
+        if obj.get("capabilities", {}).get("supports_packet"):
+            packet_ready.append(obj)
+        else:
+            packet_blocked.append(obj)
+
+    packet_summary = {
+        "total_certificates": registry["summary"]["total"],
+        "packet_ready": len(packet_ready),
+        "packet_blocked": len(packet_blocked),
+        "verified_packet_ready": len([
+            obj for obj in packet_ready
+            if obj.get("verification", {}).get("verified")
+        ]),
+    }
+
+    packet_events = list_certificate_bus_events(limit=100)
+    packet_events = [
+        e for e in packet_events
+        if e.get("event_category") == "packet"
+        or "packet" in (e.get("event_name") or "").lower()
+    ]
+
+    return render_template(
+        "certificate_studio_packets.html",
+        registry=registry,
+        packet_ready=packet_ready,
+        packet_blocked=packet_blocked,
+        packet_summary=packet_summary,
+        packet_events=packet_events,
+    )
+
+@app.route("/certificate-studio/events")
+def certificate_studio_event_monitor():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    summary = certificate_event_bus_summary()
+    events = list_certificate_bus_events(limit=500)
+
+    event_names = sorted({e.get("event_name") for e in events if e.get("event_name")})
+    event_categories = sorted({e.get("event_category") for e in events if e.get("event_category")})
+    certificate_types = sorted({e.get("certificate_type") for e in events if e.get("certificate_type")})
+    severities = sorted({e.get("severity") for e in events if e.get("severity")})
+
+    return render_template(
+        "certificate_studio_event_monitor.html",
+        summary=summary,
+        events=events,
+        event_names=event_names,
+        event_categories=event_categories,
+        certificate_types=certificate_types,
+        severities=severities,
+    )
+
+@app.route("/certificate-studio/governance")
+def certificate_studio_governance_console():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = CertificateAPI.registry()
+    policies = list_certificate_policies()
+
+    policy_counts = {}
+    revocable = 0
+    supersedable = 0
+    immutable_locked = 0
+    governance_warnings = []
+
+    for obj in registry["objects"]:
+        policy_name = obj.get("policy", {}).get("display_name") or "Unknown"
+        policy_counts[policy_name] = policy_counts.get(policy_name, 0) + 1
+
+        if obj.get("policy", {}).get("allows_revocation"):
+            revocable += 1
+
+        if obj.get("policy", {}).get("allows_supersession"):
+            supersedable += 1
+
+        if not obj.get("policy", {}).get("allows_edit") and not obj.get("policy", {}).get("allows_delete"):
+            immutable_locked += 1
+
+        if obj.get("status", {}).get("verification_status") != "verified":
+            governance_warnings.append({
+                "certificate_id": obj["identity"]["certificate_id"],
+                "issue": "Certificate is not verified.",
+                "severity": "warning",
+            })
+
+        if obj.get("policy", {}).get("requires_reason") and not obj.get("governance", {}).get("issuance_reason"):
+            governance_warnings.append({
+                "certificate_id": obj["identity"]["certificate_id"],
+                "issue": "Policy requires issuance reason, but none is recorded.",
+                "severity": "warning",
+            })
+
+        if obj.get("policy", {}).get("requires_authority") and not obj.get("governance", {}).get("issuance_authority"):
+            governance_warnings.append({
+                "certificate_id": obj["identity"]["certificate_id"],
+                "issue": "Policy requires issuance authority, but none is recorded.",
+                "severity": "warning",
+            })
+
+    governance_summary = {
+        "total_certificates": registry["summary"]["total"],
+        "policy_count": len(policies),
+        "immutable_locked": immutable_locked,
+        "supersedable": supersedable,
+        "revocable": revocable,
+        "warnings": len(governance_warnings),
+        "policy_counts": policy_counts,
+    }
+
+    return render_template(
+        "certificate_studio_governance.html",
+        registry=registry,
+        policies=policies,
+        governance_summary=governance_summary,
+        governance_warnings=governance_warnings,
+    )
+
+@app.route("/certificate-studio/relationships")
+def certificate_studio_relationship_graph():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = CertificateAPI.registry()
+
+    graph_nodes = {}
+    graph_edges = []
+
+    for obj in registry["objects"]:
+        cert_id = obj["identity"]["certificate_id"]
+        cert_type = obj["identity"]["certificate_type"]
+
+        graph_nodes[cert_id] = {
+            "node_id": cert_id,
+            "node_type": "certificate",
+            "label": cert_id,
+            "description": obj["identity"].get("display_name"),
+        }
+
+        for rel in obj.get("relationships", {}).get("items", []):
+            related_id = rel.get("related_object_id")
+            related_type = rel.get("related_object_type")
+            related_key = f"{related_type}:{related_id}"
+
+            graph_nodes[related_key] = {
+                "node_id": related_key,
+                "node_type": related_type,
+                "label": related_id,
+                "description": related_type,
+            }
+
+            graph_edges.append({
+                "from": cert_id,
+                "to": related_key,
+                "relationship_type": rel.get("relationship_type"),
+                "relationship_label": rel.get("relationship_label"),
+                "relationship_basis": rel.get("relationship_basis"),
+                "certificate_type": cert_type,
+            })
+
+    graph_summary = {
+        "nodes": len(graph_nodes),
+        "edges": len(graph_edges),
+        "certificates": len(registry["objects"]),
+        "related_objects": len(graph_nodes) - len(registry["objects"]),
+    }
+
+    return render_template(
+        "certificate_studio_relationship_graph.html",
+        registry=registry,
+        graph_nodes=list(graph_nodes.values()),
+        graph_edges=graph_edges,
+        graph_summary=graph_summary,
+    )
+
+@app.route("/certificate-studio/builder", methods=["GET", "POST"])
+def certificate_studio_builder():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    certificate_types = CertificateAPI.types(active_only=True)
+    selected_type = request.values.get("certificate_type") or "Continuity"
+    definition = CertificateAPI.definition(selected_type)
+    api_status = certificate_api_status()
+
+    draft_payload = None
+    issue_result = None
+
+    if request.method == "POST":
+        draft_payload = {
+            "certificate_type": selected_type,
+            "requested_by": session.get("username") or "admin",
+            "source_module": request.form.get("source_module"),
+            "source_record_id": request.form.get("source_record_id"),
+            "related_object_type": request.form.get("related_object_type"),
+            "related_object_id": request.form.get("related_object_id"),
+            "issuance_reason": request.form.get("issuance_reason"),
+            "issuance_authority": request.form.get("issuance_authority"),
+            "notes": request.form.get("notes"),
+        }
+
+        issue_result = CertificateAPI.issue(
+            certificate_type=selected_type,
+            payload=draft_payload,
+            authority=session.get("username") or "admin",
+        )
+
+    return render_template(
+        "certificate_studio_builder.html",
+        certificate_types=certificate_types,
+        selected_type=selected_type,
+        definition=definition,
+        api_status=api_status,
+        draft_payload=draft_payload,
+        issue_result=issue_result,
+    )
+
+@app.route("/certificate-studio/workspace/<certificate_type>/<certificate_id>")
+def certificate_studio_workspace(certificate_type, certificate_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    certificate_object = CertificateAPI.object(certificate_id, certificate_type)
+
+    if not certificate_object.get("found"):
+        return "Certificate Studio workspace record not found.", 404
+
+    events = list_certificate_bus_events(
+        certification_id=certificate_id,
+        certificate_type=certificate_type,
+        limit=50,
+    )
+
+    return render_template(
+        "certificate_studio_workspace.html",
+        certificate_object=certificate_object,
+        events=events,
+    )
+
+@app.route("/certificate-studio/explorer")
+def certificate_studio_explorer():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = CertificateAPI.registry()
+    api_status = certificate_api_status()
+
+    certificate_types = sorted({
+        obj["identity"].get("certificate_type")
+        for obj in registry["objects"]
+        if obj["identity"].get("certificate_type")
+    })
+
+    modules = sorted({
+        obj["identity"].get("module_name")
+        for obj in registry["objects"]
+        if obj["identity"].get("module_name")
+    })
+
+    chain_statuses = sorted({
+        obj["status"].get("chain_status")
+        for obj in registry["objects"]
+        if obj["status"].get("chain_status")
+    })
+
+    verification_statuses = sorted({
+        obj["status"].get("verification_status")
+        for obj in registry["objects"]
+        if obj["status"].get("verification_status")
+    })
+
+    policies = sorted({
+        obj["policy"].get("display_name")
+        for obj in registry["objects"]
+        if obj.get("policy") and obj["policy"].get("display_name")
+    })
+
+    return render_template(
+        "certificate_studio_explorer.html",
+        registry=registry,
+        api_status=api_status,
+        certificate_types=certificate_types,
+        modules=modules,
+        chain_statuses=chain_statuses,
+        verification_statuses=verification_statuses,
+        policies=policies,
+    )
+
+@app.route("/certificate-studio")
+def certificate_studio_home():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = CertificateAPI.registry()
+    api_status = certificate_api_status()
+    event_summary = certificate_event_bus_summary()
+    recent_events = list_certificate_bus_events(limit=10)
+
+    return render_template(
+        "certificate_studio_home.html",
+        registry=registry,
+        api_status=api_status,
+        event_summary=event_summary,
+        recent_events=recent_events,
+    )
+
+@app.route("/admin/certificate-event-bus")
+def admin_certificate_event_bus():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    backfill_certificate_event_bus(actor=session.get("username") or "admin")
+    summary = certificate_event_bus_summary()
+    events = list_certificate_bus_events(limit=300)
+
+    return render_template(
+        "admin_certificate_event_bus.html",
+        summary=summary,
+        events=events,
+    )
+
+
+@app.route("/api/certificate-events")
+def api_certificate_events():
+    certification_id = request.args.get("certificate_id")
+    certificate_type = request.args.get("type")
+    limit = int(request.args.get("limit") or 200)
+
+    return jsonify({
+        "summary": certificate_event_bus_summary(),
+        "events": list_certificate_bus_events(
+            certification_id=certification_id,
+            certificate_type=certificate_type,
+            limit=limit,
+        ),
+    })
+
+@app.route("/admin/certificate-api/status")
+def admin_certificate_api_status():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    status = certificate_api_status()
+    validation = CertificateAPI.validate("CERT-000003", "Continuity")
+
+    return render_template(
+        "admin_certificate_api_status.html",
+        status=status,
+        validation=validation,
+    )
+
+
+@app.route("/api/certificates")
+def api_certificates_registry():
+    return jsonify(CertificateAPI.registry())
+
+
+@app.route("/api/certificate-types")
+def api_certificate_types():
+    return jsonify({
+        "certificate_types": CertificateAPI.types()
+    })
+
+
+@app.route("/api/certificates/<certificate_type>/<certificate_id>")
+def api_certificate_object(certificate_type, certificate_id):
+    return jsonify(CertificateAPI.object(certificate_id, certificate_type))
+
+
+@app.route("/api/certificates/<certificate_type>/<certificate_id>/verify")
+def api_certificate_verify(certificate_type, certificate_id):
+    return jsonify(CertificateAPI.verify(certificate_id, certificate_type))
+
+
+@app.route("/api/certificates/<certificate_type>/<certificate_id>/timeline")
+def api_certificate_timeline(certificate_type, certificate_id):
+    return jsonify({
+        "certificate_id": certificate_id,
+        "certificate_type": certificate_type,
+        "timeline": CertificateAPI.timeline(certificate_id, certificate_type),
+    })
+
+
+@app.route("/api/certificates/<certificate_type>/<certificate_id>/relationships")
+def api_certificate_relationships(certificate_type, certificate_id):
+    return jsonify({
+        "certificate_id": certificate_id,
+        "certificate_type": certificate_type,
+        "relationships": CertificateAPI.relationships(certificate_id, certificate_type),
+    })
+
+
+@app.route("/api/certificates/<certificate_type>/<certificate_id>/chain")
+def api_certificate_chain(certificate_type, certificate_id):
+    return jsonify(CertificateAPI.chain(certificate_id, certificate_type))
+
+
+@app.route("/api/certificates/search")
+def api_certificate_search():
+    query = request.args.get("q")
+    certificate_type = request.args.get("type")
+    verification_status = request.args.get("verification")
+    chain_status = request.args.get("chain")
+
+    return jsonify(CertificateAPI.search(
+        query=query,
+        certificate_type=certificate_type,
+        verification_status=verification_status,
+        chain_status=chain_status,
+    ))
+
+@app.route("/admin/certificate-policies")
+def admin_certificate_policies():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    seed_certificate_governance_policies()
+    policies = list_certificate_policies()
+
+    return render_template(
+        "admin_certificate_policies.html",
+        policies=policies,
+    )
+
+@app.route("/admin/certificate-types")
+def admin_certificate_types():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    seed_certificate_type_registry()
+    certificate_types = list_certificate_types()
+
+    return render_template(
+        "admin_certificate_types.html",
+        certificate_types=certificate_types,
+    )
+
 @app.route("/continuity/certificates/<certification_id>")
 def continuity_certificate_detail(certification_id):
     certificate = get_institutional_certification(certification_id)
@@ -20271,11 +20997,13 @@ def continuity_certificate_detail(certification_id):
         return "Continuity certificate not found.", 404
 
     verification = verify_institutional_certification(certification_id)
+    lifecycle_events = list_certificate_lifecycle_events(certification_id)
 
     return render_template(
         "continuity_certificate_detail.html",
         certificate=certificate,
         verification=verification,
+        lifecycle_events=lifecycle_events,
     )
 
 
@@ -20288,6 +21016,14 @@ def continuity_certificate_pdf(certification_id):
         return "Continuity certificate not found.", 404
 
     verification = verify_institutional_certification(certification_id)
+    pdf_lifecycle_events = list_certificate_lifecycle_events(certification_id)
+
+    chain_status = "SUPERSEDED" if certificate.get("superseded_by_certification_id") else "CURRENT"
+    governance_status = (
+        "SUPERSEDED — HISTORICAL RECORD — DO NOT USE AS CURRENT CERTIFICATE"
+        if chain_status == "SUPERSEDED"
+        else "CURRENT ACTIVE CERTIFICATE — VERIFIED — IMMUTABLE"
+    )
 
     buffer = BytesIO()
 
@@ -20338,6 +21074,19 @@ def continuity_certificate_pdf(certification_id):
 
     story.append(Paragraph("INSTITUTIONAL CONTINUITY CERTIFICATE", title_style))
     story.append(Paragraph("Institutional Operating System", body_style))
+    story.append(Spacer(1, 8))
+
+    banner_table = Table([[governance_status]], colWidths=[480])
+    banner_table.setStyle(TableStyle([
+        ("GRID", (0, 0), (-1, -1), 0.8, colors.black),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.whitesmoke),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
+        ("FONTSIZE", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 10),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+    ]))
+    story.append(banner_table)
     story.append(Spacer(1, 12))
 
     verification_text = "VERIFIED" if verification.get("verified") else "REVIEW REQUIRED"
@@ -20365,6 +21114,89 @@ def continuity_certificate_pdf(certification_id):
     ]))
 
     story.append(summary_table)
+
+
+    story.append(Spacer(1,12))
+
+    story.append(Paragraph("Institutional Governance Status", section_style))
+    story.append(Paragraph(governance_status, body_style))
+
+    story.append(Spacer(1,12))
+
+    lifecycle_table = Table([
+        ["Lifecycle Status", certificate.get("lifecycle_status") or "Issued"],
+        ["Issuance Authority", certificate.get("issuance_authority") or "—"],
+        ["Generation Engine", certificate.get("generation_engine") or "Continuity Certification Engine"],
+        ["Issuance Reason", certificate.get("issuance_reason") or "—"],
+    ], colWidths=[150,330])
+
+    lifecycle_table.setStyle(TableStyle([
+        ("GRID",(0,0),(-1,-1),0.4,colors.grey),
+        ("BACKGROUND",(0,0),(0,-1),colors.whitesmoke),
+        ("FONTNAME",(0,0),(0,-1),"Helvetica-Bold"),
+        ("FONTSIZE",(0,0),(-1,-1),8),
+    ]))
+
+    story.append(Paragraph("Institutional Lifecycle", section_style))
+    story.append(lifecycle_table)
+
+    story.append(Spacer(1,12))
+
+    chain_table = Table([
+        ["Current Certificate", certificate.get("certification_id")],
+        ["Supersedes", certificate.get("supersedes_certification_id") or "—"],
+        ["Superseded By", certificate.get("superseded_by_certification_id") or "—"],
+        ["Chain Status", chain_status],
+    ], colWidths=[150,330])
+
+    chain_table.setStyle(TableStyle([
+        ("GRID",(0,0),(-1,-1),0.4,colors.grey),
+        ("BACKGROUND",(0,0),(0,-1),colors.whitesmoke),
+        ("FONTNAME",(0,0),(0,-1),"Helvetica-Bold"),
+        ("FONTSIZE",(0,0),(-1,-1),8),
+    ]))
+
+    story.append(Paragraph("Certificate Chain", section_style))
+    story.append(chain_table)
+
+    story.append(Spacer(1,12))
+
+    story.append(Paragraph("Lifecycle Event Summary", section_style))
+
+    for event in pdf_lifecycle_events:
+        event_reason = event.get("event_reason") or event.get("event_notes") or "Recorded"
+        story.append(
+            Paragraph(
+                "• {} — {}".format(
+                    event.get("event_type", "Event"),
+                    event_reason
+                ),
+                body_style
+            )
+        )
+
+    story.append(Spacer(1,12))
+
+    provenance_table = Table([
+        ["Generated By","Institutional Operating System"],
+        ["Generation Engine",certificate.get("generation_engine") or "Continuity Certification Engine"],
+        ["Execution Session",certificate.get("execution_id")],
+        ["Hash Algorithm","SHA-256"],
+        ["Institution Status",verification_text],
+    ], colWidths=[150,330])
+
+    provenance_table.setStyle(TableStyle([
+        ("GRID",(0,0),(-1,-1),0.4,colors.grey),
+        ("BACKGROUND",(0,0),(0,-1),colors.whitesmoke),
+        ("FONTNAME",(0,0),(0,-1),"Helvetica-Bold"),
+        ("FONTSIZE",(0,0),(-1,-1),8),
+    ]))
+
+    story.append(Paragraph("Institutional Provenance", section_style))
+    story.append(provenance_table)
+
+    story.append(Spacer(1,12))
+
 
     story.append(Paragraph("Validation Record", section_style))
 
@@ -20418,6 +21250,22 @@ def continuity_certificate_pdf(certification_id):
     )
 
     story.append(Paragraph(statement, body_style))
+
+
+    story.append(Spacer(1,12))
+
+    story.append(Paragraph("Institutional Verification Notice", section_style))
+
+    story.append(
+        Paragraph(
+            "This certificate remains immutable after issuance. "
+            "If a successor certificate exists, this document remains "
+            "part of the permanent institutional record and should be "
+            "verified through the Institutional Certificate Registry.",
+            body_style
+        )
+    )
+
     story.append(Spacer(1, 18))
 
     seal_data = [
@@ -20550,3 +21398,52 @@ def admin_diag_seed_execution_objects():
 
 
 
+
+
+@app.route("/document-platform/object-model")
+def document_platform_object_model():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    status = document_object_model_status()
+
+    sample = build_document_object(
+        document_id="DOC-SAMPLE-001",
+        document_type="Institutional Document",
+        title="Universal Document Object Model Sample",
+        module_name="Document Platform",
+        source_record_type="system",
+        source_record_id="ICP-8A",
+        status="draft",
+        lifecycle_status="model_ready",
+        relationships=[
+            {
+                "relationship_id": "DREL-SAMPLE-001",
+                "related_object_type": "certificate_platform",
+                "related_object_id": "ICP-6/ICP-7",
+                "relationship_type": "extends",
+                "relationship_label": "Extends Certificate Studio architecture",
+                "relationship_status": "active",
+            }
+        ],
+        timeline=[
+            {
+                "event_id": "DEVT-SAMPLE-001",
+                "event_type": "Model Created",
+                "event_status": "ready",
+                "event_reason": "ICP-8A Universal Document Object Model initialized.",
+                "actor": "system",
+            }
+        ],
+        verification={
+            "verified": False,
+            "verification_status": "model_sample",
+        },
+    )
+
+    return render_template(
+        "document_platform_object_model.html",
+        status=status,
+        sample=sample,
+    )
