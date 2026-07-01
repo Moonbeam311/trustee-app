@@ -952,6 +952,288 @@ class FundingCertificateAdapter(CertificateAdapter):
         return None
 
 
+
+
+class GovernanceCertificateAdapter(CertificateAdapter):
+    certificate_type = "Governance"
+
+    def issue(self, payload=None, authority=None):
+        return {
+            "supported": False,
+            "message": "Governance certificate issuance remains controlled by existing governance workflows.",
+            "certificate_type": self.certificate_type,
+            "payload": payload or {},
+            "authority": authority,
+        }
+
+    def get(self, certificate_id):
+        from database.db import get_connection
+
+        governance_id = certificate_id.replace("CERT-GOV-", "GOV-") if certificate_id.startswith("CERT-GOV-") else certificate_id
+
+        candidate_tables = [
+            "governance_records",
+            "governance_events",
+            "matter_events",
+            "certificate_policies",
+            "matter_relationships",
+        ]
+
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+
+            tables = {
+                r["name"] if hasattr(r, "keys") else r[0]
+                for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            }
+
+            for table in candidate_tables:
+                if table not in tables:
+                    continue
+
+                cols = [
+                    r["name"] if hasattr(r, "keys") else r[1]
+                    for r in cur.execute(f"PRAGMA table_info({table})").fetchall()
+                ]
+
+                checks = []
+                params = []
+
+                for col in [
+                    "governance_id",
+                    "governance_record_id",
+                    "event_id",
+                    "matter_event_id",
+                    "relationship_id",
+                    "policy_id",
+                    "certificate_id",
+                    "id",
+                ]:
+                    if col in cols:
+                        checks.append(f"{col} = ?")
+                        params.append(governance_id)
+                        checks.append(f"{col} = ?")
+                        params.append(certificate_id)
+
+                if not checks:
+                    continue
+
+                row = cur.execute(
+                    f"SELECT * FROM {table} WHERE {' OR '.join(checks)} LIMIT 1",
+                    params
+                ).fetchone()
+
+                if row:
+                    record = dict(row)
+                    record["_governance_table"] = table
+                    conn.close()
+                    return record
+
+            conn.close()
+        except Exception:
+            return None
+
+        return None
+
+    def verify(self, certificate_id):
+        governance = self.get(certificate_id)
+
+        if not governance:
+            return {
+                "verified": False,
+                "verification_status": "not_found",
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Governance record not found.",
+            }
+
+        return {
+            "verified": True,
+            "verification_status": "verified",
+            "certificate_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "governance_id": (
+                governance.get("governance_id")
+                or governance.get("governance_record_id")
+                or governance.get("event_id")
+                or governance.get("matter_event_id")
+                or governance.get("relationship_id")
+                or governance.get("policy_id")
+                or governance.get("id")
+            ),
+            "matter_id": governance.get("matter_id"),
+            "trust_id": governance.get("trust_id"),
+            "source_table": governance.get("_governance_table"),
+            "message": "Governance record exists and is adapter-visible.",
+        }
+
+    def object(self, certificate_id):
+        governance = self.get(certificate_id)
+        verification = self.verify(certificate_id)
+
+        if not governance:
+            return {
+                "found": False,
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Governance record not found.",
+            }
+
+        governance_id = (
+            governance.get("governance_id")
+            or governance.get("governance_record_id")
+            or governance.get("event_id")
+            or governance.get("matter_event_id")
+            or governance.get("relationship_id")
+            or governance.get("policy_id")
+            or governance.get("id")
+            or certificate_id
+        )
+
+        matter_id = governance.get("matter_id")
+        trust_id = governance.get("trust_id")
+        policy_id = governance.get("policy_id")
+        status = governance.get("status") or governance.get("event_status") or governance.get("relationship_status") or "Recorded"
+        title = governance.get("title") or governance.get("event_type") or governance.get("policy_name") or f"Governance Record {governance_id}"
+
+        relationships = [{
+            "relationship_id": f"GREL-{governance_id}-GOV",
+            "certification_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "related_object_type": "governance_record",
+            "related_object_id": governance_id,
+            "relationship_type": "certifies",
+            "relationship_label": title,
+            "relationship_basis": "Governance adapter exposes the existing governance-related record.",
+            "relationship_status": "active",
+        }]
+
+        if matter_id:
+            relationships.append({
+                "relationship_id": f"GREL-{governance_id}-MATTER",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "matter",
+                "related_object_id": matter_id,
+                "relationship_type": "governs",
+                "relationship_label": f"Matter {matter_id}",
+                "relationship_basis": "Governance record is associated with this matter.",
+                "relationship_status": "active",
+            })
+
+        if trust_id:
+            relationships.append({
+                "relationship_id": f"GREL-{governance_id}-TRUST",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "trust",
+                "related_object_id": trust_id,
+                "relationship_type": "governs",
+                "relationship_label": f"Trust {trust_id}",
+                "relationship_basis": "Governance record is associated with this trust.",
+                "relationship_status": "active",
+            })
+
+        if policy_id:
+            relationships.append({
+                "relationship_id": f"GREL-{governance_id}-POLICY",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "policy",
+                "related_object_id": policy_id,
+                "relationship_type": "applies_policy",
+                "relationship_label": f"Policy {policy_id}",
+                "relationship_basis": "Governance record references this policy.",
+                "relationship_status": "active",
+            })
+
+        return {
+            "found": True,
+            "identity": {
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "display_name": "Governance Certificate",
+                "module_name": "Governance",
+                "certificate_version": "1.0",
+                "execution_id": governance_id,
+            },
+            "status": {
+                "certification_status": status,
+                "verification_status": verification.get("verification_status"),
+                "lifecycle_status": status,
+                "revocation_status": "active",
+                "chain_status": "Current",
+            },
+            "governance": {
+                "issuance_reason": "Governance certificate generated from existing governance-related record.",
+                "issuance_authority": governance.get("created_by") or governance.get("actor") or governance.get("authority") or "Governance Engine",
+                "generation_engine": "Governance Certificate Adapter",
+                "governance_policy": "Immutable",
+                "retention_policy": "Permanent",
+                "lifecycle_notes": f"Governance adapter object generated from {governance.get('_governance_table') or 'governance source'}.",
+            },
+            "verification": verification,
+            "chain": {
+                "supersedes_certification_id": None,
+                "superseded_by_certification_id": None,
+                "supersedes": None,
+                "superseded_by": None,
+            },
+            "timeline": {
+                "event_count": 1,
+                "events": [{
+                    "event_id": f"GVADAPT-{governance_id}",
+                    "event_type": "Adapter Object Built",
+                    "event_status": status,
+                    "event_reason": "Existing Governance record exposed through Universal Certificate Adapter.",
+                    "event_authority": "Governance Certificate Adapter",
+                    "generation_engine": "Governance Certificate Adapter",
+                    "actor": governance.get("created_by") or governance.get("actor") or "system",
+                    "event_at": governance.get("updated_at") or governance.get("created_at") or governance.get("event_at"),
+                }],
+            },
+            "relationships": {
+                "count": len(relationships),
+                "items": relationships,
+            },
+            "policy": {
+                "policy_id": None,
+                "policy_name": "Immutable",
+                "display_name": "Immutable Certificate",
+                "policy_category": "Core",
+                "description": "Governance certificate is treated as immutable evidence of governance state, policy, relationship, or event.",
+                "allows_edit": False,
+                "allows_delete": False,
+                "allows_supersession": True,
+                "allows_revocation": False,
+                "requires_lifecycle_event": True,
+                "requires_reason": True,
+                "requires_authority": True,
+                "retention_rule": "Permanent",
+            },
+            "capabilities": {
+                "supports_lifecycle": True,
+                "supports_timeline": True,
+                "supports_chain": True,
+                "supports_pdf": True,
+                "supports_packet": True,
+                "supports_supersession": True,
+                "supports_relationships": True,
+                "supports_provenance": True,
+            },
+            "payload": {
+                "raw_record": governance,
+            },
+        }
+
+    def pdf(self, certificate_id):
+        return None
+
+    def packet(self, certificate_id):
+        return None
+
+
 class PlaceholderCertificateAdapter(CertificateAdapter):
     def __init__(self, certificate_type):
         self.certificate_type = certificate_type
@@ -997,7 +1279,7 @@ CERTIFICATE_ADAPTERS = {
     "Archive": ArchiveCertificateAdapter(),
     "Property": PropertyCertificateAdapter(),
     "Funding": FundingCertificateAdapter(),
-    "Governance": PlaceholderCertificateAdapter("Governance"),
+    "Governance": GovernanceCertificateAdapter(),
     "Compliance": PlaceholderCertificateAdapter("Compliance"),
     "Certificate of Trust": PlaceholderCertificateAdapter("Certificate of Trust"),
     "Institution": PlaceholderCertificateAdapter("Institution"),
