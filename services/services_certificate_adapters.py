@@ -686,6 +686,272 @@ class PropertyCertificateAdapter(CertificateAdapter):
         return None
 
 
+
+
+class FundingCertificateAdapter(CertificateAdapter):
+    certificate_type = "Funding"
+
+    def issue(self, payload=None, authority=None):
+        return {
+            "supported": False,
+            "message": "Funding certificate issuance remains controlled by the existing funding or asset-transfer workflow.",
+            "certificate_type": self.certificate_type,
+            "payload": payload or {},
+            "authority": authority,
+        }
+
+    def get(self, certificate_id):
+        from database.db import get_connection
+
+        funding_id = certificate_id.replace("CERT-FUND-", "FUND-") if certificate_id.startswith("CERT-FUND-") else certificate_id
+
+        candidate_tables = [
+            "funding_records",
+            "trust_funding",
+            "asset_funding",
+            "transfer_records",
+            "ledger_entries",
+        ]
+
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+
+            tables = {
+                r["name"] if hasattr(r, "keys") else r[0]
+                for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            }
+
+            for table in candidate_tables:
+                if table not in tables:
+                    continue
+
+                cols = [
+                    r["name"] if hasattr(r, "keys") else r[1]
+                    for r in cur.execute(f"PRAGMA table_info({table})").fetchall()
+                ]
+
+                checks = []
+                params = []
+
+                for col in [
+                    "funding_id",
+                    "funding_record_id",
+                    "certificate_id",
+                    "transfer_id",
+                    "ledger_id",
+                    "entry_id",
+                    "id",
+                ]:
+                    if col in cols:
+                        checks.append(f"{col} = ?")
+                        params.append(funding_id)
+                        checks.append(f"{col} = ?")
+                        params.append(certificate_id)
+
+                if not checks:
+                    continue
+
+                row = cur.execute(
+                    f"SELECT * FROM {table} WHERE {' OR '.join(checks)} LIMIT 1",
+                    params
+                ).fetchone()
+
+                if row:
+                    record = dict(row)
+                    record["_funding_table"] = table
+                    conn.close()
+                    return record
+
+            conn.close()
+        except Exception:
+            return None
+
+        return None
+
+    def verify(self, certificate_id):
+        funding = self.get(certificate_id)
+
+        if not funding:
+            return {
+                "verified": False,
+                "verification_status": "not_found",
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Funding record not found.",
+            }
+
+        return {
+            "verified": True,
+            "verification_status": "verified",
+            "certificate_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "funding_id": (
+                funding.get("funding_id")
+                or funding.get("funding_record_id")
+                or funding.get("transfer_id")
+                or funding.get("ledger_id")
+                or funding.get("entry_id")
+                or funding.get("id")
+            ),
+            "trust_id": funding.get("trust_id"),
+            "source_table": funding.get("_funding_table"),
+            "message": "Funding record exists and is adapter-visible.",
+        }
+
+    def object(self, certificate_id):
+        funding = self.get(certificate_id)
+        verification = self.verify(certificate_id)
+
+        if not funding:
+            return {
+                "found": False,
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Funding record not found.",
+            }
+
+        funding_id = (
+            funding.get("funding_id")
+            or funding.get("funding_record_id")
+            or funding.get("transfer_id")
+            or funding.get("ledger_id")
+            or funding.get("entry_id")
+            or funding.get("id")
+            or certificate_id
+        )
+
+        trust_id = funding.get("trust_id")
+        asset_id = funding.get("asset_id") or funding.get("property_id")
+        amount = funding.get("amount") or funding.get("value") or funding.get("funding_amount")
+        status = funding.get("status") or funding.get("funding_status") or "Recorded"
+        title = funding.get("title") or funding.get("description") or f"Funding Record {funding_id}"
+
+        relationships = [{
+            "relationship_id": f"FREL-{funding_id}-FUNDING",
+            "certification_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "related_object_type": "funding_record",
+            "related_object_id": funding_id,
+            "relationship_type": "certifies",
+            "relationship_label": title,
+            "relationship_basis": "Funding adapter exposes the existing funding-related record.",
+            "relationship_status": "active",
+        }]
+
+        if trust_id:
+            relationships.append({
+                "relationship_id": f"FREL-{funding_id}-TRUST",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "trust",
+                "related_object_id": trust_id,
+                "relationship_type": "funds",
+                "relationship_label": f"Trust {trust_id}",
+                "relationship_basis": "Funding record is associated with this trust.",
+                "relationship_status": "active",
+            })
+
+        if asset_id:
+            relationships.append({
+                "relationship_id": f"FREL-{funding_id}-ASSET",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "asset",
+                "related_object_id": asset_id,
+                "relationship_type": "funds_with",
+                "relationship_label": f"Asset {asset_id}",
+                "relationship_basis": "Funding record references this asset/property.",
+                "relationship_status": "active",
+            })
+
+        return {
+            "found": True,
+            "identity": {
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "display_name": "Funding Certificate",
+                "module_name": "Funding",
+                "certificate_version": "1.0",
+                "execution_id": funding_id,
+            },
+            "status": {
+                "certification_status": status,
+                "verification_status": verification.get("verification_status"),
+                "lifecycle_status": status,
+                "revocation_status": "active",
+                "chain_status": "Current",
+            },
+            "governance": {
+                "issuance_reason": "Funding certificate generated from existing funding-related record.",
+                "issuance_authority": funding.get("created_by") or funding.get("updated_by") or "Funding Engine",
+                "generation_engine": "Funding Certificate Adapter",
+                "governance_policy": "Immutable",
+                "retention_policy": "Permanent",
+                "lifecycle_notes": f"Funding adapter object generated from {funding.get('_funding_table') or 'funding source'}.",
+            },
+            "verification": verification,
+            "chain": {
+                "supersedes_certification_id": None,
+                "superseded_by_certification_id": None,
+                "supersedes": None,
+                "superseded_by": None,
+            },
+            "timeline": {
+                "event_count": 1,
+                "events": [{
+                    "event_id": f"FUADAPT-{funding_id}",
+                    "event_type": "Adapter Object Built",
+                    "event_status": status,
+                    "event_reason": "Existing Funding exposed through Universal Certificate Adapter.",
+                    "event_authority": "Funding Certificate Adapter",
+                    "generation_engine": "Funding Certificate Adapter",
+                    "actor": funding.get("created_by") or "system",
+                    "event_at": funding.get("updated_at") or funding.get("created_at") or funding.get("date"),
+                }],
+            },
+            "relationships": {
+                "count": len(relationships),
+                "items": relationships,
+            },
+            "policy": {
+                "policy_id": None,
+                "policy_name": "Immutable",
+                "display_name": "Immutable Certificate",
+                "policy_category": "Core",
+                "description": "Funding certificate is treated as immutable evidence of trust or asset funding activity.",
+                "allows_edit": False,
+                "allows_delete": False,
+                "allows_supersession": False,
+                "allows_revocation": False,
+                "requires_lifecycle_event": True,
+                "requires_reason": True,
+                "requires_authority": True,
+                "retention_rule": "Permanent",
+            },
+            "capabilities": {
+                "supports_lifecycle": True,
+                "supports_timeline": True,
+                "supports_chain": False,
+                "supports_pdf": True,
+                "supports_packet": True,
+                "supports_supersession": False,
+                "supports_relationships": True,
+                "supports_provenance": True,
+            },
+            "payload": {
+                "amount": amount,
+                "raw_record": funding,
+            },
+        }
+
+    def pdf(self, certificate_id):
+        return None
+
+    def packet(self, certificate_id):
+        return None
+
+
 class PlaceholderCertificateAdapter(CertificateAdapter):
     def __init__(self, certificate_type):
         self.certificate_type = certificate_type
@@ -730,7 +996,7 @@ CERTIFICATE_ADAPTERS = {
     "Transfer": TransferCertificateAdapter(),
     "Archive": ArchiveCertificateAdapter(),
     "Property": PropertyCertificateAdapter(),
-    "Funding": PlaceholderCertificateAdapter("Funding"),
+    "Funding": FundingCertificateAdapter(),
     "Governance": PlaceholderCertificateAdapter("Governance"),
     "Compliance": PlaceholderCertificateAdapter("Compliance"),
     "Certificate of Trust": PlaceholderCertificateAdapter("Certificate of Trust"),
