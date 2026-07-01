@@ -1507,6 +1507,241 @@ class ComplianceCertificateAdapter(CertificateAdapter):
         return None
 
 
+
+
+class CertificateOfTrustAdapter(CertificateAdapter):
+    certificate_type = "Certificate of Trust"
+
+    def issue(self, payload=None, authority=None):
+        return {
+            "supported": False,
+            "message": "Certificate of Trust issuance remains controlled by the existing trust output workflow.",
+            "certificate_type": self.certificate_type,
+            "payload": payload or {},
+            "authority": authority,
+        }
+
+    def get(self, certificate_id):
+        from database.db import get_connection
+
+        trust_id = certificate_id.replace("CERT-TRUST-", "TR-") if certificate_id.startswith("CERT-TRUST-") else certificate_id
+
+        candidate_tables = [
+            "trusts",
+            "trust_records",
+            "generated_documents",
+            "document_exports",
+        ]
+
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+
+            tables = {
+                r["name"] if hasattr(r, "keys") else r[0]
+                for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            }
+
+            for table in candidate_tables:
+                if table not in tables:
+                    continue
+
+                cols = [
+                    r["name"] if hasattr(r, "keys") else r[1]
+                    for r in cur.execute(f"PRAGMA table_info({table})").fetchall()
+                ]
+
+                checks = []
+                params = []
+
+                for col in [
+                    "trust_id",
+                    "certificate_id",
+                    "document_id",
+                    "export_id",
+                    "id",
+                ]:
+                    if col in cols:
+                        checks.append(f"{col} = ?")
+                        params.append(trust_id)
+                        checks.append(f"{col} = ?")
+                        params.append(certificate_id)
+
+                if "document_type" in cols:
+                    checks.append("document_type = ?")
+                    params.append("Certificate of Trust")
+
+                if not checks:
+                    continue
+
+                row = cur.execute(
+                    f"SELECT * FROM {table} WHERE {' OR '.join(checks)} LIMIT 1",
+                    params
+                ).fetchone()
+
+                if row:
+                    record = dict(row)
+                    record["_certificate_of_trust_table"] = table
+                    conn.close()
+                    return record
+
+            conn.close()
+        except Exception:
+            return None
+
+        return None
+
+    def verify(self, certificate_id):
+        record = self.get(certificate_id)
+
+        if not record:
+            return {
+                "verified": False,
+                "verification_status": "not_found",
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Certificate of Trust source record not found.",
+            }
+
+        return {
+            "verified": True,
+            "verification_status": "verified",
+            "certificate_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "trust_id": record.get("trust_id"),
+            "document_id": record.get("document_id"),
+            "source_table": record.get("_certificate_of_trust_table"),
+            "message": "Certificate of Trust source record exists and is adapter-visible.",
+        }
+
+    def object(self, certificate_id):
+        record = self.get(certificate_id)
+        verification = self.verify(certificate_id)
+
+        if not record:
+            return {
+                "found": False,
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Certificate of Trust source record not found.",
+            }
+
+        trust_id = record.get("trust_id") or certificate_id
+        document_id = record.get("document_id") or record.get("export_id") or f"COT-{trust_id}"
+        title = record.get("title") or record.get("trust_name") or record.get("name") or "Certificate of Trust"
+        status = record.get("status") or record.get("document_status") or "Available"
+
+        relationships = [{
+            "relationship_id": f"COTREL-{document_id}-DOC",
+            "certification_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "related_object_type": "document",
+            "related_object_id": document_id,
+            "relationship_type": "certifies",
+            "relationship_label": title,
+            "relationship_basis": "Certificate of Trust adapter exposes an existing trust output/source record.",
+            "relationship_status": "active",
+        }]
+
+        if trust_id:
+            relationships.append({
+                "relationship_id": f"COTREL-{document_id}-TRUST",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "trust",
+                "related_object_id": trust_id,
+                "relationship_type": "summarizes",
+                "relationship_label": f"Trust {trust_id}",
+                "relationship_basis": "Certificate of Trust summarizes the trust record.",
+                "relationship_status": "active",
+            })
+
+        return {
+            "found": True,
+            "identity": {
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "display_name": "Certificate of Trust",
+                "module_name": "Trust Output",
+                "certificate_version": "1.0",
+                "execution_id": document_id,
+            },
+            "status": {
+                "certification_status": status,
+                "verification_status": verification.get("verification_status"),
+                "lifecycle_status": status,
+                "revocation_status": "active",
+                "chain_status": "Current",
+            },
+            "governance": {
+                "issuance_reason": "Certificate of Trust generated from existing trust output record.",
+                "issuance_authority": record.get("created_by") or record.get("updated_by") or "Trust Output Engine",
+                "generation_engine": "Certificate of Trust Adapter",
+                "governance_policy": "Immutable",
+                "retention_policy": "Permanent",
+                "lifecycle_notes": f"Certificate of Trust adapter object generated from {record.get('_certificate_of_trust_table') or 'trust output source'}.",
+            },
+            "verification": verification,
+            "chain": {
+                "supersedes_certification_id": None,
+                "superseded_by_certification_id": None,
+                "supersedes": None,
+                "superseded_by": None,
+            },
+            "timeline": {
+                "event_count": 1,
+                "events": [{
+                    "event_id": f"COTADAPT-{document_id}",
+                    "event_type": "Adapter Object Built",
+                    "event_status": status,
+                    "event_reason": "Existing Certificate of Trust output exposed through Universal Certificate Adapter.",
+                    "event_authority": "Certificate of Trust Adapter",
+                    "generation_engine": "Certificate of Trust Adapter",
+                    "actor": record.get("created_by") or "system",
+                    "event_at": record.get("updated_at") or record.get("created_at"),
+                }],
+            },
+            "relationships": {
+                "count": len(relationships),
+                "items": relationships,
+            },
+            "policy": {
+                "policy_id": None,
+                "policy_name": "Immutable",
+                "display_name": "Immutable Certificate",
+                "policy_category": "Core",
+                "description": "Certificate of Trust is treated as immutable evidence summarizing selected trust facts.",
+                "allows_edit": False,
+                "allows_delete": False,
+                "allows_supersession": False,
+                "allows_revocation": False,
+                "requires_lifecycle_event": True,
+                "requires_reason": True,
+                "requires_authority": True,
+                "retention_rule": "Permanent",
+            },
+            "capabilities": {
+                "supports_lifecycle": True,
+                "supports_timeline": True,
+                "supports_chain": False,
+                "supports_pdf": True,
+                "supports_packet": True,
+                "supports_supersession": False,
+                "supports_relationships": True,
+                "supports_provenance": True,
+            },
+            "payload": {
+                "raw_record": record,
+            },
+        }
+
+    def pdf(self, certificate_id):
+        return None
+
+    def packet(self, certificate_id):
+        return None
+
+
 class PlaceholderCertificateAdapter(CertificateAdapter):
     def __init__(self, certificate_type):
         self.certificate_type = certificate_type
@@ -1554,7 +1789,7 @@ CERTIFICATE_ADAPTERS = {
     "Funding": FundingCertificateAdapter(),
     "Governance": GovernanceCertificateAdapter(),
     "Compliance": ComplianceCertificateAdapter(),
-    "Certificate of Trust": PlaceholderCertificateAdapter("Certificate of Trust"),
+    "Certificate of Trust": CertificateOfTrustAdapter(),
     "Institution": PlaceholderCertificateAdapter("Institution"),
 }
 
