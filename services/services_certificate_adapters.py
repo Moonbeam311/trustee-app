@@ -1742,6 +1742,164 @@ class CertificateOfTrustAdapter(CertificateAdapter):
         return None
 
 
+
+
+class InstitutionCertificateAdapter(CertificateAdapter):
+    certificate_type = "Institution"
+
+    def issue(self, payload=None, authority=None):
+        return {
+            "supported": False,
+            "message": "Institution certificate issuance remains controlled by existing institution / IOS governance workflow.",
+            "certificate_type": self.certificate_type,
+            "payload": payload or {},
+            "authority": authority,
+        }
+
+    def get(self, certificate_id):
+        if certificate_id in ("IOS", "INST-IOS", "CERT-INST-IOS"):
+            return {
+                "institution_id": "IOS",
+                "institution_name": "Institutional Operating System",
+                "status": "active",
+                "_institution_table": "virtual_institution",
+            }
+        return None
+
+    def verify(self, certificate_id):
+        institution = self.get(certificate_id)
+
+        if not institution:
+            return {
+                "verified": False,
+                "verification_status": "not_found",
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Institution record not found.",
+            }
+
+        return {
+            "verified": True,
+            "verification_status": "verified",
+            "certificate_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "institution_id": institution.get("institution_id"),
+            "source_table": institution.get("_institution_table"),
+            "message": "Institution record exists and is adapter-visible.",
+        }
+
+    def object(self, certificate_id):
+        institution = self.get(certificate_id)
+        verification = self.verify(certificate_id)
+
+        if not institution:
+            return {
+                "found": False,
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Institution record not found.",
+            }
+
+        institution_id = institution.get("institution_id") or certificate_id
+        title = institution.get("institution_name") or f"Institution {institution_id}"
+        status = institution.get("status") or "active"
+
+        return {
+            "found": True,
+            "identity": {
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "display_name": "Institutional Certificate",
+                "module_name": "Institution",
+                "certificate_version": "1.0",
+                "execution_id": institution_id,
+            },
+            "status": {
+                "certification_status": str(status),
+                "verification_status": verification.get("verification_status"),
+                "lifecycle_status": str(status),
+                "revocation_status": "active",
+                "chain_status": "Current",
+            },
+            "governance": {
+                "issuance_reason": "Institution certificate generated from institutional framework record.",
+                "issuance_authority": "Institutional Governance Engine",
+                "generation_engine": "Institution Certificate Adapter",
+                "governance_policy": "Immutable",
+                "retention_policy": "Permanent",
+                "lifecycle_notes": "Institution adapter object generated from IOS institutional framework.",
+            },
+            "verification": verification,
+            "chain": {
+                "supersedes_certification_id": None,
+                "superseded_by_certification_id": None,
+                "supersedes": None,
+                "superseded_by": None,
+            },
+            "timeline": {
+                "event_count": 1,
+                "events": [{
+                    "event_id": f"IDADAPT-{institution_id}",
+                    "event_type": "Adapter Object Built",
+                    "event_status": str(status),
+                    "event_reason": "Institution exposed through Universal Certificate Adapter.",
+                    "event_authority": "Institution Certificate Adapter",
+                    "generation_engine": "Institution Certificate Adapter",
+                    "actor": "system",
+                    "event_at": None,
+                }],
+            },
+            "relationships": {
+                "count": 1,
+                "items": [{
+                    "relationship_id": f"IREL-{institution_id}-INSTITUTION",
+                    "certification_id": certificate_id,
+                    "certificate_type": self.certificate_type,
+                    "related_object_type": "institution",
+                    "related_object_id": institution_id,
+                    "relationship_type": "certifies",
+                    "relationship_label": title,
+                    "relationship_basis": "Institution adapter exposes the institutional framework record.",
+                    "relationship_status": "active",
+                }],
+            },
+            "policy": {
+                "policy_id": None,
+                "policy_name": "Immutable",
+                "display_name": "Immutable Certificate",
+                "policy_category": "Core",
+                "description": "Institution certificate is treated as immutable evidence of institutional identity or authority.",
+                "allows_edit": False,
+                "allows_delete": False,
+                "allows_supersession": True,
+                "allows_revocation": False,
+                "requires_lifecycle_event": True,
+                "requires_reason": True,
+                "requires_authority": True,
+                "retention_rule": "Permanent",
+            },
+            "capabilities": {
+                "supports_lifecycle": True,
+                "supports_timeline": True,
+                "supports_chain": True,
+                "supports_pdf": True,
+                "supports_packet": True,
+                "supports_supersession": True,
+                "supports_relationships": True,
+                "supports_provenance": True,
+            },
+            "payload": {
+                "raw_record": institution,
+            },
+        }
+
+    def pdf(self, certificate_id):
+        return None
+
+    def packet(self, certificate_id):
+        return None
+
+
 class PlaceholderCertificateAdapter(CertificateAdapter):
     def __init__(self, certificate_type):
         self.certificate_type = certificate_type
@@ -1790,7 +1948,7 @@ CERTIFICATE_ADAPTERS = {
     "Governance": GovernanceCertificateAdapter(),
     "Compliance": ComplianceCertificateAdapter(),
     "Certificate of Trust": CertificateOfTrustAdapter(),
-    "Institution": PlaceholderCertificateAdapter("Institution"),
+    "Institution": InstitutionCertificateAdapter(),
 }
 
 
