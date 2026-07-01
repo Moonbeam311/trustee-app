@@ -1234,6 +1234,279 @@ class GovernanceCertificateAdapter(CertificateAdapter):
         return None
 
 
+
+
+class ComplianceCertificateAdapter(CertificateAdapter):
+    certificate_type = "Compliance"
+
+    def issue(self, payload=None, authority=None):
+        return {
+            "supported": False,
+            "message": "Compliance certificate issuance remains controlled by existing compliance, audit, or review workflows.",
+            "certificate_type": self.certificate_type,
+            "payload": payload or {},
+            "authority": authority,
+        }
+
+    def get(self, certificate_id):
+        from database.db import get_connection
+
+        compliance_id = certificate_id.replace("CERT-COMP-", "COMP-") if certificate_id.startswith("CERT-COMP-") else certificate_id
+
+        candidate_tables = [
+            "compliance_records",
+            "compliance_events",
+            "compliance_reviews",
+            "audit_log",
+            "audit_events",
+            "risk_assessments",
+            "review_gate_records",
+        ]
+
+        try:
+            conn = get_connection()
+            cur = conn.cursor()
+
+            tables = {
+                r["name"] if hasattr(r, "keys") else r[0]
+                for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+            }
+
+            for table in candidate_tables:
+                if table not in tables:
+                    continue
+
+                cols = [
+                    r["name"] if hasattr(r, "keys") else r[1]
+                    for r in cur.execute(f"PRAGMA table_info({table})").fetchall()
+                ]
+
+                checks = []
+                params = []
+
+                for col in [
+                    "compliance_id",
+                    "compliance_record_id",
+                    "review_id",
+                    "audit_id",
+                    "event_id",
+                    "risk_id",
+                    "gate_id",
+                    "certificate_id",
+                    "id",
+                ]:
+                    if col in cols:
+                        checks.append(f"{col} = ?")
+                        params.append(compliance_id)
+                        checks.append(f"{col} = ?")
+                        params.append(certificate_id)
+
+                if not checks:
+                    continue
+
+                row = cur.execute(
+                    f"SELECT * FROM {table} WHERE {' OR '.join(checks)} LIMIT 1",
+                    params
+                ).fetchone()
+
+                if row:
+                    record = dict(row)
+                    record["_compliance_table"] = table
+                    conn.close()
+                    return record
+
+            conn.close()
+        except Exception:
+            return None
+
+        return None
+
+    def verify(self, certificate_id):
+        compliance = self.get(certificate_id)
+
+        if not compliance:
+            return {
+                "verified": False,
+                "verification_status": "not_found",
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Compliance record not found.",
+            }
+
+        return {
+            "verified": True,
+            "verification_status": "verified",
+            "certificate_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "compliance_id": (
+                compliance.get("compliance_id")
+                or compliance.get("compliance_record_id")
+                or compliance.get("review_id")
+                or compliance.get("audit_id")
+                or compliance.get("event_id")
+                or compliance.get("risk_id")
+                or compliance.get("gate_id")
+                or compliance.get("id")
+            ),
+            "matter_id": compliance.get("matter_id"),
+            "trust_id": compliance.get("trust_id"),
+            "source_table": compliance.get("_compliance_table"),
+            "message": "Compliance record exists and is adapter-visible.",
+        }
+
+    def object(self, certificate_id):
+        compliance = self.get(certificate_id)
+        verification = self.verify(certificate_id)
+
+        if not compliance:
+            return {
+                "found": False,
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "message": "Compliance record not found.",
+            }
+
+        compliance_id = (
+            compliance.get("compliance_id")
+            or compliance.get("compliance_record_id")
+            or compliance.get("review_id")
+            or compliance.get("audit_id")
+            or compliance.get("event_id")
+            or compliance.get("risk_id")
+            or compliance.get("gate_id")
+            or compliance.get("id")
+            or certificate_id
+        )
+
+        matter_id = compliance.get("matter_id")
+        trust_id = compliance.get("trust_id")
+        status = compliance.get("status") or compliance.get("review_status") or compliance.get("risk_level") or "Recorded"
+        title = compliance.get("title") or compliance.get("event_type") or compliance.get("review_type") or f"Compliance Record {compliance_id}"
+
+        relationships = [{
+            "relationship_id": f"CREL-{compliance_id}-COMP",
+            "certification_id": certificate_id,
+            "certificate_type": self.certificate_type,
+            "related_object_type": "compliance_record",
+            "related_object_id": compliance_id,
+            "relationship_type": "certifies",
+            "relationship_label": title,
+            "relationship_basis": "Compliance adapter exposes the existing compliance/audit/review record.",
+            "relationship_status": "active",
+        }]
+
+        if matter_id:
+            relationships.append({
+                "relationship_id": f"CREL-{compliance_id}-MATTER",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "matter",
+                "related_object_id": matter_id,
+                "relationship_type": "reviews",
+                "relationship_label": f"Matter {matter_id}",
+                "relationship_basis": "Compliance record is associated with this matter.",
+                "relationship_status": "active",
+            })
+
+        if trust_id:
+            relationships.append({
+                "relationship_id": f"CREL-{compliance_id}-TRUST",
+                "certification_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "related_object_type": "trust",
+                "related_object_id": trust_id,
+                "relationship_type": "reviews",
+                "relationship_label": f"Trust {trust_id}",
+                "relationship_basis": "Compliance record is associated with this trust.",
+                "relationship_status": "active",
+            })
+
+        return {
+            "found": True,
+            "identity": {
+                "certificate_id": certificate_id,
+                "certificate_type": self.certificate_type,
+                "display_name": "Compliance Certificate",
+                "module_name": "Compliance",
+                "certificate_version": "1.0",
+                "execution_id": compliance_id,
+            },
+            "status": {
+                "certification_status": status,
+                "verification_status": verification.get("verification_status"),
+                "lifecycle_status": status,
+                "revocation_status": "active",
+                "chain_status": "Current",
+            },
+            "governance": {
+                "issuance_reason": "Compliance certificate generated from existing compliance, audit, risk, or review record.",
+                "issuance_authority": compliance.get("created_by") or compliance.get("actor") or compliance.get("reviewed_by") or "Compliance Engine",
+                "generation_engine": "Compliance Certificate Adapter",
+                "governance_policy": "Immutable",
+                "retention_policy": "Permanent",
+                "lifecycle_notes": f"Compliance adapter object generated from {compliance.get('_compliance_table') or 'compliance source'}.",
+            },
+            "verification": verification,
+            "chain": {
+                "supersedes_certification_id": None,
+                "superseded_by_certification_id": None,
+                "supersedes": None,
+                "superseded_by": None,
+            },
+            "timeline": {
+                "event_count": 1,
+                "events": [{
+                    "event_id": f"COADAPT-{compliance_id}",
+                    "event_type": "Adapter Object Built",
+                    "event_status": status,
+                    "event_reason": "Existing Compliance record exposed through Universal Certificate Adapter.",
+                    "event_authority": "Compliance Certificate Adapter",
+                    "generation_engine": "Compliance Certificate Adapter",
+                    "actor": compliance.get("created_by") or compliance.get("actor") or "system",
+                    "event_at": compliance.get("updated_at") or compliance.get("created_at") or compliance.get("event_at"),
+                }],
+            },
+            "relationships": {
+                "count": len(relationships),
+                "items": relationships,
+            },
+            "policy": {
+                "policy_id": None,
+                "policy_name": "Immutable",
+                "display_name": "Immutable Certificate",
+                "policy_category": "Core",
+                "description": "Compliance certificate is treated as immutable evidence of review, audit, risk, or compliance posture.",
+                "allows_edit": False,
+                "allows_delete": False,
+                "allows_supersession": True,
+                "allows_revocation": False,
+                "requires_lifecycle_event": True,
+                "requires_reason": True,
+                "requires_authority": True,
+                "retention_rule": "Permanent",
+            },
+            "capabilities": {
+                "supports_lifecycle": True,
+                "supports_timeline": True,
+                "supports_chain": True,
+                "supports_pdf": True,
+                "supports_packet": True,
+                "supports_supersession": True,
+                "supports_relationships": True,
+                "supports_provenance": True,
+            },
+            "payload": {
+                "raw_record": compliance,
+            },
+        }
+
+    def pdf(self, certificate_id):
+        return None
+
+    def packet(self, certificate_id):
+        return None
+
+
 class PlaceholderCertificateAdapter(CertificateAdapter):
     def __init__(self, certificate_type):
         self.certificate_type = certificate_type
@@ -1280,7 +1553,7 @@ CERTIFICATE_ADAPTERS = {
     "Property": PropertyCertificateAdapter(),
     "Funding": FundingCertificateAdapter(),
     "Governance": GovernanceCertificateAdapter(),
-    "Compliance": PlaceholderCertificateAdapter("Compliance"),
+    "Compliance": ComplianceCertificateAdapter(),
     "Certificate of Trust": PlaceholderCertificateAdapter("Certificate of Trust"),
     "Institution": PlaceholderCertificateAdapter("Institution"),
 }
