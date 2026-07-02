@@ -103,7 +103,10 @@ class DocumentAPI:
 
     @staticmethod
     def object(document_id):
-        for obj in list_universal_document_objects():
+        objects = list_universal_document_objects()
+        objects.extend(list_document_adapter_objects())
+
+        for obj in objects:
             if obj["identity"]["document_id"] == document_id:
                 return obj
 
