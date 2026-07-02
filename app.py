@@ -21377,6 +21377,53 @@ def continuity_certificate_verify_direct(certification_id):
 
 
 
+
+
+@app.route("/document-platform/events")
+def document_platform_events():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    objects = registry["objects"]
+
+    events = []
+    event_counts = {}
+
+    for obj in objects:
+        doc_id = obj["identity"]["document_id"]
+        doc_type = obj["identity"]["document_type"]
+
+        for event in obj["timeline"]["events"]:
+            event_name = event.get("event_type") or "Unknown Event"
+            event_counts[event_name] = event_counts.get(event_name, 0) + 1
+
+            events.append({
+                "document_id": doc_id,
+                "document_type": doc_type,
+                "event_id": event.get("event_id"),
+                "event_type": event_name,
+                "event_status": event.get("event_status"),
+                "event_reason": event.get("event_reason"),
+                "actor": event.get("actor"),
+            })
+
+    summary = {
+        "total_events": len(events),
+        "documents": len(objects),
+        "event_names": len(event_counts),
+        "event_counts": event_counts,
+    }
+
+    return render_template(
+        "document_platform_events.html",
+        registry=registry,
+        objects=objects,
+        events=events,
+        summary=summary,
+    )
+
 @app.route("/document-platform/governance")
 def document_platform_governance():
     gate = require_master_admin()

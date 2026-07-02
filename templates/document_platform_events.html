@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Document Event Monitor</h1>
+
+<p>
+  Read-only event monitor for document lifecycle activity, registry observations,
+  future document generation events, verification events, packet activity, and governance events.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Events</strong><br>{{ summary.total_events }}</div>
+  <div class="stat-card"><strong>Documents</strong><br>{{ summary.documents }}</div>
+  <div class="stat-card"><strong>Event Names</strong><br>{{ summary.event_names }}</div>
+</div>
+
+<h2>Events by Name</h2>
+
+<table class="table">
+  <tr>
+    <th>Event Name</th>
+    <th>Count</th>
+  </tr>
+  {% for name, count in summary.event_counts.items() %}
+  <tr>
+    <td>{{ name }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Event Stream</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Event ID</th>
+    <th>Event</th>
+    <th>Status</th>
+    <th>Reason</th>
+    <th>Actor</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for event in events %}
+  <tr>
+    <td>{{ event.document_id }}</td>
+    <td>{{ event.document_type }}</td>
+    <td>{{ event.event_id }}</td>
+    <td>{{ event.event_type }}</td>
+    <td>{{ event.event_status }}</td>
+    <td>{{ event.event_reason }}</td>
+    <td>{{ event.actor }}</td>
+    <td><a href="/document-platform/workspace/{{ event.document_id }}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
