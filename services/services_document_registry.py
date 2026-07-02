@@ -1,3 +1,4 @@
+from services.services_document_adapters import list_document_adapter_objects
 from services.services_document_object_model import build_document_object
 
 
@@ -58,8 +59,10 @@ def list_universal_document_objects():
     return objects
 
 
-def universal_document_registry_summary():
-    objects = list_universal_document_objects()
+def universal_document_registry_summary(objects=None):
+    if objects is None:
+        objects = list_universal_document_objects()
+        objects.extend(list_document_adapter_objects())
 
     by_type = {}
     by_module = {}
@@ -90,9 +93,12 @@ def universal_document_registry_summary():
 class DocumentAPI:
     @staticmethod
     def registry():
+        objects = list_universal_document_objects()
+        objects.extend(list_document_adapter_objects())
+
         return {
-            "summary": universal_document_registry_summary(),
-            "objects": list_universal_document_objects(),
+            "summary": universal_document_registry_summary(objects),
+            "objects": objects,
         }
 
     @staticmethod
@@ -110,6 +116,7 @@ class DocumentAPI:
     @staticmethod
     def search(query=None, document_type=None, module_name=None):
         objects = list_universal_document_objects()
+        objects.extend(list_document_adapter_objects())
 
         if document_type:
             objects = [
