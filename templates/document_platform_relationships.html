@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Document Relationship Graph</h1>
+
+<p>
+  Institutional relationship map connecting document objects to trusts, matters,
+  certificates, people, assets, transfers, funding records, archives, institutions,
+  and future document-linked objects.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Documents</strong><br>{{ objects | length }}</div>
+  <div class="stat-card"><strong>Nodes</strong><br>{{ nodes | length }}</div>
+  <div class="stat-card"><strong>Edges</strong><br>{{ edges | length }}</div>
+  <div class="stat-card"><strong>Registered Types</strong><br>{{ registry.summary.by_type | length }}</div>
+</div>
+
+<h2>Graph Map</h2>
+
+{% for obj in objects %}
+  <h3>{{ obj.identity.document_id }}</h3>
+  <p>{{ obj.identity.document_type }} | {{ obj.identity.module_name }} | {{ obj.status.status }}</p>
+
+  {% if obj.relationships.count == 0 %}
+    <p>No relationships registered yet.</p>
+  {% else %}
+    <ul>
+      {% for rel in obj.relationships['items'] %}
+        <li>
+          {{ rel.relationship_type }}
+          {{ rel.related_object_type }}:
+          {{ rel.related_object_id }}
+          — {{ rel.relationship_label }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endfor %}
+
+<h2>Nodes</h2>
+
+<table class="table">
+  <tr>
+    <th>Node ID</th>
+    <th>Node Type</th>
+    <th>Label</th>
+    <th>Description</th>
+  </tr>
+  {% for node in nodes %}
+  <tr>
+    <td>{{ node.node_id }}</td>
+    <td>{{ node.node_type }}</td>
+    <td>{{ node.label }}</td>
+    <td>{{ node.description }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Edges</h2>
+
+<table class="table">
+  <tr>
+    <th>From</th>
+    <th>Relationship</th>
+    <th>To</th>
+    <th>Label</th>
+    <th>Basis</th>
+  </tr>
+  {% for edge in edges %}
+  <tr>
+    <td>{{ edge.from }}</td>
+    <td>{{ edge.relationship }}</td>
+    <td>{{ edge.to }}</td>
+    <td>{{ edge.label }}</td>
+    <td>{{ edge.basis }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if edges|length == 0 %}
+<p>
+  No relationship edges are currently registered. This is expected while ICP-8 is
+  still exposing document classes rather than live document records.
+</p>
+{% endif %}
+
+{% endblock %}

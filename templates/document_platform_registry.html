@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Explorer</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Universal Document Registry</h1>
+
+<p>
+  Canonical registry for institutional document classes across trusts, minutes,
+  certificates, transfers, property, funding, governance, compliance, archive,
+  institution, and future document-producing modules.
+</p>
+
+<h2>Registry Summary</h2>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Documents</strong><br>{{ registry.summary.total }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ registry.summary.verified }}</div>
+  <div class="stat-card"><strong>Document Types</strong><br>{{ registry.summary.by_type | length }}</div>
+  <div class="stat-card"><strong>Modules</strong><br>{{ registry.summary.by_module | length }}</div>
+</div>
+
+<h2>Document Type Counts</h2>
+
+<table class="table">
+  <tr>
+    <th>Document Type</th>
+    <th>Count</th>
+  </tr>
+  {% for key, value in registry.summary.by_type.items() %}
+  <tr>
+    <td>{{ key }}</td>
+    <td>{{ value }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Universal Documents</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Title</th>
+    <th>Module</th>
+    <th>Status</th>
+    <th>Lifecycle</th>
+    <th>Verification</th>
+    <th>Timeline</th>
+    <th>Relationships</th>
+    <th>JSON</th>
+  </tr>
+
+  {% for obj in registry.objects %}
+  <tr>
+    <td><strong>{{ obj.identity.document_id }}</strong></td>
+    <td>{{ obj.identity.document_type }}</td>
+    <td>{{ obj.identity.title }}</td>
+    <td>{{ obj.identity.module_name }}</td>
+    <td>{{ obj.status.status }}</td>
+    <td>{{ obj.status.lifecycle_status }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.timeline.event_count }}</td>
+    <td>{{ obj.relationships.count }}</td>
+    <td><a href="/api/documents/{{ obj.identity.document_id }}">JSON</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

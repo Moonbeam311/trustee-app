@@ -1,3 +1,4 @@
+from services.services_document_registry import DocumentAPI, list_registered_document_types
 from services.services_document_object_model import build_document_object, document_object_model_status
 from services.services_certificate_templates import seed_certificate_templates, list_certificate_templates, resolve_template_for_certificate_object
 from services.services_certificate_event_bus import certificate_event_bus_summary, list_certificate_bus_events
@@ -21356,6 +21357,250 @@ def continuity_certificate_verify_direct(certification_id):
     )
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@app.route("/document-platform/governance")
+def document_platform_governance():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    objects = registry["objects"]
+
+    warnings = []
+
+    policy_counts = {}
+    editable = 0
+    locked = 0
+    permanent = 0
+
+    for obj in objects:
+        policy = obj["governance"].get("governance_policy") or "Unknown"
+        policy_counts[policy] = policy_counts.get(policy, 0) + 1
+
+        if obj["governance"].get("allows_edit"):
+            editable += 1
+        else:
+            locked += 1
+
+        if obj["governance"].get("retention_policy") == "Permanent":
+            permanent += 1
+
+        if obj["governance"].get("allows_delete"):
+            warnings.append({
+                "document_id": obj["identity"]["document_id"],
+                "warning": "Document allows delete; institutional records should normally be retained.",
+            })
+
+        if not obj["governance"].get("requires_authority"):
+            warnings.append({
+                "document_id": obj["identity"]["document_id"],
+                "warning": "Document does not require authority.",
+            })
+
+        if not obj["governance"].get("requires_reason"):
+            warnings.append({
+                "document_id": obj["identity"]["document_id"],
+                "warning": "Document does not require reason.",
+            })
+
+    summary = {
+        "total": len(objects),
+        "policies": len(policy_counts),
+        "editable": editable,
+        "locked": locked,
+        "permanent": permanent,
+        "warnings": len(warnings),
+        "policy_counts": policy_counts,
+    }
+
+    return render_template(
+        "document_platform_governance.html",
+        registry=registry,
+        objects=objects,
+        summary=summary,
+        warnings=warnings,
+    )
+
+@app.route("/document-platform/relationships")
+def document_platform_relationships():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    objects = registry["objects"]
+
+    nodes = []
+    edges = []
+    node_ids = set()
+
+    for obj in objects:
+        doc_id = obj["identity"]["document_id"]
+
+        if doc_id not in node_ids:
+            nodes.append({
+                "node_id": doc_id,
+                "node_type": "document",
+                "label": doc_id,
+                "description": obj["identity"]["title"],
+            })
+            node_ids.add(doc_id)
+
+        for rel in obj["relationships"]["items"]:
+            related_node_id = f"{rel.get('related_object_type')}:{rel.get('related_object_id')}"
+
+            if related_node_id not in node_ids:
+                nodes.append({
+                    "node_id": related_node_id,
+                    "node_type": rel.get("related_object_type"),
+                    "label": rel.get("related_object_id"),
+                    "description": rel.get("related_object_type"),
+                })
+                node_ids.add(related_node_id)
+
+            edges.append({
+                "from": doc_id,
+                "relationship": rel.get("relationship_type"),
+                "to": related_node_id,
+                "label": rel.get("relationship_label"),
+                "basis": rel.get("relationship_basis"),
+            })
+
+    return render_template(
+        "document_platform_relationships.html",
+        registry=registry,
+        objects=objects,
+        nodes=nodes,
+        edges=edges,
+    )
+
+@app.route("/document-platform/builder", methods=["GET", "POST"])
+def document_platform_builder():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    document_types = sorted({o["identity"]["document_type"] for o in registry["objects"]})
+
+    selected_type = request.values.get("document_type") or document_types[0]
+    selected_object = None
+
+    for obj in registry["objects"]:
+        if obj["identity"]["document_type"] == selected_type:
+            selected_object = obj
+            break
+
+    staged_payload = None
+
+    if request.method == "POST":
+        staged_payload = {
+            "document_type": selected_type,
+            "source_module": request.form.get("source_module"),
+            "source_record_id": request.form.get("source_record_id"),
+            "related_object_type": request.form.get("related_object_type"),
+            "related_object_id": request.form.get("related_object_id"),
+            "generation_authority": request.form.get("generation_authority"),
+            "generation_reason": request.form.get("generation_reason"),
+            "notes": request.form.get("notes"),
+            "issuance_enabled": False,
+            "message": "Document payload staged only. Live document generation is not enabled in ICP-8E.",
+        }
+
+    return render_template(
+        "document_platform_builder.html",
+        registry=registry,
+        document_types=document_types,
+        selected_type=selected_type,
+        selected_object=selected_object,
+        staged_payload=staged_payload,
+    )
+
+@app.route("/document-platform/workspace/<path:document_id>")
+def document_platform_workspace(document_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    document_object = DocumentAPI.object(document_id)
+
+    return render_template(
+        "document_platform_workspace.html",
+        document_object=document_object,
+    )
+
+@app.route("/document-platform/explorer")
+def document_platform_explorer():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    query = request.args.get("q", "").strip()
+    document_type = request.args.get("document_type", "").strip()
+    module_name = request.args.get("module_name", "").strip()
+
+    registry = DocumentAPI.registry()
+    objects = DocumentAPI.search(
+        query=query or None,
+        document_type=document_type or None,
+        module_name=module_name or None,
+    )
+
+    document_types = sorted({o["identity"]["document_type"] for o in registry["objects"]})
+    modules = sorted({o["identity"]["module_name"] for o in registry["objects"]})
+
+    return render_template(
+        "document_platform_explorer.html",
+        registry=registry,
+        objects=objects,
+        query=query,
+        document_type=document_type,
+        module_name=module_name,
+        document_types=document_types,
+        modules=modules,
+    )
+
+
+@app.route("/document-platform/registry")
+def document_platform_registry():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    return render_template("document_platform_registry.html", registry=registry)
+
+
+@app.route("/api/documents/registry")
+def api_documents_registry():
+    return DocumentAPI.registry()
+
+
+@app.route("/api/documents/<path:document_id>")
+def api_document_object(document_id):
+    return DocumentAPI.object(document_id)
+
+
 if __name__ == "__main__":
     app.run(debug=FLASK_DEBUG == "1")
 
@@ -21447,3 +21692,5 @@ def document_platform_object_model():
         status=status,
         sample=sample,
     )
+
+

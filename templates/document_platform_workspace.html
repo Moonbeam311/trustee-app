@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Unified Document Workspace</h1>
+
+{% if not document_object.found %}
+  <p><strong>Document not found.</strong></p>
+  <p>{{ document_object.message }}</p>
+{% else %}
+
+<h2>{{ document_object.identity.title }}</h2>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Document ID</strong><br>{{ document_object.identity.document_id }}</div>
+  <div class="stat-card"><strong>Type</strong><br>{{ document_object.identity.document_type }}</div>
+  <div class="stat-card"><strong>Status</strong><br>{{ document_object.status.status }}</div>
+  <div class="stat-card"><strong>Verification</strong><br>{{ document_object.status.verification_status }}</div>
+</div>
+
+<h2>Identity</h2>
+<table class="table">
+  {% for key, value in document_object.identity.items() %}
+  <tr><th>{{ key }}</th><td>{{ value or "—" }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Classification</h2>
+<table class="table">
+  {% for key, value in document_object.classification.items() %}
+  <tr><th>{{ key }}</th><td>{{ value or "—" }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Status</h2>
+<table class="table">
+  {% for key, value in document_object.status.items() %}
+  <tr><th>{{ key }}</th><td>{{ value or "—" }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Governance</h2>
+<table class="table">
+  {% for key, value in document_object.governance.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Verification</h2>
+<table class="table">
+  {% for key, value in document_object.verification.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Relationships</h2>
+<p>Relationships: {{ document_object.relationships.count }}</p>
+<table class="table">
+  <tr>
+    <th>Relationship ID</th>
+    <th>Related Type</th>
+    <th>Related ID</th>
+    <th>Type</th>
+    <th>Label</th>
+    <th>Status</th>
+  </tr>
+  {% for rel in document_object.relationships['items'] %}
+  <tr>
+    <td>{{ rel.relationship_id }}</td>
+    <td>{{ rel.related_object_type }}</td>
+    <td>{{ rel.related_object_id }}</td>
+    <td>{{ rel.relationship_type }}</td>
+    <td>{{ rel.relationship_label }}</td>
+    <td>{{ rel.relationship_status }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Timeline</h2>
+<p>Events: {{ document_object.timeline.event_count }}</p>
+<table class="table">
+  <tr>
+    <th>Event ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Reason</th>
+    <th>Actor</th>
+  </tr>
+  {% for event in document_object.timeline['events'] %}
+  <tr>
+    <td>{{ event.event_id }}</td>
+    <td>{{ event.event_type }}</td>
+    <td>{{ event.event_status }}</td>
+    <td>{{ event.event_reason }}</td>
+    <td>{{ event.actor }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Rendering</h2>
+<table class="table">
+  {% for key, value in document_object.rendering.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Capabilities</h2>
+<table class="table">
+  {% for key, value in document_object.capabilities.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Object JSON</h2>
+<p>
+  <a href="/api/documents/{{ document_object.identity.document_id }}">Open JSON</a>
+</p>
+
+{% endif %}
+
+{% endblock %}

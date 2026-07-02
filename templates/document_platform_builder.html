@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Dynamic Document Builder</h1>
+
+<p>
+  Builder shell for selecting a document class, inspecting its registry object,
+  and staging future document generation payloads. Live issuance is disabled in ICP-8E.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Registered Document Types</strong><br>{{ document_types | length }}</div>
+  <div class="stat-card"><strong>Selected Type</strong><br>{{ selected_type }}</div>
+  <div class="stat-card"><strong>Issuance</strong><br>Disabled</div>
+</div>
+
+<h2>Select Document Type</h2>
+
+<form method="get">
+  <select name="document_type" onchange="this.form.submit()">
+    {% for t in document_types %}
+      <option value="{{ t }}" {% if selected_type == t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if selected_object %}
+
+<h2>Selected Document Class</h2>
+
+<table class="table">
+  <tr><th>Document ID</th><td>{{ selected_object.identity.document_id }}</td></tr>
+  <tr><th>Document Type</th><td>{{ selected_object.identity.document_type }}</td></tr>
+  <tr><th>Title</th><td>{{ selected_object.identity.title }}</td></tr>
+  <tr><th>Module</th><td>{{ selected_object.identity.module_name }}</td></tr>
+  <tr><th>Status</th><td>{{ selected_object.status.status }}</td></tr>
+  <tr><th>Lifecycle</th><td>{{ selected_object.status.lifecycle_status }}</td></tr>
+  <tr><th>Governance Policy</th><td>{{ selected_object.governance.governance_policy }}</td></tr>
+  <tr><th>Retention Policy</th><td>{{ selected_object.governance.retention_policy }}</td></tr>
+</table>
+
+<h2>Stage Document Generation Payload</h2>
+
+<form method="post">
+  <input type="hidden" name="document_type" value="{{ selected_type }}">
+
+  <p>
+    <label>Source Module</label><br>
+    <input type="text" name="source_module" placeholder="Trust Registry, Transfer, Governance..." style="min-width: 420px;">
+  </p>
+
+  <p>
+    <label>Source Record ID</label><br>
+    <input type="text" name="source_record_id" placeholder="TR-001, MIN-001, MAT-000001, EXE-000001..." style="min-width: 420px;">
+  </p>
+
+  <p>
+    <label>Related Object Type</label><br>
+    <input type="text" name="related_object_type" placeholder="trust, matter, person, asset, certificate..." style="min-width: 420px;">
+  </p>
+
+  <p>
+    <label>Related Object ID</label><br>
+    <input type="text" name="related_object_id" placeholder="TR-001, MAT-000001, CERT-000001..." style="min-width: 420px;">
+  </p>
+
+  <p>
+    <label>Generation Authority</label><br>
+    <input type="text" name="generation_authority" placeholder="admin123, trustee, governance engine..." style="min-width: 420px;">
+  </p>
+
+  <p>
+    <label>Generation Reason</label><br>
+    <input type="text" name="generation_reason" placeholder="Reason for document generation" style="min-width: 420px;">
+  </p>
+
+  <p>
+    <label>Notes</label><br>
+    <textarea name="notes" rows="4" style="min-width: 520px;"></textarea>
+  </p>
+
+  <button type="submit">Stage Builder Payload</button>
+</form>
+
+{% endif %}
+
+{% if staged_payload %}
+<h2>Staged Payload</h2>
+
+<table class="table">
+  {% for key, value in staged_payload.items() %}
+  <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}

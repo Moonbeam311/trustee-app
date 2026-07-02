@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Universal Document Explorer</h1>
+
+<p>Search and filter institutional document objects through the Universal Document Registry.</p>
+
+<h2>Explorer Summary</h2>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Registry Documents</strong><br>{{ registry.summary.total }}</div>
+  <div class="stat-card"><strong>Showing</strong><br>{{ objects | length }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ registry.summary.verified }}</div>
+  <div class="stat-card"><strong>Document Types</strong><br>{{ document_types | length }}</div>
+</div>
+
+<h2>Filters</h2>
+
+<form method="get">
+  <input type="text" name="q" value="{{ query }}" placeholder="Search document ID, type, title, module...">
+
+  <select name="document_type">
+    <option value="">All Document Types</option>
+    {% for t in document_types %}
+      <option value="{{ t }}" {% if document_type == t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="module_name">
+    <option value="">All Modules</option>
+    {% for m in modules %}
+      <option value="{{ m }}" {% if module_name == m %}selected{% endif %}>{{ m }}</option>
+    {% endfor %}
+  </select>
+
+  <button type="submit">Apply</button>
+  <a href="/document-platform/explorer">Clear</a>
+</form>
+
+<h2>Documents</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Title</th>
+    <th>Module</th>
+    <th>Status</th>
+    <th>Lifecycle</th>
+    <th>Verification</th>
+    <th>Policy</th>
+    <th>Timeline</th>
+    <th>Relationships</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for obj in objects %}
+  <tr>
+    <td><strong>{{ obj.identity.document_id }}</strong></td>
+    <td>{{ obj.identity.document_type }}</td>
+    <td>{{ obj.identity.title }}</td>
+    <td>{{ obj.identity.module_name }}</td>
+    <td>{{ obj.status.status }}</td>
+    <td>{{ obj.status.lifecycle_status }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.governance.governance_policy }}</td>
+    <td>{{ obj.timeline.event_count }}</td>
+    <td>{{ obj.relationships.count }}</td>
+    <td><a href="/document-platform/workspace/{{ obj.identity.document_id }}">Workspace</a> | <a href="/api/documents/{{ obj.identity.document_id }}">JSON</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% if objects|length == 0 %}
+<p>No documents matched the current filters.</p>
+{% endif %}
+
+{% endblock %}

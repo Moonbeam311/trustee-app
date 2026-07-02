@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Document Governance Console</h1>
+
+<p>
+  Governance review for institutional document classes, retention posture,
+  edit/delete controls, authority requirements, reason requirements, and policy distribution.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Documents</strong><br>{{ summary.total }}</div>
+  <div class="stat-card"><strong>Policies</strong><br>{{ summary.policies }}</div>
+  <div class="stat-card"><strong>Editable</strong><br>{{ summary.editable }}</div>
+  <div class="stat-card"><strong>Locked</strong><br>{{ summary.locked }}</div>
+  <div class="stat-card"><strong>Permanent Retention</strong><br>{{ summary.permanent }}</div>
+  <div class="stat-card"><strong>Warnings</strong><br>{{ summary.warnings }}</div>
+</div>
+
+<h2>Policy Distribution</h2>
+
+<table class="table">
+  <tr>
+    <th>Policy</th>
+    <th>Documents</th>
+  </tr>
+  {% for policy, count in summary.policy_counts.items() %}
+  <tr>
+    <td>{{ policy }}</td>
+    <td>{{ count }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Governance Warnings</h2>
+
+{% if warnings|length == 0 %}
+<p>No governance warnings detected.</p>
+{% else %}
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Warning</th>
+  </tr>
+  {% for w in warnings %}
+  <tr>
+    <td>{{ w.document_id }}</td>
+    <td>{{ w.warning }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Document Governance Review</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Lifecycle</th>
+    <th>Policy</th>
+    <th>Edit</th>
+    <th>Delete</th>
+    <th>Reason Required</th>
+    <th>Authority Required</th>
+    <th>Retention</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for obj in objects %}
+  <tr>
+    <td>{{ obj.identity.document_id }}</td>
+    <td>{{ obj.identity.document_type }}</td>
+    <td>{{ obj.status.status }}</td>
+    <td>{{ obj.status.lifecycle_status }}</td>
+    <td>{{ obj.governance.governance_policy }}</td>
+    <td>{{ obj.governance.allows_edit }}</td>
+    <td>{{ obj.governance.allows_delete }}</td>
+    <td>{{ obj.governance.requires_reason }}</td>
+    <td>{{ obj.governance.requires_authority }}</td>
+    <td>{{ obj.governance.retention_policy }}</td>
+    <td><a href="/document-platform/workspace/{{ obj.identity.document_id }}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
