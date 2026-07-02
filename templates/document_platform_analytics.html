@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/events">Events</a> |
+  <a href="/document-platform/packets">Packets</a> |
+  <a href="/document-platform/templates">Templates</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Institutional Document Analytics</h1>
+
+<p>
+  Read-only analytics for document classes, modules, verification posture,
+  governance policy distribution, packet readiness, rendering capability,
+  timelines, relationships, templates, and registry coverage.
+</p>
+
+<h2>Institutional Snapshot</h2>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Documents</strong><br>{{ summary.total_documents }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ summary.verified }}</div>
+  <div class="stat-card"><strong>Registered Types</strong><br>{{ summary.registered_types }}</div>
+  <div class="stat-card"><strong>Modules</strong><br>{{ summary.modules }}</div>
+  <div class="stat-card"><strong>Packet Capable</strong><br>{{ summary.packet_capable }}</div>
+  <div class="stat-card"><strong>PDF Capable</strong><br>{{ summary.pdf_capable }}</div>
+  <div class="stat-card"><strong>DOCX Capable</strong><br>{{ summary.docx_capable }}</div>
+  <div class="stat-card"><strong>Relationships</strong><br>{{ summary.relationships }}</div>
+  <div class="stat-card"><strong>Timeline Events</strong><br>{{ summary.timeline_events }}</div>
+</div>
+
+<h2>Document Type Distribution</h2>
+
+<table class="table">
+  <tr><th>Document Type</th><th>Count</th></tr>
+  {% for key, value in summary.by_type.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Module Distribution</h2>
+
+<table class="table">
+  <tr><th>Module</th><th>Count</th></tr>
+  {% for key, value in summary.by_module.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Status Distribution</h2>
+
+<table class="table">
+  <tr><th>Status</th><th>Count</th></tr>
+  {% for key, value in summary.by_status.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Lifecycle Distribution</h2>
+
+<table class="table">
+  <tr><th>Lifecycle</th><th>Count</th></tr>
+  {% for key, value in summary.by_lifecycle.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Verification Distribution</h2>
+
+<table class="table">
+  <tr><th>Verification</th><th>Count</th></tr>
+  {% for key, value in summary.by_verification.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Governance Policy Distribution</h2>
+
+<table class="table">
+  <tr><th>Policy</th><th>Count</th></tr>
+  {% for key, value in summary.by_policy.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Template Distribution</h2>
+
+<table class="table">
+  <tr><th>Template</th><th>Count</th></tr>
+  {% for key, value in summary.by_template.items() %}
+  <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Document Analytics Detail</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Module</th>
+    <th>Status</th>
+    <th>Lifecycle</th>
+    <th>Verification</th>
+    <th>Policy</th>
+    <th>Relationships</th>
+    <th>Timeline</th>
+    <th>Packet</th>
+    <th>PDF</th>
+    <th>DOCX</th>
+    <th>Template</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for row in detail %}
+  <tr>
+    <td>{{ row.document_id }}</td>
+    <td>{{ row.document_type }}</td>
+    <td>{{ row.module }}</td>
+    <td>{{ row.status }}</td>
+    <td>{{ row.lifecycle }}</td>
+    <td>{{ row.verification }}</td>
+    <td>{{ row.policy }}</td>
+    <td>{{ row.relationships }}</td>
+    <td>{{ row.timeline_events }}</td>
+    <td>{{ row.packet }}</td>
+    <td>{{ row.pdf }}</td>
+    <td>{{ row.docx }}</td>
+    <td>{{ row.template }}</td>
+    <td><a href="/document-platform/workspace/{{ row.document_id }}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

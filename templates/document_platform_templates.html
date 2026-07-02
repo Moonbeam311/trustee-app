@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/events">Events</a> |
+  <a href="/document-platform/packets">Packets</a> |
+  <a href="/document-platform/analytics">Analytics</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Document Template Manager</h1>
+
+<p>
+  Registry for institutional document layouts, execution instruments, packet covers,
+  public verification formats, private internal formats, and future branding controls.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Templates</strong><br>{{ status.template_count }}</div>
+  <div class="stat-card"><strong>Active Templates</strong><br>{{ status.active_template_count }}</div>
+  <div class="stat-card"><strong>Assignments</strong><br>{{ status.assignment_count }}</div>
+</div>
+
+<h2>Registered Document Templates</h2>
+
+<table class="table">
+  <tr>
+    <th>Template ID</th>
+    <th>Name</th>
+    <th>Category</th>
+    <th>Description</th>
+    <th>Engine</th>
+    <th>Page Size</th>
+    <th>Seal</th>
+    <th>Signature</th>
+    <th>QR</th>
+    <th>Barcode</th>
+    <th>Watermark</th>
+    <th>Packet Cover</th>
+    <th>Default For</th>
+    <th>Status</th>
+  </tr>
+
+  {% for t in status.templates %}
+  <tr>
+    <td>{{ t.template_id }}</td>
+    <td>{{ t.name }}</td>
+    <td>{{ t.category }}</td>
+    <td>{{ t.description }}</td>
+    <td>{{ t.engine }}</td>
+    <td>{{ t.page_size }}</td>
+    <td>{{ t.supports_seal }}</td>
+    <td>{{ t.supports_signature }}</td>
+    <td>{{ t.supports_qr }}</td>
+    <td>{{ t.supports_barcode }}</td>
+    <td>{{ t.supports_watermark }}</td>
+    <td>{{ t.supports_packet_cover }}</td>
+    <td>{{ t.default_for }}</td>
+    <td>{{ t.status }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Document Template Assignments</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Title</th>
+    <th>Module</th>
+    <th>Assigned Template</th>
+    <th>Engine</th>
+    <th>Status</th>
+    <th>Workspace</th>
+  </tr>
+
+  {% for a in status.assignments %}
+  <tr>
+    <td>{{ a.document_id }}</td>
+    <td>{{ a.document_type }}</td>
+    <td>{{ a.title }}</td>
+    <td>{{ a.module }}</td>
+    <td>{{ a.assigned_template_name }}</td>
+    <td>{{ a.engine }}</td>
+    <td>{{ a.status }}</td>
+    <td><a href="/document-platform/workspace/{{ a.document_id }}">Open</a></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Template Manager Notes</h2>
+
+<p>
+  This phase registers and displays template capability assignments. Rendering still
+  uses existing module-specific document builders. Later ICP-8 phases may connect this
+  registry directly to rendering, seals, QR codes, barcodes, watermarks, packet covers,
+  and branded institutional exports.
+</p>
+
+{% endblock %}

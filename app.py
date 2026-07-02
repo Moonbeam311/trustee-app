@@ -1,3 +1,4 @@
+from services.services_document_templates import document_template_manager_status
 from services.services_document_registry import DocumentAPI, list_registered_document_types
 from services.services_document_object_model import build_document_object, document_object_model_status
 from services.services_certificate_templates import seed_certificate_templates, list_certificate_templates, resolve_template_for_certificate_object
@@ -21378,6 +21379,181 @@ def continuity_certificate_verify_direct(certification_id):
 
 
 
+
+
+
+
+
+
+
+@app.route("/document-platform/analytics")
+def document_platform_analytics():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    objects = registry["objects"]
+
+    by_type = {}
+    by_module = {}
+    by_status = {}
+    by_lifecycle = {}
+    by_verification = {}
+    by_policy = {}
+    by_template = {}
+
+    total_relationships = 0
+    total_timeline_events = 0
+    packet_capable = 0
+    pdf_capable = 0
+    docx_capable = 0
+
+    try:
+        from services.services_document_templates import assign_document_template
+    except Exception:
+        assign_document_template = None
+
+    detail = []
+
+    for obj in objects:
+        doc_id = obj["identity"]["document_id"]
+        doc_type = obj["identity"]["document_type"]
+        module = obj["identity"]["module_name"]
+        status = obj["status"]["status"]
+        lifecycle = obj["status"]["lifecycle_status"]
+        verification = obj["status"]["verification_status"]
+        policy = obj["governance"]["governance_policy"]
+
+        by_type[doc_type] = by_type.get(doc_type, 0) + 1
+        by_module[module] = by_module.get(module, 0) + 1
+        by_status[status] = by_status.get(status, 0) + 1
+        by_lifecycle[lifecycle] = by_lifecycle.get(lifecycle, 0) + 1
+        by_verification[verification] = by_verification.get(verification, 0) + 1
+        by_policy[policy] = by_policy.get(policy, 0) + 1
+
+        relationships = obj["relationships"]["count"]
+        timeline_events = obj["timeline"]["event_count"]
+
+        total_relationships += relationships
+        total_timeline_events += timeline_events
+
+        if obj["capabilities"].get("supports_packet") or obj["rendering"].get("supports_packet"):
+            packet_capable += 1
+
+        if obj["rendering"].get("supports_pdf"):
+            pdf_capable += 1
+
+        if obj["rendering"].get("supports_docx"):
+            docx_capable += 1
+
+        template_name = "—"
+        if assign_document_template:
+            template = assign_document_template(obj)
+            template_name = template.get("name", "—")
+            by_template[template_name] = by_template.get(template_name, 0) + 1
+
+        detail.append({
+            "document_id": doc_id,
+            "document_type": doc_type,
+            "module": module,
+            "status": status,
+            "lifecycle": lifecycle,
+            "verification": verification,
+            "policy": policy,
+            "relationships": relationships,
+            "timeline_events": timeline_events,
+            "packet": obj["capabilities"].get("supports_packet") or obj["rendering"].get("supports_packet"),
+            "pdf": obj["rendering"].get("supports_pdf"),
+            "docx": obj["rendering"].get("supports_docx"),
+            "template": template_name,
+        })
+
+    summary = {
+        "total_documents": len(objects),
+        "verified": len([o for o in objects if o["verification"].get("verified")]),
+        "registered_types": len(by_type),
+        "modules": len(by_module),
+        "packet_capable": packet_capable,
+        "pdf_capable": pdf_capable,
+        "docx_capable": docx_capable,
+        "relationships": total_relationships,
+        "timeline_events": total_timeline_events,
+        "by_type": by_type,
+        "by_module": by_module,
+        "by_status": by_status,
+        "by_lifecycle": by_lifecycle,
+        "by_verification": by_verification,
+        "by_policy": by_policy,
+        "by_template": by_template,
+    }
+
+    return render_template(
+        "document_platform_analytics.html",
+        registry=registry,
+        summary=summary,
+        detail=detail,
+    )
+
+@app.route("/document-platform/templates")
+def document_platform_templates():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    status = document_template_manager_status(registry["objects"])
+
+    return render_template(
+        "document_platform_templates.html",
+        registry=registry,
+        status=status,
+    )
+
+@app.route("/document-platform/packets")
+def document_platform_packets():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+    objects = registry["objects"]
+
+    packet_ready = []
+    packet_blocked = []
+
+    for obj in objects:
+        if obj["capabilities"].get("supports_packet") or obj["rendering"].get("supports_packet"):
+            packet_ready.append(obj)
+        else:
+            packet_blocked.append(obj)
+
+    packet_standard = [
+        {"file": "document.pdf", "purpose": "Rendered document PDF when available."},
+        {"file": "document_object.json", "purpose": "Complete canonical document object model."},
+        {"file": "verification_report.json", "purpose": "Document verification and status report."},
+        {"file": "relationship_report.json", "purpose": "Document relationship graph report."},
+        {"file": "timeline_report.json", "purpose": "Document lifecycle timeline report."},
+        {"file": "manifest.json", "purpose": "Packet inventory and metadata."},
+        {"file": "attachments/", "purpose": "Supporting document attachments when available."},
+    ]
+
+    summary = {
+        "total": len(objects),
+        "packet_ready": len(packet_ready),
+        "packet_blocked": len(packet_blocked),
+        "verified_packet_ready": len([o for o in packet_ready if o["verification"].get("verified")]),
+    }
+
+    return render_template(
+        "document_platform_packets.html",
+        registry=registry,
+        objects=objects,
+        packet_ready=packet_ready,
+        packet_blocked=packet_blocked,
+        packet_standard=packet_standard,
+        summary=summary,
+    )
 
 @app.route("/document-platform/events")
 def document_platform_events():

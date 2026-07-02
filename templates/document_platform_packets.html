@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform/explorer">Document Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/events">Events</a> |
+  <a href="/document-platform/templates">Templates</a> |
+  <a href="/document-platform/analytics">Analytics</a> |
+  <a href="/document-platform/analytics">Analytics</a> |
+  <a href="/document-platform/registry">Document Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a> |
+  <a href="/certificate-studio">Certificate Studio</a>
+</p>
+
+<h1>Document Packet Studio</h1>
+
+<p>
+  Evidence packet workspace for document PDFs, object JSON, verification reports,
+  lifecycle timelines, relationship reports, manifests, and future attachments.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Documents</strong><br>{{ summary.total }}</div>
+  <div class="stat-card"><strong>Packet Ready</strong><br>{{ summary.packet_ready }}</div>
+  <div class="stat-card"><strong>Packet Blocked</strong><br>{{ summary.packet_blocked }}</div>
+  <div class="stat-card"><strong>Verified Packet Ready</strong><br>{{ summary.verified_packet_ready }}</div>
+</div>
+
+<h2>Packet-Ready Documents</h2>
+
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Status</th>
+    <th>Verification</th>
+    <th>Policy</th>
+    <th>Timeline</th>
+    <th>Relationships</th>
+    <th>Actions</th>
+  </tr>
+
+  {% for obj in packet_ready %}
+  <tr>
+    <td>{{ obj.identity.document_id }}</td>
+    <td>{{ obj.identity.document_type }}</td>
+    <td>{{ obj.status.status }}</td>
+    <td>{{ obj.status.verification_status }}</td>
+    <td>{{ obj.governance.governance_policy }}</td>
+    <td>{{ obj.timeline.event_count }}</td>
+    <td>{{ obj.relationships.count }}</td>
+    <td>
+      <a href="/document-platform/workspace/{{ obj.identity.document_id }}">Workspace</a> |
+      <a href="/api/documents/{{ obj.identity.document_id }}">JSON</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Packet Blocked Documents</h2>
+
+{% if packet_blocked|length == 0 %}
+<p>No packet-blocked documents detected.</p>
+{% else %}
+<table class="table">
+  <tr>
+    <th>Document ID</th>
+    <th>Type</th>
+    <th>Reason</th>
+  </tr>
+  {% for obj in packet_blocked %}
+  <tr>
+    <td>{{ obj.identity.document_id }}</td>
+    <td>{{ obj.identity.document_type }}</td>
+    <td>Document does not advertise packet support.</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Packet Contents Standard</h2>
+
+<table class="table">
+  <tr>
+    <th>File</th>
+    <th>Purpose</th>
+  </tr>
+  {% for item in packet_standard %}
+  <tr>
+    <td>{{ item.file }}</td>
+    <td>{{ item.purpose }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
