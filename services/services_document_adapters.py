@@ -305,10 +305,159 @@ class CertificateDocumentAdapter(DocumentAdapter):
         return objects
 
 
+
+
+
+class TransferDocumentAdapter(DocumentAdapter):
+    document_type = "Transfer"
+
+    def _transfer_rows(self):
+        from database.db import get_connection
+
+        candidate_tables = [
+            "transfers",
+            "transfer_records",
+            "asset_transfers",
+            "execution_transfers",
+        ]
+
+        conn = get_connection()
+        cur = conn.cursor()
+
+        tables = {
+            r["name"] if hasattr(r, "keys") else r[0]
+            for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
+
+        rows = []
+
+        for table in candidate_tables:
+            if table not in tables:
+                continue
+
+            try:
+                for row in cur.execute(f"SELECT * FROM {table}").fetchall():
+                    record = dict(row)
+                    record["_source_table"] = table
+                    rows.append(record)
+            except Exception:
+                continue
+
+        conn.close()
+        return rows
+
+    def list_objects(self):
+        objects = []
+
+        for transfer in self._transfer_rows():
+            transfer_id = (
+                transfer.get("transfer_id")
+                or transfer.get("id")
+                or transfer.get("record_id")
+            )
+
+            if not transfer_id:
+                continue
+
+            title = (
+                transfer.get("title")
+                or transfer.get("transfer_title")
+                or transfer.get("asset_name")
+                or transfer.get("description")
+                or f"Transfer {transfer_id}"
+            )
+
+            status = (
+                transfer.get("status")
+                or transfer.get("transfer_status")
+                or transfer.get("execution_status")
+                or "recorded"
+            )
+
+            trust_id = transfer.get("trust_id")
+            asset_id = transfer.get("asset_id")
+            matter_id = transfer.get("matter_id")
+
+            relationships = [{
+                "relationship_id": f"DREL-{transfer_id}-TRANSFER",
+                "related_object_type": "transfer",
+                "related_object_id": transfer_id,
+                "relationship_type": "represents",
+                "relationship_label": title,
+                "relationship_basis": "Transfer document adapter exposes this transfer record as a universal document object.",
+                "relationship_status": "active",
+            }]
+
+            if trust_id:
+                relationships.append({
+                    "relationship_id": f"DREL-{transfer_id}-TRUST",
+                    "related_object_type": "trust",
+                    "related_object_id": trust_id,
+                    "relationship_type": "belongs_to",
+                    "relationship_label": f"Trust {trust_id}",
+                    "relationship_basis": "Transfer record is associated with this trust.",
+                    "relationship_status": "active",
+                })
+
+            if asset_id:
+                relationships.append({
+                    "relationship_id": f"DREL-{transfer_id}-ASSET",
+                    "related_object_type": "asset",
+                    "related_object_id": asset_id,
+                    "relationship_type": "transfers",
+                    "relationship_label": f"Asset {asset_id}",
+                    "relationship_basis": "Transfer record references this asset.",
+                    "relationship_status": "active",
+                })
+
+            if matter_id:
+                relationships.append({
+                    "relationship_id": f"DREL-{transfer_id}-MATTER",
+                    "related_object_type": "matter",
+                    "related_object_id": matter_id,
+                    "relationship_type": "belongs_to",
+                    "relationship_label": f"Matter {matter_id}",
+                    "relationship_basis": "Transfer record is associated with this matter.",
+                    "relationship_status": "active",
+                })
+
+            objects.append(build_document_object(
+                document_id=f"DOC-TRANSFER-{transfer_id}",
+                document_type="Transfer",
+                title=title,
+                module_name="Execution Transfers",
+                source_record_type="transfer",
+                source_record_id=transfer_id,
+                status=status,
+                lifecycle_status=status,
+                governance_policy="Controlled",
+                retention_policy="Permanent",
+                relationships=relationships,
+                timeline=[{
+                    "event_id": f"DADAPT-TRANSFER-{transfer_id}",
+                    "event_type": "Transfer Document Adapter Object Built",
+                    "event_status": status,
+                    "event_reason": "Existing transfer record exposed through Universal Document Adapter.",
+                    "actor": transfer.get("created_by") or transfer.get("actor") or "system",
+                }],
+                verification={
+                    "verified": True,
+                    "verification_status": "adapter-visible",
+                },
+                payload={
+                    "raw_record": transfer,
+                    "source_table": transfer.get("_source_table"),
+                },
+            ))
+
+        return objects
+
+
 DOCUMENT_ADAPTERS = {
     "Trust": TrustDocumentAdapter(),
     "Trust Minute": TrustMinuteDocumentAdapter(),
     "Certificate": CertificateDocumentAdapter(),
+    "Transfer": TransferDocumentAdapter(),
 }
 
 
