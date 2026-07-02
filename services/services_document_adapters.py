@@ -206,9 +206,109 @@ class TrustMinuteDocumentAdapter(DocumentAdapter):
         return objects
 
 
+
+
+
+class CertificateDocumentAdapter(DocumentAdapter):
+    document_type = "Certificate"
+
+    def list_objects(self):
+        objects = []
+
+        try:
+            from services.services_certificate_api import CertificateAPI
+            registry = CertificateAPI.registry()
+            cert_objects = registry.get("objects", [])
+        except Exception:
+            cert_objects = []
+
+        for cert in cert_objects:
+            identity = cert.get("identity", {})
+            status = cert.get("status", {})
+            governance = cert.get("governance", {})
+            verification = cert.get("verification", {})
+            relationships_src = cert.get("relationships", {}).get("items", [])
+            timeline_src = cert.get("timeline", {}).get("events", [])
+
+            cert_id = identity.get("certificate_id")
+            if not cert_id:
+                continue
+
+            cert_type = identity.get("certificate_type") or "Certificate"
+            title = identity.get("display_name") or f"Certificate {cert_id}"
+            module = identity.get("module_name") or "Certificate Studio"
+
+            relationships = [{
+                "relationship_id": f"DREL-{cert_id}-CERT",
+                "related_object_type": "certificate",
+                "related_object_id": cert_id,
+                "relationship_type": "represents",
+                "relationship_label": title,
+                "relationship_basis": "Certificate document adapter exposes this certificate object as a universal document object.",
+                "relationship_status": "active",
+            }]
+
+            for rel in relationships_src:
+                relationships.append({
+                    "relationship_id": f"DREL-{cert_id}-{rel.get('relationship_id')}",
+                    "related_object_type": rel.get("related_object_type"),
+                    "related_object_id": rel.get("related_object_id"),
+                    "relationship_type": rel.get("relationship_type"),
+                    "relationship_label": rel.get("relationship_label"),
+                    "relationship_basis": rel.get("relationship_basis"),
+                    "relationship_status": rel.get("relationship_status") or "active",
+                })
+
+            timeline = []
+
+            if timeline_src:
+                for event in timeline_src:
+                    timeline.append({
+                        "event_id": f"DADAPT-CERT-{event.get('event_id')}",
+                        "event_type": event.get("event_type") or "Certificate Event",
+                        "event_status": event.get("event_status") or status.get("lifecycle_status"),
+                        "event_reason": event.get("event_reason") or "Certificate event exposed through document adapter.",
+                        "actor": event.get("actor") or "system",
+                    })
+            else:
+                timeline.append({
+                    "event_id": f"DADAPT-CERT-{cert_id}",
+                    "event_type": "Certificate Document Adapter Object Built",
+                    "event_status": status.get("lifecycle_status") or status.get("certification_status") or "recorded",
+                    "event_reason": "Existing certificate object exposed through Universal Document Adapter.",
+                    "actor": governance.get("issuance_authority") or "system",
+                })
+
+            objects.append(build_document_object(
+                document_id=f"DOC-CERT-{cert_id}",
+                document_type="Certificate",
+                title=title,
+                module_name=module,
+                source_record_type="certificate",
+                source_record_id=cert_id,
+                status=status.get("certification_status") or "Certified",
+                lifecycle_status=status.get("lifecycle_status") or "Issued",
+                governance_policy=governance.get("governance_policy") or "Immutable",
+                retention_policy=governance.get("retention_policy") or "Permanent",
+                relationships=relationships,
+                timeline=timeline,
+                verification={
+                    "verified": bool(verification.get("verified")),
+                    "verification_status": status.get("verification_status") or verification.get("verification_status") or "unknown",
+                },
+                payload={
+                    "raw_certificate_object": cert,
+                    "certificate_type": cert_type,
+                },
+            ))
+
+        return objects
+
+
 DOCUMENT_ADAPTERS = {
     "Trust": TrustDocumentAdapter(),
     "Trust Minute": TrustMinuteDocumentAdapter(),
+    "Certificate": CertificateDocumentAdapter(),
 }
 
 
