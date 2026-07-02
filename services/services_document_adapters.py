@@ -88,8 +88,127 @@ class TrustDocumentAdapter(DocumentAdapter):
         return objects
 
 
+
+
+
+class TrustMinuteDocumentAdapter(DocumentAdapter):
+    document_type = "Trust Minute"
+
+    def _minute_rows(self):
+        from database.db import get_connection
+
+        candidate_tables = ["trust_minutes", "minutes", "trust_minute_records"]
+
+        conn = get_connection()
+        cur = conn.cursor()
+
+        tables = {
+            r["name"] if hasattr(r, "keys") else r[0]
+            for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        }
+
+        rows = []
+
+        for table in candidate_tables:
+            if table not in tables:
+                continue
+
+            try:
+                for row in cur.execute(f"SELECT * FROM {table}").fetchall():
+                    record = dict(row)
+                    record["_source_table"] = table
+                    rows.append(record)
+            except Exception:
+                continue
+
+        conn.close()
+        return rows
+
+    def list_objects(self):
+        objects = []
+
+        for minute in self._minute_rows():
+            minute_id = (
+                minute.get("minute_id")
+                or minute.get("id")
+                or minute.get("record_id")
+            )
+
+            if not minute_id:
+                continue
+
+            title = (
+                minute.get("title")
+                or minute.get("minute_title")
+                or minute.get("subject")
+                or f"Trust Minute {minute_id}"
+            )
+
+            status = (
+                minute.get("status")
+                or minute.get("minute_status")
+                or minute.get("execution_status")
+                or "recorded"
+            )
+
+            trust_id = minute.get("trust_id")
+
+            relationships = [{
+                "relationship_id": f"DREL-{minute_id}-MINUTE",
+                "related_object_type": "trust_minute",
+                "related_object_id": minute_id,
+                "relationship_type": "represents",
+                "relationship_label": title,
+                "relationship_basis": "Trust Minute document adapter exposes this minute record as a universal document object.",
+                "relationship_status": "active",
+            }]
+
+            if trust_id:
+                relationships.append({
+                    "relationship_id": f"DREL-{minute_id}-TRUST",
+                    "related_object_type": "trust",
+                    "related_object_id": trust_id,
+                    "relationship_type": "belongs_to",
+                    "relationship_label": f"Trust {trust_id}",
+                    "relationship_basis": "Trust Minute record is associated with this trust.",
+                    "relationship_status": "active",
+                })
+
+            objects.append(build_document_object(
+                document_id=f"DOC-MIN-{minute_id}",
+                document_type="Trust Minute",
+                title=title,
+                module_name="Trust Minutes",
+                source_record_type="trust_minute",
+                source_record_id=minute_id,
+                status=status,
+                lifecycle_status=status,
+                governance_policy="Controlled",
+                retention_policy="Permanent",
+                relationships=relationships,
+                timeline=[{
+                    "event_id": f"DADAPT-MIN-{minute_id}",
+                    "event_type": "Trust Minute Document Adapter Object Built",
+                    "event_status": status,
+                    "event_reason": "Existing trust minute record exposed through Universal Document Adapter.",
+                    "actor": minute.get("created_by") or minute.get("actor") or "system",
+                }],
+                verification={
+                    "verified": True,
+                    "verification_status": "adapter-visible",
+                },
+                payload={
+                    "raw_record": minute,
+                    "source_table": minute.get("_source_table"),
+                },
+            ))
+
+        return objects
+
+
 DOCUMENT_ADAPTERS = {
     "Trust": TrustDocumentAdapter(),
+    "Trust Minute": TrustMinuteDocumentAdapter(),
 }
 
 
