@@ -15723,6 +15723,7 @@ def intake_start():
 # INT-1B — Intake Translation Map
 # -------------------------------------------------------------------
 @app.route("/intake/<intake_id>/universal-profile", methods=["GET", "POST"])
+@csrf.exempt
 def intake_universal_profile(intake_id):
     ensure_intake_translation_tables()
     intake = get_intake_session(intake_id)
@@ -18583,6 +18584,7 @@ def intake_workflow_launch_prep(intake_id, workflow_key):
 
 
 @app.route("/intake/<intake_id>/recommendations/<workflow_key>/bridge", methods=["GET", "POST"])
+@csrf.exempt
 def intake_workflow_bridge(intake_id, workflow_key):
     # INT-2D-BRIDGE-CONTROLLER instrument bridge bypass
     if is_trust_instrument_workflow(workflow_key):
