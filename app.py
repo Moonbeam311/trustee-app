@@ -21386,6 +21386,21 @@ def continuity_certificate_verify_direct(certification_id):
 
 
 
+
+
+@app.route("/document-platform")
+def document_platform_home():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    registry = DocumentAPI.registry()
+
+    return render_template(
+        "document_platform_home.html",
+        registry=registry,
+    )
+
 @app.route("/document-platform/analytics")
 def document_platform_analytics():
     gate = require_master_admin()

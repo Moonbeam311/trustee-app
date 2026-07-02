@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+  <a href="/admin">Admin</a> |
+  <a href="/document-platform">Document Platform</a> |
+  <a href="/document-platform/explorer">Explorer</a> |
+  <a href="/document-platform/builder">Builder</a> |
+  <a href="/document-platform/relationships">Relationships</a> |
+  <a href="/document-platform/governance">Governance</a> |
+  <a href="/document-platform/events">Events</a> |
+  <a href="/document-platform/packets">Packets</a> |
+  <a href="/document-platform/templates">Templates</a> |
+  <a href="/document-platform/analytics">Analytics</a> |
+  <a href="/document-platform/registry">Registry</a> |
+  <a href="/document-platform/object-model">Object Model</a>
+</p>
+
+<h1>Institutional Document Platform</h1>
+
+<p>
+  Unified institutional workspace for document objects, registry coverage,
+  workspaces, builder staging, relationship graphing, governance review,
+  event monitoring, packet readiness, templates, and analytics.
+</p>
+
+<div class="dashboard-grid">
+  <div class="stat-card"><strong>Total Documents</strong><br>{{ registry.summary.total }}</div>
+  <div class="stat-card"><strong>Verified</strong><br>{{ registry.summary.verified }}</div>
+  <div class="stat-card"><strong>Document Types</strong><br>{{ registry.summary.by_type | length }}</div>
+  <div class="stat-card"><strong>Modules</strong><br>{{ registry.summary.by_module | length }}</div>
+</div>
+
+<h2>Platform Actions</h2>
+
+<table class="table">
+  <tr>
+    <th>Action</th>
+    <th>Purpose</th>
+    <th>Open</th>
+  </tr>
+  <tr>
+    <td>Explorer</td>
+    <td>Search and filter institutional document objects.</td>
+    <td><a href="/document-platform/explorer">Open Explorer</a></td>
+  </tr>
+  <tr>
+    <td>Builder</td>
+    <td>Stage future document generation payloads.</td>
+    <td><a href="/document-platform/builder">Open Builder</a></td>
+  </tr>
+  <tr>
+    <td>Relationships</td>
+    <td>Review document graph nodes and relationship edges.</td>
+    <td><a href="/document-platform/relationships">Open Graph</a></td>
+  </tr>
+  <tr>
+    <td>Governance</td>
+    <td>Review document governance, retention, authority, and warnings.</td>
+    <td><a href="/document-platform/governance">Open Governance</a></td>
+  </tr>
+  <tr>
+    <td>Events</td>
+    <td>Monitor document lifecycle and registry events.</td>
+    <td><a href="/document-platform/events">Open Events</a></td>
+  </tr>
+  <tr>
+    <td>Packets</td>
+    <td>Review packet-ready documents and standard packet contents.</td>
+    <td><a href="/document-platform/packets">Open Packets</a></td>
+  </tr>
+  <tr>
+    <td>Templates</td>
+    <td>Review document template capabilities and assignments.</td>
+    <td><a href="/document-platform/templates">Open Templates</a></td>
+  </tr>
+  <tr>
+    <td>Analytics</td>
+    <td>Review document metrics and institutional posture.</td>
+    <td><a href="/document-platform/analytics">Open Analytics</a></td>
+  </tr>
+  <tr>
+    <td>Registry</td>
+    <td>Review canonical registered document classes.</td>
+    <td><a href="/document-platform/registry">Open Registry</a></td>
+  </tr>
+</table>
+
+<h2>Document Type Counts</h2>
+
+<table class="table">
+  <tr>
+    <th>Document Type</th>
+    <th>Count</th>
+  </tr>
+  {% for key, value in registry.summary.by_type.items() %}
+  <tr>
+    <td>{{ key }}</td>
+    <td>{{ value }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}
