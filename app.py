@@ -9874,7 +9874,7 @@ def security_dashboard():
         {"item": "Role-aware access cues", "status": "Implemented"},
         {"item": "Audit trail", "status": "Implemented"},
         {"item": "Media evidence references", "status": "Implemented"},
-        {"item": "Render deployment classified as pilot only", "status": "Yes"},
+        {"item": "Hosted deployment classified as Version 1 certified baseline under hosted review", "status": "Yes"},
     ]
     audit_chain = verify_audit_log_chain()
     return render_template("security_dashboard.html", checklist=checklist, audit_chain=audit_chain)
