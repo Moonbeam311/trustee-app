@@ -1,5 +1,18 @@
-<div class="document-certificate-notice">
-  Institutional Property of Luna Isaac III Mishoe · System records, workflows, generated instruments, certificates, exports, and archive materials are maintained under fiduciary custody · Authorized Access Only
+{% if not suppress_document_certificate_notice|default(false) %}
+<script>
+(function () {
+  if (window.__institutionalNoticeRendered) {
+    document.currentScript.closest(".document-certificate-notice-wrapper")?.remove();
+    return;
+  }
+  window.__institutionalNoticeRendered = true;
+})();
+</script>
+
+<div class="document-certificate-notice-wrapper">
+  <div class="document-certificate-notice">
+    Institutional Property of Luna Isaac III Mishoe · System records, workflows, generated instruments, certificates, exports, and archive materials are maintained under fiduciary custody · Authorized Access Only
+  </div>
 </div>
 
 <style>
@@ -28,3 +41,4 @@
   }
 }
 </style>
+{% endif %}
