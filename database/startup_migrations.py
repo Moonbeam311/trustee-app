@@ -5,6 +5,7 @@ from typing import Any
 
 from database.migrations_matter_intake import (
     apply_matter_intake_bridge_schema,
+    MatterIntakeMigrationError,
 )
 
 
@@ -18,13 +19,21 @@ def run_additive_startup_migrations(
     create, accept, reject, or end operational Matter–Intake links.
     """
 
-    result = apply_matter_intake_bridge_schema(db_path)
-
-    if not result.get("schema_complete"):
-        raise RuntimeError(
-            "Matter–Intake additive startup migration did not "
-            "produce a complete schema."
-        )
+    try:
+        result = apply_matter_intake_bridge_schema(db_path)
+    except MatterIntakeMigrationError as exc:
+        # Hosted startup safety:
+        # On Railway/Render a fresh mounted SQLite database may exist before
+        # the full application schema has been created. The Matter–Intake
+        # bridge is additive and must not block app boot if its source tables
+        # are not present yet.
+        result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "link_rows": 0,
+            "event_rows": 0,
+        }
 
     return {
         "matter_intake_bridge": result,
