@@ -18164,7 +18164,35 @@ def execution_event_log(packet_id):
 
         event_id = "EVT-" + uuid.uuid4().hex[:8].upper()
 
+        import hashlib
+
         signature_completed = request.form.get("signature_completed") or "unknown"
+        signature_method = request.form.get("signature_method") or "not_recorded"
+        typed_signature = (request.form.get("typed_signature") or "").strip()
+        drawn_signature_data = (request.form.get("drawn_signature_data") or "").strip()
+
+        signature_evidence_present = bool(typed_signature or drawn_signature_data)
+
+        if signature_completed == "yes" and not signature_evidence_present:
+            signature_completed = "no"
+            signature_method = "not_recorded"
+            flash("Finalization blocked: typed or drawn signature evidence is required.", "warning")
+
+        signature_hash = ""
+        if signature_evidence_present:
+            signature_seed = "|".join([
+                str(packet["packet_id"]),
+                str(packet["document_control_id"]),
+                str(request.form.get("signer_name") or packet["signer_name"]),
+                str(request.form.get("signer_capacity") or packet["signer_capacity"]),
+                str(request.form.get("execution_date") or packet["execution_date"]),
+                typed_signature,
+                drawn_signature_data,
+            ])
+            signature_hash = hashlib.sha256(signature_seed.encode("utf-8")).hexdigest()
+
+        signature_evidence_status = "recorded" if signature_evidence_present else "not_recorded"
+
         witness_completed = request.form.get("witness_completed") or "unknown"
         notary_completed = request.form.get("notary_completed") or "unknown"
         jurat_acknowledgment_completed = request.form.get("jurat_acknowledgment_completed") or "unknown"
@@ -18211,6 +18239,11 @@ def execution_event_log(packet_id):
                 signer_name,
                 signer_capacity,
                 signature_completed,
+                signature_method,
+                typed_signature,
+                drawn_signature_data,
+                signature_hash,
+                signature_evidence_status,
                 witness_completed,
                 witness_name,
                 notary_completed,
@@ -18228,7 +18261,7 @@ def execution_event_log(packet_id):
                 finalization_gate,
                 event_notes
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             event_id,
             packet["packet_id"],
@@ -18244,6 +18277,11 @@ def execution_event_log(packet_id):
             request.form.get("signer_name") or packet["signer_name"],
             request.form.get("signer_capacity") or packet["signer_capacity"],
             signature_completed,
+            signature_method,
+            typed_signature,
+            drawn_signature_data,
+            signature_hash,
+            signature_evidence_status,
             witness_completed,
             request.form.get("witness_name"),
             notary_completed,

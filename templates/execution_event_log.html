@@ -38,12 +38,39 @@
   <label>Signer Capacity</label>
   <input type="text" name="signer_capacity" value="{{ packet['signer_capacity'] }}">
 
-  <label>Signature Completed?</label>
-  <select name="signature_completed">
-    <option value="unknown">Unknown</option>
-    <option value="yes">Yes</option>
-    <option value="no">No</option>
-  </select>
+  <div class="card" style="background:#fff8e6; border:1px solid #b08d2f; padding:16px; margin:18px 0;">
+    <h3>Execution Signature Capture</h3>
+    <p class="admin-muted">
+      Type or draw the signer signature below. Signature evidence is required before the finalization gate can become ready_to_finalize.
+    </p>
+
+    <label>Signature Completed?</label>
+    <select name="signature_completed" id="signature_completed">
+      <option value="unknown">Unknown</option>
+      <option value="yes">Yes</option>
+      <option value="no">No</option>
+    </select>
+
+    <label>Signature Method</label>
+    <select name="signature_method" id="signature_method">
+      <option value="not_recorded">Not Recorded</option>
+      <option value="typed">Typed Signature</option>
+      <option value="drawn">Drawn Signature</option>
+      <option value="typed_and_drawn">Typed and Drawn Signature</option>
+    </select>
+
+    <label>Typed Signature</label>
+    <input type="text" name="typed_signature" id="typed_signature" value="{{ packet['signer_name'] }}" placeholder="Type signer name as signature">
+
+    <label>Drawn Signature</label>
+    <canvas id="execution-signature-pad" width="620" height="180" style="width:100%; max-width:620px; height:180px; border:2px solid #111; background:#fff; display:block;"></canvas>
+
+    <input type="hidden" name="drawn_signature_data" id="drawn_signature_data">
+
+    <p>
+      <button type="button" id="clear-signature-pad">Clear Drawn Signature</button>
+    </p>
+  </div>
 
   <label>Witness Completed?</label>
   <select name="witness_completed">
@@ -137,6 +164,9 @@
       {% endif %}
       <p><strong>Signer:</strong> {{ record["signer_name"] }}</p>
       <p><strong>Signature Completed:</strong> {{ record["signature_completed"] }}</p>
+      <p><strong>Signature Method:</strong> {{ record["signature_method"] if "signature_method" in record.keys() else "Not recorded" }}</p>
+      <p><strong>Signature Evidence:</strong> {{ record["signature_evidence_status"] if "signature_evidence_status" in record.keys() else "Not recorded" }}</p>
+      <p><strong>Signature Hash:</strong> {{ record["signature_hash"] if "signature_hash" in record.keys() else "" }}</p>
       <p><strong>Witness Completed:</strong> {{ record["witness_completed"] }}</p>
       <p><strong>Notary Completed:</strong> {{ record["notary_completed"] }}</p>
       <p><strong>Jurat / Acknowledgment Completed:</strong> {{ record["jurat_acknowledgment_completed"] }}</p>
@@ -165,5 +195,97 @@
     Back to Execution Packet
   </a>
 </p>
+
+
+<script>
+(function () {
+  const canvas = document.getElementById("execution-signature-pad");
+  const clearBtn = document.getElementById("clear-signature-pad");
+  const hidden = document.getElementById("drawn_signature_data");
+  const method = document.getElementById("signature_method");
+  const completed = document.getElementById("signature_completed");
+  const typed = document.getElementById("typed_signature");
+
+  if (!canvas || !hidden) return;
+
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let hasDrawn = false;
+
+  function position(event) {
+    const rect = canvas.getBoundingClientRect();
+    const source = event.touches ? event.touches[0] : event;
+    return {
+      x: (source.clientX - rect.left) * (canvas.width / rect.width),
+      y: (source.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  function start(event) {
+    drawing = true;
+    const p = position(event);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    event.preventDefault();
+  }
+
+  function draw(event) {
+    if (!drawing) return;
+    const p = position(event);
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#111";
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    hasDrawn = true;
+    hidden.value = canvas.toDataURL("image/png");
+    if (completed) completed.value = "yes";
+    if (method) {
+      method.value = typed && typed.value.trim() ? "typed_and_drawn" : "drawn";
+    }
+    event.preventDefault();
+  }
+
+  function stop() {
+    drawing = false;
+    if (hasDrawn) hidden.value = canvas.toDataURL("image/png");
+  }
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", draw);
+  canvas.addEventListener("mouseup", stop);
+  canvas.addEventListener("mouseleave", stop);
+  canvas.addEventListener("touchstart", start, { passive: false });
+  canvas.addEventListener("touchmove", draw, { passive: false });
+  canvas.addEventListener("touchend", stop);
+
+  if (typed) {
+    typed.addEventListener("input", function () {
+      if (typed.value.trim()) {
+        if (completed) completed.value = "yes";
+        if (method) method.value = hasDrawn ? "typed_and_drawn" : "typed";
+      }
+    });
+  }
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", function () {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      hasDrawn = false;
+      hidden.value = "";
+      if (method) method.value = typed && typed.value.trim() ? "typed" : "not_recorded";
+    });
+  }
+
+  const form = canvas.closest("form");
+  if (form) {
+    form.addEventListener("submit", function () {
+      if (hasDrawn) hidden.value = canvas.toDataURL("image/png");
+      if (typed && typed.value.trim() && !hasDrawn && method) method.value = "typed";
+      if (typed && typed.value.trim() && hasDrawn && method) method.value = "typed_and_drawn";
+    });
+  }
+})();
+</script>
 
 {% endblock %}
