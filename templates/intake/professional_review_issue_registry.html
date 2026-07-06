@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Professional Review & Readiness — Issue Registry</h1>
+
+<div class="card">
+  <p><strong>Intake ID:</strong> {{ intake_id }}</p>
+  <p><strong>Firm ID:</strong> {{ firm_id }}</p>
+
+  <h2>Issue Summary</h2>
+  <p><strong>Total:</strong> {{ summary.total }}</p>
+  <p><strong>Open:</strong> {{ summary.open }}</p>
+  <p><strong>Resolved:</strong> {{ summary.resolved }}</p>
+  <p><strong>Accepted Risk:</strong> {{ summary.accepted_risk }}</p>
+  <p><strong>Escalated:</strong> {{ summary.escalated }}</p>
+  <p><strong>Blocking:</strong> {{ summary.blocking }}</p>
+
+  {% if summary.blocking > 0 %}
+    <p><strong>Status:</strong> BLOCKED — issue resolution required.</p>
+  {% else %}
+    <p><strong>Status:</strong> ISSUE GATE CLEAR.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>Actions</h2>
+  <p>
+    <a href="{{ url_for('professional_review_issue_seed', intake_id=intake_id, workflow_key='professional_review_checklist') }}">
+      Sync Issues From Professional Review Draft Packet
+    </a>
+  </p>
+  <p>
+    <a href="{{ url_for('intake_draft_readiness_ledger_detail', intake_id=intake_id) }}">
+      Back to Draft Readiness Ledger
+    </a>
+  </p>
+</div>
+
+<h2>Issues</h2>
+
+{% if issues %}
+<table>
+  <thead>
+    <tr>
+      <th>Issue ID</th>
+      <th>Category</th>
+      <th>Severity</th>
+      <th>Status</th>
+      <th>Title</th>
+      <th>Updated</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for issue in issues %}
+    <tr>
+      <td>{{ issue["issue_id"] }}</td>
+      <td>{{ issue["issue_category"] }}</td>
+      <td>{{ issue["severity"] }}</td>
+      <td>{{ issue["status"] }}</td>
+      <td>{{ issue["issue_title"] }}</td>
+      <td>{{ issue["updated_at"] }}</td>
+      <td>
+        <a href="{{ url_for('professional_review_issue_detail', issue_id=issue['issue_id']) }}">
+          Open Issue
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="card">
+  <p>No professional review issues have been synchronized yet.</p>
+  <p>Use <strong>Sync Issues From Professional Review Draft Packet</strong> to create actionable issue records.</p>
+</div>
+{% endif %}
+
+{% endblock %}

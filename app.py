@@ -22136,3 +22136,113 @@ def document_platform_object_model():
     )
 
 
+
+
+# ============================================================
+# RC2-B3A-2 — Professional Review Issue Resolution Engine
+# ============================================================
+
+@app.route("/intake/<intake_id>/professional-review/issues")
+@csrf.exempt
+def professional_review_issue_registry(intake_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from database.db import (
+        get_professional_review_issues,
+        get_professional_review_issue_summary,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    issues = get_professional_review_issues(intake_id, firm_id=firm_id)
+    summary = get_professional_review_issue_summary(intake_id, firm_id=firm_id)
+
+    return render_template(
+        "intake/professional_review_issue_registry.html",
+        intake_id=intake_id,
+        firm_id=firm_id,
+        issues=issues,
+        summary=summary,
+    )
+
+
+@app.route("/intake/professional-review/issues/<issue_id>", methods=["GET", "POST"])
+@csrf.exempt
+def professional_review_issue_detail(issue_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from database.db import (
+        get_professional_review_issue,
+        update_professional_review_issue,
+    )
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    issue = get_professional_review_issue(issue_id, firm_id=firm_id)
+
+    if not issue:
+        flash("Professional review issue not found.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    if request.method == "POST":
+        disposition = request.form.get("disposition") or "reopened"
+        reviewer_notes = request.form.get("reviewer_notes") or ""
+        actor = session.get("username") or "system"
+        actor_capacity = request.form.get("reviewer_capacity") or session.get("role") or "Admin"
+
+        if disposition in ("resolved", "accepted_risk", "escalated") and not reviewer_notes.strip():
+            flash("Reviewer notes are required for issue disposition.", "warning")
+            return redirect(url_for("professional_review_issue_detail", issue_id=issue_id))
+
+        event_id = update_professional_review_issue(
+            issue_id=issue_id,
+            firm_id=firm_id,
+            disposition=disposition,
+            reviewer_notes=reviewer_notes,
+            actor=actor,
+            actor_capacity=actor_capacity,
+        )
+
+        if event_id:
+            log_change(
+                "professional_review_issue",
+                issue_id,
+                f"issue_{disposition}",
+                f"Event={event_id}; Intake={issue['intake_id']}; Actor={actor}"
+            )
+            flash("Professional review issue updated.", "success")
+        else:
+            flash("Issue update failed.", "warning")
+
+        return redirect(url_for("professional_review_issue_registry", intake_id=issue["intake_id"]))
+
+    return render_template(
+        "intake/professional_review_issue_detail.html",
+        issue=issue,
+        firm_id=firm_id,
+    )
+
+
+@app.route("/intake/<intake_id>/professional-review/issues/seed/<workflow_key>")
+@csrf.exempt
+def professional_review_issue_seed(intake_id, workflow_key):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from services.services_intake import build_workflow_draft_packet
+    from database.db import seed_professional_review_issues_from_packet
+
+    firm_id = session.get("firm_id", "FIRM-001")
+    actor = session.get("username") or "system"
+
+    draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
+    created = seed_professional_review_issues_from_packet(
+        intake_id=intake_id,
+        firm_id=firm_id,
+        workflow_key=workflow_key,
+        draft_packet=draft_packet,
+        actor=actor,
+    )
+
+    flash(f"Professional review issues synchronized. New issues created: {created}.", "success")
+    return redirect(url_for("professional_review_issue_registry", intake_id=intake_id))

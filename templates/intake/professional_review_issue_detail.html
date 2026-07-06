@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>Professional Review Issue Detail</h1>
+
+<div class="card">
+  <p><strong>Issue ID:</strong> {{ issue["issue_id"] }}</p>
+  <p><strong>Intake ID:</strong> {{ issue["intake_id"] }}</p>
+  <p><strong>Category:</strong> {{ issue["issue_category"] }}</p>
+  <p><strong>Severity:</strong> {{ issue["severity"] }}</p>
+  <p><strong>Status:</strong> {{ issue["status"] }}</p>
+  <p><strong>Source:</strong> {{ issue["issue_source"] }}</p>
+  <p><strong>Linked Record:</strong> {{ issue["linked_record_type"] or "—" }} {{ issue["linked_record_id"] or "" }}</p>
+</div>
+
+<div class="card">
+  <h2>Issue Description</h2>
+  <p>{{ issue["issue_description"] }}</p>
+
+  <h2>Recommended Action</h2>
+  <p>{{ issue["recommended_action"] }}</p>
+</div>
+
+<div class="card">
+  <h2>Reviewer Action</h2>
+
+  <form method="POST">
+    <label>Disposition</label>
+    <select name="disposition">
+      <option value="resolved">Resolve</option>
+      <option value="accepted_risk">Accept Risk</option>
+      <option value="escalated">Escalate</option>
+      <option value="reopened">Reopen</option>
+    </select>
+
+    <label>Reviewer Capacity</label>
+    <input type="text" name="reviewer_capacity" value="Admin Reviewer">
+
+    <label>Reviewer Notes</label>
+    <textarea name="reviewer_notes" rows="6" required>{{ issue["reviewer_notes"] or "" }}</textarea>
+
+    <br><br>
+    <button type="submit">Record Issue Action</button>
+  </form>
+</div>
+
+<p>
+  <a href="{{ url_for('professional_review_issue_registry', intake_id=issue['intake_id']) }}">
+    Back to Issue Registry
+  </a>
+</p>
+
+{% endblock %}

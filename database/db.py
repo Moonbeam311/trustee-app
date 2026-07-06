@@ -214,6 +214,269 @@ def ensure_document_intake_table():
     conn.close()
 
 
+
+def ensure_professional_review_issue_tables():
+    """
+    RC2-B3A-2 — Professional Review Issue Resolution Engine.
+    Additive issue registry for intake/professional-review blockers.
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS professional_review_issues (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            issue_id TEXT UNIQUE,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            workflow_key TEXT DEFAULT 'professional_review_checklist',
+            issue_source TEXT,
+            issue_category TEXT,
+            severity TEXT DEFAULT 'major',
+            issue_title TEXT,
+            issue_description TEXT,
+            linked_record_type TEXT,
+            linked_record_id TEXT,
+            recommended_action TEXT,
+            status TEXT DEFAULT 'open',
+            disposition TEXT,
+            reviewer_notes TEXT,
+            resolved_by TEXT,
+            resolved_capacity TEXT,
+            resolved_at TEXT,
+            created_by TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS professional_review_issue_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id TEXT UNIQUE,
+            issue_id TEXT,
+            intake_id TEXT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            event_type TEXT,
+            event_notes TEXT,
+            actor TEXT,
+            actor_capacity TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key, draft_packet, actor="system"):
+    """
+    Convert draft_packet open_issues into actionable review issue records.
+    Safe to run repeatedly; issue_id is deterministic per intake/workflow/index.
+    """
+    import hashlib
+
+    ensure_professional_review_issue_tables()
+
+    open_issues = draft_packet.get("open_issues", []) if draft_packet else []
+    conn = get_connection()
+    cur = conn.cursor()
+
+    created = 0
+
+    for idx, issue in enumerate(open_issues, 1):
+        title = str(issue)
+        seed = "|".join([str(intake_id), str(workflow_key), str(idx), title])
+        issue_id = "PRI-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:10].upper()
+
+        cur.execute("SELECT issue_id FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
+        if cur.fetchone():
+            continue
+
+        cur.execute("""
+            INSERT INTO professional_review_issues (
+                issue_id,
+                intake_id,
+                firm_id,
+                workflow_key,
+                issue_source,
+                issue_category,
+                severity,
+                issue_title,
+                issue_description,
+                recommended_action,
+                status,
+                created_by
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            issue_id,
+            intake_id,
+            firm_id,
+            workflow_key,
+            "draft_packet_open_issue",
+            "Professional Review",
+            "major",
+            title[:180],
+            title,
+            "Review this issue, add notes, then resolve, accept risk, escalate, or reopen.",
+            "open",
+            actor,
+        ))
+        created += 1
+
+    conn.commit()
+    conn.close()
+    return created
+
+
+def get_professional_review_issues(intake_id, firm_id=None, status=None):
+    ensure_professional_review_issue_tables()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    params = [intake_id]
+    sql = "SELECT * FROM professional_review_issues WHERE intake_id = ?"
+
+    if firm_id:
+        sql += " AND firm_id = ?"
+        params.append(firm_id)
+
+    if status:
+        sql += " AND status = ?"
+        params.append(status)
+
+    sql += " ORDER BY CASE severity WHEN 'critical' THEN 1 WHEN 'major' THEN 2 WHEN 'moderate' THEN 3 ELSE 4 END, created_at DESC"
+
+    cur.execute(sql, params)
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def get_professional_review_issue(issue_id, firm_id=None):
+    ensure_professional_review_issue_tables()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    if firm_id:
+        cur.execute("SELECT * FROM professional_review_issues WHERE issue_id = ? AND firm_id = ?", (issue_id, firm_id))
+    else:
+        cur.execute("SELECT * FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
+
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def update_professional_review_issue(issue_id, firm_id, disposition, reviewer_notes, actor, actor_capacity):
+    """
+    disposition values:
+    resolved, accepted_risk, escalated, reopened
+    """
+    import uuid
+    from datetime import datetime, UTC
+
+    ensure_professional_review_issue_tables()
+
+    status_map = {
+        "resolved": "resolved",
+        "accepted_risk": "accepted_risk",
+        "escalated": "escalated",
+        "reopened": "open",
+    }
+
+    new_status = status_map.get(disposition, "open")
+    now = datetime.now(UTC).isoformat()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM professional_review_issues WHERE issue_id = ? AND firm_id = ?", (issue_id, firm_id))
+    issue = cur.fetchone()
+
+    if not issue:
+        conn.close()
+        return None
+
+    cur.execute("""
+        UPDATE professional_review_issues
+        SET status = ?,
+            disposition = ?,
+            reviewer_notes = ?,
+            resolved_by = ?,
+            resolved_capacity = ?,
+            resolved_at = CASE WHEN ? IN ('resolved', 'accepted_risk', 'escalated') THEN ? ELSE resolved_at END,
+            updated_at = ?
+        WHERE issue_id = ? AND firm_id = ?
+    """, (
+        new_status,
+        disposition,
+        reviewer_notes,
+        actor,
+        actor_capacity,
+        disposition,
+        now,
+        now,
+        issue_id,
+        firm_id,
+    ))
+
+    event_id = "PRIE-" + uuid.uuid4().hex[:10].upper()
+    cur.execute("""
+        INSERT INTO professional_review_issue_events (
+            event_id,
+            issue_id,
+            intake_id,
+            firm_id,
+            event_type,
+            event_notes,
+            actor,
+            actor_capacity
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event_id,
+        issue_id,
+        issue["intake_id"],
+        firm_id,
+        f"issue_{disposition}",
+        reviewer_notes,
+        actor,
+        actor_capacity,
+    ))
+
+    conn.commit()
+    conn.close()
+    return event_id
+
+
+def get_professional_review_issue_summary(intake_id, firm_id=None):
+    issues = get_professional_review_issues(intake_id, firm_id=firm_id)
+
+    summary = {
+        "total": len(issues),
+        "open": 0,
+        "resolved": 0,
+        "accepted_risk": 0,
+        "escalated": 0,
+        "blocking": 0,
+    }
+
+    for issue in issues:
+        status = issue["status"]
+        if status in summary:
+            summary[status] += 1
+        if status in ("open", "escalated") and issue["severity"] in ("critical", "major"):
+            summary["blocking"] += 1
+
+    return summary
+
 def get_connection():
     # Ensure SQLite parent folder exists before connecting.
     # Required for Railway/Render/Linux deployment where /app/data may not exist yet.
