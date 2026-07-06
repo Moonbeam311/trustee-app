@@ -4558,6 +4558,18 @@ def ensure_execution_event_log_table():
         if col not in event_cols:
             cur.execute(f"ALTER TABLE execution_event_log ADD COLUMN {col} {spec}")
 
+    event_cols = {row["name"] for row in cur.execute("PRAGMA table_info(execution_event_log)").fetchall()}
+
+    for col, spec in [
+        ("signature_method", "TEXT"),
+        ("typed_signature", "TEXT"),
+        ("drawn_signature_data", "TEXT"),
+        ("signature_hash", "TEXT"),
+        ("signature_evidence_status", "TEXT DEFAULT 'not_recorded'"),
+    ]:
+        if col not in event_cols:
+            cur.execute(f"ALTER TABLE execution_event_log ADD COLUMN {col} {spec}")
+
     conn.commit()
     conn.close()
 
