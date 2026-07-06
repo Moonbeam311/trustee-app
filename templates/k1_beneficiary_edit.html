@@ -28,5 +28,6 @@
   <label><input type="checkbox" name="is_active" {% if beneficiary["is_active"] == "Yes" %}checked{% endif %}> Active</label><br>
   <button type="submit">Update Beneficiary</button>
 </form>
+{% include "_institutional_property_notice.html" %}
 </body>
 </html>
