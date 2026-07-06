@@ -1,10 +1,10 @@
 {% if transfer and transfer.mode %}
 <div class="transfer-mode-badge transfer-mode-{{ transfer.mode }}">
-  <strong>Mode:</strong>
-  {% if transfer.mode == 'simulation' %}
-    Simulation — Non-executed / training workflow
+  <strong>Execution Context:</strong>
+  {% if transfer.mode == 'training' %}
+    Training — Non-executed instructional workflow
   {% else %}
-    Real Execution — Official transfer record
+    Institutional Execution — Official transfer record
   {% endif %}
 </div>
 
@@ -15,7 +15,7 @@
   margin-bottom: 12px;
   font-weight: 700;
 }
-.transfer-mode-simulation {
+.transfer-mode-training {
   background-color: #fff3cd;
   color: #856404;
   border: 1px solid #ffeeba;

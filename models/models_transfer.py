@@ -11,7 +11,7 @@ class Transfer(db.Model):
     transfer_id = db.Column(db.String(32), nullable=False, unique=True, index=True)
     firm_id = db.Column(db.String(64), nullable=True, index=True)
 
-    mode = db.Column(db.String(20), nullable=False, default="simulation")
+    mode = db.Column(db.String(20), nullable=False, default="training")
     status = db.Column(db.String(20), nullable=False, default="draft")
     current_capacity = db.Column(db.String(20), nullable=False, default="individual")
 
@@ -75,8 +75,8 @@ class Transfer(db.Model):
         return f"<Transfer {self.transfer_id} trust={self.trust_id} status={self.status}>"
 
     @property
-    def is_simulation(self) -> bool:
-        return self.mode == "simulation"
+    def is_training_context(self) -> bool:
+        return self.mode == "training"
 
     @property
     def is_real(self) -> bool:

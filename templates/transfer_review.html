@@ -11,7 +11,7 @@
 {% set guidance_what = "You are reviewing the full transfer packet before finalizing or recording completion." %}
 {% set guidance_why = "This step ensures all required information, documents, and confirmations are accurate and complete before finalizing the transfer." %}
 {% set guidance_record = "This step supports the final transfer record, packet completion status, and audit trail." %}
-{% set guidance_execution = "Simulation: validate the workflow and completeness. Real: confirm that the transfer is fully documented and ready to stand as a completed trust action." %}
+{% set guidance_execution = "Training: validate the workflow and completeness. Institutional: confirm that the transfer is fully documented and ready to stand as a completed trust action." %}
 {% include "_transfer_guidance.html" with context %}
 <p>Transfer ID: {{ transfer.transfer_id }}</p>
 
@@ -31,7 +31,7 @@
 </div>
 
 <p>Status: {{ transfer.status }}</p>
-<p>Mode: {{ transfer.mode }}</p>
+<p>Execution Context: {{ transfer.mode }}</p>
 
 {% if transfer.status == "completed" %}
   <div style="border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; padding:12px; border-radius:8px; margin:14px 0;">
@@ -77,8 +77,8 @@ Finalize Transfer</button>
   <a href="{{ url_for('transfer_print_view', transfer_id=transfer.transfer_id) }}" target="_blank">Print Packet View</a>
 </p>
 
-{% if transfer.mode == "simulation" %}
+{% if transfer.mode == "training" %}
   <hr>
-  <p><strong>Simulation Mode:</strong> Training use only.</p>
+  <p><strong>Execution Context:</strong> Training workflow.</p>
 {% endif %}
 {% endblock %}

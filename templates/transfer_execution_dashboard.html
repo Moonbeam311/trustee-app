@@ -374,8 +374,8 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
   Total: {{ transfers|length }} |
   Completed: {{ transfers|selectattr('status', 'equalto', 'completed')|list|length }} |
   Open: {{ transfers|rejectattr('status', 'equalto', 'completed')|list|length }} |
-  Simulation: {{ transfers|selectattr('mode', 'equalto', 'simulation')|list|length }} |
-  Real: {{ transfers|selectattr('mode', 'equalto', 'real')|list|length }}
+  Training: {{ transfers|selectattr('mode', 'equalto', 'training')|list|length }} |
+  Institutional: {{ transfers|selectattr('mode', 'equalto', 'institutional')|list|length }}
 
 
     <div class="transfer-status-row" style="margin-top:10px;">
@@ -471,7 +471,7 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
   <ul>
     <li>Universal one-asset transfer workflow</li>
     <li>Revocable trust transfer packet support</li>
-    <li>Simulation vs real execution mode</li>
+    <li>Training vs institutional execution context</li>
     <li>Hybrid operational + instructional flow</li>
   </ul>
 
@@ -501,7 +501,7 @@ Incomplete: missing {{ document_readiness['successor_trustee']['missing']|join('
         {% endif %}
         <br>
         Status: <strong>{{ t.status }}</strong>
-        — Mode: <strong>{{ t.mode }}</strong>
+        — Execution Context: <strong>{{ t.mode }}</strong>
         — Asset: {{ t.asset_name or "No asset yet" }}
         <br>
         <small>Last Updated: {{ t.updated_at or t.created_at }}</small>

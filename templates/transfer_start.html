@@ -10,22 +10,22 @@
 {% endif %}
 
 <div style="border:1px solid #d1d5db; border-radius:10px; padding:14px; background:#f9fafb; margin:14px 0;">
-  <h2 style="margin-top:0;">Simulation vs Real Execution Guidance</h2>
+  <h2 style="margin-top:0;">Training vs Institutional Execution Context Guidance</h2>
   <p>
-    Use <strong>Simulation</strong> to practice the workflow, test packet logic, or train a fiduciary user without treating the transfer as an executed real-world action.
+    Use <strong>Training</strong> to practice the workflow, test packet logic, or train a fiduciary user without treating the transfer as an institutional trust action.
   </p>
   <p>
     Use <strong>Real</strong> only when the trustee is intentionally documenting an actual transfer, funding action, asset movement, account change, or trust administration event.
   </p>
   <p style="color:#92400e; font-weight:700;">
-    Simulation records are not executed transfers. Real execution should be supported by the trust record, packet readiness review, trustee authority, and supporting documents.
+    Training records are instructional workflow records. Institutional execution should be supported by the trust record, packet readiness review, trustee authority, and supporting documents.
   </p>
 </div>
 
 <div style="border:1px solid #bfdbfe; border-radius:10px; padding:14px; background:#eff6ff; margin:14px 0;">
   <strong>Before You Start:</strong>
   <p style="margin:6px 0 0;">
-    Review the Formation Preview Hub and Packet Preview before using this page for real execution. If packet readiness is incomplete, start in Simulation mode unless a trustee intentionally decides otherwise.
+    Review the Formation Preview Hub and Packet Preview before using this page for institutional execution. If packet readiness is incomplete, start in Training context unless a trustee intentionally decides otherwise.
   </p>
 </div>
 
@@ -33,7 +33,7 @@
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
   <label><strong>Mode</strong></label><br>
   <select name="mode">
-    <option value="simulation">Simulation — training / testing / non-executed workflow</option>
+    <option value="training">Training — instructional / testing / non-executed workflow</option>
     <option value="real">Real — intended execution / funding record</option>
   </select><br><br>
 

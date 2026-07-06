@@ -354,9 +354,29 @@
 </form>
 {% endif %}
 
-    <p>Signer: __________________________ Role/Capacity: __________________ Date: _______________</p>
-    <p>Signer: __________________________ Role/Capacity: __________________ Date: _______________</p>
-    <p>Signer: __________________________ Role/Capacity: __________________ Date: _______________</p>
+    <h3>Printable Signature Block</h3>
+
+    {% for idx in [1, 2, 3] %}
+      {% set name = minute["trustee_" ~ idx ~ "_name"] %}
+      {% set capacity = minute["trustee_" ~ idx ~ "_capacity"] %}
+      {% set signed_date = minute["trustee_" ~ idx ~ "_signed_date"] %}
+      {% set signature_image = minute["trustee_" ~ idx ~ "_signature_image"] %}
+
+      {% if name or capacity or signed_date or signature_image %}
+        <div style="margin:18px 0;">
+          {% if signature_image %}
+            <img src="{{ signature_image }}" alt="Signer {{ idx }} drawn signature" class="drawn-signature-image">
+          {% else %}
+            <div class="signature-line"></div>
+          {% endif %}
+          <p>
+            <strong>Signer:</strong> {{ name or "__________________________" }}
+            &nbsp; <strong>Role/Capacity:</strong> {{ capacity or "__________________" }}
+            &nbsp; <strong>Date:</strong> {{ signed_date or "_____________" }}
+          </p>
+        </div>
+      {% endif %}
+    {% endfor %}
   </div>
 
 

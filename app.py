@@ -281,6 +281,11 @@ from services.services_articles import (
     build_dynamic_declaration
 )
 
+from services.identity_propagation import (
+    transfer_identity_context,
+    child_identity_context,
+    apply_identity_defaults,
+)
 from services.services_transfer import (
 generate_transfer_id,
     add_transfer_action,
@@ -309,6 +314,12 @@ try:
     from PIL import Image as PILImage
 except Exception:
     PILImage = None
+
+from services.security_authorization import (
+    require_trustee_admin_gate,
+    require_system_owner_gate,
+    authorization_snapshot,
+)
 
 app = Flask(__name__)
 
@@ -1155,13 +1166,16 @@ def log_archive_export_history(
     export_hash,
     filename,
     route_path,
+    handoff_id=None,
+    certificate_id=None,
 ):
     """
-    INT-39B: archive export history logging helper.
+    INT-39B / RC2-0D2I: archive export history logging helper.
     Best-effort logging; export generation should not fail if history logging fails.
     """
     try:
         import hashlib
+        import sqlite3
         from database.db import get_connection, ensure_archive_export_history_table
 
         ensure_archive_export_history_table()
@@ -1177,11 +1191,47 @@ def log_archive_export_history(
             str(export_hash),
             str(filename),
             str(route_path),
+            str(handoff_id),
+            str(certificate_id),
         ])
         export_id = "AEH-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:16].upper()
 
         conn = get_connection()
+        conn.row_factory = sqlite3.Row
         cur = conn.cursor()
+
+        transfer_record = None
+        if transfer_id:
+            cur.execute("SELECT * FROM transfers WHERE transfer_id = ?", (transfer_id,))
+            transfer_record = cur.fetchone()
+
+        if transfer_record:
+            parent_identity_context = transfer_identity_context(transfer_record)
+            export_identity_context = child_identity_context(
+                parent_identity_context,
+                "archive_export",
+                {
+                    "handoff_id": handoff_id,
+                    "certificate_id": certificate_id,
+                    "created_by": generated_by,
+                    "created_at": generated_at,
+                    "status": "generated",
+                },
+            )
+            export_record = apply_identity_defaults({}, export_identity_context)
+        else:
+            export_record = apply_identity_defaults({}, {
+                "firm_id": firm_id,
+                "trust_id": trust_id,
+                "transfer_id": transfer_id,
+                "handoff_id": handoff_id,
+                "certificate_id": certificate_id,
+                "created_by": generated_by,
+                "created_at": generated_at,
+                "status": "generated",
+                "record_version": "1.0",
+            })
+
         cur.execute("""
             INSERT OR IGNORE INTO archive_export_history (
                 export_id,
@@ -1189,6 +1239,13 @@ def log_archive_export_history(
                 transfer_id,
                 trust_id,
                 firm_id,
+                matter_id,
+                handoff_id,
+                certificate_id,
+                created_by,
+                created_at,
+                status,
+                record_version,
                 generated_by,
                 generated_at,
                 export_scope,
@@ -1196,13 +1253,20 @@ def log_archive_export_history(
                 filename,
                 route_path
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             export_id,
             export_type,
-            transfer_id,
-            trust_id,
-            firm_id,
+            export_record.get("transfer_id") or transfer_id,
+            export_record.get("trust_id") or trust_id,
+            export_record.get("firm_id") or firm_id,
+            export_record.get("matter_id"),
+            export_record.get("handoff_id"),
+            export_record.get("certificate_id"),
+            export_record.get("created_by") or generated_by,
+            export_record.get("created_at") or generated_at,
+            export_record.get("status") or "generated",
+            export_record.get("record_version") or "1.0",
             generated_by,
             generated_at,
             export_scope,
@@ -12630,7 +12694,12 @@ def trust_execution_dashboard(trust_id):
 
 
 @app.route("/trust/<trust_id>/execution/transfers/new", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_start(trust_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     trust = get_trust_by_id(trust_id)
     if not trust:
         return f"Trust {trust_id} not found", 404
@@ -12644,7 +12713,7 @@ def transfer_start(trust_id):
                 current_role=session.get("role"),
             )
 
-        mode = request.form.get("mode", "simulation")
+        mode = request.form.get("mode", "training")
         current_capacity = request.form.get("current_capacity", "individual")
 
         transfer = Transfer(
@@ -12681,7 +12750,12 @@ def transfer_start(trust_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/asset", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_asset(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -12730,7 +12804,12 @@ def transfer_asset(transfer_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/classification", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_classification(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -12775,7 +12854,12 @@ def transfer_classification(transfer_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/assignment", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_assignment(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -12834,7 +12918,12 @@ def transfer_assignment(transfer_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/trustee_acceptance", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_trustee_acceptance(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -12880,7 +12969,12 @@ def transfer_trustee_acceptance(transfer_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/control_evidence", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_control_evidence(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -12926,7 +13020,12 @@ def transfer_control_evidence(transfer_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/records", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_records(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -12983,7 +13082,12 @@ def transfer_records(transfer_id):
 
 
 @app.route("/execution/transfers/<transfer_id>/review", methods=["GET", "POST"])
+@csrf.exempt
 def transfer_review(transfer_id):
+    auth_gate = require_trustee_admin_gate()
+    if auth_gate:
+        return auth_gate
+
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
@@ -13067,6 +13171,10 @@ def transfer_review(transfer_id):
                         "paid_date": str(transfer.finalized_at or datetime.now(UTC)),
                         "chart_account": "1000",
                     }
+                    parent_identity_context = transfer_identity_context(transfer)
+                    ledger_identity_context = child_identity_context(parent_identity_context, "ledger_entry")
+                    ledger_entry = apply_identity_defaults(ledger_entry, ledger_identity_context)
+
                     create_ledger_entry(ledger_entry)
                     log_change(
                         "ledger_entry",
@@ -13094,7 +13202,12 @@ def transfer_review(transfer_id):
                     "action_items": "File records, update schedules, and confirm asset control.",
                     "status": "Draft",
                     "created_by": session.get("username") or "system",
+                    "firm_id": session.get("firm_id") or getattr(transfer, "firm_id", None) or "FIRM-001",
                 }
+
+                parent_identity_context = transfer_identity_context(transfer)
+                minute_identity_context = child_identity_context(parent_identity_context, "trust_minute")
+                minute_data = apply_identity_defaults(minute_data, minute_identity_context)
 
                 create_trust_minute(minute_data)
 
@@ -13643,6 +13756,7 @@ def transfer_archive_handoff_export_package(transfer_id):
     txt_lines.append(f"Firm ID: {firm_id}")
     txt_lines.append(f"Transfer ID: {transfer.transfer_id}")
     txt_lines.append(f"Trust ID: {transfer.trust_id}")
+    txt_lines.append(f"Seal Reference: {handoff_records[0]['seal_reference'] if handoff_records else 'Not recorded'}")
     txt_lines.append("")
     txt_lines.append("SUMMARY")
     txt_lines.append("-" * 72)
@@ -13844,7 +13958,10 @@ def transfer_archive_handoff_export_package(transfer_id):
     manifest_lines.append(f"Firm ID: {firm_id}")
     manifest_lines.append(f"Trust ID: {transfer.trust_id}")
     manifest_lines.append(f"Transfer ID: {transfer.transfer_id}")
+    manifest_lines.append(f"Handoff ID: {handoff_records[0]['handoff_id'] if handoff_records else 'Not recorded'}")
+    manifest_lines.append(f"Seal Reference: {handoff_records[0]['seal_reference'] if handoff_records else 'Not recorded'}")
     manifest_lines.append(f"Package Scope: {package_scope}")
+    manifest_lines.append("Certification Statement: This manifest identifies the certified archive export package contents, file hashes, package scope, handoff reference, seal reference, and custody metadata.")
     manifest_lines.append("")
     manifest_lines.append("PACKAGE CONTENTS")
     manifest_lines.append("-" * 72)
@@ -13871,7 +13988,7 @@ def transfer_archive_handoff_export_package(transfer_id):
         zf.writestr(f"archive_handoff_audit_trail_{transfer.transfer_id}.txt", audit_txt_body)
         zf.writestr(f"archive_handoff_export_index_{transfer.trust_id}_all.csv", index_csv_body)
         zf.writestr("archive_export_package_manifest.txt", manifest_body)
-        zf.writestr("package_hash_sha256.txt", package_hash + "\n")
+        zf.writestr("package_hash_sha256.txt", f"Package Hash SHA256: {package_hash}\n")
 
     zip_buffer.seek(0)
 
@@ -14451,12 +14568,47 @@ def transfer_archive_handoff(transfer_id):
         handoff_id = "TAH-" + uuid.uuid4().hex[:8].upper()
         seal_reference = request.form.get("seal_reference") or f"SEAL-{uuid.uuid4().hex[:8].upper()}"
 
+        archive_handoff_data = {
+            "handoff_id": handoff_id,
+            "transfer_id": transfer.transfer_id,
+            "trust_id": transfer.trust_id,
+            "firm_id": firm_id,
+            "archive_status": request.form.get("archive_status") or "handoff_prepared",
+            "custody_classification": request.form.get("custody_classification") or "internal_record",
+            "seal_reference": seal_reference,
+            "handoff_by": session.get("username") or "system",
+            "handoff_capacity": request.form.get("handoff_capacity") or transfer.current_capacity or "fiduciary",
+            "ledger_verified": "yes" if ledger_ok else "no",
+            "minute_verified": "yes" if minute_ok else "no",
+            "finalization_verified": "yes" if finalized_ok else "no",
+            "archive_notes": request.form.get("archive_notes") or "",
+        }
+
+        parent_identity_context = transfer_identity_context(transfer)
+        archive_identity_context = child_identity_context(
+            parent_identity_context,
+            "archive_handoff",
+            {
+                "handoff_id": archive_handoff_data["handoff_id"],
+                "status": archive_handoff_data["archive_status"],
+                "archive_status": archive_handoff_data["archive_status"],
+                "created_by": archive_handoff_data["handoff_by"],
+                "capacity": archive_handoff_data["handoff_capacity"],
+            },
+        )
+        archive_handoff_data = apply_identity_defaults(archive_handoff_data, archive_identity_context)
+
         cur.execute("""
             INSERT INTO transfer_archive_handoff (
                 handoff_id,
                 transfer_id,
                 trust_id,
                 firm_id,
+                matter_id,
+                created_by,
+                capacity,
+                status,
+                record_version,
                 archive_status,
                 custody_classification,
                 seal_reference,
@@ -14467,21 +14619,26 @@ def transfer_archive_handoff(transfer_id):
                 finalization_verified,
                 archive_notes
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            handoff_id,
-            transfer.transfer_id,
-            transfer.trust_id,
-            firm_id,
-            request.form.get("archive_status") or "handoff_prepared",
-            request.form.get("custody_classification") or "internal_record",
-            seal_reference,
-            session.get("username") or "system",
-            request.form.get("handoff_capacity") or transfer.current_capacity or "fiduciary",
-            "yes" if ledger_ok else "no",
-            "yes" if minute_ok else "no",
-            "yes" if finalized_ok else "no",
-            request.form.get("archive_notes") or "",
+            archive_handoff_data.get("handoff_id"),
+            archive_handoff_data.get("transfer_id"),
+            archive_handoff_data.get("trust_id"),
+            archive_handoff_data.get("firm_id"),
+            archive_handoff_data.get("matter_id"),
+            archive_handoff_data.get("created_by"),
+            archive_handoff_data.get("capacity"),
+            archive_handoff_data.get("status"),
+            archive_handoff_data.get("record_version"),
+            archive_handoff_data.get("archive_status"),
+            archive_handoff_data.get("custody_classification"),
+            archive_handoff_data.get("seal_reference"),
+            archive_handoff_data.get("handoff_by"),
+            archive_handoff_data.get("handoff_capacity"),
+            archive_handoff_data.get("ledger_verified"),
+            archive_handoff_data.get("minute_verified"),
+            archive_handoff_data.get("finalization_verified"),
+            archive_handoff_data.get("archive_notes"),
         ))
 
         conn.commit()
@@ -14520,6 +14677,7 @@ def transfer_archive_handoff(transfer_id):
     )
 
 
+@app.route("/execution/transfers/<transfer_id>")
 @app.route("/execution/transfers/<transfer_id>/detail")
 def transfer_detail(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
@@ -14669,6 +14827,12 @@ def admin_audit_log():
 @app.route("/guide")
 def guide_page():
     return render_template("guide_page.html")
+
+
+@app.route("/debug/auth-snapshot")
+def debug_auth_snapshot():
+    return authorization_snapshot()
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
