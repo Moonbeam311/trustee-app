@@ -271,64 +271,59 @@ def ensure_professional_review_issue_tables():
 
 def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key, draft_packet, actor="system"):
     """
-    Convert draft_packet open_issues into actionable review issue records.
-    Safe to run repeatedly; issue_id is deterministic per intake/workflow/index.
+    RC2-B3A-2A — Issue Sync Integration Fix.
     """
     import hashlib
 
     ensure_professional_review_issue_tables()
 
-    open_issues = draft_packet.get("open_issues", []) if draft_packet else []
+    open_issues = []
+    if isinstance(draft_packet, dict):
+        open_issues = draft_packet.get("open_issues") or []
+
     conn = get_connection()
     cur = conn.cursor()
 
     created = 0
+    skipped = 0
 
-    for idx, issue in enumerate(open_issues, 1):
-        title = str(issue)
-        seed = "|".join([str(intake_id), str(workflow_key), str(idx), title])
+    for issue in open_issues:
+        title = str(issue).strip()
+        if not title:
+            continue
+
+        seed = "|".join([str(intake_id), str(workflow_key), title])
         issue_id = "PRI-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:10].upper()
 
         cur.execute("SELECT issue_id FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
         if cur.fetchone():
+            skipped += 1
             continue
 
         cur.execute("""
             INSERT INTO professional_review_issues (
-                issue_id,
-                intake_id,
-                firm_id,
-                workflow_key,
-                issue_source,
-                issue_category,
-                severity,
-                issue_title,
-                issue_description,
-                recommended_action,
-                status,
-                created_by
+                issue_id, intake_id, firm_id, workflow_key, issue_source,
+                issue_category, severity, issue_title, issue_description,
+                recommended_action, status, created_by
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            issue_id,
-            intake_id,
-            firm_id,
-            workflow_key,
-            "draft_packet_open_issue",
-            "Professional Review",
-            "major",
-            title[:180],
-            title,
+            issue_id, intake_id, firm_id, workflow_key, "draft_packet_open_issue",
+            "Professional Review", "major", title[:180], title,
             "Review this issue, add notes, then resolve, accept risk, escalate, or reopen.",
-            "open",
-            actor,
+            "open", actor
         ))
         created += 1
 
     conn.commit()
     conn.close()
-    return created
 
+    return {
+        "created": created,
+        "skipped": skipped,
+        "source_issue_count": len(open_issues),
+        "normalized_issue_count": len(open_issues),
+    }
 
 def get_professional_review_issues(intake_id, firm_id=None, status=None):
     ensure_professional_review_issue_tables()
