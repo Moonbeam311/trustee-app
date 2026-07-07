@@ -1,1 +1,119 @@
-{% extends "intake_identity.html" %}
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+.intake-wrap {
+    max-width: 980px;
+    margin: 30px auto;
+    padding: 0 16px;
+}
+
+.intake-header-card,
+.intake-note-card,
+.intake-lane-card {
+    border: 1px solid rgba(0,0,0,0.16);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+}
+
+.intake-header-card {
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+.intake-note-card {
+    padding: 16px 18px;
+    margin: 18px 0;
+}
+
+.intake-lane-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.intake-lane-card {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 16px;
+    cursor: pointer;
+}
+
+.intake-lane-card:hover {
+    border-color: rgba(170,130,40,0.75);
+}
+
+.intake-lane-card input {
+    margin-top: 4px;
+}
+
+.intake-lane-title {
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.intake-lane-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.78;
+    margin-top: 4px;
+}
+
+.intake-actions {
+    margin-top: 22px;
+}
+
+.intake-primary-btn {
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+</style>
+
+<div class="intake-wrap">
+    <div class="intake-header-card">
+        <h1 style="margin-top:0;">Initial Intake</h1>
+        <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom:0;">
+            This first step places the client into the correct intake lane before deeper questions begin.
+            The purpose is to keep the first session focused, calm, and useful.
+        </p>
+    </div>
+
+    <div class="intake-note-card">
+        <strong>Estimated time:</strong> 15–20 minutes for the initial intake.<br>
+        This does not complete the full planning, review, funding, or administration process.
+    </div>
+
+    <form method="POST" action="{{ url_for('intake_start') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        <h2>Step 1 — What brings you here today?</h2>
+        <p style="line-height:1.55;">
+            Choose one lane. This determines which intake path appears next.
+        </p>
+
+        <div class="intake-lane-grid">
+            {% for key, lane in lanes.items() %}
+                <label class="intake-lane-card">
+                    <input type="radio" name="intake_lane" value="{{ key }}" required>
+                    <span>
+                        <span class="intake-lane-title">{{ lane.label }}</span>
+                        <span class="intake-lane-subtitle">
+                            Intake lane: {{ key.replace('_', ' ').title() }}
+                        </span>
+                    </span>
+                </label>
+            {% endfor %}
+        </div>
+
+        <div class="intake-actions">
+            <button type="submit" class="intake-primary-btn">
+                Continue to Intake Questions
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
