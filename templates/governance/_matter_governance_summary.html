@@ -1,0 +1,20 @@
+<section class="card">
+    <h3>Governance Summary</h3>
+
+    {% if governance_summary %}
+        <table>
+            <tbody>
+                <tr><th>Total Governance Links</th><td>{{ governance_summary.total }}</td></tr>
+                <tr><th>Directives</th><td>{{ governance_summary.directives }}</td></tr>
+                <tr><th>Policies</th><td>{{ governance_summary.policies }}</td></tr>
+                <tr><th>Pending Approval / Ratification</th><td>{{ governance_summary.pending_approval }}</td></tr>
+                <tr><th>Approved or Ratified</th><td>{{ governance_summary.approved_or_ratified }}</td></tr>
+                <tr><th>Effective</th><td>{{ governance_summary.effective }}</td></tr>
+                <tr><th>Implemented</th><td>{{ governance_summary.implemented }}</td></tr>
+                <tr><th>Latest Governance Activity</th><td>{{ governance_summary.latest_activity or "—" }}</td></tr>
+            </tbody>
+        </table>
+    {% else %}
+        <p>No governance summary is available for this Matter.</p>
+    {% endif %}
+</section>

@@ -20074,6 +20074,16 @@ def matter_detail(matter_id):
         if matter
         else []
     )
+    governance_summary = (
+        build_matter_governance_summary(matter_id)
+        if matter
+        else {}
+    )
+    governance_timeline = (
+        build_matter_governance_timeline(matter_id)
+        if matter
+        else []
+    )
 
     firm_id = session.get("firm_id") or "FIRM-001"
 
@@ -20135,6 +20145,8 @@ def matter_detail(matter_id):
         governance_links=governance_links,
         governance_directives=governance_directives,
         governance_policies=governance_policies,
+        governance_summary=governance_summary,
+        governance_timeline=governance_timeline,
         governance_relationship_types=get_governance_relationship_types(),
         matter_intake_links=matter_intake_links,
         eligible_intakes=eligible_intakes,
@@ -20848,6 +20860,8 @@ from services.services_governance import (
     generate_directive_governance_packet_pdf,
     generate_policy_governance_packet_pdf,
     get_governance_record,
+    build_matter_governance_summary,
+    build_matter_governance_timeline,
     get_governance_directive_source_types,
     get_governance_policy_source_types,
     get_governance_relationship_target_types,
