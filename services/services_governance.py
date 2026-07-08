@@ -581,6 +581,26 @@ def ensure_governance_tables():
         """
     )
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS directive_implementation_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entry_id TEXT UNIQUE NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            directive_id TEXT NOT NULL,
+            action_type TEXT,
+            action_summary TEXT NOT NULL,
+            performed_by TEXT,
+            performed_at TEXT,
+            result_status TEXT DEFAULT 'Recorded',
+            evidence_reference TEXT,
+            notes TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """
+    )
+
     index_specs = [
         ("idx_governance_number_sequences_scope", "governance_number_sequences", "firm_id, prefix, sequence_year"),
         ("idx_institutional_directives_firm_status", "institutional_directives", "firm_id, status"),
@@ -593,6 +613,7 @@ def ensure_governance_tables():
         ("idx_governance_relationships_source", "governance_relationships", "firm_id, source_object_type, source_object_id"),
         ("idx_governance_relationships_target", "governance_relationships", "firm_id, target_object_type, target_object_id"),
         ("idx_governance_relationships_type", "governance_relationships", "firm_id, relationship_type, status"),
+        ("idx_directive_implementation_entries_directive", "directive_implementation_entries", "firm_id, directive_id, performed_at"),
     ]
 
     for index_name, table_name, columns in index_specs:
@@ -741,6 +762,78 @@ def approve_governance_directive(directive_id, approved_by, authority_basis=""):
     conn.commit()
     conn.close()
     return True, directive_id
+
+
+def create_directive_implementation_entry(directive_id, data):
+    ensure_governance_tables()
+
+    directive = get_governance_record("directive", directive_id)
+    if not directive:
+        return False, "Directive not found."
+
+    action_summary = (data.get("action_summary") or "").strip()
+    if not action_summary:
+        return False, "Action summary is required."
+
+    now = _now()
+    entry_id = data.get("entry_id") or _public_id("DIL")
+    performed_at = (data.get("performed_at") or "").strip() or now
+
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO directive_implementation_entries (
+            entry_id,
+            firm_id,
+            directive_id,
+            action_type,
+            action_summary,
+            performed_by,
+            performed_at,
+            result_status,
+            evidence_reference,
+            notes,
+            created_at,
+            updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            entry_id,
+            get_current_firm_id(),
+            directive_id,
+            data.get("action_type") or "",
+            action_summary,
+            data.get("performed_by") or "System",
+            performed_at,
+            data.get("result_status") or "Recorded",
+            data.get("evidence_reference") or "",
+            data.get("notes") or "",
+            now,
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return True, entry_id
+
+
+def list_directive_implementation_entries(directive_id):
+    ensure_governance_tables()
+
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM directive_implementation_entries
+        WHERE firm_id = ?
+          AND directive_id = ?
+        ORDER BY performed_at DESC, id DESC
+        """,
+        (get_current_firm_id(), directive_id),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
 
 
 def create_governance_relationship(data):

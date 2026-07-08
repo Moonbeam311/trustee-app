@@ -66,6 +66,26 @@ class InstitutionalDirective(db.Model):
     )
 
 
+class DirectiveImplementationEntry(db.Model):
+    __tablename__ = "directive_implementation_entries"
+
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    firm_id = db.Column(db.String(64), nullable=False, default="FIRM-001", index=True)
+    directive_id = db.Column(db.String(64), nullable=False, index=True)
+    action_type = db.Column(db.String(80), nullable=True, index=True)
+    action_summary = db.Column(db.Text, nullable=False)
+    performed_by = db.Column(db.String(255), nullable=True)
+    performed_at = db.Column(db.DateTime, nullable=True, index=True)
+    result_status = db.Column(db.String(80), nullable=False, default="Recorded", index=True)
+    evidence_reference = db.Column(db.String(255), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
 class InstitutionalDecision(db.Model):
     __tablename__ = "institutional_decisions"
 

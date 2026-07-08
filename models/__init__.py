@@ -1,6 +1,7 @@
 from .models_transfer_support import TransferSupportDoc
 from .models_transfer import Transfer, TransferAction, TransferRecord
 from .models_governance import (
+    DirectiveImplementationEntry,
     GovernanceNumberSequence,
     GovernanceRelationship,
     InstitutionalDecision,
@@ -14,6 +15,7 @@ from .models_governance import (
 
 __all__ = [
     "GovernanceRelationship",
+    "DirectiveImplementationEntry",
     "GovernanceNumberSequence",
     "InstitutionalDecision",
     "InstitutionalDirective",

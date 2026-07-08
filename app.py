@@ -20759,6 +20759,7 @@ from services.services_governance import (
     GOVERNANCE_LIFECYCLE_STATES,
     approve_governance_directive,
     build_governance_metadata,
+    create_directive_implementation_entry,
     create_governance_relationship,
     create_governance_record,
     ensure_governance_tables,
@@ -20768,6 +20769,7 @@ from services.services_governance import (
     get_governance_relationship_types,
     get_governance_record_types,
     list_incoming_governance_relationships,
+    list_directive_implementation_entries,
     list_outgoing_governance_relationships,
     list_governance_records,
     transition_governance_record,
@@ -20849,11 +20851,13 @@ def governance_directive_detail(directive_id):
         directive_id,
     )
     metadata = build_governance_metadata("directive", directive)
+    implementation_entries = list_directive_implementation_entries(directive_id)
 
     return render_template(
         "governance/directive_detail.html",
         directive=directive,
         metadata=metadata,
+        implementation_entries=implementation_entries,
         outgoing_relationships=outgoing_relationships,
         incoming_relationships=incoming_relationships,
         relationship_types=get_governance_relationship_types(),
@@ -20885,6 +20889,32 @@ def governance_directive_relationship_create(directive_id):
 
     if success:
         flash(f"Relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_directive_detail", directive_id=directive_id))
+
+
+@csrf.exempt
+@app.route("/governance/directives/<directive_id>/implementation", methods=["POST"])
+def governance_directive_implementation_create(directive_id):
+    success, result = create_directive_implementation_entry(
+        directive_id,
+        {
+            "action_type": request.form.get("action_type"),
+            "action_summary": request.form.get("action_summary"),
+            "performed_by": request.form.get("performed_by")
+            or session.get("username")
+            or "System",
+            "performed_at": request.form.get("performed_at"),
+            "result_status": request.form.get("result_status"),
+            "evidence_reference": request.form.get("evidence_reference"),
+            "notes": request.form.get("notes"),
+        },
+    )
+
+    if success:
+        flash(f"Implementation entry {result} recorded.", "success")
     else:
         flash(result, "warning")
 

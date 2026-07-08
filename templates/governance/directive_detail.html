@@ -45,6 +45,8 @@
         <pre>{{ directive.milestone_plan or "No milestone plan recorded." }}</pre>
     </div>
 
+    {% include "governance/_directive_implementation_ledger.html" %}
+
     {% include "governance/_relationship_form.html" %}
 
     {% set relationships = outgoing_relationships %}
