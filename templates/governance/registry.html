@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+    <title>Governance Registry</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px;}
+        table{width:100%; border-collapse:collapse;}
+        th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top;}
+        .btn{display:inline-block; padding:10px 14px; border:1px solid #444; text-decoration:none; border-radius:8px;}
+        .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
+        .muted{color:#4b5563;}
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <strong>Institutional Navigation:</strong>
+        <a href="/governance">Governance Registry</a> |
+        <a href="/governance/directives/new">New Directive</a> |
+        <a href="/admin/workspace/governance">Governance Workspace</a>
+    </div>
+
+    <h1>Institutional Governance Registry</h1>
+    <p class="muted">
+        IOS-3A registry for governed institutional records. This checkpoint exposes Directives first.
+    </p>
+
+    <p><a class="btn" href="/governance/directives/new">+ New Directive</a></p>
+
+    <h2>Directives</h2>
+    {% if directives %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Directive</th>
+                    <th>Code</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Authority</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for directive in directives %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('governance_directive_detail', directive_id=directive.directive_id) }}">
+                                {{ directive.directive_id }}
+                            </a>
+                        </td>
+                        <td>{{ directive.directive_code or "-" }}</td>
+                        <td>{{ directive.title }}</td>
+                        <td>{{ directive.status }}</td>
+                        <td>{{ directive.authority or "-" }}</td>
+                        <td>{{ directive.updated_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No institutional directives have been recorded yet.</p>
+    {% endif %}
+
+    {% include "_institutional_property_notice.html" %}
+</body>
+</html>

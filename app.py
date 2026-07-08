@@ -20754,6 +20754,85 @@ def new_matter_event(matter_id):
 # ---- END IC-1 Institutional Matter / Case Engine ----
 
 
+# ---- IOS-3A Institutional Governance Engine ----
+from services.services_governance import (
+    create_governance_record,
+    ensure_governance_tables,
+    get_governance_record,
+    list_governance_records,
+    list_governance_relationships,
+)
+
+
+@app.route("/governance")
+def governance_registry():
+    ensure_governance_tables()
+    directives = list_governance_records("directive")
+    return render_template(
+        "governance/registry.html",
+        directives=directives,
+    )
+
+
+@csrf.exempt
+@app.route("/governance/directives/new", methods=["GET", "POST"])
+def governance_directive_new():
+    ensure_governance_tables()
+
+    if request.method == "POST":
+        success, result = create_governance_record(
+            "directive",
+            {
+                "directive_code": request.form.get("directive_code"),
+                "title": request.form.get("title"),
+                "directive_type": request.form.get("directive_type"),
+                "status": request.form.get("status"),
+                "authority": request.form.get("authority"),
+                "issued_by": request.form.get("issued_by"),
+                "summary": request.form.get("summary"),
+                "body": request.form.get("instruction"),
+                "rationale": request.form.get("rationale"),
+                "scope": request.form.get("scope"),
+                "milestone_plan": request.form.get("milestone_plan"),
+                "created_by": session.get("username") or "System",
+            },
+        )
+
+        if success:
+            flash(f"Directive {result} created.", "success")
+            return redirect(
+                url_for("governance_directive_detail", directive_id=result)
+            )
+
+        flash(result, "warning")
+
+    return render_template("governance/directive_form.html")
+
+
+@app.route("/governance/directives/<directive_id>")
+def governance_directive_detail(directive_id):
+    ensure_governance_tables()
+    directive = get_governance_record("directive", directive_id)
+
+    if not directive:
+        flash("Directive not found.", "warning")
+        return redirect(url_for("governance_registry"))
+
+    relationships = list_governance_relationships(
+        "Directive",
+        directive_id,
+    )
+
+    return render_template(
+        "governance/directive_detail.html",
+        directive=directive,
+        relationships=relationships,
+    )
+
+
+# ---- END IOS-3A Institutional Governance Engine ----
+
+
 
 
 

@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+    <title>New Institutional Directive</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px; max-width:980px;}
+        label{display:block; margin-top:14px; font-weight:bold;}
+        input,select,textarea{width:100%; padding:10px; margin-top:5px;}
+        button{margin-top:20px; padding:12px 18px;}
+        .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
+        .muted{color:#4b5563;}
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <strong>Institutional Navigation:</strong>
+        <a href="/governance">Governance Registry</a> |
+        <a href="/admin/workspace/governance">Governance Workspace</a>
+    </div>
+
+    <h1>Create Institutional Directive</h1>
+    <p class="muted">
+        A Directive records governed instruction issued by institutional authority.
+    </p>
+
+    <form method="post">
+        <label>Directive Code</label>
+        <input name="directive_code" placeholder="Example: IOS-3A">
+
+        <label>Title</label>
+        <input name="title" required placeholder="Example: Institutional Governance Engine Foundation">
+
+        <label>Directive Type</label>
+        <select name="directive_type">
+            <option>Governance Directive</option>
+            <option>Architecture Directive</option>
+            <option>Operational Directive</option>
+            <option>Compliance Directive</option>
+            <option>Remediation Directive</option>
+        </select>
+
+        <label>Status</label>
+        <select name="status">
+            <option>Draft</option>
+            <option>Issued</option>
+            <option>Active</option>
+            <option>Completed</option>
+            <option>Superseded</option>
+            <option>Retired</option>
+        </select>
+
+        <label>Authority</label>
+        <input name="authority" placeholder="Example: V2 governance program approval">
+
+        <label>Issued By</label>
+        <input name="issued_by" placeholder="Name, role, or institutional authority">
+
+        <label>Summary</label>
+        <textarea name="summary" rows="3"></textarea>
+
+        <label>Instruction</label>
+        <textarea name="instruction" rows="6" required></textarea>
+
+        <label>Rationale</label>
+        <textarea name="rationale" rows="4"></textarea>
+
+        <label>Scope</label>
+        <textarea name="scope" rows="4" placeholder="Affected modules, records, people, or workflows"></textarea>
+
+        <label>Milestone Plan</label>
+        <textarea name="milestone_plan" rows="4" placeholder="Expected milestones, dependencies, or completion gates"></textarea>
+
+        <button type="submit">Create Directive</button>
+    </form>
+
+    {% include "_institutional_property_notice.html" %}
+</body>
+</html>

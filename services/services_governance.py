@@ -474,6 +474,28 @@ def list_governance_records(record_type, status=None):
     return [dict(row) for row in rows]
 
 
+def get_governance_record(record_type, record_id):
+    ensure_governance_tables()
+
+    config = GOVERNANCE_OBJECTS.get(record_type)
+    if not config:
+        return None
+
+    firm_id = get_current_firm_id()
+    conn = get_connection()
+    row = conn.execute(
+        f"""
+        SELECT *
+        FROM {config['table']}
+        WHERE {config['id_column']} = ?
+          AND firm_id = ?
+        """,
+        (record_id, firm_id),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def list_governance_relationships(object_type=None, object_id=None):
     ensure_governance_tables()
 
