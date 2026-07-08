@@ -20059,6 +20059,21 @@ def matter_detail(matter_id):
         if matter
         else []
     )
+    governance_links = (
+        build_matter_governance_links(matter_id)
+        if matter
+        else []
+    )
+    governance_directives = (
+        list_governance_records("directive")
+        if matter
+        else []
+    )
+    governance_policies = (
+        list_governance_records("policy")
+        if matter
+        else []
+    )
 
     firm_id = session.get("firm_id") or "FIRM-001"
 
@@ -20117,9 +20132,72 @@ def matter_detail(matter_id):
         matter=matter,
         events=events,
         relationships=relationships,
+        governance_links=governance_links,
+        governance_directives=governance_directives,
+        governance_policies=governance_policies,
+        governance_relationship_types=get_governance_relationship_types(),
         matter_intake_links=matter_intake_links,
         eligible_intakes=eligible_intakes,
     )
+
+
+@csrf.exempt
+@app.route("/matters/<matter_id>/governance-links", methods=["POST"])
+def matter_governance_link_create(matter_id):
+    ensure_matter_tables()
+    matter, events = get_matter(matter_id)
+    if not matter:
+        flash("Matter not found.", "warning")
+        return redirect(url_for("matters_dashboard"))
+
+    governance_type = (request.form.get("governance_type") or "").strip()
+    governance_id = (request.form.get("governance_id") or "").strip()
+    direction = (request.form.get("direction") or "").strip()
+
+    type_map = {
+        "Directive": "directive",
+        "Policy": "policy",
+    }
+    record_type = type_map.get(governance_type)
+    if not record_type:
+        flash("Select Directive or Policy.", "warning")
+        return redirect(url_for("matter_detail", matter_id=matter_id))
+
+    if not get_governance_record(record_type, governance_id):
+        flash(f"{governance_type} record not found.", "warning")
+        return redirect(url_for("matter_detail", matter_id=matter_id))
+
+    if direction == "matter_to_governance":
+        source_object_type = "Matter"
+        source_object_id = matter_id
+        target_object_type = governance_type
+        target_object_id = governance_id
+    else:
+        source_object_type = governance_type
+        source_object_id = governance_id
+        target_object_type = "Matter"
+        target_object_id = matter_id
+
+    success, result = create_governance_relationship(
+        {
+            "source_object_type": source_object_type,
+            "source_object_id": source_object_id,
+            "relationship_type": request.form.get("relationship_type"),
+            "target_object_type": target_object_type,
+            "target_object_id": target_object_id,
+            "authority": request.form.get("authority"),
+            "reason": request.form.get("reason"),
+            "status": "Active",
+            "created_by": session.get("username") or "System",
+        }
+    )
+
+    if success:
+        flash(f"Governance relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("matter_detail", matter_id=matter_id))
 
 
 @csrf.exempt
@@ -20760,6 +20838,7 @@ from services.services_governance import (
     approve_governance_directive,
     approve_governance_policy,
     build_governance_dashboard_summary,
+    build_matter_governance_links,
     build_governance_metadata,
     create_directive_implementation_entry,
     create_governance_relationship,
