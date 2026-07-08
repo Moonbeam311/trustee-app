@@ -1,0 +1,29 @@
+<div class="card">
+    <h2>Create Relationship</h2>
+    <form method="post" action="{{ url_for('governance_directive_relationship_create', directive_id=metadata.record_id) }}">
+        <label>Relationship</label>
+        <select name="relationship_type" required>
+            {% for relationship_type in relationship_types %}
+                <option value="{{ relationship_type }}">{{ relationship_type }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Target Type</label>
+        <select name="target_object_type" required>
+            {% for target_type in relationship_target_types %}
+                <option value="{{ target_type }}">{{ target_type }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Target ID</label>
+        <input name="target_object_id" required placeholder="Example: MAT-2026-0001, TRUST-001, CERT-001">
+
+        <label>Authority</label>
+        <input name="authority" placeholder="Authority supporting this relationship">
+
+        <label>Reason</label>
+        <textarea name="reason" rows="3" placeholder="Brief basis for the relationship"></textarea>
+
+        <button type="submit">Create Relationship</button>
+    </form>
+</div>

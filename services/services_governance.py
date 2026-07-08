@@ -39,6 +39,32 @@ GOVERNANCE_LIFECYCLE_TRANSITIONS = {
     "Retired": [],
 }
 
+GOVERNANCE_RELATIONSHIP_TYPES = [
+    "authorizes",
+    "implements",
+    "supersedes",
+    "depends_on",
+    "governs",
+    "references",
+]
+
+GOVERNANCE_RELATIONSHIP_TARGET_TYPES = [
+    "Directive",
+    "Policy",
+    "Decision",
+    "Resolution",
+    "Memorandum",
+    "Opinion",
+    "Precedent",
+    "Matter",
+    "Trust",
+    "Certificate",
+    "Execution Session",
+    "Continuity Asset",
+    "Genealogy Record",
+    "Document",
+]
+
 GOVERNANCE_OBJECTS = {
     "directive": {
         "table": "institutional_directives",
@@ -128,6 +154,13 @@ def _normalize_status(status):
     return cleaned
 
 
+def _normalize_relationship_type(relationship_type):
+    cleaned = (relationship_type or "").strip()
+    if cleaned not in GOVERNANCE_RELATIONSHIP_TYPES:
+        return ""
+    return cleaned
+
+
 def _next_governance_number(conn, prefix, firm_id):
     year = datetime.utcnow().year
     cur = conn.cursor()
@@ -184,6 +217,14 @@ def get_governance_record_types():
         {"key": key, **config}
         for key, config in GOVERNANCE_OBJECTS.items()
     ]
+
+
+def get_governance_relationship_types():
+    return GOVERNANCE_RELATIONSHIP_TYPES
+
+
+def get_governance_relationship_target_types():
+    return GOVERNANCE_RELATIONSHIP_TARGET_TYPES
 
 
 def allowed_governance_transitions(status):
@@ -581,6 +622,9 @@ def create_governance_relationship(data):
     ]
 
     cleaned = {key: (data.get(key) or "").strip() for key in required}
+    cleaned["relationship_type"] = _normalize_relationship_type(
+        cleaned["relationship_type"]
+    )
     missing = [key for key, value in cleaned.items() if not value]
     if missing:
         return False, f"Missing required relationship fields: {', '.join(missing)}."
@@ -747,5 +791,45 @@ def list_governance_relationships(object_type=None, object_id=None):
 
     conn = get_connection()
     rows = conn.execute(sql, params).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def list_outgoing_governance_relationships(object_type, object_id):
+    ensure_governance_tables()
+
+    firm_id = get_current_firm_id()
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationships
+        WHERE firm_id = ?
+          AND source_object_type = ?
+          AND source_object_id = ?
+        ORDER BY updated_at DESC, id DESC
+        """,
+        (firm_id, object_type, object_id),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def list_incoming_governance_relationships(object_type, object_id):
+    ensure_governance_tables()
+
+    firm_id = get_current_firm_id()
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationships
+        WHERE firm_id = ?
+          AND target_object_type = ?
+          AND target_object_id = ?
+        ORDER BY updated_at DESC, id DESC
+        """,
+        (firm_id, object_type, object_id),
+    ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
