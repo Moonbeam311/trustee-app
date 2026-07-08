@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+    <title>Governance Dashboard</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px;}
+        table{width:100%; border-collapse:collapse; margin-bottom:24px;}
+        th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top;}
+        .grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:18px;}
+        .card{border:1px solid #ddd; border-radius:10px; padding:18px; margin-bottom:20px;}
+        .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
+        .muted{color:#4b5563;}
+    </style>
+</head>
+<body>
+    {% include "governance/_record_nav.html" %}
+
+    <h1>Governance Dashboard</h1>
+    <p class="muted">Read-only IOS-3A governance summary.</p>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Record Types</h2>
+            <table>
+                <thead>
+                    <tr><th>Type</th><th>Prefix</th><th>Count</th></tr>
+                </thead>
+                <tbody>
+                    {% for row in summary.record_type_counts %}
+                        <tr>
+                            <td>{{ row.record_label }}</td>
+                            <td>{{ row.prefix }}</td>
+                            <td>{{ row.count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Lifecycle States</h2>
+            <table>
+                <thead>
+                    <tr><th>State</th><th>Count</th></tr>
+                </thead>
+                <tbody>
+                    {% for row in summary.lifecycle_counts %}
+                        <tr>
+                            <td>{{ row.status }}</td>
+                            <td>{{ row.count }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Recent Directives</h2>
+        {% if summary.recent_directives %}
+            <table>
+                <thead>
+                    <tr><th>Directive</th><th>Code</th><th>Title</th><th>Status</th><th>Updated</th></tr>
+                </thead>
+                <tbody>
+                    {% for directive in summary.recent_directives %}
+                        <tr>
+                            <td><a href="{{ url_for('governance_directive_detail', directive_id=directive.directive_id) }}">{{ directive.directive_id }}</a></td>
+                            <td>{{ directive.directive_code or "-" }}</td>
+                            <td>{{ directive.title }}</td>
+                            <td>{{ directive.status }}</td>
+                            <td>{{ directive.updated_at }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Directives recorded yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Pending Approval / Ratification</h2>
+        {% if summary.pending_approvals %}
+            <table>
+                <thead>
+                    <tr><th>Directive</th><th>Title</th><th>Status</th><th>Authority Basis</th></tr>
+                </thead>
+                <tbody>
+                    {% for directive in summary.pending_approvals %}
+                        <tr>
+                            <td><a href="{{ url_for('governance_directive_detail', directive_id=directive.directive_id) }}">{{ directive.directive_id }}</a></td>
+                            <td>{{ directive.title }}</td>
+                            <td>{{ directive.status }}</td>
+                            <td>{{ directive.authority_basis or "Not recorded" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Directives are pending approval or ratification.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Implementation Activity</h2>
+        {% if summary.implementation_activity %}
+            <table>
+                <thead>
+                    <tr><th>Directive</th><th>Title</th><th>Status</th><th>Entries</th><th>Latest Activity</th></tr>
+                </thead>
+                <tbody>
+                    {% for directive in summary.implementation_activity %}
+                        <tr>
+                            <td><a href="{{ url_for('governance_directive_detail', directive_id=directive.directive_id) }}">{{ directive.directive_id }}</a></td>
+                            <td>{{ directive.title }}</td>
+                            <td>{{ directive.status }}</td>
+                            <td>{{ directive.entry_count }}</td>
+                            <td>{{ directive.latest_activity or "-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Directive implementation activity recorded yet.</p>
+        {% endif %}
+    </div>
+
+    <p><a href="/governance">Open Governance Registry</a></p>
+
+    {% include "_institutional_property_notice.html" %}
+</body>
+</html>

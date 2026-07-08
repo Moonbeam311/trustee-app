@@ -836,6 +836,99 @@ def list_directive_implementation_entries(directive_id):
     return [dict(row) for row in rows]
 
 
+def build_governance_dashboard_summary():
+    ensure_governance_tables()
+
+    firm_id = get_current_firm_id()
+    conn = get_connection()
+
+    record_type_counts = []
+    lifecycle_counts = {state: 0 for state in GOVERNANCE_LIFECYCLE_STATES}
+    for record_type, config in GOVERNANCE_OBJECTS.items():
+        count_row = conn.execute(
+            f"SELECT COUNT(*) AS count FROM {config['table']} WHERE firm_id = ?",
+            (firm_id,),
+        ).fetchone()
+        record_type_counts.append(
+            {
+                "record_type": record_type,
+                "record_label": config["record_label"],
+                "prefix": config["prefix"],
+                "count": count_row["count"] if count_row else 0,
+            }
+        )
+
+        state_rows = conn.execute(
+            f"""
+            SELECT status, COUNT(*) AS count
+            FROM {config['table']}
+            WHERE firm_id = ?
+            GROUP BY status
+            """,
+            (firm_id,),
+        ).fetchall()
+        for row in state_rows:
+            status = row["status"] or "Draft"
+            lifecycle_counts[status] = lifecycle_counts.get(status, 0) + row["count"]
+
+    recent_directives = conn.execute(
+        """
+        SELECT directive_id, directive_code, title, status, approved_by, approved_at, updated_at
+        FROM institutional_directives
+        WHERE firm_id = ?
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 10
+        """,
+        (firm_id,),
+    ).fetchall()
+
+    pending_approvals = conn.execute(
+        """
+        SELECT directive_id, directive_code, title, status, authority_basis, updated_at
+        FROM institutional_directives
+        WHERE firm_id = ?
+          AND COALESCE(approval_required, 0) = 1
+          AND COALESCE(approved_at, '') = ''
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 10
+        """,
+        (firm_id,),
+    ).fetchall()
+
+    implementation_activity = conn.execute(
+        """
+        SELECT
+            d.directive_id,
+            d.directive_code,
+            d.title,
+            d.status,
+            COUNT(e.id) AS entry_count,
+            MAX(e.performed_at) AS latest_activity
+        FROM institutional_directives d
+        INNER JOIN directive_implementation_entries e
+            ON e.directive_id = d.directive_id
+           AND e.firm_id = d.firm_id
+        WHERE d.firm_id = ?
+        GROUP BY d.directive_id, d.directive_code, d.title, d.status
+        ORDER BY latest_activity DESC, entry_count DESC
+        LIMIT 10
+        """,
+        (firm_id,),
+    ).fetchall()
+
+    conn.close()
+    return {
+        "record_type_counts": record_type_counts,
+        "lifecycle_counts": [
+            {"status": status, "count": count}
+            for status, count in lifecycle_counts.items()
+        ],
+        "recent_directives": [dict(row) for row in recent_directives],
+        "pending_approvals": [dict(row) for row in pending_approvals],
+        "implementation_activity": [dict(row) for row in implementation_activity],
+    }
+
+
 def create_governance_relationship(data):
     ensure_governance_tables()
 

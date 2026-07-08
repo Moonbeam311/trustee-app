@@ -20758,6 +20758,7 @@ def new_matter_event(matter_id):
 from services.services_governance import (
     GOVERNANCE_LIFECYCLE_STATES,
     approve_governance_directive,
+    build_governance_dashboard_summary,
     build_governance_metadata,
     create_directive_implementation_entry,
     create_governance_relationship,
@@ -20784,6 +20785,15 @@ def governance_registry():
         "governance/registry.html",
         directives=directives,
         record_types=get_governance_record_types(),
+    )
+
+
+@app.route("/governance/dashboard")
+def governance_dashboard():
+    summary = build_governance_dashboard_summary()
+    return render_template(
+        "governance/dashboard.html",
+        summary=summary,
     )
 
 
