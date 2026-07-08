@@ -2740,6 +2740,8 @@ ensure_firm_columns()
 with app.app_context():
     ext_db.create_all()
 
+# RAILWAY-SEC-3B: persistent upload storage.
+# Certified hosted value: UPLOAD_FOLDER=/data/uploads.
 DEFAULT_UPLOAD_FOLDER = Path(__file__).resolve().parent / "uploads"
 UPLOAD_FOLDER = Path(os.getenv("UPLOAD_FOLDER", str(DEFAULT_UPLOAD_FOLDER))).resolve()
 UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
