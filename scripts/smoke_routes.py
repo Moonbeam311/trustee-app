@@ -23,8 +23,20 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app import app
 from datetime import datetime, UTC
+from database.db import (
+    create_app_user,
+    create_trust_record,
+    ensure_firm_columns,
+    ensure_role_tables,
+    ensure_user_tables,
+    get_next_user_id,
+    get_trust_by_id,
+    get_user_by_username,
+    reseed_default_role_permissions,
+)
 
 TRUST_ID = "TR-001"
+SMOKE_FIRM_ID = "FIRM-SMOKE"
 
 ROUTES = [
     ("GET", "/admin", "Admin dashboard"),
@@ -57,17 +69,76 @@ ROUTES = [
 
 
 def inject_admin_session(client):
+    admin_user = get_user_by_username("admin")
     with client.session_transaction() as session:
         session.clear()
+        if admin_user:
+            session["user_id"] = admin_user["user_id"]
         session["username"] = "admin"
         session["role"] = "Admin"
         session["user_role"] = "Admin"
         session["is_master_admin"] = True
+        session["firm_id"] = SMOKE_FIRM_ID
         session["last_activity"] = datetime.now(UTC).timestamp()
+
+
+def ensure_smoke_trust():
+    with app.test_request_context("/"):
+        from flask import session
+
+        ensure_user_tables()
+        ensure_firm_columns()
+        ensure_role_tables()
+        reseed_default_role_permissions()
+
+        session["username"] = "admin"
+        session["role"] = "Admin"
+        session["firm_id"] = SMOKE_FIRM_ID
+
+        if not get_user_by_username("admin"):
+            create_app_user({
+                "user_id": get_next_user_id(),
+                "username": "admin",
+                "password_hash": "smoke-fixture-only",
+                "role_name": "Admin",
+                "status": "Active",
+                "firm_id": SMOKE_FIRM_ID,
+            })
+
+        if get_trust_by_id(TRUST_ID):
+            return
+
+        create_trust_record({
+            "trust_id": TRUST_ID,
+            "trust_name": "Smoke Test Trust",
+            "short_name": "Smoke",
+            "jurisdiction": "Test Jurisdiction",
+            "effective_date": "2026-01-01",
+            "trust_type": "Revocable Trust",
+            "trust_purpose": "Local smoke-test fixture",
+            "accounting_method": "Cash",
+            "workflow_mode": "simulation",
+            "settlor_name": "Smoke Settlor",
+            "trustee_name": "Smoke Trustee",
+            "successor_trustee_name": "Smoke Successor Trustee",
+            "beneficiary_name": "Smoke Beneficiary",
+            "record_visibility": "private",
+            "workflow_mode_confirmed": "private_office",
+            "ai_explanations": "off",
+            "recommended_guidance": "Smoke test only",
+            "initial_corpus_description": "Smoke fixture corpus",
+            "property_mapping_timing": "post_creation",
+            "asset_categories": "general",
+            "generate_schedule_recommendations": "yes",
+            "status": "Smoke Fixture",
+            "firm_id": SMOKE_FIRM_ID,
+            "owner_id": "admin",
+        })
 
 
 def main():
     failures = []
+    ensure_smoke_trust()
 
     with app.test_client() as client:
         inject_admin_session(client)

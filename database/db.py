@@ -495,7 +495,12 @@ def ensure_transfer_runtime_columns():
     cur = conn.cursor()
 
     cur.execute("PRAGMA table_info(transfers)")
-    existing = {row["name"] for row in cur.fetchall()}
+    table_info = cur.fetchall()
+    if not table_info:
+        conn.close()
+        return
+
+    existing = {row["name"] for row in table_info}
 
     columns = [
         ("finalized_by", "VARCHAR(120)"),
@@ -842,6 +847,19 @@ def get_trust_by_id(trust_id):
     firm_id = get_current_firm_id()
     conn = get_connection()
     cur = conn.cursor()
+
+    # Hosted/legacy DB safety: ensure trusts.firm_id exists before scoped query.
+    cur.execute("PRAGMA table_info(trusts)")
+    trust_cols = [row["name"] for row in cur.fetchall()]
+    if "firm_id" not in trust_cols:
+        cur.execute("ALTER TABLE trusts ADD COLUMN firm_id TEXT")
+        cur.execute("""
+            UPDATE trusts
+            SET firm_id = ?
+            WHERE firm_id IS NULL OR TRIM(firm_id) = ''
+        """, (firm_id,))
+        conn.commit()
+
     cur.execute(
         "SELECT * FROM trusts WHERE trust_id = ? AND firm_id = ?",
         (trust_id, firm_id)
@@ -1427,6 +1445,11 @@ def ensure_k1_tables():
     )
     """)
 
+    cur.execute("PRAGMA table_info(beneficiaries)")
+    beneficiary_columns = {row["name"] for row in cur.fetchall()}
+    if "firm_id" not in beneficiary_columns:
+        cur.execute("ALTER TABLE beneficiaries ADD COLUMN firm_id TEXT")
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS distributions (
         distribution_id TEXT PRIMARY KEY,
@@ -1443,6 +1466,11 @@ def ensure_k1_tables():
         status TEXT
     )
     """)
+
+    cur.execute("PRAGMA table_info(distributions)")
+    distribution_columns = {row["name"] for row in cur.fetchall()}
+    if "firm_id" not in distribution_columns:
+        cur.execute("ALTER TABLE distributions ADD COLUMN firm_id TEXT")
 
     conn.commit()
     conn.close()
@@ -2943,6 +2971,11 @@ def ensure_media_tables():
     )
     """)
 
+    cur.execute("PRAGMA table_info(media_records)")
+    existing_columns = {row["name"] for row in cur.fetchall()}
+    if "firm_id" not in existing_columns:
+        cur.execute("ALTER TABLE media_records ADD COLUMN firm_id TEXT")
+
     conn.commit()
     conn.close()
 
@@ -2996,6 +3029,19 @@ def get_all_media():
     conn.close()
     return rows
 
+def get_media_by_id(media_id):
+    firm_id = get_current_firm_id()
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM media_records
+        WHERE media_id = ? AND firm_id = ?
+        LIMIT 1
+    """, (media_id, firm_id))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
 def get_media_by_entity(entity_type, entity_id):
     firm_id = get_current_firm_id()
     conn = get_connection()
@@ -3036,6 +3082,11 @@ def ensure_role_tables():
         notes TEXT
     )
     """)
+
+    cur.execute("PRAGMA table_info(user_roles)")
+    existing_role_columns = {row["name"] for row in cur.fetchall()}
+    if "firm_id" not in existing_role_columns:
+        cur.execute("ALTER TABLE user_roles ADD COLUMN firm_id TEXT")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS permissions (
@@ -3610,7 +3661,7 @@ def ensure_firm_columns():
             cur.execute(f"ALTER TABLE {table} ADD COLUMN {column_def}")
         except Exception as e:
             if "duplicate column" not in str(e).lower():
-                print(f"⚠️ {table}: {e}")
+                print(f"WARNING: {table}: {e}")
 
     add_column("app_users", "firm_id TEXT")
     add_column("audit_log", "firm_id TEXT")
@@ -3642,6 +3693,11 @@ def ensure_trust_minutes_tables():
     )
     """)
 
+    cur.execute("PRAGMA table_info(trust_minutes)")
+    existing_columns = {row["name"] for row in cur.fetchall()}
+    if "firm_id" not in existing_columns:
+        cur.execute("ALTER TABLE trust_minutes ADD COLUMN firm_id TEXT")
+
     conn.commit()
     conn.close()
 
@@ -3656,14 +3712,17 @@ def get_next_minute_id():
 
 
 def create_trust_minute(data):
+    data = dict(data)
+    data.setdefault("firm_id", get_current_firm_id())
+
     conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
         INSERT INTO trust_minutes (
             minute_id, trust_id, meeting_date, meeting_type, title,
-            purpose, resolutions, action_items, status, created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            purpose, resolutions, action_items, status, created_by, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         data["minute_id"],
         data.get("trust_id"),
@@ -3675,6 +3734,7 @@ def create_trust_minute(data):
         data.get("action_items"),
         data.get("status", "Draft"),
         data.get("created_by"),
+        data.get("firm_id"),
     ))
 
     conn.commit()

@@ -202,6 +202,7 @@ from database.db import (
     get_next_media_id,
     create_media_record,
     get_all_media,
+    get_media_by_id,
     get_media_by_entity,
     get_media_by_trust_id,
     ensure_role_tables,
@@ -349,12 +350,10 @@ def require_permission(permission_name):
                     f"Permission required: {permission_name}"
                 )
 
-                flash(
-                    f"Permission required: {permission_name}",
-                    "danger"
-                )
-
-                return redirect(url_for("dashboard"))
+                return render_template(
+                    "access_denied.html",
+                    reason=f"Permission '{permission_name}' required for this action."
+                ), 403
 
             return func(*args, **kwargs)
 
@@ -376,7 +375,7 @@ ext_db.init_app(app)
 try:
     ensure_transfer_runtime_columns()
 except Exception as e:
-    print("⚠️ Transfer runtime schema migration failed:", e)
+    print("WARNING: Transfer runtime schema migration failed:", e)
 
 
 
@@ -403,7 +402,7 @@ def run_hosted_startup_self_heal():
     firm_id = os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-002").strip()
 
     if not username or not password or not firm_id:
-        print("⚠️ Hosted startup self-heal skipped: missing username/password/firm_id.")
+        print("WARNING: Hosted startup self-heal skipped: missing username/password/firm_id.")
         return
 
     try:
@@ -572,10 +571,10 @@ def run_hosted_startup_self_heal():
         conn.close()
 
         login_attempts.pop(username, None)
-        print(f"✅ Hosted startup self-heal complete: user={username}; action={user_action}; firm={firm_id}")
+        print(f"OK: Hosted startup self-heal complete: user={username}; action={user_action}; firm={firm_id}")
 
     except Exception as exc:
-        print("⚠️ Hosted startup self-heal failed:", exc)
+        print("WARNING: Hosted startup self-heal failed:", exc)
 
 
 
@@ -606,7 +605,7 @@ app.config["SESSION_COOKIE_SECURE"] = APP_ENV == "production"
 try:
     run_hosted_startup_self_heal()
 except Exception as e:
-    print("⚠️ Hosted startup self-heal wrapper failed:", e)
+    print("WARNING: Hosted startup self-heal wrapper failed:", e)
 
 
 
@@ -788,10 +787,10 @@ def run_hosted_test_trust_seed():
         conn.commit()
         conn.close()
 
-        print(f"✅ Hosted test trust seed complete: trust={trust_id}; action={action}; firm={firm_id}")
+        print(f"OK: Hosted test trust seed complete: trust={trust_id}; action={action}; firm={firm_id}")
 
     except Exception as exc:
-        print("⚠️ Hosted test trust seed failed:", exc)
+        print("WARNING: Hosted test trust seed failed:", exc)
 
 
 
@@ -800,7 +799,7 @@ def run_hosted_test_trust_seed():
 try:
     run_hosted_test_trust_seed()
 except Exception as e:
-    print("⚠️ Hosted test trust seed wrapper failed:", e)
+    print("WARNING: Hosted test trust seed wrapper failed:", e)
 
 
 
@@ -1027,10 +1026,10 @@ def run_hosted_portfolio_seed():
         conn.commit()
         conn.close()
 
-        print("✅ Hosted portfolio seed complete: property/account/document/ledger created")
+        print("OK: Hosted portfolio seed complete: property/account/document/ledger created")
 
     except Exception as exc:
-        print("⚠️ Hosted portfolio seed failed:", exc)
+        print("WARNING: Hosted portfolio seed failed:", exc)
 
 
 
@@ -1039,7 +1038,7 @@ def run_hosted_portfolio_seed():
 try:
     run_hosted_portfolio_seed()
 except Exception as e:
-    print("⚠️ Hosted portfolio seed wrapper failed:", e)
+    print("WARNING: Hosted portfolio seed wrapper failed:", e)
 
 
 def generate_csrf_token():
@@ -1093,7 +1092,7 @@ def get_visible_trusts_for_current_operator():
     for trust in trusts:
         role_rows = get_roles_by_trust_id(trust["trust_id"])
         for row in role_rows:
-            full_name = (row.get("full_name") or "").strip().lower()
+            full_name = (row["full_name"] or "").strip().lower()
             if full_name == username:
                 visible.append(trust)
                 break
@@ -1124,7 +1123,7 @@ def operator_can_access_trust(trust_id):
 
     role_rows = get_roles_by_trust_id(trust_id)
     for row in role_rows:
-        full_name = (row.get("full_name") or "").strip().lower()
+        full_name = (row["full_name"] or "").strip().lower()
         if full_name == username:
             return True
 
@@ -1139,7 +1138,7 @@ def deny_unassigned_trust_access(trust_id):
         
             "access_denied.html",
             reason="You are not assigned to this trust."
-        )
+        ), 403
 
     return None
 
@@ -1296,7 +1295,7 @@ def get_transfer_for_active_firm_or_404(transfer_id):
         return None, render_template(
             "access_denied.html",
             reason="This transfer record is not available within your assigned firm scope."
-        )
+        ), 403
 
     return transfer, None
 
@@ -2590,6 +2589,9 @@ def generate_packet_manifest_pdf(trust, preview_context):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER)
     styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    header_style = styles["Heading2"]
+    body_style = styles["BodyText"]
     story = []
 
     add_universal_v3_letterhead(story, styles, preview_context, "Packet Manifest")
@@ -2781,6 +2783,22 @@ ENDPOINT_PERMISSION_RULES = {
     "k1_dashboard": "manage_tax_reports",
     "k1_trust_view": "manage_tax_reports",
     "k1_year_end_summary": "manage_tax_reports",
+    "k1_new_beneficiary": "manage_tax_reports",
+    "k1_new_distribution": "manage_tax_reports",
+    "k1_edit_beneficiary": "manage_tax_reports",
+    "k1_toggle_beneficiary": "manage_tax_reports",
+    "k1_edit_distribution": "manage_tax_reports",
+    "k1_export_csv": "manage_tax_reports",
+    "export_k1_summary_report": "manage_tax_reports",
+    "export_1041_summary_report": "manage_tax_reports",
+    "k1_report_view": "manage_tax_reports",
+    "form1041_report_view": "manage_tax_reports",
+    "k1_report_print": "manage_tax_reports",
+    "form1041_report_print": "manage_tax_reports",
+    "k1_readiness_pdf": "manage_tax_reports",
+    "form1041_report_pdf": "manage_tax_reports",
+    "archive_handoff_export_index": "export_documents",
+    "archive_handoff_export_index_csv": "export_documents",
 }
 
 ROLE_RULES = {
@@ -2864,6 +2882,7 @@ ROLE_RULES = {
     "analytics_dashboard": {"Admin", "Trustee", "Viewer"},
     "permissions_dashboard": {"Admin"},
     "create_trust_step1": {"Admin", "Trustee"},
+    "create_trust_step2_grantor": {"Admin", "Trustee"},
     "create_trust_step2": {"Admin", "Trustee"},
     "create_trust_step3": {"Admin", "Trustee"},
     "create_trust_step4": {"Admin", "Trustee"},
@@ -2898,6 +2917,11 @@ ROLE_RULES = {
     "k1_dashboard": {"Admin", "Trustee", "Viewer"},
     "k1_trust_view": {"Admin", "Trustee"},
     "k1_year_end_summary": {"Admin", "Trustee"},
+    "k1_new_beneficiary": {"Admin", "Trustee"},
+    "k1_new_distribution": {"Admin", "Trustee"},
+    "k1_edit_beneficiary": {"Admin", "Trustee"},
+    "k1_toggle_beneficiary": {"Admin", "Trustee"},
+    "k1_edit_distribution": {"Admin", "Trustee"},
     "form1041_dashboard": {"Admin", "Trustee", "Viewer"},
     "form1041_preview": {"Admin", "Trustee"},
     "form1041_print": {"Admin", "Trustee"},
@@ -2910,7 +2934,72 @@ ROLE_RULES = {
     "form1041_report_view": {"Admin", "Trustee", "Viewer"},
     "k1_report_print": {"Admin", "Trustee"},
     "form1041_report_print": {"Admin", "Trustee"},
+    "trust_summary_pdf": {"Admin", "Trustee", "Viewer"},
+    "k1_readiness_pdf": {"Admin", "Trustee"},
+    "ledger_report_pdf": {"Admin", "Trustee"},
+    "form1041_report_pdf": {"Admin", "Trustee"},
+    "archive_handoff_export_index": {"Admin", "Trustee"},
+    "archive_handoff_export_index_csv": {"Admin", "Trustee"},
     "security_dashboard": {"Admin"},
+}
+
+
+TRUST_SCOPED_ENDPOINT_RULES = {
+    "trust_detail": {"Admin", "Trustee", "Viewer"},
+    "uploaded_seal": {"Admin", "Trustee", "Viewer"},
+    "trust_branding_settings": {"Admin", "Trustee"},
+    "trust_post_create_review": {"Admin", "Trustee"},
+    "trust_formation_preview_hub": {"Admin", "Trustee", "Viewer"},
+    "trust_successor_trustee_preview": {"Admin", "Trustee", "Viewer"},
+    "trust_successor_trustee_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_successor_trustee_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_controlled_packet_export": {"Admin", "Trustee"},
+    "trust_packet_preview": {"Admin", "Trustee", "Viewer"},
+    "trust_general_assignment_preview": {"Admin", "Trustee", "Viewer"},
+    "trust_general_assignment_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_general_assignment_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_organizational_minutes_preview": {"Admin", "Trustee", "Viewer"},
+    "trust_organizational_minutes_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_organizational_minutes_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_trustee_acceptance_preview": {"Admin", "Trustee", "Viewer"},
+    "trust_trustee_acceptance_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_trustee_acceptance_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_articles_preview": {"Admin", "Trustee", "Viewer"},
+    "trust_articles_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_articles_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_declaration_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_declaration_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_certificate_of_trust_output_surface": {"Admin", "Trustee", "Viewer"},
+    "trust_certificate_of_trust_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_accounting_method_settings": {"Admin", "Trustee"},
+    "trust_execution_dashboard": {"Admin", "Trustee"},
+    "transfer_start": {"Admin", "Trustee"},
+    "form1041_preview": {"Admin", "Trustee"},
+    "form1041_print": {"Admin", "Trustee"},
+    "k1_trust_view": {"Admin", "Trustee"},
+    "k1_new_beneficiary": {"Admin", "Trustee"},
+    "k1_new_distribution": {"Admin", "Trustee"},
+    "k1_edit_beneficiary": {"Admin", "Trustee"},
+    "k1_toggle_beneficiary": {"Admin", "Trustee"},
+    "k1_edit_distribution": {"Admin", "Trustee"},
+    "k1_export_csv": {"Admin", "Trustee"},
+    "k1_year_end_summary": {"Admin", "Trustee"},
+    "export_k1_summary_report": {"Admin", "Trustee"},
+    "export_1041_summary_report": {"Admin", "Trustee"},
+    "k1_report_view": {"Admin", "Trustee", "Viewer"},
+    "form1041_report_view": {"Admin", "Trustee", "Viewer"},
+    "k1_report_print": {"Admin", "Trustee"},
+    "form1041_report_print": {"Admin", "Trustee"},
+    "trust_summary_pdf": {"Admin", "Trustee", "Viewer"},
+    "k1_readiness_pdf": {"Admin", "Trustee"},
+    "ledger_report_pdf": {"Admin", "Trustee"},
+    "form1041_report_pdf": {"Admin", "Trustee"},
+    "archive_handoff_export_index": {"Admin", "Trustee"},
+    "archive_handoff_export_index_csv": {"Admin", "Trustee"},
+    "trust_dynamic_declaration": {"Admin", "Trustee", "Viewer"},
+    "trust_dynamic_declaration_pdf": {"Admin", "Trustee"},
+    "trust_article_assignments": {"Admin", "Trustee"},
+    "trust_article_assignment_add": {"Admin", "Trustee"},
 }
 
 
@@ -2945,7 +3034,46 @@ def require_master_admin():
         return render_template(
             "access_denied.html",
             reason="Only the master admin may access this page."
-        )
+        ), 403
+    return None
+
+def hosted_recovery_gate(flag_name, label):
+    """
+    Emergency hosted repair routes may run before login exists.
+    Require both the route-specific enable flag and a one-time operator token.
+    """
+    if os.getenv(flag_name) != "1":
+        return render_template(
+            "access_denied.html",
+            reason=f"{label} is disabled. Set {flag_name}=1 to enable it."
+        ), 403
+
+    expected_token = (os.getenv("HOSTED_RECOVERY_TOKEN") or "").strip()
+    supplied_token = (
+        request.args.get("token")
+        or request.headers.get("X-Hosted-Recovery-Token")
+        or ""
+    ).strip()
+
+    if not expected_token or not secrets.compare_digest(expected_token, supplied_token):
+        return render_template(
+            "access_denied.html",
+            reason=f"{label} requires HOSTED_RECOVERY_TOKEN."
+        ), 403
+
+    return None
+
+def admin_repair_gate(flag_name, label):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    if os.getenv(flag_name) != "1":
+        return render_template(
+            "access_denied.html",
+            reason=f"{label} is disabled. Set {flag_name}=1 to enable it."
+        ), 403
+
     return None
 
 def gate_trust_access(trust_id, allowed_roles):
@@ -2954,13 +3082,13 @@ def gate_trust_access(trust_id, allowed_roles):
         return render_template(
             "access_denied.html",
             reason="No authenticated role found in the current session."
-        )
+        ), 403
 
     if current_role not in allowed_roles:
         return render_template(
             "access_denied.html",
             reason=f"Role {current_role} is not allowed for this page."
-        )
+        ), 403
 
     trust = get_trust_by_id(trust_id)
     if not trust:
@@ -2973,7 +3101,7 @@ def gate_trust_access(trust_id, allowed_roles):
         return render_template(
             "access_denied.html",
             reason="This trust record is not available within your assigned firm scope."
-        )
+        ), 403
 
     return None
 
@@ -3300,7 +3428,7 @@ def link_account():
 
 @app.route("/upload_document", methods=["GET", "POST"])
 def upload_document():
-    trusts = get_all_trusts()
+    trusts = get_visible_trusts_for_current_operator()
     prefill_property_id = (request.args.get("property_id") or "").strip()
     prefill_trust_id = (request.args.get("trust_id") or "").strip()
     evidence_mode = (request.args.get("evidence") or "").strip()
@@ -3308,6 +3436,19 @@ def upload_document():
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("upload_document.html", trusts=trusts, error_message="Invalid or missing CSRF token.")
+
+        trust_id = request.form.get("trust_id")
+        if trust_id and not operator_can_access_trust(trust_id):
+            log_change(
+                "security",
+                trust_id,
+                "document_upload_blocked",
+                "User attempted to upload a document to an inaccessible trust."
+            )
+            return render_template(
+                "access_denied.html",
+                reason="You are not assigned to this trust."
+            ), 403
 
         uploaded_file = request.files.get("document_file")
         if not uploaded_file or uploaded_file.filename == "":
@@ -3324,7 +3465,7 @@ def upload_document():
 
         document = {
             "document_id": document_id,
-            "trust_id": request.form.get("trust_id"),
+            "trust_id": trust_id,
             "property_id": request.form.get("property_id"),
             "account_id": request.form.get("account_id"),
             "document_category": request.form.get("document_category"),
@@ -3525,7 +3666,7 @@ def property_detail(property_id):
         return render_template(
             "access_denied.html",
             reason="This property record does not belong to the current owner context."
-        )
+        ), 403
 
     linked_trust = get_trust_by_id(prop_data["trust_id"])
     linked_accounts = get_accounts_by_property_id(property_id)
@@ -6581,6 +6722,10 @@ def form1041_dashboard():
 
 @app.route("/form1041/preview/<trust_id>")
 def form1041_preview(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "1041 preview")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
     dataset = get_1041_dataset(trust_id, tax_year)
     return render_template("form1041_preview.html", dataset=dataset, tax_year=tax_year)
@@ -6588,6 +6733,10 @@ def form1041_preview(trust_id):
 
 @app.route("/form1041/print/<trust_id>")
 def form1041_print(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "1041 print")
+    if gate:
+        return gate
+
     tax_year = request.args.get("tax_year", str(date.today().year))
     dataset = get_1041_dataset(trust_id, tax_year)
     return render_template("form1041_print.html", dataset=dataset, tax_year=tax_year)
@@ -6896,7 +7045,7 @@ def users_new():
             return render_template(
                 "access_denied.html",
                 reason="User creation is currently disabled by system policy."
-            )
+            ), 403
 
         username = (request.form.get("username") or "").strip()
         password = request.form.get("password") or ""
@@ -7075,7 +7224,7 @@ def require_active_firm_trust_or_deny(trust_id, reason_label="trust record"):
         return None, render_template(
             "access_denied.html",
             reason="This trust record is not available within your assigned firm scope."
-        )
+        ), 403
     return trust, None
 
 
@@ -7092,7 +7241,7 @@ def require_export_permission(permission_name, export_label):
         return render_template(
             "access_denied.html",
             reason=f"Permission '{permission_name}' required for this export."
-        )
+        ), 403
 
     export_activity = build_generic_export_activity(
         export_label=export_label,
@@ -7665,6 +7814,9 @@ def trust_minute_certificate_pdf(minute_id):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER)
     styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    header_style = styles["Heading2"]
+    body_style = styles["BodyText"]
     story = []
 
     story.append(Paragraph("TRUST MINUTE EXECUTION CERTIFICATE", title_style))
@@ -7750,6 +7902,9 @@ def trust_minute_execution_packet_pdf(minute_id):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER)
     styles = getSampleStyleSheet()
+    title_style = styles["Title"]
+    header_style = styles["Heading2"]
+    body_style = styles["BodyText"]
     story = []
 
     story.append(Paragraph("TRUST MINUTE EXECUTION PACKET", title_style))
@@ -7822,6 +7977,23 @@ def trust_minute_execution_packet_pdf(minute_id):
     return response
 
 
+def has_drawn_signature_image(signature_image):
+    signature_image = (signature_image or "").strip()
+    if not signature_image.startswith("data:image/png;base64,"):
+        return False
+
+    image_data = signature_image.split(",", 1)[1]
+    if len(image_data) < 500:
+        return False
+
+    try:
+        decoded = base64.b64decode(image_data, validate=True)
+    except Exception:
+        return False
+
+    return len(decoded) >= 250
+
+
 def validate_trust_minute_execution_requirements(data):
     complete_signers = []
     has_trustee = False
@@ -7833,7 +8005,7 @@ def validate_trust_minute_execution_requirements(data):
         signed_date = (data.get(f"trustee_{idx}_signed_date") or "").strip()
         signature_image = (data.get(f"trustee_{idx}_signature_image") or "").strip()
 
-        has_signature_image = signature_image.startswith("data:image/png;base64,")
+        has_signature_image = has_drawn_signature_image(signature_image)
 
         signer_started = bool(name or signed_date or has_signature_image)
 
@@ -7874,6 +8046,7 @@ def validate_trust_minute_execution_requirements(data):
 
     return True, ""
 
+@csrf.exempt
 @app.route("/minutes/<minute_id>/execute", methods=["POST"])
 def trust_minute_execute(minute_id):
     gate = require_master_admin()
@@ -7892,6 +8065,15 @@ def trust_minute_execute(minute_id):
             "Attempted POST blocked because trust minute is locked."
         )
         return "This trust minute is locked and cannot be modified.", 403
+
+    if not validate_csrf_token():
+        log_change(
+            "trust_minute",
+            minute_id,
+            "minute_execute_blocked",
+            "Invalid or missing CSRF token."
+        )
+        return "Invalid or missing CSRF token.", 400
 
     action = request.form.get("action")
 
@@ -8307,6 +8489,10 @@ def k1_edit_distribution(trust_id, distribution_id):
 
 @app.route("/k1/trust/<trust_id>/export.csv")
 def k1_export_csv(trust_id):
+    gate = require_export_permission("manage_tax_reports", f"k1_csv:{trust_id}")
+    if gate:
+        return gate
+
     trust, gate = require_active_firm_trust_or_deny(trust_id, "K-1 CSV export")
     if gate:
         return gate
@@ -8322,6 +8508,10 @@ def k1_export_csv(trust_id):
 
 @app.route("/exports/k1_summary/<trust_id>.txt")
 def export_k1_summary_report(trust_id):
+    gate = require_export_permission("manage_tax_reports", f"k1_summary:{trust_id}")
+    if gate:
+        return gate
+
     trust, gate = require_active_firm_trust_or_deny(trust_id, "K-1 summary export")
     if gate:
         return gate
@@ -8363,6 +8553,10 @@ def export_k1_summary_report(trust_id):
 
 @app.route("/exports/1041_summary/<trust_id>.txt")
 def export_1041_summary_report(trust_id):
+    gate = require_export_permission("manage_tax_reports", f"1041_summary:{trust_id}")
+    if gate:
+        return gate
+
     trust, gate = require_active_firm_trust_or_deny(trust_id, "1041 summary export")
     if gate:
         return gate
@@ -9555,7 +9749,7 @@ def media_dashboard():
 
 @app.route("/media/upload", methods=["GET", "POST"])
 def media_upload():
-    trusts = get_all_trusts()
+    trusts = get_visible_trusts_for_current_operator()
     media_prefill = {
         "trust_id": request.args.get("trust_id", ""),
         "entity_type": request.args.get("entity_type", ""),
@@ -9570,6 +9764,19 @@ def media_upload():
 
         file = request.files.get("file")
         if file:
+            trust_id = request.form.get("trust_id")
+            if trust_id and not operator_can_access_trust(trust_id):
+                log_change(
+                    "security",
+                    trust_id,
+                    "media_upload_blocked",
+                    "User attempted to attach evidence to an inaccessible trust."
+                )
+                return render_template(
+                    "access_denied.html",
+                    reason="You are not assigned to this trust."
+                ), 403
+
             media_id = get_next_media_id()
             original_name = file.filename
             safe_name = secure_filename(original_name)
@@ -9579,7 +9786,7 @@ def media_upload():
 
             create_media_record({
                 "media_id": media_id,
-                "trust_id": request.form.get("trust_id"),
+                "trust_id": trust_id,
                 "related_entity_type": request.form.get("entity_type"),
                 "related_entity_id": request.form.get("entity_id"),
                 "media_type": request.form.get("media_type"),
@@ -9600,15 +9807,22 @@ def media_upload():
 
 @app.route("/media/file/<media_id>")
 def media_file(media_id):
-    records = get_all_media()
-    target = None
-    for row in records:
-        if row["media_id"] == media_id:
-            target = row
-            break
-
+    target = get_media_by_id(media_id)
     if not target:
         return "Media not found", 404
+
+    trust_id = target["trust_id"] if "trust_id" in target.keys() else None
+    if trust_id and not operator_can_access_trust(trust_id):
+        log_change(
+            "security",
+            media_id,
+            "media_access_denied",
+            f"Blocked media file access for trust {trust_id}"
+        )
+        return render_template(
+            "access_denied.html",
+            reason="You are not assigned to the trust linked to this evidence."
+        ), 403
 
     stored_path = Path(target["file_path"]).resolve()
     uploads_root = UPLOAD_FOLDER.resolve()
@@ -9616,12 +9830,18 @@ def media_file(media_id):
     try:
         stored_path.relative_to(uploads_root)
     except ValueError:
+        log_change(
+            "security",
+            media_id,
+            "blocked_media_path_access",
+            f"Blocked invalid media path: {target['file_path']}"
+        )
         return "Invalid media path", 400
 
     if not stored_path.exists() or not stored_path.is_file():
         return "Media file missing", 404
 
-        return send_file(stored_path)
+    return send_file(stored_path)
 
 
 
@@ -9950,7 +10170,7 @@ def enforce_controlled_export_policy_by_path():
         return render_template(
             "access_denied.html",
             reason="Exports are currently disabled by system policy."
-        )
+        ), 403
 
 
 @app.before_request
@@ -9961,13 +10181,36 @@ def enforce_session_timeout():
         "logout",
         "static",
         "bootstrap_admin_once",
+        "reset_admin_once",
+        "hosted_bootstrap_admin",
+        "hosted_bootstrap_admin_once",
+        "hosted_firm_scope_migration_once",
+        "hosted_reseed_permissions_once",
+        "hosted_clear_login_lockout_once",
+        "hosted_auth_diagnostic_once",
+        "hosted_repair_admin_access_once",
+        "hosted_trust_diagnostic_once",
     }
 
     if request.endpoint not in public_endpoints:
         if "role" not in session:
             return redirect(url_for("login"))
 
-    allowed_routes = {"login", "logout", "static", "bootstrap_admin_once", "reset_admin_once"}
+    allowed_routes = {
+        "login",
+        "logout",
+        "static",
+        "bootstrap_admin_once",
+        "reset_admin_once",
+        "hosted_bootstrap_admin",
+        "hosted_bootstrap_admin_once",
+        "hosted_firm_scope_migration_once",
+        "hosted_reseed_permissions_once",
+        "hosted_clear_login_lockout_once",
+        "hosted_auth_diagnostic_once",
+        "hosted_repair_admin_access_once",
+        "hosted_trust_diagnostic_once",
+    }
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
 
@@ -9990,7 +10233,7 @@ def enforce_session_timeout():
             return render_template(
                 "access_denied.html",
                 reason="Exports are currently disabled by system policy."
-            )
+            ), 403
 
     export_guarded_endpoints = {
         "controlled_docx_export",
@@ -10012,7 +10255,7 @@ def enforce_session_timeout():
             return render_template(
                 "access_denied.html",
                 reason="Exports are currently disabled by system policy."
-            )
+            ), 403
 
     if request.method == "POST":
         export_policy = get_export_policy()
@@ -10027,7 +10270,7 @@ def enforce_session_timeout():
             return render_template(
                 "access_denied.html",
                 reason="System is currently in read-only mode. Write actions are disabled."
-            )
+            ), 403
 
     if "role" not in session:
         return redirect(url_for("login"))
@@ -10043,7 +10286,7 @@ def enforce_session_timeout():
         return render_template(
             "access_denied.html",
             reason=f"Role {session.get('role')} is not allowed for this page."
-        )
+        ), 403
 
     # HYBRID PERMISSION ENFORCEMENT + USER OVERRIDES
     permission_exempt_endpoints = {"admin_toggle_export_policy"}
@@ -10065,7 +10308,36 @@ def enforce_session_timeout():
             return render_template(
                 "access_denied.html",
                 reason=f"Permission '{required_permission}' required for this action."
+            ), 403
+
+    trust_allowed_roles = TRUST_SCOPED_ENDPOINT_RULES.get(request.endpoint)
+    if trust_allowed_roles:
+        current_role = session.get("role")
+        trust_id = (request.view_args or {}).get("trust_id")
+
+        if current_role not in trust_allowed_roles:
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "role_denied",
+                f"Endpoint={request.endpoint}; Role={current_role}; Allowed={sorted(trust_allowed_roles)}"
             )
+            return render_template(
+                "access_denied.html",
+                reason=f"Role {current_role} is not allowed for this trust page."
+            ), 403
+
+        if trust_id and not operator_can_access_trust(trust_id):
+            log_change(
+                "security",
+                session.get("username") or "unknown",
+                "trust_access_denied",
+                f"Endpoint={request.endpoint}; Trust={trust_id}; Role={current_role}"
+            )
+            return render_template(
+                "access_denied.html",
+                reason="You are not assigned to this trust."
+            ), 403
 
     last_activity = session.get("last_activity")
     if last_activity is None:
@@ -10081,9 +10353,9 @@ def enforce_session_timeout():
 
 @app.route("/reports/trust/<trust_id>/summary.pdf")
 def trust_summary_pdf(trust_id):
-    trust = get_trust_by_id(trust_id)
-    if not trust:
-        return f"Trust {trust_id} not found", 404
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "trust summary PDF")
+    if gate:
+        return gate
 
     trust_dict = dict(trust)
 
@@ -10098,9 +10370,9 @@ def trust_summary_pdf(trust_id):
 
 @app.route("/reports/k1/trust/<trust_id>/<tax_year>.pdf")
 def k1_readiness_pdf(trust_id, tax_year):
-    trust = get_trust_by_id(trust_id)
-    if not trust:
-        return f"Trust {trust_id} not found", 404
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "K-1 readiness PDF")
+    if gate:
+        return gate
 
     beneficiaries = get_beneficiaries_by_trust_id(trust_id)
     distributions = get_distributions_by_trust_id(trust_id)
@@ -10131,9 +10403,9 @@ def fiduciary_report_pdf():
 
 @app.route("/reports/ledger/trust/<trust_id>.pdf")
 def ledger_report_pdf(trust_id):
-    trust = get_trust_by_id(trust_id)
-    if not trust:
-        return f"Trust {trust_id} not found", 404
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "ledger report PDF")
+    if gate:
+        return gate
 
     entries = get_ledger_entries_by_trust_id(trust_id)
     story = ledger_report_story(trust=trust, entries=entries)
@@ -10141,9 +10413,9 @@ def ledger_report_pdf(trust_id):
 
 @app.route("/reports/1041/trust/<trust_id>/<tax_year>.pdf")
 def form1041_report_pdf(trust_id, tax_year):
-    trust = get_trust_by_id(trust_id)
-    if not trust:
-        return f"Trust {trust_id} not found", 404
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "1041 report PDF")
+    if gate:
+        return gate
 
     tax_logic = get_1041_tax_logic(trust_id, tax_year)
     shares = get_1041_shares(trust_id, tax_year)
@@ -10634,7 +10906,7 @@ def workspace_detail(workspace_id):
         return render_template(
             "access_denied.html",
             reason="This workspace is not available within your assigned firm scope."
-        )
+        ), 403
 
     notes = get_workspace_notes(workspace_id)
     tasks = get_execution_tasks_by_workspace(workspace_id)
@@ -10749,7 +11021,7 @@ def discussion_thread(thread_id):
         return render_template(
             "access_denied.html",
             reason="This discussion thread does not belong to the current owner context."
-        )
+        ), 403
 
     messages = get_discussion_messages(thread_id)
     workspace = get_workspace_by_id(thread.get("workspace_id")) if thread.get("workspace_id") else None
@@ -10766,7 +11038,7 @@ def discussion_reply(thread_id):
         return render_template(
             "access_denied.html",
             reason="This discussion thread does not belong to the current owner context."
-        )
+        ), 403
 
     if request.method == "POST":
         if not validate_csrf_token():
@@ -11309,7 +11581,7 @@ def execution_task_detail(task_id):
         return render_template(
             "access_denied.html",
             reason="This execution task does not belong to the current owner context."
-        )
+        ), 403
 
     workspace = get_workspace_by_id(task.get("workspace_id")) if task.get("workspace_id") else None
     return render_template("execution_task_detail.html", task=task, workspace=workspace)
@@ -11325,7 +11597,7 @@ def execution_task_status(task_id):
         return render_template(
             "access_denied.html",
             reason="This execution task does not belong to the current owner context."
-        )
+        ), 403
 
     if not validate_csrf_token():
         return redirect(url_for("execution_task_detail", task_id=task_id))
@@ -11479,7 +11751,7 @@ def document_detail(document_id):
         return render_template(
             "access_denied.html",
             reason="This generated document does not belong to the current owner context."
-        )
+        ), 403
 
     template = get_document_template_by_id(document.get("template_id")) if document.get("template_id") else None
     workspace = get_workspace_by_id(document.get("workspace_id")) if document.get("workspace_id") else None
@@ -11954,6 +12226,10 @@ def trust_accounting_method_settings(trust_id):
 
 @app.route("/trust/<trust_id>/archive-handoff/export-index/export.csv")
 def archive_handoff_export_index_csv(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "archive handoff export index CSV")
+    if gate:
+        return gate
+
     import csv
     import io
     import sqlite3
@@ -11975,22 +12251,13 @@ def archive_handoff_export_index_csv(trust_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    try:
-        cur.execute("""
-            SELECT *
-            FROM transfers
-            WHERE trust_id = ? AND firm_id = ?
-            ORDER BY created_at DESC
-        """, (trust_id, firm_id))
-        transfers = cur.fetchall()
-    except Exception:
-        cur.execute("""
-            SELECT *
-            FROM transfers
-            WHERE trust_id = ?
-            ORDER BY created_at DESC
-        """, (trust_id,))
-        transfers = cur.fetchall()
+    cur.execute("""
+        SELECT *
+        FROM transfers
+        WHERE trust_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (trust_id, firm_id))
+    transfers = cur.fetchall()
 
     export_rows = []
 
@@ -12190,6 +12457,10 @@ def archive_handoff_export_index_csv(trust_id):
 
 @app.route("/trust/<trust_id>/archive-handoff/export-index")
 def archive_handoff_export_index(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "archive handoff export index")
+    if gate:
+        return gate
+
     import sqlite3
     from database.db import (
         get_connection,
@@ -12205,23 +12476,13 @@ def archive_handoff_export_index(trust_id):
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
 
-    # Pull transfers for this trust/firm if the transfers table supports firm_id.
-    try:
-        cur.execute("""
-            SELECT *
-            FROM transfers
-            WHERE trust_id = ? AND firm_id = ?
-            ORDER BY created_at DESC
-        """, (trust_id, firm_id))
-        transfers = cur.fetchall()
-    except Exception:
-        cur.execute("""
-            SELECT *
-            FROM transfers
-            WHERE trust_id = ?
-            ORDER BY created_at DESC
-        """, (trust_id,))
-        transfers = cur.fetchall()
+    cur.execute("""
+        SELECT *
+        FROM transfers
+        WHERE trust_id = ? AND firm_id = ?
+        ORDER BY created_at DESC
+    """, (trust_id, firm_id))
+    transfers = cur.fetchall()
 
     export_rows = []
 
@@ -14909,6 +15170,11 @@ def bootstrap_admin_once():
     if users:
         return "Bootstrap route disabled: users already exist.", 403
 
+    if APP_ENV == "production":
+        gate = hosted_recovery_gate("ALLOW_HOSTED_ADMIN_BOOTSTRAP", "Initial admin bootstrap")
+        if gate:
+            return gate
+
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("bootstrap_admin_once.html", error_message="Invalid or missing CSRF token.")
@@ -14941,7 +15207,8 @@ def bootstrap_admin_once():
             "username": username,
             "password_hash": generate_password_hash(password),
             "role_name": "Admin",
-            "status": "active",
+            "status": "Active",
+            "firm_id": os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-001").strip() or "FIRM-001",
         })
 
         return redirect(url_for("login"))
@@ -14955,10 +15222,11 @@ def bootstrap_admin_once():
 def reset_admin_once():
     """
     Controlled emergency admin reset.
-    Disabled unless ALLOW_ADMIN_RESET=1 is set.
+    Disabled unless ALLOW_ADMIN_RESET=1 and HOSTED_RECOVERY_TOKEN are set.
     """
-    if os.getenv("ALLOW_ADMIN_RESET") != "1":
-        return "Admin reset disabled. Set ALLOW_ADMIN_RESET=1 to enable.", 403
+    gate = hosted_recovery_gate("ALLOW_ADMIN_RESET", "Admin reset")
+    if gate:
+        return gate
 
     username = os.getenv("RESET_ADMIN_USERNAME", "admin").strip()
     password = os.getenv("RESET_ADMIN_PASSWORD", "admin123")
@@ -15059,7 +15327,7 @@ def run_hosted_firm_scope_migration():
         return render_template(
             "access_denied.html",
             reason="Hosted firm-scope migration is disabled. Set ALLOW_HOSTED_FIRM_MIGRATION=1 to run it."
-        )
+        ), 403
 
     import subprocess
     import sys
@@ -15070,7 +15338,7 @@ def run_hosted_firm_scope_migration():
         return render_template(
             "access_denied.html",
             reason=f"Migration script not found: {script_path}"
-        )
+        ), 404
 
     result = subprocess.run(
         [sys.executable, str(script_path)],
@@ -15090,11 +15358,9 @@ def run_hosted_firm_scope_migration():
 
 @app.route("/admin/hosted-bootstrap-admin")
 def hosted_bootstrap_admin():
-    if os.getenv("ALLOW_HOSTED_ADMIN_BOOTSTRAP") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted admin bootstrap is disabled."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_ADMIN_BOOTSTRAP", "Hosted admin bootstrap")
+    if gate:
+        return gate
 
     username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
     password = os.getenv("HOSTED_BOOTSTRAP_PASSWORD", "").strip()
@@ -15104,7 +15370,7 @@ def hosted_bootstrap_admin():
         return render_template(
             "access_denied.html",
             reason="HOSTED_BOOTSTRAP_USERNAME and HOSTED_BOOTSTRAP_PASSWORD must be set."
-        )
+        ), 403
 
     from werkzeug.security import generate_password_hash
     import sqlite3
@@ -15172,11 +15438,9 @@ def hosted_bootstrap_admin():
 
 @app.route("/hosted-bootstrap-admin-once")
 def hosted_bootstrap_admin_once():
-    if os.getenv("ALLOW_HOSTED_ADMIN_BOOTSTRAP") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted admin bootstrap is disabled."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_ADMIN_BOOTSTRAP", "Hosted admin bootstrap")
+    if gate:
+        return gate
 
     username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
     password = os.getenv("HOSTED_BOOTSTRAP_PASSWORD", "").strip()
@@ -15186,7 +15450,7 @@ def hosted_bootstrap_admin_once():
         return render_template(
             "access_denied.html",
             reason="HOSTED_BOOTSTRAP_USERNAME and HOSTED_BOOTSTRAP_PASSWORD must be set."
-        )
+        ), 403
 
     from werkzeug.security import generate_password_hash
     import sqlite3
@@ -15254,11 +15518,9 @@ def hosted_bootstrap_admin_once():
 
 @app.route("/hosted-firm-scope-migration-once")
 def hosted_firm_scope_migration_once():
-    if os.getenv("ALLOW_HOSTED_FIRM_MIGRATION") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted firm-scope migration is disabled."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_FIRM_MIGRATION", "Hosted firm-scope migration")
+    if gate:
+        return gate
 
     import subprocess
     import sys
@@ -15269,7 +15531,7 @@ def hosted_firm_scope_migration_once():
         return render_template(
             "access_denied.html",
             reason=f"Migration script not found: {script_path}"
-        )
+        ), 404
 
     result = subprocess.run(
         [sys.executable, str(script_path)],
@@ -15289,11 +15551,9 @@ def hosted_firm_scope_migration_once():
 
 @app.route("/hosted-reseed-permissions-once")
 def hosted_reseed_permissions_once():
-    if os.getenv("ALLOW_HOSTED_PERMISSION_RESEED") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted permission reseed is disabled."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_PERMISSION_RESEED", "Hosted permission reseed")
+    if gate:
+        return gate
 
     result = reseed_default_role_permissions()
 
@@ -15303,11 +15563,9 @@ def hosted_reseed_permissions_once():
 
 @app.route("/hosted-clear-login-lockout-once")
 def hosted_clear_login_lockout_once():
-    if os.getenv("ALLOW_HOSTED_LOGIN_UNLOCK") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted login unlock is disabled."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_LOGIN_UNLOCK", "Hosted login unlock")
+    if gate:
+        return gate
 
     username = os.getenv("HOSTED_BOOTSTRAP_USERNAME", "admin123").strip()
     login_attempts.pop(username, None)
@@ -15318,11 +15576,9 @@ def hosted_clear_login_lockout_once():
 
 @app.route("/hosted-auth-diagnostic-once")
 def hosted_auth_diagnostic_once():
-    if os.getenv("ALLOW_HOSTED_LOGIN_UNLOCK") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted auth diagnostic is disabled."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_LOGIN_UNLOCK", "Hosted auth diagnostic")
+    if gate:
+        return gate
 
     import sqlite3
     from werkzeug.security import check_password_hash
@@ -15378,21 +15634,17 @@ def hosted_auth_diagnostic_once():
 def hosted_repair_admin_access_once():
     """
     One-time hosted recovery route.
-    Guarded by ALLOW_HOSTED_ADMIN_BOOTSTRAP=1 and ALLOW_HOSTED_PERMISSION_RESEED=1.
+    Guarded by hosted recovery switches and HOSTED_RECOVERY_TOKEN.
     Repairs hosted admin login, role permissions, login lockout, and firm_id columns.
     Disable all hosted recovery switches immediately after use.
     """
-    if os.getenv("ALLOW_HOSTED_ADMIN_BOOTSTRAP") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted admin repair is disabled. Set ALLOW_HOSTED_ADMIN_BOOTSTRAP=1."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_ADMIN_BOOTSTRAP", "Hosted admin repair")
+    if gate:
+        return gate
 
-    if os.getenv("ALLOW_HOSTED_PERMISSION_RESEED") != "1":
-        return render_template(
-            "access_denied.html",
-            reason="Hosted permission repair is disabled. Set ALLOW_HOSTED_PERMISSION_RESEED=1."
-        )
+    gate = hosted_recovery_gate("ALLOW_HOSTED_PERMISSION_RESEED", "Hosted permission repair")
+    if gate:
+        return gate
 
     import sqlite3
     from werkzeug.security import generate_password_hash, check_password_hash
@@ -15622,7 +15874,7 @@ def hosted_trust_diagnostic_once():
     return render_template(
         "access_denied.html",
         reason="Hosted trust diagnostic has been permanently disabled."
-    )
+    ), 403
 
 
 
@@ -19635,8 +19887,9 @@ def admin_repair_int_lifecycle_tables():
     Creates missing INT lifecycle tables without overwriting records.
     Missing helper functions are reported instead of crashing the route.
     """
-    if session.get("role") != "Admin":
-        return render_template("access_denied.html", reason="Admin role required."), 403
+    gate = admin_repair_gate("ALLOW_ADMIN_REPAIR_ROUTES", "INT lifecycle table repair")
+    if gate:
+        return gate
 
     from database import db as db_module
 
@@ -22051,6 +22304,10 @@ app.jinja_env.globals['get_transfer_resume_endpoint'] = get_transfer_resume_endp
 
 @app.route("/admin/diag/seed-execution-objects")
 def admin_diag_seed_execution_objects():
+    gate = admin_repair_gate("ALLOW_ADMIN_DIAGNOSTIC_SEED", "Execution object diagnostic seed")
+    if gate:
+        return gate
+
     from services.services_execution_objects import create_execution_object, list_execution_objects_for_linked_object
 
     created = []

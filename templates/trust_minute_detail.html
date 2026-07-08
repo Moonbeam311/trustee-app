@@ -319,9 +319,9 @@
 
   <label>Signer 3 Signed Date</label>
   <input type="date" name="trustee_3_signed_date" value="{{ minute.trustee_3_signed_date or '' }}">
-  <input type="hidden" name="trustee_1_signature_image" id="trustee_1_signature_image">
-  <input type="hidden" name="trustee_2_signature_image" id="trustee_2_signature_image">
-  <input type="hidden" name="trustee_3_signature_image" id="trustee_3_signature_image">
+  <input type="hidden" name="trustee_1_signature_image" id="trustee_1_signature_image" value="{{ minute.trustee_1_signature_image or '' }}">
+  <input type="hidden" name="trustee_2_signature_image" id="trustee_2_signature_image" value="{{ minute.trustee_2_signature_image or '' }}">
+  <input type="hidden" name="trustee_3_signature_image" id="trustee_3_signature_image" value="{{ minute.trustee_3_signature_image or '' }}">
 
   <h3>Drawn Signature Capture</h3>
 
@@ -391,6 +391,7 @@ function initializeSignaturePad(canvasId, inputId) {
 
   const context = canvas.getContext("2d");
   let isDrawing = false;
+  let hasDrawn = false;
 
   context.lineWidth = 2;
   context.lineCap = "round";
@@ -425,6 +426,7 @@ function initializeSignaturePad(canvasId, inputId) {
     const pos = getPosition(event);
     context.lineTo(pos.x, pos.y);
     context.stroke();
+    hasDrawn = true;
     saveSignature();
   }
 
@@ -435,7 +437,9 @@ function initializeSignaturePad(canvasId, inputId) {
 
     event.preventDefault();
     isDrawing = false;
-    saveSignature();
+    if (hasDrawn) {
+      saveSignature();
+    }
   }
 
   canvas.addEventListener("mousedown", startDrawing);
@@ -451,6 +455,7 @@ function initializeSignaturePad(canvasId, inputId) {
   if (clearButton) {
     clearButton.addEventListener("click", function () {
       context.clearRect(0, 0, canvas.width, canvas.height);
+      hasDrawn = false;
       input.value = "";
     });
   }
