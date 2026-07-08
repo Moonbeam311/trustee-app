@@ -29,6 +29,7 @@
     </p>
 
     {% include "governance/_record_metadata.html" %}
+    {% set lifecycle_action_url = url_for('governance_directive_lifecycle', directive_id=metadata.record_id) %}
     {% include "governance/_record_lifecycle.html" %}
     {% include "governance/_directive_approval.html" %}
     {% include "governance/_directive_source.html" %}

@@ -893,6 +893,17 @@ def build_governance_dashboard_summary():
         (firm_id,),
     ).fetchall()
 
+    recent_policies = conn.execute(
+        """
+        SELECT policy_id, policy_area, title, status, approved_by, approved_at, updated_at
+        FROM institutional_policies
+        WHERE firm_id = ?
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 10
+        """,
+        (firm_id,),
+    ).fetchall()
+
     pending_approvals = conn.execute(
         """
         SELECT directive_id, directive_code, title, status, authority_basis, updated_at
@@ -935,6 +946,7 @@ def build_governance_dashboard_summary():
             for status, count in lifecycle_counts.items()
         ],
         "recent_directives": [dict(row) for row in recent_directives],
+        "recent_policies": [dict(row) for row in recent_policies],
         "pending_approvals": [dict(row) for row in pending_approvals],
         "implementation_activity": [dict(row) for row in implementation_activity],
     }

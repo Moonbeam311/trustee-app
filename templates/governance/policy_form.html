@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+    <title>New Institutional Policy</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px; max-width:980px;}
+        label{display:block; margin-top:14px; font-weight:bold;}
+        input,select,textarea{width:100%; padding:10px; margin-top:5px;}
+        button{margin-top:20px; padding:12px 18px;}
+        .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
+        .muted{color:#4b5563;}
+    </style>
+</head>
+<body>
+    {% include "governance/_record_nav.html" %}
+
+    <h1>Create Institutional Policy</h1>
+    <p class="muted">A Policy records governed institutional rule, standard, or standing requirement.</p>
+
+    <form method="post">
+        <label>Title</label>
+        <input name="title" required placeholder="Example: Governance Record Retention Policy">
+
+        <label>Policy Area</label>
+        <input name="policy_area" placeholder="Example: Governance, Records, Execution, Certificates">
+
+        <label>Status</label>
+        <select name="status">
+            {% for state in lifecycle_states %}
+                <option>{{ state }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Authority</label>
+        <input name="authority" placeholder="Institutional authority adopting this Policy">
+
+        <label>Approved By</label>
+        <input name="approved_by" placeholder="Name, role, or approving body">
+
+        <label>Approved At</label>
+        <input name="approved_at" placeholder="YYYY-MM-DD or timestamp">
+
+        <label>Summary</label>
+        <textarea name="summary" rows="3"></textarea>
+
+        <label>Policy Text</label>
+        <textarea name="policy_text" rows="7" required></textarea>
+
+        <label>Rationale</label>
+        <textarea name="rationale" rows="4"></textarea>
+
+        <button type="submit">Create Policy</button>
+    </form>
+
+    {% include "_institutional_property_notice.html" %}
+</body>
+</html>

@@ -20782,9 +20782,11 @@ from services.services_governance import (
 def governance_registry():
     ensure_governance_tables()
     directives = list_governance_records("directive")
+    policies = list_governance_records("policy")
     return render_template(
         "governance/registry.html",
         directives=directives,
+        policies=policies,
         record_types=get_governance_record_types(),
     )
 
@@ -20842,6 +20844,75 @@ def governance_directive_new():
         lifecycle_states=GOVERNANCE_LIFECYCLE_STATES,
         source_types=get_governance_directive_source_types(),
     )
+
+
+@csrf.exempt
+@app.route("/governance/policies/new", methods=["GET", "POST"])
+def governance_policy_new():
+    ensure_governance_tables()
+
+    if request.method == "POST":
+        success, result = create_governance_record(
+            "policy",
+            {
+                "title": request.form.get("title"),
+                "policy_area": request.form.get("policy_area"),
+                "status": request.form.get("status"),
+                "authority": request.form.get("authority"),
+                "approved_by": request.form.get("approved_by"),
+                "approved_at": request.form.get("approved_at"),
+                "summary": request.form.get("summary"),
+                "body": request.form.get("policy_text"),
+                "rationale": request.form.get("rationale"),
+                "created_by": session.get("username") or "System",
+            },
+        )
+
+        if success:
+            flash(f"Policy {result} created.", "success")
+            return redirect(url_for("governance_policy_detail", policy_id=result))
+
+        flash(result, "warning")
+
+    return render_template(
+        "governance/policy_form.html",
+        lifecycle_states=GOVERNANCE_LIFECYCLE_STATES,
+    )
+
+
+@app.route("/governance/policies/<policy_id>")
+def governance_policy_detail(policy_id):
+    ensure_governance_tables()
+    policy = get_governance_record("policy", policy_id)
+
+    if not policy:
+        flash("Policy not found.", "warning")
+        return redirect(url_for("governance_registry"))
+
+    metadata = build_governance_metadata("policy", policy)
+    return render_template(
+        "governance/policy_detail.html",
+        policy=policy,
+        metadata=metadata,
+    )
+
+
+@csrf.exempt
+@app.route("/governance/policies/<policy_id>/lifecycle", methods=["POST"])
+def governance_policy_lifecycle(policy_id):
+    success, result = transition_governance_record(
+        "policy",
+        policy_id,
+        request.form.get("status"),
+        session.get("username") or "System",
+    )
+
+    if success:
+        flash(f"Policy moved to {result}.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_policy_detail", policy_id=policy_id))
 
 
 @app.route("/governance/directives/<directive_id>")

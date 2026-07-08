@@ -17,13 +17,14 @@
 
     <h1>Institutional Governance Registry</h1>
     <p class="muted">
-        IOS-3A registry for governed institutional records. Directive creation is active first;
-        the shared framework now reserves numbering for all governance record types.
+        IOS governance registry for governed institutional records. Directive and Policy creation are active;
+        remaining governance record types stay reserved.
     </p>
 
     <p>
         <a class="btn" href="/governance/dashboard">Governance Dashboard</a>
         <a class="btn" href="/governance/directives/new">+ New Directive</a>
+        <a class="btn" href="/governance/policies/new">+ New Policy</a>
     </p>
 
     <h2>Framework</h2>
@@ -40,7 +41,7 @@
                 <tr>
                     <td>{{ record_type.record_label }}</td>
                     <td>{{ record_type.prefix }}</td>
-                    <td>{% if record_type["key"] == "directive" %}Creation active{% else %}Framework reserved{% endif %}</td>
+                    <td>{% if record_type["key"] in ["directive", "policy"] %}Creation active{% else %}Framework reserved{% endif %}</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -78,6 +79,40 @@
         </table>
     {% else %}
         <p>No institutional directives have been recorded yet.</p>
+    {% endif %}
+
+    <h2>Policies</h2>
+    {% if policies %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Policy</th>
+                    <th>Area</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Authority</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for policy in policies %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('governance_policy_detail', policy_id=policy.policy_id) }}">
+                                {{ policy.policy_id }}
+                            </a>
+                        </td>
+                        <td>{{ policy.policy_area or "-" }}</td>
+                        <td>{{ policy.title }}</td>
+                        <td>{{ policy.status }}</td>
+                        <td>{{ policy.authority or "-" }}</td>
+                        <td>{{ policy.updated_at }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No institutional policies have been recorded yet.</p>
     {% endif %}
 
     {% include "_institutional_property_notice.html" %}

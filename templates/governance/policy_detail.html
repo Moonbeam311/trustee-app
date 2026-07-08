@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+    <title>Policy {{ policy.policy_id }}</title>
+    <link rel="stylesheet" href="/static/trust_ui.css">
+    <style>
+        body{font-family:Arial, sans-serif; margin:30px;}
+        .card{border:1px solid #ddd; border-radius:10px; padding:18px; margin-bottom:20px;}
+        table{width:100%; border-collapse:collapse;}
+        th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top;}
+        label{display:block; margin-top:10px; font-weight:bold;}
+        select{padding:10px; min-width:220px;}
+        button{margin-top:12px; padding:10px 14px;}
+        .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
+        .muted{color:#4b5563;}
+        pre{white-space:pre-wrap; font-family:inherit;}
+    </style>
+</head>
+<body>
+    {% include "governance/_record_nav.html" %}
+
+    <h1>{{ policy.title }}</h1>
+    <p class="muted">{{ metadata.record_number }}</p>
+
+    {% include "governance/_record_metadata.html" %}
+    {% set lifecycle_action_url = url_for('governance_policy_lifecycle', policy_id=metadata.record_id) %}
+    {% include "governance/_record_lifecycle.html" %}
+
+    <div class="card">
+        <h2>Summary</h2>
+        <pre>{{ policy.summary or "No summary recorded." }}</pre>
+
+        <h2>Policy Text</h2>
+        <pre>{{ policy.policy_text or "No policy text recorded." }}</pre>
+
+        <h2>Rationale</h2>
+        <pre>{{ policy.rationale or "No rationale recorded." }}</pre>
+    </div>
+
+    {% include "_institutional_property_notice.html" %}
+</body>
+</html>

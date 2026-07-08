@@ -4,7 +4,7 @@
         Current state: <strong>{{ metadata.status }}</strong>
     </p>
     {% if metadata.allowed_transitions %}
-        <form method="post" action="{{ url_for('governance_directive_lifecycle', directive_id=metadata.record_id) }}">
+        <form method="post" action="{{ lifecycle_action_url }}">
             <label>Move To</label>
             <select name="status">
                 {% for state in metadata.allowed_transitions %}

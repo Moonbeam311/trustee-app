@@ -81,6 +81,30 @@
     </div>
 
     <div class="card">
+        <h2>Recent Policies</h2>
+        {% if summary.recent_policies %}
+            <table>
+                <thead>
+                    <tr><th>Policy</th><th>Area</th><th>Title</th><th>Status</th><th>Updated</th></tr>
+                </thead>
+                <tbody>
+                    {% for policy in summary.recent_policies %}
+                        <tr>
+                            <td><a href="{{ url_for('governance_policy_detail', policy_id=policy.policy_id) }}">{{ policy.policy_id }}</a></td>
+                            <td>{{ policy.policy_area or "-" }}</td>
+                            <td>{{ policy.title }}</td>
+                            <td>{{ policy.status }}</td>
+                            <td>{{ policy.updated_at }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Policies recorded yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
         <h2>Pending Approval / Ratification</h2>
         {% if summary.pending_approvals %}
             <table>
