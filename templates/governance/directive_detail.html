@@ -22,6 +22,11 @@
 
     <h1>{{ directive.title }}</h1>
     <p class="muted">{{ metadata.record_number }}{% if directive.directive_code %} - {{ directive.directive_code }}{% endif %}</p>
+    <p>
+        <a href="{{ url_for('governance_directive_packet_pdf', directive_id=directive.directive_id) }}">
+            Download Governance Packet
+        </a>
+    </p>
 
     {% include "governance/_record_metadata.html" %}
     {% include "governance/_record_lifecycle.html" %}

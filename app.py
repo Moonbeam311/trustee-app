@@ -20764,6 +20764,7 @@ from services.services_governance import (
     create_governance_relationship,
     create_governance_record,
     ensure_governance_tables,
+    generate_directive_governance_packet_pdf,
     get_governance_record,
     get_governance_directive_source_types,
     get_governance_relationship_target_types,
@@ -20903,6 +20904,21 @@ def governance_directive_relationship_create(directive_id):
         flash(result, "warning")
 
     return redirect(url_for("governance_directive_detail", directive_id=directive_id))
+
+
+@app.route("/governance/directives/<directive_id>/packet.pdf")
+def governance_directive_packet_pdf(directive_id):
+    packet = generate_directive_governance_packet_pdf(directive_id)
+    if not packet:
+        flash("Directive not found.", "warning")
+        return redirect(url_for("governance_registry"))
+
+    return send_file(
+        packet,
+        as_attachment=True,
+        download_name=f"{directive_id}_governance_packet.pdf",
+        mimetype="application/pdf",
+    )
 
 
 @csrf.exempt

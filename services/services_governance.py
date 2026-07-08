@@ -1,5 +1,12 @@
 from datetime import datetime
+from html import escape
+from io import BytesIO
 from uuid import uuid4
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from database.db import get_connection, get_current_firm_id
 
@@ -182,6 +189,10 @@ def _normalize_directive_source_type(source_type):
 
 def _truthy(value):
     return str(value or "").strip().lower() in {"1", "true", "yes", "on", "required"}
+
+
+def _pdf_text(value):
+    return escape(str(value if value not in (None, "") else "-"))
 
 
 def _next_governance_number(conn, prefix, firm_id):
@@ -1152,3 +1163,234 @@ def list_incoming_governance_relationships(object_type, object_id):
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def generate_directive_governance_packet_pdf(directive_id):
+    ensure_governance_tables()
+
+    directive = get_governance_record("directive", directive_id)
+    if not directive:
+        return None
+
+    metadata = build_governance_metadata("directive", directive)
+    outgoing_relationships = list_outgoing_governance_relationships(
+        "Directive",
+        directive_id,
+    )
+    incoming_relationships = list_incoming_governance_relationships(
+        "Directive",
+        directive_id,
+    )
+    implementation_entries = list_directive_implementation_entries(directive_id)
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = getSampleStyleSheet()
+    story = []
+
+    def heading(text):
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(f"<b>{_pdf_text(text)}</b>", styles["Heading2"]))
+
+    def body(text):
+        story.append(Paragraph(_pdf_text(text), styles["BodyText"]))
+
+    def table(rows, widths=None):
+        if not rows:
+            body("No records.")
+            return
+        tbl = Table(rows, colWidths=widths, repeatRows=1 if len(rows) > 1 else 0)
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2f7")),
+                    ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                ]
+            )
+        )
+        story.append(tbl)
+
+    def pair_rows(pairs):
+        return [
+            [
+                Paragraph(f"<b>{_pdf_text(label)}</b>", styles["BodyText"]),
+                Paragraph(_pdf_text(value), styles["BodyText"]),
+            ]
+            for label, value in pairs
+        ]
+
+    story.append(Paragraph("Directive Governance Packet", styles["Title"]))
+    body(
+        "Read-only governance packet generated from the IOS-3A Directive record, "
+        "relationships, approval data, provenance, and implementation ledger."
+    )
+
+    heading("Directive Identity")
+    table(
+        pair_rows(
+            [
+                ("Governance Number", directive.get("directive_id")),
+                ("Directive Code", directive.get("directive_code")),
+                ("Title", directive.get("title")),
+                ("Directive Type", directive.get("directive_type")),
+                ("Lifecycle State", directive.get("status")),
+                ("Version", directive.get("version_label")),
+                ("Created By", directive.get("created_by")),
+                ("Created At", directive.get("created_at")),
+                ("Updated At", directive.get("updated_at")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Authority / Approval")
+    table(
+        pair_rows(
+            [
+                ("Authority", directive.get("authority")),
+                ("Issuing Authority", directive.get("issuing_authority")),
+                ("Authority Basis", directive.get("authority_basis")),
+                ("Approval Status", metadata.get("approval_status")),
+                ("Approval Required", "Yes" if metadata.get("approval_required") else "No"),
+                ("Approved By", directive.get("approved_by")),
+                ("Approved At", directive.get("approved_at")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Source / Provenance")
+    table(
+        pair_rows(
+            [
+                ("Source Type", directive.get("source_type")),
+                ("Source ID", directive.get("source_id")),
+                ("Source Label", directive.get("source_label")),
+                ("Source Notes", directive.get("source_notes")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Directive Substance")
+    table(
+        pair_rows(
+            [
+                ("Summary", directive.get("summary")),
+                ("Instruction", directive.get("instruction")),
+                ("Rationale", directive.get("rationale")),
+                ("Scope", directive.get("scope")),
+                ("Milestone Plan", directive.get("milestone_plan")),
+                ("Completion Record", directive.get("completion_record")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Outgoing Relationships")
+    table(
+        [[
+            Paragraph("<b>Relationship</b>", styles["BodyText"]),
+            Paragraph("<b>Type</b>", styles["BodyText"]),
+            Paragraph("<b>Target</b>", styles["BodyText"]),
+            Paragraph("<b>Status</b>", styles["BodyText"]),
+            Paragraph("<b>Authority / Reason</b>", styles["BodyText"]),
+        ]]
+        + [
+            [
+                Paragraph(_pdf_text(row.get("relationship_id")), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("relationship_type")), styles["BodyText"]),
+                Paragraph(
+                    _pdf_text(f"{row.get('target_object_type')} {row.get('target_object_id')}"),
+                    styles["BodyText"],
+                ),
+                Paragraph(_pdf_text(row.get("status")), styles["BodyText"]),
+                Paragraph(
+                    _pdf_text(f"{row.get('authority') or '-'} / {row.get('reason') or '-'}"),
+                    styles["BodyText"],
+                ),
+            ]
+            for row in outgoing_relationships
+        ],
+        [88, 70, 115, 55, 182],
+    )
+
+    heading("Incoming Relationships")
+    table(
+        [[
+            Paragraph("<b>Relationship</b>", styles["BodyText"]),
+            Paragraph("<b>Type</b>", styles["BodyText"]),
+            Paragraph("<b>Source</b>", styles["BodyText"]),
+            Paragraph("<b>Status</b>", styles["BodyText"]),
+            Paragraph("<b>Authority / Reason</b>", styles["BodyText"]),
+        ]]
+        + [
+            [
+                Paragraph(_pdf_text(row.get("relationship_id")), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("relationship_type")), styles["BodyText"]),
+                Paragraph(
+                    _pdf_text(f"{row.get('source_object_type')} {row.get('source_object_id')}"),
+                    styles["BodyText"],
+                ),
+                Paragraph(_pdf_text(row.get("status")), styles["BodyText"]),
+                Paragraph(
+                    _pdf_text(f"{row.get('authority') or '-'} / {row.get('reason') or '-'}"),
+                    styles["BodyText"],
+                ),
+            ]
+            for row in incoming_relationships
+        ],
+        [88, 70, 115, 55, 182],
+    )
+
+    heading("Implementation Ledger")
+    table(
+        [[
+            Paragraph("<b>Entry</b>", styles["BodyText"]),
+            Paragraph("<b>Action</b>", styles["BodyText"]),
+            Paragraph("<b>Performed</b>", styles["BodyText"]),
+            Paragraph("<b>Status</b>", styles["BodyText"]),
+            Paragraph("<b>Evidence / Notes</b>", styles["BodyText"]),
+        ]]
+        + [
+            [
+                Paragraph(_pdf_text(row.get("entry_id")), styles["BodyText"]),
+                Paragraph(
+                    _pdf_text(f"{row.get('action_type') or 'Action'}: {row.get('action_summary')}"),
+                    styles["BodyText"],
+                ),
+                Paragraph(
+                    _pdf_text(f"{row.get('performed_by') or 'System'} / {row.get('performed_at') or '-'}"),
+                    styles["BodyText"],
+                ),
+                Paragraph(_pdf_text(row.get("result_status")), styles["BodyText"]),
+                Paragraph(
+                    _pdf_text(f"{row.get('evidence_reference') or '-'} / {row.get('notes') or '-'}"),
+                    styles["BodyText"],
+                ),
+            ]
+            for row in implementation_entries
+        ],
+        [80, 140, 110, 60, 120],
+    )
+
+    story.append(Spacer(1, 12))
+    body(
+        f"Packet generated at {_now()}. This packet is read-only evidence of recorded governance data."
+    )
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
