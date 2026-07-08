@@ -10,6 +10,7 @@
                     <th>Title</th>
                     <th>State</th>
                     <th>Relationship</th>
+                    <th>Impact</th>
                     <th>Direction</th>
                     <th>Approved</th>
                     <th>Effective</th>
@@ -37,6 +38,7 @@
                         <td>{{ item.title }}</td>
                         <td>{{ item.lifecycle_state }}</td>
                         <td>{{ item.relationship_type or "—" }}</td>
+                        <td>{{ item.impact or "Review Needed" }}</td>
                         <td>{{ item.direction or "—" }}</td>
                         <td>{{ item.approved_at or "—" }}</td>
                         <td>{{ item.effective_at or "—" }}</td>

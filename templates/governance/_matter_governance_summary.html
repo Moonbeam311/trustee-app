@@ -2,6 +2,13 @@
     <h3>Governance Summary</h3>
 
     {% if governance_summary %}
+        {% set health = governance_summary.governance_health or {} %}
+        <div class="card">
+            <h4>Matter Governance Health</h4>
+            <p><strong>{{ health.status or "Unknown" }}</strong></p>
+            <p>{{ health.description or "Governance health has not been calculated." }}</p>
+        </div>
+
         <table>
             <tbody>
                 <tr><th>Total Governance Links</th><td>{{ governance_summary.total }}</td></tr>
@@ -11,6 +18,10 @@
                 <tr><th>Approved or Ratified</th><td>{{ governance_summary.approved_or_ratified }}</td></tr>
                 <tr><th>Effective</th><td>{{ governance_summary.effective }}</td></tr>
                 <tr><th>Implemented</th><td>{{ governance_summary.implemented }}</td></tr>
+                <tr><th>Pending Governance</th><td>{{ governance_summary.pending_governance }}</td></tr>
+                <tr><th>Requires Implementation</th><td>{{ governance_summary.requires_implementation }}</td></tr>
+                <tr><th>Superseded / Retired</th><td>{{ governance_summary.superseded_or_retired }}</td></tr>
+                <tr><th>Active Governance</th><td>{{ governance_summary.active_governance }}</td></tr>
                 <tr><th>Latest Governance Activity</th><td>{{ governance_summary.latest_activity or "—" }}</td></tr>
             </tbody>
         </table>

@@ -1466,6 +1466,69 @@ def _governance_number_for_link(link):
     return link.get("governance_id")
 
 
+def _governance_impact_for_record(record, relationship):
+    state = (record.get("lifecycle_state") or record.get("status") or "").strip()
+    relationship_type = (relationship.get("relationship_type") or "").strip()
+    approval_required = record.get("approval_required") in ("Yes", "yes", "1", 1, True)
+    approved_at = record.get("approved_at")
+
+    if state in {"Superseded", "Archived", "Retired"}:
+        return "Superseded / Retired"
+
+    if approval_required and not approved_at:
+        return "Awaiting Approval"
+
+    if state in {"Draft", "Submitted", "Under Review", "Pending Approval"}:
+        return "Pending Governance"
+
+    if state in {"Implemented"}:
+        return "Fully Implemented"
+
+    if state in {"Approved", "Ratified", "Effective"}:
+        if relationship_type == "governs":
+            return "Governs Current Workflow"
+        if relationship_type == "authorizes":
+            return "Authorizes Action"
+        if relationship_type == "implements":
+            return "Requires Implementation"
+        if relationship_type == "depends_on":
+            return "Dependency"
+        if relationship_type == "references":
+            return "Reference Authority"
+        return "Active Governance"
+
+    return "Review Needed"
+
+
+def _matter_governance_health(summary):
+    if summary.get("total", 0) == 0:
+        return {
+            "status": "No Governance Links",
+            "level": "neutral",
+            "description": "No Directive or Policy governance records are linked to this Matter.",
+        }
+
+    if summary.get("superseded_or_retired", 0):
+        return {
+            "status": "Governance Conflict",
+            "level": "red",
+            "description": "One or more linked governance records are superseded, retired, or archived.",
+        }
+
+    if summary.get("pending_approval", 0) or summary.get("pending_governance", 0):
+        return {
+            "status": "Pending Governance",
+            "level": "yellow",
+            "description": "One or more linked governance records require approval, review, or completion.",
+        }
+
+    return {
+        "status": "Compliant",
+        "level": "green",
+        "description": "Linked governance records are active, approved, effective, or implemented.",
+    }
+
+
 def build_matter_governance_summary(matter_id):
     links = build_matter_governance_links(matter_id)
     summary = {
@@ -1477,6 +1540,11 @@ def build_matter_governance_summary(matter_id):
         "effective": 0,
         "implemented": 0,
         "latest_activity": None,
+        "pending_governance": 0,
+        "superseded_or_retired": 0,
+        "requires_implementation": 0,
+        "active_governance": 0,
+        "governance_health": {},
     }
 
     pending_states = {"Draft", "Submitted", "Under Review", "Pending Approval"}
@@ -1502,10 +1570,21 @@ def build_matter_governance_summary(matter_id):
         if state in implemented_states:
             summary["implemented"] += 1
 
+        impact = _governance_impact_for_record(record, link.get("relationship") or {})
+        if impact in {"Awaiting Approval", "Pending Governance"}:
+            summary["pending_governance"] += 1
+        elif impact == "Superseded / Retired":
+            summary["superseded_or_retired"] += 1
+        elif impact == "Requires Implementation":
+            summary["requires_implementation"] += 1
+        elif impact in {"Active Governance", "Governs Current Workflow", "Authorizes Action", "Fully Implemented"}:
+            summary["active_governance"] += 1
+
         display_date = _governance_display_date(record, link.get("relationship"))
         if display_date and (not summary["latest_activity"] or str(display_date) > str(summary["latest_activity"])):
             summary["latest_activity"] = display_date
 
+    summary["governance_health"] = _matter_governance_health(summary)
     return summary
 
 
@@ -1539,6 +1618,7 @@ def build_matter_governance_timeline(matter_id):
             "effective_at": record.get("effective_date") or record.get("effective_at"),
             "approved_at": record.get("approved_at"),
             "display_date": _governance_display_date(record, relationship),
+            "impact": _governance_impact_for_record(record, relationship),
         })
 
     timeline.sort(key=lambda item: str(item.get("display_date") or ""), reverse=True)
