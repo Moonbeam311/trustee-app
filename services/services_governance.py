@@ -161,6 +161,10 @@ def _normalize_relationship_type(relationship_type):
     return cleaned
 
 
+def _truthy(value):
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on", "required"}
+
+
 def _next_governance_number(conn, prefix, firm_id):
     year = datetime.utcnow().year
     cur = conn.cursor()
@@ -248,6 +252,18 @@ def build_governance_metadata(record_type, record):
         "status": record.get("status") or "Draft",
         "allowed_transitions": allowed_governance_transitions(record.get("status")),
         "authority": record.get("authority"),
+        "issuing_authority": record.get("issuing_authority"),
+        "authority_basis": record.get("authority_basis"),
+        "approval_required": _truthy(record.get("approval_required")),
+        "approved_by": record.get("approved_by"),
+        "approved_at": record.get("approved_at"),
+        "approval_status": (
+            "Approved"
+            if record.get("approved_at")
+            else "Approval Required"
+            if _truthy(record.get("approval_required"))
+            else "Not Required"
+        ),
         "summary": record.get("summary"),
         "rationale": record.get("rationale"),
         "version_label": record.get("version_label"),
@@ -295,6 +311,11 @@ def ensure_governance_tables():
             directive_type TEXT DEFAULT 'Governance Directive',
             status TEXT DEFAULT 'Draft',
             authority TEXT,
+            issuing_authority TEXT,
+            authority_basis TEXT,
+            approval_required INTEGER DEFAULT 0,
+            approved_by TEXT,
+            approved_at TEXT,
             issued_by TEXT,
             issued_at TEXT,
             effective_at TEXT,
@@ -314,6 +335,23 @@ def ensure_governance_tables():
         )
         """
     )
+
+    directive_columns = {
+        row["name"]
+        for row in cur.execute("PRAGMA table_info(institutional_directives)").fetchall()
+    }
+    directive_column_specs = {
+        "issuing_authority": "TEXT",
+        "authority_basis": "TEXT",
+        "approval_required": "INTEGER DEFAULT 0",
+        "approved_by": "TEXT",
+        "approved_at": "TEXT",
+    }
+    for column_name, column_spec in directive_column_specs.items():
+        if column_name not in directive_columns:
+            cur.execute(
+                f"ALTER TABLE institutional_directives ADD COLUMN {column_name} {column_spec}"
+            )
 
     cur.execute(
         """
@@ -584,7 +622,7 @@ def create_governance_record(record_type, data):
     ]
 
     extra_map = {
-        "directive": ["directive_code", "directive_type", "issued_by", "issued_at", "effective_at", "retired_at", "scope", "milestone_plan", "completion_record"],
+        "directive": ["directive_code", "directive_type", "issuing_authority", "authority_basis", "approval_required", "approved_by", "approved_at", "issued_by", "issued_at", "effective_at", "retired_at", "scope", "milestone_plan", "completion_record"],
         "decision": ["decision_type", "decided_by", "decided_at", "effective_at", "retired_at", "approval_history"],
         "policy": ["policy_area", "approved_by", "approved_at", "effective_at", "retired_at"],
         "resolution": ["resolved_by", "resolved_at", "effective_at", "retired_at", "recitals", "approval_history"],
@@ -595,7 +633,10 @@ def create_governance_record(record_type, data):
 
     for column in extra_map.get(record_type, []):
         base_columns.append(column)
-        values.append(data.get(column) or "")
+        if column == "approval_required":
+            values.append(1 if _truthy(data.get(column)) else 0)
+        else:
+            values.append(data.get(column) or "")
 
     placeholders = ", ".join("?" for _ in base_columns)
     column_sql = ", ".join(base_columns)
@@ -608,6 +649,45 @@ def create_governance_record(record_type, data):
     conn.close()
 
     return True, record_id
+
+
+def approve_governance_directive(directive_id, approved_by, authority_basis=""):
+    ensure_governance_tables()
+
+    record = get_governance_record("directive", directive_id)
+    if not record:
+        return False, "Directive not found."
+
+    basis = (authority_basis or record.get("authority_basis") or "").strip()
+    if not basis:
+        return False, "Authority basis is required before approval."
+
+    approver = (approved_by or "").strip() or "System"
+    now = _now()
+    conn = get_connection()
+    conn.execute(
+        """
+        UPDATE institutional_directives
+        SET authority_basis = ?,
+            approval_required = 1,
+            approved_by = ?,
+            approved_at = ?,
+            updated_at = ?
+        WHERE directive_id = ?
+          AND firm_id = ?
+        """,
+        (
+            basis,
+            approver,
+            now,
+            now,
+            directive_id,
+            get_current_firm_id(),
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return True, directive_id
 
 
 def create_governance_relationship(data):

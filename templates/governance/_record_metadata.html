@@ -7,6 +7,11 @@
             <tr><th>Status</th><td>{{ metadata.status }}</td></tr>
             <tr><th>{{ metadata.type_label }}</th><td>{{ metadata.type_value or "Not recorded" }}</td></tr>
             <tr><th>Authority</th><td>{{ metadata.authority or "Not recorded" }}</td></tr>
+            <tr><th>Issuing Authority</th><td>{{ metadata.issuing_authority or "Not recorded" }}</td></tr>
+            <tr><th>Authority Basis</th><td>{{ metadata.authority_basis or "Not recorded" }}</td></tr>
+            <tr><th>Approval</th><td>{{ metadata.approval_status }}</td></tr>
+            <tr><th>Approved By</th><td>{{ metadata.approved_by or "Not recorded" }}</td></tr>
+            <tr><th>Approved At</th><td>{{ metadata.approved_at or "Not recorded" }}</td></tr>
             <tr><th>{{ metadata.actor_label }}</th><td>{{ metadata.actor_value or "Not recorded" }}</td></tr>
             <tr><th>Version</th><td>{{ metadata.version_label or "v1" }}</td></tr>
             <tr><th>Effective</th><td>{{ metadata.effective_at or "Not recorded" }}</td></tr>

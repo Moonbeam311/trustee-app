@@ -20757,6 +20757,7 @@ def new_matter_event(matter_id):
 # ---- IOS-3A Institutional Governance Engine ----
 from services.services_governance import (
     GOVERNANCE_LIFECYCLE_STATES,
+    approve_governance_directive,
     build_governance_metadata,
     create_governance_relationship,
     create_governance_record,
@@ -20797,6 +20798,9 @@ def governance_directive_new():
                 "directive_type": request.form.get("directive_type"),
                 "status": request.form.get("status"),
                 "authority": request.form.get("authority"),
+                "issuing_authority": request.form.get("issuing_authority"),
+                "authority_basis": request.form.get("authority_basis"),
+                "approval_required": request.form.get("approval_required"),
                 "issued_by": request.form.get("issued_by"),
                 "summary": request.form.get("summary"),
                 "body": request.form.get("instruction"),
@@ -20875,6 +20879,23 @@ def governance_directive_relationship_create(directive_id):
 
     if success:
         flash(f"Relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_directive_detail", directive_id=directive_id))
+
+
+@csrf.exempt
+@app.route("/governance/directives/<directive_id>/approve", methods=["POST"])
+def governance_directive_approve(directive_id):
+    success, result = approve_governance_directive(
+        directive_id,
+        request.form.get("approved_by") or session.get("username") or "System",
+        request.form.get("authority_basis"),
+    )
+
+    if success:
+        flash("Directive approval recorded.", "success")
     else:
         flash(result, "warning")
 
