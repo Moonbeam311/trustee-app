@@ -35,11 +35,39 @@
         <label>Authority</label>
         <input name="authority" placeholder="Institutional authority adopting this Policy">
 
+        <label>Issuing Authority</label>
+        <input name="issuing_authority" placeholder="Institution, fiduciary, committee, or office issuing this Policy">
+
+        <label>Authority Basis</label>
+        <textarea name="authority_basis" rows="3" placeholder="Basis required before approval or ratification"></textarea>
+
+        <label>
+            <input type="checkbox" name="approval_required" value="1" style="width:auto;">
+            Approval required
+        </label>
+
         <label>Approved By</label>
         <input name="approved_by" placeholder="Name, role, or approving body">
 
         <label>Approved At</label>
         <input name="approved_at" placeholder="YYYY-MM-DD or timestamp">
+
+        <label>Source Type</label>
+        <select name="source_type">
+            <option value="">No source selected</option>
+            {% for source_type in source_types %}
+                <option value="{{ source_type }}">{{ source_type }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Source ID</label>
+        <input name="source_id" placeholder="Matter, trust, certificate, upload, or external reference ID">
+
+        <label>Source Label</label>
+        <input name="source_label" placeholder="Short label for the source">
+
+        <label>Source Notes</label>
+        <textarea name="source_notes" rows="3" placeholder="Brief provenance notes"></textarea>
 
         <label>Summary</label>
         <textarea name="summary" rows="3"></textarea>

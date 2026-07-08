@@ -11,6 +11,7 @@ from .models_governance import (
     InstitutionalPolicy,
     InstitutionalPrecedent,
     InstitutionalResolution,
+    PolicyActivityEntry,
 )
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "InstitutionalPolicy",
     "InstitutionalPrecedent",
     "InstitutionalResolution",
+    "PolicyActivityEntry",
     "Transfer",
     "TransferAction",
     "TransferRecord",

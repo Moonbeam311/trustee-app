@@ -9,6 +9,7 @@
         table{width:100%; border-collapse:collapse;}
         th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top;}
         label{display:block; margin-top:10px; font-weight:bold;}
+        input,textarea{width:100%; padding:10px; margin-top:5px;}
         select{padding:10px; min-width:220px;}
         button{margin-top:12px; padding:10px 14px;}
         .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
@@ -21,10 +22,17 @@
 
     <h1>{{ policy.title }}</h1>
     <p class="muted">{{ metadata.record_number }}</p>
+    <p>
+        <a href="{{ url_for('governance_policy_packet_pdf', policy_id=policy.policy_id) }}">
+            Download Governance Packet
+        </a>
+    </p>
 
     {% include "governance/_record_metadata.html" %}
     {% set lifecycle_action_url = url_for('governance_policy_lifecycle', policy_id=metadata.record_id) %}
     {% include "governance/_record_lifecycle.html" %}
+    {% include "governance/_policy_approval.html" %}
+    {% include "governance/_directive_source.html" %}
 
     <div class="card">
         <h2>Summary</h2>
@@ -36,6 +44,25 @@
         <h2>Rationale</h2>
         <pre>{{ policy.rationale or "No rationale recorded." }}</pre>
     </div>
+
+    {% include "governance/_policy_activity_ledger.html" %}
+
+    {% set relationship_action_url = url_for('governance_policy_relationship_create', policy_id=metadata.record_id) %}
+    {% include "governance/_relationship_form.html" %}
+
+    {% set relationships = outgoing_relationships %}
+    {% set relationship_heading = "Outgoing Relationships" %}
+    {% set relationship_direction = "outgoing" %}
+    {% set related_object_heading = "Target" %}
+    {% set empty_relationship_message = "No outgoing relationships recorded for this Policy yet." %}
+    {% include "governance/_relationship_table.html" %}
+
+    {% set relationships = incoming_relationships %}
+    {% set relationship_heading = "Incoming Relationships" %}
+    {% set relationship_direction = "incoming" %}
+    {% set related_object_heading = "Source" %}
+    {% set empty_relationship_message = "No incoming relationships recorded for this Policy yet." %}
+    {% include "governance/_relationship_table.html" %}
 
     {% include "_institutional_property_notice.html" %}
 </body>

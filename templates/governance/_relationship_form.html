@@ -1,6 +1,6 @@
 <div class="card">
     <h2>Create Relationship</h2>
-    <form method="post" action="{{ url_for('governance_directive_relationship_create', directive_id=metadata.record_id) }}">
+    <form method="post" action="{{ relationship_action_url }}">
         <label>Relationship</label>
         <select name="relationship_type" required>
             {% for relationship_type in relationship_types %}

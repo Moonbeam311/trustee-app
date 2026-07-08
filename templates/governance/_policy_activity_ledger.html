@@ -1,0 +1,62 @@
+<div class="card">
+    <h2>Policy Activity Ledger</h2>
+    <form method="post" action="{{ url_for('governance_policy_activity_create', policy_id=metadata.record_id) }}">
+        <label>Action Type</label>
+        <input name="action_type" placeholder="Example: adoption, review, implementation, exception">
+
+        <label>Action Summary</label>
+        <textarea name="action_summary" rows="3" required></textarea>
+
+        <label>Performed By</label>
+        <input name="performed_by" value="{{ session.get('username') or '' }}" placeholder="Person, office, or system">
+
+        <label>Performed At</label>
+        <input name="performed_at" placeholder="YYYY-MM-DD or timestamp">
+
+        <label>Result Status</label>
+        <select name="result_status">
+            <option>Recorded</option>
+            <option>In Progress</option>
+            <option>Completed</option>
+            <option>Blocked</option>
+            <option>Deferred</option>
+        </select>
+
+        <label>Evidence Reference</label>
+        <input name="evidence_reference" placeholder="File, certificate, upload, matter event, or external reference">
+
+        <label>Notes</label>
+        <textarea name="notes" rows="3"></textarea>
+
+        <button type="submit">Add Policy Activity</button>
+    </form>
+
+    {% if activity_entries %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Entry</th>
+                    <th>Action</th>
+                    <th>Performed</th>
+                    <th>Status</th>
+                    <th>Evidence</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in activity_entries %}
+                    <tr>
+                        <td>{{ entry.entry_id }}</td>
+                        <td><strong>{{ entry.action_type or "Action" }}</strong><br>{{ entry.action_summary }}</td>
+                        <td>{{ entry.performed_by or "System" }}<br>{{ entry.performed_at or "-" }}</td>
+                        <td>{{ entry.result_status or "Recorded" }}</td>
+                        <td>{{ entry.evidence_reference or "-" }}</td>
+                        <td>{{ entry.notes or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No policy activity has been recorded yet.</p>
+    {% endif %}
+</div>

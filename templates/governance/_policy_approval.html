@@ -1,0 +1,19 @@
+<div class="card">
+    <h2>Approval</h2>
+    <p class="muted">
+        Status: <strong>{{ metadata.approval_status }}</strong>
+    </p>
+    {% if metadata.approved_at %}
+        <p>Approved by {{ metadata.approved_by or "System" }} at {{ metadata.approved_at }}.</p>
+    {% else %}
+        <form method="post" action="{{ url_for('governance_policy_approve', policy_id=metadata.record_id) }}">
+            <label>Authority Basis</label>
+            <textarea name="authority_basis" rows="3" required>{{ metadata.authority_basis or "" }}</textarea>
+
+            <label>Approved By</label>
+            <input name="approved_by" value="{{ session.get('username') or '' }}" placeholder="Approver name or office">
+
+            <button type="submit">Approve / Ratify</button>
+        </form>
+    {% endif %}
+</div>

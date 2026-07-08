@@ -124,8 +124,15 @@ class InstitutionalPolicy(db.Model):
     policy_area = db.Column(db.String(120), nullable=True, index=True)
     status = db.Column(db.String(50), nullable=False, default="Draft", index=True)
     authority = db.Column(db.String(255), nullable=True)
+    issuing_authority = db.Column(db.String(255), nullable=True)
+    authority_basis = db.Column(db.Text, nullable=True)
+    approval_required = db.Column(db.Boolean, nullable=False, default=False)
     approved_by = db.Column(db.String(255), nullable=True)
     approved_at = db.Column(db.DateTime, nullable=True)
+    source_type = db.Column(db.String(80), nullable=True, index=True)
+    source_id = db.Column(db.String(120), nullable=True, index=True)
+    source_label = db.Column(db.String(255), nullable=True)
+    source_notes = db.Column(db.Text, nullable=True)
     effective_at = db.Column(db.DateTime, nullable=True)
     retired_at = db.Column(db.DateTime, nullable=True)
     summary = db.Column(db.Text, nullable=True)
@@ -135,6 +142,26 @@ class InstitutionalPolicy(db.Model):
     supersedes_id = db.Column(db.String(64), nullable=True, index=True)
     superseded_by_id = db.Column(db.String(64), nullable=True, index=True)
     created_by = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+
+class PolicyActivityEntry(db.Model):
+    __tablename__ = "policy_activity_entries"
+
+    id = db.Column(db.Integer, primary_key=True)
+    entry_id = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    firm_id = db.Column(db.String(64), nullable=False, default="FIRM-001", index=True)
+    policy_id = db.Column(db.String(64), nullable=False, index=True)
+    action_type = db.Column(db.String(80), nullable=True, index=True)
+    action_summary = db.Column(db.Text, nullable=False)
+    performed_by = db.Column(db.String(255), nullable=True)
+    performed_at = db.Column(db.DateTime, nullable=True, index=True)
+    result_status = db.Column(db.String(80), nullable=False, default="Recorded", index=True)
+    evidence_reference = db.Column(db.String(255), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow

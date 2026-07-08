@@ -128,6 +128,29 @@
     </div>
 
     <div class="card">
+        <h2>Pending Policy Approval / Ratification</h2>
+        {% if summary.pending_policy_approvals %}
+            <table>
+                <thead>
+                    <tr><th>Policy</th><th>Title</th><th>Status</th><th>Authority Basis</th></tr>
+                </thead>
+                <tbody>
+                    {% for policy in summary.pending_policy_approvals %}
+                        <tr>
+                            <td><a href="{{ url_for('governance_policy_detail', policy_id=policy.policy_id) }}">{{ policy.policy_id }}</a></td>
+                            <td>{{ policy.title }}</td>
+                            <td>{{ policy.status }}</td>
+                            <td>{{ policy.authority_basis or "Not recorded" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Policies are pending approval or ratification.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
         <h2>Implementation Activity</h2>
         {% if summary.implementation_activity %}
             <table>
@@ -148,6 +171,30 @@
             </table>
         {% else %}
             <p>No Directive implementation activity recorded yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2>Policy Activity</h2>
+        {% if summary.policy_activity %}
+            <table>
+                <thead>
+                    <tr><th>Policy</th><th>Title</th><th>Status</th><th>Entries</th><th>Latest Activity</th></tr>
+                </thead>
+                <tbody>
+                    {% for policy in summary.policy_activity %}
+                        <tr>
+                            <td><a href="{{ url_for('governance_policy_detail', policy_id=policy.policy_id) }}">{{ policy.policy_id }}</a></td>
+                            <td>{{ policy.title }}</td>
+                            <td>{{ policy.status }}</td>
+                            <td>{{ policy.entry_count }}</td>
+                            <td>{{ policy.latest_activity or "-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No Policy activity recorded yet.</p>
         {% endif %}
     </div>
 

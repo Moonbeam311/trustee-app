@@ -53,6 +53,7 @@
 
     {% include "governance/_directive_implementation_ledger.html" %}
 
+    {% set relationship_action_url = url_for('governance_directive_relationship_create', directive_id=metadata.record_id) %}
     {% include "governance/_relationship_form.html" %}
 
     {% set relationships = outgoing_relationships %}

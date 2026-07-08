@@ -82,6 +82,8 @@ GOVERNANCE_DIRECTIVE_SOURCE_TYPES = [
     "External Reference",
 ]
 
+GOVERNANCE_POLICY_SOURCE_TYPES = GOVERNANCE_DIRECTIVE_SOURCE_TYPES
+
 GOVERNANCE_OBJECTS = {
     "directive": {
         "table": "institutional_directives",
@@ -187,6 +189,15 @@ def _normalize_directive_source_type(source_type):
     return cleaned
 
 
+def _normalize_policy_source_type(source_type):
+    cleaned = (source_type or "").strip()
+    if not cleaned:
+        return ""
+    if cleaned not in GOVERNANCE_POLICY_SOURCE_TYPES:
+        return ""
+    return cleaned
+
+
 def _truthy(value):
     return str(value or "").strip().lower() in {"1", "true", "yes", "on", "required"}
 
@@ -263,6 +274,10 @@ def get_governance_relationship_target_types():
 
 def get_governance_directive_source_types():
     return GOVERNANCE_DIRECTIVE_SOURCE_TYPES
+
+
+def get_governance_policy_source_types():
+    return GOVERNANCE_POLICY_SOURCE_TYPES
 
 
 def allowed_governance_transitions(status):
@@ -443,10 +458,17 @@ def ensure_governance_tables():
             policy_area TEXT,
             status TEXT DEFAULT 'Draft',
             authority TEXT,
+            issuing_authority TEXT,
+            authority_basis TEXT,
+            approval_required INTEGER DEFAULT 0,
             approved_by TEXT,
             approved_at TEXT,
             effective_at TEXT,
             retired_at TEXT,
+            source_type TEXT,
+            source_id TEXT,
+            source_label TEXT,
+            source_notes TEXT,
             summary TEXT,
             policy_text TEXT,
             rationale TEXT,
@@ -459,6 +481,25 @@ def ensure_governance_tables():
         )
         """
     )
+
+    policy_columns = {
+        row["name"]
+        for row in cur.execute("PRAGMA table_info(institutional_policies)").fetchall()
+    }
+    policy_column_specs = {
+        "issuing_authority": "TEXT",
+        "authority_basis": "TEXT",
+        "approval_required": "INTEGER DEFAULT 0",
+        "source_type": "TEXT",
+        "source_id": "TEXT",
+        "source_label": "TEXT",
+        "source_notes": "TEXT",
+    }
+    for column_name, column_spec in policy_column_specs.items():
+        if column_name not in policy_columns:
+            cur.execute(
+                f"ALTER TABLE institutional_policies ADD COLUMN {column_name} {column_spec}"
+            )
 
     cur.execute(
         """
@@ -612,6 +653,26 @@ def ensure_governance_tables():
         """
     )
 
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS policy_activity_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entry_id TEXT UNIQUE NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            policy_id TEXT NOT NULL,
+            action_type TEXT,
+            action_summary TEXT NOT NULL,
+            performed_by TEXT,
+            performed_at TEXT,
+            result_status TEXT DEFAULT 'Recorded',
+            evidence_reference TEXT,
+            notes TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+        """
+    )
+
     index_specs = [
         ("idx_governance_number_sequences_scope", "governance_number_sequences", "firm_id, prefix, sequence_year"),
         ("idx_institutional_directives_firm_status", "institutional_directives", "firm_id, status"),
@@ -625,6 +686,7 @@ def ensure_governance_tables():
         ("idx_governance_relationships_target", "governance_relationships", "firm_id, target_object_type, target_object_id"),
         ("idx_governance_relationships_type", "governance_relationships", "firm_id, relationship_type, status"),
         ("idx_directive_implementation_entries_directive", "directive_implementation_entries", "firm_id, directive_id, performed_at"),
+        ("idx_policy_activity_entries_policy", "policy_activity_entries", "firm_id, policy_id, performed_at"),
     ]
 
     for index_name, table_name, columns in index_specs:
@@ -655,6 +717,17 @@ def create_governance_record(record_type, data):
         )
         if has_source_data and not source_type:
             return False, "Unsupported Directive source type."
+        if source_type and not (data.get("source_id") or "").strip():
+            return False, "Source ID is required when a source type is selected."
+        data = {**data, "source_type": source_type}
+    elif record_type == "policy":
+        source_type = _normalize_policy_source_type(data.get("source_type"))
+        has_source_data = any(
+            (data.get(key) or "").strip()
+            for key in ["source_type", "source_id", "source_label", "source_notes"]
+        )
+        if has_source_data and not source_type:
+            return False, "Unsupported Policy source type."
         if source_type and not (data.get("source_id") or "").strip():
             return False, "Source ID is required when a source type is selected."
         data = {**data, "source_type": source_type}
@@ -709,7 +782,7 @@ def create_governance_record(record_type, data):
     extra_map = {
         "directive": ["directive_code", "directive_type", "issuing_authority", "authority_basis", "approval_required", "approved_by", "approved_at", "source_type", "source_id", "source_label", "source_notes", "issued_by", "issued_at", "effective_at", "retired_at", "scope", "milestone_plan", "completion_record"],
         "decision": ["decision_type", "decided_by", "decided_at", "effective_at", "retired_at", "approval_history"],
-        "policy": ["policy_area", "approved_by", "approved_at", "effective_at", "retired_at"],
+        "policy": ["policy_area", "issuing_authority", "authority_basis", "approval_required", "approved_by", "approved_at", "source_type", "source_id", "source_label", "source_notes", "effective_at", "retired_at"],
         "resolution": ["resolved_by", "resolved_at", "effective_at", "retired_at", "recitals", "approval_history"],
         "memorandum": ["authored_by", "issued_at", "effective_at", "retired_at"],
         "opinion": ["opinion_type", "authored_by", "issued_at", "effective_at", "retired_at", "findings"],
@@ -773,6 +846,45 @@ def approve_governance_directive(directive_id, approved_by, authority_basis=""):
     conn.commit()
     conn.close()
     return True, directive_id
+
+
+def approve_governance_policy(policy_id, approved_by, authority_basis=""):
+    ensure_governance_tables()
+
+    record = get_governance_record("policy", policy_id)
+    if not record:
+        return False, "Policy not found."
+
+    basis = (authority_basis or record.get("authority_basis") or "").strip()
+    if not basis:
+        return False, "Authority basis is required before approval."
+
+    approver = (approved_by or "").strip() or "System"
+    now = _now()
+    conn = get_connection()
+    conn.execute(
+        """
+        UPDATE institutional_policies
+        SET authority_basis = ?,
+            approval_required = 1,
+            approved_by = ?,
+            approved_at = ?,
+            updated_at = ?
+        WHERE policy_id = ?
+          AND firm_id = ?
+        """,
+        (
+            basis,
+            approver,
+            now,
+            now,
+            policy_id,
+            get_current_firm_id(),
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return True, policy_id
 
 
 def create_directive_implementation_entry(directive_id, data):
@@ -842,6 +954,78 @@ def list_directive_implementation_entries(directive_id):
         ORDER BY performed_at DESC, id DESC
         """,
         (get_current_firm_id(), directive_id),
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def create_policy_activity_entry(policy_id, data):
+    ensure_governance_tables()
+
+    policy = get_governance_record("policy", policy_id)
+    if not policy:
+        return False, "Policy not found."
+
+    action_summary = (data.get("action_summary") or "").strip()
+    if not action_summary:
+        return False, "Action summary is required."
+
+    now = _now()
+    entry_id = data.get("entry_id") or _public_id("PAL")
+    performed_at = (data.get("performed_at") or "").strip() or now
+
+    conn = get_connection()
+    conn.execute(
+        """
+        INSERT INTO policy_activity_entries (
+            entry_id,
+            firm_id,
+            policy_id,
+            action_type,
+            action_summary,
+            performed_by,
+            performed_at,
+            result_status,
+            evidence_reference,
+            notes,
+            created_at,
+            updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            entry_id,
+            get_current_firm_id(),
+            policy_id,
+            data.get("action_type") or "",
+            action_summary,
+            data.get("performed_by") or "System",
+            performed_at,
+            data.get("result_status") or "Recorded",
+            data.get("evidence_reference") or "",
+            data.get("notes") or "",
+            now,
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return True, entry_id
+
+
+def list_policy_activity_entries(policy_id):
+    ensure_governance_tables()
+
+    conn = get_connection()
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM policy_activity_entries
+        WHERE firm_id = ?
+          AND policy_id = ?
+        ORDER BY performed_at DESC, id DESC
+        """,
+        (get_current_firm_id(), policy_id),
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
@@ -917,6 +1101,19 @@ def build_governance_dashboard_summary():
         (firm_id,),
     ).fetchall()
 
+    pending_policy_approvals = conn.execute(
+        """
+        SELECT policy_id, policy_area, title, status, authority_basis, updated_at
+        FROM institutional_policies
+        WHERE firm_id = ?
+          AND COALESCE(approval_required, 0) = 1
+          AND COALESCE(approved_at, '') = ''
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 10
+        """,
+        (firm_id,),
+    ).fetchall()
+
     implementation_activity = conn.execute(
         """
         SELECT
@@ -938,6 +1135,27 @@ def build_governance_dashboard_summary():
         (firm_id,),
     ).fetchall()
 
+    policy_activity = conn.execute(
+        """
+        SELECT
+            p.policy_id,
+            p.policy_area,
+            p.title,
+            p.status,
+            COUNT(e.id) AS entry_count,
+            MAX(e.performed_at) AS latest_activity
+        FROM institutional_policies p
+        INNER JOIN policy_activity_entries e
+            ON e.policy_id = p.policy_id
+           AND e.firm_id = p.firm_id
+        WHERE p.firm_id = ?
+        GROUP BY p.policy_id, p.policy_area, p.title, p.status
+        ORDER BY latest_activity DESC, entry_count DESC
+        LIMIT 10
+        """,
+        (firm_id,),
+    ).fetchall()
+
     conn.close()
     return {
         "record_type_counts": record_type_counts,
@@ -948,7 +1166,9 @@ def build_governance_dashboard_summary():
         "recent_directives": [dict(row) for row in recent_directives],
         "recent_policies": [dict(row) for row in recent_policies],
         "pending_approvals": [dict(row) for row in pending_approvals],
+        "pending_policy_approvals": [dict(row) for row in pending_policy_approvals],
         "implementation_activity": [dict(row) for row in implementation_activity],
+        "policy_activity": [dict(row) for row in policy_activity],
     }
 
 
@@ -1394,6 +1614,206 @@ def generate_directive_governance_packet_pdf(directive_id):
                 ),
             ]
             for row in implementation_entries
+        ],
+        [80, 140, 110, 60, 120],
+    )
+
+    story.append(Spacer(1, 12))
+    body(
+        f"Packet generated at {_now()}. This packet is read-only evidence of recorded governance data."
+    )
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_policy_governance_packet_pdf(policy_id):
+    ensure_governance_tables()
+
+    policy = get_governance_record("policy", policy_id)
+    if not policy:
+        return None
+
+    metadata = build_governance_metadata("policy", policy)
+    outgoing_relationships = list_outgoing_governance_relationships("Policy", policy_id)
+    incoming_relationships = list_incoming_governance_relationships("Policy", policy_id)
+    activity_entries = list_policy_activity_entries(policy_id)
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+    styles = getSampleStyleSheet()
+    story = []
+
+    def heading(text):
+        story.append(Spacer(1, 10))
+        story.append(Paragraph(f"<b>{_pdf_text(text)}</b>", styles["Heading2"]))
+
+    def body(text):
+        story.append(Paragraph(_pdf_text(text), styles["BodyText"]))
+
+    def table(rows, widths=None):
+        if not rows:
+            body("No records.")
+            return
+        tbl = Table(rows, colWidths=widths, repeatRows=1 if len(rows) > 1 else 0)
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2f7")),
+                    ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#cbd5e1")),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                ]
+            )
+        )
+        story.append(tbl)
+
+    def pair_rows(pairs):
+        return [
+            [
+                Paragraph(f"<b>{_pdf_text(label)}</b>", styles["BodyText"]),
+                Paragraph(_pdf_text(value), styles["BodyText"]),
+            ]
+            for label, value in pairs
+        ]
+
+    story.append(Paragraph("Policy Governance Packet", styles["Title"]))
+    body(
+        "Read-only governance packet generated from the IOS-3B Policy record, "
+        "relationships, approval data, provenance, and activity ledger."
+    )
+
+    heading("Policy Identity")
+    table(
+        pair_rows(
+            [
+                ("Governance Number", policy.get("policy_id")),
+                ("Title", policy.get("title")),
+                ("Policy Area", policy.get("policy_area")),
+                ("Lifecycle State", policy.get("status")),
+                ("Version", policy.get("version_label")),
+                ("Created By", policy.get("created_by")),
+                ("Created At", policy.get("created_at")),
+                ("Updated At", policy.get("updated_at")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Authority / Approval")
+    table(
+        pair_rows(
+            [
+                ("Authority", policy.get("authority")),
+                ("Issuing Authority", policy.get("issuing_authority")),
+                ("Authority Basis", policy.get("authority_basis")),
+                ("Approval Status", metadata.get("approval_status")),
+                ("Approval Required", "Yes" if metadata.get("approval_required") else "No"),
+                ("Approved By", policy.get("approved_by")),
+                ("Approved At", policy.get("approved_at")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Source / Provenance")
+    table(
+        pair_rows(
+            [
+                ("Source Type", policy.get("source_type")),
+                ("Source ID", policy.get("source_id")),
+                ("Source Label", policy.get("source_label")),
+                ("Source Notes", policy.get("source_notes")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Policy Substance")
+    table(
+        pair_rows(
+            [
+                ("Summary", policy.get("summary")),
+                ("Policy Text", policy.get("policy_text")),
+                ("Rationale", policy.get("rationale")),
+            ]
+        ),
+        [150, 360],
+    )
+
+    heading("Outgoing Relationships")
+    table(
+        [[
+            Paragraph("<b>Relationship</b>", styles["BodyText"]),
+            Paragraph("<b>Type</b>", styles["BodyText"]),
+            Paragraph("<b>Target</b>", styles["BodyText"]),
+            Paragraph("<b>Status</b>", styles["BodyText"]),
+            Paragraph("<b>Authority / Reason</b>", styles["BodyText"]),
+        ]]
+        + [
+            [
+                Paragraph(_pdf_text(row.get("relationship_id")), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("relationship_type")), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('target_object_type')} {row.get('target_object_id')}"), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("status")), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('authority') or '-'} / {row.get('reason') or '-'}"), styles["BodyText"]),
+            ]
+            for row in outgoing_relationships
+        ],
+        [88, 70, 115, 55, 182],
+    )
+
+    heading("Incoming Relationships")
+    table(
+        [[
+            Paragraph("<b>Relationship</b>", styles["BodyText"]),
+            Paragraph("<b>Type</b>", styles["BodyText"]),
+            Paragraph("<b>Source</b>", styles["BodyText"]),
+            Paragraph("<b>Status</b>", styles["BodyText"]),
+            Paragraph("<b>Authority / Reason</b>", styles["BodyText"]),
+        ]]
+        + [
+            [
+                Paragraph(_pdf_text(row.get("relationship_id")), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("relationship_type")), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('source_object_type')} {row.get('source_object_id')}"), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("status")), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('authority') or '-'} / {row.get('reason') or '-'}"), styles["BodyText"]),
+            ]
+            for row in incoming_relationships
+        ],
+        [88, 70, 115, 55, 182],
+    )
+
+    heading("Policy Activity Ledger")
+    table(
+        [[
+            Paragraph("<b>Entry</b>", styles["BodyText"]),
+            Paragraph("<b>Action</b>", styles["BodyText"]),
+            Paragraph("<b>Performed</b>", styles["BodyText"]),
+            Paragraph("<b>Status</b>", styles["BodyText"]),
+            Paragraph("<b>Evidence / Notes</b>", styles["BodyText"]),
+        ]]
+        + [
+            [
+                Paragraph(_pdf_text(row.get("entry_id")), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('action_type') or 'Action'}: {row.get('action_summary')}"), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('performed_by') or 'System'} / {row.get('performed_at') or '-'}"), styles["BodyText"]),
+                Paragraph(_pdf_text(row.get("result_status")), styles["BodyText"]),
+                Paragraph(_pdf_text(f"{row.get('evidence_reference') or '-'} / {row.get('notes') or '-'}"), styles["BodyText"]),
+            ]
+            for row in activity_entries
         ],
         [80, 140, 110, 60, 120],
     )

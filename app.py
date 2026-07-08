@@ -20758,15 +20758,19 @@ def new_matter_event(matter_id):
 from services.services_governance import (
     GOVERNANCE_LIFECYCLE_STATES,
     approve_governance_directive,
+    approve_governance_policy,
     build_governance_dashboard_summary,
     build_governance_metadata,
     create_directive_implementation_entry,
     create_governance_relationship,
     create_governance_record,
+    create_policy_activity_entry,
     ensure_governance_tables,
     generate_directive_governance_packet_pdf,
+    generate_policy_governance_packet_pdf,
     get_governance_record,
     get_governance_directive_source_types,
+    get_governance_policy_source_types,
     get_governance_relationship_target_types,
     get_governance_relationship_types,
     get_governance_record_types,
@@ -20774,6 +20778,7 @@ from services.services_governance import (
     list_directive_implementation_entries,
     list_outgoing_governance_relationships,
     list_governance_records,
+    list_policy_activity_entries,
     transition_governance_record,
 )
 
@@ -20859,8 +20864,15 @@ def governance_policy_new():
                 "policy_area": request.form.get("policy_area"),
                 "status": request.form.get("status"),
                 "authority": request.form.get("authority"),
+                "issuing_authority": request.form.get("issuing_authority"),
+                "authority_basis": request.form.get("authority_basis"),
+                "approval_required": request.form.get("approval_required"),
                 "approved_by": request.form.get("approved_by"),
                 "approved_at": request.form.get("approved_at"),
+                "source_type": request.form.get("source_type"),
+                "source_id": request.form.get("source_id"),
+                "source_label": request.form.get("source_label"),
+                "source_notes": request.form.get("source_notes"),
                 "summary": request.form.get("summary"),
                 "body": request.form.get("policy_text"),
                 "rationale": request.form.get("rationale"),
@@ -20877,6 +20889,7 @@ def governance_policy_new():
     return render_template(
         "governance/policy_form.html",
         lifecycle_states=GOVERNANCE_LIFECYCLE_STATES,
+        source_types=get_governance_policy_source_types(),
     )
 
 
@@ -20890,10 +20903,18 @@ def governance_policy_detail(policy_id):
         return redirect(url_for("governance_registry"))
 
     metadata = build_governance_metadata("policy", policy)
+    outgoing_relationships = list_outgoing_governance_relationships("Policy", policy_id)
+    incoming_relationships = list_incoming_governance_relationships("Policy", policy_id)
+    activity_entries = list_policy_activity_entries(policy_id)
     return render_template(
         "governance/policy_detail.html",
         policy=policy,
         metadata=metadata,
+        outgoing_relationships=outgoing_relationships,
+        incoming_relationships=incoming_relationships,
+        relationship_types=get_governance_relationship_types(),
+        relationship_target_types=get_governance_relationship_target_types(),
+        activity_entries=activity_entries,
     )
 
 
@@ -20913,6 +20934,94 @@ def governance_policy_lifecycle(policy_id):
         flash(result, "warning")
 
     return redirect(url_for("governance_policy_detail", policy_id=policy_id))
+
+
+@csrf.exempt
+@app.route("/governance/policies/<policy_id>/relationships", methods=["POST"])
+def governance_policy_relationship_create(policy_id):
+    policy = get_governance_record("policy", policy_id)
+    if not policy:
+        flash("Policy not found.", "warning")
+        return redirect(url_for("governance_registry"))
+
+    success, result = create_governance_relationship(
+        {
+            "source_object_type": "Policy",
+            "source_object_id": policy_id,
+            "relationship_type": request.form.get("relationship_type"),
+            "target_object_type": request.form.get("target_object_type"),
+            "target_object_id": request.form.get("target_object_id"),
+            "authority": request.form.get("authority"),
+            "reason": request.form.get("reason"),
+            "status": "Active",
+            "created_by": session.get("username") or "System",
+        }
+    )
+
+    if success:
+        flash(f"Relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_policy_detail", policy_id=policy_id))
+
+
+@csrf.exempt
+@app.route("/governance/policies/<policy_id>/approve", methods=["POST"])
+def governance_policy_approve(policy_id):
+    success, result = approve_governance_policy(
+        policy_id,
+        request.form.get("approved_by") or session.get("username") or "System",
+        request.form.get("authority_basis"),
+    )
+
+    if success:
+        flash("Policy approval recorded.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_policy_detail", policy_id=policy_id))
+
+
+@csrf.exempt
+@app.route("/governance/policies/<policy_id>/activity", methods=["POST"])
+def governance_policy_activity_create(policy_id):
+    success, result = create_policy_activity_entry(
+        policy_id,
+        {
+            "action_type": request.form.get("action_type"),
+            "action_summary": request.form.get("action_summary"),
+            "performed_by": request.form.get("performed_by")
+            or session.get("username")
+            or "System",
+            "performed_at": request.form.get("performed_at"),
+            "result_status": request.form.get("result_status"),
+            "evidence_reference": request.form.get("evidence_reference"),
+            "notes": request.form.get("notes"),
+        },
+    )
+
+    if success:
+        flash(f"Policy activity {result} recorded.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_policy_detail", policy_id=policy_id))
+
+
+@app.route("/governance/policies/<policy_id>/packet.pdf")
+def governance_policy_packet_pdf(policy_id):
+    packet = generate_policy_governance_packet_pdf(policy_id)
+    if not packet:
+        flash("Policy not found.", "warning")
+        return redirect(url_for("governance_registry"))
+
+    return send_file(
+        packet,
+        as_attachment=True,
+        download_name=f"{policy_id}_governance_packet.pdf",
+        mimetype="application/pdf",
+    )
 
 
 @app.route("/governance/directives/<directive_id>")
