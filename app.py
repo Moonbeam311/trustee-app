@@ -7461,6 +7461,16 @@ def admin_storage_diagnostics():
 
     db_file = Path(DB_PATH)
     upload_dir = Path(UPLOAD_FOLDER)
+    export_dir = Path(EXPORT_ROOT)
+    hosted_repair_flags = [
+        "ALLOW_HOSTED_ADMIN_BOOTSTRAP",
+        "ALLOW_HOSTED_FIRM_MIGRATION",
+        "ALLOW_HOSTED_PERMISSION_RESEED",
+        "ALLOW_HOSTED_LOGIN_UNLOCK",
+        "ALLOW_ADMIN_RESET",
+        "ALLOW_ADMIN_REPAIR_ROUTES",
+        "ALLOW_ADMIN_DIAGNOSTIC_SEED",
+    ]
 
     rows = [
         ("DB_PATH", str(db_file)),
@@ -7469,8 +7479,14 @@ def admin_storage_diagnostics():
         ("UPLOAD_FOLDER", str(upload_dir)),
         ("Upload Folder Exists", "Yes" if upload_dir.exists() else "No"),
         ("Upload Folder File Count", str(sum(1 for _ in upload_dir.rglob("*") if _.is_file())) if upload_dir.exists() else "N/A"),
+        ("EXPORT_ROOT", str(export_dir)),
+        ("Export Root Exists", "Yes" if export_dir.exists() else "No"),
+        ("Export Root File Count", str(sum(1 for _ in export_dir.rglob("*") if _.is_file())) if export_dir.exists() else "N/A"),
         ("ENV DB_PATH", os.getenv("DB_PATH", "")),
         ("ENV UPLOAD_FOLDER", os.getenv("UPLOAD_FOLDER", "")),
+        ("ENV EXPORT_ROOT", os.getenv("EXPORT_ROOT", "")),
+        ("HOSTED_RECOVERY_TOKEN Present", "Yes" if os.getenv("HOSTED_RECOVERY_TOKEN") else "No"),
+        *[(flag, "ON" if os.getenv(flag) == "1" else "OFF") for flag in hosted_repair_flags],
         ("RAILWAY_ENVIRONMENT", os.getenv("RAILWAY_ENVIRONMENT", "")),
         ("RAILWAY_SERVICE_NAME", os.getenv("RAILWAY_SERVICE_NAME", "")),
         ("RAILWAY_PROJECT_NAME", os.getenv("RAILWAY_PROJECT_NAME", "")),
