@@ -13,11 +13,7 @@
     </style>
 </head>
 <body>
-    <div class="nav">
-        <strong>Institutional Navigation:</strong>
-        <a href="/governance">Governance Registry</a> |
-        <a href="/admin/workspace/governance">Governance Workspace</a>
-    </div>
+    {% include "governance/_record_nav.html" %}
 
     <h1>Create Institutional Directive</h1>
     <p class="muted">
@@ -42,12 +38,9 @@
 
         <label>Status</label>
         <select name="status">
-            <option>Draft</option>
-            <option>Issued</option>
-            <option>Active</option>
-            <option>Completed</option>
-            <option>Superseded</option>
-            <option>Retired</option>
+            {% for state in lifecycle_states %}
+                <option>{{ state }}</option>
+            {% endfor %}
         </select>
 
         <label>Authority</label>

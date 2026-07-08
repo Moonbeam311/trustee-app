@@ -20756,11 +20756,15 @@ def new_matter_event(matter_id):
 
 # ---- IOS-3A Institutional Governance Engine ----
 from services.services_governance import (
+    GOVERNANCE_LIFECYCLE_STATES,
+    build_governance_metadata,
     create_governance_record,
     ensure_governance_tables,
     get_governance_record,
+    get_governance_record_types,
     list_governance_records,
     list_governance_relationships,
+    transition_governance_record,
 )
 
 
@@ -20771,6 +20775,7 @@ def governance_registry():
     return render_template(
         "governance/registry.html",
         directives=directives,
+        record_types=get_governance_record_types(),
     )
 
 
@@ -20806,7 +20811,10 @@ def governance_directive_new():
 
         flash(result, "warning")
 
-    return render_template("governance/directive_form.html")
+    return render_template(
+        "governance/directive_form.html",
+        lifecycle_states=GOVERNANCE_LIFECYCLE_STATES,
+    )
 
 
 @app.route("/governance/directives/<directive_id>")
@@ -20822,12 +20830,32 @@ def governance_directive_detail(directive_id):
         "Directive",
         directive_id,
     )
+    metadata = build_governance_metadata("directive", directive)
 
     return render_template(
         "governance/directive_detail.html",
         directive=directive,
+        metadata=metadata,
         relationships=relationships,
     )
+
+
+@csrf.exempt
+@app.route("/governance/directives/<directive_id>/lifecycle", methods=["POST"])
+def governance_directive_lifecycle(directive_id):
+    success, result = transition_governance_record(
+        "directive",
+        directive_id,
+        request.form.get("status"),
+        session.get("username") or "System",
+    )
+
+    if success:
+        flash(f"Directive moved to {result}.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("governance_directive_detail", directive_id=directive_id))
 
 
 # ---- END IOS-3A Institutional Governance Engine ----

@@ -1,0 +1,19 @@
+<div class="card">
+    <h2>Lifecycle</h2>
+    <p class="muted">
+        Current state: <strong>{{ metadata.status }}</strong>
+    </p>
+    {% if metadata.allowed_transitions %}
+        <form method="post" action="{{ url_for('governance_directive_lifecycle', directive_id=metadata.record_id) }}">
+            <label>Move To</label>
+            <select name="status">
+                {% for state in metadata.allowed_transitions %}
+                    <option value="{{ state }}">{{ state }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Update Lifecycle</button>
+        </form>
+    {% else %}
+        <p>No further lifecycle transitions are available for this record.</p>
+    {% endif %}
+</div>

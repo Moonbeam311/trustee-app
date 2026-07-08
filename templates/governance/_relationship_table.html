@@ -1,0 +1,31 @@
+<div class="card">
+    <h2>Governance Relationships</h2>
+    {% if relationships %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Relationship</th>
+                    <th>Source</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Status</th>
+                    <th>Authority</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for relationship in relationships %}
+                    <tr>
+                        <td>{{ relationship.relationship_id }}</td>
+                        <td>{{ relationship.source_object_type }} {{ relationship.source_object_id }}</td>
+                        <td>{{ relationship.relationship_type }}</td>
+                        <td>{{ relationship.target_object_type }} {{ relationship.target_object_id }}</td>
+                        <td>{{ relationship.status }}</td>
+                        <td>{{ relationship.authority or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No relationships recorded for this governance record yet.</p>
+    {% endif %}
+</div>

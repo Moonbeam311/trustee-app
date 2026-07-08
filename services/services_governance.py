@@ -4,48 +4,111 @@ from uuid import uuid4
 from database.db import get_connection, get_current_firm_id
 
 
+COMMON_GOVERNANCE_FIELDS = [
+    "firm_id",
+    "title",
+    "status",
+    "authority",
+    "summary",
+    "rationale",
+    "version_label",
+    "supersedes_id",
+    "superseded_by_id",
+    "created_by",
+    "created_at",
+    "updated_at",
+    "effective_at",
+    "retired_at",
+]
+
+GOVERNANCE_LIFECYCLE_STATES = [
+    "Draft",
+    "Issued",
+    "Active",
+    "Completed",
+    "Superseded",
+    "Retired",
+]
+
+GOVERNANCE_LIFECYCLE_TRANSITIONS = {
+    "Draft": ["Issued", "Retired"],
+    "Issued": ["Active", "Superseded", "Retired"],
+    "Active": ["Completed", "Superseded", "Retired"],
+    "Completed": ["Superseded", "Retired"],
+    "Superseded": ["Retired"],
+    "Retired": [],
+}
+
 GOVERNANCE_OBJECTS = {
     "directive": {
         "table": "institutional_directives",
         "id_column": "directive_id",
         "prefix": "DIR",
         "text_column": "instruction",
+        "record_label": "Directive",
+        "type_column": "directive_type",
+        "actor_column": "issued_by",
+        "actor_label": "Issued By",
     },
     "decision": {
         "table": "institutional_decisions",
         "id_column": "decision_id",
         "prefix": "DEC",
         "text_column": "decision_text",
+        "record_label": "Decision",
+        "type_column": "decision_type",
+        "actor_column": "decided_by",
+        "actor_label": "Decided By",
     },
     "policy": {
         "table": "institutional_policies",
         "id_column": "policy_id",
         "prefix": "POL",
         "text_column": "policy_text",
+        "record_label": "Policy",
+        "type_column": "policy_area",
+        "actor_column": "approved_by",
+        "actor_label": "Approved By",
     },
     "resolution": {
         "table": "institutional_resolutions",
         "id_column": "resolution_id",
         "prefix": "RES",
         "text_column": "resolution_text",
+        "record_label": "Resolution",
+        "type_column": None,
+        "actor_column": "resolved_by",
+        "actor_label": "Resolved By",
     },
     "memorandum": {
         "table": "institutional_memoranda",
         "id_column": "memorandum_id",
         "prefix": "MEM",
         "text_column": "memorandum_text",
+        "record_label": "Memorandum",
+        "type_column": None,
+        "actor_column": "authored_by",
+        "actor_label": "Authored By",
     },
     "opinion": {
         "table": "institutional_opinions",
         "id_column": "opinion_id",
         "prefix": "OPN",
         "text_column": "opinion_text",
+        "record_label": "Opinion",
+        "type_column": "opinion_type",
+        "actor_column": "authored_by",
+        "actor_label": "Authored By",
     },
     "precedent": {
         "table": "institutional_precedents",
         "id_column": "precedent_id",
         "prefix": "PRE",
         "text_column": "precedent_text",
+        "record_label": "Precedent",
+        "type_column": "precedent_type",
+        "actor_column": "source_object_type",
+        "actor_label": "Source Object",
     },
 }
 
@@ -58,9 +121,127 @@ def _public_id(prefix):
     return f"{prefix}-{uuid4().hex[:10].upper()}"
 
 
+def _normalize_status(status):
+    cleaned = (status or "Draft").strip()
+    if cleaned not in GOVERNANCE_LIFECYCLE_STATES:
+        return "Draft"
+    return cleaned
+
+
+def _next_governance_number(conn, prefix, firm_id):
+    year = datetime.utcnow().year
+    cur = conn.cursor()
+    row = cur.execute(
+        """
+        SELECT last_number
+        FROM governance_number_sequences
+        WHERE firm_id = ?
+          AND prefix = ?
+          AND sequence_year = ?
+        """,
+        (firm_id, prefix, year),
+    ).fetchone()
+
+    if row:
+        next_number = int(row["last_number"]) + 1
+        cur.execute(
+            """
+            UPDATE governance_number_sequences
+            SET last_number = ?,
+                updated_at = ?
+            WHERE firm_id = ?
+              AND prefix = ?
+              AND sequence_year = ?
+            """,
+            (next_number, _now(), firm_id, prefix, year),
+        )
+    else:
+        next_number = 1
+        cur.execute(
+            """
+            INSERT INTO governance_number_sequences (
+                firm_id,
+                prefix,
+                sequence_year,
+                last_number,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (firm_id, prefix, year, next_number, _now(), _now()),
+        )
+
+    return f"{prefix}-{year}-{next_number:04d}"
+
+
+def get_governance_config(record_type):
+    return GOVERNANCE_OBJECTS.get(record_type)
+
+
+def get_governance_record_types():
+    return [
+        {"key": key, **config}
+        for key, config in GOVERNANCE_OBJECTS.items()
+    ]
+
+
+def allowed_governance_transitions(status):
+    return GOVERNANCE_LIFECYCLE_TRANSITIONS.get(status or "Draft", [])
+
+
+def build_governance_metadata(record_type, record):
+    config = get_governance_config(record_type)
+    if not config or not record:
+        return {}
+
+    type_column = config.get("type_column")
+    actor_column = config.get("actor_column")
+    return {
+        "record_type": record_type,
+        "record_label": config["record_label"],
+        "record_id": record.get(config["id_column"]),
+        "record_number": record.get(config["id_column"]),
+        "prefix": config["prefix"],
+        "title": record.get("title"),
+        "status": record.get("status") or "Draft",
+        "allowed_transitions": allowed_governance_transitions(record.get("status")),
+        "authority": record.get("authority"),
+        "summary": record.get("summary"),
+        "rationale": record.get("rationale"),
+        "version_label": record.get("version_label"),
+        "type_label": type_column.replace("_", " ").title() if type_column else "Type",
+        "type_value": record.get(type_column) if type_column else "",
+        "actor_label": config.get("actor_label") or "Actor",
+        "actor_value": record.get(actor_column) if actor_column else "",
+        "created_by": record.get("created_by"),
+        "created_at": record.get("created_at"),
+        "updated_at": record.get("updated_at"),
+        "effective_at": record.get("effective_at"),
+        "retired_at": record.get("retired_at"),
+        "supersedes_id": record.get("supersedes_id"),
+        "superseded_by_id": record.get("superseded_by_id"),
+    }
+
+
 def ensure_governance_tables():
     conn = get_connection()
     cur = conn.cursor()
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS governance_number_sequences (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            prefix TEXT NOT NULL,
+            sequence_year INTEGER NOT NULL,
+            last_number INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE(firm_id, prefix, sequence_year)
+        )
+        """
+    )
 
     cur.execute(
         """
@@ -281,6 +462,7 @@ def ensure_governance_tables():
     )
 
     index_specs = [
+        ("idx_governance_number_sequences_scope", "governance_number_sequences", "firm_id, prefix, sequence_year"),
         ("idx_institutional_directives_firm_status", "institutional_directives", "firm_id, status"),
         ("idx_institutional_decisions_firm_status", "institutional_decisions", "firm_id, status"),
         ("idx_institutional_policies_firm_status", "institutional_policies", "firm_id, status"),
@@ -305,7 +487,7 @@ def ensure_governance_tables():
 def create_governance_record(record_type, data):
     ensure_governance_tables()
 
-    config = GOVERNANCE_OBJECTS.get(record_type)
+    config = get_governance_config(record_type)
     if not config:
         return False, "Unsupported governance record type."
 
@@ -315,8 +497,16 @@ def create_governance_record(record_type, data):
 
     now = _now()
     firm_id = data.get("firm_id") or get_current_firm_id()
-    record_id = data.get(config["id_column"]) or _public_id(config["prefix"])
     text_column = config["text_column"]
+    status = _normalize_status(data.get("status"))
+
+    conn = get_connection()
+    cur = conn.cursor()
+    record_id = data.get(config["id_column"]) or _next_governance_number(
+        conn,
+        config["prefix"],
+        firm_id,
+    )
 
     base_columns = [
         config["id_column"],
@@ -339,7 +529,7 @@ def create_governance_record(record_type, data):
         record_id,
         firm_id,
         title,
-        data.get("status") or "Draft",
+        status,
         data.get("authority") or "",
         data.get("summary") or "",
         data.get("body") or data.get(text_column) or "",
@@ -369,8 +559,6 @@ def create_governance_record(record_type, data):
     placeholders = ", ".join("?" for _ in base_columns)
     column_sql = ", ".join(base_columns)
 
-    conn = get_connection()
-    cur = conn.cursor()
     cur.execute(
         f"INSERT INTO {config['table']} ({column_sql}) VALUES ({placeholders})",
         values,
@@ -451,7 +639,7 @@ def create_governance_relationship(data):
 def list_governance_records(record_type, status=None):
     ensure_governance_tables()
 
-    config = GOVERNANCE_OBJECTS.get(record_type)
+    config = get_governance_config(record_type)
     if not config:
         return []
 
@@ -477,7 +665,7 @@ def list_governance_records(record_type, status=None):
 def get_governance_record(record_type, record_id):
     ensure_governance_tables()
 
-    config = GOVERNANCE_OBJECTS.get(record_type)
+    config = get_governance_config(record_type)
     if not config:
         return None
 
@@ -494,6 +682,49 @@ def get_governance_record(record_type, record_id):
     ).fetchone()
     conn.close()
     return dict(row) if row else None
+
+
+def transition_governance_record(record_type, record_id, new_status, actor="System"):
+    ensure_governance_tables()
+
+    config = get_governance_config(record_type)
+    if not config:
+        return False, "Unsupported governance record type."
+
+    record = get_governance_record(record_type, record_id)
+    if not record:
+        return False, "Governance record not found."
+
+    current_status = record.get("status") or "Draft"
+    target_status = _normalize_status(new_status)
+    if target_status not in allowed_governance_transitions(current_status):
+        return False, f"{current_status} records cannot move to {target_status}."
+
+    now = _now()
+    retired_at = now if target_status == "Retired" else record.get("retired_at") or ""
+    conn = get_connection()
+    conn.execute(
+        f"""
+        UPDATE {config['table']}
+        SET status = ?,
+            retired_at = ?,
+            updated_at = ?,
+            created_by = COALESCE(NULLIF(created_by, ''), ?)
+        WHERE {config['id_column']} = ?
+          AND firm_id = ?
+        """,
+        (
+            target_status,
+            retired_at,
+            now,
+            actor or "System",
+            record_id,
+            get_current_firm_id(),
+        ),
+    )
+    conn.commit()
+    conn.close()
+    return True, target_status
 
 
 def list_governance_relationships(object_type=None, object_id=None):

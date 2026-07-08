@@ -13,19 +13,35 @@
     </style>
 </head>
 <body>
-    <div class="nav">
-        <strong>Institutional Navigation:</strong>
-        <a href="/governance">Governance Registry</a> |
-        <a href="/governance/directives/new">New Directive</a> |
-        <a href="/admin/workspace/governance">Governance Workspace</a>
-    </div>
+    {% include "governance/_record_nav.html" %}
 
     <h1>Institutional Governance Registry</h1>
     <p class="muted">
-        IOS-3A registry for governed institutional records. This checkpoint exposes Directives first.
+        IOS-3A registry for governed institutional records. Directive creation is active first;
+        the shared framework now reserves numbering for all governance record types.
     </p>
 
     <p><a class="btn" href="/governance/directives/new">+ New Directive</a></p>
+
+    <h2>Framework</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Record Type</th>
+                <th>Number Prefix</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record_type in record_types %}
+                <tr>
+                    <td>{{ record_type.record_label }}</td>
+                    <td>{{ record_type.prefix }}</td>
+                    <td>{% if record_type["key"] == "directive" %}Creation active{% else %}Framework reserved{% endif %}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 
     <h2>Directives</h2>
     {% if directives %}

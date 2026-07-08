@@ -1,0 +1,21 @@
+<div class="card">
+    <h2>Governance Metadata</h2>
+    <table>
+        <tbody>
+            <tr><th>Record Number</th><td>{{ metadata.record_number }}</td></tr>
+            <tr><th>Record Type</th><td>{{ metadata.record_label }}</td></tr>
+            <tr><th>Status</th><td>{{ metadata.status }}</td></tr>
+            <tr><th>{{ metadata.type_label }}</th><td>{{ metadata.type_value or "Not recorded" }}</td></tr>
+            <tr><th>Authority</th><td>{{ metadata.authority or "Not recorded" }}</td></tr>
+            <tr><th>{{ metadata.actor_label }}</th><td>{{ metadata.actor_value or "Not recorded" }}</td></tr>
+            <tr><th>Version</th><td>{{ metadata.version_label or "v1" }}</td></tr>
+            <tr><th>Effective</th><td>{{ metadata.effective_at or "Not recorded" }}</td></tr>
+            <tr><th>Retired</th><td>{{ metadata.retired_at or "Not recorded" }}</td></tr>
+            <tr><th>Supersedes</th><td>{{ metadata.supersedes_id or "None" }}</td></tr>
+            <tr><th>Superseded By</th><td>{{ metadata.superseded_by_id or "None" }}</td></tr>
+            <tr><th>Created By</th><td>{{ metadata.created_by or "System" }}</td></tr>
+            <tr><th>Created</th><td>{{ metadata.created_at }}</td></tr>
+            <tr><th>Updated</th><td>{{ metadata.updated_at }}</td></tr>
+        </tbody>
+    </table>
+</div>

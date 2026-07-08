@@ -8,31 +8,22 @@
         .card{border:1px solid #ddd; border-radius:10px; padding:18px; margin-bottom:20px;}
         table{width:100%; border-collapse:collapse;}
         th,td{padding:10px; border-bottom:1px solid #ddd; text-align:left; vertical-align:top;}
+        label{display:block; margin-top:10px; font-weight:bold;}
+        select{padding:10px; min-width:220px;}
+        button{margin-top:12px; padding:10px 14px;}
         .nav{border:1px solid #d1d5db; background:#f9fafb; padding:10px 12px; border-radius:8px; margin:12px 0;}
         .muted{color:#4b5563;}
         pre{white-space:pre-wrap; font-family:inherit;}
     </style>
 </head>
 <body>
-    <div class="nav">
-        <strong>Institutional Navigation:</strong>
-        <a href="/governance">Governance Registry</a> |
-        <a href="/governance/directives/new">New Directive</a> |
-        <a href="/admin/workspace/governance">Governance Workspace</a>
-    </div>
+    {% include "governance/_record_nav.html" %}
 
     <h1>{{ directive.title }}</h1>
-    <p class="muted">{{ directive.directive_id }}{% if directive.directive_code %} - {{ directive.directive_code }}{% endif %}</p>
+    <p class="muted">{{ metadata.record_number }}{% if directive.directive_code %} - {{ directive.directive_code }}{% endif %}</p>
 
-    <div class="card">
-        <p><b>Status:</b> {{ directive.status }}</p>
-        <p><b>Type:</b> {{ directive.directive_type }}</p>
-        <p><b>Authority:</b> {{ directive.authority or "Not recorded" }}</p>
-        <p><b>Issued By:</b> {{ directive.issued_by or "Not recorded" }}</p>
-        <p><b>Version:</b> {{ directive.version_label }}</p>
-        <p><b>Created:</b> {{ directive.created_at }}</p>
-        <p><b>Updated:</b> {{ directive.updated_at }}</p>
-    </div>
+    {% include "governance/_record_metadata.html" %}
+    {% include "governance/_record_lifecycle.html" %}
 
     <div class="card">
         <h2>Summary</h2>
@@ -51,37 +42,7 @@
         <pre>{{ directive.milestone_plan or "No milestone plan recorded." }}</pre>
     </div>
 
-    <div class="card">
-        <h2>Governance Relationships</h2>
-        {% if relationships %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Relationship</th>
-                        <th>Source</th>
-                        <th>Type</th>
-                        <th>Target</th>
-                        <th>Status</th>
-                        <th>Authority</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for relationship in relationships %}
-                        <tr>
-                            <td>{{ relationship.relationship_id }}</td>
-                            <td>{{ relationship.source_object_type }} {{ relationship.source_object_id }}</td>
-                            <td>{{ relationship.relationship_type }}</td>
-                            <td>{{ relationship.target_object_type }} {{ relationship.target_object_id }}</td>
-                            <td>{{ relationship.status }}</td>
-                            <td>{{ relationship.authority or "-" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No relationships recorded for this Directive yet.</p>
-        {% endif %}
-    </div>
+    {% include "governance/_relationship_table.html" %}
 
     {% include "_institutional_property_notice.html" %}
 </body>

@@ -3,6 +3,29 @@ from datetime import datetime
 from extensions import db
 
 
+class GovernanceNumberSequence(db.Model):
+    __tablename__ = "governance_number_sequences"
+
+    id = db.Column(db.Integer, primary_key=True)
+    firm_id = db.Column(db.String(64), nullable=False, default="FIRM-001", index=True)
+    prefix = db.Column(db.String(12), nullable=False, index=True)
+    sequence_year = db.Column(db.Integer, nullable=False, index=True)
+    last_number = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            "firm_id",
+            "prefix",
+            "sequence_year",
+            name="uq_governance_number_sequence_scope",
+        ),
+    )
+
+
 class InstitutionalDirective(db.Model):
     __tablename__ = "institutional_directives"
 
