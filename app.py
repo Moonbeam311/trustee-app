@@ -3643,6 +3643,9 @@ def trust_detail(trust_id):
     linked_accounts = get_accounts_by_trust_id(trust_id)
     linked_documents = get_documents_by_trust_id(trust_id)
     linked_ledger = get_ledger_by_trust(trust_id)
+    governance_links = build_trust_governance_links(trust_id)
+    governance_directives = list_governance_records("directive")
+    governance_policies = list_governance_records("policy")
 
     return render_template(
         "trust_detail.html",
@@ -3650,8 +3653,74 @@ def trust_detail(trust_id):
         linked_properties=linked_properties,
         linked_accounts=linked_accounts,
         linked_documents=linked_documents,
-        linked_ledger=linked_ledger
+        linked_ledger=linked_ledger,
+        governance_links=governance_links,
+        governance_directives=governance_directives,
+        governance_policies=governance_policies,
+        governance_relationship_types=get_governance_relationship_types(),
     )
+
+@csrf.exempt
+@app.route("/trust/<trust_id>/governance-links", methods=["POST"])
+def trust_governance_link_create(trust_id):
+    gate = deny_unassigned_trust_access(trust_id)
+    if gate:
+        return gate
+
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        flash("Trust not found.", "warning")
+        return redirect(url_for("admin"))
+
+    governance_type = (request.form.get("governance_type") or "").strip()
+    governance_id = (request.form.get("governance_id") or "").strip()
+    direction = (request.form.get("direction") or "").strip()
+
+    type_map = {
+        "Directive": "directive",
+        "Policy": "policy",
+    }
+    record_type = type_map.get(governance_type)
+    if not record_type:
+        flash("Select Directive or Policy.", "warning")
+        return redirect(url_for("trust_detail", trust_id=trust_id))
+
+    if not get_governance_record(record_type, governance_id):
+        flash(f"{governance_type} record not found.", "warning")
+        return redirect(url_for("trust_detail", trust_id=trust_id))
+
+    if direction == "trust_to_governance":
+        source_object_type = "Trust"
+        source_object_id = trust_id
+        target_object_type = governance_type
+        target_object_id = governance_id
+    else:
+        source_object_type = governance_type
+        source_object_id = governance_id
+        target_object_type = "Trust"
+        target_object_id = trust_id
+
+    success, result = create_governance_relationship(
+        {
+            "source_object_type": source_object_type,
+            "source_object_id": source_object_id,
+            "relationship_type": request.form.get("relationship_type"),
+            "target_object_type": target_object_type,
+            "target_object_id": target_object_id,
+            "authority": request.form.get("authority"),
+            "reason": request.form.get("reason"),
+            "status": "Active",
+            "created_by": session.get("username") or "System",
+        }
+    )
+
+    if success:
+        flash(f"Governance relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("trust_detail", trust_id=trust_id))
+
 
 @app.route("/property/<property_id>")
 def property_detail(property_id):
@@ -20851,6 +20920,7 @@ from services.services_governance import (
     approve_governance_policy,
     build_governance_dashboard_summary,
     build_matter_governance_links,
+    build_trust_governance_links,
     build_governance_metadata,
     create_directive_implementation_entry,
     create_governance_relationship,

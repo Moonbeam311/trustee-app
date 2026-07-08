@@ -1,0 +1,90 @@
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
+    <h3>Governance Records</h3>
+
+    <form method="post" action="{{ url_for('trust_governance_link_create', trust_id=trust.trust_id) }}">
+        <label><strong>Governance Record</strong></label><br>
+        <select name="governance_type" required>
+            <option value="">Select type</option>
+            <option value="Directive">Directive</option>
+            <option value="Policy">Policy</option>
+        </select>
+
+        <select name="governance_id" required>
+            <option value="">Select existing Directive or Policy</option>
+            {% for directive in governance_directives %}
+                <option value="{{ directive.directive_id }}">
+                    Directive {{ directive.directive_id }} - {{ directive.title }}
+                </option>
+            {% endfor %}
+            {% for policy in governance_policies %}
+                <option value="{{ policy.policy_id }}">
+                    Policy {{ policy.policy_id }} - {{ policy.title }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <label><strong>Direction</strong></label><br>
+        <select name="direction">
+            <option value="governance_to_trust">Governance record to Trust</option>
+            <option value="trust_to_governance">Trust to governance record</option>
+        </select>
+
+        <label><strong>Relationship</strong></label><br>
+        <select name="relationship_type" required>
+            {% for relationship_type in governance_relationship_types %}
+                <option value="{{ relationship_type }}">{{ relationship_type }}</option>
+            {% endfor %}
+        </select>
+
+        <br><br>
+
+        <input name="authority" placeholder="Authority for this governance link">
+        <input name="reason" placeholder="Reason or basis for this governance link">
+
+        <button type="submit">Link Governance Record</button>
+    </form>
+
+    {% if governance_links %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Relationship</th>
+                    <th>Direction</th>
+                    <th>Record</th>
+                    <th>Verb</th>
+                    <th>Status</th>
+                    <th>Authority</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in governance_links %}
+                    <tr>
+                        <td>{{ link.relationship.relationship_id }}</td>
+                        <td>{{ link.direction }}</td>
+                        <td>
+                            {% if link.record_type == "directive" %}
+                                <a href="{{ url_for('governance_directive_detail', directive_id=link.governance_id) }}">
+                                    Directive {{ link.governance_id }}
+                                </a>
+                            {% elif link.record_type == "policy" %}
+                                <a href="{{ url_for('governance_policy_detail', policy_id=link.governance_id) }}">
+                                    Policy {{ link.governance_id }}
+                                </a>
+                            {% endif %}
+                            <br>{{ link.record.title }}
+                        </td>
+                        <td>{{ link.relationship.relationship_type }}</td>
+                        <td>{{ link.relationship.status }}</td>
+                        <td>{{ link.relationship.authority or "-" }}</td>
+                        <td>{{ link.relationship.reason or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No Directive or Policy governance links are recorded for this Trust.</p>
+    {% endif %}
+</div>

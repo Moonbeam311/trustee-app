@@ -1397,6 +1397,56 @@ def list_incoming_governance_relationships(object_type, object_id):
     return [dict(row) for row in rows]
 
 
+def build_trust_governance_links(trust_id):
+    ensure_governance_tables()
+
+    relationships = list_governance_relationships("Trust", trust_id)
+    links = []
+
+    type_map = {
+        "Directive": "directive",
+        "Policy": "policy",
+    }
+
+    for relationship in relationships:
+        source_type = relationship.get("source_object_type")
+        source_id = relationship.get("source_object_id")
+        target_type = relationship.get("target_object_type")
+        target_id = relationship.get("target_object_id")
+
+        if source_type == "Trust" and source_id == trust_id:
+            governance_type = target_type
+            governance_id = target_id
+            direction = "Trust to Governance"
+        elif target_type == "Trust" and target_id == trust_id:
+            governance_type = source_type
+            governance_id = source_id
+            direction = "Governance to Trust"
+        else:
+            continue
+
+        record_type = type_map.get(governance_type)
+        if not record_type:
+            continue
+
+        record = get_governance_record(record_type, governance_id)
+        if not record:
+            continue
+
+        links.append(
+            {
+                "relationship": relationship,
+                "direction": direction,
+                "record_type": record_type,
+                "governance_type": governance_type,
+                "governance_id": governance_id,
+                "record": record,
+            }
+        )
+
+    return links
+
+
 def build_matter_governance_links(matter_id):
     ensure_governance_tables()
 
