@@ -20763,6 +20763,7 @@ from services.services_governance import (
     create_governance_record,
     ensure_governance_tables,
     get_governance_record,
+    get_governance_directive_source_types,
     get_governance_relationship_target_types,
     get_governance_relationship_types,
     get_governance_record_types,
@@ -20801,6 +20802,10 @@ def governance_directive_new():
                 "issuing_authority": request.form.get("issuing_authority"),
                 "authority_basis": request.form.get("authority_basis"),
                 "approval_required": request.form.get("approval_required"),
+                "source_type": request.form.get("source_type"),
+                "source_id": request.form.get("source_id"),
+                "source_label": request.form.get("source_label"),
+                "source_notes": request.form.get("source_notes"),
                 "issued_by": request.form.get("issued_by"),
                 "summary": request.form.get("summary"),
                 "body": request.form.get("instruction"),
@@ -20822,6 +20827,7 @@ def governance_directive_new():
     return render_template(
         "governance/directive_form.html",
         lifecycle_states=GOVERNANCE_LIFECYCLE_STATES,
+        source_types=get_governance_directive_source_types(),
     )
 
 

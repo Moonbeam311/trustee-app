@@ -1,0 +1,15 @@
+<div class="card">
+    <h2>Source / Provenance</h2>
+    {% if metadata.has_source %}
+        <table>
+            <tbody>
+                <tr><th>Source Type</th><td>{{ metadata.source_type or "Not recorded" }}</td></tr>
+                <tr><th>Source ID</th><td>{{ metadata.source_id or "Not recorded" }}</td></tr>
+                <tr><th>Source Label</th><td>{{ metadata.source_label or "Not recorded" }}</td></tr>
+                <tr><th>Source Notes</th><td>{{ metadata.source_notes or "Not recorded" }}</td></tr>
+            </tbody>
+        </table>
+    {% else %}
+        <p>No source reference recorded for this Directive.</p>
+    {% endif %}
+</div>

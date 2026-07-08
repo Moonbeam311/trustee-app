@@ -65,6 +65,16 @@ GOVERNANCE_RELATIONSHIP_TARGET_TYPES = [
     "Document",
 ]
 
+GOVERNANCE_DIRECTIVE_SOURCE_TYPES = [
+    "Matter",
+    "Trust",
+    "Certificate",
+    "Document",
+    "Upload",
+    "Execution Session",
+    "External Reference",
+]
+
 GOVERNANCE_OBJECTS = {
     "directive": {
         "table": "institutional_directives",
@@ -161,6 +171,15 @@ def _normalize_relationship_type(relationship_type):
     return cleaned
 
 
+def _normalize_directive_source_type(source_type):
+    cleaned = (source_type or "").strip()
+    if not cleaned:
+        return ""
+    if cleaned not in GOVERNANCE_DIRECTIVE_SOURCE_TYPES:
+        return ""
+    return cleaned
+
+
 def _truthy(value):
     return str(value or "").strip().lower() in {"1", "true", "yes", "on", "required"}
 
@@ -231,6 +250,10 @@ def get_governance_relationship_target_types():
     return GOVERNANCE_RELATIONSHIP_TARGET_TYPES
 
 
+def get_governance_directive_source_types():
+    return GOVERNANCE_DIRECTIVE_SOURCE_TYPES
+
+
 def allowed_governance_transitions(status):
     return GOVERNANCE_LIFECYCLE_TRANSITIONS.get(status or "Draft", [])
 
@@ -263,6 +286,16 @@ def build_governance_metadata(record_type, record):
             else "Approval Required"
             if _truthy(record.get("approval_required"))
             else "Not Required"
+        ),
+        "source_type": record.get("source_type"),
+        "source_id": record.get("source_id"),
+        "source_label": record.get("source_label"),
+        "source_notes": record.get("source_notes"),
+        "has_source": bool(
+            record.get("source_type")
+            or record.get("source_id")
+            or record.get("source_label")
+            or record.get("source_notes")
         ),
         "summary": record.get("summary"),
         "rationale": record.get("rationale"),
@@ -316,6 +349,10 @@ def ensure_governance_tables():
             approval_required INTEGER DEFAULT 0,
             approved_by TEXT,
             approved_at TEXT,
+            source_type TEXT,
+            source_id TEXT,
+            source_label TEXT,
+            source_notes TEXT,
             issued_by TEXT,
             issued_at TEXT,
             effective_at TEXT,
@@ -346,6 +383,10 @@ def ensure_governance_tables():
         "approval_required": "INTEGER DEFAULT 0",
         "approved_by": "TEXT",
         "approved_at": "TEXT",
+        "source_type": "TEXT",
+        "source_id": "TEXT",
+        "source_label": "TEXT",
+        "source_notes": "TEXT",
     }
     for column_name, column_spec in directive_column_specs.items():
         if column_name not in directive_columns:
@@ -574,6 +615,18 @@ def create_governance_record(record_type, data):
     if not title:
         return False, "Title is required."
 
+    if record_type == "directive":
+        source_type = _normalize_directive_source_type(data.get("source_type"))
+        has_source_data = any(
+            (data.get(key) or "").strip()
+            for key in ["source_type", "source_id", "source_label", "source_notes"]
+        )
+        if has_source_data and not source_type:
+            return False, "Unsupported Directive source type."
+        if source_type and not (data.get("source_id") or "").strip():
+            return False, "Source ID is required when a source type is selected."
+        data = {**data, "source_type": source_type}
+
     now = _now()
     firm_id = data.get("firm_id") or get_current_firm_id()
     text_column = config["text_column"]
@@ -622,7 +675,7 @@ def create_governance_record(record_type, data):
     ]
 
     extra_map = {
-        "directive": ["directive_code", "directive_type", "issuing_authority", "authority_basis", "approval_required", "approved_by", "approved_at", "issued_by", "issued_at", "effective_at", "retired_at", "scope", "milestone_plan", "completion_record"],
+        "directive": ["directive_code", "directive_type", "issuing_authority", "authority_basis", "approval_required", "approved_by", "approved_at", "source_type", "source_id", "source_label", "source_notes", "issued_by", "issued_at", "effective_at", "retired_at", "scope", "milestone_plan", "completion_record"],
         "decision": ["decision_type", "decided_by", "decided_at", "effective_at", "retired_at", "approval_history"],
         "policy": ["policy_area", "approved_by", "approved_at", "effective_at", "retired_at"],
         "resolution": ["resolved_by", "resolved_at", "effective_at", "retired_at", "recitals", "approval_history"],

@@ -60,6 +60,23 @@
         <label>Issued By</label>
         <input name="issued_by" placeholder="Name, role, or institutional authority">
 
+        <label>Source Type</label>
+        <select name="source_type">
+            <option value="">No source selected</option>
+            {% for source_type in source_types %}
+                <option value="{{ source_type }}">{{ source_type }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Source ID</label>
+        <input name="source_id" placeholder="Matter, trust, certificate, upload, or external reference ID">
+
+        <label>Source Label</label>
+        <input name="source_label" placeholder="Short label for the source">
+
+        <label>Source Notes</label>
+        <textarea name="source_notes" rows="3" placeholder="Brief provenance notes"></textarea>
+
         <label>Summary</label>
         <textarea name="summary" rows="3"></textarea>
 
