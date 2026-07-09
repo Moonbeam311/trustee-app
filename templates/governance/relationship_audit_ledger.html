@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Governance Relationship Audit Ledger</h1>
+
+    <p>
+        Permanent audit trail for governance relationship attempts, including successful links,
+        duplicate blocks, authority, reason, actor, source object, target object, and timestamp.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a>
+    </p>
+
+    <h2>Ledger Filters</h2>
+
+    <form method="get" action="{{ url_for('governance_relationship_audit_ledger') }}">
+        <label>Object Type</label>
+        <input type="text" name="object_type" value="{{ summary.object_type }}" placeholder="Document, Certificate, Trust, Matter">
+
+        <label>Object ID</label>
+        <input type="text" name="object_id" value="{{ summary.object_id }}" placeholder="DOC-TRUST-TR-022, CERT-000003">
+
+        <label>Limit</label>
+        <input type="number" name="limit" value="{{ summary.limit or 100 }}" min="1" max="500">
+
+        <button type="submit">Filter Ledger</button>
+        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Clear</a>
+    </form>
+
+    <h2>Summary</h2>
+
+    <table class="table">
+        <tr>
+            <th>Total Displayed</th>
+            <th>Created</th>
+            <th>Duplicate Blocked</th>
+            <th>Other / Failed</th>
+        </tr>
+        <tr>
+            <td>{{ summary.total }}</td>
+            <td>{{ summary.created }}</td>
+            <td>{{ summary.duplicate_blocked }}</td>
+            <td>{{ summary.failed }}</td>
+        </tr>
+    </table>
+
+    <h2>Audit Records</h2>
+
+    {% if audits %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Audit ID</th>
+                    <th>Outcome</th>
+                    <th>Action</th>
+                    <th>Source</th>
+                    <th>Verb</th>
+                    <th>Target</th>
+                    <th>Attempted Relationship</th>
+                    <th>Existing Relationship</th>
+                    <th>Actor</th>
+                    <th>Authority</th>
+                    <th>Reason</th>
+                    <th>Message</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for audit in audits %}
+                    <tr>
+                        <td><strong>{{ audit.audit_id }}</strong></td>
+                        <td>{{ audit.outcome }}</td>
+                        <td>{{ audit.action }}</td>
+                        <td>
+                            {{ audit.source_object_type or "-" }}<br>
+                            {{ audit.source_object_id or "-" }}
+                        </td>
+                        <td>{{ audit.relationship_type or "-" }}</td>
+                        <td>
+                            {{ audit.target_object_type or "-" }}<br>
+                            {{ audit.target_object_id or "-" }}
+                        </td>
+                        <td>{{ audit.attempted_relationship_id or "-" }}</td>
+                        <td>{{ audit.existing_relationship_id or "-" }}</td>
+                        <td>{{ audit.actor or "-" }}</td>
+                        <td>{{ audit.authority or "-" }}</td>
+                        <td>{{ audit.reason or "-" }}</td>
+                        <td>{{ audit.message or "-" }}</td>
+                        <td>{{ audit.created_at or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No governance relationship audit records found for the selected filter.</p>
+    {% endif %}
+</div>
+{% endblock %}

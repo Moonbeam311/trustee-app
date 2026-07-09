@@ -21203,6 +21203,46 @@ def governance_policy_packet_pdf(policy_id):
     )
 
 
+@app.route("/governance/relationship-audits")
+def governance_relationship_audit_ledger():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import list_governance_relationship_audits
+
+    object_type = (request.args.get("object_type") or "").strip()
+    object_id = (request.args.get("object_id") or "").strip()
+    limit = request.args.get("limit") or 100
+
+    try:
+        limit = int(limit)
+    except Exception:
+        limit = 100
+
+    audits = list_governance_relationship_audits(
+        limit=limit,
+        object_type=object_type or None,
+        object_id=object_id or None,
+    )
+
+    summary = {
+        "total": len(audits),
+        "created": len([a for a in audits if a.get("outcome") == "created"]),
+        "duplicate_blocked": len([a for a in audits if a.get("outcome") == "duplicate_blocked"]),
+        "failed": len([a for a in audits if a.get("outcome") not in ("created", "duplicate_blocked")]),
+        "object_type": object_type,
+        "object_id": object_id,
+        "limit": limit,
+    }
+
+    return render_template(
+        "governance/relationship_audit_ledger.html",
+        audits=audits,
+        summary=summary,
+    )
+
+
 @app.route("/governance/directives/<directive_id>")
 def governance_directive_detail(directive_id):
     ensure_governance_tables()
