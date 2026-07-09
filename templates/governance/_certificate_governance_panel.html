@@ -1,0 +1,109 @@
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
+    <h2>Governance Records</h2>
+
+    <h3>Available Governance Records</h3>
+
+    {% if governance_directives or governance_policies %}
+        <table class="table">
+            <tr>
+                <th>Type</th>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Link</th>
+            </tr>
+
+            {% for directive in governance_directives %}
+            <tr>
+                <td>Directive</td>
+                <td>{{ directive.directive_id }}</td>
+                <td>{{ directive.title }}</td>
+                <td>{{ directive.status }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('certificate_workspace_governance_link_create', certificate_type=certificate_object.identity.certificate_type, certificate_id=certificate_object.identity.certificate_id) }}">
+                        <input type="hidden" name="governance_key" value="Directive|{{ directive.directive_id }}">
+                        <input type="hidden" name="direction" value="governance_to_certificate">
+                        <select name="relationship_type">
+                            {% for relationship_type in governance_relationship_types %}
+                                <option value="{{ relationship_type }}" {% if relationship_type == "authorizes" %}selected{% endif %}>{{ relationship_type }}</option>
+                            {% endfor %}
+                        </select>
+                        <input name="authority" value="admin123">
+                        <input name="reason" value="Certificate workspace governance directive smoke test.">
+                        <button type="submit">Link Directive</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+
+            {% for policy in governance_policies %}
+            <tr>
+                <td>Policy</td>
+                <td>{{ policy.policy_id }}</td>
+                <td>{{ policy.title }}</td>
+                <td>{{ policy.status }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('certificate_workspace_governance_link_create', certificate_type=certificate_object.identity.certificate_type, certificate_id=certificate_object.identity.certificate_id) }}">
+                        <input type="hidden" name="governance_key" value="Policy|{{ policy.policy_id }}">
+                        <input type="hidden" name="direction" value="governance_to_certificate">
+                        <select name="relationship_type">
+                            {% for relationship_type in governance_relationship_types %}
+                                <option value="{{ relationship_type }}" {% if relationship_type == "governs" %}selected{% endif %}>{{ relationship_type }}</option>
+                            {% endfor %}
+                        </select>
+                        <input name="authority" value="admin123">
+                        <input name="reason" value="Certificate workspace governance policy smoke test.">
+                        <button type="submit">Link Policy</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Directive or Policy records are available in the active firm context.</p>
+    {% endif %}
+
+    <h3>Linked Governance Records</h3>
+
+    {% if governance_links %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Relationship</th>
+                    <th>Direction</th>
+                    <th>Record</th>
+                    <th>Verb</th>
+                    <th>Status</th>
+                    <th>Authority</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for link in governance_links %}
+                    <tr>
+                        <td>{{ link.relationship.relationship_id }}</td>
+                        <td>{{ link.direction }}</td>
+                        <td>
+                            {% if link.record_type == "directive" %}
+                                <a href="{{ url_for('governance_directive_detail', directive_id=link.governance_id) }}">
+                                    Directive {{ link.governance_id }}
+                                </a>
+                            {% elif link.record_type == "policy" %}
+                                <a href="{{ url_for('governance_policy_detail', policy_id=link.governance_id) }}">
+                                    Policy {{ link.governance_id }}
+                                </a>
+                            {% endif %}
+                            <br>{{ link.record.title }}
+                        </td>
+                        <td>{{ link.relationship.relationship_type }}</td>
+                        <td>{{ link.relationship.status }}</td>
+                        <td>{{ link.relationship.authority or "-" }}</td>
+                        <td>{{ link.relationship.reason or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No Directive or Policy governance links are recorded for this Certificate.</p>
+    {% endif %}
+</div>

@@ -3676,8 +3676,12 @@ def trust_governance_link_create(trust_id):
         flash("Trust not found.", "warning")
         return redirect(url_for("admin"))
 
-    governance_type = (request.form.get("governance_type") or "").strip()
-    governance_id = (request.form.get("governance_id") or "").strip()
+    governance_key = (request.form.get("governance_key") or "").strip()
+    if "|" in governance_key:
+        governance_type, governance_id = [part.strip() for part in governance_key.split("|", 1)]
+    else:
+        governance_type = (request.form.get("governance_type") or "").strip()
+        governance_id = (request.form.get("governance_id") or "").strip()
     direction = (request.form.get("direction") or "").strip()
 
     type_map = {
@@ -20235,8 +20239,14 @@ def matter_governance_link_create(matter_id):
         flash("Matter not found.", "warning")
         return redirect(url_for("matters_dashboard"))
 
-    governance_type = (request.form.get("governance_type") or "").strip()
-    governance_id = (request.form.get("governance_id") or "").strip()
+    governance_key = (request.form.get("governance_key") or "").strip()
+    if "|" in governance_key:
+        governance_type, governance_id = [
+            part.strip() for part in governance_key.split("|", 1)
+        ]
+    else:
+        governance_type = (request.form.get("governance_type") or "").strip()
+        governance_id = (request.form.get("governance_id") or "").strip()
     direction = (request.form.get("direction") or "").strip()
 
     type_map = {
@@ -21836,11 +21846,109 @@ def certificate_studio_workspace(certificate_type, certificate_id):
         limit=50,
     )
 
+    from database.db import get_current_firm_id as db_get_current_firm_id
+    from services.services_governance import (
+        build_governance_links_for_object,
+        get_governance_relationship_types,
+        list_governance_records,
+    )
+
+    governance_links = build_governance_links_for_object("Certificate", certificate_id)
+    governance_directives = list_governance_records("directive")
+    governance_policies = list_governance_records("policy")
+
     return render_template(
         "certificate_studio_workspace.html",
         certificate_object=certificate_object,
         events=events,
+        governance_links=governance_links,
+        governance_directives=governance_directives,
+        governance_policies=governance_policies,
+        governance_relationship_types=get_governance_relationship_types(),
     )
+
+@csrf.exempt
+@app.route(
+    "/certificate-studio/workspace/<certificate_type>/<certificate_id>/governance-links",
+    methods=["POST"],
+)
+def certificate_workspace_governance_link_create(certificate_type, certificate_id):
+    from services.services_governance import (
+        create_governance_relationship,
+        get_governance_record,
+    )
+
+    certificate_object = CertificateAPI.object(certificate_id, certificate_type)
+    if not certificate_object or not certificate_object.get("found"):
+        flash("Certificate not found.", "warning")
+        return redirect(url_for("certificate_studio_home"))
+
+    governance_key = (request.form.get("governance_key") or "").strip()
+    if "|" in governance_key:
+        governance_type, governance_id = [
+            part.strip() for part in governance_key.split("|", 1)
+        ]
+    else:
+        governance_type = (request.form.get("governance_type") or "").strip()
+        governance_id = (request.form.get("governance_id") or "").strip()
+    direction = (request.form.get("direction") or "").strip()
+
+    type_map = {
+        "Directive": "directive",
+        "Policy": "policy",
+    }
+
+    record_type = type_map.get(governance_type)
+    if not record_type:
+        flash("Select Directive or Policy.", "warning")
+        return redirect(url_for(
+            "certificate_studio_workspace",
+            certificate_type=certificate_type,
+            certificate_id=certificate_id,
+        ))
+
+    if not get_governance_record(record_type, governance_id):
+        flash(f"{governance_type} record not found.", "warning")
+        return redirect(url_for(
+            "certificate_studio_workspace",
+            certificate_type=certificate_type,
+            certificate_id=certificate_id,
+        ))
+
+    if direction == "certificate_to_governance":
+        source_object_type = "Certificate"
+        source_object_id = certificate_id
+        target_object_type = governance_type
+        target_object_id = governance_id
+    else:
+        source_object_type = governance_type
+        source_object_id = governance_id
+        target_object_type = "Certificate"
+        target_object_id = certificate_id
+
+    success, result = create_governance_relationship({
+        "source_object_type": source_object_type,
+        "source_object_id": source_object_id,
+        "relationship_type": request.form.get("relationship_type"),
+        "target_object_type": target_object_type,
+        "target_object_id": target_object_id,
+        "authority": request.form.get("authority"),
+        "reason": request.form.get("reason"),
+        "status": "Active",
+        "created_by": session.get("username") or "System",
+    })
+
+    if success:
+        flash(f"Governance relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for(
+        "certificate_studio_workspace",
+        certificate_type=certificate_type,
+        certificate_id=certificate_id,
+    ))
+
 
 @app.route("/certificate-studio/explorer")
 def certificate_studio_explorer():

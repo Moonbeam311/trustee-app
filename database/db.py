@@ -10,15 +10,21 @@ DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
 def get_current_firm_id():
     """
     Return the active tenant/firm scope for the current request.
-    Defaults to FIRM-001 only outside request context or legacy sessions.
+    Defaults to hosted/development FIRM-002 outside request context or legacy sessions.
     """
+    fallback_firm_id = os.getenv("HOSTED_BOOTSTRAP_FIRM_ID", "FIRM-002").strip() or "FIRM-002"
     try:
         from flask import session, has_request_context
         if has_request_context():
-            return session.get("firm_id") or "FIRM-001"
+            session_firm_id = session.get("firm_id")
+            if session_firm_id and not (
+                session_firm_id == "FIRM-001" and fallback_firm_id != "FIRM-001"
+            ):
+                return session_firm_id
+            return fallback_firm_id
     except Exception:
         pass
-    return "FIRM-001"
+    return fallback_firm_id
 
 
 
