@@ -22958,6 +22958,7 @@ def document_platform_workspace(document_id):
     document_object = DocumentAPI.object(document_id)
 
     from services.services_governance import (
+        build_document_governance_impact,
         build_document_governance_summary,
         build_document_governance_timeline,
         build_governance_links_for_object,
@@ -22970,6 +22971,10 @@ def document_platform_workspace(document_id):
     governance_policies = list_governance_records("policy")
     governance_summary = build_document_governance_summary(document_id)
     governance_timeline = build_document_governance_timeline(document_id)
+    governance_impact = build_document_governance_impact(
+        document_id,
+        document_object=document_object,
+    )
 
     return render_template(
         "document_platform_workspace.html",
@@ -22980,6 +22985,7 @@ def document_platform_workspace(document_id):
         governance_relationship_types=get_governance_relationship_types(),
         governance_summary=governance_summary,
         governance_timeline=governance_timeline,
+        governance_impact=governance_impact,
     )
 
 @app.route("/document-platform/explorer")

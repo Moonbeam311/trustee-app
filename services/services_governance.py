@@ -1612,6 +1612,180 @@ def build_document_governance_summary(document_id):
     }
 
 
+def build_document_governance_impact(document_id, document_object=None):
+    links = build_governance_links_for_object("Document", document_id)
+
+    document_title = ""
+    document_type = ""
+    document_status = ""
+    verification_status = ""
+    lifecycle_status = ""
+    governance_policy = ""
+    retention_policy = ""
+    allows_edit = None
+    allows_delete = None
+    requires_reason = None
+    requires_authority = None
+
+    if document_object:
+        identity = document_object.get("identity") or {}
+        status_block = document_object.get("status") or {}
+        governance_block = document_object.get("governance") or {}
+
+        document_title = identity.get("title") or ""
+        document_type = identity.get("document_type") or ""
+        document_status = status_block.get("status") or ""
+        verification_status = status_block.get("verification_status") or ""
+        lifecycle_status = status_block.get("lifecycle_status") or ""
+        governance_policy = governance_block.get("governance_policy") or ""
+        retention_policy = governance_block.get("retention_policy") or ""
+        allows_edit = governance_block.get("allows_edit")
+        allows_delete = governance_block.get("allows_delete")
+        requires_reason = governance_block.get("requires_reason")
+        requires_authority = governance_block.get("requires_authority")
+
+    findings = []
+    risks = []
+    controls = []
+
+    pending_count = 0
+    approved_count = 0
+    active_relationships = 0
+
+    for link in links:
+        record = link.get("record") or {}
+        relationship = link.get("relationship") or {}
+        status = record.get("status") or "Draft"
+        governance_type = link.get("governance_type")
+        governance_id = link.get("governance_id")
+        relationship_type = relationship.get("relationship_type") or "references"
+
+        if status in {"Draft", "Issued"}:
+            pending_count += 1
+            risks.append(
+                {
+                    "level": "Moderate",
+                    "risk": f"{governance_type} {governance_id} linked but remains {status}.",
+                    "impact": "Document is governed by a record that is not Active or Completed.",
+                }
+            )
+
+        if status in {"Active", "Completed", "Approved", "Ratified", "Effective", "Implemented"}:
+            approved_count += 1
+
+        if relationship.get("status") == "Active":
+            active_relationships += 1
+            controls.append(
+                {
+                    "control": f"{relationship_type} {governance_type} {governance_id}",
+                    "status": "Active",
+                    "basis": relationship.get("reason") or "Governance relationship recorded.",
+                }
+            )
+
+    if not links:
+        findings.append("Document has no linked Directive or Policy governance records.")
+        risks.append(
+            {
+                "level": "Low",
+                "risk": "No document-specific governance links are recorded.",
+                "impact": "Document may rely only on general platform governance unless a specific Directive or Policy is linked.",
+            }
+        )
+        impact_status = "No Governance Links"
+    elif pending_count:
+        findings.append("Document workspace has linked governance records, but one or more remain Draft or Issued.")
+        impact_status = "Governance Pending"
+    else:
+        findings.append("Document workspace has active governance coverage.")
+        impact_status = "Governed"
+
+    if verification_status:
+        controls.append(
+            {
+                "control": f"Verification Status {verification_status}",
+                "status": verification_status,
+                "basis": "Document object model verification field.",
+            }
+        )
+
+    if lifecycle_status:
+        controls.append(
+            {
+                "control": f"Lifecycle Status {lifecycle_status}",
+                "status": lifecycle_status,
+                "basis": "Document object model lifecycle field.",
+            }
+        )
+
+    if retention_policy:
+        controls.append(
+            {
+                "control": f"Retention Policy {retention_policy}",
+                "status": "Recorded",
+                "basis": "Document governance block retention policy.",
+            }
+        )
+
+    if allows_delete is True:
+        risks.append(
+            {
+                "level": "High",
+                "risk": "Document allows deletion.",
+                "impact": "Institutional record custody may be weakened unless deletion is separately controlled.",
+            }
+        )
+    elif allows_delete is False:
+        controls.append(
+            {
+                "control": "Delete Restriction",
+                "status": "Protected",
+                "basis": "Document governance block disallows deletion.",
+            }
+        )
+
+    if requires_reason is True:
+        controls.append(
+            {
+                "control": "Reason Requirement",
+                "status": "Required",
+                "basis": "Document governance block requires reason for governed actions.",
+            }
+        )
+
+    if requires_authority is True:
+        controls.append(
+            {
+                "control": "Authority Requirement",
+                "status": "Required",
+                "basis": "Document governance block requires authority for governed actions.",
+            }
+        )
+
+    return {
+        "impact_status": impact_status,
+        "document_id": document_id,
+        "document_title": document_title,
+        "document_type": document_type,
+        "document_status": document_status,
+        "verification_status": verification_status,
+        "lifecycle_status": lifecycle_status,
+        "governance_policy": governance_policy,
+        "retention_policy": retention_policy,
+        "allows_edit": allows_edit,
+        "allows_delete": allows_delete,
+        "requires_reason": requires_reason,
+        "requires_authority": requires_authority,
+        "total_links": len(links),
+        "pending_count": pending_count,
+        "approved_count": approved_count,
+        "active_relationships": active_relationships,
+        "findings": findings,
+        "risks": risks,
+        "controls": controls,
+    }
+
+
 def build_document_governance_timeline(document_id):
     timeline = []
 
