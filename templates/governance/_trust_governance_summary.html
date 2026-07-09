@@ -2,6 +2,10 @@
     <h3>Governance Summary</h3>
 
     {% if governance_summary %}
+        <h4>Trust Governance Health</h4>
+        <p><strong>{{ governance_summary.health }}</strong></p>
+        <p>{{ governance_summary.health_note }}</p>
+
         <table>
             <tbody>
                 <tr><th>Total Governance Links</th><td>{{ governance_summary.total }}</td></tr>
@@ -11,6 +15,10 @@
                 <tr><th>Approved or Ratified</th><td>{{ governance_summary.approved_or_ratified }}</td></tr>
                 <tr><th>Effective</th><td>{{ governance_summary.effective }}</td></tr>
                 <tr><th>Implemented</th><td>{{ governance_summary.implemented }}</td></tr>
+                <tr><th>Pending Governance</th><td>{{ governance_summary.pending_governance }}</td></tr>
+                <tr><th>Requires Implementation</th><td>{{ governance_summary.requires_implementation }}</td></tr>
+                <tr><th>Superseded / Retired</th><td>{{ governance_summary.superseded_or_retired }}</td></tr>
+                <tr><th>Active Governance</th><td>{{ governance_summary.active_governance }}</td></tr>
                 <tr><th>Latest Governance Activity</th><td>{{ governance_summary.latest_activity or "—" }}</td></tr>
             </tbody>
         </table>

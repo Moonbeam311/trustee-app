@@ -1579,6 +1579,36 @@ def _matter_governance_health(summary):
     }
 
 
+def _trust_governance_impact_for_record(record, relationship):
+    state = (record.get("lifecycle_state") or record.get("status") or "").strip()
+    relationship_type = (relationship.get("relationship_type") or "").strip()
+    approval_required = record.get("approval_required") in ("Yes", "yes", "1", 1, True)
+    approved_at = record.get("approved_at")
+
+    if state in {"Superseded", "Archived", "Retired"}:
+        return "Superseded / Retired"
+
+    if approval_required and not approved_at:
+        return "Awaiting Approval"
+
+    if state in {"Draft", "Submitted", "Under Review", "Pending Approval"}:
+        return "Pending Governance"
+
+    if state == "Implemented":
+        return "Fully Implemented"
+
+    if relationship_type in {"authorizes", "governs", "implements"} and state in {"Issued", "Approved", "Ratified", "Effective"}:
+        return "Active Governance"
+
+    if relationship_type in {"depends_on", "references"}:
+        return "Reference / Dependency"
+
+    if relationship_type == "supersedes":
+        return "Superseding Authority"
+
+    return "Governance Linked"
+
+
 def build_trust_governance_summary(trust_id):
     links = build_trust_governance_links(trust_id)
     summary = {
@@ -1589,7 +1619,13 @@ def build_trust_governance_summary(trust_id):
         "approved_or_ratified": 0,
         "effective": 0,
         "implemented": 0,
+        "pending_governance": 0,
+        "requires_implementation": 0,
+        "superseded_or_retired": 0,
+        "active_governance": 0,
         "latest_activity": None,
+        "health": "No Governance Links",
+        "health_note": "No Directive or Policy governance records are linked to this Trust.",
     }
 
     pending_states = {"Draft", "Submitted", "Under Review", "Pending Approval"}
@@ -1615,9 +1651,35 @@ def build_trust_governance_summary(trust_id):
         if state in implemented_states:
             summary["implemented"] += 1
 
+        impact = _trust_governance_impact_for_record(record, link.get("relationship") or {})
+        if impact in {"Awaiting Approval", "Pending Governance"}:
+            summary["pending_governance"] += 1
+        if impact in {"Active Governance", "Governance Linked", "Superseding Authority"}:
+            summary["requires_implementation"] += 1
+        if impact == "Superseded / Retired":
+            summary["superseded_or_retired"] += 1
+        if impact == "Active Governance":
+            summary["active_governance"] += 1
+
         display_date = _governance_display_date(record, link.get("relationship"))
         if display_date and (not summary["latest_activity"] or str(display_date) > str(summary["latest_activity"])):
             summary["latest_activity"] = display_date
+
+    if summary["total"] == 0:
+        return summary
+
+    if summary["pending_governance"]:
+        summary["health"] = "Governance Pending"
+        summary["health_note"] = "One or more linked governance records are still pending approval, issuance, or ratification."
+    elif summary["superseded_or_retired"] == summary["total"]:
+        summary["health"] = "Governance Retired"
+        summary["health_note"] = "All linked governance records are superseded, retired, or archived."
+    elif summary["active_governance"]:
+        summary["health"] = "Governance Active"
+        summary["health_note"] = "At least one active governance record currently governs this Trust."
+    else:
+        summary["health"] = "Governance Linked"
+        summary["health_note"] = "Governance records are linked, but no active governing record is currently detected."
 
     return summary
 
@@ -1651,6 +1713,7 @@ def build_trust_governance_timeline(trust_id):
             "relationship_id": relationship.get("relationship_id"),
             "relationship_type": relationship.get("relationship_type"),
             "direction": link.get("direction"),
+            "impact": _trust_governance_impact_for_record(record, relationship),
             "created_at": record.get("created_at"),
             "effective_at": record.get("effective_date") or record.get("effective_at"),
             "approved_at": record.get("approved_at"),
