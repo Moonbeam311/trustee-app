@@ -1546,6 +1546,121 @@ def list_audits_for_governance_relationship(relationship_id, limit=50, firm_id=N
     return [dict(row) for row in rows]
 
 
+def retire_governance_relationship(relationship_id, authority=None, reason=None, actor=None):
+    ensure_governance_tables()
+
+    relationship_id = (relationship_id or "").strip()
+    authority = (authority or "").strip()
+    reason = (reason or "").strip()
+    actor = (actor or "System").strip() or "System"
+
+    if not relationship_id:
+        audit_id = record_governance_relationship_audit(
+            attempted_relationship_id=None,
+            existing_relationship_id=None,
+            action="retire_relationship",
+            outcome="validation_failed",
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Relationship ID is required for retirement.",
+        )
+        return False, f"Relationship ID is required for retirement. | Audit: {audit_id}"
+
+    relationship = get_governance_relationship(relationship_id)
+    if not relationship:
+        audit_id = record_governance_relationship_audit(
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=None,
+            action="retire_relationship",
+            outcome="not_found",
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Governance relationship {relationship_id} was not found.",
+        )
+        return False, f"Governance relationship {relationship_id} was not found. | Audit: {audit_id}"
+
+    if not authority or not reason:
+        audit_id = record_governance_relationship_audit(
+            firm_id=relationship.get("firm_id"),
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=relationship_id,
+            action="retire_relationship",
+            outcome="validation_failed",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Authority and reason are required to retire a governance relationship.",
+        )
+        return False, (
+            "Authority and reason are required to retire a governance relationship. "
+            f"| Audit: {audit_id}"
+        )
+
+    if (relationship.get("status") or "") == "Retired":
+        audit_id = record_governance_relationship_audit(
+            firm_id=relationship.get("firm_id"),
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=relationship_id,
+            action="retire_relationship",
+            outcome="already_retired",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Governance relationship {relationship_id} is already retired.",
+        )
+        return False, f"Governance relationship {relationship_id} is already retired. | Audit: {audit_id}"
+
+    now = _now()
+    firm_id = relationship.get("firm_id") or get_current_firm_id()
+
+    conn = get_connection()
+    conn.execute(
+        """
+        UPDATE governance_relationships
+        SET status = 'Retired',
+            retired_at = ?,
+            updated_at = ?
+        WHERE relationship_id = ?
+          AND firm_id = ?
+        """,
+        (now, now, relationship_id, firm_id),
+    )
+    conn.commit()
+    conn.close()
+
+    audit_id = record_governance_relationship_audit(
+        firm_id=firm_id,
+        attempted_relationship_id=relationship_id,
+        existing_relationship_id=relationship_id,
+        action="retire_relationship",
+        outcome="retired",
+        source_object_type=relationship.get("source_object_type"),
+        source_object_id=relationship.get("source_object_id"),
+        relationship_type=relationship.get("relationship_type"),
+        target_object_type=relationship.get("target_object_type"),
+        target_object_id=relationship.get("target_object_id"),
+        authority=authority,
+        reason=reason,
+        actor=actor,
+        message=f"Governance relationship {relationship_id} retired.",
+    )
+
+    return True, f"Governance relationship {relationship_id} retired. | Audit: {audit_id}"
+
+
+
 def build_governance_relationship_evidence_context(relationship_id):
     relationship = get_governance_relationship(relationship_id)
     audits = list_audits_for_governance_relationship(relationship_id, limit=100)

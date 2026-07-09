@@ -21227,6 +21227,29 @@ def governance_relationship_detail(relationship_id):
     )
 
 
+@app.route("/governance/relationships/<relationship_id>/retire", methods=["POST"])
+def governance_relationship_retire(relationship_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import retire_governance_relationship
+
+    success, message = retire_governance_relationship(
+        relationship_id=relationship_id,
+        authority=request.form.get("authority") or "",
+        reason=request.form.get("reason") or "",
+        actor=session.get("username") or "System",
+    )
+
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "warning")
+
+    return redirect(url_for("governance_relationship_detail", relationship_id=relationship_id))
+
+
 @app.route("/governance/relationship-audits/<audit_id>")
 def governance_relationship_audit_detail(audit_id):
     gate = require_master_admin()

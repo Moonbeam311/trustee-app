@@ -35,6 +35,27 @@
             <tr><th>Updated At</th><td>{{ relationship.updated_at or "-" }}</td></tr>
         </table>
 
+        {% if relationship.status != "Retired" %}
+            <h2>Retire Governance Relationship</h2>
+            <p>
+                This action does not delete the relationship. It changes the relationship status to Retired
+                and records the authority, reason, actor, timestamp, and audit evidence.
+            </p>
+
+            <form method="post" action="{{ url_for('governance_relationship_retire', relationship_id=relationship.relationship_id) }}">
+                <label>Authority</label>
+                <input type="text" name="authority" required placeholder="Retirement authority">
+
+                <label>Reason</label>
+                <textarea name="reason" required placeholder="Reason for retiring this governance relationship"></textarea>
+
+                <button type="submit">Retire Relationship</button>
+            </form>
+        {% else %}
+            <h2>Retirement Status</h2>
+            <p>This governance relationship has been retired and remains preserved as an institutional record.</p>
+        {% endif %}
+
         <h2>Evidence Summary</h2>
         <table class="table">
             <tr>
