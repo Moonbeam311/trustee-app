@@ -1,6 +1,53 @@
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
     <h2>Governance Records</h2>
 
+    <h3>Governance Summary</h3>
+
+    {% if governance_summary %}
+        <div class="dashboard-grid">
+            <div class="stat-card"><strong>Total Links</strong><br>{{ governance_summary.total_links }}</div>
+            <div class="stat-card"><strong>Directives</strong><br>{{ governance_summary.directives }}</div>
+            <div class="stat-card"><strong>Policies</strong><br>{{ governance_summary.policies }}</div>
+            <div class="stat-card"><strong>Pending Governance</strong><br>{{ governance_summary.pending_governance }}</div>
+            <div class="stat-card"><strong>Approved Governance</strong><br>{{ governance_summary.approved_governance }}</div>
+            <div class="stat-card"><strong>Active Relationships</strong><br>{{ governance_summary.active_relationships }}</div>
+            <div class="stat-card"><strong>Governance Health</strong><br>{{ governance_summary.health }}</div>
+        </div>
+    {% else %}
+        <p>No governance summary is available for this Document.</p>
+    {% endif %}
+
+    <h3>Governance Timeline</h3>
+
+    {% if governance_timeline %}
+        <table class="table">
+            <tr>
+                <th>Date</th>
+                <th>Record</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Relationship</th>
+                <th>Direction</th>
+                <th>Authority</th>
+                <th>Reason</th>
+            </tr>
+            {% for item in governance_timeline %}
+            <tr>
+                <td>{{ item.date or "-" }}</td>
+                <td>{{ item.governance_type }} {{ item.governance_id }}</td>
+                <td>{{ item.title or "-" }}</td>
+                <td>{{ item.status or "-" }}</td>
+                <td>{{ item.relationship_type or "-" }} / {{ item.relationship_status or "-" }}</td>
+                <td>{{ item.direction or "-" }}</td>
+                <td>{{ item.authority or "-" }}</td>
+                <td>{{ item.reason or "-" }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No governance timeline entries are recorded for this Document.</p>
+    {% endif %}
+
     <h3>Available Governance Records</h3>
 
     {% if governance_directives or governance_policies %}
