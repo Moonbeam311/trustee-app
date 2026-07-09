@@ -17,6 +17,75 @@
         <p>No governance summary is available for this certificate.</p>
     {% endif %}
 
+    <h3>Governance Impact Analysis</h3>
+
+    {% if governance_impact %}
+        <table class="table">
+            <tr><th>Impact Status</th><td>{{ governance_impact.impact_status }}</td></tr>
+            <tr><th>Certificate Status</th><td>{{ governance_impact.certificate_status or "-" }}</td></tr>
+            <tr><th>Verification Status</th><td>{{ governance_impact.verification_status or "-" }}</td></tr>
+            <tr><th>Lifecycle Status</th><td>{{ governance_impact.lifecycle_status or "-" }}</td></tr>
+            <tr><th>Chain Status</th><td>{{ governance_impact.chain_status or "-" }}</td></tr>
+            <tr><th>Total Governance Links</th><td>{{ governance_impact.total_links }}</td></tr>
+            <tr><th>Pending Governance Records</th><td>{{ governance_impact.pending_count }}</td></tr>
+            <tr><th>Approved Governance Records</th><td>{{ governance_impact.approved_count }}</td></tr>
+            <tr><th>Active Relationships</th><td>{{ governance_impact.active_relationship_count }}</td></tr>
+        </table>
+
+        <h4>Findings</h4>
+        {% if governance_impact.findings %}
+            <ul>
+                {% for finding in governance_impact.findings %}
+                    <li>{{ finding }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No findings recorded.</p>
+        {% endif %}
+
+        <h4>Risks</h4>
+        {% if governance_impact.risks %}
+            <table class="table">
+                <tr>
+                    <th>Level</th>
+                    <th>Issue</th>
+                    <th>Impact</th>
+                </tr>
+                {% for risk in governance_impact.risks %}
+                <tr>
+                    <td>{{ risk.level }}</td>
+                    <td>{{ risk.issue }}</td>
+                    <td>{{ risk.impact }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No governance risks identified.</p>
+        {% endif %}
+
+        <h4>Controls</h4>
+        {% if governance_impact.controls %}
+            <table class="table">
+                <tr>
+                    <th>Control</th>
+                    <th>Record</th>
+                    <th>Effect</th>
+                </tr>
+                {% for control in governance_impact.controls %}
+                <tr>
+                    <td>{{ control.control }}</td>
+                    <td>{{ control.record }}</td>
+                    <td>{{ control.effect }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p>No governance controls identified.</p>
+        {% endif %}
+    {% else %}
+        <p>No governance impact analysis is available for this certificate.</p>
+    {% endif %}
+
     <h3>Governance Timeline</h3>
 
     {% if governance_timeline %}

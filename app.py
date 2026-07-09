@@ -21848,6 +21848,7 @@ def certificate_studio_workspace(certificate_type, certificate_id):
 
     from database.db import get_current_firm_id as db_get_current_firm_id
     from services.services_governance import (
+        build_certificate_governance_impact,
         build_certificate_governance_summary,
         build_certificate_governance_timeline,
         build_governance_links_for_object,
@@ -21860,6 +21861,10 @@ def certificate_studio_workspace(certificate_type, certificate_id):
     governance_policies = list_governance_records("policy")
     governance_summary = build_certificate_governance_summary(certificate_id)
     governance_timeline = build_certificate_governance_timeline(certificate_id)
+    governance_impact = build_certificate_governance_impact(
+        certificate_id,
+        certificate_object=certificate_object,
+    )
 
     return render_template(
         "certificate_studio_workspace.html",
@@ -21871,6 +21876,7 @@ def certificate_studio_workspace(certificate_type, certificate_id):
         governance_relationship_types=get_governance_relationship_types(),
         governance_summary=governance_summary,
         governance_timeline=governance_timeline,
+        governance_impact=governance_impact,
     )
 
 @csrf.exempt

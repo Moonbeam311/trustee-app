@@ -1609,6 +1609,118 @@ def build_certificate_governance_summary(certificate_id):
     }
 
 
+def build_certificate_governance_impact(certificate_id, certificate_object=None):
+    links = build_governance_links_for_object("Certificate", certificate_id)
+
+    certificate_status = ""
+    verification_status = ""
+    lifecycle_status = ""
+    chain_status = ""
+
+    if certificate_object:
+        status_block = certificate_object.get("status") or {}
+        certificate_status = status_block.get("certification_status") or ""
+        verification_status = status_block.get("verification_status") or ""
+        lifecycle_status = status_block.get("lifecycle_status") or ""
+        chain_status = status_block.get("chain_status") or ""
+
+    findings = []
+    risks = []
+    controls = []
+
+    directive_count = 0
+    policy_count = 0
+    pending_count = 0
+    active_relationship_count = 0
+    approved_count = 0
+
+    for link in links:
+        record = link.get("record") or {}
+        relationship = link.get("relationship") or {}
+        record_type = link.get("record_type")
+        record_status = record.get("status") or "Draft"
+        relationship_status = relationship.get("status") or ""
+
+        if record_type == "directive":
+            directive_count += 1
+        elif record_type == "policy":
+            policy_count += 1
+
+        if relationship_status == "Active":
+            active_relationship_count += 1
+
+        if record.get("approved_at"):
+            approved_count += 1
+
+        if record_status in {"Draft", "Issued"}:
+            pending_count += 1
+            risks.append({
+                "level": "Moderate",
+                "issue": f"{record_type.title()} {link.get('governance_id')} is linked but remains {record_status}.",
+                "impact": "Certificate is governed by a record that has not reached Active or Completed state.",
+            })
+
+        if relationship.get("relationship_type") in {"governs", "authorizes"}:
+            controls.append({
+                "control": relationship.get("relationship_type"),
+                "record": link.get("governance_id"),
+                "effect": f"{record_type.title()} provides governance authority over this certificate workspace.",
+            })
+
+    if not links:
+        impact_status = "Ungoverned"
+        findings.append("No institutional Directive or Policy is linked to this certificate workspace.")
+        risks.append({
+            "level": "High",
+            "issue": "Certificate workspace has no linked governance records.",
+            "impact": "Certificate lifecycle actions may lack an explicit governance basis.",
+        })
+    elif pending_count:
+        impact_status = "Governance Pending"
+        findings.append("Certificate workspace has linked governance records, but one or more remain Draft or Issued.")
+    else:
+        impact_status = "Governance Controlled"
+        findings.append("Certificate workspace has active governance coverage.")
+
+    if certificate_status == "Certified" and verification_status == "verified":
+        findings.append("Certificate is certified and verified while governance coverage is present.")
+    elif certificate_status or verification_status:
+        findings.append(
+            f"Certificate status is {certificate_status or '-'} and verification status is {verification_status or '-'}."
+        )
+
+    if lifecycle_status == "Issued":
+        controls.append({
+            "control": "Issued Lifecycle",
+            "record": certificate_id,
+            "effect": "Certificate is in issued lifecycle state and should remain governed by immutable certificate policy.",
+        })
+
+    if chain_status == "Current":
+        controls.append({
+            "control": "Current Chain Position",
+            "record": certificate_id,
+            "effect": "Certificate is the current chain record and should be protected from unauthorized supersession.",
+        })
+
+    return {
+        "impact_status": impact_status,
+        "certificate_status": certificate_status,
+        "verification_status": verification_status,
+        "lifecycle_status": lifecycle_status,
+        "chain_status": chain_status,
+        "total_links": len(links),
+        "directive_count": directive_count,
+        "policy_count": policy_count,
+        "pending_count": pending_count,
+        "approved_count": approved_count,
+        "active_relationship_count": active_relationship_count,
+        "findings": findings,
+        "risks": risks,
+        "controls": controls,
+    }
+
+
 def build_certificate_governance_timeline(certificate_id):
     links = build_governance_links_for_object("Certificate", certificate_id)
     timeline = []
