@@ -21227,6 +21227,34 @@ def governance_relationship_detail(relationship_id):
     )
 
 
+@app.route("/governance/relationships/<relationship_id>/supersede", methods=["POST"])
+def governance_relationship_supersede(relationship_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import supersede_governance_relationship
+
+    success, message = supersede_governance_relationship(
+        old_relationship_id=relationship_id,
+        new_source_object_type=request.form.get("source_object_type") or "",
+        new_source_object_id=request.form.get("source_object_id") or "",
+        new_relationship_type=request.form.get("relationship_type") or "",
+        new_target_object_type=request.form.get("target_object_type") or "",
+        new_target_object_id=request.form.get("target_object_id") or "",
+        authority=request.form.get("authority") or "",
+        reason=request.form.get("reason") or "",
+        actor=session.get("username") or "System",
+    )
+
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "warning")
+
+    return redirect(url_for("governance_relationship_detail", relationship_id=relationship_id))
+
+
 @app.route("/governance/relationships/<relationship_id>/retire", methods=["POST"])
 def governance_relationship_retire(relationship_id):
     gate = require_master_admin()

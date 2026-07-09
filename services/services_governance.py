@@ -1661,6 +1661,181 @@ def retire_governance_relationship(relationship_id, authority=None, reason=None,
 
 
 
+def supersede_governance_relationship(
+    old_relationship_id,
+    *,
+    new_source_object_type=None,
+    new_source_object_id=None,
+    new_relationship_type=None,
+    new_target_object_type=None,
+    new_target_object_id=None,
+    authority=None,
+    reason=None,
+    actor=None,
+):
+    ensure_governance_tables()
+
+    old_relationship_id = (old_relationship_id or "").strip()
+    authority = (authority or "").strip()
+    reason = (reason or "").strip()
+    actor = (actor or "System").strip() or "System"
+
+    if not old_relationship_id:
+        audit_id = record_governance_relationship_audit(
+            attempted_relationship_id=None,
+            existing_relationship_id=None,
+            action="supersede_relationship",
+            outcome="validation_failed",
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Old relationship ID is required for supersession.",
+        )
+        return False, f"Old relationship ID is required for supersession. | Audit: {audit_id}"
+
+    old_relationship = get_governance_relationship(old_relationship_id)
+    if not old_relationship:
+        audit_id = record_governance_relationship_audit(
+            attempted_relationship_id=old_relationship_id,
+            existing_relationship_id=None,
+            action="supersede_relationship",
+            outcome="not_found",
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Governance relationship {old_relationship_id} was not found for supersession.",
+        )
+        return False, (
+            f"Governance relationship {old_relationship_id} was not found for supersession. "
+            f"| Audit: {audit_id}"
+        )
+
+    if (old_relationship.get("status") or "") == "Retired":
+        audit_id = record_governance_relationship_audit(
+            firm_id=old_relationship.get("firm_id"),
+            attempted_relationship_id=old_relationship_id,
+            existing_relationship_id=old_relationship_id,
+            action="supersede_relationship",
+            outcome="already_retired",
+            source_object_type=old_relationship.get("source_object_type"),
+            source_object_id=old_relationship.get("source_object_id"),
+            relationship_type=old_relationship.get("relationship_type"),
+            target_object_type=old_relationship.get("target_object_type"),
+            target_object_id=old_relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Governance relationship {old_relationship_id} is already retired and cannot be superseded.",
+        )
+        return False, (
+            f"Governance relationship {old_relationship_id} is already retired and cannot be superseded. "
+            f"| Audit: {audit_id}"
+        )
+
+    if not authority or not reason:
+        audit_id = record_governance_relationship_audit(
+            firm_id=old_relationship.get("firm_id"),
+            attempted_relationship_id=old_relationship_id,
+            existing_relationship_id=old_relationship_id,
+            action="supersede_relationship",
+            outcome="validation_failed",
+            source_object_type=old_relationship.get("source_object_type"),
+            source_object_id=old_relationship.get("source_object_id"),
+            relationship_type=old_relationship.get("relationship_type"),
+            target_object_type=old_relationship.get("target_object_type"),
+            target_object_id=old_relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Authority and reason are required to supersede a governance relationship.",
+        )
+        return False, (
+            "Authority and reason are required to supersede a governance relationship. "
+            f"| Audit: {audit_id}"
+        )
+
+    new_payload = {
+        "source_object_type": (new_source_object_type or old_relationship.get("source_object_type") or "").strip(),
+        "source_object_id": (new_source_object_id or old_relationship.get("source_object_id") or "").strip(),
+        "relationship_type": (new_relationship_type or old_relationship.get("relationship_type") or "").strip(),
+        "target_object_type": (new_target_object_type or old_relationship.get("target_object_type") or "").strip(),
+        "target_object_id": (new_target_object_id or old_relationship.get("target_object_id") or "").strip(),
+        "authority": authority,
+        "reason": reason,
+        "status": "Active",
+        "created_by": actor,
+        "firm_id": old_relationship.get("firm_id") or get_current_firm_id(),
+    }
+
+    created, new_relationship_id_or_message = create_governance_relationship(new_payload)
+    if not created:
+        audit_id = record_governance_relationship_audit(
+            firm_id=old_relationship.get("firm_id"),
+            attempted_relationship_id=old_relationship_id,
+            existing_relationship_id=old_relationship_id,
+            action="supersede_relationship",
+            outcome="replacement_failed",
+            source_object_type=old_relationship.get("source_object_type"),
+            source_object_id=old_relationship.get("source_object_id"),
+            relationship_type=old_relationship.get("relationship_type"),
+            target_object_type=old_relationship.get("target_object_type"),
+            target_object_id=old_relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Replacement relationship could not be created: {new_relationship_id_or_message}",
+        )
+        return False, (
+            f"Replacement relationship could not be created: {new_relationship_id_or_message} "
+            f"| Audit: {audit_id}"
+        )
+
+    new_relationship_id = new_relationship_id_or_message
+    now = _now()
+    firm_id = old_relationship.get("firm_id") or get_current_firm_id()
+
+    conn = get_connection()
+    conn.execute(
+        """
+        UPDATE governance_relationships
+        SET status = 'Retired',
+            retired_at = ?,
+            updated_at = ?
+        WHERE relationship_id = ?
+          AND firm_id = ?
+        """,
+        (now, now, old_relationship_id, firm_id),
+    )
+    conn.commit()
+    conn.close()
+
+    audit_id = record_governance_relationship_audit(
+        firm_id=firm_id,
+        attempted_relationship_id=new_relationship_id,
+        existing_relationship_id=old_relationship_id,
+        action="supersede_relationship",
+        outcome="superseded",
+        source_object_type=old_relationship.get("source_object_type"),
+        source_object_id=old_relationship.get("source_object_id"),
+        relationship_type=old_relationship.get("relationship_type"),
+        target_object_type=old_relationship.get("target_object_type"),
+        target_object_id=old_relationship.get("target_object_id"),
+        authority=authority,
+        reason=reason,
+        actor=actor,
+        message=(
+            f"Governance relationship {old_relationship_id} superseded by "
+            f"{new_relationship_id}."
+        ),
+    )
+
+    return True, (
+        f"Governance relationship {old_relationship_id} superseded by "
+        f"{new_relationship_id}. | Audit: {audit_id}"
+    )
+
+
+
 def build_governance_relationship_evidence_context(relationship_id):
     relationship = get_governance_relationship(relationship_id)
     audits = list_audits_for_governance_relationship(relationship_id, limit=100)
@@ -1875,6 +2050,9 @@ def build_governance_links_for_object(object_type, object_id):
     }
 
     for relationship in relationships:
+        if (relationship.get("status") or "") != "Active":
+            continue
+
         source_type = relationship.get("source_object_type")
         source_id = relationship.get("source_object_id")
         target_type = relationship.get("target_object_type")

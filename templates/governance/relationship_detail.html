@@ -36,6 +36,38 @@
         </table>
 
         {% if relationship.status != "Retired" %}
+            <h2>Supersede Governance Relationship</h2>
+            <p>
+                This creates a new active relationship, retires this relationship, and records the supersession
+                chain in the audit ledger. Use this when authority changes, scope changes, or a corrected
+                governance link replaces the current one.
+            </p>
+
+            <form method="post" action="{{ url_for('governance_relationship_supersede', relationship_id=relationship.relationship_id) }}">
+                <label>New Source Object Type</label>
+                <input type="text" name="source_object_type" value="{{ relationship.source_object_type }}" required>
+
+                <label>New Source Object ID</label>
+                <input type="text" name="source_object_id" value="{{ relationship.source_object_id }}" required>
+
+                <label>New Relationship Type</label>
+                <input type="text" name="relationship_type" value="{{ relationship.relationship_type }}" required>
+
+                <label>New Target Object Type</label>
+                <input type="text" name="target_object_type" value="{{ relationship.target_object_type }}" required>
+
+                <label>New Target Object ID</label>
+                <input type="text" name="target_object_id" value="{{ relationship.target_object_id }}" required>
+
+                <label>Supersession Authority</label>
+                <input type="text" name="authority" required placeholder="Supersession authority">
+
+                <label>Supersession Reason</label>
+                <textarea name="reason" required placeholder="Reason for superseding this relationship"></textarea>
+
+                <button type="submit">Supersede Relationship</button>
+            </form>
+
             <h2>Retire Governance Relationship</h2>
             <p>
                 This action does not delete the relationship. It changes the relationship status to Retired
