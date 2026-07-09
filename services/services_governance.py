@@ -1579,6 +1579,88 @@ def _matter_governance_health(summary):
     }
 
 
+def build_trust_governance_summary(trust_id):
+    links = build_trust_governance_links(trust_id)
+    summary = {
+        "total": len(links),
+        "directives": 0,
+        "policies": 0,
+        "pending_approval": 0,
+        "approved_or_ratified": 0,
+        "effective": 0,
+        "implemented": 0,
+        "latest_activity": None,
+    }
+
+    pending_states = {"Draft", "Submitted", "Under Review", "Pending Approval"}
+    approved_states = {"Approved", "Ratified"}
+    effective_states = {"Effective"}
+    implemented_states = {"Implemented"}
+
+    for link in links:
+        record = link.get("record") or {}
+        state = record.get("lifecycle_state") or record.get("status") or ""
+
+        if link.get("record_type") == "directive":
+            summary["directives"] += 1
+        elif link.get("record_type") == "policy":
+            summary["policies"] += 1
+
+        if state in pending_states or (record.get("approval_required") in ("Yes", "yes", "1", 1, True) and not record.get("approved_at")):
+            summary["pending_approval"] += 1
+        if state in approved_states or record.get("approved_at"):
+            summary["approved_or_ratified"] += 1
+        if state in effective_states:
+            summary["effective"] += 1
+        if state in implemented_states:
+            summary["implemented"] += 1
+
+        display_date = _governance_display_date(record, link.get("relationship"))
+        if display_date and (not summary["latest_activity"] or str(display_date) > str(summary["latest_activity"])):
+            summary["latest_activity"] = display_date
+
+    return summary
+
+
+def build_trust_governance_timeline(trust_id):
+    timeline = []
+
+    for link in build_trust_governance_links(trust_id):
+        record = link.get("record") or {}
+        relationship = link.get("relationship") or {}
+        record_type = link.get("record_type")
+        governance_id = link.get("governance_id")
+
+        if record_type == "directive":
+            record_label = "Directive"
+            detail_endpoint = "governance_directive_detail"
+        elif record_type == "policy":
+            record_label = "Policy"
+            detail_endpoint = "governance_policy_detail"
+        else:
+            continue
+
+        timeline.append({
+            "governance_number": _governance_number_for_link(link),
+            "governance_id": governance_id,
+            "record_type": record_type,
+            "record_label": record_label,
+            "detail_endpoint": detail_endpoint,
+            "title": record.get("title") or "Untitled governance record",
+            "lifecycle_state": record.get("lifecycle_state") or record.get("status") or "Unspecified",
+            "relationship_id": relationship.get("relationship_id"),
+            "relationship_type": relationship.get("relationship_type"),
+            "direction": link.get("direction"),
+            "created_at": record.get("created_at"),
+            "effective_at": record.get("effective_date") or record.get("effective_at"),
+            "approved_at": record.get("approved_at"),
+            "display_date": _governance_display_date(record, relationship),
+        })
+
+    timeline.sort(key=lambda item: str(item.get("display_date") or ""), reverse=True)
+    return timeline
+
+
 def build_matter_governance_summary(matter_id):
     links = build_matter_governance_links(matter_id)
     summary = {

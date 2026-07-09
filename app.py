@@ -3644,6 +3644,8 @@ def trust_detail(trust_id):
     linked_documents = get_documents_by_trust_id(trust_id)
     linked_ledger = get_ledger_by_trust(trust_id)
     governance_links = build_trust_governance_links(trust_id)
+    governance_summary = build_trust_governance_summary(trust_id)
+    governance_timeline = build_trust_governance_timeline(trust_id)
     governance_directives = list_governance_records("directive")
     governance_policies = list_governance_records("policy")
 
@@ -3655,6 +3657,8 @@ def trust_detail(trust_id):
         linked_documents=linked_documents,
         linked_ledger=linked_ledger,
         governance_links=governance_links,
+        governance_summary=governance_summary,
+        governance_timeline=governance_timeline,
         governance_directives=governance_directives,
         governance_policies=governance_policies,
         governance_relationship_types=get_governance_relationship_types(),
@@ -20921,6 +20925,8 @@ from services.services_governance import (
     build_governance_dashboard_summary,
     build_matter_governance_links,
     build_trust_governance_links,
+    build_trust_governance_summary,
+    build_trust_governance_timeline,
     build_governance_metadata,
     create_directive_implementation_entry,
     create_governance_relationship,
