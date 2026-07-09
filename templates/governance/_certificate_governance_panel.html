@@ -117,6 +117,11 @@
         <p>No governance timeline activity is recorded for this certificate.</p>
     {% endif %}
 
+    {% set linked_governance_keys = [] %}
+    {% for link in governance_links %}
+        {% set _ = linked_governance_keys.append((link.governance_type|string) ~ "|" ~ (link.governance_id|string)) %}
+    {% endfor %}
+
     <h3>Available Governance Records</h3>
 
     {% if governance_directives or governance_policies %}
@@ -136,18 +141,22 @@
                 <td>{{ directive.title }}</td>
                 <td>{{ directive.status }}</td>
                 <td>
-                    <form method="post" action="{{ url_for('certificate_workspace_governance_link_create', certificate_type=certificate_object.identity.certificate_type, certificate_id=certificate_object.identity.certificate_id) }}">
-                        <input type="hidden" name="governance_key" value="Directive|{{ directive.directive_id }}">
-                        <input type="hidden" name="direction" value="governance_to_certificate">
-                        <select name="relationship_type">
-                            {% for relationship_type in governance_relationship_types %}
-                                <option value="{{ relationship_type }}" {% if relationship_type == "authorizes" %}selected{% endif %}>{{ relationship_type }}</option>
-                            {% endfor %}
-                        </select>
-                        <input name="authority" value="admin123">
-                        <input name="reason" value="Certificate workspace governance directive smoke test.">
-                        <button type="submit">Link Directive</button>
-                    </form>
+                    {% if ("Directive|" ~ directive.directive_id) in linked_governance_keys %}
+                        <span class="status-badge">Already Linked</span>
+                    {% else %}
+                        <form method="post" action="{{ url_for('certificate_workspace_governance_link_create', certificate_type=certificate_object.identity.certificate_type, certificate_id=certificate_object.identity.certificate_id) }}">
+                            <input type="hidden" name="governance_key" value="Directive|{{ directive.directive_id }}">
+                            <input type="hidden" name="direction" value="governance_to_certificate">
+                            <select name="relationship_type">
+                                {% for relationship_type in governance_relationship_types %}
+                                    <option value="{{ relationship_type }}" {% if relationship_type == "authorizes" %}selected{% endif %}>{{ relationship_type }}</option>
+                                {% endfor %}
+                            </select>
+                            <input name="authority" value="admin123">
+                            <input name="reason" value="Certificate workspace governance directive smoke test.">
+                            <button type="submit">Link Directive</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -159,18 +168,22 @@
                 <td>{{ policy.title }}</td>
                 <td>{{ policy.status }}</td>
                 <td>
-                    <form method="post" action="{{ url_for('certificate_workspace_governance_link_create', certificate_type=certificate_object.identity.certificate_type, certificate_id=certificate_object.identity.certificate_id) }}">
-                        <input type="hidden" name="governance_key" value="Policy|{{ policy.policy_id }}">
-                        <input type="hidden" name="direction" value="governance_to_certificate">
-                        <select name="relationship_type">
-                            {% for relationship_type in governance_relationship_types %}
-                                <option value="{{ relationship_type }}" {% if relationship_type == "governs" %}selected{% endif %}>{{ relationship_type }}</option>
-                            {% endfor %}
-                        </select>
-                        <input name="authority" value="admin123">
-                        <input name="reason" value="Certificate workspace governance policy smoke test.">
-                        <button type="submit">Link Policy</button>
-                    </form>
+                    {% if ("Policy|" ~ policy.policy_id) in linked_governance_keys %}
+                        <span class="status-badge">Already Linked</span>
+                    {% else %}
+                        <form method="post" action="{{ url_for('certificate_workspace_governance_link_create', certificate_type=certificate_object.identity.certificate_type, certificate_id=certificate_object.identity.certificate_id) }}">
+                            <input type="hidden" name="governance_key" value="Policy|{{ policy.policy_id }}">
+                            <input type="hidden" name="direction" value="governance_to_certificate">
+                            <select name="relationship_type">
+                                {% for relationship_type in governance_relationship_types %}
+                                    <option value="{{ relationship_type }}" {% if relationship_type == "governs" %}selected{% endif %}>{{ relationship_type }}</option>
+                                {% endfor %}
+                            </select>
+                            <input name="authority" value="admin123">
+                            <input name="reason" value="Certificate workspace governance policy smoke test.">
+                            <button type="submit">Link Policy</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}

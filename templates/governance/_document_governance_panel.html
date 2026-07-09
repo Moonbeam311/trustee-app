@@ -121,6 +121,11 @@
         <p>No governance timeline entries are recorded for this Document.</p>
     {% endif %}
 
+    {% set linked_governance_keys = [] %}
+    {% for link in governance_links %}
+        {% set _ = linked_governance_keys.append((link.governance_type|string) ~ "|" ~ (link.governance_id|string)) %}
+    {% endfor %}
+
     <h3>Available Governance Records</h3>
 
     {% if governance_directives or governance_policies %}
@@ -140,22 +145,26 @@
                 <td>{{ directive.title }}</td>
                 <td>{{ directive.status }}</td>
                 <td>
-                    <form method="post" action="{{ url_for('document_workspace_governance_link_create', document_id=document_object.identity.document_id) }}">
-                        <input type="hidden" name="governance_key" value="Directive|{{ directive.directive_id }}">
-                        <input type="hidden" name="direction" value="governance_to_document">
+                    {% if ("Directive|" ~ directive.directive_id) in linked_governance_keys %}
+                        <span class="status-badge">Already Linked</span>
+                    {% else %}
+                        <form method="post" action="{{ url_for('document_workspace_governance_link_create', document_id=document_object.identity.document_id) }}">
+                            <input type="hidden" name="governance_key" value="Directive|{{ directive.directive_id }}">
+                            <input type="hidden" name="direction" value="governance_to_document">
 
-                        <select name="relationship_type">
-                            <option value="authorizes">authorizes</option>
-                            <option value="governs">governs</option>
-                            <option value="references">references</option>
-                            <option value="implements">implements</option>
-                            <option value="depends_on">depends_on</option>
-                        </select>
+                            <select name="relationship_type">
+                                <option value="authorizes">authorizes</option>
+                                <option value="governs">governs</option>
+                                <option value="references">references</option>
+                                <option value="implements">implements</option>
+                                <option value="depends_on">depends_on</option>
+                            </select>
 
-                        <input type="text" name="authority" value="admin123" placeholder="Authority">
-                        <input type="text" name="reason" value="Document workspace governance directive smoke test." placeholder="Reason">
-                        <button type="submit">Link Directive</button>
-                    </form>
+                            <input type="text" name="authority" value="admin123" placeholder="Authority">
+                            <input type="text" name="reason" value="Document workspace governance directive smoke test." placeholder="Reason">
+                            <button type="submit">Link Directive</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -167,22 +176,26 @@
                 <td>{{ policy.title }}</td>
                 <td>{{ policy.status }}</td>
                 <td>
-                    <form method="post" action="{{ url_for('document_workspace_governance_link_create', document_id=document_object.identity.document_id) }}">
-                        <input type="hidden" name="governance_key" value="Policy|{{ policy.policy_id }}">
-                        <input type="hidden" name="direction" value="governance_to_document">
+                    {% if ("Policy|" ~ policy.policy_id) in linked_governance_keys %}
+                        <span class="status-badge">Already Linked</span>
+                    {% else %}
+                        <form method="post" action="{{ url_for('document_workspace_governance_link_create', document_id=document_object.identity.document_id) }}">
+                            <input type="hidden" name="governance_key" value="Policy|{{ policy.policy_id }}">
+                            <input type="hidden" name="direction" value="governance_to_document">
 
-                        <select name="relationship_type">
-                            <option value="governs">governs</option>
-                            <option value="authorizes">authorizes</option>
-                            <option value="references">references</option>
-                            <option value="implements">implements</option>
-                            <option value="depends_on">depends_on</option>
-                        </select>
+                            <select name="relationship_type">
+                                <option value="governs">governs</option>
+                                <option value="authorizes">authorizes</option>
+                                <option value="references">references</option>
+                                <option value="implements">implements</option>
+                                <option value="depends_on">depends_on</option>
+                            </select>
 
-                        <input type="text" name="authority" value="admin123" placeholder="Authority">
-                        <input type="text" name="reason" value="Document workspace governance policy smoke test." placeholder="Reason">
-                        <button type="submit">Link Policy</button>
-                    </form>
+                            <input type="text" name="authority" value="admin123" placeholder="Authority">
+                            <input type="text" name="reason" value="Document workspace governance policy smoke test." placeholder="Reason">
+                            <button type="submit">Link Policy</button>
+                        </form>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
