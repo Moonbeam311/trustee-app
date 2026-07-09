@@ -1397,10 +1397,10 @@ def list_incoming_governance_relationships(object_type, object_id):
     return [dict(row) for row in rows]
 
 
-def build_trust_governance_links(trust_id):
+def build_governance_links_for_object(object_type, object_id):
     ensure_governance_tables()
 
-    relationships = list_governance_relationships("Trust", trust_id)
+    relationships = list_governance_relationships(object_type, object_id)
     links = []
 
     type_map = {
@@ -1414,14 +1414,14 @@ def build_trust_governance_links(trust_id):
         target_type = relationship.get("target_object_type")
         target_id = relationship.get("target_object_id")
 
-        if source_type == "Trust" and source_id == trust_id:
+        if source_type == object_type and source_id == object_id:
             governance_type = target_type
             governance_id = target_id
-            direction = "Trust to Governance"
-        elif target_type == "Trust" and target_id == trust_id:
+            direction = f"{object_type} to Governance"
+        elif target_type == object_type and target_id == object_id:
             governance_type = source_type
             governance_id = source_id
-            direction = "Governance to Trust"
+            direction = f"Governance to {object_type}"
         else:
             continue
 
@@ -1445,58 +1445,14 @@ def build_trust_governance_links(trust_id):
         )
 
     return links
+
+
+def build_trust_governance_links(trust_id):
+    return build_governance_links_for_object("Trust", trust_id)
 
 
 def build_matter_governance_links(matter_id):
-    ensure_governance_tables()
-
-    relationships = list_governance_relationships("Matter", matter_id)
-    links = []
-
-    type_map = {
-        "Directive": "directive",
-        "Policy": "policy",
-    }
-
-    for relationship in relationships:
-        source_type = relationship.get("source_object_type")
-        source_id = relationship.get("source_object_id")
-        target_type = relationship.get("target_object_type")
-        target_id = relationship.get("target_object_id")
-
-        if source_type == "Matter" and source_id == matter_id:
-            governance_type = target_type
-            governance_id = target_id
-            direction = "Matter to Governance"
-        elif target_type == "Matter" and target_id == matter_id:
-            governance_type = source_type
-            governance_id = source_id
-            direction = "Governance to Matter"
-        else:
-            continue
-
-        record_type = type_map.get(governance_type)
-        if not record_type:
-            continue
-
-        record = get_governance_record(record_type, governance_id)
-        if not record:
-            continue
-
-        links.append(
-            {
-                "relationship": relationship,
-                "direction": direction,
-                "record_type": record_type,
-                "governance_type": governance_type,
-                "governance_id": governance_id,
-                "record": record,
-            }
-        )
-
-    return links
-
-
+    return build_governance_links_for_object("Matter", matter_id)
 
 
 def _governance_display_date(record, relationship):
