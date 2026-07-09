@@ -119,6 +119,34 @@
         {% else %}
             <h2>Retirement Status</h2>
             <p>This governance relationship has been retired and remains preserved as an institutional record.</p>
+
+            <h2>Reinstate Governance Relationship</h2>
+            <p>
+                This recovery action restores a retired relationship to Active status only after authority,
+                reason, confirmation, and conflict checks are recorded.
+            </p>
+
+            <form method="post" action="{{ url_for('governance_relationship_reinstate', relationship_id=relationship.relationship_id) }}">
+                <label>Reinstatement Authority</label>
+                <input type="text" name="authority" required placeholder="Reinstatement authority">
+
+                <label>Reinstatement Reason</label>
+                <textarea name="reason" required placeholder="Reason for reinstating this governance relationship"></textarea>
+
+                <label>Restoration Confirmation</label>
+                <input
+                    type="text"
+                    name="confirmation"
+                    required
+                    placeholder="I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE RESTORED TO ACTIVE STATUS"
+                >
+                <p>
+                    Required phrase:
+                    <strong>I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE RESTORED TO ACTIVE STATUS</strong>
+                </p>
+
+                <button type="submit">Reinstate Relationship</button>
+            </form>
         {% endif %}
 
         {% if context.lineage and context.lineage.has_chain %}

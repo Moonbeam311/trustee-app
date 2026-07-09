@@ -21227,6 +21227,30 @@ def governance_relationship_detail(relationship_id):
     )
 
 
+@app.route("/governance/relationships/<relationship_id>/reinstate", methods=["POST"])
+def governance_relationship_reinstate(relationship_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import reinstate_governance_relationship
+
+    success, message = reinstate_governance_relationship(
+        relationship_id=relationship_id,
+        authority=request.form.get("authority") or "",
+        reason=request.form.get("reason") or "",
+        actor=session.get("username") or "System",
+        confirmation=request.form.get("confirmation") or "",
+    )
+
+    if success:
+        flash(message, "success")
+    else:
+        flash(message, "warning")
+
+    return redirect(url_for("governance_relationship_detail", relationship_id=relationship_id))
+
+
 @app.route("/governance/relationships/<relationship_id>/supersede", methods=["POST"])
 def governance_relationship_supersede(relationship_id):
     gate = require_master_admin()

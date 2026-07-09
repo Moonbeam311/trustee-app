@@ -1685,6 +1685,203 @@ def retire_governance_relationship(relationship_id, authority=None, reason=None,
 
 
 
+def reinstate_governance_relationship(relationship_id, authority=None, reason=None, actor=None, confirmation=None):
+    ensure_governance_tables()
+
+    relationship_id = (relationship_id or "").strip()
+    authority = (authority or "").strip()
+    reason = (reason or "").strip()
+    actor = (actor or "System").strip() or "System"
+    confirmation = (confirmation or "").strip()
+    required_confirmation = "I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE RESTORED TO ACTIVE STATUS"
+
+    if not relationship_id:
+        audit_id = record_governance_relationship_audit(
+            attempted_relationship_id=None,
+            existing_relationship_id=None,
+            action="reinstate_relationship",
+            outcome="validation_failed",
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Relationship ID is required for reinstatement.",
+        )
+        return False, f"Relationship ID is required for reinstatement. | Audit: {audit_id}"
+
+    relationship = get_governance_relationship(relationship_id)
+    if not relationship:
+        audit_id = record_governance_relationship_audit(
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=None,
+            action="reinstate_relationship",
+            outcome="not_found",
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Governance relationship {relationship_id} was not found for reinstatement.",
+        )
+        return False, (
+            f"Governance relationship {relationship_id} was not found for reinstatement. "
+            f"| Audit: {audit_id}"
+        )
+
+    if (relationship.get("status") or "") == "Active":
+        audit_id = record_governance_relationship_audit(
+            firm_id=relationship.get("firm_id"),
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=relationship_id,
+            action="reinstate_relationship",
+            outcome="already_active",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=f"Governance relationship {relationship_id} is already active.",
+        )
+        return False, f"Governance relationship {relationship_id} is already active. | Audit: {audit_id}"
+
+    if not authority or not reason:
+        audit_id = record_governance_relationship_audit(
+            firm_id=relationship.get("firm_id"),
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=relationship_id,
+            action="reinstate_relationship",
+            outcome="validation_failed",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Authority and reason are required to reinstate a governance relationship.",
+        )
+        return False, (
+            "Authority and reason are required to reinstate a governance relationship. "
+            f"| Audit: {audit_id}"
+        )
+
+    if confirmation != required_confirmation:
+        audit_id = record_governance_relationship_audit(
+            firm_id=relationship.get("firm_id"),
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=relationship_id,
+            action="reinstate_relationship",
+            outcome="validation_failed",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Required restoration confirmation phrase was not provided for reinstatement.",
+        )
+        return False, (
+            "Required restoration confirmation phrase was not provided for reinstatement. "
+            f"| Audit: {audit_id}"
+        )
+
+    firm_id = relationship.get("firm_id") or get_current_firm_id()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    conflict = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationships
+        WHERE firm_id = ?
+          AND relationship_id != ?
+          AND status = 'Active'
+          AND source_object_type = ?
+          AND source_object_id = ?
+          AND relationship_type = ?
+          AND target_object_type = ?
+          AND target_object_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (
+            firm_id,
+            relationship_id,
+            relationship.get("source_object_type"),
+            relationship.get("source_object_id"),
+            relationship.get("relationship_type"),
+            relationship.get("target_object_type"),
+            relationship.get("target_object_id"),
+        ),
+    ).fetchone()
+
+    if conflict:
+        conn.close()
+        conflict = dict(conflict)
+        audit_id = record_governance_relationship_audit(
+            firm_id=firm_id,
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=conflict.get("relationship_id"),
+            action="reinstate_relationship",
+            outcome="conflict_detected",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message=(
+                f"Cannot reinstate {relationship_id}; active conflicting relationship "
+                f"{conflict.get('relationship_id')} already controls the same governance link."
+            ),
+        )
+        return False, (
+            f"Cannot reinstate {relationship_id}; active conflicting relationship "
+            f"{conflict.get('relationship_id')} already controls the same governance link. "
+            f"| Audit: {audit_id}"
+        )
+
+    now = _now()
+    conn.execute(
+        """
+        UPDATE governance_relationships
+        SET status = 'Active',
+            retired_at = '',
+            updated_at = ?
+        WHERE relationship_id = ?
+          AND firm_id = ?
+        """,
+        (now, relationship_id, firm_id),
+    )
+    conn.commit()
+    conn.close()
+
+    audit_id = record_governance_relationship_audit(
+        firm_id=firm_id,
+        attempted_relationship_id=relationship_id,
+        existing_relationship_id=relationship_id,
+        action="reinstate_relationship",
+        outcome="reinstated",
+        source_object_type=relationship.get("source_object_type"),
+        source_object_id=relationship.get("source_object_id"),
+        relationship_type=relationship.get("relationship_type"),
+        target_object_type=relationship.get("target_object_type"),
+        target_object_id=relationship.get("target_object_id"),
+        authority=authority,
+        reason=reason,
+        actor=actor,
+        message=f"Governance relationship {relationship_id} reinstated to Active status.",
+    )
+
+    return True, f"Governance relationship {relationship_id} reinstated to Active status. | Audit: {audit_id}"
+
+
+
 def supersede_governance_relationship(
     old_relationship_id,
     *,
