@@ -9,6 +9,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from database.db import get_connection, get_current_firm_id
+import sqlite3
 
 
 COMMON_GOVERNANCE_FIELDS = [
@@ -612,6 +613,30 @@ def ensure_governance_tables():
 
     cur.execute(
         """
+        CREATE TABLE IF NOT EXISTS governance_relationship_audit_ledger (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            audit_id TEXT UNIQUE NOT NULL,
+            firm_id TEXT DEFAULT 'FIRM-001',
+            attempted_relationship_id TEXT,
+            existing_relationship_id TEXT,
+            action TEXT NOT NULL,
+            outcome TEXT NOT NULL,
+            source_object_type TEXT,
+            source_object_id TEXT,
+            relationship_type TEXT,
+            target_object_type TEXT,
+            target_object_id TEXT,
+            authority TEXT,
+            reason TEXT,
+            actor TEXT,
+            message TEXT,
+            created_at TEXT
+        )
+        """
+    )
+
+    cur.execute(
+        """
         CREATE TABLE IF NOT EXISTS governance_relationships (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             relationship_id TEXT UNIQUE NOT NULL,
@@ -1172,6 +1197,116 @@ def build_governance_dashboard_summary():
     }
 
 
+def record_governance_relationship_audit(
+    *,
+    firm_id=None,
+    attempted_relationship_id=None,
+    existing_relationship_id=None,
+    action="create_relationship",
+    outcome="unknown",
+    source_object_type=None,
+    source_object_id=None,
+    relationship_type=None,
+    target_object_type=None,
+    target_object_id=None,
+    authority=None,
+    reason=None,
+    actor=None,
+    message=None,
+):
+    ensure_governance_tables()
+
+    audit_id = _public_id("GRAUD")
+    firm_id = firm_id or get_current_firm_id()
+    now = _now()
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """
+        INSERT INTO governance_relationship_audit_ledger (
+            audit_id,
+            firm_id,
+            attempted_relationship_id,
+            existing_relationship_id,
+            action,
+            outcome,
+            source_object_type,
+            source_object_id,
+            relationship_type,
+            target_object_type,
+            target_object_id,
+            authority,
+            reason,
+            actor,
+            message,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            audit_id,
+            firm_id,
+            attempted_relationship_id,
+            existing_relationship_id,
+            action,
+            outcome,
+            source_object_type,
+            source_object_id,
+            relationship_type,
+            target_object_type,
+            target_object_id,
+            authority,
+            reason,
+            actor,
+            message,
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    return audit_id
+
+
+def list_governance_relationship_audits(limit=50, firm_id=None, object_type=None, object_id=None):
+    ensure_governance_tables()
+
+    firm_id = firm_id or get_current_firm_id()
+    limit = int(limit or 50)
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    params = [firm_id]
+    where = ["firm_id = ?"]
+
+    if object_type and object_id:
+        where.append(
+            """(
+                (source_object_type = ? AND source_object_id = ?)
+                OR
+                (target_object_type = ? AND target_object_id = ?)
+            )"""
+        )
+        params.extend([object_type, object_id, object_type, object_id])
+
+    rows = cur.execute(
+        f"""
+        SELECT *
+        FROM governance_relationship_audit_ledger
+        WHERE {' AND '.join(where)}
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        params + [limit],
+    ).fetchall()
+
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def create_governance_relationship(data):
     ensure_governance_tables()
 
@@ -1223,9 +1358,28 @@ def create_governance_relationship(data):
 
     if existing:
         conn.close()
+        audit_id = record_governance_relationship_audit(
+            firm_id=firm_id,
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=existing["relationship_id"],
+            action="create_relationship",
+            outcome="duplicate_blocked",
+            source_object_type=cleaned["source_object_type"],
+            source_object_id=cleaned["source_object_id"],
+            relationship_type=cleaned["relationship_type"],
+            target_object_type=cleaned["target_object_type"],
+            target_object_id=cleaned["target_object_id"],
+            authority=data.get("authority") or "",
+            reason=data.get("reason") or "",
+            actor=data.get("created_by") or "System",
+            message=(
+                "Duplicate active governance relationship blocked: "
+                f"{existing['relationship_id']}"
+            ),
+        )
         return False, (
             "Duplicate active governance relationship blocked: "
-            f"{existing['relationship_id']}"
+            f"{existing['relationship_id']} | Audit: {audit_id}"
         )
 
     cur.execute(
@@ -1269,6 +1423,23 @@ def create_governance_relationship(data):
     )
     conn.commit()
     conn.close()
+
+    record_governance_relationship_audit(
+        firm_id=firm_id,
+        attempted_relationship_id=relationship_id,
+        existing_relationship_id=None,
+        action="create_relationship",
+        outcome="created",
+        source_object_type=cleaned["source_object_type"],
+        source_object_id=cleaned["source_object_id"],
+        relationship_type=cleaned["relationship_type"],
+        target_object_type=cleaned["target_object_type"],
+        target_object_id=cleaned["target_object_id"],
+        authority=data.get("authority") or "",
+        reason=data.get("reason") or "",
+        actor=data.get("created_by") or "System",
+        message=f"Governance relationship {relationship_id} created.",
+    )
 
     return True, relationship_id
 
