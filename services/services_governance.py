@@ -1565,6 +1565,79 @@ def _trust_governance_impact_for_record(record, relationship):
     return "Governance Linked"
 
 
+def build_certificate_governance_summary(certificate_id):
+    links = build_governance_links_for_object("Certificate", certificate_id)
+
+    directive_count = 0
+    policy_count = 0
+    pending_count = 0
+    approved_count = 0
+    active_count = 0
+
+    for link in links:
+        record = link.get("record") or {}
+        record_type = link.get("record_type")
+        status = record.get("status") or "Draft"
+
+        if record_type == "directive":
+            directive_count += 1
+        elif record_type == "policy":
+            policy_count += 1
+
+        if status in {"Draft", "Issued"}:
+            pending_count += 1
+        if record.get("approved_at"):
+            approved_count += 1
+        if (link.get("relationship") or {}).get("status") == "Active":
+            active_count += 1
+
+    if not links:
+        health = "No Governance Linked"
+    elif pending_count:
+        health = "Governance Pending"
+    else:
+        health = "Governance Active"
+
+    return {
+        "total_links": len(links),
+        "directives": directive_count,
+        "policies": policy_count,
+        "pending_governance": pending_count,
+        "approved_governance": approved_count,
+        "active_relationships": active_count,
+        "health": health,
+    }
+
+
+def build_certificate_governance_timeline(certificate_id):
+    links = build_governance_links_for_object("Certificate", certificate_id)
+    timeline = []
+
+    for link in links:
+        relationship = link.get("relationship") or {}
+        record = link.get("record") or {}
+        record_type = link.get("record_type") or ""
+        governance_id = link.get("governance_id") or ""
+
+        timeline.append(
+            {
+                "date": _governance_display_date(record, relationship),
+                "record_type": record_type.title(),
+                "record_id": governance_id,
+                "title": record.get("title") or governance_id,
+                "status": record.get("status") or "Draft",
+                "relationship_type": relationship.get("relationship_type") or "",
+                "relationship_status": relationship.get("status") or "",
+                "direction": link.get("direction") or "",
+                "authority": relationship.get("authority") or record.get("authority") or "",
+                "reason": relationship.get("reason") or record.get("rationale") or "",
+            }
+        )
+
+    timeline.sort(key=lambda item: item.get("date") or "", reverse=True)
+    return timeline
+
+
 def build_trust_governance_summary(trust_id):
     links = build_trust_governance_links(trust_id)
     summary = {
