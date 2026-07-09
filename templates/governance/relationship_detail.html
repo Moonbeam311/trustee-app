@@ -88,6 +88,82 @@
             <p>This governance relationship has been retired and remains preserved as an institutional record.</p>
         {% endif %}
 
+        {% if context.lineage and context.lineage.has_chain %}
+            {% set lineage = context.lineage %}
+            {% set old_rel = lineage.old_relationship %}
+            {% set new_rel = lineage.new_relationship %}
+            {% set lineage_audit = lineage.audit %}
+
+            <h2>Governance Relationship Lineage</h2>
+            <p>
+                This panel shows the institutional chain created when one governance relationship
+                supersedes another. Both records remain preserved.
+            </p>
+
+            <table class="table">
+                <tr>
+                    <th>Current Role</th>
+                    <td>{{ lineage.role or "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Prior / Superseded Relationship</th>
+                    <td>
+                        {% if old_rel %}
+                            <a href="{{ url_for('governance_relationship_detail', relationship_id=old_rel.relationship_id) }}">
+                                {{ old_rel.relationship_id }}
+                            </a>
+                            — {{ old_rel.status or "-" }}
+                            — {{ old_rel.source_object_type }} {{ old_rel.source_object_id }}
+                            → {{ old_rel.target_object_type }} {{ old_rel.target_object_id }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Replacement / Active Relationship</th>
+                    <td>
+                        {% if new_rel %}
+                            <a href="{{ url_for('governance_relationship_detail', relationship_id=new_rel.relationship_id) }}">
+                                {{ new_rel.relationship_id }}
+                            </a>
+                            — {{ new_rel.status or "-" }}
+                            — {{ new_rel.source_object_type }} {{ new_rel.source_object_id }}
+                            → {{ new_rel.target_object_type }} {{ new_rel.target_object_id }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Supersession Audit</th>
+                    <td>
+                        {% if lineage_audit %}
+                            <a href="{{ url_for('governance_relationship_audit_detail', audit_id=lineage_audit.audit_id) }}">
+                                {{ lineage_audit.audit_id }}
+                            </a>
+                            — {{ lineage_audit.outcome or "-" }}
+                            — {{ lineage_audit.created_at or "-" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Authority</th>
+                    <td>{{ lineage_audit.authority if lineage_audit else "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Reason</th>
+                    <td>{{ lineage_audit.reason if lineage_audit else "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Actor</th>
+                    <td>{{ lineage_audit.actor if lineage_audit else "-" }}</td>
+                </tr>
+            </table>
+        {% endif %}
+
         <h2>Evidence Summary</h2>
         <table class="table">
             <tr>

@@ -1836,13 +1836,80 @@ def supersede_governance_relationship(
 
 
 
+def build_governance_relationship_lineage(relationship_id):
+    """
+    Build a structured lineage view for superseded / replacement governance relationships.
+
+    A supersession audit uses:
+    - existing_relationship_id = old retired relationship
+    - attempted_relationship_id = new active replacement relationship
+    """
+    ensure_governance_tables()
+
+    relationship_id = (relationship_id or "").strip()
+    if not relationship_id:
+        return {
+            "has_chain": False,
+            "role": "",
+            "audit": None,
+            "old_relationship": None,
+            "new_relationship": None,
+        }
+
+    audits = list_audits_for_governance_relationship(relationship_id, limit=100)
+
+    supersession_audit = None
+    role = ""
+
+    for audit in audits:
+        if (
+            audit.get("action") == "supersede_relationship"
+            and audit.get("outcome") == "superseded"
+        ):
+            supersession_audit = audit
+            if audit.get("existing_relationship_id") == relationship_id:
+                role = "superseded"
+            elif audit.get("attempted_relationship_id") == relationship_id:
+                role = "replacement"
+            else:
+                role = "related"
+            break
+
+    if not supersession_audit:
+        return {
+            "has_chain": False,
+            "role": "",
+            "audit": None,
+            "old_relationship": None,
+            "new_relationship": None,
+        }
+
+    old_relationship_id = supersession_audit.get("existing_relationship_id")
+    new_relationship_id = supersession_audit.get("attempted_relationship_id")
+
+    old_relationship = get_governance_relationship(old_relationship_id)
+    new_relationship = get_governance_relationship(new_relationship_id)
+
+    return {
+        "has_chain": True,
+        "role": role,
+        "audit": supersession_audit,
+        "old_relationship": old_relationship,
+        "new_relationship": new_relationship,
+    }
+
+
+
 def build_governance_relationship_evidence_context(relationship_id):
     relationship = get_governance_relationship(relationship_id)
     audits = list_audits_for_governance_relationship(relationship_id, limit=100)
 
+    lineage = build_governance_relationship_lineage(relationship_id)
+
     return {
         "relationship": relationship,
         "audits": audits,
+        "lineage": lineage,
         "summary": {
             "relationship_id": relationship_id,
             "found": bool(relationship),
