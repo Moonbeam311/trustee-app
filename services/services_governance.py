@@ -1324,7 +1324,26 @@ def create_governance_relationship(data):
     )
     missing = [key for key, value in cleaned.items() if not value]
     if missing:
-        return False, f"Missing required relationship fields: {', '.join(missing)}."
+        relationship_id = data.get("relationship_id") or _public_id("GR")
+        firm_id = data.get("firm_id") or get_current_firm_id()
+        message = f"Missing required relationship fields: {', '.join(missing)}."
+        audit_id = record_governance_relationship_audit(
+            firm_id=firm_id,
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=None,
+            action="create_relationship",
+            outcome="validation_failed",
+            source_object_type=cleaned.get("source_object_type"),
+            source_object_id=cleaned.get("source_object_id"),
+            relationship_type=cleaned.get("relationship_type"),
+            target_object_type=cleaned.get("target_object_type"),
+            target_object_id=cleaned.get("target_object_id"),
+            authority=data.get("authority") or "",
+            reason=data.get("reason") or "",
+            actor=data.get("created_by") or "System",
+            message=message,
+        )
+        return False, f"{message} | Audit: {audit_id}"
 
     now = _now()
     relationship_id = data.get("relationship_id") or _public_id("GR")
