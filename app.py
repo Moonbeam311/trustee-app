@@ -21203,6 +21203,54 @@ def governance_policy_packet_pdf(policy_id):
     )
 
 
+@app.route("/governance/relationships/<relationship_id>")
+def governance_relationship_detail(relationship_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_relationship_evidence_context
+
+    context = build_governance_relationship_evidence_context(relationship_id)
+
+    if not context.get("relationship"):
+        return render_template(
+            "governance/relationship_detail.html",
+            context=context,
+            not_found=True,
+        ), 404
+
+    return render_template(
+        "governance/relationship_detail.html",
+        context=context,
+        not_found=False,
+    )
+
+
+@app.route("/governance/relationship-audits/<audit_id>")
+def governance_relationship_audit_detail(audit_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_audit_evidence_context
+
+    context = build_governance_audit_evidence_context(audit_id)
+
+    if not context.get("audit"):
+        return render_template(
+            "governance/relationship_audit_detail.html",
+            context=context,
+            not_found=True,
+        ), 404
+
+    return render_template(
+        "governance/relationship_audit_detail.html",
+        context=context,
+        not_found=False,
+    )
+
+
 @app.route("/governance/relationship-audits")
 def governance_relationship_audit_ledger():
     gate = require_master_admin()

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Governance Relationship Evidence View</h1>
+
+    <p>
+        Read-only institutional evidence view for a governance relationship record and its related audit history.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a>
+    </p>
+
+    {% if not_found %}
+        <h2>Relationship Not Found</h2>
+        <p>Relationship ID {{ context.summary.relationship_id }} was not found for the active firm.</p>
+    {% else %}
+        {% set relationship = context.relationship %}
+
+        <h2>Relationship Summary</h2>
+        <table class="table">
+            <tr><th>Relationship ID</th><td><strong>{{ relationship.relationship_id }}</strong></td></tr>
+            <tr><th>Status</th><td>{{ relationship.status or "-" }}</td></tr>
+            <tr><th>Source</th><td>{{ relationship.source_object_type }} — {{ relationship.source_object_id }}</td></tr>
+            <tr><th>Relationship Type</th><td>{{ relationship.relationship_type }}</td></tr>
+            <tr><th>Target</th><td>{{ relationship.target_object_type }} — {{ relationship.target_object_id }}</td></tr>
+            <tr><th>Authority</th><td>{{ relationship.authority or "-" }}</td></tr>
+            <tr><th>Reason</th><td>{{ relationship.reason or "-" }}</td></tr>
+            <tr><th>Created By</th><td>{{ relationship.created_by or "-" }}</td></tr>
+            <tr><th>Effective At</th><td>{{ relationship.effective_at or "-" }}</td></tr>
+            <tr><th>Retired At</th><td>{{ relationship.retired_at or "-" }}</td></tr>
+            <tr><th>Created At</th><td>{{ relationship.created_at or "-" }}</td></tr>
+            <tr><th>Updated At</th><td>{{ relationship.updated_at or "-" }}</td></tr>
+        </table>
+
+        <h2>Evidence Summary</h2>
+        <table class="table">
+            <tr>
+                <th>Audit Events</th>
+                <th>Created</th>
+                <th>Duplicate Blocked</th>
+                <th>Validation Failed</th>
+            </tr>
+            <tr>
+                <td>{{ context.summary.audit_count }}</td>
+                <td>{{ context.summary.created_audits }}</td>
+                <td>{{ context.summary.duplicate_blocked_audits }}</td>
+                <td>{{ context.summary.validation_failed_audits }}</td>
+            </tr>
+        </table>
+
+        <h2>Related Audit Events</h2>
+        {% if context.audits %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Audit ID</th>
+                        <th>Outcome</th>
+                        <th>Action</th>
+                        <th>Attempted Relationship</th>
+                        <th>Existing Relationship</th>
+                        <th>Actor</th>
+                        <th>Authority</th>
+                        <th>Reason</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for audit in context.audits %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('governance_relationship_audit_detail', audit_id=audit.audit_id) }}">
+                                    {{ audit.audit_id }}
+                                </a>
+                            </td>
+                            <td>{{ audit.outcome }}</td>
+                            <td>{{ audit.action }}</td>
+                            <td>{{ audit.attempted_relationship_id or "-" }}</td>
+                            <td>{{ audit.existing_relationship_id or "-" }}</td>
+                            <td>{{ audit.actor or "-" }}</td>
+                            <td>{{ audit.authority or "-" }}</td>
+                            <td>{{ audit.reason or "-" }}</td>
+                            <td>{{ audit.created_at or "-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No related audit events found for this relationship.</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

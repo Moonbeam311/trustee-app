@@ -70,7 +70,11 @@
             <tbody>
                 {% for audit in audits %}
                     <tr>
-                        <td><strong>{{ audit.audit_id }}</strong></td>
+                        <td>
+                            <a href="{{ url_for('governance_relationship_audit_detail', audit_id=audit.audit_id) }}">
+                                <strong>{{ audit.audit_id }}</strong>
+                            </a>
+                        </td>
                         <td>{{ audit.outcome }}</td>
                         <td>{{ audit.action }}</td>
                         <td>
@@ -83,7 +87,15 @@
                             {{ audit.target_object_id or "-" }}
                         </td>
                         <td>{{ audit.attempted_relationship_id or "-" }}</td>
-                        <td>{{ audit.existing_relationship_id or "-" }}</td>
+                        <td>
+                            {% if audit.existing_relationship_id %}
+                                <a href="{{ url_for('governance_relationship_detail', relationship_id=audit.existing_relationship_id) }}">
+                                    {{ audit.existing_relationship_id }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>{{ audit.actor or "-" }}</td>
                         <td>{{ audit.authority or "-" }}</td>
                         <td>{{ audit.reason or "-" }}</td>

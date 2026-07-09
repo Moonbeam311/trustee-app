@@ -1463,6 +1463,136 @@ def create_governance_relationship(data):
     return True, relationship_id
 
 
+def get_governance_relationship(relationship_id, firm_id=None):
+    ensure_governance_tables()
+
+    relationship_id = (relationship_id or "").strip()
+    if not relationship_id:
+        return None
+
+    firm_id = firm_id or get_current_firm_id()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationships
+        WHERE relationship_id = ?
+          AND firm_id = ?
+        LIMIT 1
+        """,
+        (relationship_id, firm_id),
+    ).fetchone()
+    conn.close()
+
+    return dict(row) if row else None
+
+
+def get_governance_relationship_audit(audit_id, firm_id=None):
+    ensure_governance_tables()
+
+    audit_id = (audit_id or "").strip()
+    if not audit_id:
+        return None
+
+    firm_id = firm_id or get_current_firm_id()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    row = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationship_audit_ledger
+        WHERE audit_id = ?
+          AND firm_id = ?
+        LIMIT 1
+        """,
+        (audit_id, firm_id),
+    ).fetchone()
+    conn.close()
+
+    return dict(row) if row else None
+
+
+def list_audits_for_governance_relationship(relationship_id, limit=50, firm_id=None):
+    ensure_governance_tables()
+
+    relationship_id = (relationship_id or "").strip()
+    if not relationship_id:
+        return []
+
+    firm_id = firm_id or get_current_firm_id()
+    limit = int(limit or 50)
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationship_audit_ledger
+        WHERE firm_id = ?
+          AND (
+                attempted_relationship_id = ?
+                OR existing_relationship_id = ?
+          )
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (firm_id, relationship_id, relationship_id, limit),
+    ).fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+def build_governance_relationship_evidence_context(relationship_id):
+    relationship = get_governance_relationship(relationship_id)
+    audits = list_audits_for_governance_relationship(relationship_id, limit=100)
+
+    return {
+        "relationship": relationship,
+        "audits": audits,
+        "summary": {
+            "relationship_id": relationship_id,
+            "found": bool(relationship),
+            "audit_count": len(audits),
+            "created_audits": len([a for a in audits if a.get("outcome") == "created"]),
+            "duplicate_blocked_audits": len([a for a in audits if a.get("outcome") == "duplicate_blocked"]),
+            "validation_failed_audits": len([a for a in audits if a.get("outcome") == "validation_failed"]),
+        },
+    }
+
+
+def build_governance_audit_evidence_context(audit_id):
+    audit = get_governance_relationship_audit(audit_id)
+    relationship = None
+    related_audits = []
+
+    if audit:
+        relationship_id = (
+            audit.get("existing_relationship_id")
+            or audit.get("attempted_relationship_id")
+            or ""
+        )
+        if relationship_id:
+            relationship = get_governance_relationship(relationship_id)
+            related_audits = list_audits_for_governance_relationship(relationship_id, limit=100)
+
+    return {
+        "audit": audit,
+        "relationship": relationship,
+        "related_audits": related_audits,
+        "summary": {
+            "audit_id": audit_id,
+            "found": bool(audit),
+            "has_relationship": bool(relationship),
+            "related_audit_count": len(related_audits),
+        },
+    }
+
+
+
 def list_governance_records(record_type, status=None):
     ensure_governance_tables()
 
