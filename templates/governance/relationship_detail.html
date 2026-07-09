@@ -149,6 +149,95 @@
             </form>
         {% endif %}
 
+        {% if context.lifecycle %}
+            {% set lifecycle = context.lifecycle %}
+            {% set counts = lifecycle.counts %}
+
+            <h2>Governance Relationship Lifecycle Summary</h2>
+            <p>
+                This read-only ledger summary shows the current lifecycle state of this governance relationship
+                based on the preserved relationship record and related audit history.
+            </p>
+
+            <table class="table">
+                <tr>
+                    <th>Lifecycle State</th>
+                    <td>{{ lifecycle.lifecycle_label or "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Current Status</th>
+                    <td>{{ lifecycle.current_status or "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Audit Count</th>
+                    <td>{{ lifecycle.audit_count }}</td>
+                </tr>
+                <tr>
+                    <th>Created</th>
+                    <td>{{ counts.created }}</td>
+                </tr>
+                <tr>
+                    <th>Retired</th>
+                    <td>{{ counts.retired }}</td>
+                </tr>
+                <tr>
+                    <th>Superseded</th>
+                    <td>{{ counts.superseded }}</td>
+                </tr>
+                <tr>
+                    <th>Reinstated</th>
+                    <td>{{ counts.reinstated }}</td>
+                </tr>
+                <tr>
+                    <th>Conflict Blocked</th>
+                    <td>{{ counts.conflict_detected }}</td>
+                </tr>
+                <tr>
+                    <th>Duplicate Blocked</th>
+                    <td>{{ counts.duplicate_blocked }}</td>
+                </tr>
+                <tr>
+                    <th>Validation Failed</th>
+                    <td>{{ counts.validation_failed }}</td>
+                </tr>
+                <tr>
+                    <th>Last Action</th>
+                    <td>
+                        {% if lifecycle.last_audit_id %}
+                            <a href="{{ url_for('governance_relationship_audit_detail', audit_id=lifecycle.last_audit_id) }}">
+                                {{ lifecycle.last_audit_id }}
+                            </a>
+                            — {{ lifecycle.last_action or "-" }}
+                            — {{ lifecycle.last_outcome or "-" }}
+                            — {{ lifecycle.last_created_at or "-" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Last Actor</th>
+                    <td>{{ lifecycle.last_actor or "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Last Authority</th>
+                    <td>{{ lifecycle.last_authority or "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Last Reason</th>
+                    <td>{{ lifecycle.last_reason or "-" }}</td>
+                </tr>
+                <tr>
+                    <th>Risk Flags</th>
+                    <td>
+                        {% for flag in lifecycle.risk_flags %}
+                            {{ flag }}{% if not loop.last %}; {% endif %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </table>
+        {% endif %}
+
         {% if context.lineage and context.lineage.has_chain %}
             {% set lineage = context.lineage %}
             {% set old_rel = lineage.old_relationship %}

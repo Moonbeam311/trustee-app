@@ -2146,16 +2146,123 @@ def build_governance_relationship_lineage(relationship_id):
 
 
 
+def build_governance_relationship_lifecycle_summary(relationship, audits):
+    """
+    Build an operator-readable lifecycle summary for a governance relationship.
+
+    This is a read-only summary. It does not alter relationship state.
+    """
+    relationship = relationship or {}
+    audits = audits or []
+
+    counts = {
+        "created": 0,
+        "duplicate_blocked": 0,
+        "validation_failed": 0,
+        "retired": 0,
+        "superseded": 0,
+        "reinstated": 0,
+        "conflict_detected": 0,
+        "replacement_failed": 0,
+        "already_active": 0,
+        "already_retired": 0,
+        "not_found": 0,
+    }
+
+    action_counts = {}
+
+    for audit in audits:
+        outcome = audit.get("outcome") or ""
+        action = audit.get("action") or ""
+
+        if outcome in counts:
+            counts[outcome] += 1
+
+        if action:
+            action_counts[action] = action_counts.get(action, 0) + 1
+
+    last_audit = audits[0] if audits else None
+    current_status = relationship.get("status") or "Unknown"
+    retired_at = relationship.get("retired_at") or ""
+
+    lifecycle_label = "Unknown"
+
+    if current_status == "Active":
+        if counts["reinstated"]:
+            lifecycle_label = "Recovered / Active"
+        elif counts["superseded"] and relationship.get("relationship_id") == ((last_audit or {}).get("attempted_relationship_id")):
+            lifecycle_label = "Replacement Active"
+        else:
+            lifecycle_label = "Active"
+    elif current_status == "Retired":
+        if counts["superseded"]:
+            lifecycle_label = "Superseded / Retired"
+        elif counts["retired"]:
+            lifecycle_label = "Retired"
+        else:
+            lifecycle_label = "Inactive / Retired"
+    else:
+        lifecycle_label = current_status or "Unknown"
+
+    risk_flags = []
+
+    if counts["validation_failed"]:
+        risk_flags.append("Validation failures recorded")
+
+    if counts["conflict_detected"]:
+        risk_flags.append("Reinstatement conflict recorded")
+
+    if counts["duplicate_blocked"]:
+        risk_flags.append("Duplicate attempts blocked")
+
+    if counts["replacement_failed"]:
+        risk_flags.append("Replacement failure recorded")
+
+    if current_status == "Retired" and counts["reinstated"]:
+        risk_flags.append("Recovered previously but currently retired")
+
+    if not risk_flags:
+        risk_flags.append("No lifecycle risk flags")
+
+    return {
+        "current_status": current_status,
+        "lifecycle_label": lifecycle_label,
+        "relationship_id": relationship.get("relationship_id") or "",
+        "audit_count": len(audits),
+        "counts": counts,
+        "action_counts": action_counts,
+        "last_action": last_audit.get("action") if last_audit else "",
+        "last_outcome": last_audit.get("outcome") if last_audit else "",
+        "last_audit_id": last_audit.get("audit_id") if last_audit else "",
+        "last_actor": last_audit.get("actor") if last_audit else "",
+        "last_authority": last_audit.get("authority") if last_audit else "",
+        "last_reason": last_audit.get("reason") if last_audit else "",
+        "last_message": last_audit.get("message") if last_audit else "",
+        "last_created_at": last_audit.get("created_at") if last_audit else "",
+        "created_at": relationship.get("created_at") or "",
+        "updated_at": relationship.get("updated_at") or "",
+        "retired_at": retired_at,
+        "risk_flags": risk_flags,
+        "has_recovery_history": bool(counts["reinstated"]),
+        "has_supersession_history": bool(counts["superseded"]),
+        "has_retirement_history": bool(counts["retired"]),
+        "has_conflict_history": bool(counts["conflict_detected"]),
+    }
+
+
+
 def build_governance_relationship_evidence_context(relationship_id):
     relationship = get_governance_relationship(relationship_id)
     audits = list_audits_for_governance_relationship(relationship_id, limit=100)
 
     lineage = build_governance_relationship_lineage(relationship_id)
+    lifecycle = build_governance_relationship_lifecycle_summary(relationship, audits)
 
     return {
         "relationship": relationship,
         "audits": audits,
         "lineage": lineage,
+        "lifecycle": lifecycle,
         "summary": {
             "relationship_id": relationship_id,
             "found": bool(relationship),
