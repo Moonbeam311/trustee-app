@@ -22957,9 +22957,23 @@ def document_platform_workspace(document_id):
 
     document_object = DocumentAPI.object(document_id)
 
+    from services.services_governance import (
+        build_governance_links_for_object,
+        get_governance_relationship_types,
+        list_governance_records,
+    )
+
+    governance_links = build_governance_links_for_object("Document", document_id)
+    governance_directives = list_governance_records("directive")
+    governance_policies = list_governance_records("policy")
+
     return render_template(
         "document_platform_workspace.html",
         document_object=document_object,
+        governance_links=governance_links,
+        governance_directives=governance_directives,
+        governance_policies=governance_policies,
+        governance_relationship_types=get_governance_relationship_types(),
     )
 
 @app.route("/document-platform/explorer")
@@ -23007,6 +23021,75 @@ def document_platform_registry():
 @app.route("/api/documents/registry")
 def api_documents_registry():
     return DocumentAPI.registry()
+
+
+@csrf.exempt
+@app.route("/document-platform/workspace/<path:document_id>/governance-links", methods=["POST"])
+def document_workspace_governance_link_create(document_id):
+    from services.services_governance import (
+        create_governance_relationship,
+        get_governance_record,
+    )
+
+    document_object = DocumentAPI.object(document_id)
+    if not document_object or not document_object.get("found"):
+        flash("Document not found.", "warning")
+        return redirect(url_for("document_platform_home"))
+
+    governance_key = (request.form.get("governance_key") or "").strip()
+    if "|" in governance_key:
+        governance_type, governance_id = [
+            part.strip() for part in governance_key.split("|", 1)
+        ]
+    else:
+        governance_type = (request.form.get("governance_type") or "").strip()
+        governance_id = (request.form.get("governance_id") or "").strip()
+
+    direction = (request.form.get("direction") or "").strip()
+
+    type_map = {
+        "Directive": "directive",
+        "Policy": "policy",
+    }
+
+    record_type = type_map.get(governance_type)
+    if not record_type:
+        flash("Select Directive or Policy.", "warning")
+        return redirect(url_for("document_platform_workspace", document_id=document_id))
+
+    if not get_governance_record(record_type, governance_id):
+        flash(f"{governance_type} record not found.", "warning")
+        return redirect(url_for("document_platform_workspace", document_id=document_id))
+
+    if direction == "document_to_governance":
+        source_object_type = "Document"
+        source_object_id = document_id
+        target_object_type = governance_type
+        target_object_id = governance_id
+    else:
+        source_object_type = governance_type
+        source_object_id = governance_id
+        target_object_type = "Document"
+        target_object_id = document_id
+
+    success, result = create_governance_relationship({
+        "source_object_type": source_object_type,
+        "source_object_id": source_object_id,
+        "relationship_type": request.form.get("relationship_type"),
+        "target_object_type": target_object_type,
+        "target_object_id": target_object_id,
+        "authority": request.form.get("authority"),
+        "reason": request.form.get("reason"),
+        "status": "Active",
+        "created_by": session.get("username") or "System",
+    })
+
+    if success:
+        flash(f"Governance relationship {result} created.", "success")
+    else:
+        flash(result, "warning")
+
+    return redirect(url_for("document_platform_workspace", document_id=document_id))
 
 
 @app.route("/api/documents/<path:document_id>")

@@ -1,0 +1,107 @@
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
+    <h2>Governance Records</h2>
+
+    <h3>Available Governance Records</h3>
+
+    {% if governance_directives or governance_policies %}
+        <table class="table">
+            <tr>
+                <th>Type</th>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Link</th>
+            </tr>
+
+            {% for directive in governance_directives %}
+            <tr>
+                <td>Directive</td>
+                <td>{{ directive.directive_id }}</td>
+                <td>{{ directive.title }}</td>
+                <td>{{ directive.status }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('document_workspace_governance_link_create', document_id=document_object.identity.document_id) }}">
+                        <input type="hidden" name="governance_key" value="Directive|{{ directive.directive_id }}">
+                        <input type="hidden" name="direction" value="governance_to_document">
+
+                        <select name="relationship_type">
+                            <option value="authorizes">authorizes</option>
+                            <option value="governs">governs</option>
+                            <option value="references">references</option>
+                            <option value="implements">implements</option>
+                            <option value="depends_on">depends_on</option>
+                        </select>
+
+                        <input type="text" name="authority" value="admin123" placeholder="Authority">
+                        <input type="text" name="reason" value="Document workspace governance directive smoke test." placeholder="Reason">
+                        <button type="submit">Link Directive</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+
+            {% for policy in governance_policies %}
+            <tr>
+                <td>Policy</td>
+                <td>{{ policy.policy_id }}</td>
+                <td>{{ policy.title }}</td>
+                <td>{{ policy.status }}</td>
+                <td>
+                    <form method="post" action="{{ url_for('document_workspace_governance_link_create', document_id=document_object.identity.document_id) }}">
+                        <input type="hidden" name="governance_key" value="Policy|{{ policy.policy_id }}">
+                        <input type="hidden" name="direction" value="governance_to_document">
+
+                        <select name="relationship_type">
+                            <option value="governs">governs</option>
+                            <option value="authorizes">authorizes</option>
+                            <option value="references">references</option>
+                            <option value="implements">implements</option>
+                            <option value="depends_on">depends_on</option>
+                        </select>
+
+                        <input type="text" name="authority" value="admin123" placeholder="Authority">
+                        <input type="text" name="reason" value="Document workspace governance policy smoke test." placeholder="Reason">
+                        <button type="submit">Link Policy</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Directive or Policy records are available for this firm.</p>
+    {% endif %}
+
+    <h3>Linked Governance Records</h3>
+
+    {% if governance_links %}
+        <table class="table">
+            <tr>
+                <th>Relationship</th>
+                <th>Direction</th>
+                <th>Record</th>
+                <th>Verb</th>
+                <th>Status</th>
+                <th>Authority</th>
+                <th>Reason</th>
+            </tr>
+            {% for link in governance_links %}
+                {% set rel = link.relationship %}
+                {% set record = link.record %}
+                <tr>
+                    <td>{{ rel.relationship_id }}</td>
+                    <td>{{ link.direction }}</td>
+                    <td>
+                        {{ link.governance_type }} {{ link.governance_id }}<br>
+                        {{ record.title }}
+                    </td>
+                    <td>{{ rel.relationship_type }}</td>
+                    <td>{{ rel.status }}</td>
+                    <td>{{ rel.authority or "-" }}</td>
+                    <td>{{ rel.reason or "-" }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No Directive or Policy governance links are recorded for this Document.</p>
+    {% endif %}
+</div>

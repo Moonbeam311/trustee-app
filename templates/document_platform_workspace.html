@@ -62,7 +62,7 @@
   {% endfor %}
 </table>
 
-<h2>Verification</h2>
+{% include "governance/_document_governance_panel.html" %}<h2>Verification</h2>
 <table class="table">
   {% for key, value in document_object.verification.items() %}
   <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
