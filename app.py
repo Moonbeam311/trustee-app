@@ -21245,6 +21245,7 @@ def governance_relationship_supersede(relationship_id):
         authority=request.form.get("authority") or "",
         reason=request.form.get("reason") or "",
         actor=session.get("username") or "System",
+        confirmation=request.form.get("confirmation") or "",
     )
 
     if success:
@@ -21268,6 +21269,7 @@ def governance_relationship_retire(relationship_id):
         authority=request.form.get("authority") or "",
         reason=request.form.get("reason") or "",
         actor=session.get("username") or "System",
+        confirmation=request.form.get("confirmation") or "",
     )
 
     if success:

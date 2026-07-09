@@ -1546,13 +1546,15 @@ def list_audits_for_governance_relationship(relationship_id, limit=50, firm_id=N
     return [dict(row) for row in rows]
 
 
-def retire_governance_relationship(relationship_id, authority=None, reason=None, actor=None):
+def retire_governance_relationship(relationship_id, authority=None, reason=None, actor=None, confirmation=None):
     ensure_governance_tables()
 
     relationship_id = (relationship_id or "").strip()
     authority = (authority or "").strip()
     reason = (reason or "").strip()
     actor = (actor or "System").strip() or "System"
+    confirmation = (confirmation or "").strip()
+    required_confirmation = "I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE PRESERVED"
 
     if not relationship_id:
         audit_id = record_governance_relationship_audit(
@@ -1600,6 +1602,28 @@ def retire_governance_relationship(relationship_id, authority=None, reason=None,
         )
         return False, (
             "Authority and reason are required to retire a governance relationship. "
+            f"| Audit: {audit_id}"
+        )
+
+    if confirmation != required_confirmation:
+        audit_id = record_governance_relationship_audit(
+            firm_id=relationship.get("firm_id"),
+            attempted_relationship_id=relationship_id,
+            existing_relationship_id=relationship_id,
+            action="retire_relationship",
+            outcome="validation_failed",
+            source_object_type=relationship.get("source_object_type"),
+            source_object_id=relationship.get("source_object_id"),
+            relationship_type=relationship.get("relationship_type"),
+            target_object_type=relationship.get("target_object_type"),
+            target_object_id=relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Required preservation confirmation phrase was not provided for retirement.",
+        )
+        return False, (
+            "Required preservation confirmation phrase was not provided for retirement. "
             f"| Audit: {audit_id}"
         )
 
@@ -1672,6 +1696,7 @@ def supersede_governance_relationship(
     authority=None,
     reason=None,
     actor=None,
+    confirmation=None,
 ):
     ensure_governance_tables()
 
@@ -1679,6 +1704,8 @@ def supersede_governance_relationship(
     authority = (authority or "").strip()
     reason = (reason or "").strip()
     actor = (actor or "System").strip() or "System"
+    confirmation = (confirmation or "").strip()
+    required_confirmation = "I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE PRESERVED"
 
     if not old_relationship_id:
         audit_id = record_governance_relationship_audit(
@@ -1751,6 +1778,28 @@ def supersede_governance_relationship(
         )
         return False, (
             "Authority and reason are required to supersede a governance relationship. "
+            f"| Audit: {audit_id}"
+        )
+
+    if confirmation != required_confirmation:
+        audit_id = record_governance_relationship_audit(
+            firm_id=old_relationship.get("firm_id"),
+            attempted_relationship_id=old_relationship_id,
+            existing_relationship_id=old_relationship_id,
+            action="supersede_relationship",
+            outcome="validation_failed",
+            source_object_type=old_relationship.get("source_object_type"),
+            source_object_id=old_relationship.get("source_object_id"),
+            relationship_type=old_relationship.get("relationship_type"),
+            target_object_type=old_relationship.get("target_object_type"),
+            target_object_id=old_relationship.get("target_object_id"),
+            authority=authority,
+            reason=reason,
+            actor=actor,
+            message="Required preservation confirmation phrase was not provided for supersession.",
+        )
+        return False, (
+            "Required preservation confirmation phrase was not provided for supersession. "
             f"| Audit: {audit_id}"
         )
 

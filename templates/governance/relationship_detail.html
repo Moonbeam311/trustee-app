@@ -35,6 +35,15 @@
             <tr><th>Updated At</th><td>{{ relationship.updated_at or "-" }}</td></tr>
         </table>
 
+        {% if relationship.target_object_type in ["Document", "Certificate", "Trust", "Matter", "Execution Session"] %}
+            <h2>Operator Safeguard Warning</h2>
+            <p>
+                This relationship controls or references a high-value institutional object:
+                <strong>{{ relationship.target_object_type }} — {{ relationship.target_object_id }}</strong>.
+                Retiring or superseding it will not delete the record, but it will alter the active governance chain.
+            </p>
+        {% endif %}
+
         {% if relationship.status != "Retired" %}
             <h2>Supersede Governance Relationship</h2>
             <p>
@@ -65,6 +74,18 @@
                 <label>Supersession Reason</label>
                 <textarea name="reason" required placeholder="Reason for superseding this relationship"></textarea>
 
+                <label>Preservation Confirmation</label>
+                <input
+                    type="text"
+                    name="confirmation"
+                    required
+                    placeholder="I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE PRESERVED"
+                >
+                <p>
+                    Required phrase:
+                    <strong>I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE PRESERVED</strong>
+                </p>
+
                 <button type="submit">Supersede Relationship</button>
             </form>
 
@@ -80,6 +101,18 @@
 
                 <label>Reason</label>
                 <textarea name="reason" required placeholder="Reason for retiring this governance relationship"></textarea>
+
+                <label>Preservation Confirmation</label>
+                <input
+                    type="text"
+                    name="confirmation"
+                    required
+                    placeholder="I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE PRESERVED"
+                >
+                <p>
+                    Required phrase:
+                    <strong>I UNDERSTAND THIS GOVERNANCE RELATIONSHIP WILL BE PRESERVED</strong>
+                </p>
 
                 <button type="submit">Retire Relationship</button>
             </form>
