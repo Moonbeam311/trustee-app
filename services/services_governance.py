@@ -1197,6 +1197,37 @@ def create_governance_relationship(data):
 
     conn = get_connection()
     cur = conn.cursor()
+
+    existing = cur.execute(
+        """
+        SELECT relationship_id
+        FROM governance_relationships
+        WHERE firm_id = ?
+          AND source_object_type = ?
+          AND source_object_id = ?
+          AND relationship_type = ?
+          AND target_object_type = ?
+          AND target_object_id = ?
+          AND status = 'Active'
+        LIMIT 1
+        """,
+        (
+            firm_id,
+            cleaned["source_object_type"],
+            cleaned["source_object_id"],
+            cleaned["relationship_type"],
+            cleaned["target_object_type"],
+            cleaned["target_object_id"],
+        ),
+    ).fetchone()
+
+    if existing:
+        conn.close()
+        return False, (
+            "Duplicate active governance relationship blocked: "
+            f"{existing['relationship_id']}"
+        )
+
     cur.execute(
         """
         INSERT INTO governance_relationships (
