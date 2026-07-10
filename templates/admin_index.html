@@ -541,6 +541,7 @@
 .section-governance-label.duplicate { background: #f8fafc; }
 .section-governance-label.system { background: #f0fdf4; }
 </style>
+<!-- POST-V2-3F GOVERNANCE LABEL PRECISION FIX ACTIVE -->
 </head>
 
 <body>
@@ -592,7 +593,7 @@
 <h2>Recommended Next Action <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
     <strong>New matter?</strong> Start with <strong>Start New Intake</strong>.
-    <strong>Existing trust?</strong> Use <strong>Existing Trust Operations <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></strong>.
+    <strong>Existing trust?</strong> Use <strong>Existing Trust Operations</strong>.
     <strong>Need proof, review, or audit trail?</strong> Open the <strong>Lifecycle Ledger</strong> from the Intake Dashboard.
   </p>
 </div>
@@ -663,22 +664,22 @@
   <p>Non-destructive containment plan for legacy, duplicate, and system-control areas. No routes or links are removed in this milestone.</p>
   <details open>
     <summary>Legacy Compatibility <span class="post-v2-3d-badge">preserve</span></summary>
-    <ul><li>Legacy Compatibility Center <span class="section-governance-label legacy">LEGACY COMPATIBILITY</span></li><li>Legacy Quick Start <span class="section-governance-label legacy">LEGACY COMPATIBILITY</span></li></ul>
+    <ul><li>Legacy Compatibility Center</li><li>Legacy Quick Start</li></ul>
   </details>
   <details>
     <summary>Duplicate Entry Points <span class="post-v2-3d-badge">contain</span></summary>
-    <ul><li>Existing Trust Command Cards <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Learning & Guidance Suite <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Report Launch Area <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Admin Tools <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Operational Shortcuts <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li></ul>
+    <ul><li>Existing Trust Command Cards</li><li>Learning & Guidance Suite</li><li>Report Launch Area</li><li>Admin Tools</li><li>Operational Shortcuts</li></ul>
   </details>
   <details open>
     <summary>System Controls <span class="post-v2-3d-badge">protect</span></summary>
-    <ul><li>Hosted Baseline Seed <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li><li>Database Backup <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li><li>System Policy Controls <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li><li>Security Layer <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li></ul>
+    <ul><li>Hosted Baseline Seed</li><li>Database Backup</li><li>System Policy Controls</li><li>Security Layer</li></ul>
   </details>
   <p><strong>Certified Baseline Preserved:</strong> v2-certified-baseline-2026-07-10</p>
 </section>
 Legacy Compatibility Center</summary>
   <p class="admin-muted">
     Older shortcuts, hosted review notices, and command-map links are preserved here during the executive dashboard rebuild.
-    Prefer the Executive Home and Institutional Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span> above for normal navigation.
+    Prefer the Executive Home and Institutional Command Center above for normal navigation.
   </p>
 
   <div class="admin-actions">
@@ -711,7 +712,7 @@ Legacy Compatibility Center</summary>
   </p>
 </details>
 
-<div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></div>
+<div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center</div>
 <div class="admin-card intake-command-center promoted-intake-panel">
   <h2>Intake Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
@@ -730,7 +731,7 @@ Legacy Compatibility Center</summary>
 </div>
 
 
-<div class="admin-section-label">System Snapshot <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></div>
+<div class="admin-section-label">System Snapshot</div>
  <div class="admin-card">
  <div class="admin-grid">
  <div class="metric">
@@ -822,7 +823,7 @@ Legacy Compatibility Center</summary>
  </div>
 
  <div class="admin-card">
- <h2>Existing Trust Command Cards</h2>
+ <h2>Existing Trust Command Cards <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
  <p class="admin-muted">Fast entry into each trust’s live workflow and controlled output surfaces.</p>
 
  {% if trusts %}
@@ -858,7 +859,7 @@ Legacy Compatibility Center</summary>
 
  <div class="admin-two-grid">
  <div class="admin-card">
-<h2 id="document-export-center">Legacy Quick Start</h2>
+<h2 id="document-export-center">Legacy Quick Start <span class="section-governance-label legacy">LEGACY COMPATIBILITY</span></h2>
  <p class="admin-muted">Legacy pathways preserved during the navigation reconstruction. Prefer the Institutional Command Center above for normal use.</p>
  <div class="admin-actions">
  
@@ -871,7 +872,7 @@ Legacy Compatibility Center</summary>
  </div>
 
  <div class="admin-card">
- <h2 id="learning-guidance">Learning & Guidance Suite</h2>
+ <h2 id="learning-guidance">Learning & Guidance Suite <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
  <p class="admin-muted">Central learning surface for trust concepts, guided forms, trust-type references, and tutorial support.</p>
  <div class="admin-actions">
  <a class="primary-action" href="/learning">Learning Hub</a>
@@ -885,7 +886,7 @@ Legacy Compatibility Center</summary>
  </div>
 
 <div class="admin-card">
-<h2>Hosted Baseline Seed</h2>
+<h2>Hosted Baseline Seed <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
 <p class="admin-muted">Manual, admin-only seed control for hosted Railway databases. This creates missing ABC baseline trusts and starter Learning/Form records without overwriting existing data.</p>
 <form method="POST" action="/admin/seed-hosted-baseline" onsubmit="return confirm('Run hosted baseline seed now? This will create only missing baseline records and will not overwrite existing data.');">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
@@ -894,7 +895,7 @@ Legacy Compatibility Center</summary>
 </div>
 
 <div class="admin-card">
-<h2>Database Backup</h2>
+<h2>Database Backup <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
 <p class="admin-muted">Master Admin database backup control. Downloads the currently configured SQLite database file from DB_PATH. Use this before major changes, after hosted seeding, and before deployment-risk operations.</p>
 <div class="admin-actions">
   <a class="primary-action" href="/admin/backup/database.zip">Download Database Backup ZIP</a>
@@ -903,7 +904,7 @@ Legacy Compatibility Center</summary>
 
 <div class="admin-card">
 
-<h2 id="system-security">System Policy Controls</h2>
+<h2 id="system-security">System Policy Controls <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
 
 <div class="policy-switch-grid">
 
@@ -973,7 +974,7 @@ Legacy Compatibility Center</summary>
 
  <div class="admin-two-grid">
  <div class="admin-card">
- <h2>Report Launch Area</h2>
+ <h2>Report Launch Area <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
  <p class="admin-muted">System-wide PDF exports and guided report center.</p>
  <div class="admin-actions">
  <a href="/reports/portfolio.pdf" target="_blank">Portfolio PDF</a>
@@ -984,7 +985,7 @@ Legacy Compatibility Center</summary>
  </div>
 
  <div class="admin-card">
- <h2 id="admin-tools">Admin Tools</h2>
+ <h2 id="admin-tools">Admin Tools <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
  <div class="admin-actions">
  {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
  <a class="primary-action" href="{{ url_for('users_dashboard') }}">Manage Users</a>
@@ -1002,7 +1003,7 @@ Legacy Compatibility Center</summary>
  </div>
 
  <div class="admin-card">
- <h2>Operational Shortcuts</h2>
+ <h2>Operational Shortcuts <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
  <div class="admin-actions">
  <a href="{{ url_for('workflow_hub') }}">Workflow Hub</a>
  <a href="{{ url_for('export_center') }}">Export Center</a>
@@ -1032,7 +1033,7 @@ Legacy Compatibility Center</summary>
  </details>
 
  <details class="admin-card" open>
- <summary>Security Layer</summary>
+ <summary>Security Layer <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></summary>
  <p><a href="{{ url_for('security_dashboard') }}">Open Security Dashboard</a></p>
  <p class="admin-muted">Hosted review reminder: confirm storage, access, backups, and export controls before live sensitive-data use.</p>
  </details>
