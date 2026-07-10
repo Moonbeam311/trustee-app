@@ -55,6 +55,7 @@
                     <th>Last Outcome</th>
                     <th>Risk Flags</th>
                     <th>Updated</th>
+                    <th>Export</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,6 +89,11 @@
                             {% endfor %}
                         </td>
                         <td>{{ rel.updated_at or rel.created_at or "-" }}</td>
+                        <td>
+                            <a href="{{ url_for('governance_relationship_export_packet', relationship_id=rel.relationship_id) }}">
+                                Export Packet
+                            </a>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

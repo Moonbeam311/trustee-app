@@ -3831,3 +3831,165 @@ def generate_policy_governance_packet_pdf(policy_id):
     doc.build(story)
     buffer.seek(0)
     return buffer
+
+
+def build_governance_relationship_evidence_packet(relationship_id):
+    """
+    Build a read-only text evidence packet for a governance relationship.
+
+    This packet is generated from preserved relationship state, lifecycle summary,
+    lineage context, and audit history. It does not alter institutional records.
+    """
+    context = build_governance_relationship_evidence_context(relationship_id)
+
+    relationship = context.get("relationship")
+    if not relationship:
+        return None
+
+    lifecycle = context.get("lifecycle") or {}
+    lineage = context.get("lineage") or {}
+    audits = context.get("audits") or []
+    counts = lifecycle.get("counts") or {}
+
+    def value(record, key, default="-"):
+        if not record:
+            return default
+        if hasattr(record, "get"):
+            return record.get(key) or default
+        try:
+            return record[key] or default
+        except Exception:
+            return default
+
+    lines = []
+
+    lines.append("GOVERNANCE RELATIONSHIP EVIDENCE PACKET")
+    lines.append("=" * 48)
+    lines.append("")
+    lines.append("Preservation Notice")
+    lines.append("-" * 48)
+    lines.append(
+        "This packet is a read-only institutional evidence export generated from "
+        "preserved governance records. It does not modify, delete, retire, supersede, "
+        "or reinstate any governance relationship."
+    )
+    lines.append("")
+    lines.append("Institutional Principle")
+    lines.append("-" * 48)
+    lines.append("Every institutional action becomes a permanent governed record.")
+    lines.append("")
+
+    lines.append("Relationship Summary")
+    lines.append("-" * 48)
+    lines.append(f"Relationship ID: {value(relationship, 'relationship_id')}")
+    lines.append(f"Firm ID: {value(relationship, 'firm_id')}")
+    lines.append(f"Status: {value(relationship, 'status')}")
+    lines.append(
+        f"Source: {value(relationship, 'source_object_type')} — "
+        f"{value(relationship, 'source_object_id')}"
+    )
+    lines.append(f"Relationship Type: {value(relationship, 'relationship_type')}")
+    lines.append(
+        f"Target: {value(relationship, 'target_object_type')} — "
+        f"{value(relationship, 'target_object_id')}"
+    )
+    lines.append(f"Authority: {value(relationship, 'authority')}")
+    lines.append(f"Reason: {value(relationship, 'reason')}")
+    lines.append(f"Created By: {value(relationship, 'created_by')}")
+    lines.append(f"Effective At: {value(relationship, 'effective_at')}")
+    lines.append(f"Retired At: {value(relationship, 'retired_at')}")
+    lines.append(f"Created At: {value(relationship, 'created_at')}")
+    lines.append(f"Updated At: {value(relationship, 'updated_at')}")
+    lines.append("")
+
+    lines.append("Lifecycle Summary")
+    lines.append("-" * 48)
+    lines.append(f"Lifecycle State: {lifecycle.get('lifecycle_label') or lifecycle.get('state_label') or lifecycle.get('label') or '-'}")
+    lines.append(f"Current Status: {lifecycle.get('current_status') or value(relationship, 'status')}")
+    lines.append(f"Audit Count: {lifecycle.get('audit_count', 0)}")
+    lines.append(f"Created: {counts.get('created', 0)}")
+    lines.append(f"Retired: {counts.get('retired', 0)}")
+    lines.append(f"Superseded: {counts.get('superseded', 0)}")
+    lines.append(f"Reinstated: {counts.get('reinstated', 0)}")
+    lines.append(f"Conflict Blocked: {counts.get('conflict_detected', 0)}")
+    lines.append(f"Duplicate Blocked: {counts.get('duplicate_blocked', 0)}")
+    lines.append(f"Validation Failed: {counts.get('validation_failed', 0)}")
+    lines.append(f"Last Audit ID: {lifecycle.get('last_audit_id') or '-'}")
+    lines.append(f"Last Action: {lifecycle.get('last_action') or '-'}")
+    lines.append(f"Last Outcome: {lifecycle.get('last_outcome') or '-'}")
+    lines.append(f"Last Actor: {lifecycle.get('last_actor') or '-'}")
+    lines.append(f"Last Authority: {lifecycle.get('last_authority') or '-'}")
+    lines.append(f"Last Reason: {lifecycle.get('last_reason') or '-'}")
+    lines.append("Risk Flags:")
+    risk_flags = lifecycle.get("risk_flags") or []
+    if risk_flags:
+        for flag in risk_flags:
+            lines.append(f"- {flag}")
+    else:
+        lines.append("- No lifecycle risk flags recorded.")
+    lines.append("")
+
+    lines.append("Lineage Summary")
+    lines.append("-" * 48)
+    if lineage.get("has_chain"):
+        old_relationship = lineage.get("old_relationship") or {}
+        new_relationship = lineage.get("new_relationship") or {}
+        lineage_audit = lineage.get("audit") or {}
+
+        lines.append(f"Lineage Role: {lineage.get('role') or '-'}")
+        lines.append(
+            f"Prior / Superseded Relationship: "
+            f"{value(old_relationship, 'relationship_id')} "
+            f"({value(old_relationship, 'status')})"
+        )
+        lines.append(
+            f"Replacement / Active Relationship: "
+            f"{value(new_relationship, 'relationship_id')} "
+            f"({value(new_relationship, 'status')})"
+        )
+        lines.append(f"Supersession Audit: {value(lineage_audit, 'audit_id')}")
+        lines.append(f"Supersession Authority: {value(lineage_audit, 'authority')}")
+        lines.append(f"Supersession Reason: {value(lineage_audit, 'reason')}")
+        lines.append(f"Supersession Actor: {value(lineage_audit, 'actor')}")
+        lines.append(f"Supersession Created: {value(lineage_audit, 'created_at')}")
+    else:
+        lines.append("No supersession lineage chain found for this relationship.")
+    lines.append("")
+
+    lines.append("Audit History")
+    lines.append("-" * 48)
+    if audits:
+        for audit in audits:
+            lines.append(f"Audit ID: {value(audit, 'audit_id')}")
+            lines.append(f"Action: {value(audit, 'action')}")
+            lines.append(f"Outcome: {value(audit, 'outcome')}")
+            lines.append(f"Attempted Relationship: {value(audit, 'attempted_relationship_id')}")
+            lines.append(f"Existing Relationship: {value(audit, 'existing_relationship_id')}")
+            lines.append(
+                f"Source: {value(audit, 'source_object_type')} — "
+                f"{value(audit, 'source_object_id')}"
+            )
+            lines.append(f"Relationship Type: {value(audit, 'relationship_type')}")
+            lines.append(
+                f"Target: {value(audit, 'target_object_type')} — "
+                f"{value(audit, 'target_object_id')}"
+            )
+            lines.append(f"Actor: {value(audit, 'actor')}")
+            lines.append(f"Authority: {value(audit, 'authority')}")
+            lines.append(f"Reason: {value(audit, 'reason')}")
+            lines.append(f"Message: {value(audit, 'message')}")
+            lines.append(f"Created At: {value(audit, 'created_at')}")
+            lines.append("")
+    else:
+        lines.append("No related audit events found.")
+        lines.append("")
+
+    lines.append("End of Packet")
+    lines.append("=" * 48)
+    lines.append("Institutional Property of Luna Isaac III Mishoe")
+    lines.append(
+        "System records, workflows, generated instruments, certificates, exports, "
+        "and archive materials are maintained under fiduciary custody."
+    )
+
+    return "\n".join(lines)

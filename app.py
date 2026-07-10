@@ -21203,6 +21203,31 @@ def governance_policy_packet_pdf(policy_id):
     )
 
 
+@app.route("/governance/relationships/<relationship_id>/export")
+def governance_relationship_export_packet(relationship_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_relationship_evidence_packet
+
+    packet = build_governance_relationship_evidence_packet(relationship_id)
+    if not packet:
+        flash("Governance relationship not found for export.", "warning")
+        return redirect(url_for("governance_relationship_detail", relationship_id=relationship_id))
+
+    filename = f"governance_relationship_{relationship_id}_evidence_packet.txt"
+
+    return Response(
+        packet,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        },
+    )
+
+
 @app.route("/governance/relationships/<relationship_id>")
 def governance_relationship_detail(relationship_id):
     gate = require_master_admin()

@@ -19,6 +19,12 @@
     {% else %}
         {% set relationship = context.relationship %}
 
+        <p>
+            <a href="{{ url_for('governance_relationship_export_packet', relationship_id=relationship.relationship_id) }}">
+                Export Evidence Packet
+            </a>
+        </p>
+
         <h2>Relationship Summary</h2>
         <table class="table">
             <tr><th>Relationship ID</th><td><strong>{{ relationship.relationship_id }}</strong></td></tr>
