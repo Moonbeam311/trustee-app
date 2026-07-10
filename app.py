@@ -21378,6 +21378,28 @@ def governance_relationship_audit_detail(audit_id):
     )
 
 
+@app.route("/governance/evidence-exports")
+def governance_evidence_export_index():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_evidence_export_index
+
+    index = build_governance_evidence_export_index(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return render_template(
+        "governance/evidence_export_index.html",
+        index=index,
+    )
+
+
 @app.route("/governance/relationship-lifecycle")
 def governance_relationship_lifecycle_dashboard():
     gate = require_master_admin()

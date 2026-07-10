@@ -4115,3 +4115,167 @@ def build_governance_relationship_audit_evidence_packet(audit_id):
     )
 
     return "\n".join(lines)
+
+
+def build_governance_evidence_export_index(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only centralized export index for governance relationship packets
+    and governance audit packets.
+
+    This index does not create, modify, delete, retire, supersede, reinstate, or
+    otherwise alter any governance relationship or audit record.
+    """
+    try:
+        limit = int(limit or 250)
+    except Exception:
+        limit = 250
+
+    if limit < 1:
+        limit = 250
+    if limit > 1000:
+        limit = 1000
+
+    def value(record, *keys, default=None):
+        for key in keys:
+            if not key:
+                continue
+            if hasattr(record, "get"):
+                current = record.get(key)
+                if current not in (None, ""):
+                    return current
+            try:
+                current = record[key]
+                if current not in (None, ""):
+                    return current
+            except Exception:
+                pass
+        return default
+
+    object_type_filter = str(object_type or "").strip().lower()
+    object_id_filter = str(object_id or "").strip()
+    status_filter = str(status or "").strip().lower()
+    outcome_filter = str(outcome or "").strip().lower()
+
+    relationships = []
+    audits = []
+
+    raw_relationships = list_governance_relationships()[:limit]
+
+    for rel in raw_relationships:
+        rel_source_type = value(rel, "source_object_type", "source_type", default="")
+        rel_source_id = value(rel, "source_object_id", "source_id", default="")
+        rel_target_type = value(rel, "target_object_type", "target_type", default="")
+        rel_target_id = value(rel, "target_object_id", "target_id", default="")
+        rel_status = value(rel, "status", default="")
+
+        if object_type_filter:
+            if (
+                str(rel_source_type).strip().lower() != object_type_filter
+                and str(rel_target_type).strip().lower() != object_type_filter
+            ):
+                continue
+
+        if object_id_filter:
+            if (
+                str(rel_source_id).strip() != object_id_filter
+                and str(rel_target_id).strip() != object_id_filter
+            ):
+                continue
+
+        if status_filter:
+            if str(rel_status).strip().lower() != status_filter:
+                continue
+
+        relationship_id = value(rel, "relationship_id", "id")
+        audits_for_relationship = list_audits_for_governance_relationship(relationship_id)
+        lifecycle = build_governance_relationship_lifecycle_summary(rel, audits_for_relationship)
+
+        last_audit = audits_for_relationship[0] if audits_for_relationship else {}
+
+        relationships.append(
+            {
+                "packet_type": "Relationship",
+                "relationship_id": relationship_id,
+                "status": rel_status,
+                "lifecycle_label": lifecycle.get("lifecycle_label") or "-",
+                "source_object_type": rel_source_type,
+                "source_object_id": rel_source_id,
+                "relationship_type": value(rel, "relationship_type", "verb", default=""),
+                "target_object_type": rel_target_type,
+                "target_object_id": rel_target_id,
+                "audit_count": lifecycle.get("audit_count", 0),
+                "last_outcome": value(last_audit, "outcome", default=""),
+                "last_audit_id": value(last_audit, "audit_id", default=""),
+                "risk_flags": lifecycle.get("risk_flags") or [],
+                "updated_at": value(rel, "updated_at", "created_at", default=""),
+            }
+        )
+
+    raw_audits = list_governance_relationship_audits(
+        object_type=object_type,
+        object_id=object_id,
+        limit=limit,
+    )
+
+    for audit in raw_audits:
+        audit_outcome = value(audit, "outcome", default="")
+
+        if outcome_filter:
+            if str(audit_outcome).strip().lower() != outcome_filter:
+                continue
+
+        audits.append(
+            {
+                "packet_type": "Audit",
+                "audit_id": value(audit, "audit_id"),
+                "outcome": audit_outcome,
+                "action": value(audit, "action"),
+                "source_object_type": value(audit, "source_object_type"),
+                "source_object_id": value(audit, "source_object_id"),
+                "relationship_type": value(audit, "relationship_type"),
+                "target_object_type": value(audit, "target_object_type"),
+                "target_object_id": value(audit, "target_object_id"),
+                "attempted_relationship_id": value(audit, "attempted_relationship_id"),
+                "existing_relationship_id": value(audit, "existing_relationship_id"),
+                "actor": value(audit, "actor"),
+                "authority": value(audit, "authority"),
+                "reason": value(audit, "reason"),
+                "message": value(audit, "message"),
+                "created_at": value(audit, "created_at"),
+            }
+        )
+
+    relationship_status_counts = {}
+    for rel in relationships:
+        key = rel.get("status") or "Unknown"
+        relationship_status_counts[key] = relationship_status_counts.get(key, 0) + 1
+
+    audit_outcome_counts = {}
+    for audit in audits:
+        key = audit.get("outcome") or "Unknown"
+        audit_outcome_counts[key] = audit_outcome_counts.get(key, 0) + 1
+
+    return {
+        "filters": {
+            "object_type": object_type or "",
+            "object_id": object_id or "",
+            "status": status or "",
+            "outcome": outcome or "",
+            "limit": limit,
+        },
+        "summary": {
+            "relationship_packets": len(relationships),
+            "audit_packets": len(audits),
+            "total_packets": len(relationships) + len(audits),
+            "relationship_status_counts": relationship_status_counts,
+            "audit_outcome_counts": audit_outcome_counts,
+        },
+        "relationships": relationships,
+        "audits": audits,
+    }

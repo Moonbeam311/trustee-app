@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page">
+    <h1>Governance Evidence Export Index</h1>
+    <p>
+        Centralized read-only export index for governance relationship evidence packets
+        and governance audit evidence packets.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_registry') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_relationship_lifecycle_dashboard') }}">Relationship Lifecycle Dashboard</a> |
+        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a>
+    </p>
+
+    <h2>Export Filters</h2>
+    <form method="get">
+        <label>
+            Object Type
+            <input type="text" name="object_type" value="{{ index.filters.object_type }}" placeholder="Document, Certificate, Trust, Matter">
+        </label>
+
+        <label>
+            Object ID
+            <input type="text" name="object_id" value="{{ index.filters.object_id }}" placeholder="DOC-TRUST-TR-022, CERT-000003">
+        </label>
+
+        <label>
+            Relationship Status
+            <input type="text" name="status" value="{{ index.filters.status }}" placeholder="Active, Retired">
+        </label>
+
+        <label>
+            Audit Outcome
+            <input type="text" name="outcome" value="{{ index.filters.outcome }}" placeholder="created, duplicate_blocked, conflict_detected">
+        </label>
+
+        <label>
+            Limit
+            <input type="number" name="limit" value="{{ index.filters.limit }}" min="1" max="1000">
+        </label>
+
+        <button type="submit">Filter Export Index</button>
+        <a href="{{ url_for('governance_evidence_export_index') }}">Clear</a>
+    </form>
+
+    <h2>Summary</h2>
+    <table>
+        <tr>
+            <th>Total Packets</th>
+            <th>Relationship Packets</th>
+            <th>Audit Packets</th>
+        </tr>
+        <tr>
+            <td>{{ index.summary.total_packets }}</td>
+            <td>{{ index.summary.relationship_packets }}</td>
+            <td>{{ index.summary.audit_packets }}</td>
+        </tr>
+    </table>
+
+    <h3>Relationship Status Counts</h3>
+    <table>
+        <tr>
+            <th>Status</th>
+            <th>Count</th>
+        </tr>
+        {% for status, count in index.summary.relationship_status_counts.items() %}
+        <tr>
+            <td>{{ status }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="2">No relationship packet rows found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h3>Audit Outcome Counts</h3>
+    <table>
+        <tr>
+            <th>Outcome</th>
+            <th>Count</th>
+        </tr>
+        {% for outcome, count in index.summary.audit_outcome_counts.items() %}
+        <tr>
+            <td>{{ outcome }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="2">No audit packet rows found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Relationship Evidence Packets</h2>
+    <table>
+        <tr>
+            <th>Relationship ID</th>
+            <th>Status</th>
+            <th>Lifecycle</th>
+            <th>Source</th>
+            <th>Verb</th>
+            <th>Target</th>
+            <th>Audits</th>
+            <th>Last Outcome</th>
+            <th>Risk Flags</th>
+            <th>Updated</th>
+            <th>Open</th>
+            <th>Export</th>
+        </tr>
+        {% for rel in index.relationships %}
+        <tr>
+            <td>{{ rel.relationship_id }}</td>
+            <td>{{ rel.status }}</td>
+            <td>{{ rel.lifecycle_label or "-" }}</td>
+            <td>{{ rel.source_object_type }}<br>{{ rel.source_object_id }}</td>
+            <td>{{ rel.relationship_type }}</td>
+            <td>{{ rel.target_object_type }}<br>{{ rel.target_object_id }}</td>
+            <td>{{ rel.audit_count }}</td>
+            <td>
+                {% if rel.last_audit_id %}
+                    {{ rel.last_outcome }}<br>
+                    <a href="{{ url_for('governance_relationship_audit_detail', audit_id=rel.last_audit_id) }}">
+                        {{ rel.last_audit_id }}
+                    </a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>
+                {% for flag in rel.risk_flags %}
+                    {{ flag }}{% if not loop.last %}<br>{% endif %}
+                {% else %}
+                    -
+                {% endfor %}
+            </td>
+            <td>{{ rel.updated_at or "-" }}</td>
+            <td>
+                <a href="{{ url_for('governance_relationship_detail', relationship_id=rel.relationship_id) }}">
+                    Open
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('governance_relationship_export_packet', relationship_id=rel.relationship_id) }}">
+                    Export Packet
+                </a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="12">No relationship evidence packets found for the selected filters.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Audit Evidence Packets</h2>
+    <table>
+        <tr>
+            <th>Audit ID</th>
+            <th>Outcome</th>
+            <th>Action</th>
+            <th>Source</th>
+            <th>Verb</th>
+            <th>Target</th>
+            <th>Attempted Relationship</th>
+            <th>Existing Relationship</th>
+            <th>Actor</th>
+            <th>Created</th>
+            <th>Open</th>
+            <th>Export</th>
+        </tr>
+        {% for audit in index.audits %}
+        <tr>
+            <td>{{ audit.audit_id }}</td>
+            <td>{{ audit.outcome }}</td>
+            <td>{{ audit.action }}</td>
+            <td>{{ audit.source_object_type }}<br>{{ audit.source_object_id }}</td>
+            <td>{{ audit.relationship_type }}</td>
+            <td>{{ audit.target_object_type }}<br>{{ audit.target_object_id }}</td>
+            <td>{{ audit.attempted_relationship_id or "-" }}</td>
+            <td>{{ audit.existing_relationship_id or "-" }}</td>
+            <td>{{ audit.actor or "-" }}</td>
+            <td>{{ audit.created_at or "-" }}</td>
+            <td>
+                <a href="{{ url_for('governance_relationship_audit_detail', audit_id=audit.audit_id) }}">
+                    Open
+                </a>
+            </td>
+            <td>
+                <a href="{{ url_for('governance_relationship_audit_export_packet', audit_id=audit.audit_id) }}">
+                    Export Audit Packet
+                </a>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="12">No audit evidence packets found for the selected filters.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}
