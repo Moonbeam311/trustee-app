@@ -21458,6 +21458,54 @@ def governance_evidence_certification_dashboard():
     )
 
 
+@app.route("/governance/evidence-exports/completion-gate.txt")
+def governance_evidence_completion_gate_text():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_evidence_completion_gate_text
+
+    gate_text = build_governance_evidence_completion_gate_text(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return Response(
+        gate_text,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=governance_evidence_completion_gate.txt"
+        },
+    )
+
+
+@app.route("/governance/evidence-exports/completion-gate")
+def governance_evidence_completion_gate():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_evidence_completion_gate
+
+    completion_gate = build_governance_evidence_completion_gate(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return render_template(
+        "governance/evidence_completion_gate.html",
+        completion_gate=completion_gate,
+    )
+
+
 @app.route("/governance/evidence-exports/exceptions.txt")
 def governance_evidence_exception_panel_text():
     gate = require_master_admin()

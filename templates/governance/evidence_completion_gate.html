@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Governance Evidence Completion Gate</h1>
+    <p>
+        Read-only pre-certification gate for deciding whether the governance evidence chain
+        is ready to enter Version 2 hardening.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_evidence_certification_dashboard', object_type=completion_gate.filters.object_type, object_id=completion_gate.filters.object_id, status=completion_gate.filters.status, outcome=completion_gate.filters.outcome, limit=completion_gate.filters.limit) }}">Certification Dashboard</a> |
+        <a href="{{ url_for('governance_evidence_exception_panel', object_type=completion_gate.filters.object_type, object_id=completion_gate.filters.object_id, status=completion_gate.filters.status, outcome=completion_gate.filters.outcome, limit=completion_gate.filters.limit) }}">Exception Panel</a> |
+        <a href="{{ url_for('governance_evidence_completion_gate_text', object_type=completion_gate.filters.object_type, object_id=completion_gate.filters.object_id, status=completion_gate.filters.status, outcome=completion_gate.filters.outcome, limit=completion_gate.filters.limit) }}">Download Completion Gate TXT</a>
+    </p>
+
+    <h2>Completion Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Gate Type</th>
+            <th>Generated At</th>
+            <th>Read Only</th>
+            <th>Evidence Chain Complete</th>
+            <th>Hardening Entry Ready</th>
+            <th>Completion Status</th>
+            <th>Checks Passed</th>
+            <th>Checks Review</th>
+            <th>Checks Failed</th>
+            <th>Hardening Blockers</th>
+            <th>Hardening Review</th>
+            <th>Hardening Failed</th>
+        </tr>
+        <tr>
+            <td>{{ completion_gate.gate_type }}</td>
+            <td>{{ completion_gate.generated_at }}</td>
+            <td>{{ completion_gate.read_only }}</td>
+            <td>{{ completion_gate.evidence_chain_complete }}</td>
+            <td>{{ completion_gate.hardening_entry_ready }}</td>
+            <td>{{ completion_gate.completion_status }}</td>
+            <td>{{ completion_gate.summary.checks_passed }}</td>
+            <td>{{ completion_gate.summary.checks_review }}</td>
+            <td>{{ completion_gate.summary.checks_failed }}</td>
+            <td>{{ completion_gate.summary.hardening_blockers }}</td>
+            <td>{{ completion_gate.summary.hardening_review }}</td>
+            <td>{{ completion_gate.summary.hardening_failed }}</td>
+        </tr>
+    </table>
+
+    <h2>Evidence Packet Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Total Packets</th>
+            <th>Relationship Packets</th>
+            <th>Audit Packets</th>
+            <th>Digest Artifacts</th>
+            <th>Archive Items</th>
+            <th>Exception Total</th>
+            <th>Exception Warnings</th>
+            <th>Exception Failures</th>
+        </tr>
+        <tr>
+            <td>{{ completion_gate.summary.total_packets }}</td>
+            <td>{{ completion_gate.summary.relationship_packets }}</td>
+            <td>{{ completion_gate.summary.audit_packets }}</td>
+            <td>{{ completion_gate.summary.digest_artifacts }}</td>
+            <td>{{ completion_gate.summary.archive_items }}</td>
+            <td>{{ completion_gate.summary.exception_total }}</td>
+            <td>{{ completion_gate.summary.exception_warning_count }}</td>
+            <td>{{ completion_gate.summary.exception_fail_count }}</td>
+        </tr>
+    </table>
+
+    <h2>Filter Context</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Object Type</th>
+            <th>Object ID</th>
+            <th>Relationship Status</th>
+            <th>Audit Outcome</th>
+            <th>Limit</th>
+        </tr>
+        <tr>
+            <td>{{ completion_gate.filters.object_type or "-" }}</td>
+            <td>{{ completion_gate.filters.object_id or "-" }}</td>
+            <td>{{ completion_gate.filters.status or "-" }}</td>
+            <td>{{ completion_gate.filters.outcome or "-" }}</td>
+            <td>{{ completion_gate.filters.limit }}</td>
+        </tr>
+    </table>
+
+    <h2>Gate Checks</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Check</th>
+            <th>Status</th>
+            <th>Detail</th>
+            <th>Route / Source</th>
+        </tr>
+        {% for check in completion_gate.gate_checks %}
+        <tr>
+            <td>{{ check.check_label }}</td>
+            <td>{{ check.status }}</td>
+            <td>{{ check.detail }}</td>
+            <td>{{ check.route }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Hardening Blockers / Review Items</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Blocker</th>
+            <th>Status</th>
+            <th>Detail</th>
+        </tr>
+        {% for blocker in completion_gate.hardening_blockers %}
+        <tr>
+            <td>{{ blocker.blocker_label }}</td>
+            <td>{{ blocker.status }}</td>
+            <td>{{ blocker.detail }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Linked Evidence Routes</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Route Key</th>
+            <th>Route</th>
+        </tr>
+        {% for key, value in completion_gate.linked_routes.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Completion Notice</h2>
+    <p>{{ completion_gate.completion_notice }}</p>
+
+    <h2>Preservation Statement</h2>
+    <p>{{ completion_gate.preservation_statement }}</p>
+</section>
+{% endblock %}

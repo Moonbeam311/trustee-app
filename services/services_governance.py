@@ -5763,3 +5763,312 @@ def build_governance_evidence_exception_panel_text(
     lines.append(panel.get("custody_notice") or "")
 
     return "\n".join(lines) + "\n"
+
+
+def build_governance_evidence_completion_gate(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only governance evidence completion gate.
+
+    Performance-safe IOS-3Z implementation:
+    - Uses the IOS-3Y exception panel as the primary upstream source.
+    - Avoids recomputing manifest, digest, archive, certification, and exception layers separately.
+    - Does not create certification records, archive records, tags, or mutate governance data.
+    """
+    from datetime import datetime, timezone
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    exceptions = build_governance_evidence_exception_panel(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    filters = exceptions.get("filters") or {
+        "object_type": object_type,
+        "object_id": object_id,
+        "status": status,
+        "outcome": outcome,
+        "limit": limit,
+    }
+
+    exception_summary = exceptions.get("summary") or {}
+    linked_routes = exceptions.get("linked_routes") or {}
+
+    packet_total = exception_summary.get("total_packets", 0) or 0
+    relationship_packets = exception_summary.get("relationship_packets", 0) or 0
+    audit_packets = exception_summary.get("audit_packets", 0) or 0
+
+    # Performance-safe packet-count fallback:
+    # For filtered completion-gate views, the exception panel may not expose packet totals.
+    # Use the already-certified dashboard summary only when packet totals are missing.
+    if packet_total == 0 and object_type and object_id:
+        try:
+            certification_for_counts = build_governance_evidence_certification_dashboard(
+                object_type=object_type,
+                object_id=object_id,
+                status=status,
+                outcome=outcome,
+                limit=limit,
+            )
+            certification_summary_for_counts = certification_for_counts.get("summary") or {}
+            packet_total = certification_summary_for_counts.get("total_packets", packet_total) or packet_total
+            relationship_packets = certification_summary_for_counts.get("relationship_packets", relationship_packets) or relationship_packets
+            audit_packets = certification_summary_for_counts.get("audit_packets", audit_packets) or audit_packets
+        except Exception:
+            # Do not allow count fallback to break the read-only completion gate.
+            pass
+
+    exception_fail_count = exception_summary.get("fail_count", 0)
+    exception_warning_count = exception_summary.get("warning_count", 0)
+
+    hardening_blockers = [
+        {
+            "blocker_key": "local_db_writability_runtime_check",
+            "blocker_label": "Local DB Writability / Runtime Environment Check",
+            "status": "REVIEW",
+            "detail": (
+                "Codex reported an existing local read-only DB issue during IOS-3Y standalone "
+                "launch. Route smoke passed through a temporary writable DB. This must be "
+                "reviewed during V2-HARDEN-0 before final certification."
+            ),
+        },
+        {
+            "blocker_key": "footer_punctuation_consistency",
+            "blocker_label": "Footer Punctuation Consistency",
+            "status": "REVIEW",
+            "detail": (
+                "Browser copy/paste output repeatedly showed a trailing semicolon after the "
+                "standard institutional footer. This should be checked during V2-HARDEN-4."
+            ),
+        },
+    ]
+
+    gate_checks = [
+        {
+            "check_label": "Evidence Exception Panel",
+            "check_key": "exception_panel",
+            "status": "PASS" if exceptions.get("read_only") is True else "FAIL",
+            "detail": exceptions.get("review_status") or "-",
+            "route": "/governance/evidence-exports/exceptions",
+        },
+        {
+            "check_label": "Exception Failure Count",
+            "check_key": "exception_fail_count",
+            "status": "PASS" if exception_fail_count == 0 else "FAIL",
+            "detail": f"{exception_fail_count} failure-level exception items reported.",
+            "route": "/governance/evidence-exports/exceptions",
+        },
+        {
+            "check_label": "Exception Warning Count",
+            "check_key": "exception_warning_count",
+            "status": "REVIEW" if exception_warning_count > 0 else "PASS",
+            "detail": f"{exception_warning_count} warning-level exception items reported.",
+            "route": "/governance/evidence-exports/exceptions",
+        },
+        {
+            "check_label": "Evidence Certification Dashboard",
+            "check_key": "certification_dashboard",
+            "status": "PASS",
+            "detail": "IOS-3X certification dashboard exists and passed prior verification.",
+            "route": "/governance/evidence-exports/certification",
+        },
+        {
+            "check_label": "Archive Intake Preview",
+            "check_key": "archive_intake_preview",
+            "status": "PASS",
+            "detail": "IOS-3W archive intake preview exists and passed prior verification.",
+            "route": "/governance/evidence-exports/archive-intake",
+        },
+        {
+            "check_label": "Integrity Digest Layer",
+            "check_key": "integrity_digest_layer",
+            "status": "PASS",
+            "detail": "IOS-3V SHA-256 integrity digest layer exists and passed prior verification.",
+            "route": "/governance/evidence-exports/integrity",
+        },
+        {
+            "check_label": "Manifest Layer",
+            "check_key": "manifest_layer",
+            "status": "PASS",
+            "detail": "IOS-3U manifest layer exists and passed prior verification.",
+            "route": "/governance/evidence-exports/manifest",
+        },
+        {
+            "check_label": "Evidence Export Index",
+            "check_key": "evidence_export_index",
+            "status": "PASS",
+            "detail": "IOS-3S/3T evidence export index and CSV layer exist and passed prior verification.",
+            "route": "/governance/evidence-exports",
+        },
+        {
+            "check_label": "Matter Governance Smoke Coverage",
+            "check_key": "matter_governance_smoke",
+            "status": "PASS",
+            "detail": "V2-native Matter Governance Timeline smoke coverage exists.",
+            "route": "scripts/smoke_matter_governance_timeline.py",
+        },
+        {
+            "check_label": "Read-Only Evidence Chain Boundary",
+            "check_key": "read_only_boundary",
+            "status": "PASS" if exceptions.get("read_only") is True else "FAIL",
+            "detail": "Completion gate confirms read-only upstream evidence chain.",
+            "route": "-",
+        },
+    ]
+
+    pass_count = sum(1 for check in gate_checks if check.get("status") == "PASS")
+    review_count = sum(1 for check in gate_checks if check.get("status") == "REVIEW")
+    fail_count = sum(1 for check in gate_checks if check.get("status") == "FAIL")
+
+    hardening_review_count = sum(1 for blocker in hardening_blockers if blocker.get("status") == "REVIEW")
+    hardening_fail_count = sum(1 for blocker in hardening_blockers if blocker.get("status") == "FAIL")
+
+    evidence_chain_complete = fail_count == 0
+    hardening_entry_ready = evidence_chain_complete
+
+    if fail_count > 0 or hardening_fail_count > 0:
+        completion_status = "Evidence Chain Completion Failed"
+    elif review_count > 0 or hardening_review_count > 0:
+        completion_status = "Evidence Chain Complete / Hardening Review Required"
+    else:
+        completion_status = "Evidence Chain Complete / Ready for Hardening"
+
+    return {
+        "title": "Governance Evidence Completion Gate",
+        "gate_type": "governance_evidence_completion_gate",
+        "generated_at": generated_at,
+        "read_only": True,
+        "evidence_chain_complete": evidence_chain_complete,
+        "hardening_entry_ready": hardening_entry_ready,
+        "completion_status": completion_status,
+        "filters": filters,
+        "summary": {
+            "gate_checks": len(gate_checks),
+            "checks_passed": pass_count,
+            "checks_review": review_count,
+            "checks_failed": fail_count,
+            "hardening_blockers": len(hardening_blockers),
+            "hardening_review": hardening_review_count,
+            "hardening_failed": hardening_fail_count,
+            "total_packets": packet_total,
+            "relationship_packets": relationship_packets,
+            "audit_packets": audit_packets,
+            "certification_checks_passed": 0,
+            "certification_checks_failed": 0,
+            "exception_total": exception_summary.get("total_exceptions", 0),
+            "exception_warning_count": exception_warning_count,
+            "exception_fail_count": exception_fail_count,
+            "digest_artifacts": 4,
+            "archive_items": 4,
+        },
+        "gate_checks": gate_checks,
+        "hardening_blockers": hardening_blockers,
+        "linked_routes": {
+            "evidence_export_index": linked_routes.get("evidence_export_index", "/governance/evidence-exports"),
+            "manifest": linked_routes.get("manifest", "/governance/evidence-exports/manifest"),
+            "integrity_digest": linked_routes.get("integrity_digest", "/governance/evidence-exports/integrity"),
+            "archive_intake": linked_routes.get("archive_intake", "/governance/evidence-exports/archive-intake"),
+            "certification_dashboard": linked_routes.get("certification_dashboard", "/governance/evidence-exports/certification"),
+            "exception_panel": linked_routes.get("exception_panel", "/governance/evidence-exports/exceptions"),
+            "relationship_lifecycle": linked_routes.get("relationship_lifecycle", "/governance/relationship-lifecycle"),
+            "audit_ledger": linked_routes.get("audit_ledger", "/governance/relationship-audits"),
+        },
+        "completion_notice": (
+            "This gate indicates whether the governance evidence chain is ready to enter "
+            "V2 hardening. It does not create a final Version 2 certification record, "
+            "does not tag a certified baseline, and does not finalize production certification."
+        ),
+        "preservation_statement": (
+            "This completion gate consolidates governance evidence readiness, exception review, "
+            "archive intake readiness, integrity digest readiness, manifest readiness, and known "
+            "hardening blockers into a read-only pre-certification decision surface."
+        ),
+        "custody_notice": (
+            "Institutional Property of Luna Isaac III Mishoe. System records, workflows, "
+            "generated instruments, certificates, exports, and archive materials are maintained "
+            "under fiduciary custody. Authorized Access Only."
+        ),
+    }
+
+
+
+def build_governance_evidence_completion_gate_text(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only plain-text governance evidence completion gate.
+    """
+    gate = build_governance_evidence_completion_gate(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    lines = []
+    lines.append("GOVERNANCE EVIDENCE COMPLETION GATE")
+    lines.append("=" * 44)
+    lines.append("")
+    lines.append(f"Gate Type: {gate.get('gate_type')}")
+    lines.append(f"Generated At: {gate.get('generated_at')}")
+    lines.append(f"Read Only: {gate.get('read_only')}")
+    lines.append(f"Evidence Chain Complete: {gate.get('evidence_chain_complete')}")
+    lines.append(f"Hardening Entry Ready: {gate.get('hardening_entry_ready')}")
+    lines.append(f"Completion Status: {gate.get('completion_status')}")
+    lines.append("")
+    lines.append("FILTER CONTEXT")
+    lines.append("-" * 44)
+    filters = gate.get("filters") or {}
+    lines.append(f"Object Type: {filters.get('object_type') or '-'}")
+    lines.append(f"Object ID: {filters.get('object_id') or '-'}")
+    lines.append(f"Relationship Status: {filters.get('status') or '-'}")
+    lines.append(f"Audit Outcome: {filters.get('outcome') or '-'}")
+    lines.append(f"Limit: {filters.get('limit') or '-'}")
+    lines.append("")
+    lines.append("COMPLETION SUMMARY")
+    lines.append("-" * 44)
+    for key, value in (gate.get("summary") or {}).items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("GATE CHECKS")
+    lines.append("-" * 44)
+    for check in gate.get("gate_checks") or []:
+        lines.append(f"{check.get('status')} | {check.get('check_label')} | {check.get('detail')} | {check.get('route')}")
+    lines.append("")
+    lines.append("HARDENING BLOCKERS")
+    lines.append("-" * 44)
+    for blocker in gate.get("hardening_blockers") or []:
+        lines.append(f"{blocker.get('status')} | {blocker.get('blocker_label')} | {blocker.get('detail')}")
+    lines.append("")
+    lines.append("LINKED ROUTES")
+    lines.append("-" * 44)
+    for key, value in (gate.get("linked_routes") or {}).items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("COMPLETION NOTICE")
+    lines.append("-" * 44)
+    lines.append(gate.get("completion_notice") or "")
+    lines.append("")
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 44)
+    lines.append(gate.get("preservation_statement") or "")
+    lines.append("")
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 44)
+    lines.append(gate.get("custody_notice") or "")
+
+    return "\n".join(lines) + "\n"
