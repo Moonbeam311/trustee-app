@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Governance Evidence Certification Dashboard</h1>
+    <p>
+        Read-only readiness dashboard for governance evidence certification.
+        This page confirms whether evidence packets, audit packets, export indexes,
+        CSV exports, manifests, digests, archive intake previews, and smoke coverage are ready.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_export_archive_intake_preview', object_type=dashboard.filters.object_type, object_id=dashboard.filters.object_id, status=dashboard.filters.status, outcome=dashboard.filters.outcome, limit=dashboard.filters.limit) }}">Archive Intake</a> |
+        <a href="{{ url_for('governance_export_integrity_digest', object_type=dashboard.filters.object_type, object_id=dashboard.filters.object_id, status=dashboard.filters.status, outcome=dashboard.filters.outcome, limit=dashboard.filters.limit) }}">Integrity Digest</a> |
+        <a href="{{ url_for('governance_evidence_certification_dashboard_text', object_type=dashboard.filters.object_type, object_id=dashboard.filters.object_id, status=dashboard.filters.status, outcome=dashboard.filters.outcome, limit=dashboard.filters.limit) }}">Download Certification TXT</a>
+    </p>
+
+    <h2>Certification Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Dashboard Type</th>
+            <th>Generated At</th>
+            <th>Read Only</th>
+            <th>Certification Ready</th>
+            <th>Certification Status</th>
+            <th>Checks Passed</th>
+            <th>Checks Failed</th>
+            <th>Total Packets</th>
+            <th>Relationship Packets</th>
+            <th>Audit Packets</th>
+            <th>Digest Artifacts</th>
+            <th>Archive Items</th>
+        </tr>
+        <tr>
+            <td>{{ dashboard.dashboard_type }}</td>
+            <td>{{ dashboard.generated_at }}</td>
+            <td>{{ dashboard.read_only }}</td>
+            <td>{{ dashboard.certification_ready }}</td>
+            <td>{{ dashboard.certification_status }}</td>
+            <td>{{ dashboard.summary.checks_passed }}</td>
+            <td>{{ dashboard.summary.checks_failed }}</td>
+            <td>{{ dashboard.summary.total_packets }}</td>
+            <td>{{ dashboard.summary.relationship_packets }}</td>
+            <td>{{ dashboard.summary.audit_packets }}</td>
+            <td>{{ dashboard.summary.digest_artifacts }}</td>
+            <td>{{ dashboard.summary.archive_items }}</td>
+        </tr>
+    </table>
+
+    <h2>Filter Context</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Object Type</th>
+            <th>Object ID</th>
+            <th>Relationship Status</th>
+            <th>Audit Outcome</th>
+            <th>Limit</th>
+        </tr>
+        <tr>
+            <td>{{ dashboard.filters.object_type or "-" }}</td>
+            <td>{{ dashboard.filters.object_id or "-" }}</td>
+            <td>{{ dashboard.filters.status or "-" }}</td>
+            <td>{{ dashboard.filters.outcome or "-" }}</td>
+            <td>{{ dashboard.filters.limit }}</td>
+        </tr>
+    </table>
+
+    <h2>Readiness Checks</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Check</th>
+            <th>Status</th>
+            <th>Detail</th>
+            <th>Route / Source</th>
+        </tr>
+        {% for check in dashboard.readiness_checks %}
+        <tr>
+            <td>{{ check.check_label }}</td>
+            <td>{{ check.status }}</td>
+            <td>{{ check.detail }}</td>
+            <td>{{ check.route }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Linked Evidence Routes</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Route Key</th>
+            <th>Route</th>
+        </tr>
+        {% for key, value in dashboard.linked_routes.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Certification Notice</h2>
+    <p>{{ dashboard.certification_notice }}</p>
+
+    <h2>Preservation Statement</h2>
+    <p>{{ dashboard.preservation_statement }}</p>
+</section>
+{% endblock %}

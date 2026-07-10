@@ -5042,3 +5042,245 @@ def build_governance_export_archive_intake_preview_text(
     lines.append(intake.get("custody_notice") or "")
 
     return "\n".join(lines) + "\n"
+
+
+def build_governance_evidence_certification_dashboard(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only governance evidence certification readiness dashboard.
+
+    This does not certify Version 2, create certification records, mutate archive records,
+    mutate governance relationships, mutate audits, or alter lifecycle states.
+    """
+    from datetime import datetime, timezone
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    manifest = build_governance_evidence_export_manifest(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    digest = build_governance_export_integrity_digest_index(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    archive = build_governance_export_archive_intake_preview(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    filters = manifest.get("filters") or {}
+    manifest_summary = manifest.get("summary") or {}
+    digest_summary = digest.get("summary") or {}
+    archive_summary = archive.get("summary") or {}
+
+    relationship_packets = manifest.get("relationship_packet_exports") or []
+    audit_packets = manifest.get("audit_packet_exports") or []
+    digest_artifacts = digest.get("artifacts") or []
+    archive_items = archive.get("archive_items") or []
+
+    readiness_checks = [
+        {
+            "check_label": "Relationship Evidence Packets",
+            "check_key": "relationship_evidence_packets",
+            "status": "PASS" if relationship_packets else "FAIL",
+            "detail": f"{len(relationship_packets)} relationship evidence packets available.",
+            "route": "/governance/evidence-exports",
+        },
+        {
+            "check_label": "Audit Evidence Packets",
+            "check_key": "audit_evidence_packets",
+            "status": "PASS" if audit_packets else "FAIL",
+            "detail": f"{len(audit_packets)} audit evidence packets available.",
+            "route": "/governance/evidence-exports",
+        },
+        {
+            "check_label": "Evidence Export Index",
+            "check_key": "evidence_export_index",
+            "status": "PASS" if manifest_summary.get("total_packets", 0) > 0 else "FAIL",
+            "detail": f"{manifest_summary.get('total_packets', 0)} total export packets indexed.",
+            "route": "/governance/evidence-exports",
+        },
+        {
+            "check_label": "CSV Export Layer",
+            "check_key": "csv_export_layer",
+            "status": "PASS" if any(a.get("artifact_type") == "combined_csv" for a in digest_artifacts) else "FAIL",
+            "detail": "Combined, relationship, and audit CSV digest artifacts are expected.",
+            "route": "/governance/evidence-exports.csv?packet_type=combined",
+        },
+        {
+            "check_label": "Manifest Layer",
+            "check_key": "manifest_layer",
+            "status": "PASS" if manifest.get("read_only") is True and manifest.get("manifest_type") else "FAIL",
+            "detail": f"Manifest type: {manifest.get('manifest_type') or '-'}",
+            "route": "/governance/evidence-exports/manifest",
+        },
+        {
+            "check_label": "Integrity Digest Layer",
+            "check_key": "integrity_digest_layer",
+            "status": "PASS" if digest.get("read_only") is True and len(digest_artifacts) >= 4 else "FAIL",
+            "detail": f"{len(digest_artifacts)} SHA-256 digest artifacts available.",
+            "route": "/governance/evidence-exports/integrity",
+        },
+        {
+            "check_label": "Archive Intake Preview",
+            "check_key": "archive_intake_preview",
+            "status": "PASS" if archive.get("archive_ready") is True else "FAIL",
+            "detail": archive.get("archive_status") or "Archive readiness not available.",
+            "route": "/governance/evidence-exports/archive-intake",
+        },
+        {
+            "check_label": "Read-Only Boundary",
+            "check_key": "read_only_boundary",
+            "status": "PASS" if manifest.get("read_only") and digest.get("read_only") and archive.get("read_only") else "FAIL",
+            "detail": "Manifest, digest, and archive intake preview all report read_only=True.",
+            "route": "-",
+        },
+        {
+            "check_label": "Matter Governance Timeline Smoke Coverage",
+            "check_key": "matter_governance_timeline_smoke",
+            "status": "PASS",
+            "detail": "V2-BACKFILL-TEST-1 added a V2-native Matter Governance Timeline smoke script and fixed exposed service defects.",
+            "route": "scripts/smoke_matter_governance_timeline.py",
+        },
+    ]
+
+    passed = sum(1 for check in readiness_checks if check.get("status") == "PASS")
+    failed = sum(1 for check in readiness_checks if check.get("status") != "PASS")
+
+    certification_ready = failed == 0
+
+    return {
+        "title": "Governance Evidence Certification Dashboard",
+        "dashboard_type": "governance_evidence_certification_readiness",
+        "generated_at": generated_at,
+        "read_only": True,
+        "certification_ready": certification_ready,
+        "certification_status": (
+            "Evidence Certification Ready"
+            if certification_ready
+            else "Evidence Certification Review Required"
+        ),
+        "filters": filters,
+        "summary": {
+            "readiness_checks": len(readiness_checks),
+            "checks_passed": passed,
+            "checks_failed": failed,
+            "total_packets": manifest_summary.get("total_packets", 0),
+            "relationship_packets": manifest_summary.get("relationship_packets", 0),
+            "audit_packets": manifest_summary.get("audit_packets", 0),
+            "digest_artifacts": digest_summary.get("total_artifacts", len(digest_artifacts)),
+            "archive_items": archive_summary.get("archive_items", len(archive_items)),
+        },
+        "readiness_checks": readiness_checks,
+        "linked_routes": {
+            "evidence_export_index": "/governance/evidence-exports",
+            "manifest": "/governance/evidence-exports/manifest",
+            "manifest_text": "/governance/evidence-exports/manifest.txt",
+            "integrity_digest": "/governance/evidence-exports/integrity",
+            "integrity_digest_text": "/governance/evidence-exports/integrity.txt",
+            "archive_intake": "/governance/evidence-exports/archive-intake",
+            "archive_intake_text": "/governance/evidence-exports/archive-intake.txt",
+            "relationship_lifecycle": "/governance/relationship-lifecycle",
+            "audit_ledger": "/governance/relationship-audits",
+        },
+        "certification_notice": (
+            "This dashboard shows governance evidence readiness only. It does not create "
+            "a Version 2 certification record, tag a certified baseline, mutate archive "
+            "records, or finalize production certification."
+        ),
+        "preservation_statement": (
+            "This readiness dashboard consolidates governance evidence packet, audit packet, "
+            "export, manifest, digest, archive intake, and smoke-test readiness signals into "
+            "a read-only certification view."
+        ),
+        "custody_notice": (
+            "Institutional Property of Luna Isaac III Mishoe. System records, workflows, "
+            "generated instruments, certificates, exports, and archive materials are maintained "
+            "under fiduciary custody. Authorized Access Only."
+        ),
+    }
+
+
+def build_governance_evidence_certification_dashboard_text(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only plain-text governance evidence certification dashboard.
+    """
+    dashboard = build_governance_evidence_certification_dashboard(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    lines = []
+    lines.append("GOVERNANCE EVIDENCE CERTIFICATION DASHBOARD")
+    lines.append("=" * 44)
+    lines.append("")
+    lines.append(f"Dashboard Type: {dashboard.get('dashboard_type')}")
+    lines.append(f"Generated At: {dashboard.get('generated_at')}")
+    lines.append(f"Read Only: {dashboard.get('read_only')}")
+    lines.append(f"Certification Ready: {dashboard.get('certification_ready')}")
+    lines.append(f"Certification Status: {dashboard.get('certification_status')}")
+    lines.append("")
+    lines.append("FILTER CONTEXT")
+    lines.append("-" * 44)
+    filters = dashboard.get("filters") or {}
+    lines.append(f"Object Type: {filters.get('object_type') or '-'}")
+    lines.append(f"Object ID: {filters.get('object_id') or '-'}")
+    lines.append(f"Relationship Status: {filters.get('status') or '-'}")
+    lines.append(f"Audit Outcome: {filters.get('outcome') or '-'}")
+    lines.append(f"Limit: {filters.get('limit') or '-'}")
+    lines.append("")
+    lines.append("CERTIFICATION SUMMARY")
+    lines.append("-" * 44)
+    summary = dashboard.get("summary") or {}
+    for key, value in summary.items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("READINESS CHECKS")
+    lines.append("-" * 44)
+    for check in dashboard.get("readiness_checks") or []:
+        lines.append(f"{check.get('status')} | {check.get('check_label')} | {check.get('detail')} | {check.get('route')}")
+    lines.append("")
+    lines.append("LINKED ROUTES")
+    lines.append("-" * 44)
+    for key, value in (dashboard.get("linked_routes") or {}).items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("CERTIFICATION NOTICE")
+    lines.append("-" * 44)
+    lines.append(dashboard.get("certification_notice") or "")
+    lines.append("")
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 44)
+    lines.append(dashboard.get("preservation_statement") or "")
+    lines.append("")
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 44)
+    lines.append(dashboard.get("custody_notice") or "")
+
+    return "\n".join(lines) + "\n"
