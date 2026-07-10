@@ -127,6 +127,10 @@ from datetime import UTC, date, datetime, timedelta
 from io import BytesIO
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['WTF_CSRF_ENABLED'] = True
+app.config['WTF_CSRF_FIELD_NAME'] = '_csrf_token'
+
 SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
