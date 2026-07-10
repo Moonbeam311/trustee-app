@@ -21378,6 +21378,38 @@ def governance_relationship_audit_detail(audit_id):
     )
 
 
+@app.route("/governance/evidence-exports.csv")
+def governance_evidence_export_index_csv():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_evidence_export_index_csv
+
+    packet_type = request.args.get("packet_type") or "combined"
+
+    csv_text = build_governance_evidence_export_index_csv(
+        packet_type=packet_type,
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    safe_packet_type = packet_type.lower().replace(" ", "_")
+    filename = f"governance_evidence_export_index_{safe_packet_type}.csv"
+
+    return Response(
+        csv_text,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        },
+    )
+
+
 @app.route("/governance/evidence-exports")
 def governance_evidence_export_index():
     gate = require_master_admin()

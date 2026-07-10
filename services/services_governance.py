@@ -4279,3 +4279,150 @@ def build_governance_evidence_export_index(
         "relationships": relationships,
         "audits": audits,
     }
+
+
+def _csv_escape(value):
+    """
+    Escape a value for CSV output without mutating any institutional record.
+    """
+    if value is None:
+        value = ""
+    if isinstance(value, (list, tuple)):
+        value = "; ".join(str(item) for item in value)
+    value = str(value)
+    value = value.replace('"', '""')
+    return f'"{value}"'
+
+
+def _csv_line(values):
+    return ",".join(_csv_escape(value) for value in values)
+
+
+def build_governance_evidence_export_index_csv(
+    packet_type="combined",
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only CSV export for the governance evidence export index.
+
+    packet_type values:
+    - combined
+    - relationships
+    - audits
+    """
+    index = build_governance_evidence_export_index(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    packet_type = (packet_type or "combined").strip().lower()
+
+    lines = []
+
+    if packet_type in ("combined", "relationships"):
+        relationship_headers = [
+            "packet_type",
+            "relationship_id",
+            "status",
+            "lifecycle_label",
+            "source_object_type",
+            "source_object_id",
+            "relationship_type",
+            "target_object_type",
+            "target_object_id",
+            "audit_count",
+            "last_outcome",
+            "last_audit_id",
+            "risk_flags",
+            "updated_at",
+            "export_path",
+        ]
+        lines.append(_csv_line(relationship_headers))
+
+        for rel in index.get("relationships") or []:
+            relationship_id = rel.get("relationship_id") or ""
+            export_path = f"/governance/relationships/{relationship_id}/export" if relationship_id else ""
+
+            lines.append(
+                _csv_line(
+                    [
+                        "Relationship",
+                        relationship_id,
+                        rel.get("status"),
+                        rel.get("lifecycle_label"),
+                        rel.get("source_object_type"),
+                        rel.get("source_object_id"),
+                        rel.get("relationship_type"),
+                        rel.get("target_object_type"),
+                        rel.get("target_object_id"),
+                        rel.get("audit_count"),
+                        rel.get("last_outcome"),
+                        rel.get("last_audit_id"),
+                        rel.get("risk_flags"),
+                        rel.get("updated_at"),
+                        export_path,
+                    ]
+                )
+            )
+
+    if packet_type == "combined":
+        lines.append("")
+
+    if packet_type in ("combined", "audits"):
+        audit_headers = [
+            "packet_type",
+            "audit_id",
+            "outcome",
+            "action",
+            "source_object_type",
+            "source_object_id",
+            "relationship_type",
+            "target_object_type",
+            "target_object_id",
+            "attempted_relationship_id",
+            "existing_relationship_id",
+            "actor",
+            "authority",
+            "reason",
+            "message",
+            "created_at",
+            "export_path",
+        ]
+        lines.append(_csv_line(audit_headers))
+
+        for audit in index.get("audits") or []:
+            audit_id = audit.get("audit_id") or ""
+            export_path = f"/governance/relationship-audits/{audit_id}/export" if audit_id else ""
+
+            lines.append(
+                _csv_line(
+                    [
+                        "Audit",
+                        audit_id,
+                        audit.get("outcome"),
+                        audit.get("action"),
+                        audit.get("source_object_type"),
+                        audit.get("source_object_id"),
+                        audit.get("relationship_type"),
+                        audit.get("target_object_type"),
+                        audit.get("target_object_id"),
+                        audit.get("attempted_relationship_id"),
+                        audit.get("existing_relationship_id"),
+                        audit.get("actor"),
+                        audit.get("authority"),
+                        audit.get("reason"),
+                        audit.get("message"),
+                        audit.get("created_at"),
+                        export_path,
+                    ]
+                )
+            )
+
+    return "\n".join(lines) + "\n"
