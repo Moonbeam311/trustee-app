@@ -21458,6 +21458,42 @@ def governance_evidence_certification_dashboard():
     )
 
 
+@app.route("/governance/v2-certification.txt")
+def v2_certification_dashboard_text():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_v2_certification_dashboard_text
+
+    dashboard_text = build_v2_certification_dashboard_text()
+
+    return Response(
+        dashboard_text,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=v2_certification_dashboard.txt"
+        },
+    )
+
+
+@app.route("/governance/v2-certification")
+def v2_certification_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_v2_certification_dashboard
+
+    dashboard = build_v2_certification_dashboard()
+
+    return render_template(
+        "governance/v2_certification_dashboard.html",
+        dashboard=dashboard,
+    )
+
+
 @app.route("/governance/evidence-exports/completion-gate.txt")
 def governance_evidence_completion_gate_text():
     gate = require_master_admin()

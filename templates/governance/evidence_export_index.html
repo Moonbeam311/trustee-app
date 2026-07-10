@@ -14,6 +14,12 @@
         <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a>
     </p>
 
+    <h2>Version 2 Certification</h2>
+    <p>
+        <a href="{{ url_for('v2_certification_dashboard') }}">Version 2 Certification Dashboard</a> |
+        <a href="{{ url_for('v2_certification_dashboard_text') }}">Download V2 Certification TXT</a>
+    </p>
+
     <h2>Certification Dashboard</h2>
     <p>
         <a href="{{ url_for('governance_evidence_certification_dashboard', object_type=index.filters.object_type, object_id=index.filters.object_id, status=index.filters.status, outcome=index.filters.outcome, limit=index.filters.limit) }}">Governance Evidence Certification Dashboard</a> |

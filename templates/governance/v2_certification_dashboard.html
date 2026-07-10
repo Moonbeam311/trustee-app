@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Version 2 Certification Dashboard</h1>
+    <p>
+        Read-only certification dashboard for the Version 2 governance evidence chain,
+        hardening audit series, GitHub state, and deployment-readiness posture.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_evidence_completion_gate') }}">Completion Gate</a> |
+        <a href="{{ url_for('v2_certification_dashboard_text') }}">Download V2 Certification TXT</a>
+    </p>
+
+    <h2>Certification Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Certification Ready</th>
+            <th>Branch</th>
+            <th>HEAD</th>
+            <th>Origin</th>
+            <th>Working Tree Clean</th>
+            <th>Tag Created</th>
+        </tr>
+        <tr>
+            <td>{{ dashboard.certification_ready }}</td>
+            <td>{{ dashboard.branch }}</td>
+            <td>{{ dashboard.head_short }}</td>
+            <td>{{ dashboard.origin_short }}</td>
+            <td>{{ dashboard.working_tree_clean }}</td>
+            <td>{{ dashboard.tag_created }}</td>
+        </tr>
+    </table>
+
+    <h2>Summary Counts</h2>
+    <table border="1" cellpadding="6">
+        {% for key, value in dashboard.summary.items() %}
+        <tr>
+            <th>{{ key }}</th>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Certification Checks</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Status</th>
+            <th>Check</th>
+            <th>Detail</th>
+        </tr>
+        {% for check in dashboard.certification_checks %}
+        <tr>
+            <td>{{ check.status }}</td>
+            <td>{{ check.label }}</td>
+            <td>{{ check.detail }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Governance Evidence Chain</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Key</th>
+            <th>Status</th>
+            <th>Commit</th>
+            <th>Title</th>
+            <th>HTML Route</th>
+            <th>TXT Route</th>
+        </tr>
+        {% for item in dashboard.governance_chain %}
+        <tr>
+            <td>{{ item.key }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.commit }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.route }}</td>
+            <td>{{ item.txt_route }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Hardening Audit Series</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Key</th>
+            <th>Status</th>
+            <th>Commit</th>
+            <th>Title</th>
+            <th>Script</th>
+        </tr>
+        {% for item in dashboard.hardening_audits %}
+        <tr>
+            <td>{{ item.key }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.commit }}</td>
+            <td>{{ item.title }}</td>
+            <td>{{ item.script or "N/A" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Required Templates</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Path</th>
+            <th>Exists</th>
+        </tr>
+        {% for item in dashboard.required_templates %}
+        <tr>
+            <td>{{ item.path }}</td>
+            <td>{{ item.exists }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Deployment Files</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Path</th>
+            <th>Required</th>
+            <th>Exists</th>
+        </tr>
+        {% for item in dashboard.deployment_files %}
+        <tr>
+            <td>{{ item.path }}</td>
+            <td>{{ item.required }}</td>
+            <td>{{ item.exists }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Recent Git Log</h2>
+    <pre>{% for line in dashboard.recent_log %}{{ line }}
+{% endfor %}</pre>
+
+    <h2>Certification Notice</h2>
+    <p>{{ dashboard.certification_notice }}</p>
+
+    <h2>Preservation Statement</h2>
+    <p>{{ dashboard.preservation_statement }}</p>
+</section>
+{% endblock %}

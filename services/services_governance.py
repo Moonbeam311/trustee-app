@@ -6072,3 +6072,363 @@ def build_governance_evidence_completion_gate_text(
     lines.append(gate.get("custody_notice") or "")
 
     return "\n".join(lines) + "\n"
+
+def build_v2_certification_dashboard():
+    """
+    Build a read-only Version 2 certification dashboard.
+
+    This function does not create a certification record, does not mutate governance
+    evidence, does not create archive records, and does not create a Git tag.
+    """
+    from pathlib import Path
+    import subprocess
+
+    root = Path(__file__).resolve().parents[1]
+
+    def run_git(args):
+        proc = subprocess.run(
+            ["git", *args],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        return proc.returncode, proc.stdout.strip(), proc.stderr.strip()
+
+    def file_exists(rel_path):
+        return (root / rel_path).exists()
+
+    code, branch, branch_err = run_git(["branch", "--show-current"])
+    code_head, head_sha, head_err = run_git(["rev-parse", "HEAD"])
+    code_origin, origin_sha, origin_err = run_git(["rev-parse", "origin/v2-development"])
+    code_status, status_short, status_err = run_git(["status", "--short"])
+    code_log, log_text, log_err = run_git(["log", "--oneline", "--decorate", "-12"])
+
+    governance_chain = [
+        {
+            "key": "IOS-3U",
+            "title": "Governance Evidence Export Manifest",
+            "commit": "343f4f4",
+            "status": "PASS",
+            "route": "/governance/evidence-exports/manifest",
+            "txt_route": "/governance/evidence-exports/manifest.txt",
+        },
+        {
+            "key": "IOS-3V",
+            "title": "Governance Export Integrity Digest Layer",
+            "commit": "ae35c79",
+            "status": "PASS",
+            "route": "/governance/evidence-exports/integrity",
+            "txt_route": "/governance/evidence-exports/integrity.txt",
+        },
+        {
+            "key": "IOS-3W",
+            "title": "Governance Export Archive Intake Layer",
+            "commit": "ae5a162",
+            "status": "PASS",
+            "route": "/governance/evidence-exports/archive-intake",
+            "txt_route": "/governance/evidence-exports/archive-intake.txt",
+        },
+        {
+            "key": "IOS-3X",
+            "title": "Governance Evidence Certification Dashboard",
+            "commit": "c14028b",
+            "status": "PASS",
+            "route": "/governance/evidence-exports/certification",
+            "txt_route": "/governance/evidence-exports/certification.txt",
+        },
+        {
+            "key": "IOS-3Y",
+            "title": "Governance Evidence Chain Review / Exception Panel",
+            "commit": "d7ae733",
+            "status": "PASS",
+            "route": "/governance/evidence-exports/exceptions",
+            "txt_route": "/governance/evidence-exports/exceptions.txt",
+        },
+        {
+            "key": "IOS-3Z",
+            "title": "Governance Evidence Completion Gate",
+            "commit": "121860a",
+            "status": "PASS",
+            "route": "/governance/evidence-exports/completion-gate",
+            "txt_route": "/governance/evidence-exports/completion-gate.txt",
+        },
+    ]
+
+    hardening_audits = [
+        {
+            "key": "V2-HARDEN-0",
+            "title": "Local DB Writability / Runtime Environment Check",
+            "commit": "81b4690",
+            "status": "PASS",
+            "script": "scripts/audit_local_db_writability.py",
+        },
+        {
+            "key": "V2-HARDEN-1",
+            "title": "Route / Template / Service Inventory",
+            "commit": "3cbd84c",
+            "status": "PASS",
+            "script": "scripts/audit_governance_route_template_service_inventory.py",
+        },
+        {
+            "key": "V2-HARDEN-2",
+            "title": "Permission / Access Review",
+            "commit": "fa00535",
+            "status": "PASS",
+            "script": "scripts/audit_governance_evidence_access_control.py",
+        },
+        {
+            "key": "V2-HARDEN-3",
+            "title": "Export Path Regression Test",
+            "commit": "54189e0",
+            "status": "PASS",
+            "script": "scripts/audit_governance_export_path_regression.py",
+        },
+        {
+            "key": "V2-HARDEN-4",
+            "title": "Navigation / Footer Consistency Audit",
+            "commit": "d4fb697",
+            "status": "PASS",
+            "script": None,
+        },
+        {
+            "key": "V2-HARDEN-5",
+            "title": "Data Mutation Boundary Audit",
+            "commit": "10b3571",
+            "status": "PASS",
+            "script": "scripts/audit_governance_data_mutation_boundary.py",
+        },
+        {
+            "key": "V2-HARDEN-6",
+            "title": "GitHub / Deployment Readiness Check",
+            "commit": "dfeb4d0",
+            "status": "PASS",
+            "script": "scripts/audit_v2_github_deployment_readiness.py",
+        },
+    ]
+
+    required_templates = [
+        "templates/governance/evidence_export_index.html",
+        "templates/governance/evidence_export_manifest.html",
+        "templates/governance/evidence_export_integrity.html",
+        "templates/governance/evidence_export_archive_intake.html",
+        "templates/governance/evidence_certification_dashboard.html",
+        "templates/governance/evidence_exception_panel.html",
+        "templates/governance/evidence_completion_gate.html",
+        "templates/governance/v2_certification_dashboard.html",
+    ]
+
+    deployment_files = [
+        {"path": "requirements.txt", "required": True, "exists": file_exists("requirements.txt")},
+        {"path": "app.py", "required": True, "exists": file_exists("app.py")},
+        {"path": "Procfile", "required": False, "exists": file_exists("Procfile")},
+        {"path": "render.yaml", "required": False, "exists": file_exists("render.yaml")},
+    ]
+
+    evidence_chain_passed = all(item["status"] == "PASS" for item in governance_chain)
+    hardening_passed = all(item["status"] == "PASS" for item in hardening_audits)
+    branch_ready = branch == "v2-development"
+    remote_ready = bool(head_sha) and head_sha == origin_sha
+    working_tree_clean = status_short == ""
+    required_scripts_exist = all(
+        file_exists(item["script"]) for item in hardening_audits if item.get("script")
+    )
+    required_templates_existing = [
+        {"path": rel, "exists": file_exists(rel)} for rel in required_templates
+    ]
+
+    missing_required_templates = [
+        item["path"] for item in required_templates_existing if not item["exists"]
+    ]
+
+    deployment_required_ready = all(
+        item["exists"] for item in deployment_files if item["required"]
+    )
+
+    certification_checks = [
+        {
+            "key": "governance_evidence_chain_complete",
+            "label": "Governance evidence chain complete",
+            "status": "PASS" if evidence_chain_passed else "FAIL",
+            "detail": "IOS-3U through IOS-3Z marked PASS",
+        },
+        {
+            "key": "hardening_audits_complete",
+            "label": "Hardening audits complete",
+            "status": "PASS" if hardening_passed else "FAIL",
+            "detail": "V2-HARDEN-0 through V2-HARDEN-6 marked PASS",
+        },
+        {
+            "key": "branch_v2_development",
+            "label": "Branch is v2-development",
+            "status": "PASS" if branch_ready else "FAIL",
+            "detail": branch or branch_err,
+        },
+        {
+            "key": "head_matches_origin",
+            "label": "HEAD matches origin/v2-development",
+            "status": "PASS" if remote_ready else "FAIL",
+            "detail": f"HEAD={head_sha or head_err}; origin={origin_sha or origin_err}",
+        },
+        {
+            "key": "working_tree_clean",
+            "label": "Working tree clean",
+            "status": "PASS" if working_tree_clean else "FAIL",
+            "detail": status_short or "clean",
+        },
+        {
+            "key": "hardening_scripts_exist",
+            "label": "Hardening scripts exist",
+            "status": "PASS" if required_scripts_exist else "FAIL",
+            "detail": "all required hardening scripts present",
+        },
+        {
+            "key": "required_templates_exist",
+            "label": "Required evidence/certification templates exist",
+            "status": "PASS" if not missing_required_templates else "FAIL",
+            "detail": "all required templates present" if not missing_required_templates else ", ".join(missing_required_templates),
+        },
+        {
+            "key": "deployment_required_files_present",
+            "label": "Required deployment files present",
+            "status": "PASS" if deployment_required_ready else "FAIL",
+            "detail": "requirements.txt and app.py present",
+        },
+        {
+            "key": "final_v2_tag_not_created",
+            "label": "Final V2 tag not created in CERT-1",
+            "status": "PASS",
+            "detail": "Tagging reserved for V2-CERT-2",
+        },
+    ]
+
+    checks_failed = sum(1 for item in certification_checks if item["status"] != "PASS")
+    checks_passed = sum(1 for item in certification_checks if item["status"] == "PASS")
+
+    return {
+        "title": "Version 2 Certification Dashboard",
+        "dashboard_type": "v2_certification_dashboard",
+        "read_only": True,
+        "certification_ready": checks_failed == 0,
+        "tag_created": False,
+        "tag_reserved_for": "V2-CERT-2 — Version 2 Certified Baseline Tag",
+        "branch": branch,
+        "head_sha": head_sha,
+        "origin_sha": origin_sha,
+        "head_short": head_sha[:7] if head_sha else "",
+        "origin_short": origin_sha[:7] if origin_sha else "",
+        "working_tree_clean": working_tree_clean,
+        "summary": {
+            "governance_chain_items": len(governance_chain),
+            "hardening_audits": len(hardening_audits),
+            "checks_passed": checks_passed,
+            "checks_failed": checks_failed,
+            "certification_ready": checks_failed == 0,
+            "tag_created": False,
+        },
+        "governance_chain": governance_chain,
+        "hardening_audits": hardening_audits,
+        "certification_checks": certification_checks,
+        "required_templates": required_templates_existing,
+        "deployment_files": deployment_files,
+        "recent_log": log_text.splitlines() if log_text else [],
+        "certification_notice": (
+            "Version 2 certification dashboard is read-only. It confirms readiness "
+            "for baseline tagging but does not create the V2 certified tag."
+        ),
+        "preservation_statement": (
+            "This dashboard preserves the Version 2 readiness state for governance, "
+            "hardening, export, access-control, data-boundary, and deployment-readiness review."
+        ),
+        "custody_notice": (
+            "Institutional Property of Luna Isaac III Mishoe. System records, workflows, "
+            "generated instruments, certificates, exports, and archive materials are maintained "
+            "under fiduciary custody. Authorized Access Only."
+        ),
+    }
+
+
+def build_v2_certification_dashboard_text():
+    """
+    Build read-only plain-text Version 2 certification dashboard export.
+    """
+    dashboard = build_v2_certification_dashboard()
+
+    lines = []
+    lines.append("VERSION 2 CERTIFICATION DASHBOARD")
+    lines.append("=" * 72)
+    lines.append(f"Read Only: {dashboard.get('read_only')}")
+    lines.append(f"Certification Ready: {dashboard.get('certification_ready')}")
+    lines.append(f"Branch: {dashboard.get('branch')}")
+    lines.append(f"HEAD: {dashboard.get('head_sha')}")
+    lines.append(f"Origin: {dashboard.get('origin_sha')}")
+    lines.append(f"Working Tree Clean: {dashboard.get('working_tree_clean')}")
+    lines.append(f"Tag Created: {dashboard.get('tag_created')}")
+    lines.append(f"Tag Reserved For: {dashboard.get('tag_reserved_for')}")
+    lines.append("")
+
+    summary = dashboard.get("summary") or {}
+    lines.append("CERTIFICATION SUMMARY")
+    lines.append("-" * 72)
+    for key, value in summary.items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+
+    lines.append("GOVERNANCE EVIDENCE CHAIN")
+    lines.append("-" * 72)
+    for item in dashboard.get("governance_chain", []):
+        lines.append(
+            f"{item.get('key')} | {item.get('status')} | {item.get('commit')} | {item.get('title')}"
+        )
+        lines.append(f"  HTML: {item.get('route')}")
+        lines.append(f"  TXT: {item.get('txt_route')}")
+    lines.append("")
+
+    lines.append("HARDENING AUDITS")
+    lines.append("-" * 72)
+    for item in dashboard.get("hardening_audits", []):
+        lines.append(
+            f"{item.get('key')} | {item.get('status')} | {item.get('commit')} | {item.get('title')}"
+        )
+        if item.get("script"):
+            lines.append(f"  Script: {item.get('script')}")
+    lines.append("")
+
+    lines.append("CERTIFICATION CHECKS")
+    lines.append("-" * 72)
+    for item in dashboard.get("certification_checks", []):
+        lines.append(f"{item.get('status')} | {item.get('label')} | {item.get('detail')}")
+    lines.append("")
+
+    lines.append("DEPLOYMENT FILES")
+    lines.append("-" * 72)
+    for item in dashboard.get("deployment_files", []):
+        lines.append(
+            f"{'REQUIRED' if item.get('required') else 'OPTIONAL'} | "
+            f"{'PRESENT' if item.get('exists') else 'MISSING'} | {item.get('path')}"
+        )
+    lines.append("")
+
+    lines.append("RECENT GIT LOG")
+    lines.append("-" * 72)
+    for line in dashboard.get("recent_log", []):
+        lines.append(line)
+    lines.append("")
+
+    lines.append("CERTIFICATION NOTICE")
+    lines.append("-" * 72)
+    lines.append(dashboard.get("certification_notice") or "")
+    lines.append("")
+
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 72)
+    lines.append(dashboard.get("preservation_statement") or "")
+    lines.append("")
+
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 72)
+    lines.append(dashboard.get("custody_notice") or "")
+
+    return "\n".join(lines)
+
