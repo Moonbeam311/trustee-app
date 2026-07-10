@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>Governance Relationship Lifecycle Dashboard</h1>
+
+    <p>
+        Read-only operator dashboard showing governance relationships by lifecycle state, risk signal,
+        and high-value institutional object coverage.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a>
+    </p>
+
+    <h2>Lifecycle Totals</h2>
+    <table class="table">
+        <tr>
+            <th>Total</th>
+            <th>Active</th>
+            <th>Retired</th>
+            <th>Superseded</th>
+            <th>Reinstated</th>
+            <th>Conflict Blocked</th>
+            <th>Duplicate Blocked</th>
+            <th>Validation Failed</th>
+            <th>High-Value Links</th>
+        </tr>
+        <tr>
+            <td>{{ dashboard.totals.total }}</td>
+            <td>{{ dashboard.totals.active }}</td>
+            <td>{{ dashboard.totals.retired }}</td>
+            <td>{{ dashboard.totals.superseded }}</td>
+            <td>{{ dashboard.totals.reinstated }}</td>
+            <td>{{ dashboard.totals.conflict_blocked }}</td>
+            <td>{{ dashboard.totals.duplicate_blocked }}</td>
+            <td>{{ dashboard.totals.validation_failed }}</td>
+            <td>{{ dashboard.totals.high_value }}</td>
+        </tr>
+    </table>
+
+    <h2>Relationships</h2>
+    {% if dashboard.relationships %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Relationship ID</th>
+                    <th>Status</th>
+                    <th>Lifecycle</th>
+                    <th>Source</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Audits</th>
+                    <th>Last Outcome</th>
+                    <th>Risk Flags</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in dashboard.relationships %}
+                    {% set rel = entry.relationship %}
+                    {% set lifecycle = entry.lifecycle %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('governance_relationship_detail', relationship_id=rel.relationship_id) }}">
+                                {{ rel.relationship_id }}
+                            </a>
+                        </td>
+                        <td>{{ rel.status or "-" }}</td>
+                        <td>{{ lifecycle.lifecycle_label or "-" }}</td>
+                        <td>{{ rel.source_object_type }} — {{ rel.source_object_id }}</td>
+                        <td>{{ rel.relationship_type or "-" }}</td>
+                        <td>{{ rel.target_object_type }} — {{ rel.target_object_id }}</td>
+                        <td>{{ lifecycle.audit_count }}</td>
+                        <td>
+                            {% if lifecycle.last_audit_id %}
+                                <a href="{{ url_for('governance_relationship_audit_detail', audit_id=lifecycle.last_audit_id) }}">
+                                    {{ lifecycle.last_outcome or "-" }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% for flag in lifecycle.risk_flags %}
+                                {{ flag }}{% if not loop.last %}; {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>{{ rel.updated_at or rel.created_at or "-" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No governance relationships found.</p>
+    {% endif %}
+
+    <h2>Lifecycle Buckets</h2>
+
+    <h3>Conflict Blocked</h3>
+    {% if dashboard.categories.conflict_blocked %}
+        <ul>
+            {% for entry in dashboard.categories.conflict_blocked %}
+                <li>
+                    <a href="{{ url_for('governance_relationship_detail', relationship_id=entry.relationship.relationship_id) }}">
+                        {{ entry.relationship.relationship_id }}
+                    </a>
+                    — {{ entry.lifecycle.lifecycle_label }}
+                    — {{ entry.relationship.target_object_type }} {{ entry.relationship.target_object_id }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No conflict-blocked relationships found.</p>
+    {% endif %}
+
+    <h3>Duplicate Blocked</h3>
+    {% if dashboard.categories.duplicate_blocked %}
+        <ul>
+            {% for entry in dashboard.categories.duplicate_blocked %}
+                <li>
+                    <a href="{{ url_for('governance_relationship_detail', relationship_id=entry.relationship.relationship_id) }}">
+                        {{ entry.relationship.relationship_id }}
+                    </a>
+                    — {{ entry.lifecycle.counts.duplicate_blocked }} duplicate attempt(s)
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No duplicate-blocked relationships found.</p>
+    {% endif %}
+
+    <h3>Superseded</h3>
+    {% if dashboard.categories.superseded %}
+        <ul>
+            {% for entry in dashboard.categories.superseded %}
+                <li>
+                    <a href="{{ url_for('governance_relationship_detail', relationship_id=entry.relationship.relationship_id) }}">
+                        {{ entry.relationship.relationship_id }}
+                    </a>
+                    — {{ entry.lifecycle.lifecycle_label }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No superseded relationships found.</p>
+    {% endif %}
+
+    <h3>High-Value Object Links</h3>
+    {% if dashboard.categories.high_value %}
+        <ul>
+            {% for entry in dashboard.categories.high_value %}
+                <li>
+                    <a href="{{ url_for('governance_relationship_detail', relationship_id=entry.relationship.relationship_id) }}">
+                        {{ entry.relationship.relationship_id }}
+                    </a>
+                    — {{ entry.relationship.target_object_type }} {{ entry.relationship.target_object_id }}
+                    — {{ entry.relationship.status }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No high-value governance relationships found.</p>
+    {% endif %}
+</div>
+{% endblock %}

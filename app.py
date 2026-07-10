@@ -21328,6 +21328,22 @@ def governance_relationship_audit_detail(audit_id):
     )
 
 
+@app.route("/governance/relationship-lifecycle")
+def governance_relationship_lifecycle_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_relationship_lifecycle_dashboard
+
+    dashboard = build_governance_relationship_lifecycle_dashboard(limit=500)
+
+    return render_template(
+        "governance/relationship_lifecycle_dashboard.html",
+        dashboard=dashboard,
+    )
+
+
 @app.route("/governance/relationship-audits")
 def governance_relationship_audit_ledger():
     gate = require_master_admin()

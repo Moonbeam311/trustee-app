@@ -2251,6 +2251,125 @@ def build_governance_relationship_lifecycle_summary(relationship, audits):
 
 
 
+def build_governance_relationship_lifecycle_dashboard(limit=250):
+    """
+    Build a read-only operator dashboard for governance relationship lifecycle states.
+    """
+    ensure_governance_tables()
+
+    firm_id = get_current_firm_id()
+    limit = int(limit or 250)
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        """
+        SELECT *
+        FROM governance_relationships
+        WHERE firm_id = ?
+        ORDER BY updated_at DESC, id DESC
+        LIMIT ?
+        """,
+        (firm_id, limit),
+    ).fetchall()
+    conn.close()
+
+    high_value_types = {"Document", "Certificate", "Trust", "Matter", "Execution Session"}
+
+    categories = {
+        "active": [],
+        "retired": [],
+        "superseded": [],
+        "reinstated": [],
+        "conflict_blocked": [],
+        "duplicate_blocked": [],
+        "validation_failed": [],
+        "high_value": [],
+    }
+
+    relationships = []
+    totals = {
+        "total": 0,
+        "active": 0,
+        "retired": 0,
+        "superseded": 0,
+        "reinstated": 0,
+        "conflict_blocked": 0,
+        "duplicate_blocked": 0,
+        "validation_failed": 0,
+        "high_value": 0,
+    }
+
+    for row in rows:
+        relationship = dict(row)
+        audits = list_audits_for_governance_relationship(
+            relationship.get("relationship_id"),
+            limit=100,
+            firm_id=firm_id,
+        )
+        lifecycle = build_governance_relationship_lifecycle_summary(relationship, audits)
+
+        entry = {
+            "relationship": relationship,
+            "lifecycle": lifecycle,
+            "audit_count": lifecycle.get("audit_count", 0),
+            "last_action": lifecycle.get("last_action"),
+            "last_outcome": lifecycle.get("last_outcome"),
+            "last_audit_id": lifecycle.get("last_audit_id"),
+            "risk_flags": lifecycle.get("risk_flags") or [],
+        }
+
+        relationships.append(entry)
+        totals["total"] += 1
+
+        status = relationship.get("status") or ""
+        counts = lifecycle.get("counts") or {}
+
+        if status == "Active":
+            categories["active"].append(entry)
+            totals["active"] += 1
+
+        if status == "Retired":
+            categories["retired"].append(entry)
+            totals["retired"] += 1
+
+        if counts.get("superseded"):
+            categories["superseded"].append(entry)
+            totals["superseded"] += 1
+
+        if counts.get("reinstated"):
+            categories["reinstated"].append(entry)
+            totals["reinstated"] += 1
+
+        if counts.get("conflict_detected"):
+            categories["conflict_blocked"].append(entry)
+            totals["conflict_blocked"] += 1
+
+        if counts.get("duplicate_blocked"):
+            categories["duplicate_blocked"].append(entry)
+            totals["duplicate_blocked"] += 1
+
+        if counts.get("validation_failed"):
+            categories["validation_failed"].append(entry)
+            totals["validation_failed"] += 1
+
+        if (
+            relationship.get("source_object_type") in high_value_types
+            or relationship.get("target_object_type") in high_value_types
+        ):
+            categories["high_value"].append(entry)
+            totals["high_value"] += 1
+
+    return {
+        "firm_id": firm_id,
+        "limit": limit,
+        "totals": totals,
+        "relationships": relationships,
+        "categories": categories,
+    }
+
+
+
 def build_governance_relationship_evidence_context(relationship_id):
     relationship = get_governance_relationship(relationship_id)
     audits = list_audits_for_governance_relationship(relationship_id, limit=100)
