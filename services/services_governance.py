@@ -2673,7 +2673,7 @@ def _governance_impact_for_record(record, relationship):
     if state in {"Implemented"}:
         return "Fully Implemented"
 
-    if state in {"Approved", "Ratified", "Effective"}:
+    if state in {"Active", "Completed", "Approved", "Ratified", "Effective"}:
         if relationship_type == "governs":
             return "Governs Current Workflow"
         if relationship_type == "authorizes":
@@ -3376,8 +3376,10 @@ def build_matter_governance_timeline(matter_id):
 
         if record_type == "directive":
             record_label = "Directive"
+            detail_endpoint = "governance_directive_detail"
         elif record_type == "policy":
             record_label = "Policy"
+            detail_endpoint = "governance_policy_detail"
         else:
             continue
 
@@ -3386,6 +3388,7 @@ def build_matter_governance_timeline(matter_id):
             "governance_id": governance_id,
             "record_type": record_type,
             "record_label": record_label,
+            "detail_endpoint": detail_endpoint,
             "title": record.get("title") or "Untitled governance record",
             "lifecycle_state": record.get("lifecycle_state") or record.get("status") or "Unspecified",
             "relationship_id": relationship.get("relationship_id"),
