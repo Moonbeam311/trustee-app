@@ -533,6 +533,14 @@
 .post-v2-3d-collapse-plan ul { margin-bottom: 0; }
 .post-v2-3d-badge { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 8px; margin-left: 6px; font-size: 0.85em; background: #fff; }
 </style>
+<!-- POST-V2-3E SECTION GOVERNANCE LABELS ACTIVE -->
+<style>
+.section-governance-label { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 9px; margin-left: 8px; font-size: 0.78em; font-weight: 700; background: #ffffff; color: #334155; vertical-align: middle; }
+.section-governance-label.active { background: #eef6ff; }
+.section-governance-label.legacy { background: #fff7ed; }
+.section-governance-label.duplicate { background: #f8fafc; }
+.section-governance-label.system { background: #f0fdf4; }
+</style>
 </head>
 
 <body>
@@ -581,10 +589,10 @@
 </section>
 <!-- /POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
 
-<h2>Recommended Next Action</h2>
+<h2>Recommended Next Action <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
     <strong>New matter?</strong> Start with <strong>Start New Intake</strong>.
-    <strong>Existing trust?</strong> Use <strong>Existing Trust Operations</strong>.
+    <strong>Existing trust?</strong> Use <strong>Existing Trust Operations <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></strong>.
     <strong>Need proof, review, or audit trail?</strong> Open the <strong>Lifecycle Ledger</strong> from the Intake Dashboard.
   </p>
 </div>
@@ -592,7 +600,7 @@
 
 <!-- ADR-7 executive dashboard scaffold -->
 <section class="admin-card executive-home">
-  <h2>Executive Home</h2>
+  <h2>Executive Home <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
     This home workspace answers four questions: where was I, what needs attention,
     what should I do next, and is the institution healthy?
@@ -619,7 +627,7 @@
 </section>
 
 <section class="admin-card continue-work-panel">
-  <h2>Continue Where You Left Off</h2>
+  <h2>Continue Where You Left Off <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
     Resume the latest matter, trust, execution packet, funding review, or lifecycle ledger.
   </p>
@@ -632,7 +640,7 @@
 </section>
 
 <section class="admin-card institutional-activity-panel">
-  <h2>Recent Institutional Activity</h2>
+  <h2>Recent Institutional Activity <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
     Activity timeline placeholder. ADR-7E will connect this panel to audit, matter,
     trust, document, execution, and archive events.
@@ -655,22 +663,22 @@
   <p>Non-destructive containment plan for legacy, duplicate, and system-control areas. No routes or links are removed in this milestone.</p>
   <details open>
     <summary>Legacy Compatibility <span class="post-v2-3d-badge">preserve</span></summary>
-    <ul><li>Legacy Compatibility Center</li><li>Legacy Quick Start</li></ul>
+    <ul><li>Legacy Compatibility Center <span class="section-governance-label legacy">LEGACY COMPATIBILITY</span></li><li>Legacy Quick Start <span class="section-governance-label legacy">LEGACY COMPATIBILITY</span></li></ul>
   </details>
   <details>
     <summary>Duplicate Entry Points <span class="post-v2-3d-badge">contain</span></summary>
-    <ul><li>Existing Trust Command Cards</li><li>Learning & Guidance Suite</li><li>Report Launch Area</li><li>Admin Tools</li><li>Operational Shortcuts</li></ul>
+    <ul><li>Existing Trust Command Cards <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Learning & Guidance Suite <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Report Launch Area <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Admin Tools <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li><li>Operational Shortcuts <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></li></ul>
   </details>
   <details open>
     <summary>System Controls <span class="post-v2-3d-badge">protect</span></summary>
-    <ul><li>Hosted Baseline Seed</li><li>Database Backup</li><li>System Policy Controls</li><li>Security Layer</li></ul>
+    <ul><li>Hosted Baseline Seed <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li><li>Database Backup <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li><li>System Policy Controls <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li><li>Security Layer <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></li></ul>
   </details>
   <p><strong>Certified Baseline Preserved:</strong> v2-certified-baseline-2026-07-10</p>
 </section>
 Legacy Compatibility Center</summary>
   <p class="admin-muted">
     Older shortcuts, hosted review notices, and command-map links are preserved here during the executive dashboard rebuild.
-    Prefer the Executive Home and Institutional Command Center above for normal navigation.
+    Prefer the Executive Home and Institutional Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span> above for normal navigation.
   </p>
 
   <div class="admin-actions">
@@ -703,9 +711,9 @@ Legacy Compatibility Center</summary>
   </p>
 </details>
 
-<div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center</div>
+<div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></div>
 <div class="admin-card intake-command-center promoted-intake-panel">
-  <h2>Intake Command Center</h2>
+  <h2>Intake Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
   <p class="admin-muted">
     Recommended first step for new matters. Begin intake, review saved sessions, and follow each matter from first interview through final archive.
   </p>
@@ -722,7 +730,7 @@ Legacy Compatibility Center</summary>
 </div>
 
 
-<div class="admin-section-label">System Snapshot</div>
+<div class="admin-section-label">System Snapshot <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></div>
  <div class="admin-card">
  <div class="admin-grid">
  <div class="metric">
@@ -746,7 +754,7 @@ Legacy Compatibility Center</summary>
 
  <div class="admin-section-label">Existing Trust Operations</div>
  <div class="admin-card">
- <h2>Existing Trust Operations Dashboard</h2>
+ <h2>Existing Trust Operations Dashboard <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
  <p class="admin-muted">Primary operating surface for trust readiness, packet status, and execution entry.</p>
 
  {% if trust_summaries %}
