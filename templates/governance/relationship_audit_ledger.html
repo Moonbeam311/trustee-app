@@ -35,6 +35,7 @@
         <tr>
             <th>Total Displayed</th>
             <th>Created</th>
+                    <th>Export</th>
             <th>Duplicate Blocked</th>
             <th>Other / Failed</th>
         </tr>
@@ -101,7 +102,12 @@
                         <td>{{ audit.reason or "-" }}</td>
                         <td>{{ audit.message or "-" }}</td>
                         <td>{{ audit.created_at or "-" }}</td>
-                    </tr>
+                                            <td>
+                            <a href="{{ url_for('governance_relationship_audit_export_packet', audit_id=audit.audit_id) }}">
+                                Export Audit Packet
+                            </a>
+                        </td>
+</tr>
                 {% endfor %}
             </tbody>
         </table>

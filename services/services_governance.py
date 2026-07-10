@@ -3993,3 +3993,125 @@ def build_governance_relationship_evidence_packet(relationship_id):
     )
 
     return "\n".join(lines)
+
+
+def build_governance_relationship_audit_evidence_packet(audit_id):
+    """
+    Build a read-only text evidence packet for a governance relationship audit event.
+
+    This packet is generated from preserved audit state, linked relationship evidence,
+    and related audit history. It does not alter institutional records.
+    """
+    context = build_governance_audit_evidence_context(audit_id)
+
+    audit = context.get("audit")
+    if not audit:
+        return None
+
+    relationship = context.get("relationship") or {}
+    related_audits = context.get("related_audits") or []
+
+    def value(record, key, default="-"):
+        if not record:
+            return default
+        if hasattr(record, "get"):
+            return record.get(key) or default
+        try:
+            return record[key] or default
+        except Exception:
+            return default
+
+    lines = []
+
+    lines.append("GOVERNANCE RELATIONSHIP AUDIT EVIDENCE PACKET")
+    lines.append("=" * 56)
+    lines.append("")
+    lines.append("Preservation Notice")
+    lines.append("-" * 56)
+    lines.append(
+        "This packet is a read-only institutional evidence export generated from "
+        "preserved governance audit records. It does not modify, delete, retire, "
+        "supersede, reinstate, or otherwise alter any governance relationship."
+    )
+    lines.append("")
+    lines.append("Institutional Principle")
+    lines.append("-" * 56)
+    lines.append("Every institutional action becomes a permanent governed record.")
+    lines.append("")
+
+    lines.append("Audit Event Summary")
+    lines.append("-" * 56)
+    lines.append(f"Audit ID: {value(audit, 'audit_id')}")
+    lines.append(f"Outcome: {value(audit, 'outcome')}")
+    lines.append(f"Action: {value(audit, 'action')}")
+    lines.append(
+        f"Source: {value(audit, 'source_object_type')} — "
+        f"{value(audit, 'source_object_id')}"
+    )
+    lines.append(f"Relationship Type: {value(audit, 'relationship_type')}")
+    lines.append(
+        f"Target: {value(audit, 'target_object_type')} — "
+        f"{value(audit, 'target_object_id')}"
+    )
+    lines.append(f"Attempted Relationship ID: {value(audit, 'attempted_relationship_id')}")
+    lines.append(f"Existing Relationship ID: {value(audit, 'existing_relationship_id')}")
+    lines.append(f"Actor: {value(audit, 'actor')}")
+    lines.append(f"Authority: {value(audit, 'authority')}")
+    lines.append(f"Reason: {value(audit, 'reason')}")
+    lines.append(f"Message: {value(audit, 'message')}")
+    lines.append(f"Created At: {value(audit, 'created_at')}")
+    lines.append("")
+
+    lines.append("Linked Relationship Evidence")
+    lines.append("-" * 56)
+    if relationship:
+        lines.append(f"Relationship ID: {value(relationship, 'relationship_id')}")
+        lines.append(f"Status: {value(relationship, 'status')}")
+        lines.append(
+            f"Source: {value(relationship, 'source_object_type')} — "
+            f"{value(relationship, 'source_object_id')}"
+        )
+        lines.append(f"Relationship Type: {value(relationship, 'relationship_type')}")
+        lines.append(
+            f"Target: {value(relationship, 'target_object_type')} — "
+            f"{value(relationship, 'target_object_id')}"
+        )
+        lines.append(f"Authority: {value(relationship, 'authority')}")
+        lines.append(f"Reason: {value(relationship, 'reason')}")
+        lines.append(f"Created By: {value(relationship, 'created_by')}")
+        lines.append(f"Effective At: {value(relationship, 'effective_at')}")
+        lines.append(f"Retired At: {value(relationship, 'retired_at')}")
+        lines.append(f"Created At: {value(relationship, 'created_at')}")
+        lines.append(f"Updated At: {value(relationship, 'updated_at')}")
+    else:
+        lines.append("No linked relationship evidence found for this audit event.")
+    lines.append("")
+
+    lines.append("Related Audit Events")
+    lines.append("-" * 56)
+    if related_audits:
+        for related in related_audits:
+            lines.append(f"Audit ID: {value(related, 'audit_id')}")
+            lines.append(f"Outcome: {value(related, 'outcome')}")
+            lines.append(f"Action: {value(related, 'action')}")
+            lines.append(f"Attempted Relationship: {value(related, 'attempted_relationship_id')}")
+            lines.append(f"Existing Relationship: {value(related, 'existing_relationship_id')}")
+            lines.append(f"Actor: {value(related, 'actor')}")
+            lines.append(f"Authority: {value(related, 'authority')}")
+            lines.append(f"Reason: {value(related, 'reason')}")
+            lines.append(f"Message: {value(related, 'message')}")
+            lines.append(f"Created At: {value(related, 'created_at')}")
+            lines.append("")
+    else:
+        lines.append("No related audit events found.")
+        lines.append("")
+
+    lines.append("End of Packet")
+    lines.append("=" * 56)
+    lines.append("Institutional Property of Luna Isaac III Mishoe")
+    lines.append(
+        "System records, workflows, generated instruments, certificates, exports, "
+        "and archive materials are maintained under fiduciary custody."
+    )
+
+    return "\n".join(lines)

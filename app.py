@@ -21329,6 +21329,31 @@ def governance_relationship_retire(relationship_id):
     return redirect(url_for("governance_relationship_detail", relationship_id=relationship_id))
 
 
+@app.route("/governance/relationship-audits/<audit_id>/export")
+def governance_relationship_audit_export_packet(audit_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_relationship_audit_evidence_packet
+
+    packet = build_governance_relationship_audit_evidence_packet(audit_id)
+    if not packet:
+        flash("Governance relationship audit not found for export.", "warning")
+        return redirect(url_for("governance_relationship_audit_ledger"))
+
+    filename = f"governance_relationship_audit_{audit_id}_evidence_packet.txt"
+
+    return Response(
+        packet,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        },
+    )
+
+
 @app.route("/governance/relationship-audits/<audit_id>")
 def governance_relationship_audit_detail(audit_id):
     gate = require_master_admin()

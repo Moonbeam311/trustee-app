@@ -19,6 +19,12 @@
     {% else %}
         {% set audit = context.audit %}
 
+        <p>
+            <a href="{{ url_for('governance_relationship_audit_export_packet', audit_id=audit.audit_id) }}">
+                Export Audit Evidence Packet
+            </a>
+        </p>
+
         <h2>Audit Event Summary</h2>
         <table class="table">
             <tr><th>Audit ID</th><td><strong>{{ audit.audit_id }}</strong></td></tr>
