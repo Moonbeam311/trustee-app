@@ -4645,3 +4645,208 @@ def build_governance_evidence_export_manifest_text(
     lines.append(manifest.get("custody_notice") or "")
 
     return "\n".join(lines) + "\n"
+
+
+def _sha256_text_digest(value):
+    """
+    Return SHA-256 hex digest for a text export payload.
+    """
+    import hashlib
+
+    if value is None:
+        value = ""
+
+    if not isinstance(value, str):
+        value = str(value)
+
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def build_governance_export_integrity_digest_index(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only SHA-256 integrity digest index for governance evidence exports.
+
+    This function does not mutate governance relationships, audits, packets, indexes,
+    lifecycle states, archive records, source records, or target records.
+    """
+    from datetime import datetime, timezone
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    filter_context = {
+        "object_type": object_type,
+        "object_id": object_id,
+        "status": status,
+        "outcome": outcome,
+        "limit": limit,
+    }
+
+    artifacts = []
+
+    csv_artifacts = [
+        {
+            "artifact_label": "Combined Evidence Export CSV",
+            "artifact_type": "combined_csv",
+            "packet_type": "combined",
+            "route": "/governance/evidence-exports.csv?packet_type=combined",
+        },
+        {
+            "artifact_label": "Relationship Evidence Export CSV",
+            "artifact_type": "relationship_csv",
+            "packet_type": "relationships",
+            "route": "/governance/evidence-exports.csv?packet_type=relationships",
+        },
+        {
+            "artifact_label": "Audit Evidence Export CSV",
+            "artifact_type": "audit_csv",
+            "packet_type": "audits",
+            "route": "/governance/evidence-exports.csv?packet_type=audits",
+        },
+    ]
+
+    for artifact in csv_artifacts:
+        payload = build_governance_evidence_export_index_csv(
+            packet_type=artifact["packet_type"],
+            object_type=object_type,
+            object_id=object_id,
+            status=status,
+            outcome=outcome,
+            limit=limit,
+        )
+        artifacts.append(
+            {
+                "artifact_label": artifact["artifact_label"],
+                "artifact_type": artifact["artifact_type"],
+                "route": artifact["route"],
+                "sha256": _sha256_text_digest(payload),
+                "generated_at": generated_at,
+                "filter_context": filter_context,
+                "read_only": True,
+            }
+        )
+
+    manifest_payload = build_governance_evidence_export_manifest_text(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+    artifacts.append(
+        {
+            "artifact_label": "Governance Evidence Export Manifest TXT",
+            "artifact_type": "manifest_txt",
+            "route": "/governance/evidence-exports/manifest.txt",
+            "sha256": _sha256_text_digest(manifest_payload),
+            "generated_at": generated_at,
+            "filter_context": filter_context,
+            "read_only": True,
+        }
+    )
+
+    manifest = build_governance_evidence_export_manifest(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    summary = manifest.get("summary") or {}
+
+    return {
+        "title": "Governance Export Integrity Digest",
+        "digest_algorithm": "SHA-256",
+        "generated_at": generated_at,
+        "read_only": True,
+        "filters": filter_context,
+        "summary": {
+            "total_artifacts": len(artifacts),
+            "total_packets": summary.get("total_packets", 0),
+            "relationship_packets": summary.get("relationship_packets", 0),
+            "audit_packets": summary.get("audit_packets", 0),
+        },
+        "artifacts": artifacts,
+        "preservation_statement": (
+            "This integrity digest index records SHA-256 values for generated governance "
+            "evidence export artifacts. It is read-only and does not alter governance "
+            "relationships, audit events, lifecycle states, export packets, source records, "
+            "target records, or archive records."
+        ),
+        "custody_notice": (
+            "Institutional Property of Luna Isaac III Mishoe. System records, workflows, "
+            "generated instruments, certificates, exports, and archive materials are maintained "
+            "under fiduciary custody. Authorized Access Only."
+        ),
+    }
+
+
+def build_governance_export_integrity_digest_text(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only plain-text SHA-256 integrity digest index.
+    """
+    digest_index = build_governance_export_integrity_digest_index(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    lines = []
+    lines.append("GOVERNANCE EXPORT INTEGRITY DIGEST")
+    lines.append("=" * 44)
+    lines.append("")
+    lines.append(f"Algorithm: {digest_index.get('digest_algorithm')}")
+    lines.append(f"Generated At: {digest_index.get('generated_at')}")
+    lines.append(f"Read Only: {digest_index.get('read_only')}")
+    lines.append("")
+    lines.append("FILTER CONTEXT")
+    lines.append("-" * 44)
+    filters = digest_index.get("filters") or {}
+    lines.append(f"Object Type: {filters.get('object_type') or '-'}")
+    lines.append(f"Object ID: {filters.get('object_id') or '-'}")
+    lines.append(f"Relationship Status: {filters.get('status') or '-'}")
+    lines.append(f"Audit Outcome: {filters.get('outcome') or '-'}")
+    lines.append(f"Limit: {filters.get('limit') or '-'}")
+    lines.append("")
+    lines.append("SUMMARY")
+    lines.append("-" * 44)
+    summary = digest_index.get("summary") or {}
+    lines.append(f"Total Artifacts: {summary.get('total_artifacts', 0)}")
+    lines.append(f"Total Packets: {summary.get('total_packets', 0)}")
+    lines.append(f"Relationship Packets: {summary.get('relationship_packets', 0)}")
+    lines.append(f"Audit Packets: {summary.get('audit_packets', 0)}")
+    lines.append("")
+    lines.append("DIGEST ARTIFACTS")
+    lines.append("-" * 44)
+
+    for artifact in digest_index.get("artifacts") or []:
+        lines.append(f"Artifact Label: {artifact.get('artifact_label')}")
+        lines.append(f"Artifact Type: {artifact.get('artifact_type')}")
+        lines.append(f"Route: {artifact.get('route')}")
+        lines.append(f"SHA-256: {artifact.get('sha256')}")
+        lines.append(f"Read Only: {artifact.get('read_only')}")
+        lines.append("")
+
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 44)
+    lines.append(digest_index.get("preservation_statement") or "")
+    lines.append("")
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 44)
+    lines.append(digest_index.get("custody_notice") or "")
+
+    return "\n".join(lines) + "\n"

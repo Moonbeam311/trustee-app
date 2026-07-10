@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Governance Export Integrity Digest</h1>
+    <p>
+        Read-only SHA-256 digest index for governance evidence export artifacts.
+        Use these values to verify exported files after download, archive intake, or transmission.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_evidence_export_manifest', object_type=digest_index.filters.object_type, object_id=digest_index.filters.object_id, status=digest_index.filters.status, outcome=digest_index.filters.outcome, limit=digest_index.filters.limit) }}">Manifest</a> |
+        <a href="{{ url_for('governance_export_integrity_digest_text', object_type=digest_index.filters.object_type, object_id=digest_index.filters.object_id, status=digest_index.filters.status, outcome=digest_index.filters.outcome, limit=digest_index.filters.limit) }}">Download Integrity TXT</a>
+    </p>
+
+    <h2>Digest Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Algorithm</th>
+            <th>Generated At</th>
+            <th>Read Only</th>
+            <th>Total Artifacts</th>
+            <th>Total Packets</th>
+            <th>Relationship Packets</th>
+            <th>Audit Packets</th>
+        </tr>
+        <tr>
+            <td>{{ digest_index.digest_algorithm }}</td>
+            <td>{{ digest_index.generated_at }}</td>
+            <td>{{ digest_index.read_only }}</td>
+            <td>{{ digest_index.summary.total_artifacts }}</td>
+            <td>{{ digest_index.summary.total_packets }}</td>
+            <td>{{ digest_index.summary.relationship_packets }}</td>
+            <td>{{ digest_index.summary.audit_packets }}</td>
+        </tr>
+    </table>
+
+    <h2>Filter Context</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Object Type</th>
+            <th>Object ID</th>
+            <th>Relationship Status</th>
+            <th>Audit Outcome</th>
+            <th>Limit</th>
+        </tr>
+        <tr>
+            <td>{{ digest_index.filters.object_type or "-" }}</td>
+            <td>{{ digest_index.filters.object_id or "-" }}</td>
+            <td>{{ digest_index.filters.status or "-" }}</td>
+            <td>{{ digest_index.filters.outcome or "-" }}</td>
+            <td>{{ digest_index.filters.limit }}</td>
+        </tr>
+    </table>
+
+    <h2>SHA-256 Digest Artifacts</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Artifact Label</th>
+            <th>Artifact Type</th>
+            <th>Route</th>
+            <th>SHA-256</th>
+            <th>Read Only</th>
+            <th>Generated At</th>
+        </tr>
+        {% for artifact in digest_index.artifacts %}
+        <tr>
+            <td>{{ artifact.artifact_label }}</td>
+            <td>{{ artifact.artifact_type }}</td>
+            <td>{{ artifact.route }}</td>
+            <td><code>{{ artifact.sha256 }}</code></td>
+            <td>{{ artifact.read_only }}</td>
+            <td>{{ artifact.generated_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Preservation Statement</h2>
+    <p>{{ digest_index.preservation_statement }}</p>
+</section>
+{% endblock %}

@@ -21410,6 +21410,54 @@ def governance_evidence_export_index_csv():
     )
 
 
+@app.route("/governance/evidence-exports/integrity.txt")
+def governance_export_integrity_digest_text():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_export_integrity_digest_text
+
+    digest_text = build_governance_export_integrity_digest_text(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return Response(
+        digest_text,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=governance_export_integrity_digest.txt"
+        },
+    )
+
+
+@app.route("/governance/evidence-exports/integrity")
+def governance_export_integrity_digest():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_export_integrity_digest_index
+
+    digest_index = build_governance_export_integrity_digest_index(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return render_template(
+        "governance/evidence_export_integrity.html",
+        digest_index=digest_index,
+    )
+
+
 @app.route("/governance/evidence-exports/manifest.txt")
 def governance_evidence_export_manifest_text():
     gate = require_master_admin()
