@@ -516,27 +516,20 @@
 }
 </style>
 
+<!-- POST-V2-3B VISUAL POLISH ACTIVE -->
+<style>
+.admin-command-center { border: 1px solid #cbd5e1; border-radius: 18px; background: #f8fafc; padding: 20px; margin: 20px 0; }
+.admin-command-center h2 { margin-top: 0; }
+.admin-command-center .workspace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.admin-command-center .workspace-card { border: 1px solid #d0d7de; border-radius: 14px; background: white; padding: 14px; text-decoration: none; color: inherit; }
+.admin-command-center .workspace-card strong { display: block; margin-bottom: 6px; }
+.admin-command-center .workspace-card span { display: block; color: #475569; line-height: 1.35; }
+</style>
 </head>
 
 <body>
 
-<!-- POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
-<section class="admin-operator-groups">
-  <h2>Admin Operator Groups</h2>
-  <p>Grouped operator access for administration, governance, records, continuity, security, and diagnostics. This section reorganizes navigation only.</p>
-  <div class="workspace-grid">
-    <a class="workspace-card" href="{{ url_for('system_health_dashboard') }}"><strong>System Status</strong><span>Health, system checks, and operating condition.</span></a>
-    <a class="workspace-card" href="{{ url_for('governance_dashboard') }}"><strong>Governance</strong><span>Directives, policies, relationships, evidence, and V2 certification.</span></a>
-    <a class="workspace-card" href="{{ url_for('matters_dashboard') }}"><strong>Matters / Trusts</strong><span>Matter records, trust operations, intake, and execution.</span></a>
-    <a class="workspace-card" href="{{ url_for('fiduciary_dashboard') }}"><strong>People / Fiduciaries</strong><span>Fiduciaries, users, roles, and institutional actors.</span></a>
-    <a class="workspace-card" href="{{ url_for('export_center') }}"><strong>Documents / Exports</strong><span>Generated records, documents, exports, media, and forms.</span></a>
-    <a class="workspace-card" href="{{ url_for('continuity_asset_dashboard') }}"><strong>Archive / Continuity</strong><span>Continuity assets, archive readiness, and recovery support.</span></a>
-    <a class="workspace-card" href="{{ url_for('security_dashboard') }}"><strong>Security / Access</strong><span>Security, permissions, roles, and user access.</span></a>
-    <a class="workspace-card" href="{{ url_for('admin_audit_log') }}"><strong>Developer / Diagnostics</strong><span>Audit log, diagnostics, storage checks, and developer review.</span></a>
-  </div>
-  <p><strong>Certified Baseline Preserved:</strong> v2-certified-baseline-2026-07-10</p>
-</section>
-<!-- /POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
+
 
 <div class="page-shell admin-wrap">
  {% include "_platform_nav.html" %}
@@ -562,7 +555,25 @@
 
  
 <div class="admin-card admin-recommended-start">
-  <h2>Recommended Next Action</h2>
+  <!-- POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
+<section class="admin-operator-groups admin-command-center">
+  <h2>Institutional Command Groups</h2>
+  <p>Primary grouped access for institutional administration. Use these cards as the main operating map before using legacy shortcuts below.</p>
+  <div class="workspace-grid">
+    <a class="workspace-card" href="{{ url_for('system_health_dashboard') }}"><strong>System Status</strong><span>Health, system checks, and operating condition.</span></a>
+    <a class="workspace-card" href="{{ url_for('governance_dashboard') }}"><strong>Governance</strong><span>Directives, policies, relationships, evidence, and V2 certification.</span></a>
+    <a class="workspace-card" href="{{ url_for('matters_dashboard') }}"><strong>Matters / Trusts</strong><span>Matter records, trust operations, intake, and execution.</span></a>
+    <a class="workspace-card" href="{{ url_for('fiduciary_dashboard') }}"><strong>People / Fiduciaries</strong><span>Fiduciaries, users, roles, and institutional actors.</span></a>
+    <a class="workspace-card" href="{{ url_for('export_center') }}"><strong>Documents / Exports</strong><span>Generated records, documents, exports, media, and forms.</span></a>
+    <a class="workspace-card" href="{{ url_for('continuity_asset_dashboard') }}"><strong>Archive / Continuity</strong><span>Continuity assets, archive readiness, and recovery support.</span></a>
+    <a class="workspace-card" href="{{ url_for('security_dashboard') }}"><strong>Security / Access</strong><span>Security, permissions, roles, and user access.</span></a>
+    <a class="workspace-card" href="{{ url_for('admin_audit_log') }}"><strong>Developer / Diagnostics</strong><span>Audit log, diagnostics, storage checks, and developer review.</span></a>
+  </div>
+  <p><strong>Certified Baseline Preserved:</strong> v2-certified-baseline-2026-07-10</p>
+</section>
+<!-- /POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
+
+<h2>Recommended Next Action</h2>
   <p class="admin-muted">
     <strong>New matter?</strong> Start with <strong>Start New Intake</strong>.
     <strong>Existing trust?</strong> Use <strong>Existing Trust Operations</strong>.
