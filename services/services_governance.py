@@ -4426,3 +4426,219 @@ def build_governance_evidence_export_index_csv(
             )
 
     return "\n".join(lines) + "\n"
+
+
+def build_governance_evidence_export_manifest(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only manifest summarizing the governance evidence export universe.
+
+    The manifest does not mutate governance relationships, audits, packets, indexes,
+    lifecycle states, or institutional records.
+    """
+    from datetime import datetime, timezone
+
+    index = build_governance_evidence_export_index(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    filters = index.get("filters") or {}
+    summary = index.get("summary") or {}
+    relationships = index.get("relationships") or []
+    audits = index.get("audits") or []
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    manifest = {
+        "manifest_title": "Governance Evidence Export Manifest",
+        "manifest_type": "governance_evidence_export_manifest",
+        "generated_at": generated_at,
+        "read_only": True,
+        "filters": {
+            "object_type": filters.get("object_type") if isinstance(filters, dict) else None,
+            "object_id": filters.get("object_id") if isinstance(filters, dict) else None,
+            "status": filters.get("status") if isinstance(filters, dict) else None,
+            "outcome": filters.get("outcome") if isinstance(filters, dict) else None,
+            "limit": filters.get("limit") if isinstance(filters, dict) else limit,
+        },
+        "summary": {
+            "total_packets": summary.get("total_packets", 0),
+            "relationship_packets": summary.get("relationship_packets", 0),
+            "audit_packets": summary.get("audit_packets", 0),
+        },
+        "relationship_status_counts": (
+            summary.get("relationship_status_counts")
+            or index.get("relationship_status_counts")
+            or index.get("status_counts")
+            or index.get("relationship_status_summary")
+            or {}
+        ),
+        "audit_outcome_counts": (
+            summary.get("audit_outcome_counts")
+            or index.get("audit_outcome_counts")
+            or index.get("outcome_counts")
+            or index.get("audit_outcome_summary")
+            or {}
+        ),
+        "available_artifacts": {
+            "index_page": "/governance/evidence-exports",
+            "combined_csv": "/governance/evidence-exports.csv?packet_type=combined",
+            "relationship_csv": "/governance/evidence-exports.csv?packet_type=relationships",
+            "audit_csv": "/governance/evidence-exports.csv?packet_type=audits",
+            "manifest_page": "/governance/evidence-exports/manifest",
+            "manifest_text": "/governance/evidence-exports/manifest.txt",
+        },
+        "relationship_packet_exports": [
+            {
+                "relationship_id": rel.get("relationship_id"),
+                "status": rel.get("status"),
+                "lifecycle_label": rel.get("lifecycle_label"),
+                "source_object_type": rel.get("source_object_type"),
+                "source_object_id": rel.get("source_object_id"),
+                "relationship_type": rel.get("relationship_type"),
+                "target_object_type": rel.get("target_object_type"),
+                "target_object_id": rel.get("target_object_id"),
+                "audit_count": rel.get("audit_count"),
+                "last_outcome": rel.get("last_outcome"),
+                "last_audit_id": rel.get("last_audit_id"),
+                "export_path": (
+                    f"/governance/relationships/{rel.get('relationship_id')}/export"
+                    if rel.get("relationship_id")
+                    else None
+                ),
+            }
+            for rel in relationships
+        ],
+        "audit_packet_exports": [
+            {
+                "audit_id": audit.get("audit_id"),
+                "outcome": audit.get("outcome"),
+                "action": audit.get("action"),
+                "source_object_type": audit.get("source_object_type"),
+                "source_object_id": audit.get("source_object_id"),
+                "relationship_type": audit.get("relationship_type"),
+                "target_object_type": audit.get("target_object_type"),
+                "target_object_id": audit.get("target_object_id"),
+                "attempted_relationship_id": audit.get("attempted_relationship_id"),
+                "existing_relationship_id": audit.get("existing_relationship_id"),
+                "export_path": (
+                    f"/governance/relationship-audits/{audit.get('audit_id')}/export"
+                    if audit.get("audit_id")
+                    else None
+                ),
+            }
+            for audit in audits
+        ],
+        "custody_notice": (
+            "Institutional Property of Luna Isaac III Mishoe. System records, workflows, "
+            "generated instruments, certificates, exports, and archive materials are maintained "
+            "under fiduciary custody. Authorized Access Only."
+        ),
+        "preservation_statement": (
+            "This manifest identifies the governance evidence exports available at the time "
+            "of generation. It is a read-only institutional export inventory and does not alter "
+            "any governance relationship, audit event, lifecycle state, or source record."
+        ),
+    }
+
+    return manifest
+
+
+def build_governance_evidence_export_manifest_text(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only plain-text governance evidence export manifest.
+    """
+    manifest = build_governance_evidence_export_manifest(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    lines = []
+    lines.append("GOVERNANCE EVIDENCE EXPORT MANIFEST")
+    lines.append("=" * 44)
+    lines.append("")
+    lines.append(f"Manifest Type: {manifest.get('manifest_type')}")
+    lines.append(f"Generated At: {manifest.get('generated_at')}")
+    lines.append(f"Read Only: {manifest.get('read_only')}")
+    lines.append("")
+    lines.append("FILTERS")
+    lines.append("-" * 44)
+    filters = manifest.get("filters") or {}
+    lines.append(f"Object Type: {filters.get('object_type') or '-'}")
+    lines.append(f"Object ID: {filters.get('object_id') or '-'}")
+    lines.append(f"Relationship Status: {filters.get('status') or '-'}")
+    lines.append(f"Audit Outcome: {filters.get('outcome') or '-'}")
+    lines.append(f"Limit: {filters.get('limit') or '-'}")
+    lines.append("")
+    lines.append("PACKET SUMMARY")
+    lines.append("-" * 44)
+    summary = manifest.get("summary") or {}
+    lines.append(f"Total Packets: {summary.get('total_packets', 0)}")
+    lines.append(f"Relationship Packets: {summary.get('relationship_packets', 0)}")
+    lines.append(f"Audit Packets: {summary.get('audit_packets', 0)}")
+    lines.append("")
+    lines.append("RELATIONSHIP STATUS COUNTS")
+    lines.append("-" * 44)
+    for status_label, count in (manifest.get("relationship_status_counts") or {}).items():
+        lines.append(f"{status_label}: {count}")
+    lines.append("")
+    lines.append("AUDIT OUTCOME COUNTS")
+    lines.append("-" * 44)
+    for outcome_label, count in (manifest.get("audit_outcome_counts") or {}).items():
+        lines.append(f"{outcome_label}: {count}")
+    lines.append("")
+    lines.append("AVAILABLE EXPORT ARTIFACTS")
+    lines.append("-" * 44)
+    for label, path in (manifest.get("available_artifacts") or {}).items():
+        lines.append(f"{label}: {path}")
+    lines.append("")
+    lines.append("RELATIONSHIP PACKET EXPORTS")
+    lines.append("-" * 44)
+    for rel in manifest.get("relationship_packet_exports") or []:
+        lines.append(
+            f"{rel.get('relationship_id')} | {rel.get('status')} | "
+            f"{rel.get('source_object_type')} {rel.get('source_object_id')} "
+            f"{rel.get('relationship_type')} "
+            f"{rel.get('target_object_type')} {rel.get('target_object_id')} | "
+            f"{rel.get('export_path')}"
+        )
+    lines.append("")
+    lines.append("AUDIT PACKET EXPORTS")
+    lines.append("-" * 44)
+    for audit in manifest.get("audit_packet_exports") or []:
+        lines.append(
+            f"{audit.get('audit_id')} | {audit.get('outcome')} | "
+            f"{audit.get('action')} | "
+            f"{audit.get('source_object_type')} {audit.get('source_object_id')} "
+            f"{audit.get('relationship_type')} "
+            f"{audit.get('target_object_type')} {audit.get('target_object_id')} | "
+            f"{audit.get('export_path')}"
+        )
+    lines.append("")
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 44)
+    lines.append(manifest.get("preservation_statement") or "")
+    lines.append("")
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 44)
+    lines.append(manifest.get("custody_notice") or "")
+
+    return "\n".join(lines) + "\n"

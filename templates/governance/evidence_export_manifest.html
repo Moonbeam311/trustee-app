@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Governance Evidence Export Manifest</h1>
+    <p>
+        Read-only institutional manifest summarizing the governance evidence export universe
+        available at the time of generation.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_relationship_lifecycle_dashboard') }}">Relationship Lifecycle Dashboard</a> |
+        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a>
+    </p>
+
+    <h2>Manifest Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Manifest Type</th>
+            <th>Generated At</th>
+            <th>Read Only</th>
+        </tr>
+        <tr>
+            <td>{{ manifest.manifest_type }}</td>
+            <td>{{ manifest.generated_at }}</td>
+            <td>{{ manifest.read_only }}</td>
+        </tr>
+    </table>
+
+    <h2>Packet Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Total Packets</th>
+            <th>Relationship Packets</th>
+            <th>Audit Packets</th>
+        </tr>
+        <tr>
+            <td>{{ manifest.summary.total_packets }}</td>
+            <td>{{ manifest.summary.relationship_packets }}</td>
+            <td>{{ manifest.summary.audit_packets }}</td>
+        </tr>
+    </table>
+
+    <h2>Filters Applied</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Object Type</th>
+            <th>Object ID</th>
+            <th>Relationship Status</th>
+            <th>Audit Outcome</th>
+            <th>Limit</th>
+        </tr>
+        <tr>
+            <td>{{ manifest.filters.object_type or "-" }}</td>
+            <td>{{ manifest.filters.object_id or "-" }}</td>
+            <td>{{ manifest.filters.status or "-" }}</td>
+            <td>{{ manifest.filters.outcome or "-" }}</td>
+            <td>{{ manifest.filters.limit }}</td>
+        </tr>
+    </table>
+
+    <h2>Available Export Artifacts</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Artifact</th>
+            <th>Route</th>
+        </tr>
+        {% for label, path in manifest.available_artifacts.items() %}
+        <tr>
+            <td>{{ label }}</td>
+            <td>{{ path }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Relationship Status Counts</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Status</th>
+            <th>Count</th>
+        </tr>
+        {% for status, count in manifest.relationship_status_counts.items() %}
+        <tr>
+            <td>{{ status }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Audit Outcome Counts</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Outcome</th>
+            <th>Count</th>
+        </tr>
+        {% for outcome, count in manifest.audit_outcome_counts.items() %}
+        <tr>
+            <td>{{ outcome }}</td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Relationship Packet Coverage</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Relationship ID</th>
+            <th>Status</th>
+            <th>Lifecycle</th>
+            <th>Source</th>
+            <th>Verb</th>
+            <th>Target</th>
+            <th>Audits</th>
+            <th>Last Outcome</th>
+            <th>Export Path</th>
+        </tr>
+        {% for rel in manifest.relationship_packet_exports %}
+        <tr>
+            <td>{{ rel.relationship_id }}</td>
+            <td>{{ rel.status }}</td>
+            <td>{{ rel.lifecycle_label }}</td>
+            <td>{{ rel.source_object_type }}<br>{{ rel.source_object_id }}</td>
+            <td>{{ rel.relationship_type }}</td>
+            <td>{{ rel.target_object_type }}<br>{{ rel.target_object_id }}</td>
+            <td>{{ rel.audit_count }}</td>
+            <td>{{ rel.last_outcome or "-" }}</td>
+            <td>{{ rel.export_path }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Audit Packet Coverage</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Audit ID</th>
+            <th>Outcome</th>
+            <th>Action</th>
+            <th>Source</th>
+            <th>Verb</th>
+            <th>Target</th>
+            <th>Attempted Relationship</th>
+            <th>Existing Relationship</th>
+            <th>Export Path</th>
+        </tr>
+        {% for audit in manifest.audit_packet_exports %}
+        <tr>
+            <td>{{ audit.audit_id }}</td>
+            <td>{{ audit.outcome }}</td>
+            <td>{{ audit.action }}</td>
+            <td>{{ audit.source_object_type }}<br>{{ audit.source_object_id }}</td>
+            <td>{{ audit.relationship_type }}</td>
+            <td>{{ audit.target_object_type }}<br>{{ audit.target_object_id }}</td>
+            <td>{{ audit.attempted_relationship_id or "-" }}</td>
+            <td>{{ audit.existing_relationship_id or "-" }}</td>
+            <td>{{ audit.export_path }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Manifest Preservation Statement</h2>
+    <p>{{ manifest.preservation_statement }}</p>
+</section>
+{% endblock %}
