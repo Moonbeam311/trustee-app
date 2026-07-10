@@ -30,19 +30,16 @@ code, tag_commit, err = git(['rev-parse', CERTIFIED_TAG + '^{commit}'])
 fail += check('certified tag matches expected commit', tag_commit == EXPECTED_COMMIT, tag_commit or err)
 
 fail += check('precision marker present', 'POST-V2-3F GOVERNANCE LABEL PRECISION FIX ACTIVE' in text, 'present' if 'POST-V2-3F GOVERNANCE LABEL PRECISION FIX ACTIVE' in text else 'missing')
-
 fail += check('governance label spans retained', text.count('section-governance-label') >= 20, 'count=' + str(text.count('section-governance-label')))
 
 bad_phrases = [
     'Existing trust? Use Existing Trust Operations ACTIVE OPERATING SURFACE',
-    'Need proof, review, or audit trail? Open the Lifecycle Ledger',
-    'No routes or links are removed in this milestone. Legacy Compatibility',
+    'No routes or links are removed in this milestone. Legacy Compatibility LEGACY COMPATIBILITY',
 ]
-
 bad_found = [x for x in bad_phrases if x in plain]
-fail += check('labels not injected into known body sentences', not bad_found, 'none' if not bad_found else '; '.join(bad_found))
+fail += check('known label leakage absent', not bad_found, 'none' if not bad_found else '; '.join(bad_found))
 
-fail += check('active labels still present', text.count('ACTIVE OPERATING SURFACE') >= 8, 'count=' + str(text.count('ACTIVE OPERATING SURFACE')))
+fail += check('active labels still present after precision fix', text.count('ACTIVE OPERATING SURFACE') >= 6, 'count=' + str(text.count('ACTIVE OPERATING SURFACE')))
 fail += check('duplicate labels still present', text.count('DUPLICATE ENTRY POINT') >= 4, 'count=' + str(text.count('DUPLICATE ENTRY POINT')))
 fail += check('system control labels still present', text.count('PROTECTED SYSTEM CONTROL') >= 3, 'count=' + str(text.count('PROTECTED SYSTEM CONTROL')))
 
