@@ -8,12 +8,39 @@ CERTIFIED_TAG = 'v2-certified-baseline-2026-07-10'
 EXPECTED = '607eb174354510b64804f8dd8e4b87756f25f366'
 
 GROUPS = {
-    'Security / Access': ['bootstrap_admin', 'reset_admin', 'repair_admin_access', 'reseed_permissions', 'hosted_reseed', 'permissions', 'roles', 'users', 'security'],
-    'Developer / Diagnostics': ['diag', 'diagnostic', 'storage', 'repair', 'migration', 'run_hosted', 'certificate_event_bus'],
-    'System Status': ['backup', 'seed_hosted', 'hosted_bootstrap', 'system', 'status', 'health', 'certificate_api', 'certificate_interface', 'certificate_object_model'],
-    'Documents / Exports': ['document', 'draft', 'approval', 'articles', 'forms', 'certificate_packet', 'certificate_registry', 'unified_certificate'],
-    'Governance': ['governance', 'policy', 'certificate_policies', 'certificate_types'],
-    'Archive / Continuity': ['archive', 'continuity', 'final_archive'],
+    'Security / Access': [
+        'bootstrap_admin', 'reset_admin', 'repair_admin_access', 'reseed_permissions',
+        'hosted_reseed', 'hosted_repair', 'permissions', 'roles', 'users', 'security',
+        'admin_repair', 'hosted_bootstrap', 'bootstrap'
+    ],
+    'Developer / Diagnostics': [
+        'diag', 'diagnostic', 'storage', 'repair', 'migration', 'run_hosted',
+        'certificate_event_bus', 'api_certificate_events', 'event_monitor',
+        'seed_execution_objects', 'int_lifecycle'
+    ],
+    'System Status': [
+        'backup', 'seed_hosted', 'system', 'status', 'health',
+        'certificate_api', 'certificate_interface', 'certificate_object_model',
+        'admin_index', 'admin_ios_workspace'
+    ],
+    'Documents / Exports': [
+        'document', 'draft', 'approval', 'articles', 'article', 'forms', 'form_guide',
+        'certificate_packet', 'certificate_registry', 'unified_certificate',
+        'certificate_studio', 'certificate_workspace', 'certificate_template',
+        'certificate_builder', 'certificate_explorer', 'certificate_packet_studio',
+        'certificate_object', 'certificate_chain', 'certificate_relationships',
+        'certificate_timeline', 'certificate_verify', 'certificate_search',
+        'trust_certificate', 'minute_certificate', 'transfer_certificate',
+        'certificate-of-trust'
+    ],
+    'Governance': [
+        'governance', 'policy', 'certificate_policies', 'certificate_types',
+        'certificate-studio/governance', 'api_certificate_types'
+    ],
+    'Archive / Continuity': [
+        'archive', 'continuity', 'final_archive', 'backfill_certificate',
+        'certificates/backfill'
+    ],
 }
 
 def git(args):
