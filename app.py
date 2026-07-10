@@ -21458,6 +21458,54 @@ def governance_evidence_certification_dashboard():
     )
 
 
+@app.route("/governance/evidence-exports/exceptions.txt")
+def governance_evidence_exception_panel_text():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_evidence_exception_panel_text
+
+    panel_text = build_governance_evidence_exception_panel_text(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return Response(
+        panel_text,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=governance_evidence_exception_panel.txt"
+        },
+    )
+
+
+@app.route("/governance/evidence-exports/exceptions")
+def governance_evidence_exception_panel():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_evidence_exception_panel
+
+    panel = build_governance_evidence_exception_panel(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return render_template(
+        "governance/evidence_exception_panel.html",
+        panel=panel,
+    )
+
+
 @app.route("/governance/evidence-exports/archive-intake.txt")
 def governance_export_archive_intake_preview_text():
     gate = require_master_admin()

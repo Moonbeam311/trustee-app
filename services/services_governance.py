@@ -5284,3 +5284,482 @@ def build_governance_evidence_certification_dashboard_text(
     lines.append(dashboard.get("custody_notice") or "")
 
     return "\n".join(lines) + "\n"
+
+
+def build_governance_evidence_exception_panel(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only exception panel over the governance evidence export chain.
+
+    This review surface does not mutate governance relationships, audits, lifecycle
+    states, archive intake records, export packets, or certification records.
+    """
+    from datetime import datetime, timezone
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    manifest = build_governance_evidence_export_manifest(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+    digest = build_governance_export_integrity_digest_index(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+    archive = build_governance_export_archive_intake_preview(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+    certification = build_governance_evidence_certification_dashboard(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    filters = manifest.get("filters") or {}
+    relationships = manifest.get("relationship_packet_exports") or []
+    audits = manifest.get("audit_packet_exports") or []
+    artifacts = digest.get("artifacts") or []
+    archive_items = archive.get("archive_items") or []
+    readiness_checks = certification.get("readiness_checks") or []
+
+    categories = [
+        ("lifecycle", "Lifecycle Exceptions"),
+        ("audit", "Audit Exceptions"),
+        ("evidence_completeness", "Evidence Completeness Exceptions"),
+        ("export_integrity", "Export Integrity Exceptions"),
+        ("archive_intake", "Archive Intake Exceptions"),
+        ("certification", "Certification Exceptions"),
+    ]
+    category_labels = dict(categories)
+    exception_items = []
+
+    def add_exception(category_key, severity, record_type, record_id, issue, detail="", route=""):
+        exception_items.append(
+            {
+                "category_key": category_key,
+                "category_label": category_labels.get(category_key, category_key),
+                "severity": severity,
+                "record_type": record_type,
+                "record_id": record_id or "-",
+                "issue": issue,
+                "detail": detail,
+                "route": route or "-",
+            }
+        )
+
+    for rel in relationships:
+        relationship_id = rel.get("relationship_id")
+        route = f"/governance/relationships/{relationship_id}" if relationship_id else ""
+        rel_status = str(rel.get("status") or "").strip().lower()
+        lifecycle_label = str(rel.get("lifecycle_label") or "").strip()
+        last_outcome = str(rel.get("last_outcome") or "").strip().lower()
+
+        if rel_status == "retired":
+            add_exception(
+                "lifecycle",
+                "REVIEW",
+                "Relationship",
+                relationship_id,
+                "Retired relationship requires review acknowledgement.",
+                lifecycle_label or "Relationship status is Retired.",
+                route,
+            )
+        elif lifecycle_label and lifecycle_label not in ("-", "Active"):
+            add_exception(
+                "lifecycle",
+                "INFO",
+                "Relationship",
+                relationship_id,
+                "Historical lifecycle state present.",
+                lifecycle_label,
+                route,
+            )
+
+        if last_outcome in {"validation_failed", "conflict_detected", "replacement_failed"}:
+            add_exception(
+                "lifecycle",
+                "WARNING",
+                "Relationship",
+                relationship_id,
+                "Last lifecycle audit outcome requires operator review.",
+                last_outcome,
+                route,
+            )
+        elif last_outcome == "duplicate_blocked":
+            add_exception(
+                "lifecycle",
+                "REVIEW",
+                "Relationship",
+                relationship_id,
+                "Duplicate relationship attempt was blocked.",
+                last_outcome,
+                route,
+            )
+
+        if not relationship_id:
+            add_exception(
+                "evidence_completeness",
+                "FAIL",
+                "Relationship",
+                relationship_id,
+                "Relationship packet is missing relationship_id.",
+                "Relationship evidence cannot be opened or exported without an identifier.",
+                route,
+            )
+        if not rel.get("export_path"):
+            add_exception(
+                "evidence_completeness",
+                "FAIL",
+                "Relationship",
+                relationship_id,
+                "Relationship packet is missing export path.",
+                "Expected relationship export path is unavailable.",
+                route,
+            )
+        if not rel.get("audit_count"):
+            add_exception(
+                "evidence_completeness",
+                "REVIEW",
+                "Relationship",
+                relationship_id,
+                "Relationship has no linked audit packets.",
+                "Audit count is zero.",
+                route,
+            )
+        if not rel.get("last_audit_id"):
+            add_exception(
+                "evidence_completeness",
+                "REVIEW",
+                "Relationship",
+                relationship_id,
+                "Relationship has no last audit reference.",
+                "Latest audit pointer is blank.",
+                route,
+            )
+
+    for audit in audits:
+        audit_id = audit.get("audit_id")
+        route = f"/governance/relationship-audits/{audit_id}" if audit_id else ""
+        audit_outcome = str(audit.get("outcome") or "").strip().lower()
+        message = str(audit.get("message") or "")
+
+        if audit_outcome in {"validation_failed", "conflict_detected", "replacement_failed"}:
+            add_exception(
+                "audit",
+                "WARNING",
+                "Audit",
+                audit_id,
+                "Audit outcome requires review.",
+                audit_outcome,
+                route,
+            )
+        elif audit_outcome == "duplicate_blocked":
+            add_exception(
+                "audit",
+                "REVIEW",
+                "Audit",
+                audit_id,
+                "Duplicate relationship audit was blocked.",
+                audit.get("existing_relationship_id") or audit.get("attempted_relationship_id") or "",
+                route,
+            )
+
+        lowered_message = message.lower()
+        if any(token in lowered_message for token in ("cannot", "failed", "conflict")):
+            add_exception(
+                "audit",
+                "WARNING",
+                "Audit",
+                audit_id,
+                "Audit message indicates an exception condition.",
+                message,
+                route,
+            )
+
+        if not audit_id:
+            add_exception(
+                "evidence_completeness",
+                "FAIL",
+                "Audit",
+                audit_id,
+                "Audit packet is missing audit_id.",
+                "Audit evidence cannot be opened or exported without an identifier.",
+                route,
+            )
+        if not audit.get("export_path"):
+            add_exception(
+                "evidence_completeness",
+                "FAIL",
+                "Audit",
+                audit_id,
+                "Audit packet is missing export path.",
+                "Expected audit export path is unavailable.",
+                route,
+            )
+
+    for artifact in artifacts:
+        sha256 = artifact.get("sha256") or ""
+        if len(sha256) != 64:
+            add_exception(
+                "export_integrity",
+                "FAIL",
+                "Export Artifact",
+                artifact.get("artifact_type"),
+                "Export artifact is missing a valid SHA-256 digest.",
+                artifact.get("artifact_label") or "",
+                artifact.get("route") or "",
+            )
+        if not artifact.get("route"):
+            add_exception(
+                "export_integrity",
+                "FAIL",
+                "Export Artifact",
+                artifact.get("artifact_type"),
+                "Export artifact is missing a route.",
+                artifact.get("artifact_label") or "",
+                "",
+            )
+        if artifact.get("read_only") is not True:
+            add_exception(
+                "export_integrity",
+                "FAIL",
+                "Export Artifact",
+                artifact.get("artifact_type"),
+                "Export artifact is not marked read-only.",
+                artifact.get("artifact_label") or "",
+                artifact.get("route") or "",
+            )
+
+    for item in archive_items:
+        if item.get("archive_readiness") != "Ready for Archive Intake":
+            add_exception(
+                "archive_intake",
+                "FAIL",
+                "Archive Intake Item",
+                item.get("archive_item_type"),
+                "Archive item is not ready for intake.",
+                item.get("archive_item_label") or "",
+                item.get("export_route") or "",
+            )
+        if len(item.get("sha256") or "") != 64:
+            add_exception(
+                "archive_intake",
+                "FAIL",
+                "Archive Intake Item",
+                item.get("archive_item_type"),
+                "Archive item is missing a valid SHA-256 digest.",
+                item.get("archive_item_label") or "",
+                item.get("export_route") or "",
+            )
+        if item.get("read_only") is not True:
+            add_exception(
+                "archive_intake",
+                "FAIL",
+                "Archive Intake Item",
+                item.get("archive_item_type"),
+                "Archive item is not marked read-only.",
+                item.get("archive_item_label") or "",
+                item.get("export_route") or "",
+            )
+
+    for check in readiness_checks:
+        if check.get("status") != "PASS":
+            add_exception(
+                "certification",
+                "FAIL",
+                "Readiness Check",
+                check.get("check_key"),
+                f"{check.get('check_label')} did not pass.",
+                check.get("detail") or "",
+                check.get("route") or "",
+            )
+
+    severity_order = {"FAIL": 0, "WARNING": 1, "REVIEW": 2, "INFO": 3}
+    exception_items.sort(
+        key=lambda item: (
+            severity_order.get(item.get("severity"), 9),
+            item.get("category_label") or "",
+            item.get("record_type") or "",
+            item.get("record_id") or "",
+        )
+    )
+
+    severity_counts = {
+        "INFO": sum(1 for item in exception_items if item.get("severity") == "INFO"),
+        "REVIEW": sum(1 for item in exception_items if item.get("severity") == "REVIEW"),
+        "WARNING": sum(1 for item in exception_items if item.get("severity") == "WARNING"),
+        "FAIL": sum(1 for item in exception_items if item.get("severity") == "FAIL"),
+    }
+
+    exception_categories = []
+    for key, label in categories:
+        category_items = [item for item in exception_items if item.get("category_key") == key]
+        exception_categories.append(
+            {
+                "category_key": key,
+                "category_label": label,
+                "exception_count": len(category_items),
+                "info_count": sum(1 for item in category_items if item.get("severity") == "INFO"),
+                "review_count": sum(1 for item in category_items if item.get("severity") == "REVIEW"),
+                "warning_count": sum(1 for item in category_items if item.get("severity") == "WARNING"),
+                "fail_count": sum(1 for item in category_items if item.get("severity") == "FAIL"),
+            }
+        )
+
+    if severity_counts["FAIL"] > 0:
+        review_status = "Failed"
+        review_ready = False
+    elif severity_counts["WARNING"] > 0:
+        review_status = "Review Required"
+        review_ready = False
+    else:
+        review_status = "Ready"
+        review_ready = True
+
+    return {
+        "title": "Governance Evidence Exception Panel",
+        "panel_type": "governance_evidence_exception_panel",
+        "generated_at": generated_at,
+        "read_only": True,
+        "filters": filters,
+        "summary": {
+            "total_exceptions": len(exception_items),
+            "info_count": severity_counts["INFO"],
+            "review_count": severity_counts["REVIEW"],
+            "warning_count": severity_counts["WARNING"],
+            "fail_count": severity_counts["FAIL"],
+            "category_counts": {
+                category["category_label"]: category["exception_count"]
+                for category in exception_categories
+            },
+        },
+        "exception_categories": exception_categories,
+        "exception_items": exception_items,
+        "linked_routes": {
+            "evidence_export_index": "/governance/evidence-exports",
+            "exception_panel": "/governance/evidence-exports/exceptions",
+            "exception_text": "/governance/evidence-exports/exceptions.txt",
+            "certification_dashboard": "/governance/evidence-exports/certification",
+            "certification_text": "/governance/evidence-exports/certification.txt",
+            "archive_intake": "/governance/evidence-exports/archive-intake",
+            "archive_intake_text": "/governance/evidence-exports/archive-intake.txt",
+            "integrity_digest": "/governance/evidence-exports/integrity",
+            "integrity_digest_text": "/governance/evidence-exports/integrity.txt",
+            "manifest": "/governance/evidence-exports/manifest",
+            "manifest_text": "/governance/evidence-exports/manifest.txt",
+            "relationship_lifecycle": "/governance/relationship-lifecycle",
+            "audit_ledger": "/governance/relationship-audits",
+        },
+        "review_status": review_status,
+        "review_ready": review_ready,
+        "preservation_statement": (
+            "This read-only exception panel preserves governance evidence chain context "
+            "for review only and does not mutate governance, audit, lifecycle, archive, "
+            "export, or certification records."
+        ),
+        "custody_notice": manifest.get("custody_notice")
+        or certification.get("custody_notice")
+        or "",
+    }
+
+
+def build_governance_evidence_exception_panel_text(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only plain-text governance evidence exception panel.
+    """
+    panel = build_governance_evidence_exception_panel(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    lines = []
+    lines.append("GOVERNANCE EVIDENCE EXCEPTION PANEL")
+    lines.append("=" * 44)
+    lines.append("")
+    lines.append(f"Panel Type: {panel.get('panel_type')}")
+    lines.append(f"Generated At: {panel.get('generated_at')}")
+    lines.append(f"Read Only: {panel.get('read_only')}")
+    lines.append(f"Review Status: {panel.get('review_status')}")
+    lines.append(f"Review Ready: {panel.get('review_ready')}")
+    lines.append("")
+    lines.append("FILTER CONTEXT")
+    lines.append("-" * 44)
+    filters = panel.get("filters") or {}
+    lines.append(f"Object Type: {filters.get('object_type') or '-'}")
+    lines.append(f"Object ID: {filters.get('object_id') or '-'}")
+    lines.append(f"Relationship Status: {filters.get('status') or '-'}")
+    lines.append(f"Audit Outcome: {filters.get('outcome') or '-'}")
+    lines.append(f"Limit: {filters.get('limit') or '-'}")
+    lines.append("")
+    lines.append("EXCEPTION SUMMARY")
+    lines.append("-" * 44)
+    summary = panel.get("summary") or {}
+    lines.append(f"Total Exceptions: {summary.get('total_exceptions', 0)}")
+    lines.append(f"INFO: {summary.get('info_count', 0)}")
+    lines.append(f"REVIEW: {summary.get('review_count', 0)}")
+    lines.append(f"WARNING: {summary.get('warning_count', 0)}")
+    lines.append(f"FAIL: {summary.get('fail_count', 0)}")
+    lines.append("")
+    lines.append("EXCEPTION CATEGORIES")
+    lines.append("-" * 44)
+    for category in panel.get("exception_categories") or []:
+        lines.append(
+            f"{category.get('category_label')}: "
+            f"{category.get('exception_count', 0)} total | "
+            f"INFO {category.get('info_count', 0)} | "
+            f"REVIEW {category.get('review_count', 0)} | "
+            f"WARNING {category.get('warning_count', 0)} | "
+            f"FAIL {category.get('fail_count', 0)}"
+        )
+    lines.append("")
+    lines.append("EXCEPTION ITEMS")
+    lines.append("-" * 44)
+    for item in panel.get("exception_items") or []:
+        lines.append(
+            f"{item.get('severity')} | {item.get('category_label')} | "
+            f"{item.get('record_type')} {item.get('record_id')} | "
+            f"{item.get('issue')} | {item.get('detail')} | {item.get('route')}"
+        )
+    if not panel.get("exception_items"):
+        lines.append("No exception items found.")
+    lines.append("")
+    lines.append("LINKED ROUTES")
+    lines.append("-" * 44)
+    for key, value in (panel.get("linked_routes") or {}).items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 44)
+    lines.append(panel.get("preservation_statement") or "")
+    lines.append("")
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 44)
+    lines.append(panel.get("custody_notice") or "")
+
+    return "\n".join(lines) + "\n"

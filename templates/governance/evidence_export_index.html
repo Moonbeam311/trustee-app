@@ -20,6 +20,12 @@
         <a href="{{ url_for('governance_evidence_certification_dashboard_text', object_type=index.filters.object_type, object_id=index.filters.object_id, status=index.filters.status, outcome=index.filters.outcome, limit=index.filters.limit) }}">Download Certification TXT</a>
     </p>
 
+    <h2>Evidence Chain Review</h2>
+    <p>
+        <a href="{{ url_for('governance_evidence_exception_panel', object_type=index.filters.object_type, object_id=index.filters.object_id, status=index.filters.status, outcome=index.filters.outcome, limit=index.filters.limit) }}">Governance Evidence Exception Panel</a> |
+        <a href="{{ url_for('governance_evidence_exception_panel_text', object_type=index.filters.object_type, object_id=index.filters.object_id, status=index.filters.status, outcome=index.filters.outcome, limit=index.filters.limit) }}">Download Exception TXT</a>
+    </p>
+
     <h2>Archive Intake</h2>
     <p>
         <a href="{{ url_for('governance_export_archive_intake_preview', object_type=index.filters.object_type, object_id=index.filters.object_id, status=index.filters.status, outcome=index.filters.outcome, limit=index.filters.limit) }}">Governance Export Archive Intake Preview</a> |

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Governance Evidence Exception Panel</h1>
+    <p>
+        Read Only review surface for governance evidence chain exceptions.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_evidence_certification_dashboard', object_type=panel.filters.object_type, object_id=panel.filters.object_id, status=panel.filters.status, outcome=panel.filters.outcome, limit=panel.filters.limit) }}">Certification Dashboard</a> |
+        <a href="{{ url_for('governance_evidence_exception_panel_text', object_type=panel.filters.object_type, object_id=panel.filters.object_id, status=panel.filters.status, outcome=panel.filters.outcome, limit=panel.filters.limit) }}">Download Exception TXT</a>
+    </p>
+
+    <h2>Review Status</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Panel Type</th>
+            <th>Generated At</th>
+            <th>Read Only</th>
+            <th>Review Status</th>
+            <th>Review Ready</th>
+            <th>Total Exceptions</th>
+            <th>INFO</th>
+            <th>REVIEW</th>
+            <th>WARNING</th>
+            <th>FAIL</th>
+        </tr>
+        <tr>
+            <td>{{ panel.panel_type }}</td>
+            <td>{{ panel.generated_at }}</td>
+            <td>{{ panel.read_only }}</td>
+            <td>{{ panel.review_status }}</td>
+            <td>{{ panel.review_ready }}</td>
+            <td>{{ panel.summary.total_exceptions }}</td>
+            <td>{{ panel.summary.info_count }}</td>
+            <td>{{ panel.summary.review_count }}</td>
+            <td>{{ panel.summary.warning_count }}</td>
+            <td>{{ panel.summary.fail_count }}</td>
+        </tr>
+    </table>
+
+    <h2>Filter Context</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Object Type</th>
+            <th>Object ID</th>
+            <th>Relationship Status</th>
+            <th>Audit Outcome</th>
+            <th>Limit</th>
+        </tr>
+        <tr>
+            <td>{{ panel.filters.object_type or "-" }}</td>
+            <td>{{ panel.filters.object_id or "-" }}</td>
+            <td>{{ panel.filters.status or "-" }}</td>
+            <td>{{ panel.filters.outcome or "-" }}</td>
+            <td>{{ panel.filters.limit }}</td>
+        </tr>
+    </table>
+
+    <h2>Exception Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Category</th>
+            <th>Total</th>
+            <th>INFO</th>
+            <th>REVIEW</th>
+            <th>WARNING</th>
+            <th>FAIL</th>
+        </tr>
+        {% for category in panel.exception_categories %}
+        <tr>
+            <td>{{ category.category_label }}</td>
+            <td>{{ category.exception_count }}</td>
+            <td>{{ category.info_count }}</td>
+            <td>{{ category.review_count }}</td>
+            <td>{{ category.warning_count }}</td>
+            <td>{{ category.fail_count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% for category in panel.exception_categories %}
+    <h2>{{ category.category_label }}</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Total</th>
+            <th>INFO</th>
+            <th>REVIEW</th>
+            <th>WARNING</th>
+            <th>FAIL</th>
+        </tr>
+        <tr>
+            <td>{{ category.exception_count }}</td>
+            <td>{{ category.info_count }}</td>
+            <td>{{ category.review_count }}</td>
+            <td>{{ category.warning_count }}</td>
+            <td>{{ category.fail_count }}</td>
+        </tr>
+    </table>
+    {% endfor %}
+
+    <h2>Exception Items</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Severity</th>
+            <th>Category</th>
+            <th>Record Type</th>
+            <th>Record ID</th>
+            <th>Issue</th>
+            <th>Detail</th>
+            <th>Route</th>
+        </tr>
+        {% for item in panel.exception_items %}
+        <tr>
+            <td>{{ item.severity }}</td>
+            <td>{{ item.category_label }}</td>
+            <td>{{ item.record_type }}</td>
+            <td>{{ item.record_id }}</td>
+            <td>{{ item.issue }}</td>
+            <td>{{ item.detail or "-" }}</td>
+            <td>{{ item.route }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="7">No exception items found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Linked Evidence Routes</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Route Key</th>
+            <th>Route</th>
+        </tr>
+        {% for key, value in panel.linked_routes.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Preservation Statement</h2>
+    <p>{{ panel.preservation_statement }}</p>
+
+    <h2>Custody Notice</h2>
+    <p>{{ panel.custody_notice }}</p>
+</section>
+{% endblock %}
