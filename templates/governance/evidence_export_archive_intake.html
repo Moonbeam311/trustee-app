@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Governance Export Archive Intake Preview</h1>
+    <p>
+        Read-only archive intake preview for governance export artifacts.
+        This page verifies digest availability, manifest references, packet counts,
+        and custody metadata before any archive record is created.
+    </p>
+
+    <p>
+        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
+        <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a> |
+        <a href="{{ url_for('governance_export_integrity_digest', object_type=intake.filters.object_type, object_id=intake.filters.object_id, status=intake.filters.status, outcome=intake.filters.outcome, limit=intake.filters.limit) }}">Integrity Digest</a> |
+        <a href="{{ url_for('governance_evidence_export_manifest', object_type=intake.filters.object_type, object_id=intake.filters.object_id, status=intake.filters.status, outcome=intake.filters.outcome, limit=intake.filters.limit) }}">Manifest</a> |
+        <a href="{{ url_for('governance_export_archive_intake_preview_text', object_type=intake.filters.object_type, object_id=intake.filters.object_id, status=intake.filters.status, outcome=intake.filters.outcome, limit=intake.filters.limit) }}">Download Archive Intake TXT</a>
+    </p>
+
+    <h2>Archive Intake Summary</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Intake Type</th>
+            <th>Generated At</th>
+            <th>Read Only</th>
+            <th>Archive Ready</th>
+            <th>Archive Status</th>
+            <th>Archive Items</th>
+            <th>Total Packets</th>
+            <th>Relationship Packets</th>
+            <th>Audit Packets</th>
+        </tr>
+        <tr>
+            <td>{{ intake.intake_type }}</td>
+            <td>{{ intake.generated_at }}</td>
+            <td>{{ intake.read_only }}</td>
+            <td>{{ intake.archive_ready }}</td>
+            <td>{{ intake.archive_status }}</td>
+            <td>{{ intake.summary.archive_items }}</td>
+            <td>{{ intake.summary.total_packets }}</td>
+            <td>{{ intake.summary.relationship_packets }}</td>
+            <td>{{ intake.summary.audit_packets }}</td>
+        </tr>
+    </table>
+
+    <h2>Filter Context</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Object Type</th>
+            <th>Object ID</th>
+            <th>Relationship Status</th>
+            <th>Audit Outcome</th>
+            <th>Limit</th>
+        </tr>
+        <tr>
+            <td>{{ intake.filters.object_type or "-" }}</td>
+            <td>{{ intake.filters.object_id or "-" }}</td>
+            <td>{{ intake.filters.status or "-" }}</td>
+            <td>{{ intake.filters.outcome or "-" }}</td>
+            <td>{{ intake.filters.limit }}</td>
+        </tr>
+    </table>
+
+    <h2>Manifest References</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Reference</th>
+            <th>Value</th>
+        </tr>
+        {% for key, value in intake.manifest_reference.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Readiness Flags</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Flag</th>
+            <th>Status</th>
+        </tr>
+        {% for key, value in intake.readiness_flags.items() %}
+        <tr>
+            <td>{{ key }}</td>
+            <td>{{ value }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Archive Intake Items</h2>
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>Archive Item Label</th>
+            <th>Archive Item Type</th>
+            <th>Export Route</th>
+            <th>SHA-256</th>
+            <th>Digest Generated At</th>
+            <th>Archive Readiness</th>
+            <th>Read Only</th>
+        </tr>
+        {% for item in intake.archive_items %}
+        <tr>
+            <td>{{ item.archive_item_label }}</td>
+            <td>{{ item.archive_item_type }}</td>
+            <td>{{ item.export_route }}</td>
+            <td><code>{{ item.sha256 }}</code></td>
+            <td>{{ item.digest_generated_at }}</td>
+            <td>{{ item.archive_readiness }}</td>
+            <td>{{ item.read_only }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Preservation Statement</h2>
+    <p>{{ intake.preservation_statement }}</p>
+</section>
+{% endblock %}

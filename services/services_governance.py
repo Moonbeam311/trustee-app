@@ -4850,3 +4850,195 @@ def build_governance_export_integrity_digest_text(
     lines.append(digest_index.get("custody_notice") or "")
 
     return "\n".join(lines) + "\n"
+
+
+def build_governance_export_archive_intake_preview(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only archive intake preview for governance export artifacts.
+
+    This function does not create archive records, mutate governance relationships,
+    mutate audits, alter lifecycle states, or write certification records.
+    """
+    from datetime import datetime, timezone
+
+    generated_at = datetime.now(timezone.utc).isoformat()
+
+    digest_index = build_governance_export_integrity_digest_index(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    manifest = build_governance_evidence_export_manifest(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    filters = digest_index.get("filters") or {}
+    summary = digest_index.get("summary") or {}
+    artifacts = digest_index.get("artifacts") or []
+
+    archive_items = []
+    for artifact in artifacts:
+        archive_items.append(
+            {
+                "archive_item_label": artifact.get("artifact_label"),
+                "archive_item_type": artifact.get("artifact_type"),
+                "export_route": artifact.get("route"),
+                "sha256": artifact.get("sha256"),
+                "digest_generated_at": artifact.get("generated_at"),
+                "archive_readiness": (
+                    "Ready for Archive Intake"
+                    if artifact.get("sha256") and len(artifact.get("sha256")) == 64
+                    else "Not Ready"
+                ),
+                "read_only": True,
+            }
+        )
+
+    readiness_flags = {
+        "has_digest_index": bool(digest_index),
+        "has_manifest": bool(manifest),
+        "has_artifacts": bool(archive_items),
+        "has_packet_summary": bool(summary),
+        "has_filter_context": bool(filters),
+        "all_artifacts_have_sha256": all(
+            len(item.get("sha256") or "") == 64 for item in archive_items
+        ) if archive_items else False,
+        "read_only": True,
+    }
+
+    archive_ready = all(readiness_flags.values())
+
+    return {
+        "title": "Governance Export Archive Intake Preview",
+        "intake_type": "governance_export_archive_intake_preview",
+        "generated_at": generated_at,
+        "read_only": True,
+        "archive_ready": archive_ready,
+        "archive_status": (
+            "Ready for Archive Intake"
+            if archive_ready
+            else "Archive Intake Review Required"
+        ),
+        "filters": filters,
+        "summary": {
+            "archive_items": len(archive_items),
+            "total_packets": summary.get("total_packets", 0),
+            "relationship_packets": summary.get("relationship_packets", 0),
+            "audit_packets": summary.get("audit_packets", 0),
+            "total_artifacts": summary.get("total_artifacts", len(archive_items)),
+        },
+        "manifest_reference": {
+            "manifest_page": "/governance/evidence-exports/manifest",
+            "manifest_text": "/governance/evidence-exports/manifest.txt",
+            "integrity_digest": "/governance/evidence-exports/integrity",
+            "integrity_digest_text": "/governance/evidence-exports/integrity.txt",
+            "manifest_type": manifest.get("manifest_type"),
+            "manifest_generated_at": manifest.get("generated_at"),
+        },
+        "readiness_flags": readiness_flags,
+        "archive_items": archive_items,
+        "preservation_statement": (
+            "This archive intake preview identifies governance export artifacts that are "
+            "ready for institutional archive intake. It is read-only and does not create "
+            "archive records, alter governance records, mutate audit events, change lifecycle "
+            "states, or certify final preservation."
+        ),
+        "custody_notice": (
+            "Institutional Property of Luna Isaac III Mishoe. System records, workflows, "
+            "generated instruments, certificates, exports, and archive materials are maintained "
+            "under fiduciary custody. Authorized Access Only."
+        ),
+    }
+
+
+def build_governance_export_archive_intake_preview_text(
+    object_type=None,
+    object_id=None,
+    status=None,
+    outcome=None,
+    limit=250,
+):
+    """
+    Build a read-only plain-text archive intake preview.
+    """
+    intake = build_governance_export_archive_intake_preview(
+        object_type=object_type,
+        object_id=object_id,
+        status=status,
+        outcome=outcome,
+        limit=limit,
+    )
+
+    lines = []
+    lines.append("GOVERNANCE EXPORT ARCHIVE INTAKE PREVIEW")
+    lines.append("=" * 44)
+    lines.append("")
+    lines.append(f"Intake Type: {intake.get('intake_type')}")
+    lines.append(f"Generated At: {intake.get('generated_at')}")
+    lines.append(f"Read Only: {intake.get('read_only')}")
+    lines.append(f"Archive Ready: {intake.get('archive_ready')}")
+    lines.append(f"Archive Status: {intake.get('archive_status')}")
+    lines.append("")
+    lines.append("FILTER CONTEXT")
+    lines.append("-" * 44)
+    filters = intake.get("filters") or {}
+    lines.append(f"Object Type: {filters.get('object_type') or '-'}")
+    lines.append(f"Object ID: {filters.get('object_id') or '-'}")
+    lines.append(f"Relationship Status: {filters.get('status') or '-'}")
+    lines.append(f"Audit Outcome: {filters.get('outcome') or '-'}")
+    lines.append(f"Limit: {filters.get('limit') or '-'}")
+    lines.append("")
+    lines.append("ARCHIVE SUMMARY")
+    lines.append("-" * 44)
+    summary = intake.get("summary") or {}
+    lines.append(f"Archive Items: {summary.get('archive_items', 0)}")
+    lines.append(f"Total Artifacts: {summary.get('total_artifacts', 0)}")
+    lines.append(f"Total Packets: {summary.get('total_packets', 0)}")
+    lines.append(f"Relationship Packets: {summary.get('relationship_packets', 0)}")
+    lines.append(f"Audit Packets: {summary.get('audit_packets', 0)}")
+    lines.append("")
+    lines.append("MANIFEST REFERENCES")
+    lines.append("-" * 44)
+    manifest_reference = intake.get("manifest_reference") or {}
+    for key, value in manifest_reference.items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("READINESS FLAGS")
+    lines.append("-" * 44)
+    for key, value in (intake.get("readiness_flags") or {}).items():
+        lines.append(f"{key}: {value}")
+    lines.append("")
+    lines.append("ARCHIVE INTAKE ITEMS")
+    lines.append("-" * 44)
+
+    for item in intake.get("archive_items") or []:
+        lines.append(f"Archive Item Label: {item.get('archive_item_label')}")
+        lines.append(f"Archive Item Type: {item.get('archive_item_type')}")
+        lines.append(f"Export Route: {item.get('export_route')}")
+        lines.append(f"SHA-256: {item.get('sha256')}")
+        lines.append(f"Archive Readiness: {item.get('archive_readiness')}")
+        lines.append(f"Read Only: {item.get('read_only')}")
+        lines.append("")
+
+    lines.append("PRESERVATION STATEMENT")
+    lines.append("-" * 44)
+    lines.append(intake.get("preservation_statement") or "")
+    lines.append("")
+    lines.append("CUSTODY NOTICE")
+    lines.append("-" * 44)
+    lines.append(intake.get("custody_notice") or "")
+
+    return "\n".join(lines) + "\n"

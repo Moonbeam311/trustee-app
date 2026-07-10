@@ -21410,6 +21410,54 @@ def governance_evidence_export_index_csv():
     )
 
 
+@app.route("/governance/evidence-exports/archive-intake.txt")
+def governance_export_archive_intake_preview_text():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from flask import Response
+    from services.services_governance import build_governance_export_archive_intake_preview_text
+
+    intake_text = build_governance_export_archive_intake_preview_text(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return Response(
+        intake_text,
+        mimetype="text/plain",
+        headers={
+            "Content-Disposition": "attachment; filename=governance_export_archive_intake_preview.txt"
+        },
+    )
+
+
+@app.route("/governance/evidence-exports/archive-intake")
+def governance_export_archive_intake_preview():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_governance import build_governance_export_archive_intake_preview
+
+    intake = build_governance_export_archive_intake_preview(
+        object_type=request.args.get("object_type"),
+        object_id=request.args.get("object_id"),
+        status=request.args.get("status"),
+        outcome=request.args.get("outcome"),
+        limit=request.args.get("limit") or 250,
+    )
+
+    return render_template(
+        "governance/evidence_export_archive_intake.html",
+        intake=intake,
+    )
+
+
 @app.route("/governance/evidence-exports/integrity.txt")
 def governance_export_integrity_digest_text():
     gate = require_master_admin()
