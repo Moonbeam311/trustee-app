@@ -23,6 +23,28 @@
     <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}"><button>Trust Execution</button></a>
 </div>
 
+{# POST-V2-11B TRUST TO GOVERNANCE LINK PATCH #}
+<section class="trust-governance-guidance" style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
+    <h2>Trust Governance Continuity</h2>
+    <p>
+        Trust governance connects this trust to directives, policies, relationships,
+        evidence, execution sessions, and other governed institutional records.
+    </p>
+    <p>
+        A governance link preserves continuity between the trust and the governing record.
+        It does not by itself prove legal effect, authenticity, authority, execution,
+        funding, or completion. Verification, approval, lifecycle, execution, funding,
+        and evidence review remain separate governed actions.
+    </p>
+    <p>
+        <a href="#trust-governance-links">Review Trust Governance Links</a> |
+        <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Trust Execution</a> |
+        <a href="/admin/workspace/governance">Governance Workspace</a> |
+        <a href="/governance">Governance Registry</a> |
+        <a href="/admin">Return to Admin</a>
+    </p>
+</section>
+
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
     <h3>Trust Overview</h3>
     <p><strong>ID:</strong> {{ trust.trust_id }}</p>
