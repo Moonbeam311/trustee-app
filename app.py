@@ -7588,6 +7588,9 @@ def admin_database_backup_zip():
     if gate:
         return gate
 
+    if request.args.get("confirmed") != "1":
+        return render_template("admin_backup_database_confirm.html")
+
     db_file = Path(DB_PATH)
     if not db_file.exists():
         log_change(

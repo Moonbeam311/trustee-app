@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+    <h1>Confirm Database Backup Download</h1>
+
+    <p>
+        <strong>MEDIUM RISK &mdash; DOWNLOADS LIVE DATABASE COPY</strong>
+    </p>
+
+    <p>
+        This action downloads a live copy of the application database from the
+        currently configured DB_PATH. Use it only when you intend to create a
+        controlled administrative backup.
+    </p>
+
+    <p>
+        <a class="primary-action" href="{{ url_for('admin_database_backup_zip', confirmed=1) }}">
+            Confirm Database Backup Download
+        </a>
+        <a href="{{ url_for('admin_index') }}">Cancel and return to Admin</a>
+    </p>
+</section>
+{% endblock %}
