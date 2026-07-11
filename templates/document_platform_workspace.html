@@ -27,6 +27,29 @@
 
 <h2>{{ document_object.identity.title }}</h2>
 
+{# POST-V2-11C DOCUMENT TO GOVERNANCE LINK PATCH #}
+<section class="document-governance-guidance" style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
+  <h2>Document Governance Continuity</h2>
+  <p>
+    Document governance connects this document to directives, policies, relationships,
+    evidence, execution sessions, document packets, and other governed institutional records.
+  </p>
+  <p>
+    A governance link preserves continuity between the document and the governing record.
+    It does not by itself prove legal effect, authenticity, authority, execution, signature,
+    delivery, filing, or completion. Verification, approval, lifecycle, execution, signature,
+    delivery, filing, and evidence review remain separate governed actions.
+  </p>
+  <p>
+    <a href="/document-platform/governance">Document Governance Registry</a> |
+    <a href="#document-governance-links">Review Document Governance Links</a> |
+    <a href="/document-platform/workspace/{{ document_object.identity.document_id }}">Return to Document Workspace</a> |
+    <a href="/admin/workspace/governance">Governance Workspace</a> |
+    <a href="/governance">Governance Registry</a> |
+    <a href="/admin">Return to Admin</a>
+  </p>
+</section>
+
 <div class="dashboard-grid">
   <div class="stat-card"><strong>Document ID</strong><br>{{ document_object.identity.document_id }}</div>
   <div class="stat-card"><strong>Type</strong><br>{{ document_object.identity.document_type }}</div>
