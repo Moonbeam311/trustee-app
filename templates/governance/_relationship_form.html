@@ -1,5 +1,45 @@
 <div class="card">
+    {# POST-V2-10B GOVERNANCE RELATIONSHIP USABILITY PATCH #}
+    <section class="governance-relationship-guidance">
+        <h2>Relationship Guidance</h2>
+        <p>
+            A relationship connects one governed institutional record to another so an operator can see
+            what a record authorizes, implements, supersedes, depends_on, governs, or references.
+        </p>
+        <p>
+            A relationship is a governed connection record. It does not by itself prove legal effect,
+            authenticity, authority, or completion. Verification, approval, and lifecycle review remain
+            separate governed actions.
+        </p>
+        <ul>
+            <li><strong>authorizes</strong>: this record gives authority for another record or action.</li>
+            <li><strong>implements</strong>: this record carries out another directive, policy, decision, or requirement.</li>
+            <li><strong>supersedes</strong>: this record replaces or overrides a prior governed record.</li>
+            <li><strong>depends_on</strong>: this record relies on another record before it can be understood or completed.</li>
+            <li><strong>governs</strong>: this record controls or frames another institutional record or action.</li>
+            <li><strong>references</strong>: this record cites or points to another record for context.</li>
+        </ul>
+        <p>
+            Outgoing relationships show what this record points to. Incoming relationships show what points
+            back to this record.
+        </p>
+        <p>
+            Relationships may be active, superseded, retired, or reinstated through governed lifecycle
+            actions where available.
+        </p>
+        <nav class="governance-relationship-nav">
+            <a href="/governance">Governance Registry</a> |
+            <a href="/admin/workspace/governance">Governance Workspace</a> |
+            <a href="/governance/relationship-lifecycle">Relationship Lifecycle</a> |
+            <a href="/governance/relationship-audits">Relationship Audits</a>
+        </nav>
+    </section>
+
     <h2>Create Relationship</h2>
+    <p>
+        Create relationship links from this record to another governed object. Use the authority and reason
+        fields to preserve the operator basis for the connection.
+    </p>
     <form method="post" action="{{ relationship_action_url }}">
         <label>Relationship</label>
         <select name="relationship_type" required>

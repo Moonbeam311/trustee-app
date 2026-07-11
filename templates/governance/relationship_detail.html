@@ -9,8 +9,10 @@
     </p>
 
     <p>
-        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
-        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a>
+        <a href="/governance">Back to Governance Registry</a> |
+        <a href="/admin/workspace/governance">Governance Workspace</a> |
+        <a href="/governance/relationship-lifecycle">Relationship Lifecycle</a> |
+        <a href="/governance/relationship-audits">Relationship Audits</a>
     </p>
 
     {% if not_found %}
@@ -24,6 +26,18 @@
                 Export Evidence Packet
             </a>
         </p>
+
+        <section class="governance-relationship-guidance">
+            <h2>Relationship Guidance</h2>
+            <p>
+                This governed connection record links a source record to a target record for institutional
+                continuity. It does not by itself prove legal effect, authenticity, authority, or completion.
+            </p>
+            <p>
+                Lifecycle review remains separate: a relationship may be active, superseded, retired, or
+                reinstated through governed lifecycle actions where available.
+            </p>
+        </section>
 
         <h2>Relationship Summary</h2>
         <table class="table">

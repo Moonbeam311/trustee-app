@@ -10,10 +10,24 @@
     </p>
 
     <p>
-        <a href="{{ url_for('governance_dashboard') }}">Back to Governance</a> |
-        <a href="{{ url_for('governance_relationship_audit_ledger') }}">Audit Ledger</a> |
+        <a href="/governance">Governance Registry</a> |
+        <a href="/admin/workspace/governance">Governance Workspace</a> |
+        <a href="/governance/relationship-lifecycle">Relationship Lifecycle</a> |
+        <a href="/governance/relationship-audits">Relationship Audits</a> |
         <a href="{{ url_for('governance_evidence_export_index') }}">Evidence Export Index</a>
     </p>
+
+    <section class="governance-relationship-guidance">
+        <h2>Relationship Guidance</h2>
+        <p>
+            A relationship connects one governed institutional record to another for operational review.
+            It does not by itself prove legal effect, authenticity, authority, or completion.
+        </p>
+        <p>
+            Review relationship details before using lifecycle actions. Active, superseded, retired, and
+            reinstated relationships remain preserved as institutional records.
+        </p>
+    </section>
 
     <h2>Lifecycle Totals</h2>
     <table class="table">

@@ -1,5 +1,18 @@
 <div class="card">
     <h2>{{ relationship_heading }}</h2>
+    <p>
+        {% if relationship_direction == "outgoing" %}
+            Outgoing relationships show what this record points to.
+        {% else %}
+            Incoming relationships show what points back to this record.
+        {% endif %}
+        Open a relationship detail page to review lifecycle posture, audit history, and exportable evidence.
+    </p>
+    <p>
+        <a href="/governance/relationship-lifecycle">Relationship Lifecycle</a> |
+        <a href="/governance/relationship-audits">Relationship Audits</a> |
+        <a href="/governance">Governance Registry</a>
+    </p>
     {% if relationships %}
         <table>
             <thead>
@@ -15,7 +28,11 @@
             <tbody>
                 {% for relationship in relationships %}
                     <tr>
-                        <td>{{ relationship.relationship_id }}</td>
+                        <td>
+                            <a href="{{ url_for('governance_relationship_detail', relationship_id=relationship.relationship_id) }}">
+                                {{ relationship.relationship_id }}
+                            </a>
+                        </td>
                         <td>{{ relationship.relationship_type }}</td>
                         <td>
                             {% if relationship_direction == "outgoing" %}
