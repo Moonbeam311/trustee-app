@@ -929,7 +929,12 @@ Legacy Compatibility Center</summary>
 <h2>Database Backup <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
 <p class="admin-muted">Master Admin database backup control. Downloads the currently configured SQLite database file from DB_PATH. Use this before major changes, after hosted seeding, and before deployment-risk operations.</p>
 <div class="admin-actions">
-  <a class="primary-action" href="/admin/backup/database.zip">Download Database Backup ZIP</a>
+
+{# POST-V2-9A SYSTEM CONTROL WARNING LABEL PATCH
+   Non-destructive warning label added to visible database backup control.
+   No confirmation gate, redirect, route deletion, or permission change in this patch.
+#}
+  <a class="primary-action" href="/admin/backup/database.zip">Download Database Backup ZIP <span class="section-governance-label system">MEDIUM RISK — DOWNLOADS LIVE DATABASE COPY</span></a>
 </div>
 </div>
 
