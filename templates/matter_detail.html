@@ -35,7 +35,31 @@
     
     <hr>
 
-    <h3>Update Governance State</h3>
+    {# POST-V2-11A MATTER TO GOVERNANCE LINK PATCH #}
+    <section class="card matter-governance-guidance">
+        <h2>Matter Governance Continuity</h2>
+        <p>
+            Matter governance connects this matter to directives, policies, relationships,
+            evidence, and other governed institutional records.
+        </p>
+        <p>
+            A governance link preserves continuity between the matter and the governing record.
+            It does not by itself prove legal effect, authenticity, authority, or completion.
+            Verification, approval, lifecycle, and evidence review remain separate governed actions.
+        </p>
+        <p>
+            <a href="#matter-governance-state">Review Matter Governance</a> |
+            <a href="#matter-governance-link-form">Create Governance Link</a> |
+            <a href="/admin/workspace/governance">Governance Workspace</a> |
+            <a href="/governance">Governance Registry</a> |
+            <a href="/admin">Return to Admin</a> |
+            <a href="/matters">Return to Matter Dashboard</a>
+        </p>
+    </section>
+
+    <hr>
+
+    <h3 id="matter-governance-state">Update Governance State</h3>
 
     <form method="post" action="{{ url_for('matter_governance_state', matter_id=matter[1]) }}">
 
@@ -205,8 +229,13 @@
     <hr>
 
     <h2>Governance Records</h2>
+    <p>
+        Review Matter Governance state here, then create or review Governance Links that connect
+        this Matter to directives, policies, relationships, Evidence, and the Governance Registry.
+    </p>
 
-    <div class="card">
+    <div id="matter-governance-link-form" class="card">
+        <h3>Create Governance Link</h3>
         <form method="post" action="{{ url_for('matter_governance_link_create', matter_id=matter[1]) }}">
             <label><strong>Governance Record</strong></label><br>
             <select name="governance_type" required>

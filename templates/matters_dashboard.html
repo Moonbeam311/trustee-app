@@ -17,6 +17,9 @@
   <strong>Institutional Navigation:</strong>
   <a href="/matters/new">Open New Matter</a> |
   <a href="/matters">Return to Matters</a> |
+  <a href="/admin/workspace/governance">Governance Workspace</a> |
+  <a href="/governance">Governance Registry</a> |
+  <a href="/admin">Return to Admin</a> |
   <a href="/workflow">Open Workflow</a>
   <div style="font-size:12px; color:#374151; margin-top:6px;">
     Institutional Property of Luna Isaac III Mishoe · Authorized Access Only
@@ -25,6 +28,10 @@
 
     <h1>Institutional Matters</h1>
     <p>Master case/governance containers for trusts, transfers, fiduciary actions, archives, and institutional memory.</p>
+    <p>
+        Matter Governance links preserve Continuity between a Matter and directives, policies,
+        relationships, Evidence, and governed institutional records.
+    </p>
 
     <p><a class="btn" href="/matters/new">+ New Matter</a></p>
 
@@ -50,7 +57,10 @@
                 <td>{{ m[2] }}</td>
                 <td>{{ m[3] }}</td>
                 <td>{{ m[4] }}</td>
-                <td>{{ m[5] }}</td>
+                <td>
+                    {{ m[5] }}<br>
+                    <a href="/matters/{{ m[0] }}">Review Matter Governance</a>
+                </td>
                 <td>{{ m[6] }}</td>
                 <td>{{ m[7] }}</td>
                 <td>{{ m[8] }}</td>
