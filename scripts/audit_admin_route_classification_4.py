@@ -58,6 +58,7 @@ def classify(endpoint, route):
             return group
     return 'Unclassified / Review'
 
+# POST-V2-5C ROUTE PARSER ACCURACY REPAIR
 text = APP.read_text(encoding='utf-8', errors='ignore') if APP.exists() else ''
 lines = text.splitlines()
 routes = []
@@ -67,7 +68,14 @@ for i, line in enumerate(lines):
     if not stripped.startswith('@app.route('):
         continue
 
-    route_match = re.search(r'["\']([^"\']+)["\']', stripped)
+    decorator_text = stripped
+    if ')' not in decorator_text:
+        for continuation in lines[i+1:i+8]:
+            decorator_text += ' ' + continuation.strip()
+            if ')' in continuation:
+                break
+
+    route_match = re.search(r'["\']([^"\']+)["\']', decorator_text)
     route = route_match.group(1) if route_match else stripped
 
     endpoint = ''
