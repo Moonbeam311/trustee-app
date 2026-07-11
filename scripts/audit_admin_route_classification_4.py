@@ -15,7 +15,7 @@ GROUPS = {
     ],
     'Developer / Diagnostics': [
         'diag', 'diagnostic', 'storage', 'repair', 'migration', 'run_hosted',
-        'certificate_event_bus', 'api_certificate_events', 'event_monitor',
+        'certificate_event_bus', 'api_certificate_events', 'event_monitor', 'audit_log',
         'seed_execution_objects', 'int_lifecycle'
     ],
     'System Status': [
@@ -28,7 +28,7 @@ GROUPS = {
         'certificate_packet', 'certificate_registry', 'unified_certificate',
         'certificate_studio', 'certificate_workspace', 'certificate_template',
         'certificate_builder', 'certificate_explorer', 'certificate_packet_studio',
-        'certificate_object', 'certificate_chain', 'certificate_relationships',
+        'api_certificates_registry', 'verify_certificate', 'execution_certificate', 'certificate_preview', 'certificate_object', 'certificate_chain', 'certificate_relationships',
         'certificate_timeline', 'certificate_verify', 'certificate_search',
         'trust_certificate', 'minute_certificate', 'transfer_certificate',
         'certificate-of-trust'
@@ -118,6 +118,8 @@ else:
 status, err = git(['status', '--short'])
 bad_db = [x for x in status.splitlines() if 'data/trustee_app.db' in x or x.endswith('.db')]
 fail += check('runtime database not modified', not bad_db, 'none' if not bad_db else '\n'.join(bad_db))
+fail += check('final unclassified route closure', len(unclassified) == 0, 'remaining=' + str(len(unclassified)))
+fail += check('final unclassified route closure', len(unclassified) == 0, 'remaining=' + str(len(unclassified)))
 
 print('')
 print('SUMMARY')
