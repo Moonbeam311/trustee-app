@@ -116,6 +116,7 @@ ALLOWED_STATUS_PATHS = {
     "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
     "scripts/audit_reports_workspace_minimal_read_only_context_wiring_15c1.py",
     "scripts/audit_reports_workspace_read_only_status_panel_rendering_15c2.py",
+    "scripts/audit_reports_workspace_consolidation_certification_15d.py",
 }
 
 PARAMETERIZED_ROUTE_RESOLUTION = {
