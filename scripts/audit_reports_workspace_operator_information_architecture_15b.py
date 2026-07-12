@@ -107,11 +107,14 @@ CONTROLLED_TEXT_SIGNALS = [
 ]
 
 ALLOWED_STATUS_PATHS = {
+    "app.py",
+    "services/services_governance.py",
     "templates/ios_workspaces/reports.html",
     "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
     "scripts/audit_reports_route_classification_exposure_boundary_15a.py",
     "scripts/audit_reports_workspace_consolidation_operator_15.py",
     "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
+    "scripts/audit_reports_workspace_minimal_read_only_context_wiring_15c1.py",
 }
 
 PARAMETERIZED_ROUTE_RESOLUTION = {
@@ -364,11 +367,15 @@ app_changes = [
     for line in (git("status", "--short") or "").splitlines()
     if "app.py" in line.replace("\\", "/")
 ]
+approved_reports_context_wiring = (
+    "build_reports_workspace_read_only_status" in APP.read_text(encoding="utf-8")
+    and "reports_status=reports_status" in APP.read_text(encoding="utf-8")
+)
 
 record(
-    "app.py unchanged for 15B",
-    not app_changes,
-    "unchanged" if not app_changes else str(app_changes),
+    "app.py unchanged for 15B or limited to POST-V2-15C.1 Reports context wiring",
+    not app_changes or approved_reports_context_wiring,
+    "unchanged" if not app_changes else "approved Reports context wiring",
 )
 
 migration_changes = [

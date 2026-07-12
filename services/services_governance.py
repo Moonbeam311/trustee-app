@@ -1307,6 +1307,300 @@ def list_governance_relationship_audits(limit=50, firm_id=None, object_type=None
     return [dict(row) for row in rows]
 
 
+REPORTS_WORKSPACE_STATUS_TERMS = {
+    "Available",
+    "Complete",
+    "Incomplete",
+    "Exception",
+    "Protected",
+    "Context Required",
+    "Not Evaluated",
+    "Unavailable",
+}
+
+
+def _reports_status_panel(status, label, detail, route, summary=None):
+    panel = {
+        "status": status if status in REPORTS_WORKSPACE_STATUS_TERMS else "Not Evaluated",
+        "label": label,
+        "detail": detail,
+        "route": route,
+    }
+    if summary is not None:
+        panel["summary"] = summary
+    return panel
+
+
+def _reports_table_exists(conn, table_name):
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return bool(row)
+
+
+def _reports_count(conn, table_name, where_sql="", params=()):
+    if not _reports_table_exists(conn, table_name):
+        return None
+    row = conn.execute(
+        f"SELECT COUNT(*) AS count FROM {table_name} {where_sql}",
+        tuple(params),
+    ).fetchone()
+    return int(row["count"] if row and "count" in row.keys() else row[0] if row else 0)
+
+
+def _reports_portfolio_status():
+    try:
+        from database.db import get_portfolio_summary
+
+        portfolio, totals = get_portfolio_summary()
+        trust_count = int((totals or {}).get("trust_count") or len(portfolio or []))
+        distribution_rows = sum(int(row.get("count") or 0) for row in (portfolio or []))
+        status = "Available" if trust_count or distribution_rows else "Incomplete"
+        return _reports_status_panel(
+            status,
+            "Portfolio Reporting Availability",
+            "Portfolio reporting is available; central status includes only record coverage counts.",
+            "/portfolio",
+            {
+                "trust_count": trust_count,
+                "portfolio_rows": len(portfolio or []),
+                "distribution_record_count": distribution_rows,
+            },
+        )
+    except Exception as exc:
+        return _reports_status_panel(
+            "Unavailable",
+            "Portfolio Reporting Availability",
+            f"Portfolio reporting status could not be read: {exc}",
+            "/portfolio",
+        )
+
+
+def _reports_audit_status():
+    try:
+        from database.db import get_audit_log
+
+        logs = [dict(row) for row in get_audit_log(200)]
+        status = "Available" if logs else "Unavailable"
+        return _reports_status_panel(
+            status,
+            "Audit Activity Available",
+            "Audit activity is read from the existing central audit dashboard source.",
+            "/audit",
+            {
+                "recent_event_count": len(logs),
+            },
+        )
+    except Exception as exc:
+        return _reports_status_panel(
+            "Unavailable",
+            "Audit Activity Available",
+            f"Audit status could not be read: {exc}",
+            "/audit",
+        )
+
+
+def _reports_intake_status():
+    try:
+        firm_id = get_current_firm_id()
+        conn = get_connection()
+        total = _reports_count(conn, "intake_sessions", "WHERE firm_id = ?", (firm_id,))
+        if total is None:
+            conn.close()
+            return _reports_status_panel(
+                "Unavailable",
+                "Intake Oversight Available",
+                "Intake dashboard status source is not available.",
+                "/intake/dashboard",
+            )
+
+        completed = _reports_count(
+            conn,
+            "intake_sessions",
+            "WHERE firm_id = ? AND LOWER(COALESCE(status, '')) IN ('completed', 'complete', 'snapshot_saved')",
+            (firm_id,),
+        )
+        high_urgency = 0
+        if _reports_table_exists(conn, "intake_scores"):
+            row = conn.execute(
+                """
+                SELECT COUNT(*) AS count
+                FROM intake_scores s1
+                INNER JOIN (
+                    SELECT intake_id, MAX(id) AS max_id
+                    FROM intake_scores
+                    GROUP BY intake_id
+                ) latest
+                ON s1.id = latest.max_id
+                WHERE s1.urgency_level = 'High'
+                """
+            ).fetchone()
+            high_urgency = int(row["count"] if row else 0)
+        conn.close()
+
+        completed = int(completed or 0)
+        incomplete = max(int(total) - completed, 0)
+        status = "Available" if total else "Incomplete"
+        return _reports_status_panel(
+            status,
+            "Intake Oversight Available",
+            "Intake oversight is summarized from institution-level intake counts.",
+            "/intake/dashboard",
+            {
+                "total_intakes": int(total),
+                "completed_intakes": completed,
+                "incomplete_intakes": incomplete,
+                "high_urgency_intakes": high_urgency,
+            },
+        )
+    except Exception as exc:
+        return _reports_status_panel(
+            "Unavailable",
+            "Intake Oversight Available",
+            f"Intake oversight status could not be read: {exc}",
+            "/intake/dashboard",
+        )
+
+
+def _reports_draft_review_status():
+    try:
+        conn = get_connection()
+        draft_total = _reports_count(conn, "intake_draft_readiness_ledger")
+        review_total = _reports_count(conn, "intake_review_gate_ledger")
+        final_gate_total = _reports_count(conn, "intake_final_draft_prep_gate")
+        approval_total = _reports_count(conn, "intake_final_draft_admin_approvals")
+        conn.close()
+
+        counts = {
+            "draft_readiness_total": int(draft_total or 0),
+            "review_gate_total": int(review_total or 0),
+            "final_draft_gate_total": int(final_gate_total or 0),
+            "approval_total": int(approval_total or 0),
+        }
+        any_source = any(value is not None for value in (draft_total, review_total, final_gate_total, approval_total))
+        total = sum(counts.values())
+        status = "Incomplete" if any_source else "Unavailable"
+        if total:
+            status = "Complete"
+
+        return _reports_status_panel(
+            status,
+            "Draft and Review Gate Status",
+            "Draft and review gate status is summarized from central read-only ledgers.",
+            "/intake/draft-readiness",
+            counts,
+        )
+    except Exception as exc:
+        return _reports_status_panel(
+            "Unavailable",
+            "Draft and Review Gate Status",
+            f"Draft and review gate status could not be read: {exc}",
+            "/intake/draft-readiness",
+        )
+
+
+def _reports_governance_audits_status():
+    try:
+        firm_id = get_current_firm_id()
+        conn = get_connection()
+        if not _reports_table_exists(conn, "governance_relationship_audit_ledger"):
+            conn.close()
+            return _reports_status_panel(
+                "Unavailable",
+                "Governance Relationship Audit Ledger",
+                "Governance relationship audit ledger is not available.",
+                "/governance/relationship-audits",
+            )
+
+        rows = conn.execute(
+            """
+            SELECT outcome
+            FROM governance_relationship_audit_ledger
+            WHERE firm_id = ?
+            ORDER BY id DESC
+            LIMIT 200
+            """,
+            (firm_id,),
+        ).fetchall()
+        conn.close()
+
+        audits = [dict(row) for row in rows]
+        open_exceptions = len(
+            [
+                audit
+                for audit in audits
+                if audit.get("outcome") not in ("created", "duplicate_blocked", "resolved")
+            ]
+        )
+        resolved = len([audit for audit in audits if audit.get("outcome") in ("created", "duplicate_blocked", "resolved")])
+        status = "Available" if audits else "Unavailable"
+        if open_exceptions:
+            status = "Exception"
+        return _reports_status_panel(
+            status,
+            "Governance Relationship Audit Ledger",
+            "Governance relationship audit status is summarized from the existing audit ledger.",
+            "/governance/relationship-audits",
+            {
+                "total_audits": len(audits),
+                "open_exceptions": open_exceptions,
+                "resolved_audits": resolved,
+            },
+        )
+    except Exception as exc:
+        return _reports_status_panel(
+            "Unavailable",
+            "Governance Relationship Audit Ledger",
+            f"Governance relationship audit status could not be read: {exc}",
+            "/governance/relationship-audits",
+        )
+
+
+def build_reports_workspace_read_only_status():
+    return {
+        "read_only": True,
+        "context_type": "reports_workspace_status",
+        "panels": {
+            "portfolio": _reports_portfolio_status(),
+            "audit": _reports_audit_status(),
+            "intake": _reports_intake_status(),
+            "draft_review": _reports_draft_review_status(),
+            "governance_audits": _reports_governance_audits_status(),
+            "financial": _reports_status_panel(
+                "Not Evaluated",
+                "Financial Summary Availability",
+                "Financial reporting is available through the existing Financial Summary surface. Central status computation is not enabled.",
+                "/financial_summary",
+            ),
+            "certificate_verification": _reports_status_panel(
+                "Context Required",
+                "Certificate Verification",
+                "Certificate verification and certificate-specific status require certificate context. Use the Certificate Registry to locate the originating record.",
+                "/certificates",
+            ),
+            "controlled_exports": _reports_status_panel(
+                "Protected",
+                "Controlled Exports",
+                "Generated exports, downloads, packages, and controlled artifacts remain governed by record context, export policy, verification, and workflow state.",
+                "/exports",
+            ),
+            "governance_evidence": _reports_status_panel(
+                "Available",
+                "Governance Evidence Chain",
+                "Governance evidence-chain status is certified and maintained in the Archive Workspace. Reports does not independently recompute it.",
+                "/admin/workspace/archive",
+            ),
+            "v2_certification": _reports_status_panel(
+                "Available",
+                "V2 Certification Record",
+                "The V2 certification record remains available through its governed certification surface and is not independently recalculated in Reports.",
+                "/governance/v2-certification",
+            ),
+        },
+    }
+
+
 def create_governance_relationship(data):
     ensure_governance_tables()
 

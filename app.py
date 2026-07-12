@@ -7071,6 +7071,14 @@ def admin_ios_workspace(workspace_key):
 
         archive_status = build_archive_workspace_read_only_status()
 
+    reports_status = None
+    if workspace_key == "reports":
+        from services.services_governance import (
+            build_reports_workspace_read_only_status,
+        )
+
+        reports_status = build_reports_workspace_read_only_status()
+
     return render_template(
         "ios_workspace.html",
         workspace_key=workspace_key,
@@ -7079,6 +7087,7 @@ def admin_ios_workspace(workspace_key):
         workspace_template=f"ios_workspaces/{workspace_key}.html",
         report=report,
         archive_status=archive_status,
+        reports_status=reports_status,
     )
 
 
