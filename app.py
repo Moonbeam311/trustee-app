@@ -7062,6 +7062,15 @@ def admin_ios_workspace(workspace_key):
         "instrument_count": get_instrument_count(),
     }
 
+    archive_status = None
+    if workspace_key == "archive":
+        # POST-V2-14B.1: display-only Archive Workspace status context.
+        from services.services_governance import (
+            build_archive_workspace_read_only_status,
+        )
+
+        archive_status = build_archive_workspace_read_only_status()
+
     return render_template(
         "ios_workspace.html",
         workspace_key=workspace_key,
@@ -7069,6 +7078,7 @@ def admin_ios_workspace(workspace_key):
         workspace_description=description,
         workspace_template=f"ios_workspaces/{workspace_key}.html",
         report=report,
+        archive_status=archive_status,
     )
 
 

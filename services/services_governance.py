@@ -6432,3 +6432,201 @@ def build_v2_certification_dashboard_text():
 
     return "\n".join(lines)
 
+# POST-V2-14B.1 ARCHIVE WORKSPACE MINIMAL READ-ONLY CONTEXT WIRING
+def build_archive_workspace_read_only_status():
+    """
+    Build the Archive Workspace's centralized display-only status contract.
+
+    This helper:
+    - reuses existing governance evidence builders;
+    - performs no archive, recovery, replication, or certification mutation;
+    - does not centralize unverified continuity-certificate counts;
+    - does not invoke recovery helpers that may initialize registry rows.
+    """
+    evidence = build_governance_evidence_export_index()
+    certification = build_governance_evidence_certification_dashboard()
+    manifest = build_governance_evidence_export_manifest()
+    integrity = build_governance_export_integrity_digest_index()
+    exceptions = build_governance_evidence_exception_panel()
+    completion = build_governance_evidence_completion_gate()
+    archive_intake = build_governance_export_archive_intake_preview()
+
+    evidence_summary = evidence.get("summary") or {}
+    certification_summary = certification.get("summary") or {}
+    manifest_summary = manifest.get("summary") or {}
+    integrity_summary = integrity.get("summary") or {}
+    exception_summary = exceptions.get("summary") or {}
+    completion_summary = completion.get("summary") or {}
+    archive_summary = archive_intake.get("summary") or {}
+
+    total_packets = int(evidence_summary.get("total_packets") or 0)
+    readiness_checks = int(certification_summary.get("readiness_checks") or 0)
+    manifest_packets = int(manifest_summary.get("total_packets") or 0)
+    digest_artifacts = int(integrity_summary.get("total_artifacts") or 0)
+    total_exceptions = int(exception_summary.get("total_exceptions") or 0)
+    hardening_blockers = int(completion_summary.get("hardening_blockers") or 0)
+    archive_items = int(archive_summary.get("archive_items") or 0)
+
+    certification_ready = bool(certification.get("certification_ready"))
+    evidence_chain_complete = bool(completion.get("evidence_chain_complete"))
+    archive_ready = bool(archive_intake.get("archive_ready"))
+
+    if total_packets > 0:
+        evidence_status = "Available"
+        evidence_detail = (
+            f"{total_packets} governed evidence packets are available for review."
+        )
+    else:
+        evidence_status = "Not Evaluated"
+        evidence_detail = "No governed evidence packets are currently available."
+
+    if readiness_checks <= 0:
+        certification_status = "Not Evaluated"
+    elif certification_ready:
+        certification_status = "Complete"
+    else:
+        certification_status = "Incomplete"
+
+    if manifest_packets > 0:
+        manifest_status = "Available"
+        manifest_detail = (
+            f"The manifest accounts for {manifest_packets} governed evidence packets."
+        )
+    else:
+        manifest_status = "Not Evaluated"
+        manifest_detail = "No governed manifest packet inventory is currently available."
+
+    if digest_artifacts > 0:
+        integrity_status = "Complete"
+        integrity_detail = (
+            f"{digest_artifacts} integrity digest artifacts are available for verification."
+        )
+    else:
+        integrity_status = "Not Evaluated"
+        integrity_detail = "No integrity digest artifacts are currently available."
+
+    if total_exceptions > 0:
+        exception_status = "Exception"
+        exception_detail = (
+            f"{total_exceptions} evidence or lifecycle items require operator review."
+        )
+    else:
+        exception_status = "Complete"
+        exception_detail = "No evidence exceptions currently require review."
+
+    if not evidence_chain_complete:
+        completion_status = "Incomplete"
+    elif hardening_blockers > 0:
+        completion_status = "Incomplete"
+    else:
+        completion_status = "Complete"
+
+    completion_detail = completion.get("completion_status") or (
+        "Evidence completion has not been evaluated."
+    )
+    if hardening_blockers > 0:
+        completion_detail = (
+            f"{completion_detail} "
+            f"{hardening_blockers} hardening blocker(s) remain."
+        )
+
+    if archive_ready:
+        archive_status = "Complete"
+    elif archive_items > 0:
+        archive_status = "Incomplete"
+    else:
+        archive_status = "Not Evaluated"
+
+    archive_detail = archive_intake.get("archive_status") or (
+        "Archive-intake readiness has not been evaluated."
+    )
+
+    return {
+        "read_only": True,
+        "context_type": "archive_workspace_status",
+        "panels": {
+            "evidence": {
+                "status": evidence_status,
+                "label": "Evidence Registry",
+                "detail": evidence_detail,
+                "route": "/governance/evidence-exports",
+                "summary": evidence_summary,
+            },
+            "certification": {
+                "status": certification_status,
+                "label": "Evidence Certification",
+                "detail": certification.get("certification_status")
+                or "Evidence certification has not been evaluated.",
+                "route": "/governance/evidence-exports/certification",
+                "summary": certification_summary,
+            },
+            "manifest": {
+                "status": manifest_status,
+                "label": "Evidence Manifest",
+                "detail": manifest_detail,
+                "route": "/governance/evidence-exports/manifest",
+                "summary": manifest_summary,
+            },
+            "integrity": {
+                "status": integrity_status,
+                "label": "Integrity Digest",
+                "detail": integrity_detail,
+                "route": "/governance/evidence-exports/integrity",
+                "summary": integrity_summary,
+            },
+            "exceptions": {
+                "status": exception_status,
+                "label": "Evidence Exceptions",
+                "detail": exception_detail,
+                "route": "/governance/evidence-exports/exceptions",
+                "summary": exception_summary,
+            },
+            "completion": {
+                "status": completion_status,
+                "label": "Evidence Completion Gate",
+                "detail": completion_detail,
+                "route": "/governance/evidence-exports/completion-gate",
+                "summary": completion_summary,
+            },
+            "archive_intake": {
+                "status": archive_status,
+                "label": "Archive Intake",
+                "detail": archive_detail,
+                "route": "/governance/evidence-exports/archive-intake",
+                "summary": archive_summary,
+            },
+            "backup": {
+                "status": "Protected",
+                "label": "Database Backup",
+                "detail": "Medium-risk confirmation is required before download.",
+                "route": "/admin/backup/database.zip",
+            },
+            "continuity": {
+                "status": "Context Required",
+                "label": "Continuity Certificates",
+                "detail": (
+                    "Firm-scoped central certificate totals are not yet certified. "
+                    "Use certificate verification without relying on a central count."
+                ),
+                "route": "/continuity/certificates/verify",
+            },
+            "recovery": {
+                "status": "Protected",
+                "label": "Recovery Readiness",
+                "detail": (
+                    "Recovery readiness must be evaluated from an originating "
+                    "execution context."
+                ),
+                "route": None,
+            },
+            "replication": {
+                "status": "Context Required",
+                "label": "Replication Readiness",
+                "detail": (
+                    "Replication readiness requires an originating execution context."
+                ),
+                "route": None,
+            },
+        },
+    }
+

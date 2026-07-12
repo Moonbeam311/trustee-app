@@ -454,7 +454,15 @@ record(
 )
 
 allowed_status_paths = {
+    "app.py",
+    "services/services_governance.py",
+    "scripts/audit_archive_workspace_minimal_read_only_context_wiring_14b1.py",
     "scripts/audit_archive_workspace_read_only_status_panels_14b.py",
+    "scripts/audit_archive_workspace_operator_information_architecture_14a.py",
+    "scripts/audit_institutional_archive_workspace_consolidation_14.py",
+    "scripts/audit_institutional_archive_recovery_continuity_13.py",
+    "app.py.pre_POST_V2_14B1.bak",
+    "services/services_governance.py.pre_POST_V2_14B1.bak",
 }
 unexpected_status = []
 for line in status.splitlines():
@@ -463,9 +471,9 @@ for line in status.splitlines():
         unexpected_status.append(line)
 
 record(
-    "working tree limited to POST-V2-14B audit file",
+    "working tree limited to POST-V2-14B and 14B.1 files",
     not unexpected_status,
-    "14B audit only" if not unexpected_status else "\n".join(unexpected_status),
+    "14B/14B.1 files only" if not unexpected_status else "\n".join(unexpected_status),
 )
 
 print()
