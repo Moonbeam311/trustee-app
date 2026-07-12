@@ -12,6 +12,258 @@
   </p>
 </section>
 
+<section class="admin-card reports-status-region">
+  <h3>Reports Oversight Status</h3>
+
+  <p class="admin-muted">
+    Read-only institutional status summaries derived from approved reporting,
+    intake, audit, portfolio, and governance sources. Protected, contextual,
+    and governed-source boundaries remain in effect.
+  </p>
+
+  <p>
+    Status summaries are informational and read-only. Report generation,
+    export creation, certificate actions, approvals, and record-specific
+    verification remain governed by their originating workflows.
+  </p>
+
+  {% set allowed_report_statuses = [
+    "Available",
+    "Complete",
+    "Incomplete",
+    "Exception",
+    "Protected",
+    "Context Required",
+    "Not Evaluated",
+    "Unavailable"
+  ] %}
+
+  {% set reports_panel_order = [
+    "portfolio",
+    "audit",
+    "intake",
+    "draft_review",
+    "governance_audits",
+    "financial",
+    "certificate_verification",
+    "controlled_exports",
+    "governance_evidence",
+    "v2_certification"
+  ] %}
+
+  {% set reports_panel_routes = {
+    "portfolio": "/portfolio",
+    "audit": "/audit",
+    "intake": "/intake/dashboard",
+    "draft_review": "/intake/draft-readiness",
+    "governance_audits": "/governance/relationship-audits",
+    "financial": "/financial_summary",
+    "certificate_verification": "/certificates",
+    "controlled_exports": "/exports",
+    "governance_evidence": "/admin/workspace/archive",
+    "v2_certification": "/governance/v2-certification"
+  } %}
+
+  {% set reports_panel_link_text = {
+    "portfolio": "Open source surface",
+    "audit": "Open source surface",
+    "intake": "Open source surface",
+    "draft_review": "Open source surface",
+    "governance_audits": "Open source surface",
+    "financial": "Open source surface",
+    "certificate_verification": "Open registry",
+    "controlled_exports": "Open governed surface",
+    "governance_evidence": "Open Archive Workspace",
+    "v2_certification": "Open governed surface"
+  } %}
+
+  {% set safe_summary_panels = [
+    "portfolio",
+    "audit",
+    "intake",
+    "draft_review",
+    "governance_audits"
+  ] %}
+
+  {% if reports_status
+        and reports_status.get("read_only") == True
+        and reports_status.get("context_type") == "reports_workspace_status" %}
+    {% set panels = reports_status.get("panels", {}) %}
+
+    <div class="reports-status-grid">
+      {% for panel_key in reports_panel_order %}
+        {% set panel = panels.get(panel_key, {}) %}
+        {% set status = panel.get("status", "Not Evaluated") %}
+        {% if status not in allowed_report_statuses %}
+          {% set status = "Not Evaluated" %}
+        {% endif %}
+        {% set route = reports_panel_routes.get(panel_key) %}
+        {% set summary = panel.get("summary", {}) %}
+
+        <article class="reports-status-card reports-status-card--{{ status|lower|replace(' ', '-') }}">
+          <header class="reports-status-card__header">
+            <h4 class="reports-status-card__label">
+              {{ panel.get("label", panel_key|replace("_", " ")|title) }}
+            </h4>
+            <span class="reports-status-card__badge">
+              {{ status }}
+            </span>
+          </header>
+
+          <p class="reports-status-card__detail">
+            {{ panel.get("detail", "Status detail is not evaluated.") }}
+          </p>
+
+          {% if panel_key in safe_summary_panels and summary is mapping %}
+            {% set summary_rows = [] %}
+            {% for summary_label, summary_value in summary.items() %}
+              {% if summary_value is string or summary_value is number or summary_value is boolean %}
+                {% set _ = summary_rows.append((summary_label, summary_value)) %}
+              {% endif %}
+            {% endfor %}
+
+            {% if summary_rows %}
+              <dl class="reports-status-card__summary">
+                {% for summary_label, summary_value in summary_rows %}
+                  <div class="reports-status-card__summary-row">
+                    <dt>{{ summary_label|replace("_", " ")|title }}</dt>
+                    <dd>{{ summary_value }}</dd>
+                  </div>
+                {% endfor %}
+              </dl>
+            {% endif %}
+          {% endif %}
+
+          {% if route %}
+            <a class="reports-status-card__link" href="{{ route }}">
+              {{ reports_panel_link_text.get(panel_key, "Open source surface") }}
+            </a>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="admin-muted">
+      Reports status is unavailable. Use the report and oversight links below.
+    </p>
+  {% endif %}
+</section>
+
+<style>
+  .reports-status-region {
+    border-left: 4px solid #2f6f73;
+  }
+
+  .reports-status-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    margin-top: 14px;
+  }
+
+  .reports-status-card {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 14px;
+    background: #ffffff;
+  }
+
+  .reports-status-card__header {
+    align-items: flex-start;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .reports-status-card__label {
+    font-size: 1rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .reports-status-card__badge {
+    border: 1px solid #8c959f;
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .reports-status-card--available .reports-status-card__badge,
+  .reports-status-card--complete .reports-status-card__badge {
+    background: #e8f3ee;
+    border-color: #4f8f69;
+  }
+
+  .reports-status-card--incomplete .reports-status-card__badge,
+  .reports-status-card--not-evaluated .reports-status-card__badge {
+    background: #f6f1df;
+    border-color: #b59b42;
+  }
+
+  .reports-status-card--exception .reports-status-card__badge,
+  .reports-status-card--unavailable .reports-status-card__badge {
+    background: #f7e7e5;
+    border-color: #b65b54;
+  }
+
+  .reports-status-card--protected .reports-status-card__badge,
+  .reports-status-card--context-required .reports-status-card__badge {
+    background: #e8edf7;
+    border-color: #6176a3;
+  }
+
+  .reports-status-card__detail {
+    margin: 10px 0 0;
+  }
+
+  .reports-status-card__summary {
+    border-top: 1px solid #eaeef2;
+    margin: 12px 0 0;
+    padding-top: 10px;
+  }
+
+  .reports-status-card__summary-row {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin: 0 0 6px;
+  }
+
+  .reports-status-card__summary dt {
+    color: #57606a;
+    font-weight: 600;
+  }
+
+  .reports-status-card__summary dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .reports-status-card__link {
+    display: inline-block;
+    margin-top: 12px;
+  }
+
+  @media (max-width: 560px) {
+    .reports-status-card__header,
+    .reports-status-card__summary-row {
+      display: block;
+    }
+
+    .reports-status-card__badge {
+      margin-top: 8px;
+    }
+
+    .reports-status-card__summary dd {
+      text-align: left;
+    }
+  }
+</style>
+
 <section class="admin-card">
   <h3>Reports Workspace Purpose</h3>
 

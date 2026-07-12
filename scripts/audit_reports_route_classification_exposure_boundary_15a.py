@@ -610,6 +610,7 @@ allowed_status_paths = {
     "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
     "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
     "scripts/audit_reports_workspace_minimal_read_only_context_wiring_15c1.py",
+    "scripts/audit_reports_workspace_read_only_status_panel_rendering_15c2.py",
 }
 
 unexpected_status = []

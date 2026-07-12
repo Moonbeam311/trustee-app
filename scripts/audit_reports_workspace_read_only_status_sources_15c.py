@@ -590,6 +590,7 @@ runtime_database_changed = any(
 record("runtime database not modified", not runtime_database_changed, "none")
 
 allowed_status_paths = {
+    "templates/ios_workspaces/reports.html",
     "app.py",
     "services/services_governance.py",
     "scripts/audit_reports_workspace_consolidation_operator_15.py",
@@ -597,6 +598,7 @@ allowed_status_paths = {
     "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
     "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
     "scripts/audit_reports_workspace_minimal_read_only_context_wiring_15c1.py",
+    "scripts/audit_reports_workspace_read_only_status_panel_rendering_15c2.py",
 }
 unexpected_status = []
 for line in (git("status", "--short") or "").splitlines():

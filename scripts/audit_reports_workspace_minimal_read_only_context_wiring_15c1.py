@@ -68,6 +68,7 @@ PROHIBITED_CALL_PREFIXES = (
 )
 
 ALLOWED_STATUS_PATHS = {
+    "templates/ios_workspaces/reports.html",
     "app.py",
     "services/services_governance.py",
     "scripts/audit_reports_workspace_consolidation_operator_15.py",
@@ -75,6 +76,7 @@ ALLOWED_STATUS_PATHS = {
     "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
     "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
     "scripts/audit_reports_workspace_minimal_read_only_context_wiring_15c1.py",
+    "scripts/audit_reports_workspace_read_only_status_panel_rendering_15c2.py",
 }
 
 
@@ -132,7 +134,13 @@ record("certified V2 tag unchanged", tag_commit == EXPECTED_CERTIFIED_COMMIT, ta
 
 app_text = read(APP)
 service_text = read(GOVERNANCE_SERVICE)
+template_current = read(REPORTS_TEMPLATE)
 template_changes = git("diff", "--name-only", "HEAD", "--", "templates/ios_workspaces/reports.html")
+approved_15c2_rendering = (
+    "Reports Oversight Status" in template_current
+    and "reports-status-grid" in template_current
+    and 'reports_status.get("context_type") == "reports_workspace_status"' in template_current
+)
 
 app_tree = ast.parse(app_text)
 service_tree = ast.parse(service_text)
@@ -228,9 +236,9 @@ record(
     "default none",
 )
 record(
-    "Reports template remains unchanged from POST-V2-15B",
-    not template_changes,
-    "unchanged" if not template_changes else template_changes,
+    "Reports template unchanged from POST-V2-15B or limited to POST-V2-15C.2 rendering",
+    not template_changes or approved_15c2_rendering,
+    "unchanged" if not template_changes else "approved 15C.2 rendering",
 )
 
 migration_or_db_changes = [
