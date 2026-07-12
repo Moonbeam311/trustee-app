@@ -147,6 +147,10 @@ REPORT_SIGNAL_TOKENS = (
     "financial",
 )
 
+POST_V2_15B_MARKER = (
+    "POST-V2-15B REPORTS WORKSPACE OPERATOR INFORMATION ARCHITECTURE"
+)
+
 checks = []
 failures = []
 
@@ -433,10 +437,88 @@ record(
 )
 
 record(
-    "Reports Workspace remains placeholder during classification",
-    "ADR-9B placeholder" in template_text,
-    "retained",
+    "Reports Workspace classification boundary inherited",
+    "ADR-9B placeholder" in template_text
+    or POST_V2_15B_MARKER in template_text,
+    (
+        "POST-V2-15B architecture retained"
+        if POST_V2_15B_MARKER in template_text
+        else "ADR-9B placeholder retained"
+    ),
 )
+
+if POST_V2_15B_MARKER in template_text:
+    literal_links = sorted(
+        {
+            href
+            for href in re.findall(
+                r'href\s*=\s*["\']([^"\']+)["\']',
+                template_text,
+                flags=re.IGNORECASE,
+            )
+            if "{{" not in href
+            and "}}" not in href
+            and "{%" not in href
+            and "%}" not in href
+        }
+    )
+
+    central_class_routes = CLASS_1_CENTRAL_REPORTS | CLASS_2_CENTRAL_REGISTRIES
+    central_exposure_links = [
+        link for link in literal_links
+        if link in central_class_routes
+    ]
+    protected_central_links = [
+        link for link in central_exposure_links
+        if link in EXPLICITLY_EXCLUDED
+    ]
+    parameterized_central_links = [
+        link for link in central_exposure_links
+        if "<" in link or ">" in link
+    ]
+    write_capable_central_links = [
+        link for link in central_exposure_links
+        if route_map.get(link)
+        and set(route_map[link]["methods"]) != {"GET"}
+    ]
+    api_links = [
+        link for link in literal_links
+        if link.startswith("/api/")
+    ]
+    mutation_links = [
+        link for link in literal_links
+        if any(token in link.lower() for token in MUTATION_TOKENS)
+    ]
+
+    record(
+        "15B rendered Reports Workspace contains no API links",
+        not api_links,
+        "none" if not api_links else str(api_links),
+    )
+
+    record(
+        "15B rendered Reports Workspace contains no parameterized central links",
+        not parameterized_central_links,
+        "none" if not parameterized_central_links else str(parameterized_central_links),
+    )
+
+    record(
+        "15B rendered Reports Workspace central links remain GET-only",
+        not write_capable_central_links,
+        "all GET-only" if not write_capable_central_links else str(write_capable_central_links),
+    )
+
+    record(
+        "15B rendered Reports Workspace keeps protected routes out of central classes",
+        not protected_central_links,
+        "none" if not protected_central_links else str(protected_central_links),
+    )
+
+    record(
+        "15B rendered Reports Workspace contains no mutation-capable links",
+        not mutation_links,
+        "none" if not mutation_links else str(mutation_links),
+    )
 
 api_central_exposure = [
     item["route"]
@@ -522,6 +604,8 @@ record(
 allowed_status_paths = {
     "scripts/audit_reports_workspace_consolidation_operator_15.py",
     "scripts/audit_reports_route_classification_exposure_boundary_15a.py",
+    "templates/ios_workspaces/reports.html",
+    "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
 }
 
 unexpected_status = []

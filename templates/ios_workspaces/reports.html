@@ -1,6 +1,188 @@
+{# POST-V2-15B REPORTS WORKSPACE OPERATOR INFORMATION ARCHITECTURE #}
+
 <section class="admin-card">
   <h2>REPORTS Workspace</h2>
+
   <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
+    Review institutional reports, oversight dashboards, registries,
+    certifications, evidence summaries, and controlled reporting surfaces.
+    Record-specific reports remain within the Matter, Trust, Property,
+    Execution, Transfer, Intake, Certificate, Instrument, or Governance
+    context that created them.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Reports Workspace Purpose</h3>
+
+  <p>
+    This workspace is a central read-only discovery and oversight surface.
+    It helps operators locate authoritative institutional reports without
+    moving governed actions or record-specific reporting out of their
+    originating context.
+  </p>
+
+  <p>
+    The reporting chain is:
+    Institutional Activity → Registry or Dashboard → Report →
+    Evidence or Certification → Controlled Export or Archive.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Executive and Institutional Reports</h3>
+
+  <p>
+    Review institution-wide financial, portfolio, audit, and analytics
+    information.
+  </p>
+
+  <p>
+    <a href="/financial_summary">Financial Summary</a>
+    |
+    <a href="/portfolio">Portfolio Dashboard</a>
+    |
+    <a href="/reports/portfolio.pdf">Portfolio Report PDF</a>
+    |
+    <a href="/audit">Audit Dashboard</a>
+    |
+    <a href="/reports/audit.pdf">Audit Report PDF</a>
+    |
+    <a href="/visualization/analytics">Institutional Analytics</a>
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Export and Certificate Oversight</h3>
+
+  <p>
+    Review existing export records and institutional certificate records.
+    Export creation, certificate generation, backfill, and mutation actions
+    are not exposed from this workspace.
+  </p>
+
+  <p>
+    <a href="/exports">Export Center</a>
+    |
+    <a href="/certificates">Certificate Registry</a>
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Intake and Readiness Oversight</h3>
+
+  <p>
+    Review intake activity, export history, module completion, drafting
+    readiness, review gates, and final-draft approval status.
+  </p>
+
+  <p>
+    <a href="/intake/dashboard">Intake Dashboard</a>
+    |
+    <a href="/intake/exports">Intake Export History</a>
+    |
+    <a href="/intake/modules">Intake Module Ledger</a>
+    |
+    <a href="/intake/draft-readiness">Draft Readiness Ledger</a>
+    |
+    <a href="/intake/review-gates">Review Gate Ledger</a>
+    |
+    <a href="/intake/final-draft-gate">Final Draft Gate</a>
+    |
+    <a href="/intake/final-draft-approvals">Final Draft Approvals</a>
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Governance and Evidence Oversight</h3>
+
+  <p>
+    Review governance activity, relationship audits, evidence registries,
+    certification status, completion readiness, exceptions, archive intake,
+    integrity, and manifest records.
+  </p>
+
+  <p>
+    <a href="/governance/dashboard">Governance Dashboard</a>
+    |
+    <a href="/governance/relationship-audits">Relationship Audit Ledger</a>
+    |
+    <a href="/governance/evidence-exports">Evidence Export Registry</a>
+    |
+    <a href="/governance/evidence-exports/certification">Evidence Certification</a>
+    |
+    <a href="/governance/v2-certification">V2 Certification Record</a>
+    |
+    <a href="/governance/evidence-exports/completion-gate">Evidence Completion Gate</a>
+    |
+    <a href="/governance/evidence-exports/exceptions">Evidence Exceptions</a>
+    |
+    <a href="/governance/evidence-exports/archive-intake">Archive-Intake Preview</a>
+    |
+    <a href="/governance/evidence-exports/integrity">Integrity Digest</a>
+    |
+    <a href="/governance/evidence-exports/manifest">Evidence Manifest</a>
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Contextual Report Boundary</h3>
+
+  <p>
+    Trust summaries, tax reports, K-1 reports, Form 1041 reports, trust
+    ledgers, property timelines, execution manifests, execution ledgers,
+    transfer audit trails, continuity certificates, instrument reports,
+    evidence packets, and intake-detail reports remain attached to their
+    originating institutional record.
+  </p>
+
+  <p>
+    Open the originating Matter, Trust, Property, Execution Session,
+    Transfer, Intake, Certificate, Instrument, or Governance record to
+    review those reports.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Controlled Export Boundary</h3>
+
+  <p>
+    Generated PDFs, CSV files, text exports, ZIP packages, print views,
+    packets, manifests, certificates, and download artifacts may require
+    record context, authorization, export policy, verification, approval,
+    or prior workflow completion.
+  </p>
+
+  <p>
+    This workspace does not bypass those controls and does not create,
+    approve, finalize, execute, or download record-specific artifacts
+    without their required context.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Protected and Excluded Boundary</h3>
+
+  <p>
+    APIs, diagnostics, test routes, hosted repair tools, object-model
+    status pages, builders, upload actions, backfill actions, recovery,
+    permission reseeding, execution, approval, finalization, and destructive
+    operations are intentionally not exposed here.
+  </p>
+
+  <p>
+    Their absence is an institutional safety boundary, not a missing feature.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Operator Navigation</h3>
+
+  <p>
+    <a href="/admin">Return to Admin Dashboard</a>
+    |
+    <a href="/admin/workspace/governance">Open Governance Workspace</a>
+    |
+    <a href="/admin/workspace/archive">Open Archive Workspace</a>
   </p>
 </section>

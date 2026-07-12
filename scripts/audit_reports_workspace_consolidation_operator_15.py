@@ -4,6 +4,9 @@ import re
 import subprocess
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "app.py"
 REPORTS_TEMPLATE = ROOT / "templates" / "ios_workspaces" / "reports.html"
@@ -11,7 +14,7 @@ IOS_TEMPLATE = ROOT / "templates" / "ios_workspace.html"
 
 CERTIFIED_TAG = "v2-certified-baseline-2026-07-10"
 EXPECTED_CERTIFIED_COMMIT = "607eb174354510b64804f8dd8e4b87756f25f366"
-EXPECTED_STARTING_HEAD = "ab657dd"
+REQUIRED_ANCESTOR = "ab657dd"
 ALLOWED_BRANCHES = {"post-v2-planning"}
 
 REPORT_TERMS = [
@@ -166,9 +169,16 @@ record(
 )
 
 head = git("rev-parse", "HEAD")
+ancestor_check = subprocess.run(
+    ["git", "merge-base", "--is-ancestor", REQUIRED_ANCESTOR, "HEAD"],
+    cwd=ROOT,
+    capture_output=True,
+    text=True,
+    check=False,
+)
 record(
-    "starting HEAD is published POST-V2-14B.2",
-    head.startswith(EXPECTED_STARTING_HEAD),
+    "published POST-V2-14B.2 retained in ancestry",
+    ancestor_check.returncode == 0,
     head or "missing",
 )
 
@@ -349,6 +359,9 @@ unexpected_status = []
 
 allowed_status_paths = {
     "scripts/audit_reports_workspace_consolidation_operator_15.py",
+    "scripts/audit_reports_route_classification_exposure_boundary_15a.py",
+    "templates/ios_workspaces/reports.html",
+    "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
 }
 
 for line in (git("status", "--short") or "").splitlines():
@@ -361,9 +374,9 @@ for line in (git("status", "--short") or "").splitlines():
         unexpected_status.append(line)
 
 record(
-    "working tree limited to POST-V2-15 audit",
+    "working tree limited to POST-V2-15 Reports audit scope",
     not unexpected_status,
-    "audit only"
+    "Reports audit files only"
     if not unexpected_status
     else "\n".join(unexpected_status),
 )
