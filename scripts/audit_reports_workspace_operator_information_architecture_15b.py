@@ -111,6 +111,7 @@ ALLOWED_STATUS_PATHS = {
     "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
     "scripts/audit_reports_route_classification_exposure_boundary_15a.py",
     "scripts/audit_reports_workspace_consolidation_operator_15.py",
+    "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
 }
 
 PARAMETERIZED_ROUTE_RESOLUTION = {

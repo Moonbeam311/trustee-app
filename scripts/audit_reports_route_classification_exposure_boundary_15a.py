@@ -606,6 +606,7 @@ allowed_status_paths = {
     "scripts/audit_reports_route_classification_exposure_boundary_15a.py",
     "templates/ios_workspaces/reports.html",
     "scripts/audit_reports_workspace_operator_information_architecture_15b.py",
+    "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
 }
 
 unexpected_status = []
