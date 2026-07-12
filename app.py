@@ -7516,6 +7516,12 @@ def system_recovery_reseed_permissions():
     if gate:
         return gate
 
+    if not validate_csrf_token():
+        return render_template(
+            "access_denied.html",
+            reason="Invalid or missing CSRF token."
+        ), 400
+
     result = reseed_default_role_permissions()
 
     log_change(
@@ -7537,6 +7543,12 @@ def system_recovery_run():
     gate = require_master_admin()
     if gate:
         return gate
+
+    if not validate_csrf_token():
+        return render_template(
+            "access_denied.html",
+            reason="Invalid or missing CSRF token."
+        ), 400
 
     result = run_safe_recovery_migrations()
 
@@ -10162,10 +10174,19 @@ def form1041_report_print(trust_id):
 
 @app.route("/permissions", methods=["GET", "POST"])
 def permissions_dashboard():
+    gate = require_master_admin()
+    if gate:
+        return gate
 
     permission_roles = ["Admin", "Trustee", "Viewer"]
 
     if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "access_denied.html",
+                reason="Invalid or missing CSRF token."
+            ), 400
+
         target_role = (request.form.get("role_name") or "").strip()
         selected_permissions = request.form.getlist("permissions")
 
