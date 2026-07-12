@@ -52,6 +52,7 @@ PROHIBITED_HELPER_CALLS = [
 ALLOWED_STATUS_PATHS = {
     "app.py",
     "services/services_governance.py",
+    "templates/ios_workspaces/archive.html",
     "scripts/audit_archive_workspace_minimal_read_only_context_wiring_14b1.py",
     "app.py.pre_POST_V2_14B1.bak",
     "services/services_governance.py.pre_POST_V2_14B1.bak",
@@ -59,6 +60,7 @@ ALLOWED_STATUS_PATHS = {
     "scripts/audit_archive_workspace_operator_information_architecture_14a.py",
     "scripts/audit_institutional_archive_workspace_consolidation_14.py",
     "scripts/audit_institutional_archive_recovery_continuity_13.py",
+    "scripts/audit_archive_workspace_read_only_status_rendering_14b2.py",
 }
 
 checks = []

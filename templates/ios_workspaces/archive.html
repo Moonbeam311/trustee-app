@@ -50,6 +50,101 @@
   </div>
 
   <div class="admin-card" data-archive-section="evidence-certification">
+
+    {# POST-V2-14B.2 ARCHIVE WORKSPACE READ-ONLY STATUS PANEL RENDERING #}
+    {% if archive_status
+          and archive_status.read_only
+          and archive_status.panels %}
+    <section
+        aria-labelledby="archive-central-status-heading"
+        data-archive-status-contract="read-only"
+        style="margin: 1.5rem 0;"
+    >
+        <h3 id="archive-central-status-heading">
+            Institutional Archive Status
+        </h3>
+
+        <p>
+            Central read-only status derived from governed evidence,
+            integrity, certification, archive-intake, continuity, and
+            protected recovery boundaries.
+        </p>
+
+        {% set archive_panel_order = [
+            "evidence",
+            "certification",
+            "completion",
+            "archive_intake",
+            "manifest",
+            "integrity",
+            "exceptions",
+            "backup",
+            "continuity",
+            "recovery",
+            "replication"
+        ] %}
+
+        <div
+            class="archive-read-only-status-grid"
+            style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 1rem;
+                margin-top: 1rem;
+            "
+        >
+            {% for panel_key in archive_panel_order %}
+                {% set panel = archive_status.panels.get(panel_key) %}
+
+                {% if panel %}
+                <article
+                    class="archive-read-only-status-panel"
+                    data-archive-panel="{{ panel_key }}"
+                    data-archive-panel-status="{{ panel.status }}"
+                    style="
+                        border: 1px solid currentColor;
+                        border-radius: 0.5rem;
+                        padding: 1rem;
+                    "
+                >
+                    <h4 style="margin-top: 0;">
+                        {{ panel.label }}
+                    </h4>
+
+                    <p>
+                        <strong>Status:</strong>
+                        <span>{{ panel.status }}</span>
+                    </p>
+
+                    <p>{{ panel.detail }}</p>
+
+                    {% if panel.route %}
+                    <p style="margin-bottom: 0;">
+                        <a href="{{ panel.route }}">
+                            Open {{ panel.label }}
+                        </a>
+                    </p>
+                    {% else %}
+                    <p style="margin-bottom: 0;">
+                        <small>
+                            Status only — originating record context required.
+                        </small>
+                    </p>
+                    {% endif %}
+                </article>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <p>
+            <small>
+                Read-only workspace summary. Protected recovery and
+                record-specific archive actions remain outside this workspace.
+            </small>
+        </p>
+    </section>
+    {% endif %}
+
     <h3>Evidence and Certification</h3>
 
     <p class="admin-muted">

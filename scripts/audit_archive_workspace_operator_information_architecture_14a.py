@@ -145,8 +145,10 @@ record(
     "all present" if not missing_signals else f"missing={missing_signals}",
 )
 
+raw_template_links = re.findall(r'href=["\']([^"\']+)["\']', archive_text)
 template_links = sorted(set(
-    re.findall(r'href=["\']([^"\']+)["\']', archive_text)
+    link for link in raw_template_links
+    if not any(marker in link for marker in ("{{", "}}", "{%", "%}"))
 ))
 
 missing_links = [
@@ -244,6 +246,7 @@ allowed_paths = {
     "app.py.pre_POST_V2_14B1.bak",
     "services/services_governance.py.pre_POST_V2_14B1.bak",
     "scripts/audit_archive_workspace_read_only_status_panels_14b.py",
+    "scripts/audit_archive_workspace_read_only_status_rendering_14b2.py",
 }
 
 unexpected_status = []

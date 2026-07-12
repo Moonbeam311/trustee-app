@@ -305,12 +305,14 @@ allowed_status_paths = {
     "scripts/audit_institutional_archive_recovery_continuity_13.py",
     "app.py",
     "services/services_governance.py",
+    "templates/ios_workspaces/archive.html",
     "scripts/audit_archive_workspace_minimal_read_only_context_wiring_14b1.py",
     "scripts/audit_archive_workspace_read_only_status_panels_14b.py",
     "scripts/audit_archive_workspace_operator_information_architecture_14a.py",
     "scripts/audit_institutional_archive_workspace_consolidation_14.py",
     "app.py.pre_POST_V2_14B1.bak",
     "services/services_governance.py.pre_POST_V2_14B1.bak",
+    "scripts/audit_archive_workspace_read_only_status_rendering_14b2.py",
 }
 
 unexpected_status = []

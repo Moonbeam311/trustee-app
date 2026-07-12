@@ -221,7 +221,11 @@ record(
     else f"missing={missing_template_signals}",
 )
 
-visible_archive_links = sorted(set(re.findall(r'href=["\']([^"\']+)["\']', archive_text)))
+raw_archive_links = re.findall(r'href=["\']([^"\']+)["\']', archive_text)
+visible_archive_links = sorted(set(
+    link for link in raw_archive_links
+    if not any(marker in link for marker in ("{{", "}}", "{%", "%}"))
+))
 
 post_v2_14a_marker = (
     "POST-V2-14A ARCHIVE WORKSPACE OPERATOR INFORMATION ARCHITECTURE"
@@ -394,6 +398,7 @@ if post_v2_14a_marker:
         "scripts/audit_archive_workspace_minimal_read_only_context_wiring_14b1.py",
         "app.py.pre_POST_V2_14B1.bak",
         "services/services_governance.py.pre_POST_V2_14B1.bak",
+        "scripts/audit_archive_workspace_read_only_status_rendering_14b2.py",
     })
 
 unexpected_status = []
