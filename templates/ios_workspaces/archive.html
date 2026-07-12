@@ -1,11 +1,187 @@
-<section class="admin-card">
+{# POST-V2-14A ARCHIVE WORKSPACE OPERATOR INFORMATION ARCHITECTURE
+   Read-only institutional archive command surface.
+
+   Centralized here:
+   - archive readiness guidance
+   - governance evidence and certification
+   - manifest and integrity review
+   - controlled database backup access
+   - continuity certificate verification
+
+   Retained contextually:
+   - execution continuity
+   - transfer archive handoff
+   - property archive packets
+   - final record archive actions
+
+   Intentionally not exposed:
+   - system recovery execution
+   - permission reseeding
+   - execution freeze
+   - property archive finalization
+   - restore or destructive operations
+#}
+
+<section class="admin-card" data-post-v2-14a="archive-workspace">
   <h2>ARCHIVE Workspace</h2>
+
   <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
+    Review institutional archive readiness, evidence integrity, certification,
+    continuity verification, and controlled backup access. Record-specific archive
+    actions remain within the Matter, Trust, Execution, Transfer, Property, or
+    Governance context that created them.
   </p>
-  <!-- POST-V2-6A WORKSPACE RETURN PATH -->
-  <div class="admin-actions" data-post-v2-6a="workspace-return">
-    <a href="/admin">Return to Admin Dashboard</a>
+
+  <div class="admin-card" data-archive-section="readiness-summary">
+    <h3>Archive Readiness Summary</h3>
+
+    <p class="admin-muted">
+      The institutional archive chain is:
+      Record → Evidence → Manifest → Integrity → Certification → Archive →
+      Continuity → Recovery Readiness.
+    </p>
+
+    <ul>
+      <li>Evidence and certification surfaces are centrally reviewable.</li>
+      <li>Manifest and integrity records remain available for verification.</li>
+      <li>Contextual archive packets remain attached to their originating records.</li>
+      <li>Recovery execution remains protected and unavailable from this workspace.</li>
+    </ul>
   </div>
 
+  <div class="admin-card" data-archive-section="evidence-certification">
+    <h3>Evidence and Certification</h3>
+
+    <p class="admin-muted">
+      Review governed evidence exports, completion status, archive-intake readiness,
+      and certification records.
+    </p>
+
+    <div class="admin-actions">
+      <a href="/governance/evidence-exports">
+        Evidence Export Registry
+      </a>
+
+      <a href="/governance/evidence-exports/completion-gate">
+        Evidence Completion Gate
+      </a>
+
+      <a href="/governance/evidence-exports/archive-intake">
+        Archive-Intake Preview
+      </a>
+
+      <a href="/governance/evidence-exports/certification">
+        Evidence Certification
+      </a>
+
+      <a href="/governance/v2-certification">
+        V2 Certification Record
+      </a>
+    </div>
+  </div>
+
+  <div class="admin-card" data-archive-section="manifest-integrity">
+    <h3>Manifest and Integrity Review</h3>
+
+    <p class="admin-muted">
+      Verify the recorded export inventory and integrity digest before relying on
+      an archive package as an authoritative institutional record.
+    </p>
+
+    <div class="admin-actions">
+      <a href="/governance/evidence-exports/manifest">
+        Evidence Manifest
+      </a>
+
+      <a href="/governance/evidence-exports/integrity">
+        Integrity Digest
+      </a>
+
+      <a href="/governance/evidence-exports/exceptions">
+        Evidence Exceptions
+      </a>
+    </div>
+  </div>
+
+  <div class="admin-card" data-archive-section="continuity-verification">
+    <h3>Continuity Certificate Verification</h3>
+
+    <p class="admin-muted">
+      Verify an existing continuity certificate without exposing archive mutation,
+      recovery execution, or restore controls.
+    </p>
+
+    <div class="admin-actions">
+      <a href="/continuity/certificates/verify">
+        Verify Continuity Certificate
+      </a>
+    </div>
+  </div>
+
+  <div class="admin-card" data-archive-section="controlled-backup">
+    <h3>Controlled Database Backup</h3>
+
+    <p class="admin-muted">
+      The database backup contains a live copy of the configured institutional
+      database. The existing medium-risk confirmation boundary remains required
+      before download.
+    </p>
+
+    <div class="admin-actions">
+      <a href="/admin/backup/database.zip">
+        Download Database Backup ZIP
+        <span class="section-governance-label system">
+          MEDIUM RISK — CONFIRMATION REQUIRED
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <div class="admin-card" data-archive-section="contextual-records">
+    <h3>Contextual Archive Records</h3>
+
+    <p class="admin-muted">
+      These archive families remain within the institutional record or workflow
+      that created them:
+    </p>
+
+    <ul>
+      <li>
+        <strong>Execution Continuity:</strong>
+        manifests, recovery documentation, replication status, and execution archive state.
+      </li>
+      <li>
+        <strong>Transfer Archive Handoff:</strong>
+        handoff records, audit trails, corrections, and export packages.
+      </li>
+      <li>
+        <strong>Property Archive:</strong>
+        archive packets, integrity review, manifests, continuity profiles, and finalization history.
+      </li>
+      <li>
+        <strong>Final Record Archive:</strong>
+        final archive gates attached to the originating institutional event.
+      </li>
+    </ul>
+
+    <p class="admin-muted">
+      Open the originating Matter, Trust, Execution Session, Transfer, Property, or
+      Governance record to perform contextual archive work.
+    </p>
+  </div>
+
+  <div class="admin-card" data-archive-section="protected-boundary">
+    <h3>Protected Recovery Boundary</h3>
+
+    <p class="admin-muted">
+      Recovery execution, permission reseeding, freeze actions, finalization
+      actions, restores, and destructive operations are intentionally not exposed
+      in this workspace. Their absence is a safety control, not a missing feature.
+    </p>
+  </div>
+
+  <div class="admin-actions" data-post-v2-14a="workspace-return-paths">
+    <a href="/admin">Return to Admin Dashboard</a>
+    <a href="/admin/workspace/governance">Open Governance Workspace</a>
+  </div>
 </section>

@@ -223,10 +223,54 @@ record(
 
 visible_archive_links = sorted(set(re.findall(r'href=["\']([^"\']+)["\']', archive_text)))
 
+post_v2_14a_marker = (
+    "POST-V2-14A ARCHIVE WORKSPACE OPERATOR INFORMATION ARCHITECTURE"
+    in archive_text
+)
+
+approved_14a_links = {
+    "/admin",
+    "/admin/backup/database.zip",
+    "/admin/workspace/governance",
+    "/continuity/certificates/verify",
+    "/governance/evidence-exports",
+    "/governance/evidence-exports/archive-intake",
+    "/governance/evidence-exports/certification",
+    "/governance/evidence-exports/completion-gate",
+    "/governance/evidence-exports/exceptions",
+    "/governance/evidence-exports/integrity",
+    "/governance/evidence-exports/manifest",
+    "/governance/v2-certification",
+}
+
+unexpected_archive_links = [
+    link for link in visible_archive_links
+    if link not in approved_14a_links
+]
+
+archive_exposure_valid = (
+    len(visible_archive_links) <= 3
+    or (
+        post_v2_14a_marker
+        and not unexpected_archive_links
+    )
+)
+
 record(
-    "archive workspace remains minimally exposed",
-    len(visible_archive_links) <= 3,
-    f"visible_links={visible_archive_links}",
+    "archive workspace exposure matches approved consolidation stage",
+    archive_exposure_valid,
+    (
+        f"14A approved links={visible_archive_links}"
+        if post_v2_14a_marker and not unexpected_archive_links
+        else (
+            f"minimal links={visible_archive_links}"
+            if len(visible_archive_links) <= 3
+            else (
+                f"unexpected_links={unexpected_archive_links}; "
+                f"visible_links={visible_archive_links}"
+            )
+        )
+    ),
 )
 
 wrong_protected_methods = []
@@ -334,16 +378,27 @@ record(
     "none" if not modified_db else str(modified_db),
 )
 
-allowed_self = "scripts/audit_institutional_archive_workspace_consolidation_14.py"
-unexpected_status = [
-    line for line in status.splitlines()
-    if allowed_self not in line.replace("\\", "/")
-]
+allowed_status_paths = {
+    "scripts/audit_institutional_archive_workspace_consolidation_14.py",
+}
+
+if post_v2_14a_marker:
+    allowed_status_paths.update({
+        "templates/ios_workspaces/archive.html",
+        "templates/ios_workspaces/archive.html.pre_POST_V2_14A.bak",
+        "scripts/audit_archive_workspace_operator_information_architecture_14a.py",
+    })
+
+unexpected_status = []
+for line in status.splitlines():
+    normalized = line.replace("\\", "/")
+    if not any(path in normalized for path in allowed_status_paths):
+        unexpected_status.append(line)
 
 record(
-    "working tree clean or only POST-V2-14 audit untracked",
+    "working tree limited to approved Archive consolidation files",
     not unexpected_status,
-    "clean/self-only"
+    "approved files only"
     if not unexpected_status
     else "\\n".join(unexpected_status),
 )
