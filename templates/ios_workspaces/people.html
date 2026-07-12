@@ -1,6 +1,313 @@
-<section class="admin-card">
+<section
+  class="admin-card people-workspace"
+  data-post-v2-16c2="people-read-only-status-panels"
+>
   <h2>PEOPLE Workspace</h2>
+
   <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
+    Read-only discovery and oversight for fiduciaries, institutional identity,
+    contextual people records, governance authorities, execution participants,
+    protected system accounts, and People reporting.
+  </p>
+
+  <p class="admin-muted">
+    This workspace does not replace the originating Trust, Matter, Intake,
+    Governance, Execution, Institutional Identity, Reports, or System record.
   </p>
 </section>
+
+<section
+  class="admin-card people-status-region"
+  aria-labelledby="people-status-heading"
+>
+  <h3 id="people-status-heading">Institutional People Overview</h3>
+
+  {% if people_status
+        and people_status.context_type == "people_workspace_status"
+        and people_status.read_only %}
+
+    <p
+      class="admin-muted people-status-notice"
+      data-people-status-notice
+    >
+      {{ people_status.notice }}
+    </p>
+
+    {% set panels = people_status.panels or {} %}
+    {% set panel_order = people_status.panel_order or [] %}
+
+    <div class="people-status-grid">
+      {% for panel_key in panel_order %}
+        {% set panel = panels.get(panel_key) %}
+
+        {% if panel %}
+          {% set status_class = (
+            panel.status
+            | lower
+            | replace(" ", "-")
+          ) %}
+
+          <article
+            class="people-status-card people-status-card--{{ status_class }}"
+            data-people-panel="{{ panel_key }}"
+            data-people-ownership="{{ panel.ownership }}"
+          >
+            <div class="people-status-card__header">
+              <h4>{{ panel.label }}</h4>
+
+              <span
+                class="people-status-card__badge"
+                data-people-status="{{ panel.status }}"
+              >
+                {{ panel.status }}
+              </span>
+            </div>
+
+            <p class="people-status-card__detail">
+              {{ panel.detail }}
+            </p>
+
+            {% if panel.summary %}
+              <dl class="people-status-card__summary">
+                {% for summary_key, summary_value in panel.summary.items() %}
+                  <div class="people-status-card__summary-row">
+                    <dt>
+                      {{ summary_key | replace("_", " ") | title }}
+                    </dt>
+                    <dd>
+                      {% if summary_value is sameas true %}
+                        Yes
+                      {% elif summary_value is sameas false %}
+                        No
+                      {% else %}
+                        {{ summary_value }}
+                      {% endif %}
+                    </dd>
+                  </div>
+                {% endfor %}
+              </dl>
+            {% endif %}
+
+            {% if panel.route %}
+              <div class="admin-actions people-status-card__actions">
+                <a
+                  href="{{ panel.route }}"
+                  {% if panel_key == "people_reporting" %}
+                    target="_blank"
+                    rel="noopener"
+                  {% endif %}
+                >
+                  {% if panel_key == "fiduciaries" %}
+                    Open Fiduciary Registry
+                  {% elif panel_key == "institutional_identity" %}
+                    Open Institutional Identity
+                  {% elif panel_key == "contextual_people" %}
+                    Open Administer Workspace
+                  {% elif panel_key == "governance_authorities" %}
+                    Open Governance Workspace
+                  {% elif panel_key == "execution_participants" %}
+                    Open Execution Sessions
+                  {% elif panel_key == "system_accounts" %}
+                    Open Protected System Workspace
+                  {% elif panel_key == "people_reporting" %}
+                    Open Fiduciary Report
+                  {% else %}
+                    Open Source Workspace
+                  {% endif %}
+                </a>
+              </div>
+            {% endif %}
+          </article>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if people_status.generated_at %}
+      <p class="admin-muted people-status-generated">
+        Status generated read-only at request time:
+        {{ people_status.generated_at }}
+      </p>
+    {% endif %}
+
+  {% else %}
+    <div
+      class="people-status-unavailable"
+      data-people-status-unavailable
+    >
+      <p>
+        People status is not currently available. Existing authoritative
+        People, Trust, Intake, Governance, Execution, Reports, and System
+        routes remain active.
+      </p>
+    </div>
+  {% endif %}
+</section>
+
+<section
+  class="admin-card people-protected-boundary"
+  data-people-section="protected-boundary"
+>
+  <h3>Protected and Contextual Boundary</h3>
+
+  <ul>
+    <li>
+      Fiduciary and identity summaries do not prove legal authority,
+      appointment, acceptance, identity, capacity, execution, authenticity,
+      or current effectiveness.
+    </li>
+    <li>
+      Trustees, grantors, beneficiaries, advisors, witnesses, notaries, and
+      execution participants remain governed by their originating records.
+    </li>
+    <li>
+      Usernames, passwords, permission matrices, permission overrides,
+      signature values, signature images, signature hashes, credentials,
+      private notes, and recovery controls are not displayed here.
+    </li>
+    <li>
+      Participant and signature creation remain available only from a specific
+      Execution Session.
+    </li>
+    <li>
+      User, role, permission, password, recovery, and security administration
+      remain protected within the System boundary.
+    </li>
+  </ul>
+</section>
+
+<section
+  class="admin-card"
+  data-people-section="operator-navigation"
+>
+  <h3>Operator Navigation</h3>
+
+  <div class="admin-actions">
+    <a href="/admin">Return to Admin Dashboard</a>
+    <a href="/admin/workspace/administer">Open Administer Workspace</a>
+    <a href="/admin/workspace/governance">Open Governance Workspace</a>
+    <a href="/admin/workspace/reports">Open Reports Workspace</a>
+    <a href="/admin/workspace/system">Open Protected System Workspace</a>
+  </div>
+</section>
+
+<style>
+  .people-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+  }
+
+  .people-status-card {
+    border: 1px solid #d8dee4;
+    border-radius: 10px;
+    padding: 16px;
+    background: #ffffff;
+    min-width: 0;
+  }
+
+  .people-status-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .people-status-card__header h4 {
+    margin: 0;
+  }
+
+  .people-status-card__badge {
+    display: inline-block;
+    border: 1px solid #8c959f;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .people-status-card--available {
+    border-left: 5px solid #1a7f37;
+  }
+
+  .people-status-card--empty,
+  .people-status-card--not-evaluated {
+    border-left: 5px solid #6e7781;
+  }
+
+  .people-status-card--incomplete,
+  .people-status-card--context-required {
+    border-left: 5px solid #bf8700;
+  }
+
+  .people-status-card--protected {
+    border-left: 5px solid #8250df;
+  }
+
+  .people-status-card--unavailable,
+  .people-status-card--exception {
+    border-left: 5px solid #cf222e;
+  }
+
+  .people-status-card__detail {
+    margin: 14px 0;
+  }
+
+  .people-status-card__summary {
+    margin: 0 0 14px;
+  }
+
+  .people-status-card__summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid #d8dee4;
+    padding: 7px 0;
+  }
+
+  .people-status-card__summary-row dt {
+    font-weight: 600;
+  }
+
+  .people-status-card__summary-row dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .people-status-generated {
+    margin-top: 18px;
+    overflow-wrap: anywhere;
+  }
+
+  .people-protected-boundary {
+    border-left: 5px solid #8250df;
+  }
+
+  .people-protected-boundary li + li {
+    margin-top: 8px;
+  }
+
+  @media (max-width: 560px) {
+    .people-status-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .people-status-card__header {
+      display: block;
+    }
+
+    .people-status-card__badge {
+      margin-top: 8px;
+    }
+
+    .people-status-card__summary-row {
+      display: block;
+    }
+
+    .people-status-card__summary-row dd {
+      margin-top: 3px;
+      text-align: left;
+    }
+  }
+</style>

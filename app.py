@@ -7062,6 +7062,15 @@ def admin_ios_workspace(workspace_key):
         "instrument_count": get_instrument_count(),
     }
 
+    people_status = None
+    if workspace_key == "people":
+        # POST-V2-16C.1: aggregate-only People Workspace status context.
+        from services.services_governance import (
+            build_people_workspace_read_only_status,
+        )
+
+        people_status = build_people_workspace_read_only_status()
+
     archive_status = None
     if workspace_key == "archive":
         # POST-V2-14B.1: display-only Archive Workspace status context.
@@ -7086,6 +7095,7 @@ def admin_ios_workspace(workspace_key):
         workspace_description=description,
         workspace_template=f"ios_workspaces/{workspace_key}.html",
         report=report,
+        people_status=people_status,
         archive_status=archive_status,
         reports_status=reports_status,
     )

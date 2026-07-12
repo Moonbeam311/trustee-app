@@ -6924,3 +6924,569 @@ def build_archive_workspace_read_only_status():
         },
     }
 
+
+def build_people_workspace_read_only_status():
+    """
+    POST-V2-16C.1
+
+    Build a bounded, aggregate-only, read-only status context for the
+    PEOPLE Workspace.
+
+    This function must not:
+    - create or alter records;
+    - expose usernames, passwords, permission matrices, private notes,
+      typed signatures, signature paths, credential blocks, or personal
+      intake details;
+    - imply that any record proves identity, authority, appointment,
+      acceptance, execution, capacity, authenticity, or legal effect.
+    """
+    from datetime import datetime, timezone
+    from database.db import get_connection
+
+    allowed_statuses = {
+        "Available",
+        "Empty",
+        "Incomplete",
+        "Context Required",
+        "Protected",
+        "Unavailable",
+        "Exception",
+        "Not Evaluated",
+    }
+
+    def empty_summary():
+        return {}
+
+    def panel(
+        key,
+        label,
+        status,
+        route,
+        detail,
+        summary=None,
+        ownership="People",
+    ):
+        normalized_status = (
+            status if status in allowed_statuses else "Not Evaluated"
+        )
+
+        return {
+            "key": key,
+            "label": label,
+            "status": normalized_status,
+            "route": route,
+            "detail": detail,
+            "summary": summary or empty_summary(),
+            "ownership": ownership,
+            "read_only": True,
+        }
+
+    conn = None
+
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        table_names = {
+            row[0]
+            for row in cur.execute(
+                """
+                SELECT name
+                FROM sqlite_master
+                WHERE type = 'table'
+                """
+            ).fetchall()
+        }
+
+        def table_exists(table_name):
+            return table_name in table_names
+
+        def columns_for(table_name):
+            if not table_exists(table_name):
+                return set()
+
+            return {
+                row[1]
+                for row in cur.execute(
+                    f'PRAGMA table_info("{table_name}")'
+                ).fetchall()
+            }
+
+        def count_rows(table_name):
+            if not table_exists(table_name):
+                return None
+
+            return int(
+                cur.execute(
+                    f'SELECT COUNT(*) FROM "{table_name}"'
+                ).fetchone()[0]
+            )
+
+        def count_status(table_name, status_value):
+            columns = columns_for(table_name)
+
+            if "status" not in columns:
+                return None
+
+            return int(
+                cur.execute(
+                    f"""
+                    SELECT COUNT(*)
+                    FROM "{table_name}"
+                    WHERE LOWER(COALESCE(status, '')) = ?
+                    """,
+                    (status_value.lower(),),
+                ).fetchone()[0]
+            )
+
+        def first_existing_table(candidates):
+            return next(
+                (
+                    table_name
+                    for table_name in candidates
+                    if table_exists(table_name)
+                ),
+                None,
+            )
+
+        # ------------------------------------------------------------
+        # Fiduciary Registry
+        # ------------------------------------------------------------
+
+        fiduciary_total = count_rows("fiduciaries")
+
+        if fiduciary_total is None:
+            fiduciary_panel = panel(
+                key="fiduciaries",
+                label="Fiduciary Registry",
+                status="Unavailable",
+                route="/fiduciaries",
+                detail=(
+                    "The fiduciary registry source is not available in the "
+                    "current database."
+                ),
+                ownership="People",
+            )
+        else:
+            fiduciary_active = count_status("fiduciaries", "active")
+            fiduciary_inactive = count_status("fiduciaries", "inactive")
+
+            fiduciary_summary = {
+                "total_records": fiduciary_total,
+            }
+
+            if fiduciary_active is not None:
+                fiduciary_summary["active_records"] = fiduciary_active
+
+            if fiduciary_inactive is not None:
+                fiduciary_summary["inactive_records"] = fiduciary_inactive
+
+            fiduciary_panel = panel(
+                key="fiduciaries",
+                label="Fiduciary Registry",
+                status="Available" if fiduciary_total else "Empty",
+                route="/fiduciaries",
+                detail=(
+                    "Aggregate fiduciary-role posture. Appointment evidence, "
+                    "authority notes, and person-level details remain in the "
+                    "originating registry."
+                ),
+                summary=fiduciary_summary,
+                ownership="People",
+            )
+
+        # ------------------------------------------------------------
+        # Institutional Identity
+        # ------------------------------------------------------------
+
+        brand_table = first_existing_table(
+            (
+                "institutional_brand_packages",
+                "institutional_identity_brand_packages",
+            )
+        )
+        signature_profile_table = first_existing_table(
+            (
+                "institutional_signature_profiles",
+                "signature_profiles",
+            )
+        )
+        identity_asset_table = first_existing_table(
+            (
+                "institutional_identity_assets",
+                "institutional_assets",
+            )
+        )
+
+        brand_count = count_rows(brand_table) if brand_table else None
+        signature_profile_count = (
+            count_rows(signature_profile_table)
+            if signature_profile_table
+            else None
+        )
+        identity_asset_count = (
+            count_rows(identity_asset_table)
+            if identity_asset_table
+            else None
+        )
+
+        identity_source_available = any(
+            value is not None
+            for value in (
+                brand_count,
+                signature_profile_count,
+                identity_asset_count,
+            )
+        )
+
+        identity_total = sum(
+            value or 0
+            for value in (
+                brand_count,
+                signature_profile_count,
+                identity_asset_count,
+            )
+        )
+
+        if not identity_source_available:
+            identity_status = "Unavailable"
+        elif identity_total == 0:
+            identity_status = "Empty"
+        elif not brand_count or not signature_profile_count:
+            identity_status = "Incomplete"
+        else:
+            identity_status = "Available"
+
+        identity_summary = {}
+
+        if brand_count is not None:
+            identity_summary["brand_packages"] = brand_count
+
+        if signature_profile_count is not None:
+            identity_summary["signature_profiles"] = signature_profile_count
+
+        if identity_asset_count is not None:
+            identity_summary["identity_assets"] = identity_asset_count
+
+        identity_panel = panel(
+            key="institutional_identity",
+            label="Institutional Identity",
+            status=identity_status,
+            route="/institutional-identity",
+            detail=(
+                "Limited identity availability summary. Signature values, "
+                "asset paths, credentials, certificate references, and notes "
+                "are excluded."
+            ),
+            summary=identity_summary,
+            ownership="Institutional Identity",
+        )
+
+        # ------------------------------------------------------------
+        # Contextual People Records
+        # ------------------------------------------------------------
+
+        intake_identity_table = first_existing_table(
+            (
+                "identity_intake",
+                "intake_identity",
+                "intake_identities",
+            )
+        )
+        beneficiary_table = first_existing_table(
+            (
+                "beneficiaries",
+                "trust_beneficiaries",
+            )
+        )
+
+        contextual_summary = {}
+
+        if intake_identity_table:
+            contextual_summary["intake_identity_records"] = (
+                count_rows(intake_identity_table) or 0
+            )
+
+        if beneficiary_table:
+            contextual_summary["beneficiary_records"] = (
+                count_rows(beneficiary_table) or 0
+            )
+
+        contextual_panel = panel(
+            key="contextual_people",
+            label="Contextual People Records",
+            status="Context Required",
+            route="/admin/workspace/administer",
+            detail=(
+                "Trustees, grantors, beneficiaries, advisors, witnesses, "
+                "notaries, and intake identities remain owned by their Trust, "
+                "Matter, Intake, K-1, or Execution records."
+            ),
+            summary=contextual_summary,
+            ownership="Trust / Matter / Intake / K-1",
+        )
+
+        # ------------------------------------------------------------
+        # Governance Authorities
+        # ------------------------------------------------------------
+
+        governance_authority_count = 0
+        governance_source_found = False
+
+        governance_sources = (
+            (
+                "institutional_directives",
+                (
+                    "issuing_authority",
+                    "approved_by",
+                    "issued_by",
+                ),
+            ),
+            (
+                "institutional_policies",
+                (
+                    "issuing_authority",
+                    "approved_by",
+                ),
+            ),
+            (
+                "directive_implementation_entries",
+                (
+                    "performed_by",
+                ),
+            ),
+            (
+                "policy_activity_entries",
+                (
+                    "performed_by",
+                ),
+            ),
+        )
+
+        for table_name, authority_columns in governance_sources:
+            if not table_exists(table_name):
+                continue
+
+            governance_source_found = True
+            available_columns = columns_for(table_name)
+            usable_columns = [
+                column_name
+                for column_name in authority_columns
+                if column_name in available_columns
+            ]
+
+            if not usable_columns:
+                continue
+
+            authority_clause = " OR ".join(
+                f"TRIM(COALESCE({column_name}, '')) <> ''"
+                for column_name in usable_columns
+            )
+
+            governance_authority_count += int(
+                cur.execute(
+                    f"""
+                    SELECT COUNT(*)
+                    FROM "{table_name}"
+                    WHERE {authority_clause}
+                    """
+                ).fetchone()[0]
+            )
+
+        governance_panel = panel(
+            key="governance_authorities",
+            label="Governance Authorities",
+            status=(
+                "Available"
+                if governance_source_found and governance_authority_count
+                else (
+                    "Context Required"
+                    if governance_source_found
+                    else "Not Evaluated"
+                )
+            ),
+            route="/admin/workspace/governance",
+            detail=(
+                "Aggregate authority-reference posture only. Issuing, "
+                "approving, and performing authorities remain part of their "
+                "originating governance records."
+            ),
+            summary={
+                "records_with_authority_references":
+                    governance_authority_count
+            },
+            ownership="Governance",
+        )
+
+        # ------------------------------------------------------------
+        # Execution Participants and Signatures
+        # ------------------------------------------------------------
+
+        signature_record_table = first_existing_table(
+            (
+                "institutional_signature_records",
+                "execution_signature_records",
+            )
+        )
+        participant_record_table = first_existing_table(
+            (
+                "institutional_witness_notary_records",
+                "execution_participants",
+            )
+        )
+
+        signature_record_count = (
+            count_rows(signature_record_table)
+            if signature_record_table
+            else None
+        )
+        participant_record_count = (
+            count_rows(participant_record_table)
+            if participant_record_table
+            else None
+        )
+
+        execution_source_available = any(
+            value is not None
+            for value in (
+                signature_record_count,
+                participant_record_count,
+            )
+        )
+
+        execution_summary = {}
+
+        if signature_record_count is not None:
+            execution_summary["signature_records"] = signature_record_count
+
+        if participant_record_count is not None:
+            execution_summary["witness_notary_records"] = (
+                participant_record_count
+            )
+
+        execution_panel = panel(
+            key="execution_participants",
+            label="Execution Participants",
+            status=(
+                "Context Required"
+                if execution_source_available
+                else "Not Evaluated"
+            ),
+            route="/execution/sessions",
+            detail=(
+                "Aggregate execution participation posture. Names, roles, "
+                "notes, signature values, signature hashes, and assets remain "
+                "inside the originating execution session."
+            ),
+            summary=execution_summary,
+            ownership="Execution",
+        )
+
+        # ------------------------------------------------------------
+        # Protected System Accounts
+        # ------------------------------------------------------------
+
+        user_table = first_existing_table(
+            (
+                "app_users",
+                "users",
+            )
+        )
+
+        user_total = count_rows(user_table) if user_table else None
+        system_summary = {}
+
+        if user_total is not None:
+            system_summary["total_accounts"] = user_total
+
+            active_users = count_status(user_table, "active")
+            inactive_users = count_status(user_table, "inactive")
+
+            if active_users is not None:
+                system_summary["active_accounts"] = active_users
+
+            if inactive_users is not None:
+                system_summary["inactive_accounts"] = inactive_users
+
+        system_accounts_panel = panel(
+            key="system_accounts",
+            label="Protected System Accounts",
+            status="Protected",
+            route="/admin/workspace/system",
+            detail=(
+                "System accounts, roles, permissions, password controls, and "
+                "security administration remain protected and System-owned."
+            ),
+            summary=system_summary,
+            ownership="System",
+        )
+
+        # ------------------------------------------------------------
+        # People Reporting
+        # ------------------------------------------------------------
+
+        people_reporting_panel = panel(
+            key="people_reporting",
+            label="People Reports",
+            status="Available",
+            route="/reports/fiduciaries.pdf",
+            detail=(
+                "The existing fiduciary PDF remains the approved read-only "
+                "People reporting surface."
+            ),
+            summary={
+                "fiduciary_report_available": True,
+            },
+            ownership="Reports",
+        )
+
+        panels = {
+            "fiduciaries": fiduciary_panel,
+            "institutional_identity": identity_panel,
+            "contextual_people": contextual_panel,
+            "governance_authorities": governance_panel,
+            "execution_participants": execution_panel,
+            "system_accounts": system_accounts_panel,
+            "people_reporting": people_reporting_panel,
+        }
+
+        return {
+            "context_type": "people_workspace_status",
+            "read_only": True,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "panel_order": [
+                "fiduciaries",
+                "institutional_identity",
+                "contextual_people",
+                "governance_authorities",
+                "execution_participants",
+                "system_accounts",
+                "people_reporting",
+            ],
+            "panels": panels,
+            "notice": (
+                "Read-only aggregate status only. These summaries do not prove "
+                "identity, legal authority, appointment, acceptance, capacity, "
+                "execution, authenticity, or current effectiveness."
+            ),
+        }
+
+    except Exception as exc:
+        return {
+            "context_type": "people_workspace_status",
+            "read_only": True,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "panel_order": [],
+            "panels": {},
+            "notice": (
+                "People status is temporarily unavailable. Existing People, "
+                "Trust, Intake, Governance, Execution, and System routes remain "
+                "authoritative."
+            ),
+            "error": exc.__class__.__name__,
+        }
+
+    finally:
+        if conn is not None:
+            conn.close()
+
