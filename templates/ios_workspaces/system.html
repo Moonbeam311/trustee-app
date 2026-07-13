@@ -1,11 +1,227 @@
-<section class="admin-card">
+<section
+  class="admin-card system-workspace"
+  data-post-v2-17c="system-read-only-oversight"
+>
   <h2>SYSTEM Workspace</h2>
   <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
+    Read-only institutional oversight for protected account administration,
+    authorization boundaries, authentication posture, audit integrity, backup
+    preservation, deployment health, database posture, operating policy,
+    institutional assignments, and restricted recovery controls.
   </p>
-  <!-- POST-V2-6A WORKSPACE RETURN PATH -->
-  <div class="admin-actions" data-post-v2-6a="workspace-return">
+  <p class="admin-muted">
+    This workspace summarizes operational posture only. It does not expose
+    sensitive records, credentials, permission matrices, database paths,
+    recovery controls, emergency controls, or mutation actions.
+  </p>
+</section>
+
+<section
+  class="admin-card system-oversight-region"
+  aria-labelledby="system-oversight-heading"
+>
+  <h3 id="system-oversight-heading">System Oversight Status</h3>
+
+  {% if system_oversight
+        and system_oversight.get("workspace_status") == "read_only_oversight" %}
+    {% set panels = system_oversight.get("panels", []) %}
+
+    <div class="system-oversight-grid">
+      {% for panel in panels %}
+        {% set status = panel.get("status", "not_assessed") %}
+        {% set status_class = status|lower|replace("_", "-") %}
+
+        <article
+          class="system-oversight-card system-oversight-card--{{ status_class }}"
+          data-system-panel="{{ panel.get('key') }}"
+          data-system-owner="{{ panel.get('owner') }}"
+          data-system-exposure="{{ panel.get('exposure') }}"
+        >
+          <header class="system-oversight-card__header">
+            <h4>{{ panel.get("title") }}</h4>
+            <span class="system-oversight-card__badge">
+              {{ panel.get("status_label") }}
+            </span>
+          </header>
+
+          <dl class="system-oversight-card__classification">
+            <div>
+              <dt>Owner</dt>
+              <dd>{{ panel.get("owner") }}</dd>
+            </div>
+            <div>
+              <dt>Exposure</dt>
+              <dd>{{ panel.get("exposure") }}</dd>
+            </div>
+          </dl>
+
+          <p class="system-oversight-card__summary">
+            {{ panel.get("summary") }}
+          </p>
+
+          {% if panel.get("warning") %}
+            <p class="system-oversight-card__warning">
+              {{ panel.get("warning") }}
+            </p>
+          {% endif %}
+
+          {% if panel.get("metrics") %}
+            <dl class="system-oversight-card__metrics">
+              {% for metric in panel.get("metrics") %}
+                <div>
+                  <dt>{{ metric.get("label") }}</dt>
+                  <dd>{{ metric.get("value") }}</dd>
+                </div>
+              {% endfor %}
+            </dl>
+          {% endif %}
+
+          {% if panel.get("route") and panel.get("action_label") %}
+            <div class="admin-actions system-oversight-card__actions">
+              <a href="{{ panel.get('route') }}">
+                {{ panel.get("action_label") }}
+              </a>
+            </div>
+          {% else %}
+            <p class="system-oversight-card__status-only">
+              Status only. No action link is exposed from this panel.
+            </p>
+          {% endif %}
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="admin-muted">
+      System oversight posture is not currently available. Existing protected
+      System routes remain authoritative.
+    </p>
+  {% endif %}
+</section>
+
+<section class="admin-card system-boundary">
+  <h3>System Boundary</h3>
+  <ul>
+    <li>
+      Application Permission Controls remain separate from Institutional Role Assignments.
+    </li>
+    <li>
+      These are institutional and trust-scoped assignments, not application security roles.
+    </li>
+    <li>
+      Protected account, permission, backup, security, audit, deployment, and
+      institutional assignment destinations retain their existing gates.
+    </li>
+    <li>
+      Recovery and repair controls are excluded from ordinary System navigation.
+    </li>
+  </ul>
+</section>
+
+<section class="admin-card">
+  <h3>Operator Navigation</h3>
+  <div class="admin-actions">
     <a href="/admin">Return to Admin Dashboard</a>
   </div>
-
 </section>
+
+<style>
+  .system-oversight-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+    margin-top: 16px;
+  }
+
+  .system-oversight-card {
+    background: #ffffff;
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .system-oversight-card__header {
+    align-items: flex-start;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+  }
+
+  .system-oversight-card__header h4 {
+    font-size: 1rem;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .system-oversight-card__badge {
+    border: 1px solid #8c959f;
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .system-oversight-card--available .system-oversight-card__badge,
+  .system-oversight-card--protected .system-oversight-card__badge {
+    background: #e8f3ee;
+    border-color: #4f8f69;
+  }
+
+  .system-oversight-card--attention .system-oversight-card__badge,
+  .system-oversight-card--not-configured .system-oversight-card__badge,
+  .system-oversight-card--not-assessed .system-oversight-card__badge {
+    background: #f6f1df;
+    border-color: #b59b42;
+  }
+
+  .system-oversight-card--restricted .system-oversight-card__badge {
+    background: #e8edf7;
+    border-color: #6176a3;
+  }
+
+  .system-oversight-card__classification,
+  .system-oversight-card__metrics {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0 0;
+  }
+
+  .system-oversight-card__classification div,
+  .system-oversight-card__metrics div {
+    display: grid;
+    gap: 4px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .system-oversight-card__classification dt,
+  .system-oversight-card__metrics dt {
+    color: #57606a;
+    font-size: 0.82rem;
+  }
+
+  .system-oversight-card__classification dd,
+  .system-oversight-card__metrics dd {
+    font-weight: 700;
+    margin: 0;
+    text-align: right;
+  }
+
+  .system-oversight-card__summary,
+  .system-oversight-card__warning,
+  .system-oversight-card__status-only {
+    margin: 12px 0 0;
+  }
+
+  .system-oversight-card__warning {
+    border-left: 3px solid #b59b42;
+    color: #5c4a00;
+    padding-left: 10px;
+  }
+
+  .system-oversight-card__actions {
+    margin-top: 12px;
+  }
+</style>

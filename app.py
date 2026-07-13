@@ -31,6 +31,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_execution_recovery import get_archive_topology, build_continuity_dashboard_profile
 from services.services_object_dashboard import build_object_dashboard_context
+from services.services_system_workspace import build_system_workspace_oversight
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
     list_identity_assets,
@@ -7088,6 +7089,10 @@ def admin_ios_workspace(workspace_key):
 
         reports_status = build_reports_workspace_read_only_status()
 
+    system_oversight = None
+    if workspace_key == "system":
+        system_oversight = build_system_workspace_oversight()
+
     return render_template(
         "ios_workspace.html",
         workspace_key=workspace_key,
@@ -7098,6 +7103,7 @@ def admin_ios_workspace(workspace_key):
         people_status=people_status,
         archive_status=archive_status,
         reports_status=reports_status,
+        system_oversight=system_oversight,
     )
 
 
