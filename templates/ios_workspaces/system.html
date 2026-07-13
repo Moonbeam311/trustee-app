@@ -37,6 +37,35 @@
       </p>
     </div>
 
+    {% set exception_summary = system_oversight.get("exception_summary", {}) %}
+    {% if exception_summary %}
+      <section
+        class="system-decision-posture"
+        aria-labelledby="system-decision-posture-heading"
+      >
+        <h4 id="system-decision-posture-heading">
+          Institutional Exception and Decision Posture
+        </h4>
+        <p class="admin-muted">
+          {{ exception_summary.get("summary") }}
+        </p>
+        <dl class="system-decision-posture__metrics">
+          <div>
+            <dt>Exceptions requiring review</dt>
+            <dd>{{ exception_summary.get("exception_count", 0) }}</dd>
+          </div>
+          <div>
+            <dt>Protected decisions</dt>
+            <dd>{{ exception_summary.get("protected_decision_count", 0) }}</dd>
+          </div>
+          <div>
+            <dt>Restricted procedures</dt>
+            <dd>{{ exception_summary.get("restricted_count", 0) }}</dd>
+          </div>
+        </dl>
+      </section>
+    {% endif %}
+
     <div class="system-oversight-grid">
       {% for panel in panels %}
         {% set status = panel.get("status", "not_assessed") %}
@@ -87,6 +116,61 @@
                 <p>{{ panel.get("operator_guidance") }}</p>
               {% endif %}
             </div>
+          {% endif %}
+
+          {% if panel.get("decision_required") %}
+            <section class="system-oversight-card__decision">
+              <h5>Operator Decision</h5>
+
+              {% if panel.get("observed_condition") %}
+                <p>
+                  <strong>Observed condition:</strong>
+                  {{ panel.get("observed_condition") }}
+                </p>
+              {% endif %}
+
+              {% if panel.get("decision_owner") %}
+                <p>
+                  <strong>Decision owner:</strong>
+                  {{ panel.get("decision_owner") }}
+                </p>
+              {% endif %}
+
+              {% if panel.get("escalation_level") %}
+                <p>
+                  <strong>Escalation level:</strong>
+                  {{ panel.get("escalation_level")|replace("_", " ")|title }}
+                </p>
+              {% endif %}
+
+              {% if panel.get("decision_question") %}
+                <p>
+                  <strong>Decision question:</strong>
+                  {{ panel.get("decision_question") }}
+                </p>
+              {% endif %}
+
+              {% if panel.get("permitted_review") %}
+                <p>
+                  <strong>Permitted review:</strong>
+                  {{ panel.get("permitted_review") }}
+                </p>
+              {% endif %}
+
+              {% if panel.get("restricted_action") %}
+                <p>
+                  <strong>Restricted action:</strong>
+                  {{ panel.get("restricted_action") }}
+                </p>
+              {% endif %}
+
+              {% if panel.get("future_record_owner") %}
+                <p>
+                  <strong>Future record owner:</strong>
+                  {{ panel.get("future_record_owner") }}
+                </p>
+              {% endif %}
+            </section>
           {% endif %}
 
           {% if panel.get("metrics") %}
@@ -182,6 +266,45 @@
     border-color: #6176a3;
   }
 
+  .system-decision-posture {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding: 12px 14px;
+  }
+
+  .system-decision-posture h4,
+  .system-decision-posture p {
+    margin: 0;
+  }
+
+  .system-decision-posture p {
+    margin-top: 8px;
+  }
+
+  .system-decision-posture__metrics {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin: 12px 0 0;
+  }
+
+  .system-decision-posture__metrics div {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .system-decision-posture__metrics dt {
+    color: #57606a;
+    font-size: 0.82rem;
+  }
+
+  .system-decision-posture__metrics dd {
+    font-weight: 700;
+    margin: 4px 0 0;
+  }
+
   .system-oversight-grid {
     display: grid;
     gap: 12px;
@@ -269,6 +392,7 @@
   .system-oversight-card__summary,
   .system-oversight-card__warning,
   .system-oversight-card__exception,
+  .system-oversight-card__decision,
   .system-oversight-card__status-only {
     margin: 12px 0 0;
   }
@@ -291,6 +415,27 @@
   }
 
   .system-oversight-card__exception p + p {
+    margin-top: 6px;
+  }
+
+  .system-oversight-card__decision {
+    background: #ffffff;
+    border: 1px solid #d8dee4;
+    border-left: 4px solid #6176a3;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .system-oversight-card__decision h5 {
+    font-size: 0.95rem;
+    margin: 0 0 8px;
+  }
+
+  .system-oversight-card__decision p {
+    margin: 0;
+  }
+
+  .system-oversight-card__decision p + p {
     margin-top: 6px;
   }
 

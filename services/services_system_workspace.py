@@ -51,6 +51,117 @@ APP_ROUTE_STATUSES = {
     "unavailable",
     "not_assessed",
 }
+EXCEPTION_STATUSES = {"attention", "restricted", "unavailable", "not_assessed"}
+PROTECTED_DECISION_PANEL_KEYS = {
+    "application_permission_controls",
+    "backup_data_preservation",
+}
+ESCALATION_LEVELS = {
+    "informational",
+    "operator_review",
+    "institutional_review",
+    "restricted_procedure",
+}
+DECISION_OWNERS = {
+    "System Administrator",
+    "Institutional Administrator",
+    "Governance Authority",
+    "Compliance Reviewer",
+    "Archive Custodian",
+    "Authorized Operator",
+    "Deployment Administrator",
+    "Not Assigned",
+}
+FUTURE_RECORD_OWNERS = {
+    "Governance",
+    "Compliance",
+    "Archive",
+    "System Audit",
+    "Matter",
+    "None",
+}
+DECISION_RULES = {
+    "protected_user_accounts": {
+        "decision_owner": "System Administrator",
+        "escalation_level": "operator_review",
+        "decision_question": "Should the protected account registry be reviewed before further account administration?",
+        "permitted_review": "Review the protected account registry at /users.",
+        "restricted_action": "Account creation, editing, deactivation, and credential changes remain inside the protected account registry.",
+        "future_record_owner": "System Audit",
+    },
+    "application_permission_controls": {
+        "decision_owner": "System Administrator",
+        "escalation_level": "operator_review",
+        "decision_question": "Should application authorization controls be reviewed before further permission administration?",
+        "permitted_review": "Review the protected permission-control surface at /permissions.",
+        "restricted_action": "Permission changes and matrix replacement remain inside the protected permission-control surface.",
+        "future_record_owner": "System Audit",
+    },
+    "authentication_session_security": {
+        "decision_owner": "System Administrator",
+        "escalation_level": "operator_review",
+        "decision_question": "Should authentication and session controls be reviewed before relying on the affected operating environment?",
+        "permitted_review": "Review structural security posture at /security.",
+        "restricted_action": "Credential repair, bootstrap, lockout clearing, and exceptional access procedures remain outside ordinary navigation.",
+        "future_record_owner": "System Audit",
+    },
+    "audit_security_oversight": {
+        "decision_owner": "Compliance Reviewer",
+        "escalation_level": "institutional_review",
+        "decision_question": "Should reliance on the affected audit records pause pending integrity review?",
+        "permitted_review": "Review aggregate audit posture at /audit.",
+        "restricted_action": "Audit records must not be silently rewritten, reseeded, or repaired through the System Workspace.",
+        "future_record_owner": "Compliance",
+    },
+    "backup_data_preservation": {
+        "decision_owner": "Archive Custodian",
+        "escalation_level": "operator_review",
+        "decision_question": "Should an authorized database backup be initiated through the protected confirmation flow?",
+        "permitted_review": "Review the protected backup confirmation boundary at /admin/backup/database.zip.",
+        "restricted_action": "Backup completion, restoration, and recoverability are not determined by this workspace.",
+        "future_record_owner": "Archive",
+    },
+    "deployment_production_health": {
+        "decision_owner": "Deployment Administrator",
+        "escalation_level": "informational",
+        "decision_question": "Should hosted runtime posture be reviewed in the actual deployment environment before operational reliance?",
+        "permitted_review": "Review sanitized hosted production health at /hosted-production-health.",
+        "restricted_action": "Deployment repair, environment changes, migration, and exceptional administration remain outside ordinary navigation.",
+        "future_record_owner": "System Audit",
+    },
+    "database_migration_posture": {
+        "decision_owner": "System Administrator",
+        "escalation_level": "institutional_review",
+        "decision_question": "Should database posture be reviewed before further mutation-dependent operations?",
+        "permitted_review": "Use bounded institutional database review; no ordinary mutation route is exposed from this workspace.",
+        "restricted_action": "Migration, schema repair, table creation, and database recovery require separately authorized procedures.",
+        "future_record_owner": "System Audit",
+    },
+    "feature_flags_operating_policy": {
+        "decision_owner": "System Administrator",
+        "escalation_level": "operator_review",
+        "decision_question": "Should current operating restrictions remain in effect before further institutional activity?",
+        "permitted_review": "Review read-only System operating-policy posture in this workspace.",
+        "restricted_action": "Policy mutation remains outside this oversight panel.",
+        "future_record_owner": "System Audit",
+    },
+    "institutional_role_assignments": {
+        "decision_owner": "Institutional Administrator",
+        "escalation_level": "institutional_review",
+        "decision_question": "Should institutional or trust-scoped assignments be reviewed before relying on current authority records?",
+        "permitted_review": "Review institutional and trust-scoped assignments at /roles.",
+        "restricted_action": "Application authorization remains governed separately through System permission controls.",
+        "future_record_owner": "Governance",
+    },
+    "recovery_repair_controls": {
+        "decision_owner": "System Administrator",
+        "escalation_level": "restricted_procedure",
+        "decision_question": "Has a separately authorized restricted recovery or repair procedure been approved?",
+        "permitted_review": "No ordinary action is available from this workspace.",
+        "restricted_action": "Recovery, repair, reseed, bootstrap, reset, migration, and lockout-clear controls remain excluded from ordinary navigation.",
+        "future_record_owner": "System Audit",
+    },
+}
 
 
 def _metric(label, value):
@@ -94,6 +205,14 @@ def _panel(
         "exception_state": bool(exception_state),
         "exception_label": exception_label,
         "operator_guidance": operator_guidance,
+        "observed_condition": summary,
+        "decision_required": False,
+        "decision_owner": None,
+        "escalation_level": None,
+        "decision_question": None,
+        "permitted_review": None,
+        "restricted_action": None,
+        "future_record_owner": None,
     }
 
 
@@ -660,6 +779,85 @@ def _workspace_summary(status):
     return summaries.get(status, summaries["not_assessed"])
 
 
+def _panel_needs_decision(panel):
+    status = panel.get("status")
+    key = panel.get("key")
+    return status in EXCEPTION_STATUSES or (
+        status == "protected" and key in PROTECTED_DECISION_PANEL_KEYS
+    )
+
+
+def _apply_decision_metadata(panel):
+    key = panel.get("key")
+    rule = DECISION_RULES.get(key, {})
+    decision_required = _panel_needs_decision(panel)
+    panel["decision_required"] = bool(decision_required)
+
+    if decision_required and rule:
+        decision_owner = rule.get("decision_owner")
+        escalation_level = rule.get("escalation_level")
+        future_record_owner = rule.get("future_record_owner")
+
+        panel["decision_owner"] = (
+            decision_owner if decision_owner in DECISION_OWNERS else "Not Assigned"
+        )
+        panel["escalation_level"] = (
+            escalation_level if escalation_level in ESCALATION_LEVELS else "informational"
+        )
+        panel["decision_question"] = rule.get("decision_question")
+        panel["permitted_review"] = rule.get("permitted_review")
+        panel["restricted_action"] = rule.get("restricted_action")
+        panel["future_record_owner"] = (
+            future_record_owner if future_record_owner in FUTURE_RECORD_OWNERS else "None"
+        )
+    else:
+        panel["decision_owner"] = None
+        panel["escalation_level"] = None
+        panel["decision_question"] = None
+        panel["permitted_review"] = None
+        panel["restricted_action"] = None
+        panel["future_record_owner"] = None
+
+    return panel
+
+
+def _exception_summary(panels):
+    exception_count = sum(
+        1 for panel in panels if panel.get("status") in EXCEPTION_STATUSES
+    )
+    decision_required_count = sum(
+        1 for panel in panels if panel.get("decision_required")
+    )
+    restricted_count = sum(
+        1 for panel in panels if panel.get("status") == "restricted"
+    )
+    protected_decision_count = sum(
+        1
+        for panel in panels
+        if panel.get("status") == "protected" and panel.get("decision_required")
+    )
+
+    if decision_required_count:
+        summary = (
+            "System exceptions and protected decisions require bounded operator "
+            "judgment through ordinary authorized destinations or separately "
+            "authorized restricted procedures."
+        )
+    else:
+        summary = (
+            "No System exception currently requires operator decision in this "
+            "workspace; restricted recovery remains outside ordinary navigation."
+        )
+
+    return {
+        "exception_count": exception_count,
+        "decision_required_count": decision_required_count,
+        "restricted_count": restricted_count,
+        "protected_decision_count": protected_decision_count,
+        "summary": summary,
+    }
+
+
 def build_system_workspace_oversight():
     builders = [
         _protected_user_accounts_panel,
@@ -693,12 +891,13 @@ def build_system_workspace_oversight():
                 exception_label="Not assessed",
                 operator_guidance="Review this posture through its protected source surface.",
             )
-        panels.append(panel)
+        panels.append(_apply_decision_metadata(panel))
 
     workspace_status = _derive_workspace_status(panels)
     return {
         "workspace_status": workspace_status,
         "workspace_status_label": _label(workspace_status),
         "workspace_summary": _workspace_summary(workspace_status),
+        "exception_summary": _exception_summary(panels),
         "panels": panels,
     }
