@@ -22,10 +22,15 @@
 <body>
   <div class="box">
     <div class="actions">
+      <a class="button" href="{{ url_for('admin_ios_workspace', workspace_key='system') }}">Back to System Workspace</a>
       <a class="button" href="/users/new">Create User</a>
     </div>
 
     <h2>App Users</h2>
+    <p>
+      Protected User Accounts is a System-owned application account registry.
+      Account-management actions remain inside this protected administrative surface.
+    </p>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}

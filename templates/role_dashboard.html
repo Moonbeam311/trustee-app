@@ -14,6 +14,12 @@
 <h1>Access Control / Role Layer</h1>
 
 <div class="box">
+  <p><a href="{{ url_for('admin_ios_workspace', workspace_key='system') }}">Back to System Workspace</a></p>
+  <p>
+    Institutional Role Assignments are institutional and trust-scoped assignments,
+    not application security roles. This registry does not manage login roles,
+    application permissions, or application authorization controls.
+  </p>
   <p><a href="{{ url_for('role_new') }}">Add Role Assignment</a></p>
 </div>
 

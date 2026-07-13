@@ -16,7 +16,13 @@
 <h1>Security Dashboard</h1>
 
 <div class="box">
+  <p><a href="{{ url_for('admin_ios_workspace', workspace_key='system') }}">Back to System Workspace</a></p>
   <p>This dashboard tracks current security posture and deployment hardening notes.</p>
+  <p>
+    Authentication and Session Security is a System-owned read-only oversight
+    surface. It summarizes security posture without displaying session values,
+    browser credentials, tokens, passwords, or lockout details.
+  </p>
 </div>
 
 <div class="box">
