@@ -23,8 +23,19 @@
   <h3 id="system-oversight-heading">System Oversight Status</h3>
 
   {% if system_oversight
-        and system_oversight.get("workspace_status") == "read_only_oversight" %}
+        and system_oversight.get("panels") %}
     {% set panels = system_oversight.get("panels", []) %}
+    {% set workspace_status = system_oversight.get("workspace_status", "not_assessed") %}
+
+    <div class="system-readiness-summary system-readiness-summary--{{ workspace_status|replace('_', '-') }}">
+      <p>
+        <strong>Workspace Status:</strong>
+        {{ system_oversight.get("workspace_status_label", "Not Assessed") }}
+      </p>
+      <p class="admin-muted">
+        {{ system_oversight.get("workspace_summary") }}
+      </p>
+    </div>
 
     <div class="system-oversight-grid">
       {% for panel in panels %}
@@ -63,6 +74,19 @@
             <p class="system-oversight-card__warning">
               {{ panel.get("warning") }}
             </p>
+          {% endif %}
+
+          {% if panel.get("exception_label") or panel.get("operator_guidance") %}
+            <div class="system-oversight-card__exception">
+              {% if panel.get("exception_label") %}
+                <p>
+                  <strong>{{ panel.get("exception_label") }}</strong>
+                </p>
+              {% endif %}
+              {% if panel.get("operator_guidance") %}
+                <p>{{ panel.get("operator_guidance") }}</p>
+              {% endif %}
+            </div>
           {% endif %}
 
           {% if panel.get("metrics") %}
@@ -125,6 +149,39 @@
 </section>
 
 <style>
+  .system-readiness-summary {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding: 12px 14px;
+  }
+
+  .system-readiness-summary p {
+    margin: 0;
+  }
+
+  .system-readiness-summary p + p {
+    margin-top: 8px;
+  }
+
+  .system-readiness-summary--ready {
+    background: #e8f3ee;
+    border-color: #4f8f69;
+  }
+
+  .system-readiness-summary--attention,
+  .system-readiness-summary--not-assessed,
+  .system-readiness-summary--unavailable {
+    background: #f6f1df;
+    border-color: #b59b42;
+  }
+
+  .system-readiness-summary--protected,
+  .system-readiness-summary--restricted {
+    background: #e8edf7;
+    border-color: #6176a3;
+  }
+
   .system-oversight-grid {
     display: grid;
     gap: 12px;
@@ -164,15 +221,15 @@
     white-space: nowrap;
   }
 
-  .system-oversight-card--available .system-oversight-card__badge,
+  .system-oversight-card--ready .system-oversight-card__badge,
   .system-oversight-card--protected .system-oversight-card__badge {
     background: #e8f3ee;
     border-color: #4f8f69;
   }
 
   .system-oversight-card--attention .system-oversight-card__badge,
-  .system-oversight-card--not-configured .system-oversight-card__badge,
-  .system-oversight-card--not-assessed .system-oversight-card__badge {
+  .system-oversight-card--not-assessed .system-oversight-card__badge,
+  .system-oversight-card--unavailable .system-oversight-card__badge {
     background: #f6f1df;
     border-color: #b59b42;
   }
@@ -211,6 +268,7 @@
 
   .system-oversight-card__summary,
   .system-oversight-card__warning,
+  .system-oversight-card__exception,
   .system-oversight-card__status-only {
     margin: 12px 0 0;
   }
@@ -219,6 +277,21 @@
     border-left: 3px solid #b59b42;
     color: #5c4a00;
     padding-left: 10px;
+  }
+
+  .system-oversight-card__exception {
+    background: #f6f8fa;
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .system-oversight-card__exception p {
+    margin: 0;
+  }
+
+  .system-oversight-card__exception p + p {
+    margin-top: 6px;
   }
 
   .system-oversight-card__actions {
