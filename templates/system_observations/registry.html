@@ -50,6 +50,7 @@
             <th scope="col">Condition</th>
             <th scope="col">Current State</th>
             <th scope="col">Context</th>
+            <th scope="col">Routed Destination</th>
             <th scope="col">First Observed</th>
             <th scope="col">Last Observed</th>
             <th scope="col">Version</th>
@@ -80,6 +81,16 @@
               </td>
               <td>{{ observation.get("current_state_label") }}</td>
               <td>{{ observation.get("context_display") }}</td>
+              <td>
+                {% if observation.get("routed_destination") %}
+                  {{ observation.get("routed_destination").get("type") }}
+                  <span class="system-observation-key">
+                    {{ observation.get("routed_destination").get("record_id") }}
+                  </span>
+                {% else %}
+                  None
+                {% endif %}
+              </td>
               <td>{{ observation.get("first_observed_at") or "Not recorded" }}</td>
               <td>{{ observation.get("last_observed_at") or "Not recorded" }}</td>
               <td>{{ observation.get("version") }}</td>

@@ -7227,12 +7227,16 @@ def system_observation_detail(observation_id):
     if gate:
         return gate
 
-    from services.services_system_observations import get_system_observation_detail
+    from services.services_system_observations import (
+        get_allowed_routing_destinations,
+        get_system_observation_detail,
+    )
 
     detail = get_system_observation_detail(
         observation_id,
         scope=_system_observation_read_scope(),
     )
+    observation = detail.get("observation") or {}
     status = 200
     if not detail.get("available"):
         status = 503
@@ -7245,9 +7249,15 @@ def system_observation_detail(observation_id):
         route_family="/system/observations",
         can_start_investigation=(
             detail.get("status") == "found"
-            and (detail.get("observation") or {}).get("current_state") == "acknowledged"
+            and observation.get("current_state") == "acknowledged"
+        ),
+        can_route_observation=(
+            detail.get("status") == "found"
+            and observation.get("current_state") == "under_review"
         ),
         investigation_idempotency_key=secrets.token_urlsafe(24),
+        routing_idempotency_key=secrets.token_urlsafe(24),
+        routing_destinations=get_allowed_routing_destinations(observation.get("observation_type")),
     ), status
 
 
@@ -7286,6 +7296,83 @@ def system_observation_investigate(observation_id):
     if result.get("status") == "registry_unavailable":
         return render_template("access_denied.html", reason="System Observation foundation is unavailable."), 503
     return render_template("access_denied.html", reason="System observation investigation could not be started."), 400
+
+
+@app.route("/system/observations/<observation_id>/route", methods=["GET", "POST"])
+def system_observation_route(observation_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_system_observations import (
+        get_allowed_routing_destinations,
+        get_system_observation_detail,
+        route_system_observation,
+    )
+
+    detail = get_system_observation_detail(
+        observation_id,
+        scope=_system_observation_read_scope(),
+    )
+    observation = detail.get("observation") or {}
+    if not detail.get("available"):
+        return render_template("access_denied.html", reason="System Observation foundation is unavailable."), 503
+    if detail.get("status") != "found":
+        return render_template("access_denied.html", reason="System observation is not available."), 404
+    if observation.get("current_state") != "under_review":
+        return render_template("access_denied.html", reason="Only under-review observations can be routed."), 409
+
+    routing_destinations = get_allowed_routing_destinations(observation.get("observation_type"))
+    if request.method == "GET":
+        return render_template(
+            "system_observations/route.html",
+            detail=detail,
+            routing_destinations=routing_destinations,
+            routing_idempotency_key=secrets.token_urlsafe(24),
+        )
+
+    if not validate_csrf_token():
+        return render_template("access_denied.html", reason="Invalid form token."), 403
+
+    result = route_system_observation(
+        observation_id=observation_id,
+        destination_type=request.form.get("destination_type") or "",
+        destination_record_id=request.form.get("destination_record_id") or "",
+        expected_version=request.form.get("expected_version"),
+        routing_reason=request.form.get("routing_reason") or "",
+        routing_summary=request.form.get("routing_summary") or "",
+        actor_context=_system_observation_actor_context(),
+        idempotency_key=request.form.get("idempotency_key") or "",
+        scope=_system_observation_read_scope(),
+    )
+    routed_observation = result.get("observation") or {}
+    if result.get("ok") and routed_observation.get("observation_id"):
+        flash("System observation routed to an existing governed destination record.", "success")
+        return redirect(url_for("system_observation_detail", observation_id=routed_observation["observation_id"]))
+    if result.get("status") == "stale_version":
+        return render_template(
+            "access_denied.html",
+            reason="This observation changed before routing was completed. Review the current record and try again if the action is still appropriate.",
+        ), 409
+    if result.get("status") in {"not_found", "invalid_input", "destination_not_found"}:
+        return render_template(
+            "system_observations/route.html",
+            detail=detail,
+            routing_destinations=routing_destinations,
+            routing_idempotency_key=request.form.get("idempotency_key") or secrets.token_urlsafe(24),
+            error_message=result.get("message") or "Routing destination could not be verified.",
+        ), 400
+    if result.get("status") in {
+        "invalid_transition",
+        "conflict",
+        "duplicate_destination",
+        "destination_not_allowed",
+        "scope_mismatch",
+    }:
+        return render_template("access_denied.html", reason=result.get("message") or "System observation cannot be routed."), 409
+    if result.get("status") in {"registry_unavailable", "destination_unavailable"}:
+        return render_template("access_denied.html", reason=result.get("message") or "Routing destination is unavailable."), 503
+    return render_template("access_denied.html", reason="System observation could not be routed."), 400
 
 
 @app.route("/objects/<object_type>/<object_id>")

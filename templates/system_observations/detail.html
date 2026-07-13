@@ -122,6 +122,79 @@
     </section>
   {% endif %}
 
+  {% if can_route_observation %}
+    <section class="admin-card">
+      <h2>Route for Governed Determination</h2>
+      <p class="admin-muted">
+        Routing records that this under-review observation is being sent to an
+        existing governed destination record. It does not create the
+        destination, close the observation, execute remediation, or prove
+        resolution.
+      </p>
+      {% if routing_destinations %}
+        <form method="post" action="{{ url_for('system_observation_route', observation_id=observation.get('observation_id')) }}">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="expected_version" value="{{ observation.get('version') }}">
+          <input type="hidden" name="idempotency_key" value="{{ routing_idempotency_key }}">
+
+          <label for="destination_type">Governed Destination Type</label>
+          <select id="destination_type" name="destination_type" required>
+            {% for destination in routing_destinations %}
+              <option value="{{ destination.get('key') }}">
+                {{ destination.get("label") }}
+              </option>
+            {% endfor %}
+          </select>
+
+          <label for="destination_record_id">Existing Destination Record ID</label>
+          <input
+            id="destination_record_id"
+            name="destination_record_id"
+            maxlength="120"
+            required
+          >
+
+          <label for="routing_reason">Routing Reason</label>
+          <textarea
+            id="routing_reason"
+            name="routing_reason"
+            maxlength="500"
+            required
+          ></textarea>
+
+          <label for="routing_summary">Routing Summary</label>
+          <textarea
+            id="routing_summary"
+            name="routing_summary"
+            maxlength="1000"
+          ></textarea>
+
+          <button type="submit">Route Observation</button>
+        </form>
+      {% else %}
+        <p class="admin-muted">
+          No governed routing destinations are configured for this observation
+          type.
+        </p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if observation.get("routed_destination") %}
+    <section class="admin-card">
+      <h2>Routed Destination</h2>
+      <p>
+        <strong>{{ observation.get("routed_destination").get("type") }}</strong>
+        {{ observation.get("routed_destination").get("record_id") }}
+      </p>
+      <p class="admin-muted">
+        This is a bounded reference recorded in the append-only event history.
+        It does not create a destination record or claim institutional
+        resolution.
+      </p>
+    </section>
+  {% endif %}
+
   <section class="admin-card">
     <h2>Condition and Source Context</h2>
     {% set context = observation.get("context", {}) %}

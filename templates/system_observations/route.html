@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set observation = detail.get("observation") or {} %}
+
+<section class="admin-card system-observation-route">
+  <h1>Route System Observation</h1>
+  <p class="admin-muted">
+    This workflow records an explicit route to an existing governed destination
+    record. It does not create destination records, execute remediation, close
+    the observation, or claim institutional resolution.
+  </p>
+  <div class="admin-actions">
+    <a href="{{ url_for('system_observation_detail', observation_id=observation.get('observation_id')) }}">
+      Back to Observation
+    </a>
+    <a href="{{ url_for('system_observation_registry') }}">
+      Back to Registry
+    </a>
+  </div>
+</section>
+
+{% if error_message %}
+  <section class="admin-card">
+    <h2>Routing Not Recorded</h2>
+    <p class="admin-muted">{{ error_message }}</p>
+  </section>
+{% endif %}
+
+<section class="admin-card">
+  <h2>Observation Context</h2>
+  <dl class="system-observation-dl">
+    <div>
+      <dt>Observation ID</dt>
+      <dd>{{ observation.get("observation_id") }}</dd>
+    </div>
+    <div>
+      <dt>Observation Type</dt>
+      <dd>{{ observation.get("observation_type_label") }}</dd>
+    </div>
+    <div>
+      <dt>Current State</dt>
+      <dd>{{ observation.get("current_state") }}</dd>
+    </div>
+    <div>
+      <dt>Version</dt>
+      <dd>{{ observation.get("version") }}</dd>
+    </div>
+  </dl>
+</section>
+
+<section class="admin-card">
+  <h2>Route for Governed Determination</h2>
+  {% if routing_destinations %}
+    <form method="post" action="{{ url_for('system_observation_route', observation_id=observation.get('observation_id')) }}">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="expected_version" value="{{ observation.get('version') }}">
+      <input type="hidden" name="idempotency_key" value="{{ routing_idempotency_key }}">
+
+      <label for="destination_type">Governed Destination Type</label>
+      <select id="destination_type" name="destination_type" required>
+        {% for destination in routing_destinations %}
+          <option value="{{ destination.get('key') }}">
+            {{ destination.get("label") }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <label for="destination_record_id">Existing Destination Record ID</label>
+      <input
+        id="destination_record_id"
+        name="destination_record_id"
+        maxlength="120"
+        required
+      >
+
+      <label for="routing_reason">Routing Reason</label>
+      <textarea
+        id="routing_reason"
+        name="routing_reason"
+        maxlength="500"
+        required
+      ></textarea>
+
+      <label for="routing_summary">Routing Summary</label>
+      <textarea
+        id="routing_summary"
+        name="routing_summary"
+        maxlength="1000"
+      ></textarea>
+
+      <button type="submit">Route Observation</button>
+    </form>
+  {% else %}
+    <p class="admin-muted">
+      No governed routing destinations are configured for this observation
+      type.
+    </p>
+  {% endif %}
+</section>
+
+<style>
+  .system-observation-dl {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .system-observation-dl div {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .system-observation-dl dt {
+    color: #57606a;
+    font-size: 0.82rem;
+  }
+
+  .system-observation-dl dd {
+    font-weight: 700;
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+  }
+</style>
+{% endblock %}

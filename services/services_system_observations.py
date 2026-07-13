@@ -31,6 +31,41 @@ ALLOWED_RELATED_RECORD_TYPES = {
     "Restricted Procedure Governance",
     "System Audit",
 }
+ROUTING_DESTINATIONS = {
+    "archive": "Archive",
+    "compliance": "Compliance",
+    "governance": "Governance",
+    "matter": "Matter",
+    "people": "People",
+    "restricted_procedure_governance": "Restricted Procedure Governance",
+    "system_audit": "System Audit",
+}
+ROUTING_DESTINATION_MATRIX = {
+    "account_posture": {"people", "governance", "compliance", "matter", "system_audit"},
+    "permission_posture": {"governance", "compliance", "matter", "system_audit"},
+    "authentication_session_posture": {"governance", "compliance", "matter", "system_audit"},
+    "audit_integrity_posture": {"system_audit", "compliance", "governance", "matter"},
+    "backup_preservation_posture": {"archive", "compliance", "governance", "matter", "system_audit"},
+    "deployment_health_posture": {"governance", "compliance", "matter", "system_audit"},
+    "database_migration_posture": {
+        "restricted_procedure_governance",
+        "governance",
+        "compliance",
+        "matter",
+        "system_audit",
+    },
+    "operating_policy_posture": {"governance", "compliance", "matter", "system_audit"},
+    "institutional_role_posture": {"people", "governance", "compliance", "matter", "system_audit"},
+    "recovery_repair_posture": {
+        "restricted_procedure_governance",
+        "governance",
+        "compliance",
+        "archive",
+        "matter",
+        "system_audit",
+    },
+}
+DESTINATION_RECORD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$")
 SENSITIVE_MARKERS = {
     "password",
     "password_hash",
@@ -81,6 +116,10 @@ TRANSITIONS = {
     ("under_review", "deferred", "deferred"): {
         "requires_reason": True,
         "requires_related": False,
+    },
+    ("under_review", "routed", "routing_prepared"): {
+        "requires_reason": True,
+        "requires_related": True,
     },
     ("deferred", "under_review", "investigation_started"): {
         "requires_reason": True,
@@ -396,7 +435,17 @@ def _validate_foundation_fields(observation_type, panel_key, condition_code, per
     return observation_type, panel_key, condition_code, persistence_trigger
 
 
-def _check_idempotency(conn, idempotency_key, observation_id=None, event_type=None, resulting_state=None, event_summary=None, reason_code=None):
+def _check_idempotency(
+    conn,
+    idempotency_key,
+    observation_id=None,
+    event_type=None,
+    resulting_state=None,
+    event_summary=None,
+    reason_code=None,
+    related_record_type=None,
+    related_record_id=None,
+):
     if not idempotency_key:
         return None
     row = conn.execute(
@@ -418,6 +467,10 @@ def _check_idempotency(conn, idempotency_key, observation_id=None, event_type=No
     if event_summary is not None and (row["event_summary"] or "") != event_summary:
         raise RuntimeError("idempotency_conflict")
     if reason_code is not None and (row["reason_code"] or "") != (reason_code or ""):
+        raise RuntimeError("idempotency_conflict")
+    if related_record_type is not None and (row["related_record_type"] or "") != (related_record_type or ""):
+        raise RuntimeError("idempotency_conflict")
+    if related_record_id is not None and (row["related_record_id"] or "") != (related_record_id or ""):
         raise RuntimeError("idempotency_conflict")
     return row
 
@@ -718,6 +771,153 @@ def create_system_observation(
         return _result(False, "conflict", str(exc))
     except Exception:
         return _result(False, "unexpected_failure", "System observation could not be created.")
+    finally:
+        conn.close()
+
+
+def route_system_observation(
+    *,
+    observation_id,
+    destination_type,
+    destination_record_id,
+    expected_version,
+    routing_reason,
+    routing_summary="",
+    actor_context,
+    idempotency_key=None,
+    scope=None,
+):
+    ensure_system_observation_tables()
+    conn = get_connection()
+    try:
+        actor_id, actor_label = _actor(actor_context)
+        observation_id = validate_public_observation_id(observation_id)
+        destination_type = _routing_destination_key(destination_type)
+        destination_record_id = _routing_destination_record_id(destination_record_id)
+        routing_reason = _reason(routing_reason, "routing_reason", required=True)
+        routing_summary = _summary(routing_summary, "routing_summary")
+        idempotency_key = _scalar(idempotency_key, "idempotency_key", max_length=IDEMPOTENCY_LIMIT)
+        expected_version = int(expected_version)
+        related_record_type = ROUTING_DESTINATIONS[destination_type]
+
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            availability = _tables_available(conn)
+            if not availability["available"]:
+                conn.rollback()
+                return _result(False, "registry_unavailable", "System Observation foundation is unavailable.")
+
+            observation = _public_observation(
+                conn.execute(
+                    "SELECT * FROM system_observations WHERE observation_id = ?",
+                    (observation_id,),
+                ).fetchone()
+            )
+            if not _observation_visible(observation, scope):
+                conn.rollback()
+                return _result(False, "not_found", "Observation not found.")
+
+            replay = _check_idempotency(
+                conn,
+                idempotency_key,
+                observation_id=observation_id,
+                event_type="routing_prepared",
+                resulting_state="routed",
+                event_summary=routing_summary,
+                reason_code=routing_reason,
+                related_record_type=related_record_type,
+                related_record_id=destination_record_id,
+            )
+            if replay:
+                conn.commit()
+                return _result(
+                    True,
+                    "idempotent_replay",
+                    observation=get_system_observation(observation_id, connection=conn),
+                    event=_public_event(replay),
+                )
+
+            if observation["current_state"] != "under_review":
+                conn.rollback()
+                return _result(False, "invalid_transition", "Only under-review observations can be routed.")
+            if int(observation["version"]) != expected_version:
+                conn.rollback()
+                return _result(False, "stale_version", "Observation changed before routing.")
+            allowed = ROUTING_DESTINATION_MATRIX.get(observation["observation_type"], set())
+            if destination_type not in allowed:
+                conn.rollback()
+                return _result(False, "destination_not_allowed", "Destination is not allowed for this observation type.")
+
+            destination_result = _validate_destination_record(
+                conn,
+                destination_type,
+                destination_record_id,
+                observation,
+            )
+            if not destination_result.get("ok"):
+                conn.rollback()
+                return destination_result
+
+            duplicate = conn.execute(
+                """
+                SELECT *
+                FROM system_observation_events
+                WHERE observation_id = ?
+                  AND event_type IN ('routing_prepared', 'destination_linked')
+                  AND related_record_type = ?
+                  AND related_record_id = ?
+                LIMIT 1
+                """,
+                (observation_id, related_record_type, destination_record_id),
+            ).fetchone()
+            if duplicate:
+                conn.rollback()
+                return _result(False, "duplicate_destination", "Destination already linked to this observation.")
+
+            event_id = _insert_event(
+                conn,
+                observation_id,
+                "routing_prepared",
+                observation["current_state"],
+                "routed",
+                actor_id,
+                actor_label,
+                event_summary=routing_summary,
+                reason_code=routing_reason,
+                related_record_type=related_record_type,
+                related_record_id=destination_record_id,
+                idempotency_key=idempotency_key,
+            )
+            _update_observation_projection(
+                conn,
+                observation_id,
+                "routed",
+                actor_id,
+                observation["active_duplicate_key"],
+                expected_version,
+            )
+            observation_after = get_system_observation(observation_id, connection=conn)
+            event = _public_event(
+                conn.execute(
+                    "SELECT * FROM system_observation_events WHERE observation_event_id = ?",
+                    (event_id,),
+                ).fetchone()
+            )
+            conn.commit()
+            return _result(True, "routed", observation=observation_after, event=event)
+        except Exception:
+            conn.rollback()
+            raise
+    except ValueError as exc:
+        return _result(False, "invalid_input", str(exc))
+    except RuntimeError as exc:
+        if str(exc) == "idempotency_conflict":
+            return _result(False, "conflict", "Idempotency key conflicts with a prior operation.")
+        if str(exc) == "stale_version":
+            return _result(False, "stale_version", "Observation changed before routing.")
+        return _result(False, "unexpected_failure", "System observation could not be routed.")
+    except Exception:
+        return _result(False, "unexpected_failure", "System observation could not be routed.")
     finally:
         conn.close()
 
@@ -1024,6 +1224,121 @@ def _record_reference(record_type, record_id):
     }
 
 
+def _routing_destination_key(value):
+    key = _scalar(value, "destination_type", required=True, lowercase=True)
+    if key not in ROUTING_DESTINATIONS:
+        raise ValueError("destination_type_invalid")
+    return key
+
+
+def _routing_destination_record_id(value):
+    record_id = _scalar(value, "destination_record_id", required=True, max_length=SCALAR_LIMIT)
+    if not DESTINATION_RECORD_ID_RE.fullmatch(record_id):
+        raise ValueError("destination_record_id_invalid")
+    lowered = record_id.lower()
+    if "://" in lowered or "/" in lowered or "\\" in lowered or "?" in lowered or "#" in lowered:
+        raise ValueError("destination_record_id_invalid")
+    return record_id
+
+
+def get_allowed_routing_destinations(observation_type):
+    observation_type = _scalar(observation_type, "observation_type", lowercase=True)
+    keys = sorted(ROUTING_DESTINATION_MATRIX.get(observation_type, set()))
+    return [
+        {"key": key, "label": ROUTING_DESTINATIONS[key]}
+        for key in keys
+        if key in ROUTING_DESTINATIONS
+    ]
+
+
+def _table_columns(conn, table_name):
+    try:
+        return {row["name"] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()}
+    except Exception:
+        return set()
+
+
+def _table_exists(conn, table_name):
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return bool(row)
+
+
+def _destination_record_query(destination_type, record_id):
+    if destination_type == "matter":
+        return {
+            "table": "matters",
+            "id_column": "matter_id",
+            "label": ROUTING_DESTINATIONS[destination_type],
+            "query_id": record_id,
+        }
+    if destination_type == "system_audit":
+        query_id = record_id
+        if record_id.upper().startswith("AUDIT-"):
+            query_id = record_id.split("-", 1)[1]
+        elif record_id.upper().startswith("AUD-"):
+            query_id = record_id.split("-", 1)[1]
+        return {
+            "table": "audit_log",
+            "id_column": "id",
+            "label": ROUTING_DESTINATIONS[destination_type],
+            "query_id": query_id,
+        }
+    return None
+
+
+def _validate_destination_record(conn, destination_type, record_id, observation):
+    query = _destination_record_query(destination_type, record_id)
+    if not query:
+        return _result(
+            False,
+            "destination_unavailable",
+            "Destination type is recognized but no existing-record verifier is available.",
+        )
+
+    table_name = query["table"]
+    id_column = query["id_column"]
+    if not _table_exists(conn, table_name):
+        return _result(False, "destination_unavailable", "Destination table is unavailable.")
+    columns = _table_columns(conn, table_name)
+    if id_column not in columns:
+        return _result(False, "destination_unavailable", "Destination identifier column is unavailable.")
+
+    row = conn.execute(
+        f"SELECT * FROM {table_name} WHERE {id_column} = ? LIMIT 1",
+        (query["query_id"],),
+    ).fetchone()
+    if not row:
+        return _result(False, "destination_not_found", "Destination record was not found.")
+
+    row_dict = dict(row)
+    destination_firm = row_dict.get("firm_id") if "firm_id" in columns else None
+    observation_firm = observation.get("firm_id")
+    if observation_firm and destination_firm and destination_firm != observation_firm:
+        return _result(False, "scope_mismatch", "Destination record is outside observation scope.")
+
+    return _result(
+        True,
+        "verified",
+        observation={
+            "destination_type": destination_type,
+            "destination_label": query["label"],
+            "destination_record_id": record_id,
+        },
+    )
+
+
+def _latest_routing_reference(events):
+    for event in reversed(events):
+        if event.get("event_type") in {"routing_prepared", "destination_linked"}:
+            reference = event.get("related_reference")
+            if reference:
+                return reference
+    return None
+
+
 def _context_values(observation):
     scope = observation.get("context_scope")
     if scope == "platform_scoped":
@@ -1116,6 +1431,7 @@ def _view_observation(observation):
         "version": observation.get("version"),
         "prior_occurrence_id": observation.get("prior_occurrence_id"),
         "superseded_by_observation_id": observation.get("superseded_by_observation_id"),
+        "routed_destination": observation.get("routed_destination"),
         "created_by": observation.get("created_by"),
         "created_at": observation.get("created_at"),
         "updated_by": observation.get("updated_by"),
@@ -1128,6 +1444,7 @@ def _view_event(event):
     authority = _record_reference(event.get("authority_record_type"), event.get("authority_record_id"))
     return {
         "observation_event_id": event.get("observation_event_id"),
+        "observation_id": event.get("observation_id"),
         "event_type": event.get("event_type"),
         "event_type_label": _label_key(event.get("event_type")),
         "prior_state": event.get("prior_state"),
@@ -1194,6 +1511,26 @@ def list_system_observations_for_registry(filters=None, limit=100, scope=None):
         params.append(limit)
         rows = [_public_observation(row) for row in conn.execute(sql, params).fetchall()]
         visible = [row for row in rows if _observation_visible(row, scope)]
+        observation_ids = [row["observation_id"] for row in visible]
+        if observation_ids:
+            placeholders = ", ".join("?" for _ in observation_ids)
+            routing_rows = conn.execute(
+                f"""
+                SELECT *
+                FROM system_observation_events
+                WHERE observation_id IN ({placeholders})
+                  AND event_type IN ('routing_prepared', 'destination_linked')
+                ORDER BY created_at ASC, id ASC
+                """,
+                observation_ids,
+            ).fetchall()
+            routed_by_observation = {}
+            for event_row in routing_rows:
+                event = _view_event(_public_event(event_row))
+                if event.get("related_reference"):
+                    routed_by_observation[event["observation_id"]] = event["related_reference"]
+            for row in visible:
+                row["routed_destination"] = routed_by_observation.get(row["observation_id"])
         return {
             "available": True,
             "missing": [],
@@ -1246,6 +1583,9 @@ def get_system_observation_detail(observation_id, scope=None):
             (observation_id,),
         ).fetchall()
         events = [_view_event(_public_event(row)) for row in event_rows]
+        routed_destination = _latest_routing_reference(events)
+        if routed_destination:
+            observation["routed_destination"] = routed_destination
 
         prior = None
         if observation.get("prior_occurrence_id"):
@@ -1307,12 +1647,14 @@ __all__ = [
     "create_system_observation",
     "ensure_system_observation_tables",
     "find_open_duplicate",
+    "get_allowed_routing_destinations",
     "get_system_observation_detail",
     "get_system_observation",
     "get_open_system_observation_for_condition",
     "list_system_observation_events",
     "list_system_observations_for_registry",
     "list_system_observations",
+    "route_system_observation",
     "start_system_observation_investigation",
     "system_observation_registry_available",
     "transition_system_observation",
