@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-card">
+  <h1>Acknowledge System Condition</h1>
+  <p class="admin-muted">
+    Acknowledgement creates a governed System observation. It does not resolve,
+    route, repair, approve, or certify the condition.
+  </p>
+  <div class="admin-actions">
+    <a href="{{ url_for('admin_ios_workspace', workspace_key='system') }}">
+      Back to System Workspace
+    </a>
+    <a href="{{ url_for('system_observation_registry') }}">
+      Back to System Observation Registry
+    </a>
+  </div>
+</section>
+
+{% if error_message %}
+  <section class="admin-card">
+    <h2>Acknowledgement Not Completed</h2>
+    <p class="admin-muted">{{ error_message }}</p>
+  </section>
+{% endif %}
+
+<section class="admin-card">
+  <h2>Condition</h2>
+  <dl class="system-observation-dl">
+    <div>
+      <dt>System Panel</dt>
+      <dd>{{ panel.get("title") }}</dd>
+    </div>
+    <div>
+      <dt>Condition Code</dt>
+      <dd>{{ condition.get("condition_code") }}</dd>
+    </div>
+    <div>
+      <dt>Observation Type</dt>
+      <dd>{{ condition.get("observation_type") }}</dd>
+    </div>
+    <div>
+      <dt>Context Scope</dt>
+      <dd>{{ condition.get("context", {}).get("context_scope") }}</dd>
+    </div>
+    <div>
+      <dt>Context</dt>
+      <dd>{{ condition.get("context_display") }}</dd>
+    </div>
+    <div>
+      <dt>Current Rendered Posture</dt>
+      <dd>{{ panel.get("status_label") }}</dd>
+    </div>
+  </dl>
+  <p class="admin-muted">
+    {{ condition.get("summary") }}
+  </p>
+</section>
+
+<section class="admin-card">
+  <h2>Confirm Acknowledgement</h2>
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+
+    <label for="sanitized_summary">Observation Summary</label>
+    <textarea
+      id="sanitized_summary"
+      name="sanitized_summary"
+      maxlength="1000"
+      required
+    >{{ condition.get("summary") }}</textarea>
+
+    <label for="acknowledgement_reason">Acknowledgement Reason</label>
+    <textarea
+      id="acknowledgement_reason"
+      name="acknowledgement_reason"
+      maxlength="500"
+      required
+    ></textarea>
+
+    <p class="admin-muted">
+      An observation records a governed System condition and its lifecycle
+      history. It does not by itself prove legal compliance, technical
+      resolution, successful recovery, backup recoverability, institutional
+      approval, or completion of a related action.
+    </p>
+
+    <button type="submit">Acknowledge Condition</button>
+  </form>
+</section>
+
+<style>
+  .system-observation-dl {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .system-observation-dl div {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .system-observation-dl dt {
+    color: #57606a;
+    font-size: 0.82rem;
+  }
+
+  .system-observation-dl dd {
+    font-weight: 700;
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+  }
+</style>
+{% endblock %}

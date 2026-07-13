@@ -89,6 +89,39 @@
     </p>
   </section>
 
+  {% if can_start_investigation %}
+    <section class="admin-card">
+      <h2>Available Governed Action</h2>
+      <p class="admin-muted">
+        Starting investigation records institutional review posture only. It
+        does not execute remediation, route the condition, close the
+        observation, approve a policy, or initiate a restricted procedure.
+      </p>
+      <form method="post" action="{{ url_for('system_observation_investigate', observation_id=observation.get('observation_id')) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="expected_version" value="{{ observation.get('version') }}">
+        <input type="hidden" name="idempotency_key" value="{{ investigation_idempotency_key }}">
+
+        <label for="investigation_reason">Investigation Reason</label>
+        <textarea
+          id="investigation_reason"
+          name="investigation_reason"
+          maxlength="500"
+          required
+        ></textarea>
+
+        <label for="investigation_summary">Investigation Summary</label>
+        <textarea
+          id="investigation_summary"
+          name="investigation_summary"
+          maxlength="1000"
+        ></textarea>
+
+        <button type="submit">Start Investigation</button>
+      </form>
+    </section>
+  {% endif %}
+
   <section class="admin-card">
     <h2>Condition and Source Context</h2>
     {% set context = observation.get("context", {}) %}

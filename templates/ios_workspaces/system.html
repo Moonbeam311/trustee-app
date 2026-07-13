@@ -208,6 +208,29 @@
               {% endfor %}
             </div>
           {% endif %}
+
+          {% if panel.get("acknowledgement_condition") %}
+            {% set condition = panel.get("acknowledgement_condition") %}
+            <div class="system-oversight-card__acknowledgement">
+              {% if condition.get("existing_observation_id") %}
+                <a href="{{ url_for('system_observation_detail', observation_id=condition.get('existing_observation_id')) }}">
+                  View Existing Observation
+                </a>
+              {% else %}
+                <a href="{{ url_for(
+                  'system_observation_acknowledge',
+                  panel_key=condition.get('panel_key'),
+                  condition_code=condition.get('condition_code')
+                ) }}">
+                  Acknowledge Condition
+                </a>
+              {% endif %}
+              <p class="admin-muted">
+                Acknowledgement creates a governed System observation; it does
+                not resolve, route, repair, or approve the condition.
+              </p>
+            </div>
+          {% endif %}
         </article>
       {% endfor %}
     </div>
@@ -468,5 +491,15 @@
 
   .system-oversight-card__secondary-links p + p {
     margin-top: 6px;
+  }
+
+  .system-oversight-card__acknowledgement {
+    border-top: 1px solid #d8dee4;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .system-oversight-card__acknowledgement p {
+    margin: 6px 0 0;
   }
 </style>

@@ -7118,6 +7118,28 @@ def _system_observation_read_scope():
     }
 
 
+def _system_observation_actor_context():
+    username = session.get("username") or "unknown"
+    return {
+        "actor_id": session.get("user_id") or username,
+        "actor_label": username,
+    }
+
+
+def _find_rendered_acknowledgement_condition(panel_key, condition_code):
+    system_oversight = build_system_workspace_oversight()
+    for panel in system_oversight.get("panels", []):
+        condition = panel.get("acknowledgement_condition")
+        if not condition:
+            continue
+        if (
+            condition.get("panel_key") == panel_key
+            and condition.get("condition_code") == condition_code
+        ):
+            return condition, panel
+    return None, None
+
+
 @app.route("/system/observations", methods=["GET"])
 def system_observation_registry():
     gate = require_master_admin()
@@ -7137,6 +7159,66 @@ def system_observation_registry():
         registry=registry,
         route_family="/system/observations",
     ), (200 if registry.get("available") else 503)
+
+
+@app.route("/system/observations/acknowledge/<panel_key>/<condition_code>", methods=["GET", "POST"])
+def system_observation_acknowledge(panel_key, condition_code):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    panel_key = (panel_key or "").strip().lower()
+    condition_code = (condition_code or "").strip().lower()
+    condition, panel = _find_rendered_acknowledgement_condition(panel_key, condition_code)
+    if not condition:
+        flash("That System condition is not currently eligible for acknowledgement.", "danger")
+        return redirect(url_for("admin_ios_workspace", workspace_key="system"))
+
+    if condition.get("existing_observation_id"):
+        flash("An open observation already exists for this condition.", "warning")
+        return redirect(url_for("system_observation_detail", observation_id=condition.get("existing_observation_id")))
+
+    if request.method == "GET":
+        idempotency_key = secrets.token_urlsafe(24)
+        return render_template(
+            "system_observations/acknowledge.html",
+            condition=condition,
+            panel=panel,
+            idempotency_key=idempotency_key,
+        )
+
+    if not validate_csrf_token():
+        return render_template("access_denied.html", reason="Invalid form token."), 403
+
+    from services.services_system_observations import acknowledge_system_condition
+
+    result = acknowledge_system_condition(
+        panel_key=panel_key,
+        condition_code=condition_code,
+        context=condition.get("context") or {},
+        sanitized_summary=request.form.get("sanitized_summary") or "",
+        reason=request.form.get("acknowledgement_reason") or "",
+        actor_context=_system_observation_actor_context(),
+        idempotency_key=request.form.get("idempotency_key") or "",
+    )
+    observation = result.get("observation") or {}
+    if result.get("ok") and observation.get("observation_id"):
+        flash("System condition acknowledged as a governed observation.", "success")
+        return redirect(url_for("system_observation_detail", observation_id=observation["observation_id"]))
+    if result.get("status") == "duplicate_observation" and observation.get("observation_id"):
+        flash("An open observation already exists for this condition.", "warning")
+        return redirect(url_for("system_observation_detail", observation_id=observation["observation_id"]))
+    if result.get("status") == "registry_unavailable":
+        return render_template("access_denied.html", reason="System Observation foundation is unavailable."), 503
+    if result.get("status") == "conflict":
+        return render_template("access_denied.html", reason="This acknowledgement request conflicts with a prior operation."), 409
+    return render_template(
+        "system_observations/acknowledge.html",
+        condition=condition,
+        panel=panel,
+        idempotency_key=request.form.get("idempotency_key") or secrets.token_urlsafe(24),
+        error_message=result.get("message") or "System condition could not be acknowledged.",
+    ), 400
 
 
 @app.route("/system/observations/<observation_id>", methods=["GET"])
@@ -7161,7 +7243,49 @@ def system_observation_detail(observation_id):
         detail=detail,
         observation_id="SYSOBS-0000-000000",
         route_family="/system/observations",
+        can_start_investigation=(
+            detail.get("status") == "found"
+            and (detail.get("observation") or {}).get("current_state") == "acknowledged"
+        ),
+        investigation_idempotency_key=secrets.token_urlsafe(24),
     ), status
+
+
+@app.route("/system/observations/<observation_id>/investigate", methods=["POST"])
+def system_observation_investigate(observation_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+    if not validate_csrf_token():
+        return render_template("access_denied.html", reason="Invalid form token."), 403
+
+    from services.services_system_observations import start_system_observation_investigation
+
+    result = start_system_observation_investigation(
+        observation_id=observation_id,
+        expected_version=request.form.get("expected_version"),
+        reason=request.form.get("investigation_reason") or "",
+        event_summary=request.form.get("investigation_summary") or "",
+        actor_context=_system_observation_actor_context(),
+        idempotency_key=request.form.get("idempotency_key") or "",
+        scope=_system_observation_read_scope(),
+    )
+    observation = result.get("observation") or {}
+    if result.get("ok") and observation.get("observation_id"):
+        flash("System observation investigation started.", "success")
+        return redirect(url_for("system_observation_detail", observation_id=observation["observation_id"]))
+    if result.get("status") == "stale_version":
+        return render_template(
+            "access_denied.html",
+            reason="This observation changed before your action was completed. Review the current record and try again if the action is still appropriate.",
+        ), 409
+    if result.get("status") in {"not_found", "invalid_input"}:
+        return render_template("access_denied.html", reason="System observation is not available for investigation."), 404
+    if result.get("status") in {"invalid_transition", "conflict"}:
+        return render_template("access_denied.html", reason=result.get("message") or "Investigation cannot be started for this observation."), 409
+    if result.get("status") == "registry_unavailable":
+        return render_template("access_denied.html", reason="System Observation foundation is unavailable."), 503
+    return render_template("access_denied.html", reason="System observation investigation could not be started."), 400
 
 
 @app.route("/objects/<object_type>/<object_id>")

@@ -3,7 +3,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from flask import current_app
+from flask import current_app, session
 
 from database.db import get_connection, verify_audit_log_chain
 
@@ -187,6 +187,7 @@ def _panel(
     exception_label=None,
     operator_guidance=None,
     secondary_links=None,
+    acknowledgement_condition=None,
 ):
     if status not in APP_ROUTE_STATUSES:
         status = "not_assessed"
@@ -207,6 +208,7 @@ def _panel(
         "exception_label": exception_label,
         "operator_guidance": operator_guidance,
         "secondary_links": secondary_links or [],
+        "acknowledgement_condition": acknowledgement_condition,
         "observed_condition": summary,
         "decision_required": False,
         "decision_owner": None,
@@ -216,6 +218,49 @@ def _panel(
         "restricted_action": None,
         "future_record_owner": None,
     }
+
+
+def _ack_context():
+    return {"context_scope": "firm_scoped", "firm_id": session.get("firm_id") or "FIRM-001"}
+
+
+def _acknowledgement_condition(panel_key, condition_code, summary, context=None):
+    try:
+        from services.services_system_observations import (
+            CONDITION_CODE_REGISTRY,
+            PANEL_TYPE_MAP,
+            get_open_system_observation_for_condition,
+        )
+
+        condition = CONDITION_CODE_REGISTRY.get(condition_code)
+        observation_type = PANEL_TYPE_MAP.get(panel_key)
+        context = context or _ack_context()
+        if not condition or condition.get("observation_type") != observation_type:
+            return None
+        if "authorized_acknowledgement" not in condition.get("persistence_triggers", set()):
+            return None
+        if context["context_scope"] not in condition.get("context_scopes", set()):
+            return None
+        if condition.get("restricted_governance"):
+            return None
+
+        existing = get_open_system_observation_for_condition(
+            panel_key,
+            condition_code,
+            context,
+            scope={"global": True},
+        )
+        return {
+            "panel_key": panel_key,
+            "condition_code": condition_code,
+            "observation_type": observation_type,
+            "context": context,
+            "context_display": context["firm_id"],
+            "summary": summary,
+            "existing_observation_id": existing.get("observation_id") if existing else None,
+        }
+    except Exception:
+        return None
 
 
 def _route_available(route):
@@ -324,6 +369,15 @@ def _protected_user_accounts_panel():
             exception_state=status != "ready",
             exception_label="Review required" if status == "attention" else ("Unavailable" if status == "unavailable" else None),
             operator_guidance=guidance,
+            acknowledgement_condition=(
+                _acknowledgement_condition(
+                    "protected_user_accounts",
+                    "inactive_accounts_detected" if malformed else "account_registry_unavailable",
+                    "Protected user account posture requires acknowledged institutional review.",
+                )
+                if status in {"attention", "unavailable"}
+                else None
+            ),
         )
     except Exception:
         return _panel(
@@ -342,6 +396,11 @@ def _protected_user_accounts_panel():
             exception_state=True,
             exception_label="Unavailable",
             operator_guidance="Review the protected user registry.",
+            acknowledgement_condition=_acknowledgement_condition(
+                "protected_user_accounts",
+                "account_registry_unavailable",
+                "Protected user account registry could not be safely read.",
+            ),
         )
 
 
@@ -417,6 +476,16 @@ def _authentication_session_security_panel():
         exception_state=status != "ready",
         exception_label="Review required" if status == "attention" else ("Unavailable" if status == "unavailable" else None),
         operator_guidance=guidance,
+        acknowledgement_condition=(
+            _acknowledgement_condition(
+                "authentication_session_security",
+                "authentication_runtime_not_assessed",
+                "Authentication runtime posture requires acknowledged review.",
+                context={"context_scope": "platform_scoped"},
+            )
+            if status in {"not_assessed", "unavailable"}
+            else None
+        ),
     )
 
 
@@ -529,6 +598,15 @@ def _backup_data_preservation_panel():
         exception_state=status != "protected",
         exception_label="Review required" if status == "attention" else ("Unavailable" if status == "unavailable" else "Protected boundary"),
         operator_guidance=guidance,
+        acknowledgement_condition=(
+            _acknowledgement_condition(
+                "backup_data_preservation",
+                "backup_route_unavailable",
+                "Backup route availability requires acknowledged review.",
+            )
+            if status == "unavailable"
+            else None
+        ),
     )
 
 
@@ -674,6 +752,15 @@ def _feature_flags_operating_policy_panel():
             exception_state=restricted,
             exception_label="Review required" if restricted else None,
             operator_guidance="Review operating policy before write or export work." if restricted else "Ordinary operating policy is readable and not restricting standard operations.",
+            acknowledgement_condition=(
+                _acknowledgement_condition(
+                    "feature_flags_operating_policy",
+                    "read_only_mode_enabled" if read_only else ("exports_disabled" if not exports else "user_creation_disabled"),
+                    "Operating policy restriction requires acknowledged review.",
+                )
+                if restricted
+                else None
+            ),
         )
     except Exception:
         return _panel(
@@ -689,6 +776,11 @@ def _feature_flags_operating_policy_panel():
             exception_state=True,
             exception_label="Unavailable",
             operator_guidance="Review operating policy through the protected Admin policy surface.",
+            acknowledgement_condition=_acknowledgement_condition(
+                "feature_flags_operating_policy",
+                "operating_policy_unavailable",
+                "Operating policy could not be read without exposing raw diagnostics.",
+            ),
         )
 
 

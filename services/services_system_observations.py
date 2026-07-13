@@ -20,6 +20,7 @@ SUMMARY_LIMIT = 1000
 SCALAR_LIMIT = 120
 IDEMPOTENCY_LIMIT = 120
 READ_LIMIT = 250
+REASON_LIMIT = 500
 PUBLIC_OBSERVATION_ID_RE = re.compile(r"^SYSOBS-\d{4}-\d{6}$")
 ALLOWED_RELATED_RECORD_TYPES = {
     "Archive",
@@ -162,6 +163,16 @@ def _scalar(value, field, required=False, max_length=SCALAR_LIMIT, lowercase=Fal
 
 def _summary(value, field, required=False):
     text = _scalar(value, field, required=required, max_length=SUMMARY_LIMIT)
+    if text is None:
+        return ""
+    lowered = text.lower()
+    if any(marker in lowered for marker in SENSITIVE_MARKERS):
+        raise ValueError(f"{field}_sensitive")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def _reason(value, field, required=False):
+    text = _scalar(value, field, required=required, max_length=REASON_LIMIT)
     if text is None:
         return ""
     lowered = text.lower()
@@ -409,6 +420,172 @@ def _check_idempotency(conn, idempotency_key, observation_id=None, event_type=No
     if reason_code is not None and (row["reason_code"] or "") != (reason_code or ""):
         raise RuntimeError("idempotency_conflict")
     return row
+
+
+def _read_open_duplicate(conn, observation_type, condition_code, context_data):
+    duplicate_key = _active_duplicate_key(observation_type, condition_code, context_data)
+    return conn.execute(
+        """
+        SELECT *
+        FROM system_observations
+        WHERE active_duplicate_key = ?
+        """,
+        (duplicate_key,),
+    ).fetchone()
+
+
+def _ensure_registry_available():
+    conn = get_connection()
+    try:
+        availability = _tables_available(conn)
+        return availability
+    finally:
+        conn.close()
+
+
+def validate_acknowledgement_condition(panel_key, condition_code, context):
+    context_data = _normalize_context(context)
+    panel_key = _scalar(panel_key, "panel_key", required=True, lowercase=True)
+    condition_code = _scalar(condition_code, "condition_code", required=True, lowercase=True)
+    observation_type = PANEL_TYPE_MAP.get(panel_key)
+    if not observation_type:
+        raise ValueError("panel_key_invalid")
+    condition = CONDITION_CODE_REGISTRY.get(condition_code)
+    if not condition or condition.get("observation_type") != observation_type:
+        raise ValueError("condition_code_invalid")
+    if "authorized_acknowledgement" not in condition.get("persistence_triggers", set()):
+        raise ValueError("acknowledgement_not_allowed")
+    if context_data["context_scope"] not in condition.get("context_scopes", set()):
+        raise ValueError("context_scope_not_allowed")
+    if condition.get("restricted_governance"):
+        raise ValueError("restricted_governance_required")
+    return {
+        "panel_key": panel_key,
+        "condition_code": condition_code,
+        "observation_type": observation_type,
+        "context": context_data,
+        "condition": condition,
+    }
+
+
+def get_open_system_observation_for_condition(panel_key, condition_code, context, scope=None):
+    try:
+        availability = _ensure_registry_available()
+        if not availability.get("available"):
+            return None
+        validated = validate_acknowledgement_condition(panel_key, condition_code, context)
+        conn = get_connection()
+        try:
+            duplicate = _read_open_duplicate(
+                conn,
+                validated["observation_type"],
+                validated["condition_code"],
+                validated["context"],
+            )
+            observation = _public_observation(duplicate)
+            return observation if _observation_visible(observation, scope) else None
+        finally:
+            conn.close()
+    except Exception:
+        return None
+
+
+def acknowledge_system_condition(
+    *,
+    panel_key,
+    condition_code,
+    context,
+    sanitized_summary,
+    reason,
+    actor_context,
+    idempotency_key,
+):
+    try:
+        availability = _ensure_registry_available()
+        if not availability.get("available"):
+            return _result(False, "registry_unavailable", "System Observation foundation is unavailable.")
+        validated = validate_acknowledgement_condition(panel_key, condition_code, context)
+        sanitized_summary = _summary(sanitized_summary, "sanitized_summary", required=True)
+        reason = _reason(reason, "acknowledgement_reason", required=True)
+        idempotency_key = _scalar(idempotency_key, "idempotency_key", required=True, max_length=IDEMPOTENCY_LIMIT)
+
+        conn = get_connection()
+        try:
+            replay = _check_idempotency(
+                conn,
+                idempotency_key,
+                event_type="observation_created",
+                event_summary=sanitized_summary,
+            )
+            if replay:
+                observation = get_system_observation(replay["observation_id"], connection=conn)
+                return _result(True, "idempotent_replay", observation=observation, event=_public_event(replay))
+        except RuntimeError as exc:
+            if str(exc) == "idempotency_conflict":
+                return _result(False, "conflict", "Idempotency key conflicts with a prior operation.")
+            raise
+        finally:
+            conn.close()
+
+        create_result = create_system_observation(
+            observation_type=validated["observation_type"],
+            condition_code=validated["condition_code"],
+            panel_key=validated["panel_key"],
+            persistence_trigger="authorized_acknowledgement",
+            context=validated["context"],
+            sanitized_summary=sanitized_summary,
+            actor_context=actor_context,
+            initial_state="acknowledged",
+            idempotency_key=idempotency_key,
+        )
+        if create_result.get("status") == "duplicate_observation":
+            create_result["message"] = "An open observation already exists for this condition and context."
+        return create_result
+    except ValueError as exc:
+        return _result(False, "invalid_input", str(exc))
+    except Exception:
+        return _result(False, "unexpected_failure", "System condition could not be acknowledged.")
+
+
+def start_system_observation_investigation(
+    *,
+    observation_id,
+    expected_version,
+    reason,
+    event_summary,
+    actor_context,
+    idempotency_key,
+    scope=None,
+):
+    try:
+        availability = _ensure_registry_available()
+        if not availability.get("available"):
+            return _result(False, "registry_unavailable", "System Observation foundation is unavailable.")
+        observation_id = validate_public_observation_id(observation_id)
+        observation = get_system_observation(observation_id)
+        if not _observation_visible(observation, scope):
+            return _result(False, "not_found", "Observation not found.")
+        if observation.get("current_state") != "acknowledged":
+            return _result(False, "invalid_transition", "Only acknowledged observations may begin investigation in this workflow.")
+        expected_version = int(expected_version)
+        reason = _reason(reason, "investigation_reason", required=True)
+        event_summary = _summary(event_summary, "investigation_summary")
+        idempotency_key = _scalar(idempotency_key, "idempotency_key", required=True, max_length=IDEMPOTENCY_LIMIT)
+
+        return transition_system_observation(
+            observation_id=observation_id,
+            target_state="under_review",
+            event_type="investigation_started",
+            expected_version=expected_version,
+            actor_context=actor_context,
+            reason=reason,
+            event_summary=event_summary or reason,
+            idempotency_key=idempotency_key,
+        )
+    except ValueError as exc:
+        return _result(False, "invalid_input", str(exc))
+    except Exception:
+        return _result(False, "unexpected_failure", "System observation investigation could not be started.")
 
 
 def create_system_observation(
@@ -1126,15 +1303,19 @@ __all__ = [
     "PANEL_TYPE_MAP",
     "PERSISTENCE_TRIGGERS",
     "TRANSITIONS",
+    "acknowledge_system_condition",
     "create_system_observation",
     "ensure_system_observation_tables",
     "find_open_duplicate",
     "get_system_observation_detail",
     "get_system_observation",
+    "get_open_system_observation_for_condition",
     "list_system_observation_events",
     "list_system_observations_for_registry",
     "list_system_observations",
+    "start_system_observation_investigation",
     "system_observation_registry_available",
     "transition_system_observation",
+    "validate_acknowledgement_condition",
     "validate_public_observation_id",
 ]
