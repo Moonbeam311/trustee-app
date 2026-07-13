@@ -141,7 +141,7 @@
           <select id="destination_type" name="destination_type" required>
             {% for destination in routing_destinations %}
               <option value="{{ destination.get('key') }}">
-                {{ destination.get("label") }}
+                {{ destination.get("label") }}{% if destination.get("record_types") %} - {{ destination.get("record_types")|join(", ") }}{% endif %}
               </option>
             {% endfor %}
           </select>
@@ -185,8 +185,28 @@
       <h2>Routed Destination</h2>
       <p>
         <strong>{{ observation.get("routed_destination").get("type") }}</strong>
-        {{ observation.get("routed_destination").get("record_id") }}
+        {% if observation.get("routed_destination").get("detail_url") %}
+          <a href="{{ observation.get("routed_destination").get("detail_url") }}">
+            {{ observation.get("routed_destination").get("display_label") or observation.get("routed_destination").get("record_id") }}
+          </a>
+        {% else %}
+          {{ observation.get("routed_destination").get("display_label") or observation.get("routed_destination").get("record_id") }}
+        {% endif %}
       </p>
+      <dl class="system-observation-dl">
+        <div>
+          <dt>Record ID</dt>
+          <dd>{{ observation.get("routed_destination").get("record_id") }}</dd>
+        </div>
+        <div>
+          <dt>Record Type</dt>
+          <dd>{{ observation.get("routed_destination").get("record_type") or observation.get("routed_destination").get("type") }}</dd>
+        </div>
+        <div>
+          <dt>Verification Status</dt>
+          <dd>{{ observation.get("routed_destination").get("status") or "Stored Reference" }}</dd>
+        </div>
+      </dl>
       <p class="admin-muted">
         This is a bounded reference recorded in the append-only event history.
         It does not create a destination record or claim institutional

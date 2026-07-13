@@ -61,7 +61,7 @@
       <select id="destination_type" name="destination_type" required>
         {% for destination in routing_destinations %}
           <option value="{{ destination.get('key') }}">
-            {{ destination.get("label") }}
+            {{ destination.get("label") }}{% if destination.get("record_types") %} - {{ destination.get("record_types")|join(", ") }}{% endif %}
           </option>
         {% endfor %}
       </select>
@@ -97,6 +97,15 @@
       type.
     </p>
   {% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Institutional Caution</h2>
+  <p class="admin-muted">
+    The destination record is verified by its owning registry only after the
+    form is submitted. Browser text is not trusted as a destination label,
+    route, status, or institutional determination.
+  </p>
 </section>
 
 <style>

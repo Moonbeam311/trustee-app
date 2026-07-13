@@ -7354,7 +7354,7 @@ def system_observation_route(observation_id):
             "access_denied.html",
             reason="This observation changed before routing was completed. Review the current record and try again if the action is still appropriate.",
         ), 409
-    if result.get("status") in {"not_found", "invalid_input", "destination_not_found"}:
+    if result.get("status") in {"not_found", "invalid_input", "invalid_record_id", "record_type_mismatch"}:
         return render_template(
             "system_observations/route.html",
             detail=detail,
@@ -7362,15 +7362,27 @@ def system_observation_route(observation_id):
             routing_idempotency_key=request.form.get("idempotency_key") or secrets.token_urlsafe(24),
             error_message=result.get("message") or "Routing destination could not be verified.",
         ), 400
+    if result.get("status") == "destination_not_found":
+        return render_template(
+            "system_observations/route.html",
+            detail=detail,
+            routing_destinations=routing_destinations,
+            routing_idempotency_key=request.form.get("idempotency_key") or secrets.token_urlsafe(24),
+            error_message=result.get("message") or "Routing destination could not be verified.",
+        ), 404
     if result.get("status") in {
         "invalid_transition",
         "conflict",
         "duplicate_destination",
         "destination_not_allowed",
         "scope_mismatch",
+        "context_mismatch",
+        "cross_firm_destination",
+        "destination_access_denied",
+        "destination_inactive",
     }:
         return render_template("access_denied.html", reason=result.get("message") or "System observation cannot be routed."), 409
-    if result.get("status") in {"registry_unavailable", "destination_unavailable"}:
+    if result.get("status") in {"registry_unavailable", "destination_unavailable", "restricted_destination_unavailable"}:
         return render_template("access_denied.html", reason=result.get("message") or "Routing destination is unavailable."), 503
     return render_template("access_denied.html", reason="System observation could not be routed."), 400
 

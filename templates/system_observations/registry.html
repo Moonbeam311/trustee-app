@@ -85,7 +85,8 @@
                 {% if observation.get("routed_destination") %}
                   {{ observation.get("routed_destination").get("type") }}
                   <span class="system-observation-key">
-                    {{ observation.get("routed_destination").get("record_id") }}
+                    {{ observation.get("routed_destination").get("display_label") or observation.get("routed_destination").get("record_id") }}
+                    ({{ observation.get("routed_destination").get("record_id") }})
                   </span>
                 {% else %}
                   None
