@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-card system-observation-registry">
+  <h1>System Observation Registry</h1>
+  <p class="admin-muted">
+    This registry is read-only. An observation records a governed System
+    condition and its append-only lifecycle history. It does not by itself
+    prove resolution, compliance, recoverability, approval, or completed
+    technical action.
+  </p>
+  <div class="admin-actions">
+    <a href="{{ url_for('admin_ios_workspace', workspace_key='system') }}">
+      Back to System Workspace
+    </a>
+  </div>
+</section>
+
+{% if not registry.get("available") %}
+  <section class="admin-card">
+    <h2>Registry Unavailable</h2>
+    <p class="admin-muted">
+      Registry unavailable because the System Observation foundation migration
+      has not been applied.
+    </p>
+  </section>
+{% elif not registry.get("observations") %}
+  <section class="admin-card">
+    <h2>No Persistent Observations Recorded</h2>
+    <p class="admin-muted">
+      No persistent System observations are currently recorded.
+    </p>
+    <p class="admin-muted">
+      This does not prove that every System condition is ready, protected,
+      verified, or assessed.
+    </p>
+  </section>
+{% else %}
+  <section class="admin-card">
+    <h2>Observation List</h2>
+    <p class="admin-muted">
+      Open observations are listed first, then most recently observed records.
+    </p>
+    <div class="system-observation-table-wrap">
+      <table class="system-observation-table">
+        <thead>
+          <tr>
+            <th scope="col">Observation ID</th>
+            <th scope="col">Panel</th>
+            <th scope="col">Condition</th>
+            <th scope="col">Current State</th>
+            <th scope="col">Context</th>
+            <th scope="col">First Observed</th>
+            <th scope="col">Last Observed</th>
+            <th scope="col">Version</th>
+            <th scope="col">Persistence Trigger</th>
+            <th scope="col">Prior Occurrence</th>
+            <th scope="col">Superseded By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for observation in registry.get("observations") %}
+            <tr>
+              <td>
+                <a href="{{ url_for('system_observation_detail', observation_id=observation.get('observation_id')) }}">
+                  {{ observation.get("observation_id") }}
+                </a>
+              </td>
+              <td>
+                {{ observation.get("panel_label") }}
+                <span class="system-observation-key">
+                  {{ observation.get("panel_key") }}
+                </span>
+              </td>
+              <td>
+                {{ observation.get("condition_label") }}
+                <span class="system-observation-key">
+                  {{ observation.get("condition_code") }}
+                </span>
+              </td>
+              <td>{{ observation.get("current_state_label") }}</td>
+              <td>{{ observation.get("context_display") }}</td>
+              <td>{{ observation.get("first_observed_at") or "Not recorded" }}</td>
+              <td>{{ observation.get("last_observed_at") or "Not recorded" }}</td>
+              <td>{{ observation.get("version") }}</td>
+              <td>{{ observation.get("persistence_trigger_label") }}</td>
+              <td>{{ observation.get("prior_occurrence_id") or "None" }}</td>
+              <td>{{ observation.get("superseded_by_observation_id") or "None" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endif %}
+
+<style>
+  .system-observation-table-wrap {
+    overflow-x: auto;
+  }
+
+  .system-observation-table {
+    border-collapse: collapse;
+    min-width: 980px;
+    width: 100%;
+  }
+
+  .system-observation-table th,
+  .system-observation-table td {
+    border-bottom: 1px solid #d8dee4;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .system-observation-key {
+    color: #57606a;
+    display: block;
+    font-size: 0.8rem;
+    margin-top: 3px;
+  }
+</style>
+{% endblock %}

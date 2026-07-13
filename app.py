@@ -7107,6 +7107,63 @@ def admin_ios_workspace(workspace_key):
     )
 
 
+def _system_observation_read_scope():
+    username = (session.get("username") or "").strip().lower()
+    role = session.get("role")
+    if username == "admin" and role == "Admin":
+        return {"global": True}
+    return {
+        "global": False,
+        "firm_id": session.get("firm_id") or "FIRM-001",
+    }
+
+
+@app.route("/system/observations", methods=["GET"])
+def system_observation_registry():
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_system_observations import (
+        list_system_observations_for_registry,
+    )
+
+    registry = list_system_observations_for_registry(
+        limit=100,
+        scope=_system_observation_read_scope(),
+    )
+    return render_template(
+        "system_observations/registry.html",
+        registry=registry,
+        route_family="/system/observations",
+    ), (200 if registry.get("available") else 503)
+
+
+@app.route("/system/observations/<observation_id>", methods=["GET"])
+def system_observation_detail(observation_id):
+    gate = require_master_admin()
+    if gate:
+        return gate
+
+    from services.services_system_observations import get_system_observation_detail
+
+    detail = get_system_observation_detail(
+        observation_id,
+        scope=_system_observation_read_scope(),
+    )
+    status = 200
+    if not detail.get("available"):
+        status = 503
+    elif detail.get("status") != "found":
+        status = 404
+    return render_template(
+        "system_observations/detail.html",
+        detail=detail,
+        observation_id="SYSOBS-0000-000000",
+        route_family="/system/observations",
+    ), status
+
+
 @app.route("/objects/<object_type>/<object_id>")
 def universal_object_dashboard(object_type, object_id):
     if not session.get("user_id") and not session.get("username"):

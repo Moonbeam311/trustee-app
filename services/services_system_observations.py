@@ -19,6 +19,17 @@ from models.models_system_observations import (
 SUMMARY_LIMIT = 1000
 SCALAR_LIMIT = 120
 IDEMPOTENCY_LIMIT = 120
+READ_LIMIT = 250
+PUBLIC_OBSERVATION_ID_RE = re.compile(r"^SYSOBS-\d{4}-\d{6}$")
+ALLOWED_RELATED_RECORD_TYPES = {
+    "Archive",
+    "Compliance",
+    "Governance",
+    "Matter",
+    "People",
+    "Restricted Procedure Governance",
+    "System Audit",
+}
 SENSITIVE_MARKERS = {
     "password",
     "password_hash",
@@ -34,6 +45,31 @@ SENSITIVE_MARKERS = {
     "repair command",
     "bootstrap credential",
     "reset credential",
+}
+
+OBSERVATION_TYPE_LABELS = {
+    key: key.replace("_", " ").title()
+    for key in OBSERVATION_TYPES
+}
+PANEL_LABELS = {
+    "protected_user_accounts": "Protected User Accounts",
+    "application_permission_controls": "Application Permission Controls",
+    "authentication_session_security": "Authentication and Session Security",
+    "audit_security_oversight": "Audit and Security Oversight",
+    "backup_data_preservation": "Backup and Data Preservation",
+    "deployment_production_health": "Deployment and Production Health",
+    "database_migration_posture": "Database and Migration Posture",
+    "feature_flags_operating_policy": "Feature Flags and Operating Policy",
+    "institutional_role_assignments": "Institutional Role Assignments",
+    "recovery_repair_controls": "Recovery and Repair Controls",
+}
+CONTEXT_SCOPE_LABELS = {
+    "platform_scoped": "Platform-Wide Observation",
+    "deployment_scoped": "Deployment-Scoped Observation",
+    "firm_scoped": "Firm-Scoped Observation",
+    "institution_scoped": "Institution-Scoped Observation",
+    "trust_scoped": "Trust-Scoped Observation",
+    "matter_scoped": "Matter-Scoped Observation",
 }
 
 TRANSITIONS = {
@@ -753,6 +789,333 @@ def list_system_observations(filters=None, limit=100):
         conn.close()
 
 
+def _tables_available(conn):
+    names = {
+        row["name"]
+        for row in conn.execute(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name IN ('system_observations', 'system_observation_events')
+            """
+        ).fetchall()
+    }
+    return {
+        "available": names == {"system_observations", "system_observation_events"},
+        "missing": sorted({"system_observations", "system_observation_events"} - names),
+    }
+
+
+def system_observation_registry_available():
+    conn = get_connection()
+    try:
+        return _tables_available(conn)
+    except Exception:
+        return {
+            "available": False,
+            "missing": ["system_observations", "system_observation_events"],
+        }
+    finally:
+        conn.close()
+
+
+def _label_key(value):
+    return (value or "").replace("_", " ").title()
+
+
+def _bounded_reference_type(value):
+    text = _scalar(value, "related_record_type")
+    if not text:
+        return None
+    for allowed in ALLOWED_RELATED_RECORD_TYPES:
+        if text.lower() == allowed.lower():
+            return allowed
+    return None
+
+
+def _record_reference(record_type, record_id):
+    safe_type = _bounded_reference_type(record_type)
+    safe_id = _scalar(record_id, "related_record_id")
+    if not (safe_type and safe_id):
+        return None
+    return {
+        "type": safe_type,
+        "record_id": safe_id,
+        "link": None,
+        "caution": "Review the governed destination record for authoritative status and scope.",
+    }
+
+
+def _context_values(observation):
+    scope = observation.get("context_scope")
+    if scope == "platform_scoped":
+        return {
+            "scope": scope,
+            "scope_label": CONTEXT_SCOPE_LABELS.get(scope, _label_key(scope)),
+            "display": "Platform-wide observation",
+            "items": [],
+        }
+
+    candidates = [
+        ("firm_id", "Firm"),
+        ("institution_id", "Institution"),
+        ("trust_id", "Trust"),
+        ("matter_id", "Matter"),
+        ("deployment_key", "Deployment"),
+    ]
+    items = [
+        {"label": label, "value": observation.get(key)}
+        for key, label in candidates
+        if observation.get(key)
+    ]
+    display = " / ".join(item["value"] for item in items) if items else "Bounded context"
+    return {
+        "scope": scope,
+        "scope_label": CONTEXT_SCOPE_LABELS.get(scope, _label_key(scope)),
+        "display": display,
+        "items": items,
+    }
+
+
+def _state_rank(state):
+    if state in OPEN_STATES:
+        return 0
+    if state in CLOSED_STATES:
+        return 1
+    return 2
+
+
+def _observation_visible(observation, scope=None):
+    if not observation:
+        return False
+    scope = scope or {}
+    if scope.get("global"):
+        return True
+
+    allowed_firm_id = _scalar(scope.get("firm_id"), "firm_id")
+    if not allowed_firm_id:
+        return False
+
+    observation_firm = observation.get("firm_id")
+    if observation_firm:
+        return observation_firm == allowed_firm_id
+
+    if observation.get("context_scope") == "firm_scoped":
+        return observation.get("context_id") == allowed_firm_id
+
+    return False
+
+
+def _view_observation(observation):
+    if not observation:
+        return None
+    condition = CONDITION_CODE_REGISTRY.get(observation.get("condition_code"), {})
+    context = _context_values(observation)
+    return {
+        "observation_id": observation.get("observation_id"),
+        "observation_type": observation.get("observation_type"),
+        "observation_type_label": OBSERVATION_TYPE_LABELS.get(
+            observation.get("observation_type"),
+            _label_key(observation.get("observation_type")),
+        ),
+        "panel_key": observation.get("panel_key"),
+        "panel_label": PANEL_LABELS.get(
+            observation.get("panel_key"),
+            _label_key(observation.get("panel_key")),
+        ),
+        "condition_code": observation.get("condition_code"),
+        "condition_label": condition.get("label") or _label_key(observation.get("condition_code")),
+        "current_state": observation.get("current_state"),
+        "current_state_label": _label_key(observation.get("current_state")),
+        "persistence_trigger": observation.get("persistence_trigger"),
+        "persistence_trigger_label": _label_key(observation.get("persistence_trigger")),
+        "context": context,
+        "context_scope": observation.get("context_scope"),
+        "context_display": context.get("display"),
+        "sanitized_summary": observation.get("sanitized_summary") or "",
+        "first_observed_at": observation.get("first_observed_at"),
+        "last_observed_at": observation.get("last_observed_at"),
+        "version": observation.get("version"),
+        "prior_occurrence_id": observation.get("prior_occurrence_id"),
+        "superseded_by_observation_id": observation.get("superseded_by_observation_id"),
+        "created_by": observation.get("created_by"),
+        "created_at": observation.get("created_at"),
+        "updated_by": observation.get("updated_by"),
+        "updated_at": observation.get("updated_at"),
+    }
+
+
+def _view_event(event):
+    reference = _record_reference(event.get("related_record_type"), event.get("related_record_id"))
+    authority = _record_reference(event.get("authority_record_type"), event.get("authority_record_id"))
+    return {
+        "observation_event_id": event.get("observation_event_id"),
+        "event_type": event.get("event_type"),
+        "event_type_label": _label_key(event.get("event_type")),
+        "prior_state": event.get("prior_state"),
+        "prior_state_label": _label_key(event.get("prior_state")),
+        "resulting_state": event.get("resulting_state"),
+        "resulting_state_label": _label_key(event.get("resulting_state")),
+        "actor_label": event.get("actor_label"),
+        "actor_id": event.get("actor_id"),
+        "authority_record_type": authority.get("type") if authority else None,
+        "authority_record_id": authority.get("record_id") if authority else None,
+        "authority_reference": authority,
+        "event_summary": event.get("event_summary") or "",
+        "reason_code": event.get("reason_code"),
+        "reason_code_label": _label_key(event.get("reason_code")),
+        "related_record_type": reference.get("type") if reference else None,
+        "related_record_id": reference.get("record_id") if reference else None,
+        "related_reference": reference,
+        "created_at": event.get("created_at"),
+    }
+
+
+def list_system_observations_for_registry(filters=None, limit=100, scope=None):
+    filters = filters or {}
+    limit = max(1, min(int(limit or 100), READ_LIMIT))
+    allowed_filters = {
+        "observation_type",
+        "condition_code",
+        "current_state",
+        "context_scope",
+        "panel_key",
+    }
+    where = []
+    params = []
+    for key in sorted(set(filters) & allowed_filters):
+        value = _scalar(filters.get(key), key)
+        if value:
+            where.append(f"{key} = ?")
+            params.append(value)
+
+    conn = get_connection()
+    try:
+        availability = _tables_available(conn)
+        if not availability["available"]:
+            return {
+                "available": False,
+                "missing": availability["missing"],
+                "observations": [],
+            }
+
+        sql = "SELECT * FROM system_observations"
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        sql += """
+            ORDER BY
+                CASE
+                    WHEN current_state IN ('acknowledged', 'under_review', 'deferred', 'routed') THEN 0
+                    WHEN current_state IN ('closed_no_action', 'closed_resolved', 'superseded') THEN 1
+                    ELSE 2
+                END ASC,
+                COALESCE(last_observed_at, created_at, '') DESC,
+                observation_id DESC
+            LIMIT ?
+        """
+        params.append(limit)
+        rows = [_public_observation(row) for row in conn.execute(sql, params).fetchall()]
+        visible = [row for row in rows if _observation_visible(row, scope)]
+        return {
+            "available": True,
+            "missing": [],
+            "observations": [_view_observation(row) for row in visible],
+        }
+    except Exception:
+        return {
+            "available": False,
+            "missing": ["system_observations", "system_observation_events"],
+            "observations": [],
+        }
+    finally:
+        conn.close()
+
+
+def get_system_observation_detail(observation_id, scope=None):
+    try:
+        observation_id = validate_public_observation_id(observation_id)
+    except ValueError:
+        return {"available": True, "status": "not_found", "observation": None, "events": []}
+
+    conn = get_connection()
+    try:
+        availability = _tables_available(conn)
+        if not availability["available"]:
+            return {
+                "available": False,
+                "status": "unavailable",
+                "missing": availability["missing"],
+                "observation": None,
+                "events": [],
+            }
+
+        observation = _public_observation(
+            conn.execute(
+                "SELECT * FROM system_observations WHERE observation_id = ?",
+                (observation_id,),
+            ).fetchone()
+        )
+        if not _observation_visible(observation, scope):
+            return {"available": True, "status": "not_found", "observation": None, "events": []}
+
+        event_rows = conn.execute(
+            """
+            SELECT *
+            FROM system_observation_events
+            WHERE observation_id = ?
+            ORDER BY created_at ASC, id ASC
+            """,
+            (observation_id,),
+        ).fetchall()
+        events = [_view_event(_public_event(row)) for row in event_rows]
+
+        prior = None
+        if observation.get("prior_occurrence_id"):
+            prior_row = _public_observation(
+                conn.execute(
+                    "SELECT * FROM system_observations WHERE observation_id = ?",
+                    (observation.get("prior_occurrence_id"),),
+                ).fetchone()
+            )
+            prior = _view_observation(prior_row) if _observation_visible(prior_row, scope) else None
+
+        superseded_by = None
+        if observation.get("superseded_by_observation_id"):
+            superseded_row = _public_observation(
+                conn.execute(
+                    "SELECT * FROM system_observations WHERE observation_id = ?",
+                    (observation.get("superseded_by_observation_id"),),
+                ).fetchone()
+            )
+            superseded_by = (
+                _view_observation(superseded_row)
+                if _observation_visible(superseded_row, scope)
+                else None
+            )
+
+        reopened = any(event.get("event_type") == "reopened" for event in events)
+        return {
+            "available": True,
+            "status": "found",
+            "observation": _view_observation(observation),
+            "events": events,
+            "prior_occurrence": prior,
+            "superseded_by": superseded_by,
+            "has_reopened_history": reopened,
+        }
+    except Exception:
+        return {
+            "available": False,
+            "status": "unavailable",
+            "missing": ["system_observations", "system_observation_events"],
+            "observation": None,
+            "events": [],
+        }
+    finally:
+        conn.close()
+
+
 __all__ = [
     "CONDITION_CODE_REGISTRY",
     "CONTEXT_SCOPES",
@@ -766,9 +1129,12 @@ __all__ = [
     "create_system_observation",
     "ensure_system_observation_tables",
     "find_open_duplicate",
+    "get_system_observation_detail",
     "get_system_observation",
     "list_system_observation_events",
+    "list_system_observations_for_registry",
     "list_system_observations",
+    "system_observation_registry_available",
     "transition_system_observation",
     "validate_public_observation_id",
 ]

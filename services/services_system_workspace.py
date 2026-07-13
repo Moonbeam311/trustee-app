@@ -186,6 +186,7 @@ def _panel(
     exception_state=False,
     exception_label=None,
     operator_guidance=None,
+    secondary_links=None,
 ):
     if status not in APP_ROUTE_STATUSES:
         status = "not_assessed"
@@ -205,6 +206,7 @@ def _panel(
         "exception_state": bool(exception_state),
         "exception_label": exception_label,
         "operator_guidance": operator_guidance,
+        "secondary_links": secondary_links or [],
         "observed_condition": summary,
         "decision_required": False,
         "decision_owner": None,
@@ -450,6 +452,13 @@ def _audit_security_oversight_panel():
             "Open Audit Oversight",
             "Read-only oversight",
             "System / Evidence",
+            secondary_links=[
+                {
+                    "route": "/system/observations",
+                    "label": "System Observation Registry",
+                    "description": "Review persistent System observations and their append-only lifecycle history.",
+                }
+            ],
             metrics=[
                 _metric("Audit route", "Yes"),
                 _metric("Integrity status", "Bounded pass" if status == "ready" else "Attention"),
@@ -471,6 +480,13 @@ def _audit_security_oversight_panel():
             "Open Audit Oversight",
             "Read-only oversight",
             "System / Evidence",
+            secondary_links=[
+                {
+                    "route": "/system/observations",
+                    "label": "System Observation Registry",
+                    "description": "Review persistent System observations and their append-only lifecycle history.",
+                }
+            ],
             metrics=[_metric("Integrity status", "Not assessed")],
             exception_state=True,
             exception_label="Not assessed",

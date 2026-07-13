@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-card system-observation-detail">
+  <h1>System Observation Detail</h1>
+  <p class="admin-muted">
+    This interface is read-only. Events are preserved as historical records
+    and are not edited through this interface.
+  </p>
+  <div class="admin-actions">
+    <a href="{{ url_for('system_observation_registry') }}">
+      Back to System Observation Registry
+    </a>
+    <a href="{{ url_for('admin_ios_workspace', workspace_key='system') }}">
+      Back to System Workspace
+    </a>
+  </div>
+</section>
+
+{% if not detail.get("available") %}
+  <section class="admin-card">
+    <h2>Registry Unavailable</h2>
+    <p class="admin-muted">
+      Registry unavailable because the System Observation foundation migration
+      has not been applied.
+    </p>
+  </section>
+{% elif detail.get("status") != "found" %}
+  <section class="admin-card">
+    <h2>Observation Not Found</h2>
+    <p class="admin-muted">
+      The requested System observation is not available through your current
+      authorized scope.
+    </p>
+  </section>
+{% else %}
+  {% set observation = detail.get("observation") %}
+
+  <section class="admin-card">
+    <h2>Observation Identity</h2>
+    <dl class="system-observation-dl">
+      <div>
+        <dt>Observation ID</dt>
+        <dd>{{ observation.get("observation_id") }}</dd>
+      </div>
+      <div>
+        <dt>Observation Type</dt>
+        <dd>{{ observation.get("observation_type_label") }} ({{ observation.get("observation_type") }})</dd>
+      </div>
+      <div>
+        <dt>System Panel</dt>
+        <dd>{{ observation.get("panel_label") }} ({{ observation.get("panel_key") }})</dd>
+      </div>
+      <div>
+        <dt>Condition Code</dt>
+        <dd>{{ observation.get("condition_label") }} ({{ observation.get("condition_code") }})</dd>
+      </div>
+      <div>
+        <dt>Persistence Trigger</dt>
+        <dd>{{ observation.get("persistence_trigger_label") }}</dd>
+      </div>
+      <div>
+        <dt>Current State</dt>
+        <dd>{{ observation.get("current_state") }}</dd>
+      </div>
+      <div>
+        <dt>Version</dt>
+        <dd>{{ observation.get("version") }}</dd>
+      </div>
+      <div>
+        <dt>Created</dt>
+        <dd>{{ observation.get("created_at") or "Not recorded" }}</dd>
+      </div>
+      <div>
+        <dt>Last Updated</dt>
+        <dd>{{ observation.get("updated_at") or "Not recorded" }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="admin-card">
+    <h2>Current Lifecycle Posture</h2>
+    <p>
+      <strong>{{ observation.get("current_state") }}</strong>
+    </p>
+    <p class="admin-muted">
+      The current state is a registry posture, not proof that an institutional
+      determination or technical action has occurred.
+    </p>
+  </section>
+
+  <section class="admin-card">
+    <h2>Condition and Source Context</h2>
+    {% set context = observation.get("context", {}) %}
+    <p>
+      <strong>{{ context.get("scope_label") }}</strong>
+    </p>
+    {% if context.get("items") %}
+      <dl class="system-observation-dl">
+        {% for item in context.get("items") %}
+          <div>
+            <dt>{{ item.get("label") }}</dt>
+            <dd>{{ item.get("value") }}</dd>
+          </div>
+        {% endfor %}
+      </dl>
+    {% else %}
+      <p class="admin-muted">{{ context.get("display") }}</p>
+    {% endif %}
+  </section>
+
+  <section class="admin-card">
+    <h2>Observation Summary</h2>
+    <pre class="system-observation-summary">{{ observation.get("sanitized_summary") }}</pre>
+  </section>
+
+  <section class="admin-card">
+    <h2>Occurrence Continuity</h2>
+    {% if observation.get("prior_occurrence_id") %}
+      <p>
+        <strong>Prior Occurrence:</strong>
+        {% if detail.get("prior_occurrence") %}
+          <a href="{{ url_for('system_observation_detail', observation_id=observation.get('prior_occurrence_id')) }}">
+            {{ observation.get("prior_occurrence_id") }}
+          </a>
+        {% else %}
+          {{ observation.get("prior_occurrence_id") }}
+        {% endif %}
+      </p>
+      <p class="admin-muted">
+        Recurring: A new observation was created after a prior occurrence had
+        been validly closed.
+      </p>
+    {% endif %}
+
+    {% if observation.get("superseded_by_observation_id") %}
+      <p>
+        <strong>Superseded By:</strong>
+        {% if detail.get("superseded_by") %}
+          <a href="{{ url_for('system_observation_detail', observation_id=observation.get('superseded_by_observation_id')) }}">
+            {{ observation.get("superseded_by_observation_id") }}
+          </a>
+        {% else %}
+          {{ observation.get("superseded_by_observation_id") }}
+        {% endif %}
+      </p>
+      <p class="admin-muted">
+        Superseded: A successor observation replaced this record's active
+        posture without deleting its history.
+      </p>
+    {% endif %}
+
+    {% if detail.get("has_reopened_history") %}
+      <p class="admin-muted">
+        Reopened: The same governed occurrence returned to active review.
+      </p>
+    {% endif %}
+
+    {% if not observation.get("prior_occurrence_id")
+          and not observation.get("superseded_by_observation_id")
+          and not detail.get("has_reopened_history") %}
+      <p class="admin-muted">No occurrence continuity references are recorded.</p>
+    {% endif %}
+  </section>
+
+  <section class="admin-card">
+    <h2>Append-Only Event History</h2>
+    <p class="admin-muted">
+      Events are preserved as historical records and are not edited through
+      this interface.
+    </p>
+    {% if detail.get("events") %}
+      <ol class="system-observation-events">
+        {% for event in detail.get("events") %}
+          <li>
+            <h3>{{ event.get("event_type_label") }}</h3>
+            <dl class="system-observation-dl">
+              <div>
+                <dt>Event ID</dt>
+                <dd>{{ event.get("observation_event_id") }}</dd>
+              </div>
+              {% if event.get("prior_state") %}
+                <div>
+                  <dt>Prior State</dt>
+                  <dd>{{ event.get("prior_state") }}</dd>
+                </div>
+              {% endif %}
+              {% if event.get("resulting_state") %}
+                <div>
+                  <dt>Resulting State</dt>
+                  <dd>{{ event.get("resulting_state") }}</dd>
+                </div>
+              {% endif %}
+              {% if event.get("actor_label") %}
+                <div>
+                  <dt>Actor</dt>
+                  <dd>{{ event.get("actor_label") }}{% if event.get("actor_id") %} ({{ event.get("actor_id") }}){% endif %}</dd>
+                </div>
+              {% endif %}
+              <div>
+                <dt>Created At</dt>
+                <dd>{{ event.get("created_at") or "Not recorded" }}</dd>
+              </div>
+              {% if event.get("reason_code") %}
+                <div>
+                  <dt>Reason Code</dt>
+                  <dd>{{ event.get("reason_code") }}</dd>
+                </div>
+              {% endif %}
+            </dl>
+            {% if event.get("event_summary") %}
+              <pre class="system-observation-summary">{{ event.get("event_summary") }}</pre>
+            {% endif %}
+            {% if event.get("authority_reference") %}
+              <p>
+                <strong>Authority Reference:</strong>
+                {{ event.get("authority_record_type") }}
+                {{ event.get("authority_record_id") }}
+              </p>
+              <p class="admin-muted">
+                Authority reference recorded. Review the governed destination
+                record for authoritative status and scope.
+              </p>
+            {% endif %}
+            {% if event.get("related_reference") %}
+              <p>
+                <strong>Related Governed Record:</strong>
+                {{ event.get("related_record_type") }}
+                {{ event.get("related_record_id") }}
+              </p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="admin-muted">No event history is available for this observation.</p>
+    {% endif %}
+  </section>
+
+  <section class="admin-card">
+    <h2>Related Governed Records</h2>
+    <p class="admin-muted">
+      Related references shown here are bounded references recorded in the
+      append-only event history. They do not create relationships or destination
+      records.
+    </p>
+  </section>
+
+  <section class="admin-card">
+    <h2>Institutional Caution</h2>
+    <p class="admin-muted">
+      An observation records a governed System condition and its lifecycle
+      history. It does not by itself prove legal compliance, technical
+      resolution, successful recovery, backup recoverability, institutional
+      approval, or completion of a related action.
+    </p>
+  </section>
+{% endif %}
+
+<style>
+  .system-observation-dl {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .system-observation-dl div {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .system-observation-dl dt {
+    color: #57606a;
+    font-size: 0.82rem;
+  }
+
+  .system-observation-dl dd {
+    font-weight: 700;
+    margin: 4px 0 0;
+    overflow-wrap: anywhere;
+  }
+
+  .system-observation-summary {
+    background: #f6f8fa;
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    margin: 0;
+    max-height: 260px;
+    overflow: auto;
+    padding: 12px;
+    white-space: pre-wrap;
+  }
+
+  .system-observation-events {
+    display: grid;
+    gap: 12px;
+    margin: 12px 0 0;
+    padding-left: 24px;
+  }
+
+  .system-observation-events li {
+    border: 1px solid #d8dee4;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .system-observation-events h3 {
+    margin-top: 0;
+  }
+</style>
+{% endblock %}

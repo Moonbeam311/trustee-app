@@ -195,6 +195,19 @@
               Status only. No action link is exposed from this panel.
             </p>
           {% endif %}
+
+          {% if panel.get("secondary_links") %}
+            <div class="system-oversight-card__secondary-links">
+              {% for link in panel.get("secondary_links") %}
+                <p>
+                  <a href="{{ link.get('route') }}">{{ link.get("label") }}</a>
+                </p>
+                {% if link.get("description") %}
+                  <p class="admin-muted">{{ link.get("description") }}</p>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% endif %}
         </article>
       {% endfor %}
     </div>
@@ -441,5 +454,19 @@
 
   .system-oversight-card__actions {
     margin-top: 12px;
+  }
+
+  .system-oversight-card__secondary-links {
+    border-top: 1px solid #d8dee4;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .system-oversight-card__secondary-links p {
+    margin: 0;
+  }
+
+  .system-oversight-card__secondary-links p + p {
+    margin-top: 6px;
   }
 </style>
