@@ -4,7 +4,6 @@ from database.db import get_connection
 
 
 DESTINATION_LABELS = {
-    "system_audit": "System Audit",
     "governance": "Governance",
     "compliance": "Compliance",
     "archive": "Archive",
@@ -258,13 +257,6 @@ def verify_matter_destination(record_id, observation=None, actor_context=None, c
             conn.close()
 
 
-def verify_system_audit_destination(record_id, observation=None, actor_context=None, connection=None):
-    return _failure(
-        "destination_unavailable",
-        "No authoritative routable System Audit destination registry is available.",
-    )
-
-
 def verify_compliance_destination(record_id, observation=None, actor_context=None, connection=None):
     return _failure(
         "destination_unavailable",
@@ -294,7 +286,6 @@ def verify_restricted_procedure_destination(record_id, observation=None, actor_c
 
 
 DESTINATION_VERIFIERS = {
-    "system_audit": verify_system_audit_destination,
     "governance": verify_governance_destination,
     "compliance": verify_compliance_destination,
     "archive": verify_archive_destination,
@@ -317,6 +308,20 @@ def verify_destination_record(destination_type, record_id, observation=None, act
 def resolve_destination_reference(record_type, record_id, observation=None, actor_context=None, connection=None):
     label_to_key = {label.lower(): key for key, label in DESTINATION_LABELS.items()}
     record_type_key = str(record_type or "").strip().lower()
+    if record_type_key in {"system audit", "system_audit"}:
+        return {
+            "type": "System Audit - historical reference",
+            "record_id": _bounded(record_id, 120),
+            "status": "historical_reference",
+            "display_label": _bounded(record_id, 120),
+            "detail_url": None,
+            "record_type": "System Audit",
+            "caution": (
+                "This historical reference was recorded under an earlier routing "
+                "vocabulary. System Audit is no longer treated as a governed "
+                "routing destination."
+            ),
+        }
     record_type_to_key = {
         "institutional directive": "governance",
         "institutional policy": "governance",
@@ -377,13 +382,6 @@ def get_routable_destination_options(destination_keys):
 
 def destination_registry_report():
     return {
-        "system_audit": {
-            "authoritative_registry": "None identified as routable",
-            "verifier": "verify_system_audit_destination",
-            "supported_record_types": [],
-            "stable_public_id": None,
-            "implementation_status": "bounded_unavailable",
-        },
         "governance": {
             "authoritative_registry": "institutional_directives, institutional_policies",
             "verifier": "verify_governance_destination",

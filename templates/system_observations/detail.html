@@ -212,6 +212,11 @@
         It does not create a destination record or claim institutional
         resolution.
       </p>
+      {% if observation.get("routed_destination").get("caution") %}
+        <p class="admin-muted">
+          {{ observation.get("routed_destination").get("caution") }}
+        </p>
+      {% endif %}
     </section>
   {% endif %}
 
@@ -354,6 +359,11 @@
                 {{ event.get("related_record_type") }}
                 {{ event.get("related_record_id") }}
               </p>
+              {% if event.get("related_reference").get("caution") %}
+                <p class="admin-muted">
+                  {{ event.get("related_reference").get("caution") }}
+                </p>
+              {% endif %}
             {% endif %}
           </li>
         {% endfor %}

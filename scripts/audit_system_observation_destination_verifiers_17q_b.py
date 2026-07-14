@@ -394,7 +394,6 @@ def run():
     results = []
 
     expected_keys = {
-        "system_audit",
         "governance",
         "compliance",
         "archive",
@@ -429,7 +428,14 @@ def run():
     record(results, "Governance inactive", verify_destination_record("governance", "POL-2026-0002", observation=obs, actor_context=actor_context).get("status") == "destination_inactive")
     record(results, "Governance cross-firm", verify_destination_record("governance", "DIR-2026-9999", observation=obs, actor_context=actor_context).get("status") == "cross_firm_destination")
 
-    for key in ("system_audit", "compliance", "archive", "people"):
+    record(
+        results,
+        "System Audit removed from verifier registry",
+        "system_audit" not in DESTINATION_VERIFIERS
+        and verify_destination_record("system_audit", "AUDIT-17QB", observation=obs, actor_context=actor_context).get("status")
+        == "invalid_destination_type",
+    )
+    for key in ("compliance", "archive", "people"):
         status = verify_destination_record(key, f"{key.upper()}-17QB", observation=obs, actor_context=actor_context).get("status")
         record(results, f"{key} bounded unavailable", status == "destination_unavailable")
     record(
@@ -528,7 +534,7 @@ def run():
     names = [
         "Verifier registry",
         "Verifier dispatch",
-        "System Audit verifier",
+        "System Audit removed from verifier registry",
         "Governance verifier",
         "Compliance verifier",
         "Archive verifier",
@@ -566,7 +572,7 @@ def run():
     ]
     passed_lookup = {name: passed for name, passed, _ in results}
     implied_passes = {
-        "System Audit verifier": report["system_audit"]["implementation_status"] == "bounded_unavailable",
+        "System Audit removed from verifier registry": "system_audit" not in report and "system_audit" not in DESTINATION_VERIFIERS,
         "Compliance verifier": report["compliance"]["implementation_status"] == "bounded_unavailable",
         "Archive verifier": report["archive"]["implementation_status"] == "bounded_unavailable",
         "People verifier": report["people"]["implementation_status"] == "bounded_unavailable",

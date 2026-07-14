@@ -37,32 +37,29 @@ ALLOWED_RELATED_RECORD_TYPES = {
     "Matter",
     "People",
     "Restricted Procedure Governance",
-    "System Audit",
 }
 ROUTING_DESTINATIONS = DESTINATION_LABELS
 ROUTING_DESTINATION_MATRIX = {
-    "account_posture": {"people", "governance", "compliance", "matter", "system_audit"},
-    "permission_posture": {"governance", "compliance", "matter", "system_audit"},
-    "authentication_session_posture": {"governance", "compliance", "matter", "system_audit"},
-    "audit_integrity_posture": {"system_audit", "compliance", "governance", "matter"},
-    "backup_preservation_posture": {"archive", "compliance", "governance", "matter", "system_audit"},
-    "deployment_health_posture": {"governance", "compliance", "matter", "system_audit"},
+    "account_posture": {"people", "governance", "compliance", "matter"},
+    "permission_posture": {"governance", "compliance", "matter"},
+    "authentication_session_posture": {"governance", "compliance", "matter"},
+    "audit_integrity_posture": {"compliance", "governance", "matter"},
+    "backup_preservation_posture": {"archive", "compliance", "governance", "matter"},
+    "deployment_health_posture": {"governance", "compliance", "matter"},
     "database_migration_posture": {
         "restricted_procedure_governance",
         "governance",
         "compliance",
         "matter",
-        "system_audit",
     },
-    "operating_policy_posture": {"governance", "compliance", "matter", "system_audit"},
-    "institutional_role_posture": {"people", "governance", "compliance", "matter", "system_audit"},
+    "operating_policy_posture": {"governance", "compliance", "matter"},
+    "institutional_role_posture": {"people", "governance", "compliance", "matter"},
     "recovery_repair_posture": {
         "restricted_procedure_governance",
         "governance",
         "compliance",
         "archive",
         "matter",
-        "system_audit",
     },
 }
 SENSITIVE_MARKERS = {
@@ -594,6 +591,8 @@ def acknowledge_system_condition(
             create_result["message"] = "An open observation already exists for this condition and context."
         return create_result
     except ValueError as exc:
+        if str(exc) == "destination_type_invalid":
+            return _result(False, "invalid_destination_type", "Destination type is not routable.")
         return _result(False, "invalid_input", str(exc))
     except Exception:
         return _result(False, "unexpected_failure", "System condition could not be acknowledged.")
@@ -635,6 +634,8 @@ def start_system_observation_investigation(
             idempotency_key=idempotency_key,
         )
     except ValueError as exc:
+        if str(exc) == "destination_type_invalid":
+            return _result(False, "invalid_destination_type", "Destination type is not routable.")
         return _result(False, "invalid_input", str(exc))
     except Exception:
         return _result(False, "unexpected_failure", "System observation investigation could not be started.")
@@ -765,6 +766,8 @@ def create_system_observation(
             conn.rollback()
             raise
     except ValueError as exc:
+        if str(exc) == "destination_type_invalid":
+            return _result(False, "invalid_destination_type", "Destination type is not routable.")
         return _result(False, "invalid_input", str(exc))
     except RuntimeError as exc:
         return _result(False, "conflict", str(exc))
@@ -946,6 +949,8 @@ def route_system_observation(
             conn.rollback()
             raise
     except ValueError as exc:
+        if str(exc) == "destination_type_invalid":
+            return _result(False, "invalid_destination_type", "Destination type is not routable.")
         return _result(False, "invalid_input", str(exc))
     except RuntimeError as exc:
         if str(exc) == "idempotency_conflict":
@@ -1242,6 +1247,8 @@ def _bounded_reference_type(value):
     text = _scalar(value, "related_record_type")
     if not text:
         return None
+    if text.lower() in {"system audit", "system_audit"}:
+        return "System Audit"
     for allowed in ALLOWED_RELATED_RECORD_TYPES:
         if text.lower() == allowed.lower():
             return allowed
