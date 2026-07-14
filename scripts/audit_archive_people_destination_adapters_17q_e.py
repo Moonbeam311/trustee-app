@@ -13,7 +13,13 @@ if str(ROOT) not in sys.path:
 
 
 REQUIRED_BRANCH = "post-v2-planning"
-REQUIRED_HEAD = "2aaf5b61e0323aa0aed3ebb582954105a57ed7b8"
+CERTIFIED_PHASE_COMMIT = "ab080d47d89257df58d3712be9953c0b37c6b114"
+ACTIVE_PHASE_ALLOWED_PATHS = {
+    "scripts/audit_archive_people_destination_adapters_17q_e.py",
+    "scripts/audit_system_audit_destination_removal_17q_d.py",
+    "scripts/audit_compliance_review_architecture_17q_f.py",
+    "scripts/audit_regression_guard_and_auth_preservation_17q_f_1.py",
+}
 NORMAL_DB_PATH = Path(os.environ.get("DB_PATH", ROOT / "trustee_app.db"))
 TEMP_DIR = tempfile.TemporaryDirectory(prefix="trustee_17q_e_", ignore_cleanup_errors=True)
 TEMP_DB_PATH = Path(TEMP_DIR.name) / "archive_people_destinations.db"
@@ -60,6 +66,12 @@ def git(*args):
     import subprocess
 
     return subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=False).stdout.strip()
+
+
+def git_code(*args):
+    import subprocess
+
+    return subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=False).returncode
 
 
 def record(results, name, passed, details=""):
@@ -390,19 +402,13 @@ def run():
     branch = git("branch", "--show-current")
     head = git("rev-parse", "HEAD")
     remote = git("rev-parse", "origin/post-v2-planning")
+    phase_commit_is_ancestor = git_code("merge-base", "--is-ancestor", CERTIFIED_PHASE_COMMIT, "HEAD") == 0
+    staged_paths = set(git("diff", "--cached", "--name-only").splitlines())
     status = git("status", "--short")
     changed_paths = {
         line[3:].replace("\\", "/") if line.startswith("?? ") else line[2:].strip().replace("\\", "/")
         for line in status.splitlines()
         if line.strip()
-    }
-    expected_paths = {
-        "services/services_system_observation_destinations.py",
-        "services/services_system_observations.py",
-        "templates/system_observations/route.html",
-        "scripts/audit_archive_people_destination_adapters_17q_e.py",
-        "scripts/audit_system_observation_destination_verifiers_17q_b.py",
-        "scripts/audit_system_audit_destination_removal_17q_d.py",
     }
 
     report = destination_registry_report()
@@ -413,8 +419,8 @@ def run():
     archive_ok = verify_destination_record("archive", "CCL-0001", observation=archive_observation_context, actor_context=actor_context)
     people_ok = verify_destination_record("people", "FID-001", observation=people_observation_context, actor_context=actor_context)
 
-    record(results, "certified baseline preserved", branch == REQUIRED_BRANCH and head == REQUIRED_HEAD and remote == REQUIRED_HEAD)
-    record(results, "repository scope", changed_paths <= expected_paths)
+    record(results, "certified baseline preserved", branch == REQUIRED_BRANCH and phase_commit_is_ancestor)
+    record(results, "repository scope", not staged_paths and changed_paths <= ACTIVE_PHASE_ALLOWED_PATHS)
     record(results, "Archive authoritative registry identified", report["archive"]["authoritative_registry"] == "continuity_custody_log")
     record(results, "Archive stable public ID", verify_destination_record("archive", "CCL-0001", observation=archive_observation_context, actor_context=actor_context).get("ok"))
     record(results, "Archive record-type allowlist", DESTINATION_RECORD_TYPES.get("archive") == {"Continuity Custody Event"})

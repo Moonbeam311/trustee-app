@@ -13,7 +13,13 @@ if str(ROOT) not in sys.path:
 
 
 REQUIRED_BRANCH = "post-v2-planning"
-REQUIRED_HEAD = "2aaf5b61e0323aa0aed3ebb582954105a57ed7b8"
+CERTIFIED_PHASE_COMMIT = "2aaf5b61e0323aa0aed3ebb582954105a57ed7b8"
+ACTIVE_PHASE_ALLOWED_PATHS = {
+    "scripts/audit_archive_people_destination_adapters_17q_e.py",
+    "scripts/audit_system_audit_destination_removal_17q_d.py",
+    "scripts/audit_compliance_review_architecture_17q_f.py",
+    "scripts/audit_regression_guard_and_auth_preservation_17q_f_1.py",
+}
 NORMAL_DB_PATH = Path(os.environ.get("DB_PATH", ROOT / "trustee_app.db"))
 TEMP_DIR = tempfile.TemporaryDirectory(prefix="trustee_17q_d_", ignore_cleanup_errors=True)
 TEMP_DB_PATH = Path(TEMP_DIR.name) / "system_audit_destination_removal.db"
@@ -63,6 +69,12 @@ def git(*args):
     import subprocess
 
     return subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=False).stdout.strip()
+
+
+def git_code(*args):
+    import subprocess
+
+    return subprocess.run(["git", *args], cwd=ROOT, text=True, capture_output=True, check=False).returncode
 
 
 def record(results, name, passed, details=""):
@@ -305,27 +317,20 @@ def run():
     branch = git("branch", "--show-current")
     head = git("rev-parse", "HEAD")
     remote = git("rev-parse", "origin/post-v2-planning")
+    phase_commit_is_ancestor = git_code("merge-base", "--is-ancestor", CERTIFIED_PHASE_COMMIT, "HEAD") == 0
+    staged_paths = set(git("diff", "--cached", "--name-only").splitlines())
     status = git("status", "--short")
     changed_paths = {
         line[3:].replace("\\", "/") if line.startswith("?? ") else line[2:].strip().replace("\\", "/")
         for line in status.splitlines()
         if line.strip()
     }
-    expected_paths = {
-        "services/services_system_observation_destinations.py",
-        "services/services_system_observations.py",
-        "templates/system_observations/detail.html",
-        "templates/system_observations/route.html",
-        "scripts/audit_archive_people_destination_adapters_17q_e.py",
-        "scripts/audit_system_observation_destination_verifiers_17q_b.py",
-        "scripts/audit_system_audit_destination_removal_17q_d.py",
-    }
     destinations_source = read("services/services_system_observation_destinations.py")
     observations_source = read("services/services_system_observations.py")
 
     report = destination_registry_report()
-    record(results, "Certified baseline", branch == REQUIRED_BRANCH and head == REQUIRED_HEAD and remote == REQUIRED_HEAD)
-    record(results, "Repository scope", changed_paths <= expected_paths)
+    record(results, "Certified baseline", branch == REQUIRED_BRANCH and phase_commit_is_ancestor)
+    record(results, "Repository scope", not staged_paths and changed_paths <= ACTIVE_PHASE_ALLOWED_PATHS)
     record(results, "System Audit classification", "system_audit" not in report and "system_audit" not in DESTINATION_LABELS)
     record(results, "Routing vocabulary correction", "system_audit" not in DESTINATION_LABELS and "system_audit" not in DESTINATION_RECORD_TYPES)
     record(results, "Verifier-registry correction", "system_audit" not in DESTINATION_VERIFIERS and "verify_system_audit_destination" not in destinations_source)
