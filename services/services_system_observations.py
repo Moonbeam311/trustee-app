@@ -31,6 +31,8 @@ PUBLIC_OBSERVATION_ID_RE = re.compile(r"^SYSOBS-\d{4}-\d{6}$")
 ALLOWED_RELATED_RECORD_TYPES = {
     "Archive",
     "Compliance",
+    "Continuity Custody Event",
+    "Fiduciary Record",
     "Governance",
     "Institutional Directive",
     "Institutional Policy",

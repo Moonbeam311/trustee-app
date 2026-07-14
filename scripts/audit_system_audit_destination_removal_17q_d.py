@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
 
 
 REQUIRED_BRANCH = "post-v2-planning"
-REQUIRED_HEAD = "7626eb3c4e52faa6274ae087b575eff5944b3630"
+REQUIRED_HEAD = "2aaf5b61e0323aa0aed3ebb582954105a57ed7b8"
 NORMAL_DB_PATH = Path(os.environ.get("DB_PATH", ROOT / "trustee_app.db"))
 TEMP_DIR = tempfile.TemporaryDirectory(prefix="trustee_17q_d_", ignore_cleanup_errors=True)
 TEMP_DB_PATH = Path(TEMP_DIR.name) / "system_audit_destination_removal.db"
@@ -315,6 +315,8 @@ def run():
         "services/services_system_observation_destinations.py",
         "services/services_system_observations.py",
         "templates/system_observations/detail.html",
+        "templates/system_observations/route.html",
+        "scripts/audit_archive_people_destination_adapters_17q_e.py",
         "scripts/audit_system_observation_destination_verifiers_17q_b.py",
         "scripts/audit_system_audit_destination_removal_17q_d.py",
     }
@@ -336,8 +338,8 @@ def run():
     record(results, "Governance verifier preserved", governance_status.get("ok") and governance_status.get("status") == "verified")
     record(results, "Matter verifier preserved", matter_status.get("ok") and matter_status.get("status") == "verified")
     record(results, "Compliance remains bounded unavailable", verify_destination_record("compliance", "CMP-17QD", actor_context=actor_context).get("status") == "destination_unavailable")
-    record(results, "Archive remains bounded unavailable", verify_destination_record("archive", "ARC-17QD", actor_context=actor_context).get("status") == "destination_unavailable")
-    record(results, "People remains bounded unavailable", verify_destination_record("people", "PER-17QD", actor_context=actor_context).get("status") == "destination_unavailable")
+    record(results, "Archive no longer reintroduces System Audit", report.get("archive", {}).get("implementation_status") in {"verified_supported", "bounded_unavailable"})
+    record(results, "People no longer reintroduces System Audit", report.get("people", {}).get("implementation_status") in {"verified_supported", "bounded_unavailable"})
     record(
         results,
         "Restricted Procedure remains bounded unavailable",
@@ -510,7 +512,7 @@ def run():
     print("Matter regression")
     print(f"  status={matter_route.get('status')}")
     print("Unavailable-destination preservation")
-    print("  compliance/archive/people/restricted remain unavailable; System Audit is invalid, not unavailable.")
+    print("  compliance/restricted remain unavailable; Archive/People may be supported by later bounded adapters; System Audit is invalid, not unavailable.")
     print("CSRF preservation")
     print("  route form includes CSRF and expected version.")
     print("Authorization preservation")

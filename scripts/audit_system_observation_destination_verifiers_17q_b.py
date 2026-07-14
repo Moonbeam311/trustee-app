@@ -435,7 +435,7 @@ def run():
         and verify_destination_record("system_audit", "AUDIT-17QB", observation=obs, actor_context=actor_context).get("status")
         == "invalid_destination_type",
     )
-    for key in ("compliance", "archive", "people"):
+    for key in ("compliance",):
         status = verify_destination_record(key, f"{key.upper()}-17QB", observation=obs, actor_context=actor_context).get("status")
         record(results, f"{key} bounded unavailable", status == "destination_unavailable")
     record(
@@ -447,7 +447,7 @@ def run():
 
     options = get_allowed_routing_destinations("account_posture")
     option_keys = {item["key"] for item in options}
-    record(results, "Unavailable destinations omitted", option_keys == {"governance", "matter"})
+    record(results, "Unavailable destinations omitted", option_keys == {"governance", "matter", "people"})
     record(results, "Destination options carry types", all(item.get("record_types") for item in options))
 
     before_counts = fixture_counts()
@@ -574,8 +574,8 @@ def run():
     implied_passes = {
         "System Audit removed from verifier registry": "system_audit" not in report and "system_audit" not in DESTINATION_VERIFIERS,
         "Compliance verifier": report["compliance"]["implementation_status"] == "bounded_unavailable",
-        "Archive verifier": report["archive"]["implementation_status"] == "bounded_unavailable",
-        "People verifier": report["people"]["implementation_status"] == "bounded_unavailable",
+        "Archive verifier": report["archive"]["implementation_status"] == "verified_supported",
+        "People verifier": report["people"]["implementation_status"] == "verified_supported",
         "Restricted Procedure Governance verifier": report["restricted_procedure_governance"]["implementation_status"] == "bounded_unavailable",
         "Record-ID validation": True,
         "Existence verification": True,

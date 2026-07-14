@@ -13,19 +13,35 @@ DESTINATION_LABELS = {
 }
 
 DESTINATION_RECORD_TYPES = {
+    "archive": {
+        "Continuity Custody Event",
+    },
     "governance": {
         "Institutional Directive",
         "Institutional Policy",
     },
     "matter": {"Matter"},
+    "people": {
+        "Fiduciary Record",
+    },
 }
 
 DESTINATION_RECORD_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$")
+ARCHIVE_CUSTODY_ID_RE = re.compile(r"^CCL-\d{4}$")
+FIDUCIARY_ID_RE = re.compile(r"^FID-\d{3,6}$")
 GOVERNANCE_ID_RE = re.compile(r"^(DIR|POL)-\d{4}-\d{4}$")
 MATTER_ID_RE = re.compile(r"^MAT-[A-Za-z0-9][A-Za-z0-9_.:-]{0,115}$")
-SUPPORTED_DESTINATIONS = {"governance", "matter"}
+SUPPORTED_DESTINATIONS = {"archive", "governance", "matter", "people"}
+ACTIVE_ARCHIVE_CUSTODY_ACTIONS = {
+    "custody_received",
+    "custody_transferred",
+    "custody_verified",
+    "archive_review",
+    "custody_note",
+}
 ACTIVE_GOVERNANCE_STATUSES = {"Draft", "Issued", "Active", "Completed"}
 ACTIVE_MATTER_STATUSES = {"Open", "Active", "Review", "Intake"}
+ACTIVE_FIDUCIARY_STATUSES = {"Active", "Current", "Appointed", "Authorized", "Accepted", "Verified"}
 
 
 def _bounded(value, limit=200):
@@ -57,7 +73,9 @@ def _verified(
     matter_id=None,
     deployment_key=None,
     record_status=None,
+    eligibility="routable",
     detail_url=None,
+    caution=None,
 ):
     return {
         "ok": True,
@@ -72,7 +90,9 @@ def _verified(
         "matter_id": matter_id,
         "deployment_key": deployment_key,
         "record_status": _bounded(record_status, 80),
+        "eligibility": _bounded(eligibility, 80),
         "detail_url": detail_url,
+        "caution": _bounded(caution, 500) if caution else None,
     }
 
 
@@ -257,6 +277,69 @@ def verify_matter_destination(record_id, observation=None, actor_context=None, c
             conn.close()
 
 
+def verify_archive_destination(record_id, observation=None, actor_context=None, connection=None):
+    record_id = _safe_record_id(record_id)
+    if not record_id:
+        return _failure("invalid_record_id", "Archive destination ID is not supported.")
+    if not record_id.startswith("CCL-"):
+        return _failure("record_type_mismatch", "Archive destination must be a continuity custody event.")
+    if not ARCHIVE_CUSTODY_ID_RE.fullmatch(record_id):
+        return _failure("invalid_record_id", "Archive custody event ID is not supported.")
+
+    owns = connection is None
+    conn = connection or get_connection()
+    try:
+        if not _table_exists(conn, "continuity_custody_log") or not _table_exists(conn, "properties"):
+            return _failure("destination_unavailable", "Archive custody registry is unavailable.")
+        row = conn.execute(
+            """
+            SELECT
+                c.*,
+                p.property_name,
+                p.status AS property_status,
+                p.firm_id AS property_firm_id,
+                p.trust_id AS property_trust_id
+            FROM continuity_custody_log c
+            LEFT JOIN properties p ON p.property_id = c.property_id
+            WHERE c.custody_event_id = ?
+            LIMIT 1
+            """,
+            (record_id,),
+        ).fetchone()
+        if not row:
+            return _failure("destination_not_found", "Archive custody record could not be verified.")
+        record = dict(row)
+        action = record.get("custody_action") or ""
+        if action not in ACTIVE_ARCHIVE_CUSTODY_ACTIONS:
+            return _failure("destination_ineligible", "Archive custody record is not eligible for routing.")
+        firm_id = record.get("firm_id") or record.get("property_firm_id")
+        trust_id = record.get("trust_id") or record.get("property_trust_id")
+        destination = _verified(
+            destination_type="archive",
+            record_id=record_id,
+            record_type="Continuity Custody Event",
+            display_label=f"{record_id} - {(record.get('custody_action') or 'Custody Event').replace('_', ' ').title()}",
+            firm_id=firm_id,
+            trust_id=trust_id,
+            record_status=action,
+            detail_url=f"/property/{record.get('property_id')}/custody-log" if record.get("property_id") else None,
+            caution=(
+                "This routing reference identifies the governed Archive record responsible for "
+                "preservation, custody, continuity, or archive review. It does not independently "
+                "establish archive integrity, recoverability, restoration success, or continuity certification."
+            ),
+        )
+        context = validate_destination_context(observation, destination, actor_context)
+        if not context.get("ok"):
+            return context
+        return destination
+    except Exception:
+        return _failure("unexpected_failure", "Archive destination could not be verified.")
+    finally:
+        if owns:
+            conn.close()
+
+
 def verify_compliance_destination(record_id, observation=None, actor_context=None, connection=None):
     return _failure(
         "destination_unavailable",
@@ -264,18 +347,57 @@ def verify_compliance_destination(record_id, observation=None, actor_context=Non
     )
 
 
-def verify_archive_destination(record_id, observation=None, actor_context=None, connection=None):
-    return _failure(
-        "destination_unavailable",
-        "No authoritative routable Archive destination registry is available.",
-    )
-
-
 def verify_people_destination(record_id, observation=None, actor_context=None, connection=None):
-    return _failure(
-        "destination_unavailable",
-        "No authoritative routable People destination registry is available.",
-    )
+    record_id = _safe_record_id(record_id)
+    if not record_id:
+        return _failure("invalid_record_id", "People destination ID is not supported.")
+    if not record_id.startswith("FID-"):
+        return _failure("record_type_mismatch", "People destination must be a fiduciary assignment record.")
+    if not FIDUCIARY_ID_RE.fullmatch(record_id):
+        return _failure("invalid_record_id", "Fiduciary assignment ID is not supported.")
+
+    owns = connection is None
+    conn = connection or get_connection()
+    try:
+        if not _table_exists(conn, "fiduciaries"):
+            return _failure("destination_unavailable", "Fiduciary registry is unavailable.")
+        row = conn.execute(
+            "SELECT * FROM fiduciaries WHERE fiduciary_id = ? LIMIT 1",
+            (record_id,),
+        ).fetchone()
+        if not row:
+            return _failure("destination_not_found", "Fiduciary assignment could not be verified.")
+        record = dict(row)
+        status = record.get("status") or ""
+        if status not in ACTIVE_FIDUCIARY_STATUSES:
+            if status.lower() == "revoked":
+                return _failure("assignment_revoked", "Fiduciary assignment is revoked.")
+            if status.lower() == "superseded":
+                return _failure("assignment_superseded", "Fiduciary assignment is superseded.")
+            return _failure("assignment_inactive", "Fiduciary assignment is not active or eligible.")
+        destination = _verified(
+            destination_type="people",
+            record_id=record_id,
+            record_type="Fiduciary Record",
+            display_label=f"{record.get('full_name') or record_id} - {record.get('role_title') or 'Fiduciary'}",
+            firm_id=record.get("firm_id"),
+            trust_id=record.get("trust_id"),
+            record_status=status,
+            detail_url="/fiduciaries",
+            caution=(
+                "This routing reference identifies an institutional assignment or fiduciary record for "
+                "review. It does not determine personal fault, liability, misconduct, discipline, or removal."
+            ),
+        )
+        context = validate_destination_context(observation, destination, actor_context)
+        if not context.get("ok"):
+            return context
+        return destination
+    except Exception:
+        return _failure("unexpected_failure", "People destination could not be verified.")
+    finally:
+        if owns:
+            conn.close()
 
 
 def verify_restricted_procedure_destination(record_id, observation=None, actor_context=None, connection=None):
@@ -325,6 +447,8 @@ def resolve_destination_reference(record_type, record_id, observation=None, acto
     record_type_to_key = {
         "institutional directive": "governance",
         "institutional policy": "governance",
+        "continuity custody event": "archive",
+        "fiduciary record": "people",
         "matter": "matter",
     }
     key = label_to_key.get(record_type_key) or record_type_to_key.get(record_type_key)
@@ -353,7 +477,7 @@ def resolve_destination_reference(record_type, record_id, observation=None, acto
             "detail_url": result.get("detail_url"),
             "record_type": result.get("record_type"),
             "record_status": result.get("record_status"),
-            "caution": "Review the governed destination record for authoritative status and scope.",
+            "caution": result.get("caution") or "Review the governed destination record for authoritative status and scope.",
         }
     return {
         "type": DESTINATION_LABELS.get(key, _bounded(record_type, 80)),
@@ -397,18 +521,18 @@ def destination_registry_report():
             "implementation_status": "bounded_unavailable",
         },
         "archive": {
-            "authoritative_registry": "None identified as routable",
+            "authoritative_registry": "continuity_custody_log",
             "verifier": "verify_archive_destination",
-            "supported_record_types": [],
-            "stable_public_id": None,
-            "implementation_status": "bounded_unavailable",
+            "supported_record_types": sorted(DESTINATION_RECORD_TYPES["archive"]),
+            "stable_public_id": "CCL-0001",
+            "implementation_status": "verified_supported",
         },
         "people": {
-            "authoritative_registry": "None identified as routable",
+            "authoritative_registry": "fiduciaries",
             "verifier": "verify_people_destination",
-            "supported_record_types": [],
-            "stable_public_id": None,
-            "implementation_status": "bounded_unavailable",
+            "supported_record_types": sorted(DESTINATION_RECORD_TYPES["people"]),
+            "stable_public_id": "FID-001",
+            "implementation_status": "verified_supported",
         },
         "matter": {
             "authoritative_registry": "matters",
