@@ -15,10 +15,15 @@ if str(ROOT) not in sys.path:
 REQUIRED_BRANCH = "post-v2-planning"
 CERTIFIED_PHASE_COMMIT = "2aaf5b61e0323aa0aed3ebb582954105a57ed7b8"
 ACTIVE_PHASE_ALLOWED_PATHS = {
+    "migrations/add_compliance_review_foundation.py",
+    "models/__init__.py",
+    "models/models_compliance_reviews.py",
     "scripts/audit_archive_people_destination_adapters_17q_e.py",
+    "scripts/audit_compliance_review_foundation_17q_g.py",
     "scripts/audit_system_audit_destination_removal_17q_d.py",
     "scripts/audit_compliance_review_architecture_17q_f.py",
     "scripts/audit_regression_guard_and_auth_preservation_17q_f_1.py",
+    "services/services_compliance_reviews.py",
 }
 NORMAL_DB_PATH = Path(os.environ.get("DB_PATH", ROOT / "trustee_app.db"))
 TEMP_DIR = tempfile.TemporaryDirectory(prefix="trustee_17q_d_", ignore_cleanup_errors=True)

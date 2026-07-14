@@ -8,14 +8,19 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_BRANCH = "post-v2-planning"
-CURRENT_CERTIFIED_HEAD = "ab080d47d89257df58d3712be9953c0b37c6b114"
+CURRENT_CERTIFIED_HEAD = "b51c283851c76809d5b92958688643cbef0bed87"
 CERTIFIED_17Q_D = "2aaf5b61e0323aa0aed3ebb582954105a57ed7b8"
 CERTIFIED_17Q_E = "ab080d47d89257df58d3712be9953c0b37c6b114"
 AUTHORIZED_FILES = {
+    "migrations/add_compliance_review_foundation.py",
+    "models/__init__.py",
+    "models/models_compliance_reviews.py",
     "scripts/audit_archive_people_destination_adapters_17q_e.py",
+    "scripts/audit_compliance_review_foundation_17q_g.py",
     "scripts/audit_system_audit_destination_removal_17q_d.py",
     "scripts/audit_compliance_review_architecture_17q_f.py",
     "scripts/audit_regression_guard_and_auth_preservation_17q_f_1.py",
+    "services/services_compliance_reviews.py",
 }
 MODE = "regression_guard_modernization_and_bounded_authentication_audit_preservation"
 

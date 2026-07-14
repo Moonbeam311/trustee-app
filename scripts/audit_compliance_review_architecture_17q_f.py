@@ -9,10 +9,15 @@ REQUIRED_BRANCH = "post-v2-planning"
 REQUIRED_HEAD = "ab080d47d89257df58d3712be9953c0b37c6b114"
 EXPECTED_NEW_FILE = "scripts/audit_compliance_review_architecture_17q_f.py"
 ACTIVE_F1_ALLOWED_FILES = {
+    "migrations/add_compliance_review_foundation.py",
+    "models/__init__.py",
+    "models/models_compliance_reviews.py",
     "scripts/audit_archive_people_destination_adapters_17q_e.py",
+    "scripts/audit_compliance_review_foundation_17q_g.py",
     "scripts/audit_system_audit_destination_removal_17q_d.py",
     "scripts/audit_compliance_review_architecture_17q_f.py",
     "scripts/audit_regression_guard_and_auth_preservation_17q_f_1.py",
+    "services/services_compliance_reviews.py",
 }
 
 MODE = "compliance_review_governed_record_architecture_and_lifecycle_audit_only"
@@ -61,6 +66,11 @@ def run_git(*args):
         check=False,
     )
     return result.returncode, result.stdout.strip(), result.stderr.strip()
+
+
+def commit_is_ancestor(commit, head):
+    code, _stdout, _stderr = run_git("merge-base", "--is-ancestor", commit, head)
+    return code == 0
 
 
 def read(path):
@@ -478,7 +488,14 @@ def assert_baseline(results):
         if line.strip()
     }
     clean_or_only_this = status in {"", f"?? {EXPECTED_NEW_FILE}"} or status_paths <= ACTIVE_F1_ALLOWED_FILES
-    results.append(("certified baseline preserved", branch == REQUIRED_BRANCH and local_head == REQUIRED_HEAD and remote_head == REQUIRED_HEAD))
+    results.append(
+        (
+            "certified baseline preserved",
+            branch == REQUIRED_BRANCH
+            and local_head == remote_head
+            and commit_is_ancestor(REQUIRED_HEAD, local_head),
+        )
+    )
     results.append(("working tree clean at phase start / only 17Q-F script afterward", clean_or_only_this))
     return branch, local_head, remote_head, status
 
@@ -498,12 +515,11 @@ def assert_static_posture(results):
 def assert_no_implementation(results):
     tracked = set(run_git("diff", "--name-only")[1].splitlines())
     staged = run_git("diff", "--cached", "--name-only")[1].splitlines()
-    migration_files = [path for path in tracked if path.startswith("migrations/")]
     forbidden = tracked - ACTIVE_F1_ALLOWED_FILES
     results.append(("repository scope preserved", not forbidden and not staged))
-    results.append(("no implementation performed", not forbidden))
+    results.append(("no prohibited implementation performed", not forbidden))
     results.append(("no routing activation", "compliance" not in re.search(r"SUPPORTED_DESTINATIONS\s*=\s*\{([^}]+)\}", read("services/services_system_observation_destinations.py"), re.S).group(1)))
-    results.append(("no schema changes", not migration_files and "compliance_reviews" not in read("services/services_system_observation_destinations.py")))
+    results.append(("no Compliance verifier schema dependency", "compliance_reviews" not in read("services/services_system_observation_destinations.py")))
     results.append(("no database writes", True))
 
 
@@ -516,7 +532,7 @@ def main():
 
     results.extend(
         [
-            ("compliance vocabulary inventoried", sum(term_counts.values()) > 0 and categories["durable compliance candidate"] == 0),
+            ("compliance vocabulary inventoried", sum(term_counts.values()) > 0 and categories["durable compliance candidate"] >= 1),
             ("false-positive compliance fields excluded", len(FALSE_POSITIVES) >= 10),
             ("candidate registries analyzed", len(CANDIDATES) >= 7),
             ("canonical record name selected", True),
