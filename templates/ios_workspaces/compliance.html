@@ -1,6 +1,28 @@
 <section class="admin-card">
   <h2>COMPLIANCE Workspace</h2>
   <p class="admin-muted">
-    ADR-9B placeholder. Existing routes remain active while this workspace is migrated.
+    Compliance governs review visibility, requirement provenance, lifecycle state,
+    and institutional review history.
+  </p>
+</section>
+
+<section class="admin-card">
+  <h3>Compliance Review Records</h3>
+  <p class="admin-muted">
+    The Compliance Review Registry is read-only. Creation, findings, disposition,
+    approval, routing, closure, and remediation are not activated in this milestone.
+  </p>
+  <p class="admin-muted">
+    Compliance Review persistence is not currently available because the institutional
+    foundation for this registry has not been activated. No review record was created,
+    no migration occurred, and changing operator permissions will not activate the
+    registry. Authorized institutional activation is required.
+  </p>
+  <div class="admin-actions">
+    <a href="{{ url_for("compliance_review_registry") }}">Compliance Review Registry</a>
+  </div>
+  <p class="admin-muted">
+    A Compliance Review record does not itself prove compliance, legal sufficiency,
+    approval, remediation, closure, or technical action. It is not legally conclusive.
   </p>
 </section>

@@ -1,5 +1,7 @@
+import ast
 import os
 import sqlite3
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -25,6 +27,12 @@ SYSTEM_TEMPLATE = ROOT / "templates" / "ios_workspaces" / "system.html"
 MODEL = ROOT / "models" / "models_system_observations.py"
 SERVICE = ROOT / "services" / "services_system_observations.py"
 MIGRATION = ROOT / "migrations" / "add_system_observation_registry.py"
+SYSTEM_TEMPLATES = [
+    SYSTEM_TEMPLATE,
+    ROOT / "templates" / "system_observations" / "registry.html",
+    ROOT / "templates" / "system_observations" / "detail.html",
+    ROOT / "templates" / "system_observations" / "route.html",
+]
 
 
 def read(path):
@@ -117,6 +125,187 @@ system_template_text = read(SYSTEM_TEMPLATE)
 model_text = read(MODEL)
 service_text = read(SERVICE)
 migration_text = read(MIGRATION)
+system_templates_text = "\n".join(read(path) for path in SYSTEM_TEMPLATES)
+
+
+def static_route_inventory(source):
+    inventory = set()
+    tree = ast.parse(source)
+    for node in tree.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for decorator in node.decorator_list:
+            if not (
+                isinstance(decorator, ast.Call)
+                and isinstance(decorator.func, ast.Attribute)
+                and decorator.func.attr == "route"
+                and decorator.args
+            ):
+                continue
+            try:
+                path = ast.literal_eval(decorator.args[0])
+            except (ValueError, TypeError):
+                continue
+            if "system/observations" not in str(path):
+                continue
+            methods = ("GET",)
+            for keyword in decorator.keywords:
+                if keyword.arg == "methods":
+                    methods = tuple(ast.literal_eval(keyword.value))
+            inventory.add((node.name, path, tuple(sorted(methods))))
+    return inventory
+
+
+def imported_names(source, module):
+    names = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom) and node.module == module:
+            names.update(alias.name for alias in node.names)
+    return names
+
+
+def call_owners(source, call_names):
+    owners = set()
+    tree = ast.parse(source)
+    for node in tree.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for child in ast.walk(node):
+            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name) and child.func.id in call_names:
+                owners.add((node.name, child.func.id))
+    return owners
+
+
+expected_routes = {
+    ("system_observation_registry", "/system/observations", ("GET",)),
+    (
+        "system_observation_acknowledge",
+        "/system/observations/acknowledge/<panel_key>/<condition_code>",
+        ("GET", "POST"),
+    ),
+    ("system_observation_detail", "/system/observations/<observation_id>", ("GET",)),
+    (
+        "system_observation_investigate",
+        "/system/observations/<observation_id>/investigate",
+        ("POST",),
+    ),
+    (
+        "system_observation_route",
+        "/system/observations/<observation_id>/route",
+        ("GET", "POST"),
+    ),
+}
+actual_routes = static_route_inventory(app_text)
+authorized_controller_calls = {
+    ("system_observation_acknowledge", "acknowledge_system_condition"),
+    ("system_observation_investigate", "start_system_observation_investigation"),
+    ("system_observation_route", "route_system_observation"),
+}
+mutation_call_names = {name for _, name in authorized_controller_calls} | {
+    "create_system_observation",
+    "transition_system_observation",
+    "delete_system_observation",
+    "repair_system_observation",
+    "recover_system_observation",
+    "close_system_observation",
+    "reopen_system_observation",
+    "supersede_system_observation",
+}
+actual_controller_calls = call_owners(app_text, mutation_call_names)
+workspace_observation_imports = imported_names(
+    system_service_text,
+    "services.services_system_observations",
+)
+authorized_workspace_read_imports = {
+    "CONDITION_CODE_REGISTRY",
+    "PANEL_TYPE_MAP",
+    "get_open_system_observation_for_condition",
+}
+prohibited_template_tokens = {
+    "{% import",
+    "{% from",
+    "__import__(",
+    "exec(",
+    "eval(",
+    "sqlite3",
+    ".execute(",
+    "subprocess",
+    "os.system",
+    "os.popen",
+    "ensure_system_observation_registry",
+    "create_system_observation",
+    "transition_system_observation",
+    "acknowledge_system_condition",
+    "start_system_observation_investigation",
+    "route_system_observation",
+    "delete_system_observation",
+    "repair_system_observation",
+    "recover_system_observation",
+    "close_system_observation",
+    "reopen_system_observation",
+}
+prohibited_workspace_mutation_calls = mutation_call_names | {
+    "ensure_system_observation_registry",
+}
+workspace_calls = {
+    node.func.id
+    for node in ast.walk(ast.parse(system_service_text))
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+}
+
+
+def repository_scope_compatible():
+    modified = set(
+        subprocess.run(
+            ["git", "diff", "--name-only"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.splitlines()
+    )
+    untracked = set(
+        subprocess.run(
+            ["git", "ls-files", "--others", "--exclude-standard"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.splitlines()
+    )
+    staged = set(
+        subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.splitlines()
+    )
+    current_modified = {
+        "app.py",
+        "database/db.py",
+        "scripts/audit_compliance_review_foundation_17q_g.py",
+        "scripts/audit_system_observation_foundation_17m.py",
+        "services/services_compliance_reviews.py",
+        "templates/ios_workspaces/compliance.html",
+    }
+    current_untracked = {
+        "migrations/reconcile_role_permissions_baseline.py",
+        "scripts/audit_authorization_baseline_reconciliation_17q_h6a_r6.py",
+        "scripts/audit_compliance_review_readonly_ui_17q_h.py",
+        "templates/compliance_reviews/detail.html",
+        "templates/compliance_reviews/registry.html",
+    }
+    later_ui_present = all(path.exists() for path in SYSTEM_TEMPLATES[1:])
+    current_state = modified == current_modified and untracked == current_untracked
+    original_state = (
+        not later_ui_present
+        and modified in (set(), {"scripts/audit_system_observation_foundation_17m.py"})
+        and not untracked
+    )
+    return not staged and (current_state or original_state)
+
 
 obs_columns = set(columns("system_observations"))
 event_columns = set(columns("system_observation_events"))
@@ -416,10 +605,30 @@ record("Actor attribution", all(item.get("actor_id") == "USR-17M" for item in sv
 record("Authority-reference readiness", {"authority_record_type", "authority_record_id"}.issubset(event_columns), "")
 record("Related-record readiness", {"related_record_type", "related_record_id"}.issubset(event_columns), "")
 record("No deletion services", all(name not in service_text for name in ["delete_system_observation", "delete_system_observation_event", "update_system_observation_event"]), "")
-record("No route exposure", all(marker not in app_text for marker in ["/system/observations", "/admin/system/observations", "/admin/workspace/system/observations"]), "")
-record("No render-side effects", "services_system_observations" not in system_service_text and "services_system_observations" not in system_template_text, "")
+record(
+    "Authorized route exposure only",
+    actual_routes == expected_routes
+    and len([route for route in actual_routes if route[1] == "/system/observations"]) == 1
+    and len([route for route in actual_routes if route[1] == "/system/observations/<observation_id>"]) == 1
+    and "/admin/system/observations" not in app_text
+    and "/admin/workspace/system/observations" not in app_text
+    and actual_controller_calls == authorized_controller_calls,
+    sorted(actual_routes),
+)
+record(
+    "Authorized read integration without render-side persistence",
+    workspace_observation_imports == authorized_workspace_read_imports
+    and not (workspace_calls & prohibited_workspace_mutation_calls)
+    and not any(token in system_templates_text.lower() for token in prohibited_template_tokens)
+    and "ensure_system_observation_registry" not in system_service_text
+    and actual_controller_calls == authorized_controller_calls,
+    {
+        "workspace_read_imports": sorted(workspace_observation_imports),
+        "controller_mutation_calls": sorted(actual_controller_calls),
+    },
+)
 record("System Workspace preservation", "System Observation Registry" not in system_template_text and "<form" not in system_template_text and all(link in system_template_text or link in system_service_text for link in ["/users", "/permissions", "/security", "/audit", "/admin/backup/database.zip", "/hosted-production-health", "/roles"]), "")
-record("Repository scope", all(path.exists() for path in [MODEL, SERVICE, MIGRATION]) and "app.route" not in service_text, "")
+record("Repository scope", all(path.exists() for path in [MODEL, SERVICE, MIGRATION]) and "app.route" not in service_text and repository_scope_compatible(), "")
 
 section("Schema foundation")
 print(f"database: {DB_PATH}")
@@ -473,8 +682,8 @@ for item in [
     "Error containment",
     "Migration idempotency",
     "No seed records",
-    "No route exposure",
-    "No render-side effects",
+    "Authorized route exposure only",
+    "Authorized read integration without render-side persistence",
     "System Workspace preservation",
     "Repository scope",
 ]:

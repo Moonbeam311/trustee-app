@@ -60,6 +60,31 @@ PROHIBITED_TRANSITION_FIELDS = {
     "completed_at",
     "superseded_by_id",
 }
+READ_LIMIT_MAX = 250
+REQUIRED_READ_TABLES = {
+    "compliance_reviews",
+    "compliance_review_events",
+    "compliance_review_relationships",
+}
+PUBLIC_REVIEW_FIELDS = (
+    "compliance_review_id", "firm_id", "institution_id", "trust_id", "matter_id",
+    "deployment_key", "title", "review_type", "question_presented",
+    "governing_requirement_type", "governing_requirement_id",
+    "governing_requirement_label", "source_type", "source_id", "source_label",
+    "scope_summary", "status", "priority", "risk_level", "review_owner",
+    "assigned_to", "authority_basis", "approval_required", "opened_at", "due_at",
+    "completed_at", "created_by", "created_at", "updated_by", "updated_at", "version",
+)
+PUBLIC_EVENT_FIELDS = (
+    "event_id", "compliance_review_id", "event_sequence", "event_type", "actor_id",
+    "actor_label", "prior_status", "resulting_status", "summary", "reason",
+    "related_record_type", "related_record_id", "expected_version", "created_at",
+)
+PUBLIC_RELATIONSHIP_FIELDS = (
+    "relationship_id", "compliance_review_id", "relationship_type",
+    "related_record_type", "related_record_id", "direction", "status", "created_by",
+    "created_at",
+)
 
 
 def _now():
@@ -206,6 +231,62 @@ def _public_review(row):
 
 def _public_event(row):
     return dict(row) if row else None
+
+
+def _selected_fields(fields):
+    return ", ".join(fields)
+
+
+def _row_record(cursor, row, fields):
+    if row is None:
+        return None
+    if hasattr(row, "keys"):
+        return {field: row[field] for field in fields}
+    names = [column[0] for column in cursor.description]
+    values = dict(zip(names, row))
+    return {field: values.get(field) for field in fields}
+
+
+def _serialize_review(record):
+    if record is not None:
+        record["approval_required"] = bool(record.get("approval_required"))
+    return record
+
+
+def _read_scope(scope):
+    if not isinstance(scope, dict):
+        return None
+    if scope.get("global") is True:
+        return {"global": True, "firm_id": None}
+    try:
+        firm_id = _safe_id(scope.get("firm_id"), "firm_id", required=True)
+    except ValueError:
+        return None
+    return {"global": False, "firm_id": firm_id}
+
+
+def _read_limit(limit, default):
+    if limit is None:
+        limit = default
+    if isinstance(limit, bool):
+        raise ValueError("limit_invalid")
+    try:
+        value = int(limit)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("limit_invalid") from exc
+    if value < 1 or value > READ_LIMIT_MAX:
+        raise ValueError("limit_invalid")
+    return value
+
+
+def _read_schema_available(conn):
+    placeholders = ", ".join("?" for _ in REQUIRED_READ_TABLES)
+    rows = conn.execute(
+        f"SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ({placeholders})",
+        tuple(sorted(REQUIRED_READ_TABLES)),
+    ).fetchall()
+    names = {row[0] for row in rows}
+    return names == REQUIRED_READ_TABLES
 
 
 def _allocate_public_id(conn):
@@ -398,21 +479,118 @@ def _normalize_create_payload(payload, actor_context):
     return data
 
 
-def get_compliance_review(compliance_review_id, *, scope=None, connection=None):
-    compliance_review_id = validate_public_compliance_review_id(compliance_review_id)
+def _get_compliance_review_internal(compliance_review_id, connection=None):
     owns = connection is None
     conn = connection or get_connection()
     try:
-        row = conn.execute(
-            "SELECT * FROM compliance_reviews WHERE compliance_review_id = ? LIMIT 1",
-            (compliance_review_id,),
-        ).fetchone()
-        review = _public_review(row)
-        if not review:
+        return _public_review(
+            conn.execute(
+                "SELECT * FROM compliance_reviews WHERE compliance_review_id = ? LIMIT 1",
+                (compliance_review_id,),
+            ).fetchone()
+        )
+    finally:
+        if owns:
+            conn.close()
+
+
+def list_compliance_reviews(*, scope=None, limit=100, connection=None):
+    read_scope = _read_scope(scope)
+    if read_scope is None:
+        return {
+            "available": False,
+            "status": "invalid_scope",
+            "message": "A valid firm scope is required to view Compliance Reviews.",
+            "reviews": [],
+            "count": 0,
+        }
+    limit = _read_limit(limit, 100)
+    owns = connection is None
+    conn = connection or get_connection()
+    try:
+        if not _read_schema_available(conn):
+            return {
+                "available": False,
+                "status": "schema_missing",
+                "message": (
+                    "Compliance Review persistence is not currently available because the "
+                    "institutional foundation for this registry has not been activated. "
+                    "No review record was created, no migration occurred, and changing "
+                    "operator permissions will not activate the registry. Authorized "
+                    "institutional activation is required."
+                ),
+                "reviews": [],
+                "count": 0,
+            }
+        params = []
+        where = ""
+        if not read_scope["global"]:
+            where = "WHERE firm_id = ?"
+            params.append(read_scope["firm_id"])
+        params.append(limit)
+        cursor = conn.execute(
+            f"""
+            SELECT {_selected_fields(PUBLIC_REVIEW_FIELDS)}
+            FROM compliance_reviews
+            {where}
+            ORDER BY updated_at DESC, created_at DESC, compliance_review_id DESC
+            LIMIT ?
+            """,
+            tuple(params),
+        )
+        reviews = [
+            _serialize_review(_row_record(cursor, row, PUBLIC_REVIEW_FIELDS))
+            for row in cursor.fetchall()
+        ]
+        return {
+            "available": True,
+            "status": "ok",
+            "message": "Compliance Review records are available.",
+            "reviews": reviews,
+            "count": len(reviews),
+        }
+    except Exception:
+        return {
+            "available": False,
+            "status": "read_failure",
+            "message": "Compliance Review records could not be read.",
+            "reviews": [],
+            "count": 0,
+        }
+    finally:
+        if owns:
+            conn.close()
+
+
+def get_compliance_review(compliance_review_id, *, scope=None, connection=None):
+    compliance_review_id = validate_public_compliance_review_id(compliance_review_id)
+    read_scope = _read_scope(scope)
+    if read_scope is None:
+        return None
+    owns = connection is None
+    conn = connection or get_connection()
+    try:
+        if not _read_schema_available(conn):
             return None
-        if scope and not (scope.get("global") or review.get("firm_id") == scope.get("firm_id")):
-            return None
-        return review
+        params = [compliance_review_id]
+        firm_clause = ""
+        if not read_scope["global"]:
+            firm_clause = " AND firm_id = ?"
+            params.append(read_scope["firm_id"])
+        cursor = conn.execute(
+            f"""
+            SELECT {_selected_fields(PUBLIC_REVIEW_FIELDS)}
+            FROM compliance_reviews
+            WHERE compliance_review_id = ?{firm_clause}
+            LIMIT 1
+            """,
+            tuple(params),
+        )
+        return _serialize_review(
+            _row_record(cursor, cursor.fetchone(), PUBLIC_REVIEW_FIELDS)
+        )
+    except Exception:
+        return None
     finally:
         if owns:
             conn.close()
@@ -423,45 +601,125 @@ def get_compliance_review_by_public_id(compliance_review_id, *, scope=None, conn
 
 
 def get_compliance_review_by_id(id, *, scope=None, connection=None):
+    read_scope = _read_scope(scope)
+    if read_scope is None:
+        return None
     owns = connection is None
     conn = connection or get_connection()
     try:
-        row = conn.execute(
-            "SELECT * FROM compliance_reviews WHERE id = ? LIMIT 1",
-            (id,),
-        ).fetchone()
-        review = _public_review(row)
-        if not review:
+        if not _read_schema_available(conn):
             return None
-        if scope and not (scope.get("global") or review.get("firm_id") == scope.get("firm_id")):
-            return None
-        return review
+        params = [id]
+        firm_clause = ""
+        if not read_scope["global"]:
+            firm_clause = " AND firm_id = ?"
+            params.append(read_scope["firm_id"])
+        cursor = conn.execute(
+            f"""
+            SELECT {_selected_fields(PUBLIC_REVIEW_FIELDS)}
+            FROM compliance_reviews
+            WHERE id = ?{firm_clause}
+            LIMIT 1
+            """,
+            tuple(params),
+        )
+        return _serialize_review(
+            _row_record(cursor, cursor.fetchone(), PUBLIC_REVIEW_FIELDS)
+        )
+    except Exception:
+        return None
     finally:
         if owns:
             conn.close()
 
 
-def list_compliance_review_events(compliance_review_id, *, scope=None, connection=None):
-    review = get_compliance_review(compliance_review_id, scope=scope, connection=connection)
-    if not review:
+def list_compliance_review_events(
+    compliance_review_id, *, scope=None, limit=READ_LIMIT_MAX, connection=None
+):
+    compliance_review_id = validate_public_compliance_review_id(compliance_review_id)
+    read_scope = _read_scope(scope)
+    if read_scope is None:
         return []
+    limit = _read_limit(limit, READ_LIMIT_MAX)
     owns = connection is None
     conn = connection or get_connection()
     try:
-        rows = conn.execute(
-            """
-            SELECT *
+        if not _read_schema_available(conn):
+            return []
+        params = [compliance_review_id]
+        firm_clause = ""
+        if not read_scope["global"]:
+            firm_clause = " AND firm_id = ?"
+            params.append(read_scope["firm_id"])
+        visible = conn.execute(
+            f"SELECT 1 FROM compliance_reviews WHERE compliance_review_id = ?{firm_clause} LIMIT 1",
+            tuple(params),
+        ).fetchone()
+        if not visible:
+            return []
+        cursor = conn.execute(
+            f"""
+            SELECT {_selected_fields(PUBLIC_EVENT_FIELDS)}
             FROM compliance_review_events
             WHERE compliance_review_id = ?
             ORDER BY event_sequence ASC
+            LIMIT ?
             """,
-            (compliance_review_id,),
-        ).fetchall()
-        return [_public_event(row) for row in rows]
+            (compliance_review_id, limit),
+        )
+        return [
+            _row_record(cursor, row, PUBLIC_EVENT_FIELDS) for row in cursor.fetchall()
+        ]
+    except Exception:
+        return []
     finally:
         if owns:
             conn.close()
 
+
+def list_compliance_review_relationships(
+    compliance_review_id, *, scope=None, limit=READ_LIMIT_MAX, connection=None
+):
+    compliance_review_id = validate_public_compliance_review_id(compliance_review_id)
+    read_scope = _read_scope(scope)
+    if read_scope is None:
+        return []
+    limit = _read_limit(limit, READ_LIMIT_MAX)
+    owns = connection is None
+    conn = connection or get_connection()
+    try:
+        if not _read_schema_available(conn):
+            return []
+        params = [compliance_review_id]
+        firm_clause = ""
+        if not read_scope["global"]:
+            firm_clause = " AND firm_id = ?"
+            params.append(read_scope["firm_id"])
+        visible = conn.execute(
+            f"SELECT 1 FROM compliance_reviews WHERE compliance_review_id = ?{firm_clause} LIMIT 1",
+            tuple(params),
+        ).fetchone()
+        if not visible:
+            return []
+        cursor = conn.execute(
+            f"""
+            SELECT {_selected_fields(PUBLIC_RELATIONSHIP_FIELDS)}
+            FROM compliance_review_relationships
+            WHERE compliance_review_id = ?
+            ORDER BY created_at ASC, relationship_id ASC
+            LIMIT ?
+            """,
+            (compliance_review_id, limit),
+        )
+        return [
+            _row_record(cursor, row, PUBLIC_RELATIONSHIP_FIELDS)
+            for row in cursor.fetchall()
+        ]
+    except Exception:
+        return []
+    finally:
+        if owns:
+            conn.close()
 
 def create_compliance_review(*, payload, actor_context, idempotency_key=None):
     ensure_compliance_review_foundation()
@@ -563,7 +821,7 @@ def create_compliance_review(*, payload, actor_context, idempotency_key=None):
                 idempotency_key=None,
                 payload_hash=payload_hash,
             )
-            review = get_compliance_review(review_id, connection=conn)
+            review = _get_compliance_review_internal(review_id, connection=conn)
             event = conn.execute(
                 "SELECT * FROM compliance_review_events WHERE event_id = ?",
                 (event_id,),
@@ -649,7 +907,7 @@ def transition_compliance_review(
                     conn.rollback()
                     return _result(False, "conflict", "Idempotency key conflicts with a prior transition.")
                 conn.commit()
-                return _result(True, "idempotent_replay", review=get_compliance_review(review_id), event=_public_event(replay))
+                return _result(True, "idempotent_replay", review=_get_compliance_review_internal(review_id), event=_public_event(replay))
 
             current_status = review["status"]
             transition = COMPLIANCE_REVIEW_TRANSITIONS.get((current_status, action))
@@ -697,7 +955,7 @@ def transition_compliance_review(
                 payload_hash=payload_hash,
                 expected_version=expected_version,
             )
-            updated = get_compliance_review(review_id, connection=conn)
+            updated = _get_compliance_review_internal(review_id, connection=conn)
             event = conn.execute(
                 "SELECT * FROM compliance_review_events WHERE event_id = ?",
                 (event_id,),
@@ -722,6 +980,8 @@ __all__ = [
     "get_compliance_review_by_id",
     "get_compliance_review_by_public_id",
     "list_compliance_review_events",
+    "list_compliance_review_relationships",
+    "list_compliance_reviews",
     "transition_compliance_review",
     "validate_compliance_review_scope",
     "validate_public_compliance_review_id",

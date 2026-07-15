@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-card">
+  <h1>Compliance Review Detail</h1>
+  <p class="admin-muted"><strong>Read-only institutional record.</strong></p>
+  <div class="admin-actions">
+    <a href="{{ registry_url }}">Back to Compliance Review Registry</a>
+    <a href="{{ compliance_workspace_url }}">Back to Compliance Workspace</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <h2>Review Identity</h2>
+  <dl class="admin-grid">
+    <div><dt>Review ID</dt><dd>{{ review.compliance_review_id or "Not recorded" }}</dd></div>
+    <div><dt>Title</dt><dd>{{ review.title or "Not recorded" }}</dd></div>
+    <div><dt>Review Type</dt><dd>{{ review.review_type or "Not recorded" }}</dd></div>
+    <div><dt>Status</dt><dd>{{ review.status or "Not recorded" }}</dd></div>
+    <div><dt>Priority</dt><dd>{{ review.priority or "Not recorded" }}</dd></div>
+    <div><dt>Risk Level</dt><dd>{{ review.risk_level or "Not recorded" }}</dd></div>
+    <div><dt>Version</dt><dd>{{ review.version if review.version is not none else "Not recorded" }}</dd></div>
+    <div><dt>Approval Required</dt><dd>{% if review.approval_required %}Yes{% else %}No{% endif %}</dd></div>
+  </dl>
+</section>
+
+<section class="admin-card">
+  <h2>Context Ownership</h2>
+  <dl class="admin-grid">
+    <div><dt>Firm ID</dt><dd>{{ review.firm_id or "Not recorded" }}</dd></div><div><dt>Institution ID</dt><dd>{{ review.institution_id or "Not recorded" }}</dd></div>
+    <div><dt>Trust ID</dt><dd>{{ review.trust_id or "Not recorded" }}</dd></div><div><dt>Matter ID</dt><dd>{{ review.matter_id or "Not recorded" }}</dd></div>
+    <div><dt>Deployment Key</dt><dd>{{ review.deployment_key or "Not recorded" }}</dd></div>
+  </dl>
+</section>
+
+<section class="admin-card">
+  <h2>Source and Requirement Provenance</h2>
+  <dl class="admin-grid">
+    <div><dt>Governing Requirement Type</dt><dd>{{ review.governing_requirement_type or "Not recorded" }}</dd></div><div><dt>Governing Requirement ID</dt><dd>{{ review.governing_requirement_id or "Not recorded" }}</dd></div>
+    <div><dt>Governing Requirement Label</dt><dd>{{ review.governing_requirement_label or "Not recorded" }}</dd></div><div><dt>Source Type</dt><dd>{{ review.source_type or "Not recorded" }}</dd></div>
+    <div><dt>Source ID</dt><dd>{{ review.source_id or "Not recorded" }}</dd></div><div><dt>Source Label</dt><dd>{{ review.source_label or "Not recorded" }}</dd></div>
+    <div><dt>Authority Basis</dt><dd>{{ review.authority_basis or "Not recorded" }}</dd></div>
+  </dl>
+</section>
+
+<section class="admin-card">
+  <h2>Review Question and Scope</h2>
+  <h3>Question Presented</h3><p>{{ review.question_presented or "Not recorded" }}</p>
+  <h3>Scope Summary</h3><p>{{ review.scope_summary or "Not recorded" }}</p>
+</section>
+
+<section class="admin-card">
+  <h2>Attribution and Timestamps</h2>
+  <dl class="admin-grid">
+    <div><dt>Review Owner</dt><dd>{{ review.review_owner or "Not recorded" }}</dd></div><div><dt>Assigned To</dt><dd>{{ review.assigned_to or "Not recorded" }}</dd></div>
+    <div><dt>Created By</dt><dd>{{ review.created_by or "Not recorded" }}</dd></div><div><dt>Created At</dt><dd>{{ review.created_at or "Not recorded" }}</dd></div>
+    <div><dt>Updated By</dt><dd>{{ review.updated_by or "Not recorded" }}</dd></div><div><dt>Updated At</dt><dd>{{ review.updated_at or "Not recorded" }}</dd></div>
+    <div><dt>Opened At</dt><dd>{{ review.opened_at or "Not recorded" }}</dd></div><div><dt>Due At</dt><dd>{{ review.due_at or "Not recorded" }}</dd></div>
+    <div><dt>Completed At</dt><dd>{{ review.completed_at or "Not recorded" }}</dd></div>
+  </dl>
+  <p class="admin-muted">A recorded completion timestamp does not by itself prove closure or legal completion.</p>
+</section>
+
+<section class="admin-card">
+  <h2>Append-Only Review Event Timeline</h2>
+  {% if events %}
+  <table class="admin-table"><thead><tr><th>Sequence</th><th>Event ID</th><th>Event Type</th><th>Prior Status</th><th>Resulting Status</th><th>Actor</th><th>Authority / Reason</th><th>Related Record</th><th>Summary</th><th>Created</th></tr></thead>
+    <tbody>{% for event in events %}<tr><td>{{ event.event_sequence or "Not recorded" }}</td><td>{{ event.event_id or "Not recorded" }}</td><td>{{ event.event_type or "Not recorded" }}</td><td>{{ event.prior_status or "Not recorded" }}</td><td>{{ event.resulting_status or "Not recorded" }}</td><td>{{ event.actor_label or event.actor_id or "Not recorded" }}</td><td>{{ event.reason or "Not recorded" }}</td><td>{% if event.related_record_type or event.related_record_id %}{{ event.related_record_type or "Not recorded" }} ? {{ event.related_record_id or "Not recorded" }}{% else %}Not recorded{% endif %}</td><td>{{ event.summary or "Not recorded" }}</td><td>{{ event.created_at or "Not recorded" }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% else %}<p class="admin-muted">No Compliance Review lifecycle events are available for this record.</p>{% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Related Governed Records</h2>
+  {% if relationships %}
+  <table class="admin-table"><thead><tr><th>Relationship ID</th><th>Relationship Type</th><th>Related Record Type</th><th>Related Record ID</th><th>Direction</th><th>Status</th><th>Created By</th><th>Created At</th></tr></thead>
+    <tbody>{% for relationship in relationships %}<tr><td>{{ relationship.relationship_id or "Not recorded" }}</td><td>{{ relationship.relationship_type or "Not recorded" }}</td><td>{{ relationship.related_record_type or "Not recorded" }}</td><td>{{ relationship.related_record_id or "Not recorded" }}</td><td>{{ relationship.direction or "Not recorded" }}</td><td>{{ relationship.status or "Not recorded" }}</td><td>{{ relationship.created_by or "Not recorded" }}</td><td>{{ relationship.created_at or "Not recorded" }}</td></tr>{% endfor %}</tbody>
+  </table>
+  {% else %}<p class="admin-muted">No related governed records are currently stored for this Compliance Review.</p>{% endif %}
+</section>
+
+<section class="admin-card">
+  <h2>Institutional Caution</h2>
+  <p class="admin-muted">This page presents a governed institutional record. It does not independently establish compliance, legal sufficiency, approval, remediation, closure, or technical action.</p>
+</section>
+{% endblock %}

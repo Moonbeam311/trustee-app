@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-card">
+  <h1>Compliance Review Registry</h1>
+  <p class="admin-muted"><strong>Read-only registry.</strong></p>
+  <p class="admin-muted">
+    The registry records governed Compliance Review identity, provenance, context,
+    lifecycle state, and review history. A record does not by itself prove compliance,
+    legal sufficiency, remediation, approval, closure, or technical action.
+  </p>
+  <div class="admin-actions">
+    <a href="{{ compliance_workspace_url }}">Back to Compliance Workspace</a>
+  </div>
+</section>
+
+{% if not registry.available %}
+<section class="admin-card">
+  <p class="admin-muted">{{ registry.message }}</p>
+</section>
+{% elif not registry.reviews %}
+<section class="admin-card">
+  <p class="admin-muted">No Compliance Review records are available within the current authorized scope.</p>
+  <p class="admin-muted">No record is created by viewing this page.</p>
+</section>
+{% else %}
+<section class="admin-card">
+  <table class="admin-table">
+    <thead><tr><th>Review ID</th><th>Title</th><th>Review Type</th><th>Status</th><th>Context</th><th>Source</th><th>Risk</th><th>Updated</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for review in registry.reviews %}
+      <tr>
+        <td>{{ review.compliance_review_id or "Not recorded" }}</td>
+        <td>{{ review.title or "Not recorded" }}</td>
+        <td>{{ review.review_type or "Not recorded" }}</td>
+        <td>{{ review.status or "Not recorded" }}</td>
+        <td>{% if review.matter_id %}Matter: {{ review.matter_id }}{% elif review.trust_id %}Trust: {{ review.trust_id }}{% elif review.institution_id %}Institution: {{ review.institution_id }}{% elif review.deployment_key %}Deployment: {{ review.deployment_key }}{% elif review.firm_id %}Firm: {{ review.firm_id }}{% else %}Not recorded{% endif %}</td>
+        <td>{{ review.source_type or "Not recorded" }}{% if review.source_id %} ? {{ review.source_id }}{% endif %}{% if review.source_label %} ? {{ review.source_label }}{% endif %}</td>
+        <td>{{ review.risk_level or "Not recorded" }}{% if review.priority %} ? Priority: {{ review.priority }}{% endif %}</td>
+        <td>{{ review.updated_at or review.created_at or "Not recorded" }}</td>
+        <td><a href="{{ url_for("compliance_review_detail", compliance_review_id=review.compliance_review_id) }}">View review</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

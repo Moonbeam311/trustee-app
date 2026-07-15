@@ -3078,6 +3078,38 @@ def ensure_role_tables():
     conn = get_connection()
     cur = conn.cursor()
 
+    existing = cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='role_permissions'"
+    ).fetchone()
+    if existing:
+        columns = {row["name"] for row in cur.execute("PRAGMA table_info(role_permissions)")}
+        if {"id", "role_name", "permission_name"}.issubset(columns):
+            duplicates = cur.execute(
+                "SELECT 1 FROM role_permissions GROUP BY role_name, permission_name "
+                "HAVING COUNT(*) > 1 LIMIT 1"
+            ).fetchone()
+            indexes = list(cur.execute("PRAGMA index_list(role_permissions)"))
+            reconciled = False
+            for row in indexes:
+                if row["name"] != "ux_role_permissions_role_permission" or row["unique"] != 1:
+                    continue
+                index_columns = [
+                    info["name"]
+                    for info in cur.execute(
+                        "PRAGMA index_info(ux_role_permissions_role_permission)"
+                    )
+                ]
+                reconciled = index_columns == ["role_name", "permission_name"]
+                if reconciled:
+                    break
+            if duplicates and not reconciled:
+                conn.close()
+                raise RuntimeError(
+                    "role_permissions contains duplicate logical pairs; run "
+                    "migrations/reconcile_role_permissions_baseline.py with an explicit "
+                    "database path before invoking ensure_role_tables()."
+                )
+
     cur.execute("""
     CREATE TABLE IF NOT EXISTS user_roles (
         role_id TEXT PRIMARY KEY,
@@ -3155,8 +3187,10 @@ def ensure_role_tables():
                 VALUES (?, ?)
             """, (role_name, permission_name))
 
+    changes = conn.total_changes
     conn.commit()
     conn.close()
+    return {"ok": True, "changes": changes}
 
 
 def get_next_role_id():

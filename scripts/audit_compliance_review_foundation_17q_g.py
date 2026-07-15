@@ -1,4 +1,7 @@
+from html.parser import HTMLParser
 from pathlib import Path
+import importlib
+import inspect
 import os
 import re
 import sqlite3
@@ -30,16 +33,20 @@ EXPECTED_TABLES = {
     "compliance_review_events",
     "compliance_review_relationships",
 }
-EXPECTED_FILES = {
-    "migrations/add_compliance_review_foundation.py",
-    "models/models_compliance_reviews.py",
-    "models/__init__.py",
-    "scripts/audit_archive_people_destination_adapters_17q_e.py",
-    "scripts/audit_compliance_review_architecture_17q_f.py",
+ALLOWED_MODIFIED_FILES = {
+    "app.py",
+    "database/db.py",
     "services/services_compliance_reviews.py",
+    "templates/ios_workspaces/compliance.html",
     "scripts/audit_compliance_review_foundation_17q_g.py",
-    "scripts/audit_regression_guard_and_auth_preservation_17q_f_1.py",
-    "scripts/audit_system_audit_destination_removal_17q_d.py",
+    "scripts/audit_system_observation_foundation_17m.py",
+}
+ALLOWED_UNTRACKED_FILES = {
+    "migrations/reconcile_role_permissions_baseline.py",
+    "scripts/audit_authorization_baseline_reconciliation_17q_h6a_r6.py",
+    "scripts/audit_compliance_review_readonly_ui_17q_h.py",
+    "templates/compliance_reviews/registry.html",
+    "templates/compliance_reviews/detail.html",
 }
 AUTHORIZED_ACTOR = {
     "actor_id": "admin",
@@ -127,13 +134,154 @@ def base_payload(**overrides):
     return payload
 
 
+class _TemplateTagGuard(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.tags = []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.append(tag.lower())
+
+    def handle_startendtag(self, tag, attrs):
+        self.tags.append(tag.lower())
+
+
+def _route_and_ui_compatibility():
+    app_module = importlib.import_module("app")
+    flask_app = app_module.app
+    rules = list(flask_app.url_map.iter_rules())
+    review_rules = [rule for rule in rules if rule.rule.startswith("/compliance/reviews")]
+    registry_rules = [rule for rule in rules if rule.endpoint == "compliance_review_registry"]
+    detail_rules = [rule for rule in rules if rule.endpoint == "compliance_review_detail"]
+    expected_methods = {"GET", "HEAD", "OPTIONS"}
+
+    route_parts_present = bool(review_rules or registry_rules or detail_rules)
+    if route_parts_present:
+        route_ok = (
+            len(registry_rules) == 1
+            and len(detail_rules) == 1
+            and registry_rules[0].rule == "/compliance/reviews"
+            and detail_rules[0].rule == "/compliance/reviews/<compliance_review_id>"
+            and set(registry_rules[0].methods) == expected_methods
+            and set(detail_rules[0].methods) == expected_methods
+            and len(review_rules) == 2
+            and {(rule.endpoint, rule.rule) for rule in review_rules} == {
+                (registry_rules[0].endpoint, registry_rules[0].rule),
+                (detail_rules[0].endpoint, detail_rules[0].rule),
+            }
+            and all("POST" not in rule.methods for rule in review_rules)
+        )
+        forbidden_calls = (
+            "create_compliance_review",
+            "transition_compliance_review",
+            "ensure_compliance_review_foundation",
+            "db.create_all",
+            "ext_db.create_all",
+            "subprocess",
+            "os.system",
+            "log_change",
+        )
+        route_sources = "\n".join(
+            inspect.getsource(flask_app.view_functions[endpoint])
+            for endpoint in ("compliance_review_registry", "compliance_review_detail")
+            if endpoint in flask_app.view_functions
+        )
+        route_ok = route_ok and all(
+            not re.search(rf"(?<![A-Za-z0-9_]){re.escape(call)}\s*\(", route_sources)
+            for call in forbidden_calls
+        )
+    else:
+        route_ok = True
+
+    registry_path = ROOT / "templates/compliance_reviews/registry.html"
+    detail_path = ROOT / "templates/compliance_reviews/detail.html"
+    template_presence = (registry_path.exists(), detail_path.exists())
+    if any(template_presence):
+        templates_ok = all(template_presence) and registry_path.is_file() and detail_path.is_file()
+        sources = {}
+        if templates_ok:
+            try:
+                for name, template_path in (
+                    ("compliance_reviews/registry.html", registry_path),
+                    ("compliance_reviews/detail.html", detail_path),
+                ):
+                    flask_app.jinja_env.get_template(name)
+                    sources[name] = template_path.read_text(encoding="utf-8")
+            except Exception:
+                templates_ok = False
+        if templates_ok:
+            forbidden_tags = {"form", "input", "textarea", "select", "button", "script"}
+            forbidden_fields = {
+                "payload_hash",
+                "idempotency_key",
+                "approved_by",
+                "approved_at",
+            }
+            mutation_terms = (
+                "create", "transition", "acknowledge", "assign", "finding",
+                "recommendation", "evidence_determination", "disposition",
+                "approval", "reject", "defer", "closure", "reopen",
+                "recurrence", "supersession", "routing", "remediation",
+                "migration", "repair",
+            )
+            for source in sources.values():
+                parser = _TemplateTagGuard()
+                parser.feed(source)
+                lowered = source.lower()
+                templates_ok = templates_ok and not (set(parser.tags) & forbidden_tags)
+                templates_ok = templates_ok and "|safe" not in re.sub(r"\s+", "", lowered)
+                templates_ok = templates_ok and not any(field in lowered for field in forbidden_fields)
+                templates_ok = templates_ok and not re.search(
+                    r"\b(?:review|event|relationship)\s*(?:\.\s*id\b|\[\s*['\"]id['\"]\s*\])",
+                    source,
+                )
+                url_endpoints = re.findall(r"url_for\(\s*['\"]([^'\"]+)", source)
+                templates_ok = templates_ok and not any(
+                    endpoint.startswith("compliance_review_")
+                    and any(term in endpoint.lower() for term in mutation_terms)
+                    for endpoint in url_endpoints
+                )
+            registry_endpoints = re.findall(
+                r"url_for\(\s*['\"]([^'\"]+)",
+                sources["compliance_reviews/registry.html"],
+            )
+            templates_ok = templates_ok and set(registry_endpoints) <= {"compliance_review_detail"}
+    else:
+        templates_ok = True
+
+    workspace_source = read("templates/ios_workspaces/compliance.html")
+    registry_link_present = "Compliance Review Registry" in workspace_source
+    if registry_link_present:
+        parser = _TemplateTagGuard()
+        parser.feed(workspace_source)
+        workspace_endpoints = re.findall(
+            r"url_for\(\s*['\"]([^'\"]+)", workspace_source
+        )
+        mutation_controls = {"form", "input", "textarea", "select", "button"}
+        workspace_ok = (
+            "compliance_review_registry" in workspace_endpoints
+            and not (set(parser.tags) & mutation_controls)
+            and not any(
+                endpoint.startswith("compliance_review_")
+                and endpoint != "compliance_review_registry"
+                for endpoint in workspace_endpoints
+            )
+        )
+    else:
+        workspace_ok = True
+
+    complete_h_surface = route_parts_present and all(template_presence) and registry_link_present
+    foundation_only_surface = not route_parts_present and not any(template_presence) and not registry_link_present
+    consistent_surface = complete_h_surface or foundation_only_surface
+    return route_ok and consistent_surface, templates_ok and workspace_ok and consistent_surface
+
+
 def source_guard_results():
     service = read("services/services_compliance_reviews.py")
     model = read("models/models_compliance_reviews.py")
     combined = f"{model}\n{service}"
     destination = read("services/services_system_observation_destinations.py")
-    app_source = read("app.py")
-    template_files = list((ROOT / "templates").rglob("*compliance_review*"))
+    route_ok, ui_ok = _route_and_ui_compatibility()
     return {
         "reserved_workflows": all(
             token in combined
@@ -148,8 +296,8 @@ def source_guard_results():
             "No authoritative routable Compliance destination registry is available" in destination
             and '"compliance"' not in re.search(r"SUPPORTED_DESTINATIONS\s*=\s*\{([^}]+)\}", destination, re.S).group(1)
         ),
-        "no_routes": "/compliance/reviews" not in app_source,
-        "no_templates": not template_files,
+        "readonly_route_compatibility": route_ok,
+        "readonly_template_and_workspace_compatibility": ui_ok,
     }
 
 
@@ -157,13 +305,21 @@ def changed_files_ok():
     code, stdout, stderr = run_git("diff", "--name-only")
     if code != 0:
         raise AssertionError(stderr or stdout)
-    changed = {line.strip() for line in stdout.splitlines() if line.strip()}
+    modified = {line.strip() for line in stdout.splitlines() if line.strip()}
     code, stdout, stderr = run_git("ls-files", "--others", "--exclude-standard")
     if code != 0:
         raise AssertionError(stderr or stdout)
-    changed.update(line.strip() for line in stdout.splitlines() if line.strip())
-    unexpected = changed - EXPECTED_FILES
-    return changed, unexpected
+    untracked = {line.strip() for line in stdout.splitlines() if line.strip()}
+    code, staged_stdout, stderr = run_git("diff", "--cached", "--name-only")
+    if code != 0:
+        raise AssertionError(stderr or staged_stdout)
+    staged = {line.strip() for line in staged_stdout.splitlines() if line.strip()}
+    unexpected = (
+        (modified - ALLOWED_MODIFIED_FILES)
+        | (untracked - ALLOWED_UNTRACKED_FILES)
+        | staged
+    )
+    return modified | untracked, unexpected
 
 
 def main():
@@ -401,8 +557,9 @@ def main():
     print(
         "PASS - Compliance Review now has a durable numbered, scope-aware, versioned data model "
         "with explicit lifecycle controls, append-only event history, duplicate and idempotency "
-        "protection, and atomic service operations, while all UI, disposition, approval, closure, "
-        "remediation, verifier, and System Observation routing capabilities remain unavailable."
+        "protection, and atomic service operations, while disposition, approval, closure, remediation, "
+        "verifier, mutation UI, and System Observation routing capabilities remain unavailable; only "
+        "the compatible later GET-only registry and detail interface may be present."
     )
 
 

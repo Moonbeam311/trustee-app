@@ -2730,7 +2730,7 @@ ensure_instrument_tables()
 ensure_fiduciary_tables()
 ensure_genealogy_tables()
 ensure_media_tables()
-ensure_role_tables()
+# POST-V2-17Q-H.6A-R5: role/permission seeding is explicit-only, not import-time.
 ensure_user_tables()
 ensure_user_permission_override_tables()
 ensure_trust_minutes_tables()
@@ -7106,6 +7106,140 @@ def admin_ios_workspace(workspace_key):
         system_oversight=system_oversight,
     )
 
+
+
+def _compliance_review_read_scope():
+    username = (session.get("username") or "").strip().lower()
+    role = session.get("role")
+    if username == "admin" and role == "Admin":
+        return {"global": True}
+    return {
+        "global": False,
+        "firm_id": session.get("firm_id"),
+    }
+
+
+def _compliance_review_error(reason, status):
+    return render_template("access_denied.html", reason=reason), status
+
+
+COMPLIANCE_REVIEW_FOUNDATION_UNAVAILABLE = (
+    "Compliance Review persistence is not currently available because the institutional "
+    "foundation for this registry has not been activated. No review record was created, "
+    "no migration occurred, and changing operator permissions will not activate the "
+    "registry. Authorized institutional activation is required."
+)
+
+
+@app.route("/compliance/reviews", methods=["GET"])
+def compliance_review_registry():
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from services.services_compliance_reviews import list_compliance_reviews
+
+    try:
+        scope = _compliance_review_read_scope()
+        registry = list_compliance_reviews(limit=100, scope=scope)
+    except Exception:
+        return _compliance_review_error(
+            "Compliance Review Registry could not be read.", 503
+        )
+
+    if registry.get("status") == "invalid_scope":
+        return _compliance_review_error(
+            "Compliance Review access requires an authenticated firm scope.", 403
+        )
+    if registry.get("status") == "schema_missing":
+        return _compliance_review_error(
+            COMPLIANCE_REVIEW_FOUNDATION_UNAVAILABLE,
+            503,
+        )
+    if not registry.get("available") or registry.get("status") == "read_failure":
+        return _compliance_review_error(
+            "Compliance Review Registry could not be read.", 503
+        )
+
+    return render_template(
+        "compliance_reviews/registry.html",
+        registry=registry,
+        route_family="/compliance/reviews",
+        compliance_workspace_url=url_for(
+            "admin_ios_workspace", workspace_key="compliance"
+        ),
+    ), 200
+
+
+@app.route(
+    "/compliance/reviews/<compliance_review_id>",
+    methods=["GET"],
+)
+def compliance_review_detail(compliance_review_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+
+    from services.services_compliance_reviews import (
+        get_compliance_review,
+        list_compliance_review_events,
+        list_compliance_review_relationships,
+        list_compliance_reviews,
+        validate_public_compliance_review_id,
+    )
+
+    scope = _compliance_review_read_scope()
+    try:
+        registry = list_compliance_reviews(limit=1, scope=scope)
+    except Exception:
+        return _compliance_review_error(
+            "Compliance Review Registry could not be read.", 503
+        )
+
+    if registry.get("status") == "invalid_scope":
+        return _compliance_review_error(
+            "Compliance Review access requires an authenticated firm scope.", 403
+        )
+
+    try:
+        validated_review_id = validate_public_compliance_review_id(
+            compliance_review_id
+        )
+    except (TypeError, ValueError):
+        return _compliance_review_error("Compliance Review not found.", 404)
+
+    if registry.get("status") == "schema_missing":
+        return _compliance_review_error(
+            COMPLIANCE_REVIEW_FOUNDATION_UNAVAILABLE,
+            503,
+        )
+    if not registry.get("available") or registry.get("status") == "read_failure":
+        return _compliance_review_error(
+            "Compliance Review Registry could not be read.", 503
+        )
+
+    try:
+        review = get_compliance_review(validated_review_id, scope=scope)
+        if review is None:
+            return _compliance_review_error("Compliance Review not found.", 404)
+        events = list_compliance_review_events(validated_review_id, scope=scope)
+        relationships = list_compliance_review_relationships(
+            validated_review_id, scope=scope
+        )
+    except Exception:
+        return _compliance_review_error(
+            "Compliance Review Registry could not be read.", 503
+        )
+
+    return render_template(
+        "compliance_reviews/detail.html",
+        review=review,
+        events=events,
+        relationships=relationships,
+        route_family="/compliance/reviews",
+        registry_url=url_for("compliance_review_registry"),
+        compliance_workspace_url=url_for(
+            "admin_ios_workspace", workspace_key="compliance"
+        ),
+    ), 200
 
 def _system_observation_read_scope():
     username = (session.get("username") or "").strip().lower()
