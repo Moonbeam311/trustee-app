@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-card">
+  <h1>Create Compliance Review</h1>
+  <p class="admin-muted">Temporary activated operator workflow. Submission is governed by server-side scope, authority, lifecycle, and request-integrity controls.</p>
+  <div class="admin-actions">
+    <a href="{{ registry_url }}">Back to Compliance Review Registry</a>
+    <a href="{{ compliance_workspace_url }}">Back to Compliance Workspace</a>
+  </div>
+</section>
+
+<section class="admin-card">
+  <form method="post" action="{{ url_for("compliance_review_registry") }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <label>Firm ID <input name="firm_id" required value="{{ session.get("firm_id") or "FIRM-001" }}"></label>
+    <label>Review Type <input name="review_type" required maxlength="80" value="trust_administration_review"></label>
+    <label>Title <input name="title" required maxlength="255"></label>
+    <label>Purpose <input name="purpose" required maxlength="255"></label>
+    <label>Scope <input name="scope" required maxlength="255"></label>
+    <label>Review Standard <input name="review_standard" required maxlength="255"></label>
+    <label>Primary Subject Type <input name="primary_subject_type" required maxlength="80" value="Trust"></label>
+    <label>Primary Subject ID <input name="primary_subject_id" maxlength="80"></label>
+    <label>Primary Subject Label <input name="primary_subject_label" maxlength="255"></label>
+    <label>Question Presented <input name="question_presented" required maxlength="255" value="Does the governed record satisfy the applicable institutional control?"></label>
+    <label>Governing Requirement Type <input name="governing_requirement_type" required maxlength="80" value="institutional_policy"></label>
+    <label>Governing Requirement ID <input name="governing_requirement_id" maxlength="80"></label>
+    <label>Source Type <input name="source_type" required maxlength="80" value="governance_record"></label>
+    <label>Source ID <input name="source_id" maxlength="80"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Risk Level <input name="risk_level" maxlength="40" value="moderate"></label>
+    <label>Priority <input name="priority" maxlength="40" value="normal"></label>
+    <label>Confidentiality Level <input name="confidentiality_level" maxlength="80" value="internal"></label>
+    <label>Due Date <input name="due_date" type="date"></label>
+    <label>Idempotency Key <input name="idempotency_key" maxlength="120"></label>
+    <button type="submit">Create review</button>
+  </form>
+</section>
+{% endblock %}

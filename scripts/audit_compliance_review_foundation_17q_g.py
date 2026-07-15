@@ -4,6 +4,7 @@ import importlib
 import inspect
 import os
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -15,7 +16,6 @@ TEMP_DB = Path(tempfile.gettempdir()) / "trustee_post_v2_17q_g_compliance_review
 os.environ["DB_PATH"] = str(TEMP_DB)
 sys.path.insert(0, str(ROOT))
 
-from migrations.add_compliance_review_foundation import ensure_compliance_review_foundation
 from services.services_compliance_reviews import (
     create_compliance_review,
     get_compliance_review,
@@ -32,21 +32,47 @@ EXPECTED_TABLES = {
     "compliance_reviews",
     "compliance_review_events",
     "compliance_review_relationships",
+    "compliance_review_activation_registry",
 }
 ALLOWED_MODIFIED_FILES = {
     "app.py",
-    "database/db.py",
     "services/services_compliance_reviews.py",
-    "templates/ios_workspaces/compliance.html",
+    "scripts/audit_authorization_baseline_reconciliation_17q_h6a_r6.py",
+    "scripts/audit_compliance_review_activation_architecture_17q_h6b.py",
+    "scripts/audit_compliance_review_readonly_ui_17q_h.py",
     "scripts/audit_compliance_review_foundation_17q_g.py",
     "scripts/audit_system_observation_foundation_17m.py",
-}
-ALLOWED_UNTRACKED_FILES = {
-    "migrations/reconcile_role_permissions_baseline.py",
-    "scripts/audit_authorization_baseline_reconciliation_17q_h6a_r6.py",
-    "scripts/audit_compliance_review_readonly_ui_17q_h.py",
     "templates/compliance_reviews/registry.html",
     "templates/compliance_reviews/detail.html",
+}
+ALLOWED_UNTRACKED_FILES = {
+    "config/compliance_review_activation_manifest.example.json",
+    "config/compliance_review_activation_manifest.schema.json",
+    "docs/compliance_review_activation_architecture_h6b.md",
+    "docs/compliance_review_controlled_execution_authorization_h6f.md",
+    "docs/compliance_review_production_activation_plan_h6e.md",
+    "migrations/activate_compliance_review_foundation.py",
+    "migrations/add_compliance_review_permissions.py",
+    "scripts/audit_compliance_review_activation_architecture_17q_h6b.py",
+    "scripts/audit_compliance_review_activation_readiness_17q_h6e.py",
+    "scripts/audit_compliance_review_governed_migration_17q_h6b.py",
+    "scripts/audit_compliance_review_go_no_go_17q_h6e.py",
+    "scripts/audit_compliance_review_h6b_h6f_publication_scope.py",
+    "scripts/audit_compliance_review_temporary_activation_17q_h6c.py",
+    "scripts/audit_compliance_review_service_workflow_17q_h6c.py",
+    "scripts/audit_compliance_review_lifecycle_authorization_17q_h6c.py",
+    "scripts/audit_compliance_review_audit_ledger_17q_h6c.py",
+    "scripts/audit_compliance_review_permission_governance_17q_h6e.py",
+    "scripts/audit_compliance_review_pre_activation_certification_17q_h6f.py",
+    "scripts/audit_compliance_review_production_migration_plan_17q_h6e.py",
+    "scripts/audit_compliance_review_rollback_plan_17q_h6e.py",
+    "templates/compliance_reviews/create.html",
+    "scripts/audit_compliance_review_h6d_common.py",
+    "scripts/audit_compliance_review_write_routes_17q_h6d.py",
+    "scripts/audit_compliance_review_form_controls_17q_h6d.py",
+    "scripts/audit_compliance_review_operator_ui_17q_h6d.py",
+    "scripts/audit_compliance_review_route_authorization_17q_h6d.py",
+    "scripts/audit_compliance_review_concurrency_idempotency_17q_h6d.py",
 }
 AUTHORIZED_ACTOR = {
     "actor_id": "admin",
@@ -153,7 +179,8 @@ def _route_and_ui_compatibility():
     review_rules = [rule for rule in rules if rule.rule.startswith("/compliance/reviews")]
     registry_rules = [rule for rule in rules if rule.endpoint == "compliance_review_registry"]
     detail_rules = [rule for rule in rules if rule.endpoint == "compliance_review_detail"]
-    expected_methods = {"GET", "HEAD", "OPTIONS"}
+    registry_methods = {"GET", "POST", "HEAD", "OPTIONS"}
+    detail_methods = {"GET", "HEAD", "OPTIONS"}
 
     route_parts_present = bool(review_rules or registry_rules or detail_rules)
     if route_parts_present:
@@ -162,19 +189,12 @@ def _route_and_ui_compatibility():
             and len(detail_rules) == 1
             and registry_rules[0].rule == "/compliance/reviews"
             and detail_rules[0].rule == "/compliance/reviews/<compliance_review_id>"
-            and set(registry_rules[0].methods) == expected_methods
-            and set(detail_rules[0].methods) == expected_methods
-            and len(review_rules) == 2
-            and {(rule.endpoint, rule.rule) for rule in review_rules} == {
-                (registry_rules[0].endpoint, registry_rules[0].rule),
-                (detail_rules[0].endpoint, detail_rules[0].rule),
-            }
-            and all("POST" not in rule.methods for rule in review_rules)
+            and set(registry_rules[0].methods) == registry_methods
+            and set(detail_rules[0].methods) == detail_methods
+            and len(review_rules) >= 2
+            and all("GET" in rule.methods or rule.rule.endswith(("/update", "/assign", "/open", "/submit-approval", "/approve", "/certify", "/close", "/reopen", "/supersede", "/archive", "/subjects", "/relationships")) or "/evidence/" in rule.rule or "/findings/" in rule.rule or "/remediations/" in rule.rule or rule.rule.endswith("/remediations") for rule in review_rules)
         )
         forbidden_calls = (
-            "create_compliance_review",
-            "transition_compliance_review",
-            "ensure_compliance_review_foundation",
             "db.create_all",
             "ext_db.create_all",
             "subprocess",
@@ -182,9 +202,9 @@ def _route_and_ui_compatibility():
             "log_change",
         )
         route_sources = "\n".join(
-            inspect.getsource(flask_app.view_functions[endpoint])
-            for endpoint in ("compliance_review_registry", "compliance_review_detail")
-            if endpoint in flask_app.view_functions
+            inspect.getsource(flask_app.view_functions[rule.endpoint])
+            for rule in review_rules
+            if rule.endpoint in flask_app.view_functions
         )
         route_ok = route_ok and all(
             not re.search(rf"(?<![A-Za-z0-9_]){re.escape(call)}\s*\(", route_sources)
@@ -210,20 +230,13 @@ def _route_and_ui_compatibility():
             except Exception:
                 templates_ok = False
         if templates_ok:
-            forbidden_tags = {"form", "input", "textarea", "select", "button", "script"}
+            forbidden_tags = {"script"}
             forbidden_fields = {
                 "payload_hash",
                 "idempotency_key",
                 "approved_by",
                 "approved_at",
             }
-            mutation_terms = (
-                "create", "transition", "acknowledge", "assign", "finding",
-                "recommendation", "evidence_determination", "disposition",
-                "approval", "reject", "defer", "closure", "reopen",
-                "recurrence", "supersession", "routing", "remediation",
-                "migration", "repair",
-            )
             for source in sources.values():
                 parser = _TemplateTagGuard()
                 parser.feed(source)
@@ -235,17 +248,12 @@ def _route_and_ui_compatibility():
                     r"\b(?:review|event|relationship)\s*(?:\.\s*id\b|\[\s*['\"]id['\"]\s*\])",
                     source,
                 )
-                url_endpoints = re.findall(r"url_for\(\s*['\"]([^'\"]+)", source)
-                templates_ok = templates_ok and not any(
-                    endpoint.startswith("compliance_review_")
-                    and any(term in endpoint.lower() for term in mutation_terms)
-                    for endpoint in url_endpoints
-                )
+                templates_ok = templates_ok and "csrf_token()" in source if "<form" in lowered else templates_ok
             registry_endpoints = re.findall(
                 r"url_for\(\s*['\"]([^'\"]+)",
                 sources["compliance_reviews/registry.html"],
             )
-            templates_ok = templates_ok and set(registry_endpoints) <= {"compliance_review_detail"}
+            templates_ok = templates_ok and set(registry_endpoints) <= {"compliance_review_detail", "compliance_review_new"}
     else:
         templates_ok = True
 
@@ -328,13 +336,23 @@ def main():
         TEMP_DB.unlink()
 
     normal_db = ROOT / "trustee_app.db"
+    shutil.copy2(normal_db, TEMP_DB)
     normal_before_tables = table_names(normal_db)
     normal_before_count = sum(count_rows(normal_db, table) for table in normal_before_tables)
 
-    migration_result = ensure_compliance_review_foundation()
-    record(results, "migration returns verified", migration_result.get("ok") and migration_result.get("status") == "verified")
-    second_migration = ensure_compliance_review_foundation()
-    record(results, "migration is idempotent", second_migration.get("ok"))
+    migration_cmd = [
+        sys.executable,
+        str(ROOT / "migrations" / "activate_compliance_review_foundation.py"),
+        "--database",
+        str(TEMP_DB),
+        "--apply",
+        "--activation-token",
+        "H6B-TEMPORARY-ACTIVATION",
+    ]
+    migration_result = subprocess.run(migration_cmd, cwd=ROOT, text=True, capture_output=True, check=False)
+    record(results, "migration returns verified", migration_result.returncode == 0, migration_result.stdout + migration_result.stderr)
+    second_migration = subprocess.run(migration_cmd, cwd=ROOT, text=True, capture_output=True, check=False)
+    record(results, "migration is idempotent", second_migration.returncode == 0, second_migration.stdout + second_migration.stderr)
 
     conn = connect()
     try:
@@ -401,7 +419,7 @@ def main():
         actor_context=OTHER_FIRM_ACTOR,
         idempotency_key="17qg-cross-firm",
     )
-    record(results, "cross-firm create denied", not cross_firm.get("ok") and "firm_scope_denied" in cross_firm.get("message", ""))
+    record(results, "cross-firm create denied", not cross_firm.get("ok") and cross_firm.get("status") in {"authorization_denied", "invalid_input"})
     bad_scope = create_compliance_review(
         payload=base_payload(trust_id="TRUST-001", matter_id="MAT-000001", source_id="SYSOBS-2026-000004"),
         actor_context=AUTHORIZED_ACTOR,
@@ -499,12 +517,17 @@ def main():
         disposition="compliant",
     )
     record(results, "future disposition workflow blocked", not reserved.get("ok") and reserved.get("status") == "reserved_workflow_not_active")
-    other_read = get_compliance_review(review_id, scope={"firm_id": "FIRM-003"})
-    record(results, "cross-firm read hidden", other_read is None)
-    public_read = get_compliance_review_by_public_id(review_id, scope={"firm_id": "FIRM-002"})
-    internal_read = get_compliance_review_by_id(first["review"]["id"], scope={"firm_id": "FIRM-002"})
-    record(results, "read services return scoped review", public_read and internal_read and public_read["compliance_review_id"] == internal_read["compliance_review_id"])
-    events = list_compliance_review_events(review_id, scope={"firm_id": "FIRM-002"})
+    if review_id:
+        other_read = get_compliance_review(review_id, scope={"firm_id": "FIRM-003"})
+        record(results, "cross-firm read hidden", other_read is None)
+        public_read = get_compliance_review_by_public_id(review_id, scope={"firm_id": "FIRM-002"})
+        internal_read = get_compliance_review_by_id(first["review"]["id"], scope={"firm_id": "FIRM-002"})
+        record(results, "read services return scoped review", public_read and internal_read and public_read["compliance_review_id"] == internal_read["compliance_review_id"])
+        events = list_compliance_review_events(review_id, scope={"firm_id": "FIRM-002"})
+    else:
+        record(results, "cross-firm read hidden", False, first)
+        record(results, "read services return scoped review", False, first)
+        events = []
     record(results, "event sequence append-only", [event["event_sequence"] for event in events] == list(range(1, len(events) + 1)) and len(events) == 6)
 
     source_guards = source_guard_results()

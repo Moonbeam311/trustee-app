@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Compliance Review Activation Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "module_key",
+    "manifest_version",
+    "schema_version",
+    "required_application_commit",
+    "target_environment",
+    "target_database_path",
+    "expected_pre_migration_sha256",
+    "expected_role_permission_count",
+    "expected_permission_set_hash",
+    "permission_migration",
+    "activation_migration",
+    "backup_path",
+    "backup_sha256",
+    "requested_by",
+    "approved_by",
+    "authority_basis",
+    "migration_executor",
+    "post_migration_verifier",
+    "rollback_owner",
+    "activation_window",
+    "certification_owner",
+    "write_freeze_confirmed",
+    "active_connections_confirmed",
+    "permission_migration_authorized",
+    "activation_migration_authorized",
+    "controlled_create_test_authorized",
+    "rollback_authorized",
+    "token_reference"
+  ],
+  "properties": {
+    "module_key": { "const": "compliance_reviews" },
+    "manifest_version": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": "compliance_reviews_h6b_v1" },
+    "required_application_commit": { "type": "string", "minLength": 1 },
+    "target_environment": { "type": "string", "enum": ["production", "staging", "controlled-local"] },
+    "target_database_path": { "type": "string", "minLength": 1 },
+    "expected_pre_migration_sha256": { "type": "string", "minLength": 1 },
+    "expected_role_permission_count": { "type": "integer", "minimum": 0 },
+    "expected_permission_set_hash": { "type": "string", "minLength": 1 },
+    "permission_migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "mode"],
+      "properties": {
+        "name": { "const": "add_compliance_review_permissions_h6e" },
+        "path": { "const": "migrations/add_compliance_review_permissions.py" },
+        "mode": { "type": "string", "minLength": 1 }
+      }
+    },
+    "activation_migration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "schema_version"],
+      "properties": {
+        "name": { "const": "activate_compliance_review_foundation_h6b" },
+        "path": { "const": "migrations/activate_compliance_review_foundation.py" },
+        "schema_version": { "const": "compliance_reviews_h6b_v1" }
+      }
+    },
+    "backup_path": { "type": "string", "minLength": 1 },
+    "backup_sha256": { "type": "string", "minLength": 1 },
+    "requested_by": { "type": "string", "minLength": 1 },
+    "approved_by": { "type": "string", "minLength": 1 },
+    "authority_basis": { "type": "string", "minLength": 1 },
+    "migration_executor": { "type": "string", "minLength": 1 },
+    "post_migration_verifier": { "type": "string", "minLength": 1 },
+    "rollback_owner": { "type": "string", "minLength": 1 },
+    "activation_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["starts_at", "ends_at"],
+      "properties": {
+        "starts_at": { "type": "string", "minLength": 1 },
+        "ends_at": { "type": "string", "minLength": 1 }
+      }
+    },
+    "certification_owner": { "type": "string", "minLength": 1 },
+    "write_freeze_confirmed": { "type": "boolean" },
+    "active_connections_confirmed": { "type": "boolean" },
+    "permission_migration_authorized": { "type": "boolean" },
+    "activation_migration_authorized": { "type": "boolean" },
+    "controlled_create_test_authorized": { "type": "boolean" },
+    "rollback_authorized": { "type": "boolean" },
+    "token_reference": { "type": "string", "minLength": 1 }
+  }
+}

@@ -79,6 +79,173 @@
   {% else %}<p class="admin-muted">No related governed records are currently stored for this Compliance Review.</p>{% endif %}
 </section>
 
+{% if controls %}
+<section class="admin-card">
+  <h2>Operator Controls</h2>
+  <p class="admin-muted">Controls are shown for operator convenience. Server-side service authorization remains authoritative.</p>
+  {% if controls.edit %}
+  <form method="post" action="{{ url_for("compliance_review_update", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Title <input name="title" maxlength="255" value="{{ review.title or "" }}"></label>
+    <label>Purpose <input name="purpose" maxlength="255"></label>
+    <label>Scope <input name="scope" maxlength="255"></label>
+    <label>Review Standard <input name="review_standard" maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Update draft</button>
+  </form>
+  {% endif %}
+  {% if controls.assign %}
+  <form method="post" action="{{ url_for("compliance_review_assign", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Assigned Reviewer <input name="assigned_reviewer" required maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Assign reviewer</button>
+  </form>
+  {% endif %}
+  {% if controls.open %}
+  <form method="post" action="{{ url_for("compliance_review_open", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Open review</button>
+  </form>
+  {% endif %}
+  {% if controls.subjects %}
+  <form method="post" action="{{ url_for("compliance_review_add_subject", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Subject Type <input name="subject_type" required maxlength="80"></label>
+    <label>Subject ID <input name="subject_id" maxlength="80"></label>
+    <label>Subject Label <input name="subject_label" maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Add subject</button>
+  </form>
+  {% endif %}
+  {% if controls.relationships %}
+  <form method="post" action="{{ url_for("compliance_review_add_relationship", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Related Record Type <input name="related_record_type" required maxlength="80"></label>
+    <label>Related Record ID <input name="related_record_id" required maxlength="80"></label>
+    <label>Relationship Type <input name="relationship_type" maxlength="80" value="related_to"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Add relationship</button>
+  </form>
+  {% endif %}
+  {% if controls.evidence %}
+  <form method="post" action="{{ url_for("compliance_review_evidence", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Evidence Type <input name="evidence_type" required maxlength="80"></label>
+    <label>Source Type <input name="source_type" required maxlength="80"></label>
+    <label>Source ID <input name="source_id" maxlength="80"></label>
+    <label>Description <input name="description" maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Add evidence</button>
+  </form>
+  <form method="post" action="{{ url_for("compliance_review_evidence_status", compliance_review_id=review.compliance_review_id, evidence_id="CEV-YYYY-000001") }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Evidence ID <input name="display_evidence_id" value="Enter ID in route during temporary testing" disabled></label>
+    <label>Verification Basis <input name="verification_basis" required maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Verify evidence</button>
+  </form>
+  {% endif %}
+  {% if controls.findings %}
+  <form method="post" action="{{ url_for("compliance_review_findings", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Finding Type <input name="finding_type" required maxlength="80"></label>
+    <label>Title <input name="title" required maxlength="255"></label>
+    <label>Evidence Basis <input name="evidence_basis" required maxlength="255"></label>
+    <label>Severity <input name="severity" maxlength="40" value="medium"></label>
+    <label>Risk Level <input name="risk_level" maxlength="40" value="moderate"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type issue to confirm <input name="confirm_action" required></label>
+    <button type="submit">Issue finding</button>
+  </form>
+  {% endif %}
+  {% if controls.remediation %}
+  <form method="post" action="{{ url_for("compliance_review_add_remediation", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Finding ID <input name="compliance_finding_id" required maxlength="80"></label>
+    <label>Required Action <input name="required_action" required maxlength="255"></label>
+    <label>Responsible Party Type <input name="responsible_party_type" required maxlength="80"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <button type="submit">Assign remediation</button>
+  </form>
+  {% endif %}
+  {% if controls.approval %}
+  <form method="post" action="{{ url_for("compliance_review_submit_approval", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type submit to confirm <input name="confirm_action" required></label>
+    <button type="submit">Submit for approval</button>
+  </form>
+  <form method="post" action="{{ url_for("compliance_review_approve", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type approve to confirm <input name="confirm_action" required></label>
+    <button type="submit">Approve review</button>
+  </form>
+  {% endif %}
+  {% if controls.certification %}
+  <form method="post" action="{{ url_for("compliance_review_certify", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Certification Statement <input name="certification_statement" required maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type certify to confirm <input name="confirm_action" required></label>
+    <button type="submit">Certify review</button>
+  </form>
+  {% endif %}
+  {% if controls.close %}
+  <form method="post" action="{{ url_for("compliance_review_close", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type close to confirm <input name="confirm_action" required></label>
+    <button type="submit">Close review</button>
+  </form>
+  {% endif %}
+  {% if controls.reopen %}
+  <form method="post" action="{{ url_for("compliance_review_reopen", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Reason <input name="reason" required maxlength="255"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type reopen to confirm <input name="confirm_action" required></label>
+    <button type="submit">Reopen review</button>
+  </form>
+  {% endif %}
+  {% if controls.supersede %}
+  <form method="post" action="{{ url_for("compliance_review_supersede", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Successor Review ID <input name="successor_review_id" required maxlength="80"></label>
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type supersede to confirm <input name="confirm_action" required></label>
+    <button type="submit">Supersede review</button>
+  </form>
+  {% endif %}
+  {% if controls.archive %}
+  <form method="post" action="{{ url_for("compliance_review_archive", compliance_review_id=review.compliance_review_id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="expected_version" value="{{ review.version }}">
+    <label>Authority Basis <input name="authority_basis" required maxlength="255"></label>
+    <label>Type archive to confirm <input name="confirm_action" required></label>
+    <button type="submit">Archive review</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+
 <section class="admin-card">
   <h2>Institutional Caution</h2>
   <p class="admin-muted">This page presents a governed institutional record. It does not independently establish compliance, legal sufficiency, approval, remediation, closure, or technical action.</p>
