@@ -1,0 +1,85 @@
+{
+  "schema_version": "25AE-current-control-coverage-v1",
+  "controls": [
+    {
+      "control_id": "authentication",
+      "title": "Authentication and user identity",
+      "status": "covered",
+      "current_audits": ["STEP-25AB", "STEP-25AC"],
+      "assertions": ["missing identity denied", "inactive_create", "live actor context uses database user"],
+      "historical_predecessors": ["H6A-R6-LEGACY-001"]
+    },
+    {
+      "control_id": "authorization",
+      "title": "Least-privilege Compliance authorization",
+      "status": "covered",
+      "current_audits": ["STEP-25AB", "STEP-25AC"],
+      "assertions": ["Admin role alone denied", "username admin denied", "Master Admin/global reader no mutation", "permission mapping complete"],
+      "historical_predecessors": ["H6C-LEGACY-003", "H6E-LEGACY-001"]
+    },
+    {
+      "control_id": "firm_scope",
+      "title": "Firm scope and global read separation",
+      "status": "covered",
+      "current_audits": ["STEP-25AB", "STEP-25AC", "STEP-25AD"],
+      "assertions": ["cross firm denied", "global reader cross firm mutation denied", "global_read_registry"],
+      "historical_predecessors": ["H6D-LEGACY-003"]
+    },
+    {
+      "control_id": "route_integration",
+      "title": "Compliance route integration",
+      "status": "covered",
+      "current_audits": ["STEP-25AC"],
+      "assertions": ["CSRF required", "confirmation required", "live route mutations use central actor context"],
+      "historical_predecessors": ["H6D-LEGACY-001", "H6D-LEGACY-002", "H6D-LEGACY-003", "H6D-LEGACY-004", "H6D-LEGACY-005"]
+    },
+    {
+      "control_id": "service_enforcement",
+      "title": "Service-layer authority and lifecycle enforcement",
+      "status": "covered",
+      "current_audits": ["STEP-25AC", "STEP-25AD"],
+      "assertions": ["canonical _actor_has_authority", "invalid lifecycle transition denied", "terminal mutation blocked"],
+      "historical_predecessors": ["H6C-LEGACY-002", "H6C-LEGACY-003"]
+    },
+    {
+      "control_id": "separation_of_duties",
+      "title": "Separation of duties",
+      "status": "covered",
+      "current_audits": ["STEP-25AB", "STEP-25AC", "STEP-25AD"],
+      "assertions": ["creator cannot approve", "finding issuer cannot acknowledge", "requester cannot approve exception", "approver cannot certify"],
+      "historical_predecessors": ["H6C-LEGACY-004"]
+    },
+    {
+      "control_id": "attribution",
+      "title": "Actor attribution persistence",
+      "status": "covered",
+      "current_audits": ["STEP-25AD"],
+      "assertions": ["exception_requested_by persisted", "approval actor persisted", "payload actor spoofing rejected by actor_context source"],
+      "historical_predecessors": ["H6C-LEGACY-004"]
+    },
+    {
+      "control_id": "permissions_and_migration",
+      "title": "Permission and migration alignment",
+      "status": "covered",
+      "current_audits": ["STEP-25AB", "STEP-25AC", "STEP-25AD"],
+      "assertions": ["permission migration idempotent", "sensitive defaults absent", "attribution migration idempotent", "fresh and additive paths validated"],
+      "historical_predecessors": ["H6E-LEGACY-001", "H6E-LEGACY-002", "H6E-LEGACY-004"]
+    },
+    {
+      "control_id": "activation_boundary",
+      "title": "Active database activation boundary",
+      "status": "covered",
+      "current_audits": ["STEP-25AC", "STEP-25AD", "STEP-25AE-LINEAGE", "STEP-25AE-MASTER"],
+      "assertions": ["active DB file unchanged", "Compliance objects empty", "policy unchanged", "normal DB path refused by migrations"],
+      "historical_predecessors": ["H6B-LEGACY-001", "H6B-LEGACY-002", "H6E-LEGACY-003", "H6E-LEGACY-005"]
+    },
+    {
+      "control_id": "audit_integrity",
+      "title": "Audit integrity and lineage",
+      "status": "covered",
+      "current_audits": ["STEP-25AD", "STEP-25AE-LINEAGE", "STEP-25AE-MASTER"],
+      "assertions": ["audit metadata persists", "historical hashes match", "registry excludes historical audits from current suite"],
+      "historical_predecessors": ["H6C-LEGACY-004", "H6F-LEGACY-001"]
+    }
+  ]
+}

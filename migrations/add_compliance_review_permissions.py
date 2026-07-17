@@ -42,6 +42,10 @@ PERMISSIONS = [
     ("PERM-CMP-019", "view_compliance_audit", "View Compliance Review audit trail"),
     ("PERM-CMP-020", "activate_compliance_foundation", "Authorize Compliance foundation activation"),
     ("PERM-CMP-021", "execute_compliance_migration", "Execute Compliance Review migrations"),
+    ("PERM-CMP-022", "acknowledge_compliance_findings", "Acknowledge Compliance Review findings"),
+    ("PERM-CMP-023", "open_compliance_review", "Open Compliance Review records"),
+    ("PERM-CMP-024", "request_compliance_exception", "Request Compliance remediation exceptions"),
+    ("PERM-CMP-025", "view_all_compliance_reviews", "View Compliance Review records across firm scope"),
 ]
 
 ROLE_ASSIGNMENTS = {
@@ -52,11 +56,10 @@ ROLE_ASSIGNMENTS = {
         "edit_compliance_review",
         "assign_compliance_reviewer",
         "add_compliance_evidence",
-        "verify_compliance_evidence",
         "issue_compliance_findings",
         "manage_compliance_remediation",
         "submit_compliance_remediation",
-        "verify_compliance_remediation",
+        "open_compliance_review",
         "close_compliance_review",
         "view_compliance_audit",
     ],
@@ -68,6 +71,7 @@ ROLE_ASSIGNMENTS = {
         "add_compliance_evidence",
         "manage_compliance_remediation",
         "submit_compliance_remediation",
+        "open_compliance_review",
     ],
     "Viewer": [
         "view_compliance_workspace",
@@ -78,12 +82,17 @@ ROLE_ASSIGNMENTS = {
 MANUAL_INSTITUTIONAL_ASSIGNMENT_REQUIRED = {
     "approve_compliance_exception",
     "approve_compliance_review",
+    "acknowledge_compliance_findings",
     "certify_compliance_review",
+    "request_compliance_exception",
+    "verify_compliance_evidence",
+    "verify_compliance_remediation",
     "reopen_compliance_review",
     "supersede_compliance_review",
     "archive_compliance_review",
     "activate_compliance_foundation",
     "execute_compliance_migration",
+    "view_all_compliance_reviews",
 }
 
 

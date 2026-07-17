@@ -119,6 +119,8 @@ H6C_ACTION_AUTHORITIES = {
     "verify_remediation": "verify_remediation",
     "request_exception": "request_exception",
     "approve_exception": "approve_exception",
+    "exception_requested": "request_exception",
+    "exception_approved": "approve_exception",
     "submit_approval": "approve_review",
     "approve_review": "approve_review",
     "certify_review": "certify_review",
@@ -147,6 +149,10 @@ FOUNDATION_UNAVAILABLE_MESSAGE = (
     "operator permissions will not activate the registry. Authorized "
     "institutional activation is required."
 )
+
+
+class SeparationOfDutiesError(PermissionError):
+    """Raised when an authorized actor fails maker/checker separation."""
 PUBLIC_REVIEW_FIELDS = (
     "compliance_review_id", "firm_id", "institution_id", "trust_id", "matter_id",
     "deployment_key", "title", "review_type", "question_presented",
@@ -259,7 +265,8 @@ def _actor_scope(actor_context):
     actor_context = actor_context or {}
     scope = actor_context.get("scope") or {}
     return {
-        "global": bool(scope.get("global") or actor_context.get("global")),
+        "global": bool(scope.get("global_read") or scope.get("global") or actor_context.get("global")),
+        "global_mutation": bool(scope.get("global_mutation")),
         "firm_id": scope.get("firm_id") or actor_context.get("firm_id"),
     }
 
@@ -267,6 +274,11 @@ def _actor_scope(actor_context):
 def _actor_can_access_firm(actor_context, firm_id):
     scope = _actor_scope(actor_context)
     return bool(scope["global"] or (firm_id and scope["firm_id"] and firm_id == scope["firm_id"]))
+
+
+def _actor_can_mutate_firm(actor_context, firm_id):
+    scope = _actor_scope(actor_context)
+    return bool(scope["global_mutation"] or (firm_id and scope["firm_id"] and firm_id == scope["firm_id"]))
 
 
 def _actor_authorities(actor_context):
@@ -280,17 +292,7 @@ def _actor_authorities(actor_context):
 def _actor_has_authority(actor_context, action):
     required = H6C_ACTION_AUTHORITIES.get(action, action)
     authorities = _actor_authorities(actor_context)
-    return bool(
-        actor_context
-        and (
-            actor_context.get("global_authority")
-            or actor_context.get("role") == "Admin"
-            or actor_context.get("actor_id") == "admin"
-            or "compliance_admin" in authorities
-            or required in authorities
-            or action in authorities
-        )
-    )
+    return bool(actor_context and required in authorities)
 
 
 def _require_authority(actor_context, action, authority_basis=None):
@@ -328,7 +330,7 @@ def validate_compliance_review_scope(payload, actor_context=None):
     matter_id = _safe_id(payload.get("matter_id"), "matter_id")
     deployment_key = _safe_id(payload.get("deployment_key"), "deployment_key")
 
-    if not _actor_can_access_firm(actor_context, firm_id):
+    if not _actor_can_mutate_firm(actor_context, firm_id):
         raise ValueError("firm_scope_denied")
     if trust_id and matter_id:
         raise ValueError("trust_matter_scope_requires_authoritative_link")
@@ -540,6 +542,9 @@ def _append_audit_entry(
     previous_state=None,
     new_state=None,
     note="",
+    exception_requested_by=None,
+    exception_approved_by=None,
+    sod_result=None,
 ):
     actor_id, _actor_label = _actor(actor_context)
     review = None
@@ -563,6 +568,13 @@ def _append_audit_entry(
     ).fetchone()
     previous_hash = previous["entry_hash"] if previous else None
     audit_id = _allocate_identifier(conn, IDENTIFIER_NAMESPACES["audit"])
+    canonical_authority = H6C_ACTION_AUTHORITIES.get(action, action)
+    try:
+        from services.services_compliance_authorization import source_permissions_for_authority
+
+        source_permissions = source_permissions_for_authority(canonical_authority)
+    except Exception:
+        source_permissions = ()
     payload = {
         "compliance_audit_id": audit_id,
         "compliance_review_id": compliance_review_id,
@@ -573,7 +585,15 @@ def _append_audit_entry(
         "new_state": new_state,
         "note": _summary(note, "note"),
         "actor_id": actor_id,
+        "actor_label": _actor_label,
         "actor_role": _scalar((actor_context or {}).get("actor_role") or (actor_context or {}).get("role"), "actor_role"),
+        "target_firm_id": firm_id,
+        "canonical_authority": canonical_authority,
+        "source_permission": ",".join(source_permissions),
+        "exception_requested_by": _scalar(exception_requested_by, "exception_requested_by"),
+        "exception_approved_by": _scalar(exception_approved_by, "exception_approved_by"),
+        "sod_result": _scalar(sod_result, "sod_result"),
+        "override_used": 0,
         "authority_basis": _summary(authority_basis, "authority_basis", required=True),
         "created_at": _now(),
         "previous_hash": previous_hash,
@@ -584,10 +604,12 @@ def _append_audit_entry(
         """
         INSERT INTO compliance_review_audit_ledger (
             compliance_audit_id, compliance_review_id, entity_type, entity_id,
-            action, previous_state, new_state, note, actor_id, actor_role,
-            authority_basis, created_at, previous_hash, entry_hash, hash_algorithm,
-            firm_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SHA-256', ?)
+            action, previous_state, new_state, note, actor_id, actor_label,
+            actor_role, target_firm_id, canonical_authority, source_permission,
+            exception_requested_by, exception_approved_by, sod_result,
+            override_used, authority_basis, created_at, previous_hash,
+            entry_hash, hash_algorithm, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SHA-256', ?)
         """,
         (
             payload["compliance_audit_id"],
@@ -599,7 +621,15 @@ def _append_audit_entry(
             new_state,
             payload["note"],
             payload["actor_id"],
+            payload["actor_label"],
             payload["actor_role"],
+            payload["target_firm_id"],
+            payload["canonical_authority"],
+            payload["source_permission"],
+            payload["exception_requested_by"],
+            payload["exception_approved_by"],
+            payload["sod_result"],
+            payload["override_used"],
             payload["authority_basis"],
             payload["created_at"],
             payload["previous_hash"],
@@ -1436,6 +1466,8 @@ def transition_compliance_review(
 def _workflow_result(fn):
     try:
         return fn()
+    except SeparationOfDutiesError as exc:
+        return _result(False, "separation_of_duties_denied", str(exc) or "separation of duties denied")
     except PermissionError as exc:
         return _result(False, "authorization_denied", str(exc) or "Compliance Review action is not authorized.")
     except ValueError as exc:
@@ -1454,7 +1486,7 @@ def _load_review_for_update(conn, compliance_review_id, actor_context):
     )
     if not review:
         raise LookupError("not_found")
-    if not _review_visible_to_actor(review, actor_context):
+    if not _actor_can_mutate_firm(actor_context, review["firm_id"]):
         raise PermissionError("wrong_firm")
     if not _review_mutable(review):
         raise ValueError("archived_or_terminal_record")
@@ -1652,6 +1684,14 @@ def acknowledge_review_finding(*, compliance_review_id, compliance_finding_id, a
     def handler(conn, review):
         actor_id, _label = _actor(actor_context)
         fid = _safe_id(compliance_finding_id, "compliance_finding_id", required=True)
+        row = conn.execute(
+            "SELECT issued_by FROM compliance_review_findings WHERE compliance_finding_id = ? AND compliance_review_id = ?",
+            (fid, review["compliance_review_id"]),
+        ).fetchone()
+        if not row:
+            raise ValueError("finding_not_found")
+        if row["issued_by"] == actor_id:
+            raise PermissionError("self_acknowledgement_denied")
         disputed = 1 if dispute_basis else 0
         status = "disputed" if disputed else "acknowledged"
         conn.execute("UPDATE compliance_review_findings SET status = ?, disputed = ?, dispute_basis = ?, acknowledged_by = ?, acknowledged_at = ?, updated_at = ? WHERE compliance_finding_id = ? AND compliance_review_id = ?", (status, disputed, _summary(dispute_basis, "dispute_basis"), actor_id, _now(), _now(), fid, review["compliance_review_id"]))
@@ -1721,13 +1761,42 @@ def verify_remediation(*, compliance_review_id, compliance_remediation_id, verif
 
 def request_exception(*, compliance_review_id, compliance_remediation_id, exception_basis, actor_context, authority_basis):
     def handler(conn, review):
+        actor_id, actor_label = _actor(actor_context)
         rid = _safe_id(compliance_remediation_id, "compliance_remediation_id", required=True)
         basis = _summary(exception_basis, "exception_basis", required=True)
-        conn.execute("UPDATE compliance_review_remediations SET exception_requested = 1, exception_basis = ?, status = 'waived', updated_at = ? WHERE compliance_remediation_id = ? AND compliance_review_id = ?", (basis, _now(), rid, review["compliance_review_id"]))
+        row = conn.execute(
+            """
+            SELECT exception_requested, exception_requested_by
+            FROM compliance_review_remediations
+            WHERE compliance_remediation_id = ? AND compliance_review_id = ?
+            """,
+            (rid, review["compliance_review_id"]),
+        ).fetchone()
+        if not row:
+            raise ValueError("remediation_not_found")
+        if row["exception_requested"]:
+            raise ValueError("exception_request_already_exists")
+        now = _now()
+        conn.execute(
+            """
+            UPDATE compliance_review_remediations
+            SET exception_requested = 1,
+                exception_basis = ?,
+                exception_requested_by = ?,
+                exception_requested_by_label = ?,
+                exception_requested_at = ?,
+                exception_request_basis = ?,
+                exception_request_status = 'requested',
+                status = 'waived',
+                updated_at = ?
+            WHERE compliance_remediation_id = ? AND compliance_review_id = ?
+            """,
+            (basis, actor_id, actor_label, now, authority_basis, now, rid, review["compliance_review_id"]),
+        )
         if conn.total_changes < 1:
             raise ValueError("remediation_not_found")
-        _append_audit_entry(conn, compliance_review_id=review["compliance_review_id"], entity_type="compliance_review_remediation", entity_id=rid, action="exception_requested", actor_context=actor_context, authority_basis=authority_basis, new_state="exception_requested", note=basis)
-        return _result(True, "exception_requested", event={"compliance_remediation_id": rid})
+        _append_audit_entry(conn, compliance_review_id=review["compliance_review_id"], entity_type="compliance_review_remediation", entity_id=rid, action="exception_requested", actor_context=actor_context, authority_basis=authority_basis, new_state="exception_requested", note=basis, exception_requested_by=actor_id, sod_result="request_recorded")
+        return _result(True, "exception_requested", event={"compliance_remediation_id": rid, "exception_requested_by": actor_id})
     return _workflow_result(lambda: _run_workflow("request_exception", compliance_review_id=compliance_review_id, actor_context=actor_context, authority_basis=authority_basis, handler=handler))
 
 
@@ -1735,16 +1804,22 @@ def approve_exception(*, compliance_review_id, compliance_remediation_id, actor_
     def handler(conn, review):
         actor_id, _label = _actor(actor_context)
         rid = _safe_id(compliance_remediation_id, "compliance_remediation_id", required=True)
-        row = conn.execute("SELECT completed_by, exception_requested FROM compliance_review_remediations WHERE compliance_remediation_id = ? AND compliance_review_id = ?", (rid, review["compliance_review_id"])).fetchone()
+        row = conn.execute("SELECT completed_by, exception_requested, exception_requested_by FROM compliance_review_remediations WHERE compliance_remediation_id = ? AND compliance_review_id = ?", (rid, review["compliance_review_id"])).fetchone()
         if not row:
             raise ValueError("remediation_not_found")
         if not row["exception_requested"]:
             raise ValueError("exception_request_required")
+        requester = _scalar(row["exception_requested_by"], "exception_requested_by")
+        if not requester:
+            raise SeparationOfDutiesError("exception_requester_attribution_required")
+        if requester == actor_id:
+            raise SeparationOfDutiesError("exception_requester_cannot_approve")
         if row["completed_by"] == actor_id:
-            raise PermissionError("self_exception_approval_denied")
-        conn.execute("UPDATE compliance_review_remediations SET status = 'exception_approved', exception_approved_by = ?, exception_approved_at = ?, updated_at = ? WHERE compliance_remediation_id = ?", (actor_id, _now(), _now(), rid))
-        _append_audit_entry(conn, compliance_review_id=review["compliance_review_id"], entity_type="compliance_review_remediation", entity_id=rid, action="exception_approved", actor_context=actor_context, authority_basis=authority_basis, new_state="exception_approved", note="Exception approved.")
-        return _result(True, "exception_approved", event={"compliance_remediation_id": rid})
+            raise SeparationOfDutiesError("self_exception_approval_denied")
+        now = _now()
+        conn.execute("UPDATE compliance_review_remediations SET status = 'exception_approved', exception_approved_by = ?, exception_approved_at = ?, exception_request_status = 'approved', updated_at = ? WHERE compliance_remediation_id = ?", (actor_id, now, now, rid))
+        _append_audit_entry(conn, compliance_review_id=review["compliance_review_id"], entity_type="compliance_review_remediation", entity_id=rid, action="exception_approved", actor_context=actor_context, authority_basis=authority_basis, new_state="exception_approved", note="Exception approved.", exception_requested_by=requester, exception_approved_by=actor_id, sod_result="requester_approver_separated")
+        return _result(True, "exception_approved", event={"compliance_remediation_id": rid, "exception_approved_by": actor_id, "exception_requested_by": requester})
     return _workflow_result(lambda: _run_workflow("approve_exception", compliance_review_id=compliance_review_id, actor_context=actor_context, authority_basis=authority_basis, handler=handler))
 
 
@@ -1770,6 +1845,19 @@ def certify_review(*, compliance_review_id, certification_statement, actor_conte
         actor_id, _label = _actor(actor_context)
         if review["created_by"] == actor_id or review.get("assigned_reviewer") == actor_id:
             raise PermissionError("self_certification_denied")
+        approval = conn.execute(
+            """
+            SELECT approved_by
+            FROM compliance_review_approvals
+            WHERE compliance_review_id = ?
+              AND approval_status = 'approved'
+            ORDER BY approved_at DESC, id DESC
+            LIMIT 1
+            """,
+            (review["compliance_review_id"],),
+        ).fetchone()
+        if approval and approval["approved_by"] == actor_id:
+            raise PermissionError("approver_self_certification_denied")
         cid = _allocate_identifier(conn, IDENTIFIER_NAMESPACES["certification"])
         conn.execute("INSERT INTO compliance_review_certifications (certification_id, compliance_review_id, certification_type, certification_statement, certified_by, authority_basis, certified_at, effective_date, expiration_date, certification_status) VALUES (?, ?, 'review_certification', ?, ?, ?, ?, ?, ?, 'active')", (cid, review["compliance_review_id"], _summary(certification_statement, "certification_statement", required=True), actor_id, authority_basis, _now(), _scalar(effective_date, "effective_date", max_length=80), _scalar(expiration_date, "expiration_date", max_length=80)))
         _touch_review(conn, review["compliance_review_id"], actor_id, status="certified")

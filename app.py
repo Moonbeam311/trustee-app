@@ -7109,13 +7109,14 @@ def admin_ios_workspace(workspace_key):
 
 
 def _compliance_review_read_scope():
-    username = (session.get("username") or "").strip().lower()
-    role = session.get("role")
-    if username == "admin" and role == "Admin":
-        return {"global": True}
+    try:
+        actor = _compliance_review_actor_context()
+    except Exception:
+        return {"global": False, "firm_id": session.get("firm_id")}
+    scope = actor.get("scope") or {}
     return {
-        "global": False,
-        "firm_id": session.get("firm_id"),
+        "global": bool(scope.get("global_read")),
+        "firm_id": scope.get("firm_id") or actor.get("firm_id"),
     }
 
 
@@ -7124,18 +7125,17 @@ def _compliance_review_error(reason, status):
 
 
 def _compliance_review_actor_context(payload=None):
+    from services.services_compliance_authorization import build_compliance_actor_context
+
     payload = payload or {}
-    return {
-        "actor_id": session.get("user_id") or session.get("username"),
-        "actor_label": session.get("username") or session.get("user_id"),
-        "actor_role": session.get("role"),
-        "role": session.get("role"),
-        "firm_id": session.get("firm_id"),
-        "scope": _compliance_review_read_scope(),
-        "authorities": session.get("compliance_authorities") or [],
-        "authority_basis": payload.get("authority_basis"),
-        "global_authority": bool(session.get("is_master_admin")),
-    }
+    return build_compliance_actor_context(
+        username=session.get("username") or session.get("user_id"),
+        session_role=session.get("role"),
+        session_firm_id=session.get("firm_id"),
+        payload=payload,
+        target_firm_id=payload.get("firm_id"),
+        master_admin=is_master_admin(),
+    )
 
 
 def _compliance_review_request_payload():
@@ -7218,7 +7218,10 @@ def compliance_review_registry():
         guarded = _compliance_review_write_guard(payload)
         if guarded:
             return guarded
-        actor_context = _compliance_review_actor_context(payload)
+        try:
+            actor_context = _compliance_review_actor_context(payload)
+        except PermissionError:
+            return _compliance_review_error("Compliance Review creation is not authorized.", 403)
         result = create_compliance_review(
             payload=payload,
             actor_context=actor_context,
@@ -7420,7 +7423,10 @@ def _compliance_review_post_action(compliance_review_id, service_action, *, succ
     stale = _compliance_review_stale_guard(review, payload)
     if stale:
         return stale
-    actor_context = _compliance_review_actor_context(payload)
+    try:
+        actor_context = _compliance_review_actor_context({**payload, "firm_id": review.get("firm_id")})
+    except PermissionError:
+        return _compliance_review_error("Compliance Review action is not authorized.", 403)
     redirect_to = url_for("compliance_review_detail", compliance_review_id=review["compliance_review_id"])
     result = service_action(review, payload, actor_context, extra)
     return _compliance_review_result_response(result, success_message=success_message, redirect_to=redirect_to)
