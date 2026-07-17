@@ -1293,10 +1293,13 @@ def get_transfer_for_active_firm_or_404(transfer_id):
             "transfer_firm_access_denied",
             f"Transfer outside active firm scope. User={session.get('username')}; Firm={firm_id}; TransferFirm={transfer.firm_id}"
         )
-        return None, render_template(
-            "access_denied.html",
-            reason="This transfer record is not available within your assigned firm scope."
-        ), 403
+        return None, (
+            render_template(
+                "access_denied.html",
+                reason="This transfer record is not available within your assigned firm scope."
+            ),
+            403,
+        )
 
     return transfer, None
 
