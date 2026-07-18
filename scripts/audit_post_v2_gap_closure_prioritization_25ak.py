@@ -17,6 +17,8 @@ ALLOWED_CHANGED = {
     "docs/post_v2_gap_closure_prioritization_25ak.md",
     "docs/reports_pdf_runtime_repair_25am.md",
     "docs/v2_certification_candidate_readiness_25ao.md",
+    "docs/v2_certification_candidate_evidence_freeze_25ap.md",
+    "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -24,10 +26,12 @@ ALLOWED_CHANGED = {
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
+    "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
     "scripts/audit_reports_pdf_runtime_repair_25am.py",
     "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
     "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+    "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
 }
 APPROVED_PRODUCTION_REPAIR_PATHS = {"app.py", "pdf_utils.py"}
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/")

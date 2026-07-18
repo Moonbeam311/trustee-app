@@ -20,6 +20,10 @@ ALLOWED_CHANGED = {
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
+    "docs/v2_certification_candidate_evidence_freeze_25ap.md",
+    "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
+    "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
+    "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
 }
 PRODUCTION_PREFIXES = (
     "app.py",

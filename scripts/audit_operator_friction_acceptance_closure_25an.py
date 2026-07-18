@@ -21,6 +21,10 @@ ALLOWED_CHANGED = {
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "docs/v2_certification_candidate_readiness_25ao.md",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+    "docs/v2_certification_candidate_evidence_freeze_25ap.md",
+    "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
+    "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
+    "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
 }
 PRODUCTION_PREFIXES = (
     "app.py",

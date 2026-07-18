@@ -1,0 +1,670 @@
+{
+  "active_db_reference": {
+    "audit_log_count": 569,
+    "certificate_count": "MISSING",
+    "compliance_objects": [],
+    "institutional_certification_count": 3,
+    "logical_label": "trustee_app.db",
+    "matter_count": 1,
+    "mtime_ns": 1784378870854649900,
+    "permission_count": 15,
+    "referenced_not_committed": true,
+    "role_count": "MISSING",
+    "schema_version": 404,
+    "sha256": "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525",
+    "size_bytes": 3096576,
+    "system_observation_objects": [],
+    "table_count": 132,
+    "transfer_count": 14,
+    "trust_count": 22,
+    "user_count": 7
+  },
+  "authoritative_audits": [
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 38,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Certification-candidate readiness",
+      "result": "PASS",
+      "script": "scripts/audit_v2_certification_candidate_readiness_25ao.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 25,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Remaining operator friction closure",
+      "result": "PASS",
+      "script": "scripts/audit_operator_friction_acceptance_closure_25an.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 51,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Reports PDF runtime repair",
+      "result": "PASS",
+      "script": "scripts/audit_reports_pdf_runtime_repair_25am.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 39,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Reports PDF repair evidence",
+      "result": "PASS",
+      "script": "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 57,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Active-state reconciliation",
+      "result": "PASS",
+      "script": "scripts/audit_expected_active_state_reconciliation_25al_r1.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": null,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Core product operator acceptance",
+      "result": "PASS",
+      "script": "scripts/audit_core_product_manual_operator_acceptance_25al.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 26,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Gap closure prioritization",
+      "result": "PASS",
+      "script": "scripts/audit_post_v2_gap_closure_prioritization_25ak.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": null,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Product gap repository-shape guard",
+      "result": "PASS",
+      "script": "scripts/audit_product_completion_gap_post_v2_18.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": null,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Core operator repository-shape guard",
+      "result": "PASS",
+      "script": "scripts/audit_core_product_operator_acceptance_post_v2_19.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 4,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Transfer helper contract",
+      "result": "PASS",
+      "script": "scripts/audit_transfer_helper_contract_post_v2_19_r1.py"
+    },
+    {
+      "active_state_expectation": "ACTIVE_UNCHANGED=True",
+      "check_count": 4,
+      "current_or_historical": "current",
+      "policy_state_expectation": "POLICY_UNCHANGED=True",
+      "purpose": "Compliance current successor suite",
+      "result": "PASS",
+      "script": "scripts/run_compliance_current_successor_suite_25ae.py"
+    }
+  ],
+  "candidate_status": "CERTIFICATION_CANDIDATE_READY",
+  "commit_chain": [
+    {
+      "commit": "8e6318ce7822cd0f66cca48817b31f4c1320845e",
+      "short": "8e6318c",
+      "subject": "Prioritize POST-V2 gap closure sequence"
+    },
+    {
+      "commit": "7b20ef7ba4de5a54a7024af271f03cd3f6a84e7d",
+      "short": "7b20ef7",
+      "subject": "Record reconciled core operator acceptance"
+    },
+    {
+      "commit": "7524a3b4d724cabc6f473bc3e92f14b281794174",
+      "short": "7524a3b",
+      "subject": "Repair portfolio and fiduciary PDF reports"
+    },
+    {
+      "commit": "f70a89f0c9592fb48064f481a34d49ae3de5d8a1",
+      "short": "f70a89f",
+      "subject": "Close remaining operator acceptance evidence"
+    },
+    {
+      "commit": "a1f63da1096bc6c261db2fd8a894f660ec919c2a",
+      "short": "a1f63da",
+      "subject": "Audit V2 certification candidate readiness"
+    }
+  ],
+  "conditions_before_actual_certification": "None beyond execution of the separately authorized certification phase against this frozen evidence set.",
+  "deployment_only_items": [
+    "hosted persistence validation",
+    "hosted backup and restore validation",
+    "hosted environment flag validation",
+    "rollback validation",
+    "SQLite hosted write-risk controls",
+    "hosted monitoring",
+    "public release workflow"
+  ],
+  "evidence_files": [
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "50e3082a729d3cc6180e99164c5ab46be2ed9070",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AM/25AN",
+      "path": "app.py",
+      "required_for_reproduction": true,
+      "role": "Current route and report behavior required for reproduction",
+      "sha256": "BABA2033C909BB19CA136036829A1314667267E8277740273003F24FE471F472",
+      "size_bytes": 918766
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "383034bff63a8c78837e90e11fb5cc706207e89a",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AL-R1",
+      "path": "docs/audit_expected_active_state_reconciliation_25al_r1.md",
+      "required_for_reproduction": true,
+      "role": "Active-state reconciliation evidence",
+      "sha256": "E2ABFA3CA36F20A161C7D4D669F4F78C6FFB7BC87541810E2CE892AFB1C55209",
+      "size_bytes": 9188
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "01bfb64f833b8a1d7be5bf5bd4fb39f83cebac8e",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AE",
+      "path": "docs/compliance_audit_lineage_25ae.md",
+      "required_for_reproduction": true,
+      "role": "Compliance successor lineage evidence",
+      "sha256": "69F926844D9366C7F7FCFE6AD4C75AF3C51288376BBFD44B3D122805B0EF3BED",
+      "size_bytes": 4748
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "20484caefc96ad69e42f71782b6218c2b6ccf423",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AL",
+      "path": "docs/core_product_manual_operator_acceptance_25al.md",
+      "required_for_reproduction": true,
+      "role": "Core product manual operator acceptance",
+      "sha256": "B844A5B1509B53606341B8FA5D60480CF19BBCBE9FA698F0694699C15E0953BE",
+      "size_bytes": 14246
+    },
+    {
+      "classification": "HISTORICAL_OR_SUPERSEDED",
+      "current_or_historical": "historical",
+      "git_blob_sha": "f5301ce69acf599f3338c8ed65b5e6ce88967f41",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "POST-V2-19",
+      "path": "docs/core_product_operator_acceptance_post_v2_19.md",
+      "required_for_reproduction": false,
+      "role": "Historical operator acceptance preparation lineage",
+      "sha256": "98AE8A01B4E3337670EE197E35F39ABD35A02C927164D2E2E39C73C5447C1B51",
+      "size_bytes": 15227
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "e532d0e4b4fe91e6e94c583237f175f7b525fd78",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AN",
+      "path": "docs/operator_friction_acceptance_closure_25an.md",
+      "required_for_reproduction": true,
+      "role": "Remaining operator friction closure",
+      "sha256": "32078375B4C0EF8A42540174679BA0D571B6CB902BF3AA6EBE7771D87B949CB8",
+      "size_bytes": 7781
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "6da8f353c7ca6a215100c026c94685bc16b59e29",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AK",
+      "path": "docs/post_v2_gap_closure_prioritization_25ak.md",
+      "required_for_reproduction": true,
+      "role": "Prioritized closure sequence",
+      "sha256": "3372975FFB7FD027DED62611A18A452745426AA8BE74CD5837FD86600EB49D89",
+      "size_bytes": 23299
+    },
+    {
+      "classification": "HISTORICAL_OR_SUPERSEDED",
+      "current_or_historical": "historical",
+      "git_blob_sha": "886a7a9ff76c82e58983be7b18f90f910dae768b",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "POST-V2-18",
+      "path": "docs/product_completion_gap_audit_post_v2_18.md",
+      "required_for_reproduction": false,
+      "role": "Historical product gap baseline",
+      "sha256": "4FDFF50A721D0F3EAD9F2B66BDB8EB1CF54657E949B966C8ADCD3453381A2467",
+      "size_bytes": 27313
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "517ad88c2e0450cee9fb5f458ed199c78255345b",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AM",
+      "path": "docs/reports_pdf_runtime_repair_25am.md",
+      "required_for_reproduction": true,
+      "role": "Reports PDF runtime repair evidence",
+      "sha256": "D2C7D1EECFD8EE00FC254CC7AA6D48CED61B6269EBBF1D310025AE7FE1CD50D3",
+      "size_bytes": 8155
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "b88679a5195cf7b14ab999ba4d197c351a0d1141",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AO",
+      "path": "docs/v2_certification_candidate_readiness_25ao.md",
+      "required_for_reproduction": true,
+      "role": "Certification-candidate readiness decision",
+      "sha256": "FAE003F71FCF198C7B7BBAEEE2E7249AC8A465080D95FE8F3987C6A75F226375",
+      "size_bytes": 22145
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "a81837773ef4077625c16fe0ac1976aaa916db05",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AM",
+      "path": "pdf_utils.py",
+      "required_for_reproduction": true,
+      "role": "Current PDF helper behavior required for reproduction",
+      "sha256": "20AEA6738536FE0265FF28C4780E0666A2E4F9075726DA6F545673323E2302E1",
+      "size_bytes": 24116
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "eff3e289011ef75b6c617ed1495e044e131f87cc",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "14B.1",
+      "path": "scripts/audit_archive_workspace_minimal_read_only_context_wiring_14b1.py",
+      "required_for_reproduction": false,
+      "role": "Archive workspace read-only wiring support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "F26D7DB0817134C96E3586FE1CD325AD9938A2BA7BF16A787AF498DDA1B87C15",
+      "size_bytes": 7096
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "2c9ad6d23d81d8d92eaa9f0739f2e0ba54196585",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "14A",
+      "path": "scripts/audit_archive_workspace_operator_information_architecture_14a.py",
+      "required_for_reproduction": false,
+      "role": "Archive workspace operator information architecture support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "A06282D3EA29CC9F0F39128CC8CDB39F1E814E9002CC4C1F76E2B73431F6D37A",
+      "size_bytes": 8289
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "3de9aa9d1ad1f278208d545b8098ff1ee2dfc124",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "14B",
+      "path": "scripts/audit_archive_workspace_read_only_status_panels_14b.py",
+      "required_for_reproduction": false,
+      "role": "Archive read-only status panel support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "501F4A87DC07F6C8C6FA002A1A4A846FE5CA9AC6E2A6D2855E6D6F0662285C49",
+      "size_bytes": 20718
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "2d573c428c5ae1e5c4d8ebbcce62945274e186cb",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "14B.2",
+      "path": "scripts/audit_archive_workspace_read_only_status_rendering_14b2.py",
+      "required_for_reproduction": false,
+      "role": "Archive read-only status rendering support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "732599019EBD7BD66D87330CBB0C256C2AC6A7439E3D2827F4C0D6405A921813",
+      "size_bytes": 5658
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "f406f571fb3b1e05b1ed8aae37a22e418092e629",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AD",
+      "path": "scripts/audit_compliance_attribution_persistence_and_audit_modernization_25ad.py",
+      "required_for_reproduction": true,
+      "role": "Compliance attribution and audit modernization audit",
+      "sha256": "489558ED0952B36D2C8C482713E17F554982E1EB0B7DD780F19F6BDE433B3242",
+      "size_bytes": 20605
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "4830ab8511a6fb0489d179ce536d1f9c0c39e2d8",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AB",
+      "path": "scripts/audit_compliance_authority_test_harness_25ab.py",
+      "required_for_reproduction": true,
+      "role": "Compliance authority harness audit",
+      "sha256": "CF24D9A1E32594A4630DEFB68849AB144D996E3634AD922A0F81779E6DCF4580",
+      "size_bytes": 26796
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "0aad88a03faab40d7ed84768d4d933a607deba9f",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AE",
+      "path": "scripts/audit_compliance_lineage_validation_25ae.py",
+      "required_for_reproduction": true,
+      "role": "Compliance lineage validation audit",
+      "sha256": "E342474005A9036A4EBE59DFCDCFABA3806DA0061E3E3BB539621FC1B633B11D",
+      "size_bytes": 9064
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "9638bf9c2ef5db6fb218da2b205981705fb61401",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AC",
+      "path": "scripts/audit_compliance_live_authority_integration_25ac.py",
+      "required_for_reproduction": true,
+      "role": "Compliance live authority integration audit",
+      "sha256": "94ABE21586DC9FDE14FA7A3E104AAA8DDBA1380E6BD89C5B25F740454FDD55D6",
+      "size_bytes": 22067
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "c45fd99a0e6ec3425d2d6cc0ba5370ddb563c808",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AL",
+      "path": "scripts/audit_core_product_manual_operator_acceptance_25al.py",
+      "required_for_reproduction": true,
+      "role": "Core operator acceptance static audit",
+      "sha256": "85C868873B93D9B367CB80D13A6B524150E9133ECA378BF06BCEE4109C534877",
+      "size_bytes": 5935
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "a3614d5b3c4488415ece0d98dcd0329547963b2f",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "POST-V2-19",
+      "path": "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+      "required_for_reproduction": true,
+      "role": "Repository-shape and operator acceptance guard",
+      "sha256": "65888F8388589E91FC1C9C78664D4277824B4F8B983B552B27C141C37BABD767",
+      "size_bytes": 33188
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "8d85355473ec9daf162eb45339668a9611bd16d8",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AL-R1",
+      "path": "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
+      "required_for_reproduction": true,
+      "role": "Active-state reconciliation audit",
+      "sha256": "78399AB034705491955CDC7B2A0EF839FF2A958D1DF681FD1BA2438B4D8C49EB",
+      "size_bytes": 5525
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "90c6a0c3199629f0ba79425e492725f38b372a91",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "11D",
+      "path": "scripts/audit_governance_continuity_closure_11d.py",
+      "required_for_reproduction": false,
+      "role": "Governance continuity support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "BCADC2547FD5CD5F9691756476A1A0A1B062DA6EA630CFFAB1EB8EEC5999822C",
+      "size_bytes": 14066
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "0a6529e0241b0cdd48b5f9146ce3c2fd5c87fd0b",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "governance",
+      "path": "scripts/audit_governance_data_mutation_boundary.py",
+      "required_for_reproduction": false,
+      "role": "Governance mutation-boundary support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "B18DE9DAA77F81EE84002387624DB4750BFF3D3F7EF486EBCB53265AA50A67E1",
+      "size_bytes": 8437
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "06cb6234cae78793a02d8fd3650b0c414310641d",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "governance",
+      "path": "scripts/audit_governance_evidence_access_control.py",
+      "required_for_reproduction": false,
+      "role": "Governance access-control support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "240AFAD775E732593E520CA792469DA486B144B06A4D3BD3C82C96AD80B54493",
+      "size_bytes": 7987
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "e778be0e8e52eb2313b665477ed0ad2ff74aab23",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AN",
+      "path": "scripts/audit_operator_friction_acceptance_closure_25an.py",
+      "required_for_reproduction": true,
+      "role": "Operator friction closure audit",
+      "sha256": "E2FF569AE2D2FC847CE91A2154D0346D55C58DC3C17E43DCA2272F1CDFEF447F",
+      "size_bytes": 9905
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "f0d6a1ac7c47186cc1ea1cfb931aeac0720b0ab0",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AK",
+      "path": "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+      "required_for_reproduction": true,
+      "role": "Gap closure prioritization audit",
+      "sha256": "D80CB2B87A982D4C6798DA5E7EFDA2A30623F0EF681C0210571108B9F8E91B1B",
+      "size_bytes": 7794
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "f34c3c04a307e4bb10ac12dd4364b4e75a1c108d",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "POST-V2-18",
+      "path": "scripts/audit_product_completion_gap_post_v2_18.py",
+      "required_for_reproduction": true,
+      "role": "Repository-shape and product gap guard",
+      "sha256": "4141F3A136C62C08086A9F1DF5F2FA0C8931F7C5E20ABB60FC263ACB07416B80",
+      "size_bytes": 22711
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "b205b4e72c991e450ed6ba0fa4d912a280ae5920",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AM",
+      "path": "scripts/audit_reports_pdf_runtime_repair_25am.py",
+      "required_for_reproduction": true,
+      "role": "Reports PDF runtime repair audit",
+      "sha256": "A6A99ED0BCAF15B0E4A62D944728E6BCAD016D1675B7F51EB9DAACB9429A0FA9",
+      "size_bytes": 9503
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "826d4bb67d2237782e1731c4f515f3a87203dc3a",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AM",
+      "path": "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
+      "required_for_reproduction": true,
+      "role": "Reports PDF active-state evidence audit",
+      "sha256": "24BB55E2169B6CF50D96895F462450532D821C6BDFFCC40ADB8E8F8FB13748EE",
+      "size_bytes": 4741
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "0b4652d25767c94f9ded35a34aa358668f61aac4",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "15D",
+      "path": "scripts/audit_reports_workspace_consolidation_certification_15d.py",
+      "required_for_reproduction": false,
+      "role": "Reports workspace support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "BFC60C2FFF0240F39950957D2F8AD9D5474107C5C4F3EC4377541B682FD6DF8D",
+      "size_bytes": 26021
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "52bbec2dab470e1f56deb2eb346fc4d63325eab3",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "15C.2",
+      "path": "scripts/audit_reports_workspace_read_only_status_panel_rendering_15c2.py",
+      "required_for_reproduction": false,
+      "role": "Reports read-only rendering support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "4F2287C117D6805F65982BEA4C4444EFD7F0DEE27F8281279DF79EC4C615C737",
+      "size_bytes": 14384
+    },
+    {
+      "classification": "SUPPORTING_CURRENT_IMPLEMENTATION",
+      "current_or_historical": "current",
+      "git_blob_sha": "c7618dbba211e9f9f22b611eb530049cdd092779",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "15C",
+      "path": "scripts/audit_reports_workspace_read_only_status_sources_15c.py",
+      "required_for_reproduction": false,
+      "role": "Reports read-only source support audit retained for lineage; its historical shape guard is step-scoped",
+      "sha256": "D8B4F54FF9F898C0DD6B65EABD6EC168EB422C670F1992AF071A766454382422",
+      "size_bytes": 28802
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "32885aa20733c5da100128171fe7867799b2cae6",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "POST-V2-19-R1",
+      "path": "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
+      "required_for_reproduction": true,
+      "role": "Transfer helper contract audit",
+      "sha256": "D964F89B4B541C511479339033EBBEDCFD377AEF8516849E678203446C74DDCE",
+      "size_bytes": 6125
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "3c15059e466e640d29916a2f25031f79c09e4195",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AO",
+      "path": "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+      "required_for_reproduction": true,
+      "role": "Readiness audit",
+      "sha256": "3C0920C56D35A28EDD4DAA131487F52374813CA5708584FC78895BE269E59777",
+      "size_bytes": 9000
+    },
+    {
+      "classification": "AUTHORITATIVE_FROZEN_EVIDENCE",
+      "current_or_historical": "current",
+      "git_blob_sha": "d26dddcc422c22a3ed735fea79ad3d4bda505319",
+      "notes": "Frozen tracked evidence reference; file contents are hashed for drift detection.",
+      "originating_step": "25AE",
+      "path": "scripts/run_compliance_current_successor_suite_25ae.py",
+      "required_for_reproduction": true,
+      "role": "Registry-driven compliance successor suite",
+      "sha256": "9E8C64CE930AE29BA413DFEFEACD636E4CB88A19F28A851486BEFD1877900B33",
+      "size_bytes": 7100
+    }
+  ],
+  "excluded_categories": [
+    "active DB files",
+    "cloned DBs and audit/runtime_sandbox",
+    "policy file contents beyond hash reference",
+    "test_artifacts runtime JSON",
+    "uploads and exports",
+    "backups",
+    "downloaded or generated PDFs",
+    "screenshots and raw logs",
+    "__pycache__",
+    ".bak files",
+    "local config and private environment values"
+  ],
+  "freeze_decision": "EVIDENCE_FREEZE_PASS",
+  "freeze_step": "25AP",
+  "frozen_generation_date": "2026-07-18",
+  "inactive_modules": [
+    {
+      "classification": "ACCEPTABLE_INACTIVE_STATE",
+      "module": "Compliance"
+    },
+    {
+      "classification": "ACCEPTABLE_INACTIVE_STATE",
+      "module": "System Observation"
+    }
+  ],
+  "known_limitations": [
+    {
+      "classification": "NONBLOCKING_ACCEPTED",
+      "item": "Two preview pages lack direct Admin shortcut"
+    },
+    {
+      "classification": "NONBLOCKING_ACCEPTED",
+      "item": "Successful credential POST was not repeated beyond accepted coverage"
+    },
+    {
+      "classification": "INTENTIONALLY_INACTIVE",
+      "item": "Compliance inactive"
+    },
+    {
+      "classification": "INTENTIONALLY_INACTIVE",
+      "item": "System Observation inactive"
+    },
+    {
+      "classification": "DEPLOYMENT_ONLY",
+      "item": "Hosted hardening deferred"
+    },
+    {
+      "classification": "FUTURE_ENHANCEMENT",
+      "item": "Admin redesign deferred"
+    },
+    {
+      "classification": "FUTURE_ENHANCEMENT",
+      "item": "Future trust-type expansion deferred"
+    }
+  ],
+  "next_phase": "Step 25AQ - V2 Certification Issuance Readiness and Final Integrity Gate",
+  "policy_reference": {
+    "logical_label": "data/export_policy.json",
+    "mtime_ns": 1784293287862666100,
+    "referenced_not_committed": true,
+    "sha256": "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361",
+    "size_bytes": 123,
+    "state": {
+      "allow_exports": false,
+      "allow_user_creation": true,
+      "read_only_mode": false,
+      "strict_packet_export": true
+    }
+  },
+  "schema_version": "1.0",
+  "source_branch": "post-v2-planning",
+  "source_commit": "a1f63da1096bc6c261db2fd8a894f660ec919c2a",
+  "source_commit_short": "a1f63da",
+  "source_commit_subject": "Audit V2 certification candidate readiness"
+}
