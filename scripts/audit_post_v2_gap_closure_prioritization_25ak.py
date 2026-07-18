@@ -19,6 +19,7 @@ ALLOWED_CHANGED = {
     "docs/v2_certification_candidate_readiness_25ao.md",
     "docs/v2_certification_candidate_evidence_freeze_25ap.md",
     "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
+    "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -31,6 +32,7 @@ ALLOWED_CHANGED = {
     "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
     "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+    "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
 }
 APPROVED_PRODUCTION_REPAIR_PATHS = {"app.py", "pdf_utils.py"}

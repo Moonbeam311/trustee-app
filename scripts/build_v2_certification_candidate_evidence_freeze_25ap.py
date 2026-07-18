@@ -16,6 +16,8 @@ SOURCE_SHORT = "a1f63da"
 SOURCE_SUBJECT = "Audit V2 certification candidate readiness"
 DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
 POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
+EVIDENCE_FREEZE_COMMIT = "a908110e361b5211a94e4a84283f754699b8b969"
+FROZEN_MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
 REPORT_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap.md"
 MANIFEST_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
 
@@ -29,6 +31,8 @@ EXPECTED_DEVELOPMENT_PATHS = {
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+    "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
+    "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
 }
 
 EXCLUDED_PREFIXES = (
@@ -343,6 +347,34 @@ def build_manifest() -> dict[str, object]:
     }
 
 
+def committed_bytes(commit: str, path: str) -> bytes:
+    result = subprocess.run(
+        ["git", "-c", f"safe.directory={ROOT.as_posix()}", "show", f"{commit}:{path}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise FreezeError(result.stderr.decode("utf-8", errors="replace").strip())
+    return result.stdout
+
+
+def check_frozen_artifacts() -> None:
+    ensure_repo_state()
+    manifest_bytes = MANIFEST_PATH.read_bytes()
+    if hashlib.sha256(manifest_bytes).hexdigest().upper() != FROZEN_MANIFEST_SHA:
+        raise FreezeError("Frozen manifest SHA drift detected")
+    expected_manifest = committed_bytes(EVIDENCE_FREEZE_COMMIT, MANIFEST_PATH.relative_to(ROOT).as_posix())
+    expected_report = committed_bytes(EVIDENCE_FREEZE_COMMIT, REPORT_PATH.relative_to(ROOT).as_posix())
+    mismatches = []
+    if manifest_bytes != expected_manifest:
+        mismatches.append(MANIFEST_PATH.relative_to(ROOT).as_posix())
+    if REPORT_PATH.read_bytes() != expected_report:
+        mismatches.append(REPORT_PATH.relative_to(ROOT).as_posix())
+    if mismatches:
+        raise FreezeError(f"Evidence freeze drift detected: {mismatches}")
+
+
 def render_report(manifest: dict[str, object]) -> str:
     evidence = manifest["evidence_files"]
     audits = manifest["authoritative_audits"]
@@ -499,20 +531,16 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
     try:
-        manifest = build_manifest()
-        manifest_text = stable_json(manifest)
-        report_text = render_report(manifest)
         if args.check:
-            mismatches = []
-            if not MANIFEST_PATH.exists() or MANIFEST_PATH.read_bytes() != manifest_text.encode("utf-8"):
-                mismatches.append(MANIFEST_PATH.relative_to(ROOT).as_posix())
-            if not REPORT_PATH.exists() or REPORT_PATH.read_bytes() != report_text.encode("utf-8"):
-                mismatches.append(REPORT_PATH.relative_to(ROOT).as_posix())
-            if mismatches:
-                raise FreezeError(f"Evidence freeze drift detected: {mismatches}")
+            check_frozen_artifacts()
             print("STEP 25AP EVIDENCE FREEZE BUILDER CHECK")
             print("RESULT: PASS")
             return 0
+        if git("rev-parse", "HEAD") != SOURCE_COMMIT:
+            raise FreezeError("Refusing to rewrite frozen evidence after Step 25AP source generation")
+        manifest = build_manifest()
+        manifest_text = stable_json(manifest)
+        report_text = render_report(manifest)
         MANIFEST_PATH.write_bytes(manifest_text.encode("utf-8"))
         REPORT_PATH.write_bytes(report_text.encode("utf-8"))
         print(f"WROTE {MANIFEST_PATH.relative_to(ROOT).as_posix()}")

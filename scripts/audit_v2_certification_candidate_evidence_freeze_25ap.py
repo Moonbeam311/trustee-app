@@ -26,6 +26,9 @@ ALLOWED_CHANGED = {
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+    "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
+    "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
+    "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
 }
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/", "database/")
 EXCLUDED_PREFIXES = ("audit/runtime_sandbox/", "test_artifacts/", "uploads/", "exports/", "data/backups/", "config/local/")
@@ -149,10 +152,20 @@ def main() -> int:
     before_policy = sha256(ROOT / "data" / "export_policy.json")
     first_manifest = MANIFEST.read_bytes() if MANIFEST.exists() else b""
     first_report = REPORT.read_bytes() if REPORT.exists() else b""
-    result1 = subprocess.run([sys.executable, str(BUILDER.relative_to(ROOT))], cwd=ROOT, text=True, capture_output=True)
+    result1 = subprocess.run(
+        [sys.executable, str(BUILDER.relative_to(ROOT)), "--check"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
     second_manifest = MANIFEST.read_bytes() if MANIFEST.exists() else b""
     second_report = REPORT.read_bytes() if REPORT.exists() else b""
-    result2 = subprocess.run([sys.executable, str(BUILDER.relative_to(ROOT))], cwd=ROOT, text=True, capture_output=True)
+    result2 = subprocess.run(
+        [sys.executable, str(BUILDER.relative_to(ROOT)), "--check"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+    )
     third_manifest = MANIFEST.read_bytes() if MANIFEST.exists() else b""
     third_report = REPORT.read_bytes() if REPORT.exists() else b""
     after_db = sha256(ROOT / "trustee_app.db")

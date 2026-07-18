@@ -31,6 +31,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "docs/v2_certification_candidate_readiness_25ao.md",
     "docs/v2_certification_candidate_evidence_freeze_25ap.md",
     "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
+    "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -41,6 +42,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
     "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
+    "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
     "test_artifacts/README.md",
 }
@@ -324,6 +326,16 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25aq_issuance_readiness_package",
+            [
+                "?? docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
+                "?? scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -466,6 +478,20 @@ def run_repository_shape_self_tests() -> dict:
         (
             "fail_step_25ap_freeze_audit_copy",
             ["?? scripts/audit_v2_certification_candidate_evidence_freeze_25ap_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25aq_readiness_doc_copy",
+            ["?? docs/v2_certification_issuance_readiness_final_integrity_25aq_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25aq_readiness_audit_copy",
+            ["?? scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq_copy.py"],
             set(),
             set(),
             False,
