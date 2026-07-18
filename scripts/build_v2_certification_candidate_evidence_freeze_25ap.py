@@ -37,6 +37,8 @@ EXPECTED_DEVELOPMENT_PATHS = {
     "docs/v2_certification_issuance_25ar.md",
     "docs/v2_certification_issuance_25ar.json",
     "scripts/audit_v2_certification_issuance_25ar.py",
+    "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
+    "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
 }
 
 EXCLUDED_PREFIXES = (

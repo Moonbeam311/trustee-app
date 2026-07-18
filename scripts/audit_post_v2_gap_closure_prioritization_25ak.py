@@ -22,6 +22,7 @@ ALLOWED_CHANGED = {
     "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "docs/v2_certification_issuance_25ar.md",
     "docs/v2_certification_issuance_25ar.json",
+    "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -36,6 +37,7 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
     "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
     "scripts/audit_v2_certification_issuance_25ar.py",
+    "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
 }
 APPROVED_PRODUCTION_REPAIR_PATHS = {"app.py", "pdf_utils.py"}

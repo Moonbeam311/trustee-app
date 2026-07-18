@@ -28,6 +28,8 @@ ALLOWED_CHANGED = {
     "docs/v2_certification_issuance_25ar.md",
     "docs/v2_certification_issuance_25ar.json",
     "scripts/audit_v2_certification_issuance_25ar.py",
+    "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
+    "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
 }
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/", "database/")
 

@@ -34,6 +34,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "docs/v2_certification_issuance_25ar.md",
     "docs/v2_certification_issuance_25ar.json",
+    "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -46,6 +47,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
     "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
     "scripts/audit_v2_certification_issuance_25ar.py",
+    "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
     "test_artifacts/README.md",
 }
@@ -350,6 +352,16 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25as_r1_publication_evidence_package",
+            [
+                "?? docs/certified_baseline_publication_branch_disposition_25as_r1.md",
+                "?? scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -527,6 +539,20 @@ def run_repository_shape_self_tests() -> dict:
         (
             "fail_step_25ar_certification_audit_copy",
             ["?? scripts/audit_v2_certification_issuance_25ar_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25as_r1_publication_doc_copy",
+            ["?? docs/certified_baseline_publication_branch_disposition_25as_r1_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25as_r1_publication_audit_copy",
+            ["?? scripts/audit_certified_baseline_publication_branch_disposition_25as_r1_copy.py"],
             set(),
             set(),
             False,

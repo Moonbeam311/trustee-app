@@ -43,6 +43,8 @@ ALLOWED_CHANGED = {
     "docs/v2_certification_issuance_25ar.md",
     "docs/v2_certification_issuance_25ar.json",
     "scripts/audit_v2_certification_issuance_25ar.py",
+    "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
+    "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
