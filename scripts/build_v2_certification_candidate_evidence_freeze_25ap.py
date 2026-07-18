@@ -17,6 +17,7 @@ SOURCE_SUBJECT = "Audit V2 certification candidate readiness"
 DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
 POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
 EVIDENCE_FREEZE_COMMIT = "a908110e361b5211a94e4a84283f754699b8b969"
+FINAL_INTEGRITY_COMMIT = "dda6f96f2b4e4a6400dcd656cf9d149efbca5ff7"
 FROZEN_MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
 REPORT_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap.md"
 MANIFEST_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
@@ -33,6 +34,9 @@ EXPECTED_DEVELOPMENT_PATHS = {
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
     "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
+    "docs/v2_certification_issuance_25ar.md",
+    "docs/v2_certification_issuance_25ar.json",
+    "scripts/audit_v2_certification_issuance_25ar.py",
 }
 
 EXCLUDED_PREFIXES = (
@@ -155,8 +159,8 @@ def ensure_repo_state() -> None:
     ).returncode == 0:
         raise FreezeError(f"HEAD {head} is not the source commit or its descendant")
     remote = git("rev-parse", "origin/post-v2-planning")
-    if remote not in {SOURCE_COMMIT, EVIDENCE_FREEZE_COMMIT, head}:
-        raise FreezeError(f"origin/post-v2-planning is {remote}; expected source, freeze, or current commit")
+    if remote not in {SOURCE_COMMIT, EVIDENCE_FREEZE_COMMIT, FINAL_INTEGRITY_COMMIT, head}:
+        raise FreezeError(f"origin/post-v2-planning is {remote}; expected source, freeze, final-integrity, or current commit")
     unexpected = sorted(changed_paths() - EXPECTED_DEVELOPMENT_PATHS)
     if unexpected:
         raise FreezeError(f"Unexpected changed paths: {unexpected}")

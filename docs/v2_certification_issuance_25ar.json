@@ -1,0 +1,123 @@
+{
+  "accepted_limitations": [
+    "Two preview pages use a clear two-click indirect Admin return.",
+    "No direct Admin shortcut is present on those two preview pages.",
+    "Successful credential POST mutation testing was not repeated beyond accepted coverage.",
+    "Compliance operational persistence remains intentionally inactive.",
+    "System Observation persistence remains intentionally inactive.",
+    "Hosted production hardening remains outside this certification.",
+    "Optional Admin redesign remains deferred.",
+    "Future trust-type expansion remains deferred."
+  ],
+  "active_db_reference": {
+    "audit_log_count": 569,
+    "certificate_count": "MISSING",
+    "compliance_objects": [],
+    "matter_count": 1,
+    "mtime_ns": 1784378870854649900,
+    "referenced_not_committed": true,
+    "schema_version": 404,
+    "sha256": "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525",
+    "size_bytes": 3096576,
+    "system_observation_objects": [],
+    "table_count": 132,
+    "transfer_count": 14,
+    "trust_count": 22,
+    "user_count": 7
+  },
+  "authoritative_decisions": {
+    "step_25ao": "CERTIFICATION_CANDIDATE_READY",
+    "step_25ap": "EVIDENCE_FREEZE_PASS",
+    "step_25aq": "CERTIFICATION_ISSUANCE_READY"
+  },
+  "certification_date": "2026-07-18",
+  "certification_id": "TRUSTEE-APP-V2-CERT-2026-07-18",
+  "certification_tag": "v2-certified-baseline-2026-07-18",
+  "certified_capabilities": [
+    "institutional navigation architecture",
+    "trust and matter lifecycle continuity",
+    "execution and transfer continuity",
+    "authorization enforcement",
+    "firm-scope isolation",
+    "governance object framework",
+    "governance relationships and lifecycle",
+    "approval authority and source provenance",
+    "reports and PDF generation",
+    "archive read-only workspace",
+    "certificate verification",
+    "evidence export and integrity surfaces",
+    "operator acceptance",
+    "repository-shape governance",
+    "active-state continuity",
+    "recovery-safety boundaries",
+    "intentionally inactive-module representation"
+  ],
+  "decision": "V2_CERTIFIED",
+  "deployment_exclusions": [
+    "hosted production deployment completion",
+    "production WSGI configuration",
+    "hosted environment secrets",
+    "hosted storage durability",
+    "external backup verification",
+    "live disaster-recovery execution",
+    "public release",
+    "production monitoring",
+    "Compliance activation",
+    "System Observation activation",
+    "future trust-type expansion",
+    "optional Admin redesign",
+    "optional direct Admin preview shortcuts",
+    "credential mutation workflows not repeated during final acceptance",
+    "third-party service availability",
+    "legal enforceability of generated instruments",
+    "tax treatment",
+    "regulatory approval",
+    "legal advice",
+    "tax advice",
+    "professional fiduciary judgment"
+  ],
+  "evidence_freeze_commit": "a908110e361b5211a94e4a84283f754699b8b969",
+  "evidence_gaps": 0,
+  "evidence_manifest": {
+    "path": "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
+    "sha256": "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
+  },
+  "final_integrity_commit": "dda6f96f2b4e4a6400dcd656cf9d149efbca5ff7",
+  "frozen_source_commit": "a1f63da1096bc6c261db2fd8a894f660ec919c2a",
+  "inactive_modules": [
+    {
+      "module": "Compliance",
+      "status": "not operationally active"
+    },
+    {
+      "module": "System Observation persistence",
+      "status": "not operationally active"
+    }
+  ],
+  "issuance_readiness_commit": "774775b34f26627223a7308f6e476b99405697e3",
+  "issuance_status": "ISSUED_BY_ANNOTATED_TAG",
+  "next_phase": "Step 25AS - Certified Baseline Publication and Branch Disposition Audit",
+  "nonclaims": [
+    "This is a technical and institutional-process certification, not legal validation.",
+    "It does not establish enforceability of any trust instrument.",
+    "It does not establish tax compliance.",
+    "It does not establish regulatory approval.",
+    "It does not activate intentionally inactive modules.",
+    "It does not certify hosted production deployment.",
+    "It does not certify disaster-recovery execution.",
+    "It does not erase accepted nonblocking operator friction.",
+    "It does not replace operator judgment or professional review.",
+    "It applies only to the exact identified source, evidence, readiness, certification commit, and annotated tag."
+  ],
+  "open_blockers": 0,
+  "policy_reference": {
+    "mtime_ns": 1784293287862666100,
+    "referenced_not_committed": true,
+    "sha256": "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361",
+    "size_bytes": 123
+  },
+  "product": "Trustee App",
+  "schema_version": "1.0",
+  "source_branch": "post-v2-planning",
+  "version": "V2"
+}

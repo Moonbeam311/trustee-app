@@ -25,6 +25,9 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
+    "docs/v2_certification_issuance_25ar.md",
+    "docs/v2_certification_issuance_25ar.json",
+    "scripts/audit_v2_certification_issuance_25ar.py",
 }
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/", "database/")
 

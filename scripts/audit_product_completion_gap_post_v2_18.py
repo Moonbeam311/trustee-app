@@ -32,6 +32,8 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "docs/v2_certification_candidate_evidence_freeze_25ap.md",
     "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
     "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
+    "docs/v2_certification_issuance_25ar.md",
+    "docs/v2_certification_issuance_25ar.json",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -43,6 +45,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
     "scripts/audit_v2_certification_candidate_readiness_25ao.py",
     "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
+    "scripts/audit_v2_certification_issuance_25ar.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
     "test_artifacts/README.md",
 }
@@ -336,6 +339,17 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25ar_certification_issuance_package",
+            [
+                "?? docs/v2_certification_issuance_25ar.md",
+                "?? docs/v2_certification_issuance_25ar.json",
+                "?? scripts/audit_v2_certification_issuance_25ar.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -492,6 +506,27 @@ def run_repository_shape_self_tests() -> dict:
         (
             "fail_step_25aq_readiness_audit_copy",
             ["?? scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ar_certification_doc_copy",
+            ["?? docs/v2_certification_issuance_25ar_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ar_certification_json_copy",
+            ["?? docs/v2_certification_issuance_25ar_copy.json"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ar_certification_audit_copy",
+            ["?? scripts/audit_v2_certification_issuance_25ar_copy.py"],
             set(),
             set(),
             False,

@@ -26,6 +26,9 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",
     "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
+    "docs/v2_certification_issuance_25ar.md",
+    "docs/v2_certification_issuance_25ar.json",
+    "scripts/audit_v2_certification_issuance_25ar.py",
 }
 PRODUCTION_PREFIXES = (
     "app.py",
