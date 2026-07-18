@@ -30,3 +30,7 @@ exports/
 *.pdf
 ~$*.docx
 audit/ios3/
+
+# Generated local audit evidence
+test_artifacts/**/*.json
+!test_artifacts/README.md

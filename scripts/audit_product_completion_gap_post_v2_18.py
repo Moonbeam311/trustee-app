@@ -20,7 +20,22 @@ EXPECTED_EVIDENCE_FILES = {
     "docs/core_product_operator_acceptance_post_v2_19.md",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
 }
-EXPECTED_ARTIFACT_PREFIX = "test_artifacts/"
+APPROVED_LATER_EVIDENCE_FILES = {
+    ".gitignore",
+    "test_artifacts/README.md",
+}
+GENERATED_LOCAL_ARTIFACT_FILES = {
+    "test_artifacts/step25ab/step25ab_report.json",
+    "test_artifacts/step25ac/step25ac_report.json",
+    "test_artifacts/step25ad/step25ad_report.json",
+    "test_artifacts/step25ae/step25ae_master_report.json",
+}
+ACTIVE_STATE_FILES = {
+    "trustee_app.db",
+    "database.db",
+    "data/database.db",
+    "data/export_policy.json",
+}
 LOCAL_BOOKMARK_FILES = [
     ROOT / "config" / "local" / "compliance_review_activation_manifest.local.json",
     ROOT / "config" / "local" / "compliance_review_activation_authorization_worksheet.local.md",
@@ -95,6 +110,132 @@ def check(label: str, condition: bool, detail: object = "") -> bool:
     return condition
 
 
+def normalize_repo_path(path: str) -> str:
+    return path.strip().strip('"').replace("\\", "/")
+
+
+def parse_status_line(line: str) -> tuple[str, str]:
+    status_code = line[:2]
+    path = normalize_repo_path(line[3:])
+    if " -> " in path:
+        path = normalize_repo_path(path.split(" -> ", 1)[1])
+    return status_code, path
+
+
+def classify_repository_shape(
+    status_lines: list[str],
+    staged_paths: set[str],
+    tracked_generated_artifacts: set[str],
+) -> dict:
+    historical_evidence: list[str] = []
+    approved_later_evidence: list[str] = []
+    generated_local_output: list[str] = []
+    unauthorized: list[str] = []
+
+    for line in status_lines:
+        status_code, path = parse_status_line(line)
+        compact_status = status_code.strip()
+
+        if path in GENERATED_LOCAL_ARTIFACT_FILES:
+            if compact_status == "??":
+                generated_local_output.append(path)
+            else:
+                unauthorized.append(f"{status_code} {path}")
+            continue
+
+        if path in EXPECTED_EVIDENCE_FILES and compact_status in {"A", "M", "??"}:
+            historical_evidence.append(path)
+            continue
+
+        if path in APPROVED_LATER_EVIDENCE_FILES and compact_status in {"A", "M", "??"}:
+            approved_later_evidence.append(path)
+            continue
+
+        unauthorized.append(f"{status_code} {path}")
+
+    unauthorized_staged = sorted(
+        path
+        for path in staged_paths
+        if path not in EXPECTED_EVIDENCE_FILES and path not in APPROVED_LATER_EVIDENCE_FILES
+    )
+    unauthorized_tracked_artifacts = sorted(
+        path for path in tracked_generated_artifacts if path in GENERATED_LOCAL_ARTIFACT_FILES
+    )
+    generated_staged = sorted(path for path in staged_paths if path in GENERATED_LOCAL_ARTIFACT_FILES)
+    active_state_changes = sorted(
+        path
+        for path in staged_paths | {parse_status_line(line)[1] for line in status_lines}
+        if path in ACTIVE_STATE_FILES
+    )
+
+    unauthorized.extend(f"staged:{path}" for path in unauthorized_staged)
+    unauthorized.extend(f"tracked-generated:{path}" for path in unauthorized_tracked_artifacts)
+    unauthorized.extend(f"staged-generated:{path}" for path in generated_staged)
+    unauthorized.extend(f"active-state:{path}" for path in active_state_changes)
+
+    return {
+        "allowed": not unauthorized,
+        "historical_evidence": sorted(set(historical_evidence)),
+        "approved_later_evidence": sorted(set(approved_later_evidence)),
+        "generated_local_output": sorted(set(generated_local_output)),
+        "unauthorized": sorted(set(unauthorized)),
+    }
+
+
+def run_repository_shape_self_tests() -> dict:
+    cases = [
+        ("pass_no_later_additions", [], set(), set(), True),
+        ("pass_gitignore_only", ["M  .gitignore"], {".gitignore"}, set(), True),
+        (
+            "pass_readme_only",
+            ["A  test_artifacts/README.md"],
+            {"test_artifacts/README.md"},
+            set(),
+            True,
+        ),
+        (
+            "pass_both_hygiene_files",
+            ["M  .gitignore", "A  test_artifacts/README.md"],
+            {".gitignore", "test_artifacts/README.md"},
+            set(),
+            True,
+        ),
+        (
+            "pass_ignored_known_reports_untracked",
+            ["?? test_artifacts/step25ab/step25ab_report.json"],
+            set(),
+            set(),
+            True,
+        ),
+        ("fail_arbitrary_app_file", ["?? app_extra.py"], set(), set(), False),
+        ("fail_modified_app_py", [" M app.py"], set(), set(), False),
+        (
+            "fail_tracked_generated_report",
+            [],
+            set(),
+            {"test_artifacts/step25ab/step25ab_report.json"},
+            False,
+        ),
+        (
+            "fail_staged_raw_json_report",
+            ["A  test_artifacts/step25ab/step25ab_report.json"],
+            {"test_artifacts/step25ab/step25ab_report.json"},
+            set(),
+            False,
+        ),
+        ("fail_unknown_doc", ["?? docs/new_report.md"], set(), set(), False),
+        ("fail_unknown_script", ["?? scripts/new_audit.py"], set(), set(), False),
+        ("fail_active_db_added", ["A  trustee_app.db"], {"trustee_app.db"}, set(), False),
+        ("fail_policy_modified", [" M data/export_policy.json"], set(), set(), False),
+        ("fail_unknown_untracked", ["?? scratch.tmp"], set(), set(), False),
+    ]
+    results = {}
+    for name, status_lines, staged_paths, tracked_artifacts, expected in cases:
+        result = classify_repository_shape(status_lines, staged_paths, tracked_artifacts)
+        results[name] = result["allowed"] == expected
+    return results
+
+
 def main() -> int:
     failures = 0
     head = run_git("rev-parse", "HEAD")
@@ -103,18 +244,15 @@ def main() -> int:
     status = run_git("status", "--short")
     staged = run_git("diff", "--cached", "--name-only")
     status_lines = [line for line in status.splitlines() if line]
-    allowed_status = True
-    for line in status_lines:
-        path = line[3:].replace("\\", "/")
-        status_code = line[:2]
-        if path in EXPECTED_EVIDENCE_FILES and status_code.strip() in {"A", "??"}:
-            continue
-        if path.startswith(EXPECTED_ARTIFACT_PREFIX) and status_code == "??":
-            continue
-        allowed_status = False
-        break
     staged_paths = {line.replace("\\", "/") for line in staged.splitlines() if line}
-    allowed_staged = staged_paths.issubset(EXPECTED_EVIDENCE_FILES)
+    tracked_generated_artifacts = {
+        normalize_repo_path(line)
+        for line in run_git("ls-files", *sorted(GENERATED_LOCAL_ARTIFACT_FILES)).splitlines()
+        if line
+    }
+    repository_shape = classify_repository_shape(status_lines, staged_paths, tracked_generated_artifacts)
+    shape_self_tests = run_repository_shape_self_tests()
+    allowed_staged = staged_paths.issubset(EXPECTED_EVIDENCE_FILES | APPROVED_LATER_EVIDENCE_FILES)
 
     db = db_summary(ROOT / "trustee_app.db")
     h6a_sha = sha256(ROOT / "data" / "backups" / "trustee_app_pre_role_permission_reconcile_2026-07-15.db")
@@ -131,7 +269,9 @@ def main() -> int:
         ("branch", branch == "post-v2-planning", branch),
         ("local head contains required baseline", git_ok("merge-base", "--is-ancestor", REQUIRED_BASELINE_HEAD, "HEAD"), head),
         ("remote head contains required baseline", git_ok("merge-base", "--is-ancestor", REQUIRED_BASELINE_HEAD, "origin/post-v2-planning"), remote_head),
-        ("tracked working tree has only evidence/artifact files", allowed_status, status),
+        ("repository shape limited to historical evidence and approved later hygiene", repository_shape["allowed"], repository_shape),
+        ("repository shape negative self-tests", all(shape_self_tests.values()), shape_self_tests),
+        ("approved later hygiene classified", APPROVED_LATER_EVIDENCE_FILES.issubset(set(repository_shape["approved_later_evidence"]) | set(staged_paths)) or not staged_paths.intersection(APPROVED_LATER_EVIDENCE_FILES), repository_shape["approved_later_evidence"]),
         ("staging limited to evidence files", allowed_staged, staged),
         ("normal database size", db["size"] == REQUIRED_DB_SIZE, db["size"]),
         ("normal database sha", db["sha256"] == REQUIRED_DB_SHA, db["sha256"]),
@@ -161,7 +301,7 @@ def main() -> int:
     print(f"PHASE_DB_SHA256_UNCHANGED={str(db['sha256'] == REQUIRED_DB_SHA)}")
     print(f"PHASE_DB_CONTENT_UNCHANGED={str(db['sha256'] == REQUIRED_DB_SHA and db['role_permissions'] == 25)}")
     print("COMPLIANCE_NORMAL_DB_ACTIVATED=False")
-    print(json.dumps({"db": db, "status_short": status}, sort_keys=True))
+    print(json.dumps({"db": db, "repository_shape": repository_shape, "status_short": status}, sort_keys=True))
     print("POST-V2-18 PRODUCT COMPLETION GAP AUDIT")
     print("CLASSIFICATION: HISTORICAL_PRODUCT_GAP_EVIDENCE_WITH_CURRENT_BASELINE_GUARDS")
     print("RESULT:", "PASS" if failures == 0 else "FAIL")

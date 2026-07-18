@@ -43,7 +43,24 @@ EXPECTED_UNTRACKED = {
 }
 
 EXPECTED_EVIDENCE_FILES = EXPECTED_UNTRACKED
-EXPECTED_ARTIFACT_PREFIX = "test_artifacts/"
+APPROVED_LATER_REPOSITORY_PATHS = {
+    ".gitignore",
+    "scripts/audit_product_completion_gap_post_v2_18.py",
+    "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+    "test_artifacts/README.md",
+}
+GENERATED_LOCAL_ARTIFACT_FILES = {
+    "test_artifacts/step25ab/step25ab_report.json",
+    "test_artifacts/step25ac/step25ac_report.json",
+    "test_artifacts/step25ad/step25ad_report.json",
+    "test_artifacts/step25ae/step25ae_master_report.json",
+}
+ACTIVE_STATE_FILES = {
+    "trustee_app.db",
+    "database.db",
+    "data/database.db",
+    "data/export_policy.json",
+}
 
 H6G_LOCAL_FILES = [
     REPO / "config" / "local" / "compliance_review_activation_manifest.local.json",
@@ -163,6 +180,158 @@ def git_status() -> tuple[list[str], list[str], list[str]]:
     return staged, unstaged, untracked
 
 
+def normalize_repo_path(path: str) -> str:
+    return path.strip().strip('"').replace("\\", "/")
+
+
+def parse_status_line(line: str) -> tuple[str, str]:
+    status_code = line[:2]
+    path = normalize_repo_path(line[3:])
+    if " -> " in path:
+        path = normalize_repo_path(path.split(" -> ", 1)[1])
+    return status_code, path
+
+
+def classify_repository_shape(
+    staged: list[str],
+    unstaged: list[str],
+    untracked: list[str],
+    tracked_generated_artifacts: set[str],
+) -> dict[str, object]:
+    original_expected: list[str] = []
+    approved_later: list[str] = []
+    generated_local_output: list[str] = []
+    unauthorized: list[str] = []
+
+    for line in staged + unstaged:
+        status_code, path = parse_status_line(line)
+        compact_status = status_code.strip()
+        if path in GENERATED_LOCAL_ARTIFACT_FILES:
+            unauthorized.append(f"{status_code} {path}")
+        elif path in EXPECTED_EVIDENCE_FILES and compact_status in {"A", "M"}:
+            original_expected.append(path)
+        elif path in APPROVED_LATER_REPOSITORY_PATHS and compact_status in {"A", "M"}:
+            approved_later.append(path)
+        else:
+            unauthorized.append(f"{status_code} {path}")
+
+    for path in untracked:
+        normalized = normalize_repo_path(path)
+        if normalized in GENERATED_LOCAL_ARTIFACT_FILES:
+            generated_local_output.append(normalized)
+        elif normalized in EXPECTED_EVIDENCE_FILES:
+            original_expected.append(normalized)
+        elif normalized in APPROVED_LATER_REPOSITORY_PATHS:
+            approved_later.append(normalized)
+        else:
+            unauthorized.append(f"?? {normalized}")
+
+    staged_paths = {parse_status_line(line)[1] for line in staged}
+    unauthorized_staged = sorted(
+        path
+        for path in staged_paths
+        if path not in EXPECTED_EVIDENCE_FILES and path not in APPROVED_LATER_REPOSITORY_PATHS
+    )
+    generated_staged = sorted(path for path in staged_paths if path in GENERATED_LOCAL_ARTIFACT_FILES)
+    unauthorized_tracked_artifacts = sorted(
+        path for path in tracked_generated_artifacts if path in GENERATED_LOCAL_ARTIFACT_FILES
+    )
+    active_state_changes = sorted(
+        path
+        for path in staged_paths
+        | {parse_status_line(line)[1] for line in unstaged}
+        | {normalize_repo_path(path) for path in untracked}
+        if path in ACTIVE_STATE_FILES
+    )
+
+    unauthorized.extend(f"staged:{path}" for path in unauthorized_staged)
+    unauthorized.extend(f"staged-generated:{path}" for path in generated_staged)
+    unauthorized.extend(f"tracked-generated:{path}" for path in unauthorized_tracked_artifacts)
+    unauthorized.extend(f"active-state:{path}" for path in active_state_changes)
+
+    return {
+        "allowed": not unauthorized,
+        "original_expected": sorted(set(original_expected)),
+        "approved_later": sorted(set(approved_later)),
+        "generated_local_output": sorted(set(generated_local_output)),
+        "unauthorized": sorted(set(unauthorized)),
+    }
+
+
+def repository_shape_self_tests() -> dict[str, bool]:
+    cases = [
+        ("pass_no_later_additions", [], [], [], set(), True),
+        ("pass_gitignore_only", ["M  .gitignore"], [], [], set(), True),
+        (
+            "pass_post_v2_18_reconciliation_only",
+            ["M  scripts/audit_product_completion_gap_post_v2_18.py"],
+            [],
+            [],
+            set(),
+            True,
+        ),
+        (
+            "pass_post_v2_19_reconciliation_only",
+            ["M  scripts/audit_core_product_operator_acceptance_post_v2_19.py"],
+            [],
+            [],
+            set(),
+            True,
+        ),
+        ("pass_readme_only", ["A  test_artifacts/README.md"], [], [], set(), True),
+        (
+            "pass_all_four_approved_paths",
+            [
+                "M  .gitignore",
+                "M  scripts/audit_product_completion_gap_post_v2_18.py",
+                "M  scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+                "A  test_artifacts/README.md",
+            ],
+            [],
+            [],
+            set(),
+            True,
+        ),
+        (
+            "pass_ignored_known_reports_untracked",
+            [],
+            [],
+            ["test_artifacts/step25ab/step25ab_report.json"],
+            set(),
+            True,
+        ),
+        ("fail_modified_app_py", [], [" M app.py"], [], set(), False),
+        ("fail_arbitrary_service", ["A  services/new_service.py"], [], [], set(), False),
+        ("fail_unknown_doc", [], [], ["docs/new_report.md"], set(), False),
+        ("fail_unknown_script", ["A  scripts/new_audit.py"], [], [], set(), False),
+        (
+            "fail_tracked_raw_json",
+            [],
+            [],
+            [],
+            {"test_artifacts/step25ab/step25ab_report.json"},
+            False,
+        ),
+        (
+            "fail_staged_raw_json",
+            ["A  test_artifacts/step25ab/step25ab_report.json"],
+            [],
+            [],
+            set(),
+            False,
+        ),
+        ("fail_database_added", ["A  trustee_app.db"], [], [], set(), False),
+        ("fail_policy_modified", [], [" M data/export_policy.json"], [], set(), False),
+        ("fail_unknown_untracked", [], [], ["scratch.tmp"], set(), False),
+        ("fail_broad_new_directory", [], [], ["new_area/readme.md"], set(), False),
+    ]
+    results: dict[str, bool] = {}
+    for name, staged, unstaged, untracked, tracked_artifacts, expected in cases:
+        result = classify_repository_shape(staged, unstaged, untracked, tracked_artifacts)
+        results[name] = result["allowed"] == expected
+    return results
+
+
 def port_closed(port: int = 5000) -> bool:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.settimeout(0.25)
@@ -246,18 +415,17 @@ def assert_repo_baseline() -> tuple[list[str], list[str], list[str]]:
     fail_if(not git_ok("merge-base", "--is-ancestor", BASELINE_HEAD, REMOTE_REF), "remote HEAD does not contain POST-V2-19 R1 baseline")
     pass_line("remote head contains baseline", remote_head)
     staged, unstaged, untracked = git_status()
-    staged_paths = {line[3:].replace("\\", "/") for line in staged}
-    unstaged_paths = {line[3:].replace("\\", "/") for line in unstaged}
-    untracked_set = set(untracked)
-    allowed_untracked = {
-        path for path in untracked_set
-        if path in EXPECTED_EVIDENCE_FILES or path.startswith(EXPECTED_ARTIFACT_PREFIX)
+    tracked_generated_artifacts = {
+        normalize_repo_path(line)
+        for line in run(["git", "ls-files", *sorted(GENERATED_LOCAL_ARTIFACT_FILES)]).splitlines()
+        if line
     }
-    fail_if(unstaged_paths, f"tracked unstaged changes present: {unstaged}")
-    fail_if(not staged_paths.issubset(EXPECTED_EVIDENCE_FILES), f"unexpected staged files: {staged}")
-    fail_if(allowed_untracked != untracked_set, f"unexpected untracked files: {untracked}")
-    pass_line("staging limited to evidence files", sorted(staged_paths))
-    pass_line("expected untracked files/artifacts", sorted(untracked_set))
+    repository_shape = classify_repository_shape(staged, unstaged, untracked, tracked_generated_artifacts)
+    shape_self_tests = repository_shape_self_tests()
+    fail_if(not repository_shape["allowed"], f"unauthorized repository paths: {repository_shape}")
+    fail_if(not all(shape_self_tests.values()), f"repository shape self-tests failed: {shape_self_tests}")
+    pass_line("repository shape limited to expected and approved later paths", repository_shape)
+    pass_line("repository shape negative self-tests", shape_self_tests)
     fail_if(not port_closed(), "port 5000 is open")
     pass_line("port 5000 closed")
     sidecars = [str(p.relative_to(REPO)) for p in REPO.glob("trustee_app.db-*")]
