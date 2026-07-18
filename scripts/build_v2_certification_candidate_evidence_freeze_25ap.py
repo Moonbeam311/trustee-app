@@ -155,8 +155,8 @@ def ensure_repo_state() -> None:
     ).returncode == 0:
         raise FreezeError(f"HEAD {head} is not the source commit or its descendant")
     remote = git("rev-parse", "origin/post-v2-planning")
-    if remote != SOURCE_COMMIT and remote != head:
-        raise FreezeError(f"origin/post-v2-planning is {remote}; expected source or freeze commit")
+    if remote not in {SOURCE_COMMIT, EVIDENCE_FREEZE_COMMIT, head}:
+        raise FreezeError(f"origin/post-v2-planning is {remote}; expected source, freeze, or current commit")
     unexpected = sorted(changed_paths() - EXPECTED_DEVELOPMENT_PATHS)
     if unexpected:
         raise FreezeError(f"Unexpected changed paths: {unexpected}")
