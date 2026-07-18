@@ -13,12 +13,14 @@ ALLOWED_CHANGED = {
     "app.py",
     "docs/audit_expected_active_state_reconciliation_25al_r1.md",
     "docs/core_product_manual_operator_acceptance_25al.md",
+    "docs/operator_friction_acceptance_closure_25an.md",
     "docs/post_v2_gap_closure_prioritization_25ak.md",
     "docs/reports_pdf_runtime_repair_25am.md",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+    "scripts/audit_operator_friction_acceptance_closure_25an.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
     "scripts/audit_reports_pdf_runtime_repair_25am.py",
@@ -156,7 +158,7 @@ def main() -> int:
     failures += 0 if record("no active DB or policy file is staged", not state_staged, state_staged) else 1
 
     allowed_worktree = changed.issubset(ALLOWED_CHANGED)
-    failures += 0 if record("worktree limited to Step 25AK planning files", allowed_worktree, sorted(changed)) else 1
+    failures += 0 if record("worktree limited to approved planning and later evidence files", allowed_worktree, sorted(changed)) else 1
 
     print("POST-V2-25AK GAP CLOSURE PRIORITIZATION AUDIT")
     print("RESULT:", "PASS" if failures == 0 else "FAIL")
