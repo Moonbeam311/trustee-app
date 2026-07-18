@@ -28,6 +28,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "docs/post_v2_gap_closure_prioritization_25ak.md",
     "docs/reports_pdf_runtime_repair_25am.md",
     "docs/operator_friction_acceptance_closure_25an.md",
+    "docs/v2_certification_candidate_readiness_25ao.md",
     "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
@@ -36,6 +37,7 @@ APPROVED_LATER_EVIDENCE_FILES = {
     "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
     "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
+    "scripts/audit_v2_certification_candidate_readiness_25ao.py",
     "test_artifacts/README.md",
 }
 GENERATED_LOCAL_ARTIFACT_FILES = {
@@ -296,6 +298,16 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25ao_readiness_package",
+            [
+                "?? docs/v2_certification_candidate_readiness_25ao.md",
+                "?? scripts/audit_v2_certification_candidate_readiness_25ao.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -396,6 +408,20 @@ def run_repository_shape_self_tests() -> dict:
         (
             "fail_step_25an_closure_audit_copy",
             ["?? scripts/audit_operator_friction_acceptance_closure_25an_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ao_readiness_doc_copy",
+            ["?? docs/v2_certification_candidate_readiness_25ao_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ao_readiness_audit_copy",
+            ["?? scripts/audit_v2_certification_candidate_readiness_25ao_copy.py"],
             set(),
             set(),
             False,

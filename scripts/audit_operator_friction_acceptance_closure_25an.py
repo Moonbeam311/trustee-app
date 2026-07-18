@@ -19,6 +19,8 @@ ALLOWED_CHANGED = {
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+    "docs/v2_certification_candidate_readiness_25ao.md",
+    "scripts/audit_v2_certification_candidate_readiness_25ao.py",
 }
 PRODUCTION_PREFIXES = (
     "app.py",
