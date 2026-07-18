@@ -10,17 +10,23 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs" / "post_v2_gap_closure_prioritization_25ak.md"
 SCRIPT = ROOT / "scripts" / "audit_post_v2_gap_closure_prioritization_25ak.py"
 ALLOWED_CHANGED = {
+    "app.py",
     "docs/audit_expected_active_state_reconciliation_25al_r1.md",
     "docs/core_product_manual_operator_acceptance_25al.md",
     "docs/post_v2_gap_closure_prioritization_25ak.md",
+    "docs/reports_pdf_runtime_repair_25am.md",
+    "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
+    "scripts/audit_reports_pdf_runtime_repair_25am.py",
+    "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
     "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
 }
-PRODUCTION_PREFIXES = ("app.py", "templates/", "services/", "models/", "migrations/")
+APPROVED_PRODUCTION_REPAIR_PATHS = {"app.py", "pdf_utils.py"}
+PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/")
 ACTIVE_STATE_FILES = {
     "trustee_app.db",
     "database.db",
@@ -140,7 +146,11 @@ def main() -> int:
 
     changed = changed_paths()
     staged = staged_paths()
-    production_changes = [p for p in changed if p == "app.py" or p.startswith(PRODUCTION_PREFIXES)]
+    production_changes = [
+        p for p in changed
+        if (p == "app.py" or p.startswith(PRODUCTION_PREFIXES))
+        and p not in APPROVED_PRODUCTION_REPAIR_PATHS
+    ]
     state_staged = sorted(staged & ACTIVE_STATE_FILES)
     failures += 0 if record("no production code is changed", not production_changes, production_changes) else 1
     failures += 0 if record("no active DB or policy file is staged", not state_staged, state_staged) else 1

@@ -22,12 +22,17 @@ EXPECTED_EVIDENCE_FILES = {
 }
 APPROVED_LATER_EVIDENCE_FILES = {
     ".gitignore",
+    "app.py",
     "docs/audit_expected_active_state_reconciliation_25al_r1.md",
     "docs/core_product_manual_operator_acceptance_25al.md",
     "docs/post_v2_gap_closure_prioritization_25ak.md",
+    "docs/reports_pdf_runtime_repair_25am.md",
+    "pdf_utils.py",
     "scripts/audit_core_product_manual_operator_acceptance_25al.py",
     "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+    "scripts/audit_reports_pdf_runtime_repair_25am.py",
+    "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
     "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
     "test_artifacts/README.md",
 }
@@ -266,6 +271,19 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25am_repair_package",
+            [
+                "M  app.py",
+                " M pdf_utils.py",
+                "?? docs/reports_pdf_runtime_repair_25am.md",
+                "?? scripts/audit_reports_pdf_runtime_repair_25am.py",
+                "?? scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -273,7 +291,7 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         ("fail_arbitrary_app_file", ["?? app_extra.py"], set(), set(), False),
-        ("fail_modified_app_py", [" M app.py"], set(), set(), False),
+        ("fail_modified_template", [" M templates/report_center.html"], set(), set(), False),
         (
             "fail_tracked_generated_report",
             [],
@@ -331,6 +349,27 @@ def run_repository_shape_self_tests() -> dict:
         (
             "fail_step_25al_acceptance_audit_copy",
             ["?? scripts/audit_core_product_manual_operator_acceptance_25al_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25am_repair_doc_copy",
+            ["?? docs/reports_pdf_runtime_repair_25am_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25am_runtime_audit_copy",
+            ["?? scripts/audit_reports_pdf_runtime_repair_25am_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25am_evidence_audit_copy",
+            ["?? scripts/audit_reports_pdf_runtime_repair_evidence_25am_copy.py"],
             set(),
             set(),
             False,

@@ -11778,8 +11778,7 @@ def report_center():
 
 @app.route("/reports/portfolio.pdf")
 def portfolio_report_pdf():
-    portfolio = get_portfolio_snapshot()
-    totals = get_portfolio_totals()
+    portfolio, totals = get_portfolio_summary()
     story = portfolio_report_story(portfolio=portfolio, totals=totals)
     return build_pdf_response("portfolio_report.pdf", story)
 

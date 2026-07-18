@@ -12,6 +12,18 @@ from flask import make_response
 
 PAGE_WIDTH, PAGE_HEIGHT = LETTER
 
+def _mapping_rows(rows, label):
+    normalized = []
+    for row in rows or []:
+        if isinstance(row, dict):
+            normalized.append(dict(row))
+            continue
+        if hasattr(row, "keys"):
+            normalized.append({key: row[key] for key in row.keys()})
+            continue
+        raise TypeError(f"{label} rows must be dictionaries or row mappings")
+    return normalized
+
 def _styles():
     styles = getSampleStyleSheet()
     styles.add(ParagraphStyle(
@@ -290,6 +302,8 @@ def k1_readiness_story(trust, tax_year, summary, totals, beneficiary_totals, ben
 def fiduciary_report_story(trusts, fiduciaries, selected_trust_id=None):
     styles = _styles()
     story = []
+    trusts = _mapping_rows(trusts, "trust")
+    fiduciaries = _mapping_rows(fiduciaries, "fiduciary")
 
     trust_lookup = {str(t.get("trust_id")): t for t in (trusts or [])}
     filtered = fiduciaries or []

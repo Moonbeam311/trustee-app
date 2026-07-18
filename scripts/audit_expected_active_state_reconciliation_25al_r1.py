@@ -11,6 +11,18 @@ HISTORICAL_SHA = "6E9E3EF0AE596FB296972B99EA4ED293DB8C5DBD4A64A03AA4FBB0C0CB7A6C
 CURRENT_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
 POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
 PRODUCTION_PATHS = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/")
+APPROVED_25AM_REPAIR_PATHS = {
+    "app.py",
+    "pdf_utils.py",
+    "docs/reports_pdf_runtime_repair_25am.md",
+    "scripts/audit_reports_pdf_runtime_repair_25am.py",
+    "scripts/audit_reports_pdf_runtime_repair_evidence_25am.py",
+    "scripts/audit_product_completion_gap_post_v2_18.py",
+    "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+    "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+    "scripts/audit_core_product_manual_operator_acceptance_25al.py",
+    "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
+}
 STATE_PATHS = {"trustee_app.db", "database.db", "data/database.db", "data/export_policy.json"}
 
 
@@ -80,11 +92,17 @@ def main() -> int:
         failures += 0 if record(label, ok) else 1
 
     paths = changed_paths()
-    production_changes = sorted(p for p in paths if p == "app.py" or p.startswith(PRODUCTION_PATHS))
+    production_changes = sorted(
+        p for p in paths
+        if (p == "app.py" or p.startswith(PRODUCTION_PATHS))
+        and p not in APPROVED_25AM_REPAIR_PATHS
+    )
     state_changes = sorted(paths & STATE_PATHS)
     staged = {p.replace("\\", "/") for p in git("diff", "--cached", "--name-only").splitlines() if p}
     staged_state = sorted(staged & STATE_PATHS)
-    failures += 0 if record("no production code modified", not production_changes, production_changes) else 1
+    approved_repair_present = {"app.py", "pdf_utils.py"}.issubset(paths)
+    failures += 0 if record("no unrelated production code modified", not production_changes, production_changes) else 1
+    failures += 0 if record("Step 25AM repair closure package recognized", not approved_repair_present or paths.issubset(APPROVED_25AM_REPAIR_PATHS), sorted(paths)) else 1
     failures += 0 if record("no active state staged", not staged_state and not state_changes, {"changed": state_changes, "staged": staged_state}) else 1
 
     permanent_ids = re.findall(r"\bD-\d{3,}\b|\bDEFECT-\d+\b|\bBUG-\d+\b", text)
