@@ -26,8 +26,8 @@ BASELINE_HEAD = "0d43de6d9e1b6f3c2a4493e4d4001650e0b92597"
 REMOTE_REF = "origin/post-v2-planning"
 DB = REPO / "trustee_app.db"
 DB_SIZE = 3_096_576
-DB_MTIME_NS = 1_784_297_518_235_947_200
-DB_SHA = "6E9E3EF0AE596FB296972B99EA4ED293DB8C5DBD4A64A03AA4FBB0C0CB7A6C36"
+DB_MTIME_NS = 1_784_378_870_854_649_900
+DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
 H6A_BACKUP = REPO / "data" / "backups" / "trustee_app_pre_role_permission_reconcile_2026-07-15.db"
 H6A_BACKUP_SHA = "CEEDF08EAA93F1311D0E3057CD1BF84E35EADF26D40872CF7A05F5D2D560F7BA"
 POST_V18_DOC = REPO / "docs" / "product_completion_gap_audit_post_v2_18.md"
@@ -45,9 +45,14 @@ EXPECTED_UNTRACKED = {
 EXPECTED_EVIDENCE_FILES = EXPECTED_UNTRACKED
 APPROVED_LATER_REPOSITORY_PATHS = {
     ".gitignore",
+    "docs/audit_expected_active_state_reconciliation_25al_r1.md",
+    "docs/core_product_manual_operator_acceptance_25al.md",
+    "scripts/audit_core_product_manual_operator_acceptance_25al.py",
+    "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
     "docs/post_v2_gap_closure_prioritization_25ak.md",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
+    "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "test_artifacts/README.md",
 }
@@ -337,6 +342,27 @@ def repository_shape_self_tests() -> dict[str, bool]:
             True,
         ),
         (
+            "pass_step_25al_r1_package",
+            [],
+            [],
+            [
+                "docs/audit_expected_active_state_reconciliation_25al_r1.md",
+                "docs/core_product_manual_operator_acceptance_25al.md",
+                "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
+                "scripts/audit_core_product_manual_operator_acceptance_25al.py",
+            ],
+            set(),
+            True,
+        ),
+        (
+            "pass_step_25al_r1_current_reference_update",
+            [" M scripts/audit_transfer_helper_contract_post_v2_19_r1.py"],
+            [],
+            [],
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             [],
             [],
@@ -381,6 +407,38 @@ def repository_shape_self_tests() -> dict[str, bool]:
             [],
             [],
             ["scripts/audit_post_v2_gap_closure_prioritization_25ak_copy.py"],
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_r1_reconciliation_doc_copy",
+            [],
+            [],
+            ["docs/audit_expected_active_state_reconciliation_25al_r1_copy.md"],
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_r1_reconciliation_audit_copy",
+            [],
+            [],
+            ["scripts/audit_expected_active_state_reconciliation_25al_r1_copy.py"],
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_acceptance_doc_copy",
+            [],
+            [],
+            ["docs/core_product_manual_operator_acceptance_25al_copy.md"],
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_acceptance_audit_copy",
+            [],
+            [],
+            ["scripts/audit_core_product_manual_operator_acceptance_25al_copy.py"],
             set(),
             False,
         ),
@@ -451,7 +509,7 @@ def assert_db_baseline(manifest: dict[str, object]) -> None:
     fail_if(manifest["size"] != DB_SIZE, f"database size changed: {manifest['size']}")
     fail_if(manifest["mtime_ns"] != DB_MTIME_NS, f"database mtime changed: {manifest['mtime_ns']}")
     fail_if(manifest["sha256"] != DB_SHA, f"database sha changed: {manifest['sha256']}")
-    fail_if(tuple(manifest["audit_log"]) != (559, 559), f"audit_log baseline changed: {manifest['audit_log']}")
+    fail_if(tuple(manifest["audit_log"]) != (569, 569), f"audit_log baseline changed: {manifest['audit_log']}")
     fail_if(manifest["role_permissions"] != 25, f"role_permissions changed: {manifest['role_permissions']}")
     fail_if(manifest["distinct_pairs"] != 25, f"distinct pairs changed: {manifest['distinct_pairs']}")
     fail_if(manifest["duplicate_groups"] != 0, f"duplicate groups changed: {manifest['duplicate_groups']}")

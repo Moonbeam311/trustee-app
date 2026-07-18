@@ -10,10 +10,15 @@ ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT / "docs" / "post_v2_gap_closure_prioritization_25ak.md"
 SCRIPT = ROOT / "scripts" / "audit_post_v2_gap_closure_prioritization_25ak.py"
 ALLOWED_CHANGED = {
+    "docs/audit_expected_active_state_reconciliation_25al_r1.md",
+    "docs/core_product_manual_operator_acceptance_25al.md",
     "docs/post_v2_gap_closure_prioritization_25ak.md",
+    "scripts/audit_core_product_manual_operator_acceptance_25al.py",
+    "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
+    "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
 }
 PRODUCTION_PREFIXES = ("app.py", "templates/", "services/", "models/", "migrations/")
 ACTIVE_STATE_FILES = {

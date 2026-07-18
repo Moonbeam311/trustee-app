@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_BASELINE_HEAD = "0d43de6d9e1b6f3c2a4493e4d4001650e0b92597"
-REQUIRED_DB_SHA = "6E9E3EF0AE596FB296972B99EA4ED293DB8C5DBD4A64A03AA4FBB0C0CB7A6C36"
+REQUIRED_DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
 REQUIRED_DB_SIZE = 3_096_576
 REQUIRED_H6A_SHA = "CEEDF08EAA93F1311D0E3057CD1BF84E35EADF26D40872CF7A05F5D2D560F7BA"
 DOC_PATH = ROOT / "docs" / "product_completion_gap_audit_post_v2_18.md"
@@ -22,8 +22,13 @@ EXPECTED_EVIDENCE_FILES = {
 }
 APPROVED_LATER_EVIDENCE_FILES = {
     ".gitignore",
+    "docs/audit_expected_active_state_reconciliation_25al_r1.md",
+    "docs/core_product_manual_operator_acceptance_25al.md",
     "docs/post_v2_gap_closure_prioritization_25ak.md",
+    "scripts/audit_core_product_manual_operator_acceptance_25al.py",
+    "scripts/audit_expected_active_state_reconciliation_25al_r1.py",
     "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+    "scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
     "test_artifacts/README.md",
 }
 GENERATED_LOCAL_ARTIFACT_FILES = {
@@ -248,6 +253,19 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25al_r1_package",
+            [
+                "?? docs/audit_expected_active_state_reconciliation_25al_r1.md",
+                "?? docs/core_product_manual_operator_acceptance_25al.md",
+                "?? scripts/audit_expected_active_state_reconciliation_25al_r1.py",
+                "?? scripts/audit_core_product_manual_operator_acceptance_25al.py",
+                " M scripts/audit_transfer_helper_contract_post_v2_19_r1.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -285,6 +303,34 @@ def run_repository_shape_self_tests() -> dict:
         (
             "fail_step_25ak_audit_copy",
             ["?? scripts/audit_post_v2_gap_closure_prioritization_25ak_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_r1_reconciliation_doc_copy",
+            ["?? docs/audit_expected_active_state_reconciliation_25al_r1_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_r1_reconciliation_audit_copy",
+            ["?? scripts/audit_expected_active_state_reconciliation_25al_r1_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_acceptance_doc_copy",
+            ["?? docs/core_product_manual_operator_acceptance_25al_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25al_acceptance_audit_copy",
+            ["?? scripts/audit_core_product_manual_operator_acceptance_25al_copy.py"],
             set(),
             set(),
             False,
@@ -346,7 +392,7 @@ def main() -> int:
         ("normal database size", db["size"] == REQUIRED_DB_SIZE, db["size"]),
         ("normal database sha", db["sha256"] == REQUIRED_DB_SHA, db["sha256"]),
         ("normal database mtime stable during read", db["mtime_unchanged_during_read"], db["mtime_ns"]),
-        ("audit log baseline", tuple(db["audit_log"]) == (559, 559), db["audit_log"]),
+        ("audit log reconciled baseline", tuple(db["audit_log"]) == (569, 569), db["audit_log"]),
         ("authorization baseline", db["role_permissions"] == 25 and db["distinct_pairs"] == 25, db),
         ("duplicate groups absent", db["duplicate_groups"] == 0, db["duplicate_groups"]),
         ("unique role-permission index present", "ux_role_permissions_role_permission" in db["role_permission_indexes"], db["role_permission_indexes"]),
