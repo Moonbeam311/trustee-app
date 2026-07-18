@@ -45,6 +45,8 @@ EXPECTED_UNTRACKED = {
 EXPECTED_EVIDENCE_FILES = EXPECTED_UNTRACKED
 APPROVED_LATER_REPOSITORY_PATHS = {
     ".gitignore",
+    "docs/post_v2_gap_closure_prioritization_25ak.md",
+    "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "scripts/audit_product_completion_gap_post_v2_18.py",
     "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
     "test_artifacts/README.md",
@@ -186,7 +188,7 @@ def normalize_repo_path(path: str) -> str:
 
 def parse_status_line(line: str) -> tuple[str, str]:
     status_code = line[:2]
-    path = normalize_repo_path(line[3:])
+    path = normalize_repo_path(line[2:].strip())
     if " -> " in path:
         path = normalize_repo_path(path.split(" -> ", 1)[1])
     return status_code, path
@@ -280,12 +282,54 @@ def repository_shape_self_tests() -> dict[str, bool]:
         ),
         ("pass_readme_only", ["A  test_artifacts/README.md"], [], [], set(), True),
         (
+            "pass_step_25ak_plan_only",
+            [],
+            [],
+            ["docs/post_v2_gap_closure_prioritization_25ak.md"],
+            set(),
+            True,
+        ),
+        (
+            "pass_step_25ak_audit_only",
+            [],
+            [],
+            ["scripts/audit_post_v2_gap_closure_prioritization_25ak.py"],
+            set(),
+            True,
+        ),
+        (
+            "pass_step_25ak_package",
+            [],
+            [],
+            [
+                "docs/post_v2_gap_closure_prioritization_25ak.md",
+                "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+            ],
+            set(),
+            True,
+        ),
+        (
             "pass_all_four_approved_paths",
             [
                 "M  .gitignore",
                 "M  scripts/audit_product_completion_gap_post_v2_18.py",
                 "M  scripts/audit_core_product_operator_acceptance_post_v2_19.py",
                 "A  test_artifacts/README.md",
+            ],
+            [],
+            [],
+            set(),
+            True,
+        ),
+        (
+            "pass_prior_approved_plus_step_25ak",
+            [
+                "M  .gitignore",
+                "M  scripts/audit_product_completion_gap_post_v2_18.py",
+                "M  scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+                "A  test_artifacts/README.md",
+                "A  docs/post_v2_gap_closure_prioritization_25ak.md",
+                "A  scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
             ],
             [],
             [],
@@ -324,6 +368,22 @@ def repository_shape_self_tests() -> dict[str, bool]:
         ("fail_policy_modified", [], [" M data/export_policy.json"], [], set(), False),
         ("fail_unknown_untracked", [], [], ["scratch.tmp"], set(), False),
         ("fail_broad_new_directory", [], [], ["new_area/readme.md"], set(), False),
+        (
+            "fail_step_25ak_plan_copy",
+            [],
+            [],
+            ["docs/post_v2_gap_closure_prioritization_25ak_copy.md"],
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ak_audit_copy",
+            [],
+            [],
+            ["scripts/audit_post_v2_gap_closure_prioritization_25ak_copy.py"],
+            set(),
+            False,
+        ),
     ]
     results: dict[str, bool] = {}
     for name, staged, unstaged, untracked, tracked_artifacts, expected in cases:

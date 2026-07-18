@@ -22,6 +22,8 @@ EXPECTED_EVIDENCE_FILES = {
 }
 APPROVED_LATER_EVIDENCE_FILES = {
     ".gitignore",
+    "docs/post_v2_gap_closure_prioritization_25ak.md",
+    "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
     "test_artifacts/README.md",
 }
 GENERATED_LOCAL_ARTIFACT_FILES = {
@@ -116,7 +118,7 @@ def normalize_repo_path(path: str) -> str:
 
 def parse_status_line(line: str) -> tuple[str, str]:
     status_code = line[:2]
-    path = normalize_repo_path(line[3:])
+    path = normalize_repo_path(line[2:].strip())
     if " -> " in path:
         path = normalize_repo_path(path.split(" -> ", 1)[1])
     return status_code, path
@@ -201,6 +203,51 @@ def run_repository_shape_self_tests() -> dict:
             True,
         ),
         (
+            "pass_step_25ak_plan_only",
+            ["?? docs/post_v2_gap_closure_prioritization_25ak.md"],
+            set(),
+            set(),
+            True,
+        ),
+        (
+            "pass_step_25ak_audit_only",
+            ["?? scripts/audit_post_v2_gap_closure_prioritization_25ak.py"],
+            set(),
+            set(),
+            True,
+        ),
+        (
+            "pass_step_25ak_package",
+            [
+                "?? docs/post_v2_gap_closure_prioritization_25ak.md",
+                "?? scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+            ],
+            set(),
+            set(),
+            True,
+        ),
+        (
+            "pass_prior_approved_plus_step_25ak",
+            [
+                "M  .gitignore",
+                "M  scripts/audit_product_completion_gap_post_v2_18.py",
+                "M  scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+                "A  test_artifacts/README.md",
+                "A  docs/post_v2_gap_closure_prioritization_25ak.md",
+                "A  scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+            ],
+            {
+                ".gitignore",
+                "scripts/audit_product_completion_gap_post_v2_18.py",
+                "scripts/audit_core_product_operator_acceptance_post_v2_19.py",
+                "test_artifacts/README.md",
+                "docs/post_v2_gap_closure_prioritization_25ak.md",
+                "scripts/audit_post_v2_gap_closure_prioritization_25ak.py",
+            },
+            set(),
+            True,
+        ),
+        (
             "pass_ignored_known_reports_untracked",
             ["?? test_artifacts/step25ab/step25ab_report.json"],
             set(),
@@ -228,6 +275,20 @@ def run_repository_shape_self_tests() -> dict:
         ("fail_active_db_added", ["A  trustee_app.db"], {"trustee_app.db"}, set(), False),
         ("fail_policy_modified", [" M data/export_policy.json"], set(), set(), False),
         ("fail_unknown_untracked", ["?? scratch.tmp"], set(), set(), False),
+        (
+            "fail_step_25ak_plan_copy",
+            ["?? docs/post_v2_gap_closure_prioritization_25ak_copy.md"],
+            set(),
+            set(),
+            False,
+        ),
+        (
+            "fail_step_25ak_audit_copy",
+            ["?? scripts/audit_post_v2_gap_closure_prioritization_25ak_copy.py"],
+            set(),
+            set(),
+            False,
+        ),
     ]
     results = {}
     for name, status_lines, staged_paths, tracked_artifacts, expected in cases:
@@ -253,6 +314,11 @@ def main() -> int:
     repository_shape = classify_repository_shape(status_lines, staged_paths, tracked_generated_artifacts)
     shape_self_tests = run_repository_shape_self_tests()
     allowed_staged = staged_paths.issubset(EXPECTED_EVIDENCE_FILES | APPROVED_LATER_EVIDENCE_FILES)
+    active_approved_later_paths = {
+        parse_status_line(line)[1]
+        for line in status_lines
+        if parse_status_line(line)[1] in APPROVED_LATER_EVIDENCE_FILES
+    } | (staged_paths & APPROVED_LATER_EVIDENCE_FILES)
 
     db = db_summary(ROOT / "trustee_app.db")
     h6a_sha = sha256(ROOT / "data" / "backups" / "trustee_app_pre_role_permission_reconcile_2026-07-15.db")
@@ -271,7 +337,11 @@ def main() -> int:
         ("remote head contains required baseline", git_ok("merge-base", "--is-ancestor", REQUIRED_BASELINE_HEAD, "origin/post-v2-planning"), remote_head),
         ("repository shape limited to historical evidence and approved later hygiene", repository_shape["allowed"], repository_shape),
         ("repository shape negative self-tests", all(shape_self_tests.values()), shape_self_tests),
-        ("approved later hygiene classified", APPROVED_LATER_EVIDENCE_FILES.issubset(set(repository_shape["approved_later_evidence"]) | set(staged_paths)) or not staged_paths.intersection(APPROVED_LATER_EVIDENCE_FILES), repository_shape["approved_later_evidence"]),
+        (
+            "approved later evidence classified",
+            active_approved_later_paths.issubset(set(repository_shape["approved_later_evidence"]) | staged_paths),
+            repository_shape["approved_later_evidence"],
+        ),
         ("staging limited to evidence files", allowed_staged, staged),
         ("normal database size", db["size"] == REQUIRED_DB_SIZE, db["size"]),
         ("normal database sha", db["sha256"] == REQUIRED_DB_SHA, db["sha256"]),
