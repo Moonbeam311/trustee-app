@@ -11,6 +11,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BRANCH = "post-v2-planning"
+SYSTEM1_SUCCESSOR_BRANCH = "system-1-annual-evaluation"
+ALLOWED_BRANCHES = {BRANCH, SYSTEM1_SUCCESSOR_BRANCH}
+PUBLISHED_SYSTEM1_PARENT = "0047fc053c4dfecaa4103af9b20c3811a0f564ad"
 SOURCE_COMMIT = "a1f63da1096bc6c261db2fd8a894f660ec919c2a"
 SOURCE_SHORT = "a1f63da"
 SOURCE_SUBJECT = "Audit V2 certification candidate readiness"
@@ -19,9 +22,17 @@ POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
 EVIDENCE_FREEZE_COMMIT = "a908110e361b5211a94e4a84283f754699b8b969"
 FINAL_INTEGRITY_COMMIT = "dda6f96f2b4e4a6400dcd656cf9d149efbca5ff7"
 FROZEN_MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
+CERTIFICATION_TAG = "v2-certified-baseline-2026-07-18"
+CERTIFICATION_TAG_OBJECT = "8ae024087cda06724bb3676960aaf8cdbbba9b67"
+CERTIFICATION_COMMIT = "e9907e1b9a13cd47c2b0acd4ad06d434c8a4fa46"
 REPORT_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap.md"
 MANIFEST_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
 AUTHORIZED_STEP_25AR_REPAIR_PATH = "scripts/audit_v2_certification_issuance_25ar.py"
+AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH = "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py"
+AUTHORIZED_LOCAL_REPAIR_INVENTORIES = {
+    (("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,)),),
+    (("M", (AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH,)),),
+}
 
 EXPECTED_DEVELOPMENT_PATHS = {
     "docs/v2_certification_candidate_evidence_freeze_25ap.md",
@@ -174,14 +185,14 @@ def local_commit_inventory(commit: str) -> list[tuple[str, tuple[str, ...]]]:
     return inventory
 
 
-def evaluate_authorized_step_25ar_parent_state(evidence: dict[str, object]) -> tuple[bool, dict[str, object]]:
+def evaluate_authorized_local_repair_parent_state(evidence: dict[str, object]) -> tuple[bool, dict[str, object]]:
     inventory = evidence.get("inventory")
     details = {
         "parent_is_remote": evidence.get("parent") == evidence.get("remote"),
         "remote_is_ancestor": evidence.get("remote_is_ancestor") is True,
         "divergence_is_one_ahead": evidence.get("behind") == 0 and evidence.get("ahead") == 1,
         "single_local_commit_is_head": evidence.get("local_commits") == [evidence.get("head")],
-        "inventory_is_authorized": inventory == [("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,))],
+        "inventory_is_authorized": tuple(inventory or []) in AUTHORIZED_LOCAL_REPAIR_INVENTORIES,
     }
     return all(details.values()), details
 
@@ -199,12 +210,12 @@ def is_exact_authorized_local_repair_state(*, remote: str, head: str) -> tuple[b
         "local_commits": local_commits,
         "inventory": local_commit_inventory(head),
     }
-    accepted, details = evaluate_authorized_step_25ar_parent_state(evidence)
+    accepted, details = evaluate_authorized_local_repair_parent_state(evidence)
     evidence["checks"] = details
     return accepted, evidence
 
 
-def self_test_authorized_step_25ar_parent_state() -> None:
+def self_test_authorized_local_repair_parent_state() -> None:
     base = {
         "remote": "1" * 40,
         "head": "2" * 40,
@@ -215,9 +226,15 @@ def self_test_authorized_step_25ar_parent_state() -> None:
         "local_commits": ["2" * 40],
         "inventory": [("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,))],
     }
-    accepted, _ = evaluate_authorized_step_25ar_parent_state(base)
+    accepted, _ = evaluate_authorized_local_repair_parent_state(base)
     if not accepted:
         raise FreezeError("Authorized Step 25AR parent-state self-test rejected the valid case")
+
+    builder_case = dict(base)
+    builder_case["inventory"] = [("M", (AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH,))]
+    accepted, _ = evaluate_authorized_local_repair_parent_state(builder_case)
+    if not accepted:
+        raise FreezeError("Authorized Step 25AP builder parent-state self-test rejected the valid case")
 
     negatives = [
         ("grandparent", {"remote": "0" * 40}),
@@ -235,17 +252,46 @@ def self_test_authorized_step_25ar_parent_state() -> None:
     for name, override in negatives:
         case = dict(base)
         case.update(override)
-        accepted, _ = evaluate_authorized_step_25ar_parent_state(case)
+        accepted, _ = evaluate_authorized_local_repair_parent_state(case)
         if accepted:
-            raise FreezeError(f"Authorized Step 25AR parent-state self-test accepted invalid case: {name}")
+            raise FreezeError(f"Authorized local-repair parent-state self-test accepted invalid case: {name}")
+
+
+def ensure_certified_boundary() -> None:
+    try:
+        tag_object = git("rev-parse", CERTIFICATION_TAG)
+        peeled_commit = git("rev-parse", f"{CERTIFICATION_TAG}^{{}}")
+    except FreezeError as exc:
+        raise FreezeError(f"certified tag mismatch: {exc}") from exc
+    if tag_object != CERTIFICATION_TAG_OBJECT:
+        raise FreezeError(f"certified tag mismatch: {tag_object}")
+    if peeled_commit != CERTIFICATION_COMMIT:
+        raise FreezeError(f"certified tag mismatch: peeled {peeled_commit}")
+
+
+def ensure_authorized_branch(branch: str, head: str) -> None:
+    if not branch:
+        raise FreezeError("Detached HEAD unsupported")
+    if branch not in ALLOWED_BRANCHES:
+        raise FreezeError(f"Unexpected branch {branch}; expected one of {sorted(ALLOWED_BRANCHES)}")
+    if branch == SYSTEM1_SUCCESSOR_BRANCH and not git_bool(
+        "merge-base",
+        "--is-ancestor",
+        PUBLISHED_SYSTEM1_PARENT,
+        head,
+    ):
+        raise FreezeError(
+            "Successor branch missing required published ancestor "
+            f"{PUBLISHED_SYSTEM1_PARENT}"
+        )
 
 
 def ensure_repo_state() -> None:
     branch = git("branch", "--show-current")
-    if branch != BRANCH:
-        raise FreezeError(f"Unexpected branch {branch}; expected {BRANCH}")
-    self_test_authorized_step_25ar_parent_state()
     head = git("rev-parse", "HEAD")
+    ensure_authorized_branch(branch, head)
+    ensure_certified_boundary()
+    self_test_authorized_local_repair_parent_state()
     if head != SOURCE_COMMIT and not subprocess.run(
         ["git", "-c", f"safe.directory={ROOT.as_posix()}", "merge-base", "--is-ancestor", SOURCE_COMMIT, "HEAD"],
         cwd=ROOT,
@@ -263,7 +309,7 @@ def ensure_repo_state() -> None:
         raise FreezeError(
             "origin/post-v2-planning is "
             f"{remote}; expected source, freeze, final-integrity, current HEAD, "
-            "or the exact one-commit Step 25AR audit-repair parent state "
+            "or an exact one-commit authorized local-repair parent state "
             f"({remote_diagnostics})"
         )
     unexpected = sorted(changed_paths() - EXPECTED_DEVELOPMENT_PATHS)
