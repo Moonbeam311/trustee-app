@@ -21,6 +21,8 @@ FROZEN_SOURCE = "a1f63da1096bc6c261db2fd8a894f660ec919c2a"
 EVIDENCE_FREEZE = "a908110e361b5211a94e4a84283f754699b8b969"
 ISSUANCE_READINESS = "774775b34f26627223a7308f6e476b99405697e3"
 FINAL_INTEGRITY = "dda6f96f2b4e4a6400dcd656cf9d149efbca5ff7"
+CERTIFICATION_COMMIT = "e9907e1b9a13cd47c2b0acd4ad06d434c8a4fa46"
+CERTIFICATION_TAG_OBJECT = "8ae024087cda06724bb3676960aaf8cdbbba9b67"
 MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
 DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
 POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
@@ -221,7 +223,36 @@ def verify_tag() -> int:
     tag_object = git("rev-parse", TAG_NAME, check=False)
     peeled = git("rev-parse", f"{TAG_NAME}^{{}}", check=False)
     tag_body = git("cat-file", "-p", TAG_NAME, check=False)
-    head = git("rev-parse", "HEAD").stdout.strip()
+
+    tag_object_value = tag_object.stdout.strip()
+    peeled_value = peeled.stdout.strip()
+
+    sha40_pattern = re.compile(r"^[0-9a-f]{40}$")
+    false_sha = "0" * 40
+
+    regression_checks = [
+        (
+            "peeled comparison rejects a false SHA",
+            peeled_value != false_sha,
+            false_sha,
+        ),
+        (
+            "tag object cannot substitute for peeled commit",
+            tag_object_value != CERTIFICATION_COMMIT,
+            tag_object_value,
+        ),
+        (
+            "trailing newline normalization preserves peeled SHA",
+            (peeled_value + "\n").strip() == CERTIFICATION_COMMIT,
+            repr(peeled_value + "\n"),
+        ),
+        (
+            "bytes do not silently equal normalized text SHA",
+            peeled_value.encode("ascii") != CERTIFICATION_COMMIT,
+            type(peeled_value.encode("ascii")).__name__,
+        ),
+    ]
+
     tree_paths = [
         "docs/v2_certification_issuance_25ar.md",
         "docs/v2_certification_issuance_25ar.json",
@@ -240,11 +271,46 @@ def verify_tag() -> int:
         ("tag message contains frozen source commit", FROZEN_SOURCE in tag_body.stdout, FROZEN_SOURCE),
         ("tag message contains evidence-freeze commit", EVIDENCE_FREEZE in tag_body.stdout, EVIDENCE_FREEZE),
         ("tag message contains manifest SHA", MANIFEST_SHA in tag_body.stdout, MANIFEST_SHA),
-        ("tag peels to the Step 25AR certification issuance commit", peeled.returncode == 0 and peeled.stdout.strip() == head, peeled.stdout.strip() if peeled.returncode == 0 else peeled.stderr.strip()),
+        (
+            "tag object SHA is exact",
+            tag_object.returncode == 0
+            and tag_object_value == CERTIFICATION_TAG_OBJECT,
+            tag_object_value if tag_object.returncode == 0 else tag_object.stderr.strip(),
+        ),
+        (
+            "tag peels to the Step 25AR certification issuance commit",
+            peeled.returncode == 0
+            and peeled_value == CERTIFICATION_COMMIT,
+            peeled_value if peeled.returncode == 0 else peeled.stderr.strip(),
+        ),
+        (
+            "tag object differs from peeled certification commit",
+            tag_object.returncode == 0
+            and peeled.returncode == 0
+            and tag_object_value != peeled_value,
+            {"tag_object": tag_object_value, "peeled": peeled_value},
+        ),
+        (
+            "peeled commit is a full lowercase hexadecimal SHA",
+            peeled.returncode == 0
+            and sha40_pattern.fullmatch(peeled_value) is not None,
+            peeled_value,
+        ),
         ("peeled commit contains the certification record and audit", all(contains_paths), contains_paths),
-        ("tag does not point to a prior readiness or freeze commit", peeled.returncode == 0 and peeled.stdout.strip() not in {FROZEN_SOURCE, EVIDENCE_FREEZE, ISSUANCE_READINESS, FINAL_INTEGRITY}, peeled.stdout.strip() if peeled.returncode == 0 else ""),
+        (
+            "tag does not point to a prior readiness or freeze commit",
+            peeled.returncode == 0
+            and peeled_value
+            not in {
+                FROZEN_SOURCE,
+                EVIDENCE_FREEZE,
+                ISSUANCE_READINESS,
+                FINAL_INTEGRITY,
+            },
+            peeled_value if peeled.returncode == 0 else "",
+        ),
         ("Markdown still requires annotated tag", "annotated tag" in text and "No lightweight tag is authorized." in text, "tag boundary"),
-        ("tag object SHA is present", tag_object.returncode == 0 and bool(tag_object.stdout.strip()), tag_object.stdout.strip() if tag_object.returncode == 0 else ""),
+        *regression_checks,
     ]
     for label, ok, detail in checks:
         if not record(label, bool(ok), detail):
