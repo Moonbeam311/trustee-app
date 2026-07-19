@@ -21,6 +21,7 @@ FINAL_INTEGRITY_COMMIT = "dda6f96f2b4e4a6400dcd656cf9d149efbca5ff7"
 FROZEN_MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
 REPORT_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap.md"
 MANIFEST_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
+AUTHORIZED_STEP_25AR_REPAIR_PATH = "scripts/audit_v2_certification_issuance_25ar.py"
 
 EXPECTED_DEVELOPMENT_PATHS = {
     "docs/v2_certification_candidate_evidence_freeze_25ap.md",
@@ -148,10 +149,102 @@ def changed_paths() -> set[str]:
     return paths
 
 
+def git_bool(*args: str) -> bool:
+    result = subprocess.run(
+        ["git", "-c", f"safe.directory={ROOT.as_posix()}", *args],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def parse_divergence(value: str) -> tuple[int, int]:
+    left, right = value.split()
+    return int(left), int(right)
+
+
+def local_commit_inventory(commit: str) -> list[tuple[str, tuple[str, ...]]]:
+    inventory: list[tuple[str, tuple[str, ...]]] = []
+    for line in git("diff-tree", "--no-commit-id", "--name-status", "-r", commit).splitlines():
+        parts = tuple(normalize(part) for part in line.split("\t"))
+        if parts:
+            inventory.append((parts[0], parts[1:]))
+    return inventory
+
+
+def evaluate_authorized_step_25ar_parent_state(evidence: dict[str, object]) -> tuple[bool, dict[str, object]]:
+    inventory = evidence.get("inventory")
+    details = {
+        "parent_is_remote": evidence.get("parent") == evidence.get("remote"),
+        "remote_is_ancestor": evidence.get("remote_is_ancestor") is True,
+        "divergence_is_one_ahead": evidence.get("behind") == 0 and evidence.get("ahead") == 1,
+        "single_local_commit_is_head": evidence.get("local_commits") == [evidence.get("head")],
+        "inventory_is_authorized": inventory == [("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,))],
+    }
+    return all(details.values()), details
+
+
+def is_exact_authorized_local_repair_state(*, remote: str, head: str) -> tuple[bool, dict[str, object]]:
+    behind, ahead = parse_divergence(git("rev-list", "--left-right", "--count", f"{remote}...{head}"))
+    local_commits = git("rev-list", f"{remote}..{head}").splitlines()
+    evidence: dict[str, object] = {
+        "remote": remote,
+        "head": head,
+        "parent": git("rev-parse", f"{head}^"),
+        "remote_is_ancestor": git_bool("merge-base", "--is-ancestor", remote, head),
+        "behind": behind,
+        "ahead": ahead,
+        "local_commits": local_commits,
+        "inventory": local_commit_inventory(head),
+    }
+    accepted, details = evaluate_authorized_step_25ar_parent_state(evidence)
+    evidence["checks"] = details
+    return accepted, evidence
+
+
+def self_test_authorized_step_25ar_parent_state() -> None:
+    base = {
+        "remote": "1" * 40,
+        "head": "2" * 40,
+        "parent": "1" * 40,
+        "remote_is_ancestor": True,
+        "behind": 0,
+        "ahead": 1,
+        "local_commits": ["2" * 40],
+        "inventory": [("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,))],
+    }
+    accepted, _ = evaluate_authorized_step_25ar_parent_state(base)
+    if not accepted:
+        raise FreezeError("Authorized Step 25AR parent-state self-test rejected the valid case")
+
+    negatives = [
+        ("grandparent", {"remote": "0" * 40}),
+        ("two_ahead", {"ahead": 2, "local_commits": ["3" * 40, "2" * 40]}),
+        ("nonzero_behind", {"behind": 1}),
+        ("diverged", {"remote_is_ancestor": False}),
+        ("extra_file", {"inventory": [("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,)), ("M", ("app.py",))]}),
+        ("unauthorized_file", {"inventory": [("M", ("scripts/audit_v2_certification_issuance_25aq.py",))]}),
+        ("empty_inventory", {"inventory": []}),
+        ("renamed_authorized_file", {"inventory": [("R100", (AUTHORIZED_STEP_25AR_REPAIR_PATH, AUTHORIZED_STEP_25AR_REPAIR_PATH))]}),
+        ("tag_object_as_commit", {"local_commits": ["8ae024087cda06724bb3676960aaf8cdbbba9b67"]}),
+        ("peeled_certification_as_parent", {"parent": "e9907e1b9a13cd47c2b0acd4ad06d434c8a4fa46"}),
+        ("ancestry_only_descendant", {"ahead": 3, "local_commits": ["4" * 40, "3" * 40, "2" * 40]}),
+    ]
+    for name, override in negatives:
+        case = dict(base)
+        case.update(override)
+        accepted, _ = evaluate_authorized_step_25ar_parent_state(case)
+        if accepted:
+            raise FreezeError(f"Authorized Step 25AR parent-state self-test accepted invalid case: {name}")
+
+
 def ensure_repo_state() -> None:
     branch = git("branch", "--show-current")
     if branch != BRANCH:
         raise FreezeError(f"Unexpected branch {branch}; expected {BRANCH}")
+    self_test_authorized_step_25ar_parent_state()
     head = git("rev-parse", "HEAD")
     if head != SOURCE_COMMIT and not subprocess.run(
         ["git", "-c", f"safe.directory={ROOT.as_posix()}", "merge-base", "--is-ancestor", SOURCE_COMMIT, "HEAD"],
@@ -161,8 +254,18 @@ def ensure_repo_state() -> None:
     ).returncode == 0:
         raise FreezeError(f"HEAD {head} is not the source commit or its descendant")
     remote = git("rev-parse", "origin/post-v2-planning")
-    if remote not in {SOURCE_COMMIT, EVIDENCE_FREEZE_COMMIT, FINAL_INTEGRITY_COMMIT, head}:
-        raise FreezeError(f"origin/post-v2-planning is {remote}; expected source, freeze, final-integrity, or current commit")
+    remote_is_allowed = remote in {SOURCE_COMMIT, EVIDENCE_FREEZE_COMMIT, FINAL_INTEGRITY_COMMIT, head}
+    if not remote_is_allowed:
+        remote_is_allowed, remote_diagnostics = is_exact_authorized_local_repair_state(remote=remote, head=head)
+    else:
+        remote_diagnostics = {}
+    if not remote_is_allowed:
+        raise FreezeError(
+            "origin/post-v2-planning is "
+            f"{remote}; expected source, freeze, final-integrity, current HEAD, "
+            "or the exact one-commit Step 25AR audit-repair parent state "
+            f"({remote_diagnostics})"
+        )
     unexpected = sorted(changed_paths() - EXPECTED_DEVELOPMENT_PATHS)
     if unexpected:
         raise FreezeError(f"Unexpected changed paths: {unexpected}")
