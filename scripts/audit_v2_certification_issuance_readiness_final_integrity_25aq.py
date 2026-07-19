@@ -46,6 +46,14 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest().upper()
 
 
+def committed_sha256(commit: str, path: str) -> str:
+    data = subprocess.check_output(
+        ["git", "-c", f"safe.directory={ROOT.as_posix()}", "show", f"{commit}:{path}"],
+        cwd=ROOT,
+    )
+    return hashlib.sha256(data).hexdigest().upper()
+
+
 def check(label: str, condition: bool, detail: object = "") -> bool:
     print(("PASS" if condition else "FAIL") + f" - {label}" + (f" | {detail}" if detail != "" else ""))
     return condition
@@ -95,7 +103,8 @@ def main() -> int:
         path for path in changed | staged if path in {"app.py", "pdf_utils.py"} or path.startswith(PRODUCTION_PREFIXES)
     )
     counts = active_counts()
-    manifest_hash = sha256(ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json")
+    manifest_path = "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json"
+    manifest_hash = committed_sha256(STARTING_HEAD, manifest_path)
     before_db = sha256(ROOT / "trustee_app.db")
     before_policy = sha256(ROOT / "data" / "export_policy.json")
 

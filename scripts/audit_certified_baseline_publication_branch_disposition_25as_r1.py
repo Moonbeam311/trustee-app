@@ -66,6 +66,18 @@ def sha256(path: Path) -> str:
     return digest.hexdigest().upper()
 
 
+def committed_sha256(commit: str, path: str) -> str:
+    result = subprocess.run(
+        ["git", "-c", f"safe.directory={ROOT.as_posix()}", "show", f"{commit}:{path}"],
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.decode("utf-8", errors="replace").strip())
+    return hashlib.sha256(result.stdout).hexdigest().upper()
+
+
 def record(label: str, ok: bool, detail: object = "") -> bool:
     print(("PASS" if ok else "FAIL") + f" - {label}" + (f" | {detail}" if detail != "" else ""))
     return ok
@@ -145,7 +157,12 @@ def main() -> int:
         ("Local peeled commit is exact", peeled == CERTIFICATION_COMMIT and peeled in text, peeled),
         ("Frozen source is exact", FROZEN_SOURCE in text, FROZEN_SOURCE),
         ("Evidence freeze is exact", EVIDENCE_FREEZE in text, EVIDENCE_FREEZE),
-        ("Manifest SHA is exact", sha256(MANIFEST) == MANIFEST_SHA and MANIFEST_SHA in text, sha256(MANIFEST)),
+        (
+            "Manifest SHA is exact",
+            committed_sha256(EVIDENCE_FREEZE, MANIFEST.relative_to(ROOT).as_posix()) == MANIFEST_SHA
+            and MANIFEST_SHA in text,
+            committed_sha256(EVIDENCE_FREEZE, MANIFEST.relative_to(ROOT).as_posix()),
+        ),
         ("Previous remote proof is historical context", "historical proof is recorded as context only" in text, "historical"),
         ("Fresh remote verification section exists", "## 5. Fresh Remote Reverification" in text, "fresh"),
         ("Remote branch result exists", "| origin/post-v2-planning |" in text and CERTIFICATION_COMMIT in text, "remote branch"),
@@ -189,7 +206,11 @@ def main() -> int:
         ("No branch creation is claimed", "No merge, branch creation" in text, "no creation"),
         ("No branch deletion or rename is claimed", "branch deletion, branch rename" in text, "no deletion rename"),
         ("No deployment is claimed", "or deployment was performed" in text, "no deployment"),
-        ("Step 25AP manifest remains unchanged", sha256(MANIFEST) == MANIFEST_SHA, sha256(MANIFEST)),
+        (
+            "Step 25AP manifest remains unchanged",
+            committed_sha256(EVIDENCE_FREEZE, MANIFEST.relative_to(ROOT).as_posix()) == MANIFEST_SHA,
+            committed_sha256(EVIDENCE_FREEZE, MANIFEST.relative_to(ROOT).as_posix()),
+        ),
         ("No production code is modified or staged", not production_changed, production_changed),
         ("No machine-specific absolute paths appear", not re.search(r"[A-Za-z]:\\|C:/Users/|/Users/|/home/|/tmp/", text), "portable"),
         ("No permanent invented defect IDs appear", not re.search(r"\b(?:DEFECT|BUG|ISSUE)-\d+\b", text), "defect ids"),

@@ -470,17 +470,19 @@ def committed_bytes(commit: str, path: str) -> bytes:
 
 def check_frozen_artifacts() -> None:
     ensure_repo_state()
-    manifest_bytes = MANIFEST_PATH.read_bytes()
-    if hashlib.sha256(manifest_bytes).hexdigest().upper() != FROZEN_MANIFEST_SHA:
-        raise FreezeError("Frozen manifest SHA drift detected")
-    expected_manifest = committed_bytes(EVIDENCE_FREEZE_COMMIT, MANIFEST_PATH.relative_to(ROOT).as_posix())
-    expected_report = committed_bytes(EVIDENCE_FREEZE_COMMIT, REPORT_PATH.relative_to(ROOT).as_posix())
+    manifest_relpath = MANIFEST_PATH.relative_to(ROOT).as_posix()
+    report_relpath = REPORT_PATH.relative_to(ROOT).as_posix()
+    expected_manifest = committed_bytes(EVIDENCE_FREEZE_COMMIT, manifest_relpath)
+    if hashlib.sha256(expected_manifest).hexdigest().upper() != FROZEN_MANIFEST_SHA:
+        raise FreezeError("Frozen committed manifest SHA drift detected")
     mismatches = []
-    if manifest_bytes != expected_manifest:
-        mismatches.append(MANIFEST_PATH.relative_to(ROOT).as_posix())
-    if REPORT_PATH.read_bytes() != expected_report:
-        mismatches.append(REPORT_PATH.relative_to(ROOT).as_posix())
+    if not git_bool("diff", "--quiet", EVIDENCE_FREEZE_COMMIT, "--", manifest_relpath):
+        mismatches.append(manifest_relpath)
+    if not git_bool("diff", "--quiet", EVIDENCE_FREEZE_COMMIT, "--", report_relpath):
+        mismatches.append(report_relpath)
     if mismatches:
+        if manifest_relpath in mismatches:
+            raise FreezeError(f"Working-tree manifest differs from frozen committed manifest: {mismatches}")
         raise FreezeError(f"Evidence freeze drift detected: {mismatches}")
 
 
