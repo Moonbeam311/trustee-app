@@ -29,6 +29,14 @@ REPORT_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap.m
 MANIFEST_PATH = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
 AUTHORIZED_STEP_25AR_REPAIR_PATH = "scripts/audit_v2_certification_issuance_25ar.py"
 AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH = "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py"
+AUTHORIZED_R3_REPAIR_INVENTORY = (
+    ("M", ("scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",)),
+    ("M", ("scripts/audit_post_v2_gap_closure_prioritization_25ak.py",)),
+    ("M", ("scripts/audit_v2_certification_candidate_evidence_freeze_25ap.py",)),
+    ("M", ("scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",)),
+    ("M", ("scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",)),
+    ("A", ("scripts/support/operational_authority.py",)),
+)
 AUTHORIZED_LOCAL_REPAIR_INVENTORIES = {
     (("M", (AUTHORIZED_STEP_25AR_REPAIR_PATH,)),),
     (("M", (AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH,)),),
@@ -51,6 +59,7 @@ EXPECTED_DEVELOPMENT_PATHS = {
     "scripts/audit_v2_certification_issuance_25ar.py",
     "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
     "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
+    "scripts/support/operational_authority.py",
 }
 
 EXCLUDED_PREFIXES = (
@@ -197,6 +206,20 @@ def evaluate_authorized_local_repair_parent_state(evidence: dict[str, object]) -
     return all(details.values()), details
 
 
+def evaluate_authorized_system1_r3_sequence(evidence: dict[str, object]) -> tuple[bool, dict[str, object]]:
+    inventories = evidence.get("inventories") or []
+    details = {
+        "oldest_parent_is_remote": evidence.get("oldest_parent") == evidence.get("remote"),
+        "remote_is_ancestor": evidence.get("remote_is_ancestor") is True,
+        "divergence_is_two_ahead": evidence.get("behind") == 0 and evidence.get("ahead") == 2,
+        "local_commit_count_is_two": len(evidence.get("local_commits") or []) == 2,
+        "oldest_commit_is_builder_repair": len(inventories) == 2
+        and tuple(inventories[1]) == (("M", (AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH,)),),
+        "newest_commit_is_r3_repair": len(inventories) == 2 and tuple(inventories[0]) == AUTHORIZED_R3_REPAIR_INVENTORY,
+    }
+    return all(details.values()), details
+
+
 def is_exact_authorized_local_repair_state(*, remote: str, head: str) -> tuple[bool, dict[str, object]]:
     behind, ahead = parse_divergence(git("rev-list", "--left-right", "--count", f"{remote}...{head}"))
     local_commits = git("rev-list", f"{remote}..{head}").splitlines()
@@ -204,13 +227,17 @@ def is_exact_authorized_local_repair_state(*, remote: str, head: str) -> tuple[b
         "remote": remote,
         "head": head,
         "parent": git("rev-parse", f"{head}^"),
+        "oldest_parent": git("rev-parse", f"{local_commits[-1]}^") if local_commits else "",
         "remote_is_ancestor": git_bool("merge-base", "--is-ancestor", remote, head),
         "behind": behind,
         "ahead": ahead,
         "local_commits": local_commits,
         "inventory": local_commit_inventory(head),
+        "inventories": [local_commit_inventory(commit) for commit in local_commits],
     }
     accepted, details = evaluate_authorized_local_repair_parent_state(evidence)
+    if not accepted:
+        accepted, details = evaluate_authorized_system1_r3_sequence(evidence)
     evidence["checks"] = details
     return accepted, evidence
 
@@ -235,6 +262,19 @@ def self_test_authorized_local_repair_parent_state() -> None:
     accepted, _ = evaluate_authorized_local_repair_parent_state(builder_case)
     if not accepted:
         raise FreezeError("Authorized Step 25AP builder parent-state self-test rejected the valid case")
+
+    r3_case = dict(base)
+    r3_case.update(
+        {
+            "ahead": 2,
+            "oldest_parent": "1" * 40,
+            "local_commits": ["3" * 40, "2" * 40],
+            "inventories": [list(AUTHORIZED_R3_REPAIR_INVENTORY), [("M", (AUTHORIZED_STEP_25AP_BUILDER_REPAIR_PATH,))]],
+        }
+    )
+    accepted, _ = evaluate_authorized_system1_r3_sequence(r3_case)
+    if not accepted:
+        raise FreezeError("Authorized R3 parent-state self-test rejected the valid case")
 
     negatives = [
         ("grandparent", {"remote": "0" * 40}),

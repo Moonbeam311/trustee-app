@@ -2,19 +2,29 @@ from __future__ import annotations
 
 import hashlib
 import re
-import sqlite3
 import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.support.operational_authority import (
+    REQUIRED_DB_SHA,
+    REQUIRED_POLICY_SHA,
+    active_counts as authority_active_counts,
+    assert_snapshot_unchanged,
+    authority_snapshot,
+    resolve_operational_authority,
+    sha256,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "docs" / "v2_certification_issuance_readiness_final_integrity_25aq.md"
 STARTING_HEAD = "a908110e361b5211a94e4a84283f754699b8b969"
 FROZEN_SOURCE = "a1f63da1096bc6c261db2fd8a894f660ec919c2a"
 MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
-DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
-POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
+DB_SHA = REQUIRED_DB_SHA
+POLICY_SHA = REQUIRED_POLICY_SHA
 ALLOWED_CHANGED = {
     "docs/v2_certification_issuance_readiness_final_integrity_25aq.md",
     "scripts/audit_v2_certification_issuance_readiness_final_integrity_25aq.py",
@@ -30,6 +40,7 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_issuance_25ar.py",
     "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
     "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
+    "scripts/support/operational_authority.py",
 }
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/", "database/")
 
@@ -40,10 +51,6 @@ def git(*args: str) -> str:
         cwd=ROOT,
         text=True,
     ).strip()
-
-
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest().upper()
 
 
 def committed_sha256(commit: str, path: str) -> str:
@@ -76,17 +83,7 @@ def staged_paths() -> set[str]:
 
 
 def active_counts() -> dict[str, object]:
-    with sqlite3.connect(f"file:{(ROOT / 'trustee_app.db').as_posix()}?mode=ro", uri=True) as conn:
-        cur = conn.cursor()
-        tables = [row[0] for row in cur.execute("select name from sqlite_master where type='table'")]
-        return {
-            "audit_log": cur.execute("select count(*) from audit_log").fetchone()[0],
-            "transfers": cur.execute("select count(*) from transfers").fetchone()[0],
-            "schema_version": cur.execute("pragma schema_version").fetchone()[0],
-            "table_count": len(tables),
-            "compliance_objects": [t for t in tables if "compliance_review" in t.lower()],
-            "system_observation_objects": [t for t in tables if "system_observation" in t.lower()],
-        }
+    return authority_active_counts(resolve_operational_authority(ROOT))
 
 
 def exactly_one(text: str, phrase: str) -> bool:
@@ -96,6 +93,8 @@ def exactly_one(text: str, phrase: str) -> bool:
 def main() -> int:
     failures = 0
     text = REPORT.read_text(encoding="utf-8") if REPORT.exists() else ""
+    authority = resolve_operational_authority(ROOT)
+    before_snapshot = authority_snapshot(authority)
     changed = changed_paths()
     staged = staged_paths()
     unexpected = sorted((changed | staged) - ALLOWED_CHANGED)
@@ -105,8 +104,6 @@ def main() -> int:
     counts = active_counts()
     manifest_path = "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json"
     manifest_hash = committed_sha256(STARTING_HEAD, manifest_path)
-    before_db = sha256(ROOT / "trustee_app.db")
-    before_policy = sha256(ROOT / "data" / "export_policy.json")
 
     nonclaims = [
         "Certification is technical and institutional-process certification, not legal validation.",
@@ -136,12 +133,13 @@ def main() -> int:
         ("commit-chain result is present", "FROZEN_SOURCE_COMMIT_VALID=True" in text and "EVIDENCE_FREEZE_COMMIT_VALID=True" in text, "chain"),
         ("repository integrity result is present", "REPOSITORY_INTEGRITY_PASS=True" in text, "repo"),
         ("full authoritative audit result is present", "ALL_AUTHORITATIVE_AUDITS_PASS=True" in text, "audits"),
-        ("active DB SHA is exact", DB_SHA in text and before_db == DB_SHA, before_db),
+        ("operational authority mode is valid", authority.mode in {"LOCAL_OPERATIONAL", "EXTERNAL_OPERATIONAL"}, authority.mode),
+        ("active DB SHA is exact", DB_SHA in text and before_snapshot["db_sha"] == DB_SHA, before_snapshot["db_sha"]),
         ("audit count 569 is present", counts["audit_log"] == 569 and "Audit-log count: `569`" in text, counts),
         ("transfer count 14 is present", counts["transfers"] == 14 and "Transfer count: `14`" in text, counts),
         ("schema version 404 is present", counts["schema_version"] == 404 and "Schema version: `404`" in text, counts),
         ("table count 132 is present", counts["table_count"] == 132 and "Table count: `132`" in text, counts),
-        ("policy SHA is exact", POLICY_SHA in text and before_policy == POLICY_SHA, before_policy),
+        ("policy SHA is exact", POLICY_SHA in text and before_snapshot["policy_sha"] == POLICY_SHA, before_snapshot["policy_sha"]),
         ("policy size 123 is present", "Policy size: `123`" in text, "123"),
         ("critical runtime result is present", "Critical runtime result: `PASS`" in text, "runtime"),
         ("authorization result is present", "AUTHORIZATION_FINAL_PASS=True" in text, "auth"),
@@ -172,9 +170,15 @@ def main() -> int:
         ("repository changes limited to Step 25AQ evidence/guard updates", not unexpected, unexpected),
     ]
 
-    after_db = sha256(ROOT / "trustee_app.db")
-    after_policy = sha256(ROOT / "data" / "export_policy.json")
-    checks.append(("audit does not mutate state", before_db == after_db == DB_SHA and before_policy == after_policy == POLICY_SHA, "state"))
+    after_snapshot = authority_snapshot(authority)
+    try:
+        assert_snapshot_unchanged(before_snapshot, after_snapshot)
+        state_unchanged = True
+        state_detail = "state"
+    except RuntimeError as exc:
+        state_unchanged = False
+        state_detail = str(exc)
+    checks.append(("audit does not mutate state", state_unchanged, state_detail))
 
     for label, condition, detail in checks:
         if not check(label, bool(condition), detail):

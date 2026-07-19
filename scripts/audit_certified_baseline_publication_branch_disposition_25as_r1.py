@@ -2,17 +2,24 @@ from __future__ import annotations
 
 import hashlib
 import re
-import sqlite3
 import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.support.operational_authority import (
+    REQUIRED_DB_SHA,
+    REQUIRED_POLICY_SHA,
+    assert_snapshot_unchanged,
+    authority_snapshot,
+    resolve_operational_authority,
+    sha256,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "docs" / "certified_baseline_publication_branch_disposition_25as_r1.md"
 MANIFEST = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
-DB = ROOT / "trustee_app.db"
-POLICY = ROOT / "data" / "export_policy.json"
 
 CERTIFICATION_ID = "TRUSTEE-APP-V2-CERT-2026-07-18"
 CERTIFICATION_COMMIT = "e9907e1b9a13cd47c2b0acd4ad06d434c8a4fa46"
@@ -21,8 +28,8 @@ TAG_OBJECT = "8ae024087cda06724bb3676960aaf8cdbbba9b67"
 FROZEN_SOURCE = "a1f63da1096bc6c261db2fd8a894f660ec919c2a"
 EVIDENCE_FREEZE = "a908110e361b5211a94e4a84283f754699b8b969"
 MANIFEST_SHA = "C7B25B9C09120AA77E1A684B828C45A06DB6339600AF5A4BEC16244626F2EFD8"
-DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
-POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
+DB_SHA = REQUIRED_DB_SHA
+POLICY_SHA = REQUIRED_POLICY_SHA
 PUBLICATION_CLASSIFICATION = "CERTIFICATION_ISSUED_AND_PUBLISHED"
 DISPOSITION = "PRESERVE_AND_OPEN_SUCCESSOR_BRANCH"
 DECISION = "PUBLICATION_EVIDENCE_AND_DISPOSITION_COMPLETE"
@@ -40,6 +47,7 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_issuance_25ar.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
     "scripts/audit_operator_friction_acceptance_closure_25an.py",
+    "scripts/support/operational_authority.py",
 }
 PRODUCTION_PREFIXES = ("templates/", "services/", "models/", "migrations/", "database/")
 PRODUCTION_FILES = {"app.py", "pdf_utils.py"}
@@ -56,14 +64,6 @@ def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     if check and result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
     return result
-
-
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest().upper()
 
 
 def committed_sha256(commit: str, path: str) -> str:
@@ -100,21 +100,21 @@ def staged_paths() -> set[str]:
 
 
 def active_snapshot() -> dict[str, object]:
-    with sqlite3.connect(f"file:{DB.as_posix()}?mode=ro", uri=True) as conn:
-        cur = conn.cursor()
-        tables = [row[0] for row in cur.execute("select name from sqlite_master where type='table' order by name")]
-        return {
-            "db_sha": sha256(DB),
-            "db_size": DB.stat().st_size,
-            "audit_rows": cur.execute("select count(*) from audit_log").fetchone()[0],
-            "transfers": cur.execute("select count(*) from transfers").fetchone()[0],
-            "schema": cur.execute("pragma schema_version").fetchone()[0],
-            "tables": len(tables),
-            "compliance_objects": [name for name in tables if "compliance" in name.lower()],
-            "system_observation_objects": [name for name in tables if "system_observation" in name.lower()],
-            "policy_sha": sha256(POLICY),
-            "policy_size": POLICY.stat().st_size,
-        }
+    snapshot = authority_snapshot(resolve_operational_authority(ROOT))
+    return {
+        "mode": snapshot["mode"],
+        "db_sha": snapshot["db_sha"],
+        "db_size": snapshot["db_size"],
+        "audit_rows": snapshot["audit_log"],
+        "transfers": snapshot["transfers"],
+        "schema": snapshot["schema_version"],
+        "tables": snapshot["table_count"],
+        "compliance_objects": snapshot["compliance_objects"],
+        "system_observation_objects": snapshot["system_observation_objects"],
+        "policy_sha": snapshot["policy_sha"],
+        "policy_size": snapshot["policy_size"],
+        "raw": snapshot,
+    }
 
 
 def section(text: str, heading: str) -> str:
@@ -127,8 +127,8 @@ def section(text: str, heading: str) -> str:
 
 
 def main() -> int:
-    before_db = sha256(DB)
-    before_policy = sha256(POLICY)
+    authority = resolve_operational_authority(ROOT)
+    before_snapshot = authority_snapshot(authority)
     text = REPORT.read_text(encoding="utf-8") if REPORT.exists() else ""
     active = active_snapshot()
     changed = status_paths()
@@ -176,6 +176,7 @@ def main() -> int:
         ),
         ("Publication is not overstated", "No branch repush was performed. No tag repush was performed." in text, "not overstated"),
         ("Authoritative audit results exist", "Full authoritative-suite result: PASS" in text, "audits"),
+        ("operational authority mode is valid", authority.mode in {"LOCAL_OPERATIONAL", "EXTERNAL_OPERATIONAL"}, authority.mode),
         ("Manifest unchanged result exists", "Manifest unchanged since" in text and "True" in section(text, "9. Frozen Manifest Integrity"), "manifest"),
         ("Active DB SHA is exact", active["db_sha"] == DB_SHA and DB_SHA in text, active["db_sha"]),
         ("DB size 3096576 is present", active["db_size"] == 3_096_576 and "DB size: 3096576" in text, active["db_size"]),
@@ -215,9 +216,19 @@ def main() -> int:
         ("No machine-specific absolute paths appear", not re.search(r"[A-Za-z]:\\|C:/Users/|/Users/|/home/|/tmp/", text), "portable"),
         ("No permanent invented defect IDs appear", not re.search(r"\b(?:DEFECT|BUG|ISSUE)-\d+\b", text), "defect ids"),
         ("Audit exits nonzero on failure", True, "return code"),
-        ("Audit does not mutate repository or active state", before_db == sha256(DB) == DB_SHA and before_policy == sha256(POLICY) == POLICY_SHA, "state"),
+        ("Audit does not mutate repository or active state", True, "state"),
         ("Repository changes limited to Step 25AS-R1 evidence and guard recognition", not unexpected, unexpected),
     ]
+
+    after_snapshot = authority_snapshot(authority)
+    try:
+        assert_snapshot_unchanged(before_snapshot, after_snapshot)
+        mutation_ok = True
+        mutation_detail = "state"
+    except RuntimeError as exc:
+        mutation_ok = False
+        mutation_detail = str(exc)
+    checks[-2] = ("Audit does not mutate repository or active state", mutation_ok, mutation_detail)
 
     failures = 0
     for label, ok, detail in checks:

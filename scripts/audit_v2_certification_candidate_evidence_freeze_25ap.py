@@ -3,19 +3,29 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import sqlite3
 import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts.support.operational_authority import (
+    REQUIRED_DB_SHA,
+    REQUIRED_POLICY_SHA,
+    active_counts as authority_active_counts,
+    assert_snapshot_unchanged,
+    authority_snapshot,
+    resolve_operational_authority,
+    sha256,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap.md"
 MANIFEST = ROOT / "docs" / "v2_certification_candidate_evidence_freeze_25ap_manifest.json"
 BUILDER = ROOT / "scripts" / "build_v2_certification_candidate_evidence_freeze_25ap.py"
 SOURCE_COMMIT = "a1f63da1096bc6c261db2fd8a894f660ec919c2a"
-DB_SHA = "7958CAFE5AFBED418A093A32DADA9E07FCA8A87D90A0F3D23BF81C9B1C565525"
-POLICY_SHA = "660ED85445BB8672E2082C410772F53C76D1AA0732FF62A6BFB68B04FE544361"
+DB_SHA = REQUIRED_DB_SHA
+POLICY_SHA = REQUIRED_POLICY_SHA
 ALLOWED_CHANGED = {
     "docs/v2_certification_candidate_evidence_freeze_25ap.md",
     "docs/v2_certification_candidate_evidence_freeze_25ap_manifest.json",
@@ -34,6 +44,7 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_issuance_25ar.py",
     "docs/certified_baseline_publication_branch_disposition_25as_r1.md",
     "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
+    "scripts/support/operational_authority.py",
 }
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/", "database/")
 EXCLUDED_PREFIXES = ("audit/runtime_sandbox/", "test_artifacts/", "uploads/", "exports/", "data/backups/", "config/local/")
@@ -51,10 +62,6 @@ def git(*args: str) -> str:
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
     return result.stdout.strip()
-
-
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest().upper()
 
 
 def record(label: str, ok: bool, detail: object = "") -> bool:
@@ -79,15 +86,7 @@ def staged_paths() -> set[str]:
 
 
 def active_counts() -> dict[str, object]:
-    with sqlite3.connect(f"file:{(ROOT / 'trustee_app.db').as_posix()}?mode=ro", uri=True) as conn:
-        cur = conn.cursor()
-        tables = [row[0] for row in cur.execute("select name from sqlite_master where type='table'")]
-        return {
-            "audit_log": cur.execute("select count(*) from audit_log").fetchone()[0],
-            "transfers": cur.execute("select count(*) from transfers").fetchone()[0],
-            "compliance_objects": [table for table in tables if "compliance_review" in table.lower()],
-            "system_observation_objects": [table for table in tables if "system_observation" in table.lower()],
-        }
+    return authority_active_counts(resolve_operational_authority(ROOT))
 
 
 def run_builder_check() -> bool:
@@ -108,6 +107,8 @@ def main() -> int:
     failures = 0
     report_text = REPORT.read_text(encoding="utf-8") if REPORT.exists() else ""
     manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else {}
+    authority = resolve_operational_authority(ROOT)
+    before_snapshot = authority_snapshot(authority)
     evidence = manifest.get("evidence_files", [])
     paths = [entry.get("path", "") for entry in evidence]
     changed = changed_paths()
@@ -130,6 +131,7 @@ def main() -> int:
         ("transfer count 14 is present", manifest.get("active_db_reference", {}).get("transfer_count") == 14, "14"),
         ("policy SHA is present", POLICY_SHA in report_text and manifest.get("policy_reference", {}).get("sha256") == POLICY_SHA, POLICY_SHA),
         ("policy size 123 is present", manifest.get("policy_reference", {}).get("size_bytes") == 123, "123"),
+        ("operational authority mode is valid", authority.mode in {"LOCAL_OPERATIONAL", "EXTERNAL_OPERATIONAL"}, authority.mode),
         ("commit chain includes 8e6318c", any(item.get("short") == "8e6318c" for item in manifest.get("commit_chain", [])), "8e6318c"),
         ("commit chain includes 7b20ef7", any(item.get("short") == "7b20ef7" for item in manifest.get("commit_chain", [])), "7b20ef7"),
         ("commit chain includes 7524a3b", any(item.get("short") == "7524a3b" for item in manifest.get("commit_chain", [])), "7524a3b"),
@@ -153,8 +155,6 @@ def main() -> int:
         ("builder --check passes", run_builder_check(), "--check"),
     ]
 
-    before_db = sha256(ROOT / "trustee_app.db")
-    before_policy = sha256(ROOT / "data" / "export_policy.json")
     first_manifest = MANIFEST.read_bytes() if MANIFEST.exists() else b""
     first_report = REPORT.read_bytes() if REPORT.exists() else b""
     result1 = subprocess.run(
@@ -173,15 +173,21 @@ def main() -> int:
     )
     third_manifest = MANIFEST.read_bytes() if MANIFEST.exists() else b""
     third_report = REPORT.read_bytes() if REPORT.exists() else b""
-    after_db = sha256(ROOT / "trustee_app.db")
-    after_policy = sha256(ROOT / "data" / "export_policy.json")
     counts = active_counts()
+    after_snapshot = authority_snapshot(authority)
+    try:
+        assert_snapshot_unchanged(before_snapshot, after_snapshot)
+        state_unchanged = True
+        state_detail: object = counts
+    except RuntimeError as exc:
+        state_unchanged = False
+        state_detail = str(exc)
 
     checks.extend(
         [
             ("manifest is deterministic across two generations", result1.returncode == 0 and result2.returncode == 0 and first_manifest == second_manifest == third_manifest and first_report == second_report == third_report, "deterministic"),
-            ("active state is not mutated", before_db == after_db == DB_SHA and counts["audit_log"] == 569 and counts["transfers"] == 14, counts),
-            ("policy is not mutated", before_policy == after_policy == POLICY_SHA, POLICY_SHA),
+            ("active state is not mutated", state_unchanged and counts["audit_log"] == 569 and counts["transfers"] == 14, state_detail),
+            ("policy is not mutated", before_snapshot["policy_sha"] == after_snapshot["policy_sha"] == POLICY_SHA, POLICY_SHA),
             ("no production code is modified or staged", not production_changed, production_changed),
             ("repository changes limited to Step 25AP evidence/guard updates", not sorted((changed | staged) - ALLOWED_CHANGED), sorted((changed | staged) - ALLOWED_CHANGED)),
         ]

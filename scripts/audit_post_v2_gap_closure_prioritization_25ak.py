@@ -39,6 +39,7 @@ ALLOWED_CHANGED = {
     "scripts/audit_v2_certification_issuance_25ar.py",
     "scripts/audit_certified_baseline_publication_branch_disposition_25as_r1.py",
     "scripts/build_v2_certification_candidate_evidence_freeze_25ap.py",
+    "scripts/support/operational_authority.py",
 }
 APPROVED_PRODUCTION_REPAIR_PATHS = {"app.py", "pdf_utils.py"}
 PRODUCTION_PREFIXES = ("app.py", "pdf_utils.py", "templates/", "services/", "models/", "migrations/")
