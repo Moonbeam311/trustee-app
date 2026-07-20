@@ -1,4 +1,5 @@
 from io import BytesIO
+from xml.sax.saxutils import escape
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.units import inch
 from reportlab.lib import colors
@@ -541,6 +542,7 @@ def portfolio_report_story(portfolio, totals):
 
 
 def audit_log_report_story(logs, entity_type=None, entity_id=None):
+    logs = _mapping_rows(logs, "audit log")
     styles = _styles()
     story = []
 
@@ -562,22 +564,94 @@ def audit_log_report_story(logs, entity_type=None, entity_id=None):
     story.append(_table(summary_rows, col_widths=[2.4 * inch, 3.2 * inch]))
     story.append(Spacer(1, 10))
 
-    rows = [["When", "Entity Type", "Entity ID", "Action", "Details"]]
-    for log in (logs or [])[:200]:
-        if isinstance(log, dict):
-            rows.append([
-                _safe(log.get("created_at") or log.get("timestamp") or log.get("logged_at")),
-                _safe(log.get("entity_type")),
-                _safe(log.get("entity_id")),
-                _safe(log.get("action") or log.get("change_type") or log.get("event_type")),
-                _safe(log.get("details") or log.get("description") or log.get("notes")),
-            ])
-        else:
-            rows.append(["", "", "", "", _safe(log)])
+    audit_header_style = ParagraphStyle(
+        "AuditTableHeader",
+        parent=styles["BodySmall"],
+        fontName="Helvetica-Bold",
+        fontSize=7.5,
+        leading=9,
+        spaceAfter=0,
+        splitLongWords=True,
+    )
+    audit_cell_style = ParagraphStyle(
+        "AuditTableCell",
+        parent=styles["BodySmall"],
+        fontName="Helvetica",
+        fontSize=7.5,
+        leading=9,
+        spaceAfter=0,
+        splitLongWords=True,
+    )
+
+    def audit_cell(value, style):
+        # Escape report data before using Paragraph markup. Word-break markers
+        # after common audit delimiters permit wrapping without changing values.
+        rendered = escape(_safe(value))
+        rendered = rendered.replace("_", "_<wbr/>")
+        rendered = rendered.replace(";", ";<wbr/>")
+        rendered = rendered.replace("=", "=<wbr/>")
+        return Paragraph(rendered or " ", style)
+
+    rows = [[
+        audit_cell("When", audit_header_style),
+        audit_cell("Entity Type", audit_header_style),
+        audit_cell("Entity ID", audit_header_style),
+        audit_cell("Action", audit_header_style),
+        audit_cell("Details", audit_header_style),
+    ]]
+
+    for log in logs[:200]:
+        rows.append([
+            audit_cell(
+                log.get("created_at")
+                or log.get("timestamp")
+                or log.get("logged_at"),
+                audit_cell_style,
+            ),
+            audit_cell(log.get("entity_type"), audit_cell_style),
+            audit_cell(log.get("entity_id"), audit_cell_style),
+            audit_cell(
+                log.get("action")
+                or log.get("change_type")
+                or log.get("event_type"),
+                audit_cell_style,
+            ),
+            audit_cell(
+                log.get("details")
+                or log.get("description")
+                or log.get("notes")
+                or log.get("note"),
+                audit_cell_style,
+            ),
+        ])
 
     if len(rows) == 1:
-        rows.append(["", "", "", "", "No audit log records found"])
+        rows.append([
+            audit_cell("", audit_cell_style),
+            audit_cell("", audit_cell_style),
+            audit_cell("", audit_cell_style),
+            audit_cell("", audit_cell_style),
+            audit_cell("No audit log records found", audit_cell_style),
+        ])
 
     story.append(Paragraph("Audit Entries", styles["SectionHeader"]))
-    story.append(_table(rows, col_widths=[1.2 * inch, 1.0 * inch, 0.9 * inch, 1.0 * inch, 2.4 * inch]))
+
+    audit_table = _table(
+        rows,
+        col_widths=[
+            1.15 * inch,
+            1.05 * inch,
+            0.85 * inch,
+            1.45 * inch,
+            2.50 * inch,
+        ],
+    )
+    audit_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    story.append(audit_table)
     return story
