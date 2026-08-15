@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hindsfoot responsive overflow audit</title>
+  <style>
+    body { margin: 2rem; font: 16px/1.5 system-ui, sans-serif; color: #11100e; background: #f5f0e5; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: .55rem; border: 1px solid #b9aa87; text-align: left; vertical-align: top; }
+    .pass { color: #17672d; font-weight: 800; }
+    .fail { color: #9b241c; font-weight: 800; }
+    #audit-frame { position: fixed; left: -100000px; top: 0; height: 900px; visibility: hidden; border: 0; }
+  </style>
+</head>
+<body>
+  <h1>Responsive horizontal overflow audit</h1>
+  <p>This same-origin harness renders every public page at each required CSS-pixel width and compares document width with viewport width.</p>
+  <p id="summary" role="status" aria-live="polite">Running…</p>
+  <table><thead><tr><th>Page</th><th>Width</th><th>Document / viewport</th><th>Result</th><th>Offenders</th></tr></thead><tbody id="results"></tbody></table>
+  <iframe id="audit-frame" title="Responsive audit target"></iframe>
+  <script>
+    const widths = [320, 360, 640, 768, 960, 1024, 1152, 1180, 1280, 1366, 1440, 1920];
+    const pages = [
+      "index.html", "how-it-works.html", "who-it-helps.html", "capabilities.html",
+      "hindsfoot-model.html", "security-continuity.html", "about.html",
+      "request-demo.html", "genealogy-legacy.html", "privacy.html", "terms.html",
+      "accessibility.html", "software-disclaimer.html", "work-learning-hub.html"
+    ];
+    const frame = document.querySelector("#audit-frame");
+    const tbody = document.querySelector("#results");
+    const results = [];
+
+    function load(page, width) {
+      return new Promise((resolve) => {
+        frame.style.width = `${width}px`;
+        frame.onload = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+          const doc = frame.contentDocument;
+          const root = doc.documentElement;
+          const viewport = root.clientWidth;
+          const documentWidth = root.scrollWidth;
+          const offenders = [...doc.querySelectorAll("body *")].filter((element) => {
+            const rect = element.getBoundingClientRect();
+            const style = frame.contentWindow.getComputedStyle(element);
+            return style.display !== "none" && style.visibility !== "hidden" &&
+              (rect.right > viewport + 1 || rect.left < -1);
+          }).slice(0, 8).map((element) => element.tagName.toLowerCase() +
+            (element.id ? `#${element.id}` : "") +
+            (element.classList.length ? `.${[...element.classList].join(".")}` : ""));
+          const clippedControls = [...doc.querySelectorAll("a,button")].filter((element) =>
+            element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1
+          );
+          const imagesDistorted = [...doc.images].filter((image) => image.complete && image.naturalWidth &&
+            Math.abs((image.clientWidth / image.clientHeight) - (image.naturalWidth / image.naturalHeight)) > .02
+          );
+          const nav = doc.querySelector("[data-site-nav]");
+          const toggle = doc.querySelector("[data-nav-toggle]");
+          const login = doc.querySelector(".header-login");
+          const mark = doc.querySelector(".wordmark img");
+          const wordmark = doc.querySelector(".wordmark span");
+          const navUsable = width <= 1180
+            ? frame.contentWindow.getComputedStyle(toggle).display !== "none"
+            : frame.contentWindow.getComputedStyle(nav).display === "flex";
+          const loginRect = login.getBoundingClientRect();
+          const loginVisible = frame.contentWindow.getComputedStyle(login).display !== "none" &&
+            loginRect.width > 0 && loginRect.left >= -1 && loginRect.right <= viewport + 1;
+          const markRect = mark.getBoundingClientRect();
+          const markCircular = Math.abs(markRect.width - markRect.height) <= 1 &&
+            frame.contentWindow.getComputedStyle(mark).borderRadius === "50%";
+          const wordmarkRect = wordmark.getBoundingClientRect();
+          const wordmarkReadable = frame.contentWindow.getComputedStyle(wordmark).display !== "none" &&
+            wordmarkRect.width > 0 && wordmarkRect.right <= loginRect.left - 1;
+          const navRect = nav.getBoundingClientRect();
+          const navOverlapsLogin = frame.contentWindow.getComputedStyle(nav).display !== "none" &&
+            navRect.right > loginRect.left + 1;
+          const heroGrid = doc.querySelector(".hero-grid");
+          const heroIdentity = doc.querySelector(".hero-identity");
+          const heroDescriptor = doc.querySelector(".hero-descriptor");
+          const heroCoherent = !heroGrid || (width >= 960
+            ? frame.contentWindow.getComputedStyle(heroGrid).gridTemplateColumns.split(" ").length >= 2
+            : frame.contentWindow.getComputedStyle(heroGrid).gridTemplateColumns.split(" ").length === 1 &&
+              Math.abs((heroIdentity.getBoundingClientRect().left + heroIdentity.getBoundingClientRect().right) / 2 - viewport / 2) <= 2 &&
+              frame.contentWindow.getComputedStyle(heroDescriptor).textAlign === "center");
+          const descriptorFits = !heroDescriptor || heroDescriptor.scrollWidth <= heroDescriptor.clientWidth + 1;
+          const journey = doc.querySelector(".path");
+          const journeyColumns = journey ? frame.contentWindow.getComputedStyle(journey).gridTemplateColumns.split(" ").length : 0;
+          const expectedJourneyColumns = width <= 640 ? 1 : width <= 959 ? 2 : 3;
+          const journeyCoherent = !journey || journeyColumns === expectedJourneyColumns;
+          const previewFrames = [...doc.querySelectorAll(".preview-window")];
+          const previewHeights = previewFrames.map((element) => Math.round(element.getBoundingClientRect().height));
+          const previewsAligned = previewFrames.length === 0 || width <= 640 || Math.max(...previewHeights) - Math.min(...previewHeights) <= 2;
+          resolve({page, width, viewport, documentWidth, offenders, clippedControls: clippedControls.length,
+            imagesDistorted: imagesDistorted.length, navUsable, loginVisible, markCircular, wordmarkReadable, navOverlapsLogin,
+            heroCoherent, descriptorFits, journeyCoherent, previewsAligned,
+            pass: documentWidth <= viewport + 1 && clippedControls.length === 0 && imagesDistorted.length === 0 &&
+              navUsable && loginVisible && markCircular && wordmarkReadable && !navOverlapsLogin && heroCoherent &&
+              descriptorFits && journeyCoherent && previewsAligned});
+        }));
+        frame.src = `../${page}?overflow-audit=${width}-${Date.now()}`;
+      });
+    }
+
+    (async () => {
+      for (const page of pages) for (const width of widths) {
+        const result = await load(page, width);
+        results.push(result);
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${result.page}</td><td>${result.width}px</td><td>${result.documentWidth} / ${result.viewport}</td>` +
+          `<td class="${result.pass ? "pass" : "fail"}">${result.pass ? "PASS" : "FAIL"}</td>` +
+          `<td>${result.offenders.join(", ") || "—"}</td>`;
+        tbody.append(row);
+      }
+      const failures = results.filter((result) => !result.pass);
+      document.querySelector("#summary").textContent = failures.length
+        ? `FAIL — ${failures.length} of ${results.length} rendered cases failed.`
+        : `PASS — all ${results.length} rendered page/width cases passed.`;
+      document.querySelector("#summary").className = failures.length ? "fail" : "pass";
+      window.__HINDSFOOT_RESPONSIVE_AUDIT_RESULTS__ = Object.freeze(results);
+    })();
+  </script>
+</body>
+</html>
