@@ -554,7 +554,8 @@ def init_db():
         property_mapping_timing TEXT,
         asset_categories TEXT,
         generate_schedule_recommendations TEXT,
-        status TEXT
+        status TEXT,
+        firm_id TEXT
     )
     """)
 
@@ -571,6 +572,7 @@ def init_db():
         ("prepared_by", "TEXT"),
         ("return_to", "TEXT"),
         ("branding_style", "TEXT DEFAULT 'v3_minimal'"),
+        ("firm_id", "TEXT"),
     ]:
         if col[0] not in trust_cols:
             cur.execute(f"ALTER TABLE trusts ADD COLUMN {col[0]} {col[1]}")
@@ -716,11 +718,6 @@ def get_next_firm_trust_number(firm_id):
             cur.execute(f"ALTER TABLE trusts ADD COLUMN {col_name} {col_type}")
             trust_cols.append(col_name)
 
-    cur.execute("""
-        UPDATE trusts
-        SET firm_id = ?
-        WHERE firm_id IS NULL OR TRIM(firm_id) = ''
-    """, (firm_id,))
     conn.commit()
 
     cur.execute(
@@ -823,22 +820,27 @@ def ensure_table_firm_id_column(table_name, default_firm_id=None):
     return True
 
 
-def get_all_trusts():
-    firm_id = get_current_firm_id()
+def ensure_trust_firm_identity_column():
+    """Add trust firm identity without inventing identity for legacy rows."""
     conn = get_connection()
     cur = conn.cursor()
-
-    # Hosted/legacy DB safety: ensure trusts.firm_id exists before scoped query.
-    cur.execute("PRAGMA table_info(trusts)")
-    trust_cols = [row["name"] for row in cur.fetchall()]
-    if "firm_id" not in trust_cols:
+    cur.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='trusts'")
+    if not cur.fetchone():
+        conn.close()
+        return False
+    columns = {row["name"] for row in cur.execute("PRAGMA table_info(trusts)")}
+    if "firm_id" not in columns:
         cur.execute("ALTER TABLE trusts ADD COLUMN firm_id TEXT")
-        cur.execute("""
-            UPDATE trusts
-            SET firm_id = ?
-            WHERE firm_id IS NULL OR TRIM(firm_id) = ''
-        """, (firm_id,))
         conn.commit()
+    conn.close()
+    return True
+
+
+def get_all_trusts():
+    firm_id = get_current_firm_id()
+    ensure_trust_firm_identity_column()
+    conn = get_connection()
+    cur = conn.cursor()
 
     cur.execute(
         "SELECT * FROM trusts WHERE firm_id = ? ORDER BY trust_id",
@@ -851,20 +853,9 @@ def get_all_trusts():
 
 def get_trust_by_id(trust_id):
     firm_id = get_current_firm_id()
+    ensure_trust_firm_identity_column()
     conn = get_connection()
     cur = conn.cursor()
-
-    # Hosted/legacy DB safety: ensure trusts.firm_id exists before scoped query.
-    cur.execute("PRAGMA table_info(trusts)")
-    trust_cols = [row["name"] for row in cur.fetchall()]
-    if "firm_id" not in trust_cols:
-        cur.execute("ALTER TABLE trusts ADD COLUMN firm_id TEXT")
-        cur.execute("""
-            UPDATE trusts
-            SET firm_id = ?
-            WHERE firm_id IS NULL OR TRIM(firm_id) = ''
-        """, (firm_id,))
-        conn.commit()
 
     cur.execute(
         "SELECT * FROM trusts WHERE trust_id = ? AND firm_id = ?",
@@ -875,13 +866,20 @@ def get_trust_by_id(trust_id):
     return row
 
 def update_trust_fields(trust_id, updates):
+    firm_id = get_current_firm_id()
+    ensure_trust_firm_identity_column()
+    updates = {key: value for key, value in updates.items() if key != "firm_id"}
+    if not updates:
+        return False
     conn = get_connection()
     cur = conn.cursor()
     fields = ", ".join([f"{k} = ?" for k in updates.keys()])
-    values = list(updates.values()) + [trust_id]
-    cur.execute(f"UPDATE trusts SET {fields} WHERE trust_id = ?", values)
+    values = list(updates.values()) + [trust_id, firm_id]
+    cur.execute(f"UPDATE trusts SET {fields} WHERE trust_id = ? AND firm_id = ?", values)
+    changed = cur.rowcount
     conn.commit()
     conn.close()
+    return bool(changed)
 
 def get_next_property_id():
     conn = get_connection()
@@ -3705,6 +3703,7 @@ def ensure_firm_columns():
 
     add_column("app_users", "firm_id TEXT")
     add_column("audit_log", "firm_id TEXT")
+    add_column("trusts", "firm_id TEXT")
 
     conn.commit()
     conn.close()

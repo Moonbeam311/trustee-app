@@ -6,6 +6,8 @@
     body { font-family: Arial; background: #f6f8fa; padding: 40px; }
     .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
     input { width: 100%; margin-bottom: 10px; padding: 8px; }
+    .password-visibility { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; }
+    .password-visibility input { width: auto; margin: 0; padding: 0; }
     button { width: 100%; padding: 10px; }
     .error { color: red; }
   </style>
@@ -30,7 +32,16 @@
       <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
 
     <input type="text" name="username" placeholder="Username" required>
-    <input type="password" name="password" placeholder="Password" required>
+    <input id="login-password" type="password" name="password" placeholder="Password" required>
+    <div class="password-visibility">
+      <input
+        id="show-password"
+        type="checkbox"
+        aria-controls="login-password"
+        aria-label="Show password"
+      >
+      <label for="show-password">Show password</label>
+    </div>
     <button type="submit">Login</button>
   </form>
 
@@ -38,6 +49,17 @@
     <a href="/guide">Open User Guide</a>
   </p>
 </div>
+
+<script>
+  (function () {
+    var control = document.getElementById("show-password");
+    var password = document.getElementById("login-password");
+    if (!control || !password) return;
+    control.addEventListener("change", function () {
+      password.type = control.checked ? "text" : "password";
+    });
+  }());
+</script>
 
 {% include "_institutional_property_notice.html" %}
 </body>

@@ -33,7 +33,18 @@ def _provenance_helpers():
                 return None
             profiles = connection.execute("SELECT continuity_profile_id,subject_name FROM continuity_profiles WHERE firm_id=? AND (trust_id=? OR bridge_id=?)", (_firm(), trust_id, bridge["bridge_id"])).fetchall()
             deviations = connection.execute("SELECT COUNT(*) FROM intake_trust_formation_field_proposals WHERE bridge_id=? AND deviation_indicator=1", (bridge["bridge_id"],)).fetchone()[0]
-            return {"bridge": dict(bridge), "profiles": [dict(row) for row in profiles], "deviation_count": deviations}
+            proposals = connection.execute("""
+                SELECT target_field,confirmed_value,source_classification,
+                       deviation_indicator,deviation_reason
+                FROM intake_trust_formation_field_proposals
+                WHERE bridge_id=? ORDER BY target_step,proposal_id
+            """, (bridge["bridge_id"],)).fetchall()
+            return {
+                "bridge": dict(bridge),
+                "profiles": [dict(row) for row in profiles],
+                "proposals": [dict(row) for row in proposals],
+                "deviation_count": deviations,
+            }
         except sqlite3.OperationalError:
             return None
         finally:
@@ -129,8 +140,9 @@ def bridge_confirm(bridge_id):
         abort(404)
     values = {row["target_field"]: request.form.get(row["target_field"], "") for row in bundle["proposals"]}
     reasons = {row["target_field"]: request.form.get(f"deviation_reason__{row['target_field']}", "") for row in bundle["proposals"]}
+    confirmed_fields = request.form.getlist("confirmed_fields")
     try:
-        confirm_bridge(_db_path(), bridge_id, _firm(), values, _actor(), reasons)
+        confirm_bridge(_db_path(), bridge_id, _firm(), values, _actor(), reasons, confirmed_fields)
         flash("Formation values confirmed. This is not legal or execution approval.", "success")
     except BridgeError as exc:
         flash(str(exc), "warning")

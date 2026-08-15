@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hindsfoot OS | The Personal Institutional Operating System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='branding/hindsfoot_os.css') }}">
+</head>
+<body class="brand-page">
+  <header class="brand-utility" aria-label="Product navigation">
+    <a class="brand-wordmark" href="{{ url_for('home') }}">Hindsfoot OS</a>
+    <nav class="brand-actions" aria-label="Account and guide actions">
+      <a class="brand-link" href="{{ url_for('guide_page') }}">User Guide</a>
+      {% if session.get('role') %}
+        <a class="brand-link" href="{{ url_for('logout') }}">Log Out</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="brand-main">
+    <section class="brand-introduction" aria-labelledby="product-descriptor">
+      <div class="brand-logo-frame">
+        <img
+          class="brand-logo"
+          src="{{ url_for('static', filename='branding/hindsfoot_os_logo.png') }}"
+          width="1254"
+          height="1254"
+          alt="Hindsfoot OS — Sure Footing Across Generations"
+        >
+      </div>
+
+      <div class="brand-copy">
+        <p class="brand-kicker">Hindsfoot OS</p>
+        <h1 id="product-descriptor">The Personal Institutional Operating System</h1>
+        <p class="brand-tagline">Govern your affairs. Preserve your record. Carry your legacy forward.</p>
+        <p class="brand-statement">
+          Hindsfoot OS helps people and institutions govern affairs, preserve records,
+          maintain continuity, and carry legacy forward. It provides sure footing for
+          the decisions, relationships, and responsibilities that must survive the
+          journey across generations.
+        </p>
+
+        <div class="brand-primary-actions">
+          {% if session.get('role') == 'Admin' %}
+            <a class="brand-button brand-button-primary" href="{{ url_for('admin_index') }}">Continue to Workspace</a>
+          {% elif session.get('role') == 'Viewer' %}
+            <a class="brand-button brand-button-primary" href="{{ url_for('portfolio_dashboard') }}">Continue to Workspace</a>
+          {% elif session.get('role') %}
+            <a class="brand-button brand-button-primary" href="{{ url_for('workspace_home') }}">Enter Hindsfoot OS</a>
+          {% else %}
+            <a class="brand-button brand-button-primary" href="{{ url_for('login') }}">Log In</a>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="brand-footer">Built upon the Hindsfoot Model.</footer>
+</body>
+</html>

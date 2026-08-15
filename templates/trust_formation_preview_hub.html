@@ -281,16 +281,53 @@
 </head>
 <body>
   {% set planning = formation_provenance(trust['trust_id']) %}
-  {% if planning %}<section><h2>Planning-to-formation provenance</h2><p>This provenance is not legal approval. Originating intake <a href="{{ url_for('intake_saved_snapshot', intake_id=planning.bridge.intake_id) }}">{{ planning.bridge.intake_id }}</a>; bridge <a href="{{ url_for('tpd1c.bridge_detail', bridge_id=planning.bridge.bridge_id) }}">{{ planning.bridge.bridge_id }}</a>; workflow {{ planning.bridge.workflow_key }}; confirmed {{ planning.bridge.confirmed_at }} by {{ planning.bridge.confirmed_by }}; deviations {{ planning.deviation_count }}.</p>{% for p in planning.profiles %}<a href="{{ url_for('tpd1c.continuity_detail', profile_id=p.continuity_profile_id) }}">Continuity Profile: {{ p.subject_name }}</a>{% endfor %}</section>{% endif %}
+  {% set bridge_draft = trust['status'] == 'Draft - Bridge Created' %}
+  {% if planning %}<section><h2>Planning-to-formation provenance</h2><p>This provenance is not legal approval. Originating intake <a href="{{ url_for('intake_saved_snapshot', intake_id=planning.bridge.intake_id) }}">{{ planning.bridge.intake_id }}</a>; bridge <a href="{{ url_for('tpd1c.bridge_detail', bridge_id=planning.bridge.bridge_id) }}">{{ planning.bridge.bridge_id }}</a>; workflow {{ planning.bridge.workflow_key }}; source version {{ planning.bridge.source_version }}; source fingerprint {{ planning.bridge.source_fingerprint }}; confirmed {{ planning.bridge.confirmed_at }} by {{ planning.bridge.confirmed_by }}; deviations {{ planning.deviation_count }}.</p>{% if planning.profiles %}{% for p in planning.profiles %}<a href="{{ url_for('tpd1c.continuity_detail', profile_id=p.continuity_profile_id) }}">Continuity Profile: {{ p.subject_name }}</a>{% endfor %}{% else %}<p>No Continuity Profile is linked. Profile creation remains a separate, explicit operator action.</p>{% endif %}</section>{% endif %}
 <div class="console-wrap">
 
   <div class="hero">
-    <h1>Trust Created — Post-Create Action Console</h1>
+    <h1>Draft Trust Created — Formation Review Console</h1>
     <p>
-      The trust intake is complete. Review the trust record, inspect the formation documents,
-      open final document surfaces, preview the packet, then move into execution and funding.
+      This is a draft institutional record. It is not finalized or executed, no property is funded or mapped,
+      and no Continuity Profile is implied. Review confirmed values and provenance before any later formation action.
     </p>
   </div>
+
+  {% if planning %}
+  <div class="section" id="governed-formation-values">
+    <h2>Confirmed governed formation values</h2>
+    <p class="muted">All values below were explicitly confirmed on the formation bridge and copied into this draft trust record. Bridge identity, source version/fingerprint, actor history, and deviations remain governed provenance rather than substantive trust language.</p>
+    <table class="doc-readiness-table">
+      <thead><tr><th>Formation field</th><th>Confirmed canonical value</th><th>Disposition</th><th>Deviation</th></tr></thead>
+      <tbody>
+      {% for proposal in planning.proposals %}
+        <tr data-formation-field="{{ proposal.target_field }}">
+          <td><strong>{{ proposal.target_field|replace('_', ' ')|title }}</strong></td>
+          <td>{{ proposal.confirmed_value }}</td>
+          <td>Copied into draft trust record</td>
+          <td>{% if proposal.deviation_indicator %}{{ proposal.deviation_reason }}{% else %}None{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if bridge_draft %}
+  <div class="packet-banner warning">
+    <h2>Draft review required</h2>
+    <p><strong>Formation data is complete; lifecycle authorization is not.</strong></p>
+    <p class="muted">Packet export, document previews and final surfaces, finalization, execution, transfers, funding, and property mapping are unavailable until a separately governed review phase authorizes advancement.</p>
+  </div>
+  <div class="section">
+    <h2>Available draft-stage actions</h2>
+    <div class="action-row">
+      <a class="button-link primary" href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Review Draft Trust Record</a>
+      <a class="button-link" href="{{ url_for('tpd1c.bridge_detail', bridge_id=planning.bridge.bridge_id) }}">Review Formation Bridge</a>
+      <a class="button-link warning" href="{{ url_for('admin_index') }}">Return to Admin Dashboard</a>
+    </div>
+  </div>
+  {% else %}
 
   <div class="packet-banner {% if packet_readiness.ready %}ready{% elif packet_readiness.blocked %}blocked{% else %}warning{% endif %}">
     <h2>Packet Readiness Status</h2>
@@ -702,6 +739,8 @@
       <a class="button-link" href="{{ url_for('trust_packet_preview', trust_id=trust.trust_id) }}">Review Packet First</a>
     </div>
   </div>
+
+  {% endif %}
 
 </div>
 {% include "_institutional_property_notice.html" %}

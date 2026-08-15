@@ -13,6 +13,13 @@ def migrate_intake_trust_bridge(db_path):
     connection = sqlite3.connect(str(db_path))
     connection.execute("PRAGMA foreign_keys = ON")
     try:
+        trust_table = connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='trusts'"
+        ).fetchone()
+        if trust_table:
+            trust_columns = {row[1] for row in connection.execute("PRAGMA table_info(trusts)")}
+            if "firm_id" not in trust_columns:
+                connection.execute("ALTER TABLE trusts ADD COLUMN firm_id TEXT")
         connection.executescript("""
         CREATE TABLE IF NOT EXISTS intake_trust_formation_bridges (
             bridge_id TEXT PRIMARY KEY,
@@ -71,6 +78,39 @@ def migrate_intake_trust_bridge(db_path):
             UNIQUE (bridge_id, target_field),
             FOREIGN KEY (bridge_id) REFERENCES intake_trust_formation_bridges(bridge_id) ON DELETE RESTRICT
         );
+
+        CREATE TABLE IF NOT EXISTS intake_trust_formation_proposal_revisions (
+            revision_id TEXT PRIMARY KEY,
+            proposal_id TEXT NOT NULL,
+            bridge_id TEXT NOT NULL,
+            firm_id TEXT NOT NULL,
+            revision_number INTEGER NOT NULL,
+            target_field TEXT NOT NULL,
+            revision_type TEXT NOT NULL,
+            prior_classification TEXT,
+            resulting_classification TEXT NOT NULL,
+            source_record_type TEXT NOT NULL,
+            source_record_id TEXT,
+            source_field_id TEXT,
+            source_version TEXT NOT NULL,
+            source_fingerprint TEXT NOT NULL,
+            prior_value TEXT,
+            resulting_value TEXT,
+            operator_entered INTEGER NOT NULL CHECK (operator_entered IN (0,1)),
+            explicitly_confirmed INTEGER NOT NULL CHECK (explicitly_confirmed IN (0,1)),
+            actor_id TEXT NOT NULL,
+            reason TEXT,
+            created_at TEXT NOT NULL,
+            UNIQUE (proposal_id, revision_number),
+            FOREIGN KEY (proposal_id) REFERENCES intake_trust_formation_field_proposals(proposal_id) ON DELETE RESTRICT,
+            FOREIGN KEY (bridge_id) REFERENCES intake_trust_formation_bridges(bridge_id) ON DELETE RESTRICT
+        );
+        CREATE INDEX IF NOT EXISTS ix_bridge_proposal_revisions
+        ON intake_trust_formation_proposal_revisions(firm_id, bridge_id, target_field, revision_number);
+        CREATE TRIGGER IF NOT EXISTS trg_bridge_proposal_revisions_no_update
+        BEFORE UPDATE ON intake_trust_formation_proposal_revisions BEGIN SELECT RAISE(ABORT, 'Bridge proposal revisions are immutable.'); END;
+        CREATE TRIGGER IF NOT EXISTS trg_bridge_proposal_revisions_no_delete
+        BEFORE DELETE ON intake_trust_formation_proposal_revisions BEGIN SELECT RAISE(ABORT, 'Bridge proposal revisions are immutable.'); END;
 
         CREATE TABLE IF NOT EXISTS intake_trust_formation_bridge_events (
             event_id TEXT PRIMARY KEY,

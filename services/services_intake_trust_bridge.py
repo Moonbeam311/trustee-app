@@ -15,14 +15,6 @@ WORKFLOW = "declaration_of_trust"
 COMPLETE_INTAKE_STATUSES = {"scored", "snapshot_saved", "completed"}
 BLOCKING_REVIEW_STATUSES = {"open", "escalated"}
 BLOCKING_REVIEW_SEVERITIES = {"critical", "major"}
-REQUIRED_FIELDS = (
-    "trust_name", "short_name", "jurisdiction", "effective_date", "trust_type",
-    "trust_purpose", "accounting_method", "workflow_mode", "grantor_name",
-    "grantor_type", "settlor_name", "trustee_name", "successor_trustee_name",
-    "beneficiary_name", "record_visibility", "workflow_mode_confirmed",
-    "ai_explanations", "recommended_guidance", "initial_corpus_description",
-    "property_mapping_timing", "asset_categories", "generate_schedule_recommendations",
-)
 FORMATION_FIELD_CONTROLS = {
     "trust_name": {"label": "Trust name", "type": "text"},
     "short_name": {"label": "Short name", "type": "text"},
@@ -85,15 +77,40 @@ def _fingerprint(value):
     return hashlib.sha256(_json(value).encode("utf-8")).hexdigest()
 
 
-def _event(conn, bridge, event_type, actor, basis="", previous=None, new=None):
+def _event(conn, bridge, event_type, actor, basis="", previous=None, new=None, actor_capacity="authorized_operator"):
     conn.execute("""
         INSERT INTO intake_trust_formation_bridge_events
-        (event_id, bridge_id, firm_id, event_type, actor_id, event_basis,
-         previous_state_json, new_state_json, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (event_id, bridge_id, firm_id, event_type, actor_id, actor_capacity,
+         event_basis, previous_state_json, new_state_json, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (_id("BFE"), bridge["bridge_id"], bridge["firm_id"], event_type, actor,
-          basis, _json(previous) if previous is not None else None,
+          actor_capacity, basis, _json(previous) if previous is not None else None,
           _json(new) if new is not None else None, _now()))
+
+
+def _proposal_revision(conn, bridge, proposal, revision_type, actor, *, prior_value=None,
+                       resulting_value=None, operator_entered=False, explicitly_confirmed=False,
+                       reason=None, source_version=None, source_fingerprint=None):
+    revision_number = conn.execute(
+        "SELECT COALESCE(MAX(revision_number),0)+1 FROM intake_trust_formation_proposal_revisions WHERE proposal_id=?",
+        (proposal["proposal_id"],),
+    ).fetchone()[0]
+    conn.execute("""
+        INSERT INTO intake_trust_formation_proposal_revisions
+        (revision_id,proposal_id,bridge_id,firm_id,revision_number,target_field,revision_type,
+         prior_classification,resulting_classification,source_record_type,source_record_id,
+         source_field_id,source_version,source_fingerprint,prior_value,resulting_value,
+         operator_entered,explicitly_confirmed,actor_id,reason,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    """, (
+        _id("ITFR"), proposal["proposal_id"], bridge["bridge_id"], bridge["firm_id"],
+        revision_number, proposal["target_field"], revision_type,
+        proposal["source_classification"], proposal["source_classification"],
+        proposal["source_record_type"], proposal["source_record_id"], proposal["source_field_id"],
+        source_version or proposal["source_version"], source_fingerprint or bridge["source_fingerprint"],
+        prior_value, resulting_value, int(operator_entered), int(explicitly_confirmed),
+        actor, reason or None, _now(),
+    ))
 
 
 def _table_exists(conn, table):
@@ -204,6 +221,19 @@ def _proposal_specs(bridge_answers, intake_answers):
     }
 
 
+def _required_fields_from_specs(specs):
+    """Derive confirmation requirements from the governed proposal contract."""
+    return tuple(
+        field for field, spec in specs.items()
+        if spec[3] == "NO_RELIABLE_SOURCE"
+        or spec[5] in {"REQUIRE_NEW_ENTRY", "REQUIRE_CONFIRMATION"}
+        or field in FORMATION_FIELD_CONTROLS
+    )
+
+
+REQUIRED_FIELDS = _required_fields_from_specs(_proposal_specs({}, {}))
+
+
 def prepare_bridge(db_path, firm_id, intake_id, actor, matter_id=None):
     eligibility = evaluate_eligibility(db_path, firm_id, intake_id, WORKFLOW)
     if not eligibility["eligible"]:
@@ -252,7 +282,16 @@ def prepare_bridge(db_path, firm_id, intake_id, actor, matter_id=None):
                  source_classification,original_source_value,proposed_value,confirmation_requirement,
                  source_version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (_id("ITFP"), bridge_id, field, step, source_type, intake_id, source_field,
-                  classification, reference, proposed, requirement, source_version, now, now))
+                   classification, reference, proposed, requirement, source_version, now, now))
+            proposal = conn.execute(
+                "SELECT * FROM intake_trust_formation_field_proposals WHERE bridge_id=? AND target_field=?",
+                (bridge_id, field),
+            ).fetchone()
+            _proposal_revision(
+                conn, bridge, proposal, "PREPARED", actor,
+                resulting_value=proposed, operator_entered=False,
+                source_fingerprint=bridge["source_fingerprint"],
+            )
         _event(conn, bridge, "BRIDGE_PREPARED", actor, "Accepted declaration recommendation and completed preparation.", new={"status": "prepared"})
         conn.commit()
         return dict(conn.execute("SELECT * FROM intake_trust_formation_bridges WHERE bridge_id=?", (bridge_id,)).fetchone())
@@ -272,7 +311,12 @@ def get_bridge(db_path, bridge_id, firm_id):
             return None
         proposals = conn.execute("SELECT * FROM intake_trust_formation_field_proposals WHERE bridge_id=? ORDER BY target_step,target_field", (bridge_id,)).fetchall()
         events = conn.execute("SELECT * FROM intake_trust_formation_bridge_events WHERE bridge_id=? ORDER BY created_at", (bridge_id,)).fetchall()
-        return {"bridge": dict(bridge), "proposals": [dict(row) for row in proposals], "events": [dict(row) for row in events]}
+        revisions = conn.execute("""
+            SELECT * FROM intake_trust_formation_proposal_revisions
+            WHERE bridge_id=? AND firm_id=? ORDER BY target_field,revision_number
+        """, (bridge_id, firm_id)).fetchall() if _table_exists(conn, "intake_trust_formation_proposal_revisions") else []
+        return {"bridge": dict(bridge), "proposals": [dict(row) for row in proposals],
+                "revisions": [dict(row) for row in revisions], "events": [dict(row) for row in events]}
     finally:
         conn.close()
 
@@ -288,8 +332,8 @@ def acknowledge_source_rebase(db_path, bridge_id, firm_id, actor):
         ).fetchone()
         if not bridge:
             raise BridgeError("Bridge not found in the active firm context.")
-        if bridge["bridge_status"] != "needs_review":
-            raise BridgeError("Only a needs-review bridge may acknowledge a stale source.")
+        if bridge["bridge_status"] not in ("prepared", "needs_review"):
+            raise BridgeError("Only a prepared or needs-review bridge may acknowledge a stale source.")
         recommendation = conn.execute(
             """SELECT id,intake_id,firm_id,workflow_key,title,reason,status,
                       created_at,updated_at,created_by
@@ -339,6 +383,16 @@ def acknowledge_source_rebase(db_path, bridge_id, firm_id, actor):
                WHERE bridge_id=?""",
             (current_version, now, bridge_id),
         )
+        for proposal in conn.execute(
+            "SELECT * FROM intake_trust_formation_field_proposals WHERE bridge_id=? ORDER BY target_step,target_field",
+            (bridge_id,),
+        ).fetchall():
+            _proposal_revision(
+                conn, bridge, proposal, "SOURCE_REBASED", actor,
+                prior_value=proposal["proposed_value"], resulting_value=proposal["proposed_value"],
+                reason="Metadata-only source-version change acknowledged after fingerprint verification.",
+                source_version=current_version, source_fingerprint=current_fingerprint,
+            )
         _event(
             conn, bridge, "SOURCE_REBASED", actor,
             "Operator acknowledged a metadata-only source-version change after fingerprint verification.",
@@ -354,13 +408,14 @@ def acknowledge_source_rebase(db_path, bridge_id, firm_id, actor):
         conn.close()
 
 
-def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons=None):
+def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons=None, confirmed_fields=None):
     deviation_reasons = deviation_reasons or {}
+    confirmed_fields = set(confirmed_fields or ())
     conn = _connect(db_path)
     try:
         conn.execute("BEGIN IMMEDIATE")
         bridge = conn.execute("SELECT * FROM intake_trust_formation_bridges WHERE bridge_id=? AND firm_id=?", (bridge_id, firm_id)).fetchone()
-        if not bridge or bridge["bridge_status"] in ("cancelled", "superseded", "blocked"):
+        if not bridge or bridge["bridge_status"] in ("cancelled", "superseded", "blocked", "trust_created"):
             raise BridgeError("Bridge is unavailable for confirmation.")
         if bridge["bridge_status"] == "confirmed" and bridge["confirmation_state"] == "confirmed":
             existing = {
@@ -381,8 +436,6 @@ def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons
             return get_bridge(db_path, bridge_id, firm_id)
         current = _recommendation(conn, firm_id, bridge["intake_id"], bridge["workflow_key"])
         if not current or current["status"] != "accepted" or (current["updated_at"] or current["created_at"]) != bridge["source_version"]:
-            conn.execute("UPDATE intake_trust_formation_bridges SET bridge_status='needs_review',updated_at=? WHERE bridge_id=?", (_now(), bridge_id))
-            conn.commit()
             raise BridgeError("Source recommendation is stale, replaced, or no longer accepted.")
         blocking = conn.execute("""
             SELECT COUNT(*) FROM professional_review_issues WHERE firm_id=? AND intake_id=? AND workflow_key=?
@@ -394,6 +447,9 @@ def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons
         missing = [f for f in REQUIRED_FIELDS if not str(values.get(f, "")).strip()]
         if missing:
             raise BridgeError("Required formation values are missing: " + ", ".join(missing))
+        unconfirmed = [field for field in REQUIRED_FIELDS if field not in confirmed_fields]
+        if unconfirmed:
+            raise BridgeError("Explicit confirmation is required for: " + ", ".join(unconfirmed))
         invalid_choices = []
         for field, control in FORMATION_FIELD_CONTROLS.items():
             choices = control.get("choices")
@@ -402,6 +458,26 @@ def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons
         if invalid_choices:
             raise BridgeError("Invalid controlled formation values: " + ", ".join(invalid_choices))
         now = _now()
+        revision_counts = {
+            row["proposal_id"]: row["revision_count"]
+            for row in conn.execute("""
+                SELECT proposal_id,COUNT(*) revision_count
+                FROM intake_trust_formation_proposal_revisions
+                WHERE bridge_id=? GROUP BY proposal_id
+            """, (bridge_id,))
+        }
+        missing_history = [p["target_field"] for p in proposals if not revision_counts.get(p["proposal_id"])]
+        if missing_history:
+            raise BridgeError("Required proposal provenance is missing for: " + ", ".join(missing_history))
+        if bridge["bridge_status"] not in ("prepared", "needs_review", "ready_for_confirmation"):
+            raise BridgeError("Bridge is not in an allowed predecessor state for confirmation.")
+        conn.execute("""
+            UPDATE intake_trust_formation_bridges SET bridge_status='ready_for_confirmation',
+            confirmation_state='ready',updated_at=? WHERE bridge_id=?
+        """, (now, bridge_id))
+        _event(conn, bridge, "BRIDGE_READY_FOR_CONFIRMATION", actor,
+               "Server-derived readiness after complete field, provenance, source, and review validation.",
+               previous={"status": bridge["bridge_status"]}, new={"status": "ready_for_confirmation"})
         for proposal in proposals:
             field, confirmed = proposal["target_field"], str(values.get(proposal["target_field"], "")).strip()
             proposed = str(proposal["proposed_value"] or "")
@@ -409,15 +485,33 @@ def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons
             reason = str(deviation_reasons.get(field, "")).strip()
             if deviated and not reason:
                 raise BridgeError(f"Deviation reason required for {field}.")
+            operator_entered = proposal["confirmation_requirement"] == "REQUIRE_NEW_ENTRY" or proposal["source_classification"] == "NO_RELIABLE_SOURCE"
+            _proposal_revision(
+                conn, bridge, proposal, "CONFIRMED", actor,
+                prior_value=proposed, resulting_value=confirmed,
+                operator_entered=operator_entered, explicitly_confirmed=True, reason=reason,
+            )
+            if operator_entered:
+                _event(
+                    conn, bridge, "FIELD_ENTERED", actor,
+                    f"Operator supplied a required governed value for {field}.",
+                    new={"field": field, "operator_entered": True},
+                )
             conn.execute("""
                 UPDATE intake_trust_formation_field_proposals SET confirmed_value=?,confirmation_status='confirmed',
                 deviation_indicator=?,deviation_reason=?,confirmed_by=?,confirmed_at=?,updated_at=? WHERE proposal_id=?
             """, (confirmed, deviated, reason or None, actor, now, now, proposal["proposal_id"]))
+            _event(
+                conn, bridge, "FIELD_DEVIATED" if deviated else "FIELD_CONFIRMED", actor,
+                f"Explicit operator confirmation for governed field {field}.",
+                previous={"field": field, "value": proposed, "classification": proposal["source_classification"]},
+                new={"field": field, "value": confirmed, "explicitly_confirmed": True},
+            )
         conn.execute("""
             UPDATE intake_trust_formation_bridges SET bridge_status='confirmed',confirmation_state='confirmed',
             confirmed_by=?,confirmed_at=?,updated_at=? WHERE bridge_id=?
         """, (actor, now, now, bridge_id))
-        _event(conn, bridge, "BRIDGE_CONFIRMED", actor, "Explicit operator confirmation.", previous={"status": bridge["bridge_status"]}, new={"status": "confirmed"})
+        _event(conn, bridge, "BRIDGE_CONFIRMED", actor, "Explicit operator confirmation.", previous={"status": "ready_for_confirmation"}, new={"status": "confirmed"})
         conn.commit()
         return get_bridge(db_path, bridge_id, firm_id)
     except Exception:
@@ -429,12 +523,10 @@ def confirm_bridge(db_path, bridge_id, firm_id, values, actor, deviation_reasons
 
 
 def _allocate_trust_id(conn):
-    existing = {row[0] for row in conn.execute("SELECT trust_id FROM trusts")}
-    numeric = [int(match.group(1)) for value in existing if (match := re.fullmatch(r"TR-(\d+)", value or ""))]
-    candidate = max(numeric, default=0) + 1
-    while f"TR-{candidate:03d}" in existing:
-        candidate += 1
-    return f"TR-{candidate:03d}"
+    while True:
+        candidate = _id("TR")
+        if not conn.execute("SELECT 1 FROM trusts WHERE trust_id=?", (candidate,)).fetchone():
+            return candidate
 
 
 def create_or_resume_trust(db_path, bridge_id, firm_id, actor, fail_after_insert=False):
@@ -445,14 +537,32 @@ def create_or_resume_trust(db_path, bridge_id, firm_id, actor, fail_after_insert
         if not bridge:
             raise BridgeError("Bridge not found.")
         if bridge["trust_id"]:
+            linked_trust = conn.execute(
+                "SELECT trust_id,firm_id FROM trusts WHERE trust_id=?",
+                (bridge["trust_id"],),
+            ).fetchone()
+            if not linked_trust or linked_trust["firm_id"] != firm_id:
+                raise BridgeError("Linked draft trust is missing or outside the active firm context.")
+            resumed = conn.execute("""
+                SELECT 1 FROM intake_trust_formation_bridge_events
+                WHERE bridge_id=? AND event_type='TRUST_CREATION_RESUMED' LIMIT 1
+            """, (bridge_id,)).fetchone()
+            if not resumed:
+                _event(conn, bridge, "TRUST_CREATION_RESUMED", actor,
+                       "Existing same-firm draft trust resumed without duplicate creation.",
+                       new={"trust_id": bridge["trust_id"]})
             conn.commit()
             return {"trust_id": bridge["trust_id"], "resumed": True}
         if bridge["bridge_status"] != "confirmed":
             raise BridgeError("Explicit bridge confirmation is required before trust creation.")
         values = {row["target_field"]: row["confirmed_value"] for row in conn.execute(
             "SELECT target_field,confirmed_value FROM intake_trust_formation_field_proposals WHERE bridge_id=?", (bridge_id,))}
+        _event(conn, bridge, "TRUST_CREATION_STARTED", actor,
+               "Authorized creation began from the transactionally confirmed bridge.")
         trust_id = _allocate_trust_id(conn)
         columns = {row[1] for row in conn.execute("PRAGMA table_info(trusts)")}
+        if "firm_id" not in columns:
+            raise BridgeError("Trust firm-identity schema is unavailable; run the additive bridge migration before creation.")
         payload = dict(values)
         payload.update({"trust_id": trust_id, "status": "Draft - Bridge Created", "firm_id": firm_id})
         insert_columns = [name for name in payload if name in columns]

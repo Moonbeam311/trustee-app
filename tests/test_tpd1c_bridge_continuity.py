@@ -54,23 +54,113 @@ def confirmed_values(bundle):
     return values
 
 
+def explicit_confirmations():
+    return set(REQUIRED_FIELDS)
+
+
 def test_required_values_controlled_choices_and_review_without_trust_creation(pilot_db):
     bridge = prepare_bridge(pilot_db, "FIRM-1", "INT-1", "operator")
     bundle = get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")
     values = confirmed_values(bundle)
     values.pop("workflow_mode")
     with pytest.raises(BridgeError, match="workflow_mode"):
-        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
     values = confirmed_values(bundle)
     values["workflow_mode"] = "invented-mode"
     with pytest.raises(BridgeError, match="Invalid controlled formation values: workflow_mode"):
-        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
     values = confirmed_values(bundle)
-    result = confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
+    result = confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
     assert result["bridge"]["bridge_status"] == "confirmed"
     assert {row["target_field"]: row["confirmed_value"] for row in result["proposals"]}["workflow_mode"] == "private_office"
     connection = sqlite3.connect(pilot_db)
     assert connection.execute("SELECT COUNT(*) FROM trusts").fetchone()[0] == 0
+    connection.close()
+
+
+def test_contract_required_fields_are_derived_and_grantor_contact_cannot_be_blank_or_unconfirmed(pilot_db):
+    bridge = prepare_bridge(pilot_db, "FIRM-1", "INT-1", "operator")
+    bundle = get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")
+    contract_required = {
+        row["target_field"] for row in bundle["proposals"]
+        if row["source_classification"] == "NO_RELIABLE_SOURCE"
+        or row["confirmation_requirement"] in {"REQUIRE_NEW_ENTRY", "REQUIRE_CONFIRMATION"}
+    }
+    assert contract_required <= set(REQUIRED_FIELDS)
+    assert "grantor_contact" in contract_required
+    assert set(REQUIRED_FIELDS) == set(FORMATION_FIELD_CONTROLS)
+
+    values = confirmed_values(bundle)
+    values["grantor_contact"] = "   "
+    with pytest.raises(BridgeError, match="grantor_contact"):
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
+
+    values["grantor_contact"] = "operator@example.test"
+    confirmations = explicit_confirmations() - {"grantor_contact"}
+    with pytest.raises(BridgeError, match="grantor_contact"):
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=confirmations)
+
+    connection = sqlite3.connect(pilot_db)
+    state = connection.execute(
+        "SELECT bridge_status,confirmation_state FROM intake_trust_formation_bridges WHERE bridge_id=?",
+        (bridge["bridge_id"],),
+    ).fetchone()
+    assert state == ("prepared", "pending")
+    assert connection.execute("SELECT COUNT(*) FROM trusts").fetchone()[0] == 0
+    assert connection.execute(
+        "SELECT COUNT(*) FROM intake_trust_formation_bridge_events WHERE bridge_id=?",
+        (bridge["bridge_id"],),
+    ).fetchone()[0] == 1
+    connection.close()
+
+
+def test_confirmation_preserves_immutable_revisions_and_ordered_governed_events(pilot_db):
+    bridge = prepare_bridge(pilot_db, "FIRM-1", "INT-1", "operator")
+    bundle = get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")
+    values = confirmed_values(bundle)
+    values["trust_purpose"] = "Operator-reviewed continuity purpose"
+    confirm_bridge(
+        pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator",
+        {"trust_purpose": "Operator corrected the proposed purpose."}, explicit_confirmations(),
+    )
+
+    connection = sqlite3.connect(pilot_db)
+    connection.row_factory = sqlite3.Row
+    proposal = connection.execute(
+        "SELECT * FROM intake_trust_formation_field_proposals WHERE bridge_id=? AND target_field='trust_purpose'",
+        (bridge["bridge_id"],),
+    ).fetchone()
+    revisions = connection.execute(
+        "SELECT * FROM intake_trust_formation_proposal_revisions WHERE proposal_id=? ORDER BY revision_number",
+        (proposal["proposal_id"],),
+    ).fetchall()
+    assert [row["revision_number"] for row in revisions] == [1, 2]
+    assert [row["revision_type"] for row in revisions] == ["PREPARED", "CONFIRMED"]
+    assert revisions[0]["resulting_value"] == "Family continuity"
+    assert revisions[1]["prior_value"] == "Family continuity"
+    assert revisions[1]["resulting_value"] == values["trust_purpose"]
+    assert revisions[1]["actor_id"] == "operator"
+    assert revisions[1]["explicitly_confirmed"] == 1
+    assert revisions[1]["created_at"]
+    with pytest.raises(sqlite3.IntegrityError, match="immutable"):
+        connection.execute(
+            "UPDATE intake_trust_formation_proposal_revisions SET reason='rewrite' WHERE revision_id=?",
+            (revisions[0]["revision_id"],),
+        )
+    events = [row[0] for row in connection.execute(
+        "SELECT event_type FROM intake_trust_formation_bridge_events WHERE bridge_id=? ORDER BY rowid",
+        (bridge["bridge_id"],),
+    )]
+    assert events[0] == "BRIDGE_PREPARED"
+    assert events[1] == "BRIDGE_READY_FOR_CONFIRMATION"
+    assert events[-1] == "BRIDGE_CONFIRMED"
+    assert events.count("FIELD_DEVIATED") == 1
+    assert events.count("FIELD_CONFIRMED") == len(FORMATION_FIELD_CONTROLS) - 1
+    assert events.count("FIELD_ENTERED") >= 1
+    assert connection.execute(
+        "SELECT COUNT(*) FROM intake_trust_formation_bridge_events WHERE bridge_id=? AND actor_capacity='authorized_operator'",
+        (bridge["bridge_id"],),
+    ).fetchone()[0] == len(events)
     connection.close()
 
 
@@ -105,8 +195,8 @@ def test_deviation_stale_detection_create_resume_collision_and_rollback(pilot_db
     values = confirmed_values(bundle)
     values["trust_name"] = "Changed Trust"
     with pytest.raises(BridgeError):
-        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
-    confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", {"trust_name": "Operator-confirmed legal name"})
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
+    confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", {"trust_name": "Operator-confirmed legal name"}, explicit_confirmations())
     with pytest.raises(RuntimeError):
         create_or_resume_trust(pilot_db, bridge["bridge_id"], "FIRM-1", "operator", fail_after_insert=True)
     connection = sqlite3.connect(pilot_db)
@@ -118,8 +208,37 @@ def test_deviation_stale_detection_create_resume_collision_and_rollback(pilot_db
     )
     connection.commit(); connection.close()
     created = create_or_resume_trust(pilot_db, bridge["bridge_id"], "FIRM-1", "operator")
-    assert created == {"trust_id": "TR-002", "resumed": False}
-    assert create_or_resume_trust(pilot_db, bridge["bridge_id"], "FIRM-1", "operator") == {"trust_id": "TR-002", "resumed": True}
+    assert created["resumed"] is False
+    assert created["trust_id"].startswith("TR-")
+    assert created["trust_id"] != first_generated_id
+    assert create_or_resume_trust(pilot_db, bridge["bridge_id"], "FIRM-1", "operator") == {"trust_id": created["trust_id"], "resumed": True}
+    connection = sqlite3.connect(pilot_db)
+    connection.row_factory = sqlite3.Row
+    saved = connection.execute("SELECT * FROM trusts WHERE trust_id=?", (created["trust_id"],)).fetchone()
+    assert saved["trust_name"] == "Changed Trust"
+    assert saved["firm_id"] == "FIRM-1"
+    linked = connection.execute("SELECT bridge_status,trust_id FROM intake_trust_formation_bridges WHERE bridge_id=?", (bridge["bridge_id"],)).fetchone()
+    assert tuple(linked) == ("trust_created", created["trust_id"])
+    assert connection.execute("SELECT COUNT(*) FROM intake_trust_formation_bridge_events WHERE bridge_id=? AND event_type='TRUST_CREATED'", (bridge["bridge_id"],)).fetchone()[0] == 1
+    assert connection.execute("SELECT COUNT(*) FROM intake_trust_formation_bridge_events WHERE bridge_id=? AND event_type='TRUST_CREATION_STARTED'", (bridge["bridge_id"],)).fetchone()[0] == 1
+    assert connection.execute("SELECT COUNT(*) FROM intake_trust_formation_bridge_events WHERE bridge_id=? AND event_type='TRUST_CREATION_RESUMED'", (bridge["bridge_id"],)).fetchone()[0] == 1
+    assert connection.execute("SELECT COUNT(*) FROM continuity_profiles").fetchone()[0] == 0
+    connection.close()
+
+
+def test_resume_rejects_missing_or_cross_firm_linked_trust(pilot_db):
+    bridge = prepare_bridge(pilot_db, "FIRM-1", "INT-1", "operator")
+    confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", confirmed_values(get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")), "operator", confirmed_fields=explicit_confirmations())
+    connection = sqlite3.connect(pilot_db)
+    connection.execute("UPDATE intake_trust_formation_bridges SET trust_id='TR-999',bridge_status='trust_created' WHERE bridge_id=?", (bridge["bridge_id"],))
+    connection.commit(); connection.close()
+    with pytest.raises(BridgeError, match="missing or outside"):
+        create_or_resume_trust(pilot_db, bridge["bridge_id"], "FIRM-1", "operator")
+    connection = sqlite3.connect(pilot_db)
+    connection.execute("INSERT INTO trusts(trust_id,trust_name,firm_id) VALUES('TR-999','Other firm draft','FIRM-2')")
+    connection.commit(); connection.close()
+    with pytest.raises(BridgeError, match="missing or outside"):
+        create_or_resume_trust(pilot_db, bridge["bridge_id"], "FIRM-1", "operator")
 
 
 def test_stale_recommendation_blocks_confirmation(pilot_db):
@@ -127,7 +246,17 @@ def test_stale_recommendation_blocks_confirmation(pilot_db):
     connection = sqlite3.connect(pilot_db)
     connection.execute("UPDATE intake_document_recommendations SET updated_at='v2'"); connection.commit(); connection.close()
     with pytest.raises(BridgeError, match="stale"):
-        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", confirmed_values(get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")), "operator")
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", confirmed_values(get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")), "operator", confirmed_fields=explicit_confirmations())
+    connection = sqlite3.connect(pilot_db)
+    assert connection.execute(
+        "SELECT bridge_status FROM intake_trust_formation_bridges WHERE bridge_id=?",
+        (bridge["bridge_id"],),
+    ).fetchone()[0] == "prepared"
+    assert connection.execute(
+        "SELECT COUNT(*) FROM intake_trust_formation_bridge_events WHERE bridge_id=?",
+        (bridge["bridge_id"],),
+    ).fetchone()[0] == 1
+    connection.close()
 
 
 def test_metadata_only_source_rebase_is_firm_scoped_audited_and_confirmation_idempotent(pilot_db):
@@ -137,7 +266,7 @@ def test_metadata_only_source_rebase_is_firm_scoped_audited_and_confirmation_ide
     connection.execute("UPDATE intake_document_recommendations SET updated_at='v2'")
     connection.commit(); connection.close()
     with pytest.raises(BridgeError, match="stale"):
-        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
     with pytest.raises(BridgeError, match="active firm"):
         acknowledge_source_rebase(pilot_db, bridge["bridge_id"], "FIRM-2", "outsider")
     rebased = acknowledge_source_rebase(pilot_db, bridge["bridge_id"], "FIRM-1", "operator")
@@ -149,7 +278,7 @@ def test_metadata_only_source_rebase_is_firm_scoped_audited_and_confirmation_ide
     assert rebase_event[0]["actor_id"] == "operator"
     assert 'source_fingerprint' in rebase_event[0]["previous_state_json"]
     assert 'source_fingerprint' in rebase_event[0]["new_state_json"]
-    confirmed = confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
+    confirmed = confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator", confirmed_fields=explicit_confirmations())
     repeated = confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", values, "operator")
     assert confirmed["bridge"]["bridge_status"] == repeated["bridge"]["bridge_status"] == "confirmed"
     assert len([event for event in repeated["events"] if event["event_type"] == "BRIDGE_CONFIRMED"]) == 1
@@ -165,7 +294,7 @@ def test_material_source_change_cannot_be_rebased(pilot_db):
     connection.execute("UPDATE intake_document_recommendations SET reason='Materially different basis',updated_at='v2'")
     connection.commit(); connection.close()
     with pytest.raises(BridgeError, match="stale"):
-        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", confirmed_values(get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")), "operator")
+        confirm_bridge(pilot_db, bridge["bridge_id"], "FIRM-1", confirmed_values(get_bridge(pilot_db, bridge["bridge_id"], "FIRM-1")), "operator", confirmed_fields=explicit_confirmations())
     with pytest.raises(BridgeError, match="materially"):
         acknowledge_source_rebase(pilot_db, bridge["bridge_id"], "FIRM-1", "operator")
 

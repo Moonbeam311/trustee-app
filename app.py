@@ -1062,6 +1062,29 @@ def get_current_owner():
     return session.get("username")
 
 
+def get_trust_firm_id(trust):
+    """Return stored trust firm identity across row, mapping, and object records."""
+    if trust is None:
+        return None
+
+    for field_name in ("firm_id", "firm"):
+        try:
+            value = trust[field_name]
+        except (KeyError, IndexError, TypeError):
+            value = None
+        if value:
+            return value
+
+        try:
+            value = getattr(trust, field_name, None)
+        except Exception:
+            value = None
+        if value:
+            return value
+
+    return None
+
+
 
 def get_visible_trusts_for_current_operator():
     # FIRM-SCOPE-1: Master Admin may see all; firm Admins only see active-firm records.
@@ -1072,20 +1095,11 @@ def get_visible_trusts_for_current_operator():
 
     active_firm_id = session.get("firm_id") or "FIRM-001"
 
-    def trust_firm_id(trust):
-        try:
-            return trust.get("firm_id") or trust.get("firm") or "FIRM-001"
-        except Exception:
-            try:
-                return getattr(trust, "firm_id", None) or getattr(trust, "firm", None) or "FIRM-001"
-            except Exception:
-                return "FIRM-001"
-
     # Tenant isolation rule:
     # A non-master Admin may see all trusts inside the active firm only.
     # Trustee/Viewer visibility remains assignment-based.
     if session.get("role") == "Admin":
-        return [t for t in trusts if trust_firm_id(t) == active_firm_id]
+        return [t for t in trusts if get_trust_firm_id(t) == active_firm_id]
 
     username = (session.get("username") or "").strip().lower()
     if not username:
@@ -1118,11 +1132,7 @@ def operator_can_access_trust(trust_id):
         active_firm_id = session.get("firm_id") or "FIRM-001"
         if not trust:
             return False
-        try:
-            trust_firm_id = trust.get("firm_id") or trust.get("firm") or "FIRM-001"
-        except Exception:
-            trust_firm_id = getattr(trust, "firm_id", None) or getattr(trust, "firm", None) or "FIRM-001"
-        return trust_firm_id == active_firm_id
+        return get_trust_firm_id(trust) == active_firm_id
 
     role_rows = get_roles_by_trust_id(trust_id)
     for row in role_rows:
@@ -2838,6 +2848,7 @@ ROLE_RULES = {
     "lifecycle_master_ledger": {"Admin"},
 
     "home": {"Admin", "Trustee", "Viewer"},
+    "workspace_home": {"Admin", "Trustee", "Viewer"},
     "workflow_hub": {"Admin", "Trustee"},
     "portfolio_dashboard": {"Admin", "Trustee", "Viewer"},
     "fiduciary_dashboard": {"Admin", "Trustee"},
@@ -3011,6 +3022,153 @@ TRUST_SCOPED_ENDPOINT_RULES = {
     "trust_article_assignment_add": {"Admin", "Trustee"},
 }
 
+# A bridge-derived draft may be reviewed, but lifecycle advancement and every
+# document surface remain unavailable until a separately governed phase moves
+# it beyond the bridge-created draft state.
+BRIDGE_DRAFT_REVIEW_ENDPOINTS = {
+    "trust_detail",
+    "trust_post_create_review",
+    "trust_formation_preview_hub",
+}
+
+BRIDGE_DRAFT_BLOCKED_ENDPOINTS = (
+    set(TRUST_SCOPED_ENDPOINT_RULES)
+    - BRIDGE_DRAFT_REVIEW_ENDPOINTS
+) | {
+    "create_trust_step2_grantor",
+    "create_trust_step2",
+    "create_trust_step3",
+    "create_trust_step4",
+    "create_trust_step5",
+    "create_trust_step6",
+    "create_trust_step7",
+}
+
+# These routes do not carry trust_id in the URL. They accept a trust selection
+# for a downstream write or artifact-producing workflow, so the submitted ID is
+# used only to retrieve and verify the authoritative stored trust before policy
+# is evaluated.
+BRIDGE_DRAFT_FORM_TRUST_ENDPOINTS = {
+    "financial_summary",
+    "tax_assistant",
+    "form1041_dashboard",
+    "instruments_dashboard",
+    "add_property",
+    "link_account",
+    "upload_document",
+    "ledger_entry",
+    "media_upload",
+    "instrument_create",
+    "trust_minutes_new",
+    "fiduciary_new",
+    "genealogy_new",
+    "execution_task_new",
+    "workspace_task_new",
+    "document_generate",
+    "workspace_document_generate",
+    "institutional_execution_session_new",
+    "report_center",
+    "fiduciary_report_pdf",
+    "tpd1c.continuity_new",
+}
+
+BRIDGE_DRAFT_BRIDGE_ENDPOINTS = {
+    "tpd1c.bridge_create_or_resume",
+    "tpd1c.bridge_link_continuity",
+    "tpd1c.continuity_new",
+}
+
+BRIDGE_DRAFT_ACCESS_DENIED = object()
+
+
+def bridge_draft_lifecycle_blocked(endpoint, trust):
+    if not trust or endpoint not in BRIDGE_DRAFT_BLOCKED_ENDPOINTS:
+        return False
+    status = trust.get("status") if hasattr(trust, "get") else trust["status"]
+    return status == "Draft - Bridge Created"
+
+
+def bridge_draft_request_trust():
+    """Return an accessible authoritative trust targeted by this request."""
+    endpoint = request.endpoint or ""
+    trust_id = None
+
+    if endpoint in BRIDGE_DRAFT_BLOCKED_ENDPOINTS:
+        trust_id = ((request.view_args or {}).get("trust_id") or "").strip()
+
+    if not trust_id and endpoint in BRIDGE_DRAFT_FORM_TRUST_ENDPOINTS:
+        trust_id = (
+            request.values.get("trust_id")
+            or request.values.get("fiduciary_trust_id")
+            or ""
+        ).strip()
+
+    if not trust_id and endpoint in BRIDGE_DRAFT_BRIDGE_ENDPOINTS:
+        bridge_id = (
+            (request.view_args or {}).get("bridge_id")
+            or request.values.get("bridge_id")
+            or ""
+        ).strip()
+        if bridge_id:
+            database_uri = f"file:{Path(DB_PATH).as_posix()}?mode=ro"
+            connection = sqlite3.connect(database_uri, uri=True)
+            try:
+                row = connection.execute(
+                    """SELECT trust_id FROM intake_trust_formation_bridges
+                       WHERE bridge_id=? AND firm_id=? LIMIT 1""",
+                    (bridge_id, session.get("firm_id") or "FIRM-001"),
+                ).fetchone()
+                trust_id = (row[0] if row and row[0] else "").strip()
+            except sqlite3.OperationalError:
+                trust_id = ""
+            finally:
+                connection.close()
+
+    if not trust_id:
+        return None
+
+    trust = get_trust_by_id(trust_id)
+    if not trust:
+        database_uri = f"file:{Path(DB_PATH).as_posix()}?mode=ro"
+        connection = sqlite3.connect(database_uri, uri=True)
+        try:
+            exists = connection.execute(
+                "SELECT 1 FROM trusts WHERE trust_id=? LIMIT 1", (trust_id,)
+            ).fetchone()
+        except sqlite3.OperationalError:
+            exists = None
+        finally:
+            connection.close()
+        return BRIDGE_DRAFT_ACCESS_DENIED if exists else None
+    if not operator_can_access_trust(trust_id):
+        return BRIDGE_DRAFT_ACCESS_DENIED
+    return trust
+
+
+def enforce_bridge_draft_lifecycle():
+    trust = bridge_draft_request_trust()
+    if trust is BRIDGE_DRAFT_ACCESS_DENIED:
+        return render_template(
+            "access_denied.html",
+            reason="You are not assigned to this trust.",
+        ), 403
+    if not trust:
+        return None
+    endpoint = request.endpoint or ""
+    if endpoint in BRIDGE_DRAFT_FORM_TRUST_ENDPOINTS or endpoint in BRIDGE_DRAFT_BRIDGE_ENDPOINTS:
+        blocked = (trust.get("status") if hasattr(trust, "get") else trust["status"]) == "Draft - Bridge Created"
+    else:
+        blocked = bridge_draft_lifecycle_blocked(endpoint, trust)
+    if not blocked:
+        return None
+    return render_template(
+        "access_denied.html",
+        reason=(
+            "This trust remains a draft created from a governed intake bridge "
+            "and is not eligible for the requested lifecycle action."
+        ),
+    ), 403
+
 
 
 
@@ -3116,6 +3274,11 @@ def gate_trust_access(trust_id, allowed_roles):
 
 @app.route("/")
 def home():
+    return render_template("product_introduction.html")
+
+
+@app.route("/workspace")
+def workspace_home():
     trusts = get_all_trusts()
     return render_template("dashboard.html", trusts=trusts)
 
@@ -8156,14 +8319,48 @@ def admin_index():
     # BUILD TRUST SUMMARIES
     trust_summaries = [build_admin_trust_summary(t) for t in trusts]
     report = {
-        "trust_count": get_trust_count(),
+        # The visible metric and table intentionally share one authorized record set.
+        "trust_count": len(trust_summaries),
         "beneficiary_count": get_beneficiary_count(),
         "distribution_count": get_distribution_count(),
         "instrument_count": get_instrument_count(),
     }
     export_policy = get_export_policy()
-    return render_template("admin_index.html", trusts=trusts, report=report, export_policy=export_policy,
-        trust_summaries=trust_summaries)
+    username = session.get("username") or "unknown"
+    role = session.get("role") or "Authorized User"
+    firm_id = session.get("firm_id") or "FIRM-001"
+    recent_activity = []
+    for row in get_audit_log(8):
+        item = dict(row)
+        recent_activity.append({
+            "created_at": item.get("created_at") or "",
+            "entity_type": item.get("entity_type") or "Institutional record",
+            "entity_id": item.get("entity_id") or "",
+            "action": item.get("action") or "Activity recorded",
+        })
+
+    incomplete_trusts = sum(
+        1 for item in trust_summaries if int(item.get("incomplete_count") or 0) > 0
+    )
+    admin_context = {
+        "username": username,
+        "role": role,
+        "firm_id": firm_id,
+        "is_master_admin": is_master_admin(),
+        "can_manage_permissions": user_has_effective_permission(username, "manage_permissions"),
+        "can_view_audit": user_has_effective_permission(username, "view_audit"),
+        "can_export_documents": user_has_effective_permission(username, "export_documents"),
+        "incomplete_trusts": incomplete_trusts,
+        "recent_activity": recent_activity,
+    }
+    return render_template(
+        "admin_index.html",
+        trusts=trusts,
+        report=report,
+        export_policy=export_policy,
+        trust_summaries=trust_summaries,
+        admin_context=admin_context,
+    )
 
 
 @app.route("/users")
@@ -11364,6 +11561,7 @@ def enforce_controlled_export_policy_by_path():
 def enforce_session_timeout():
     # 🔒 GLOBAL AUTHENTICATION LOCK
     public_endpoints = {
+        "home",
         "login",
         "logout",
         "static",
@@ -11384,6 +11582,7 @@ def enforce_session_timeout():
             return redirect(url_for("login"))
 
     allowed_routes = {
+        "home",
         "login",
         "logout",
         "static",
@@ -11537,6 +11736,10 @@ def enforce_session_timeout():
         return redirect(url_for("login", timeout="1"))
 
     session["last_activity"] = now_ts
+
+    lifecycle_gate = enforce_bridge_draft_lifecycle()
+    if lifecycle_gate:
+        return lifecycle_gate
 
 @app.route("/reports/trust/<trust_id>/summary.pdf")
 def trust_summary_pdf(trust_id):
@@ -16347,7 +16550,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("home"))
 
 
 @app.route("/bootstrap_admin_once", methods=["GET", "POST"])
