@@ -27,7 +27,7 @@ import json
 import os
 import base64
 import secrets
-from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect, CSRFError, generate_csrf as generate_wtf_csrf_token
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_execution_recovery import get_archive_topology, build_continuity_dashboard_profile
 from services.services_object_dashboard import build_object_dashboard_context
@@ -324,6 +324,8 @@ from services.security_authorization import (
 )
 
 app = Flask(__name__)
+from routes_tpd1c import tpd1c
+app.register_blueprint(tpd1c)
 
 # ===================================================
 # PERMISSION DECORATOR ENGINE
@@ -2714,6 +2716,7 @@ def build_transfer_step_nav(transfer, current_step):
 
 app.jinja_env.globals["csrf_token"] = generate_csrf_token
 app.jinja_env.globals["app_csrf_token"] = generate_csrf_token
+app.jinja_env.globals["wtf_csrf_token"] = generate_wtf_csrf_token
 
 init_audit_table()
 

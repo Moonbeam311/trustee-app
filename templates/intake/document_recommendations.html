@@ -220,6 +220,9 @@
                 <a href="{{ url_for('intake_workflow_bridge', intake_id=intake_id, workflow_key=rec.workflow_key) }}">
                     Start Bridge
                 </a>
+                {% if rec.workflow_key == 'declaration_of_trust' and rec.status == 'accepted' %}
+                <a href="{{ url_for('tpd1c.bridge_prepare', intake_id=intake_id) }}">Prepare Trust Formation Bridge</a>
+                {% endif %}
             </div>
         </div>
     {% else %}

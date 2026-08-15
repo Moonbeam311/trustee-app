@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% block content %}
+<h1>Trust Formation Bridge</h1>
+<p>This proposal connects planning to a draft trust. It is not legal approval, execution approval, or trust formation.</p>
+{% if eligibility.eligible %}
+<form method="post"><input type="hidden" name="_csrf_token" value="{{ tpd1c_csrf_token() }}">
+<label>Active matter ID (optional) <input name="matter_id"></label>
+<button type="submit">Prepare reviewable proposal</button></form>
+{% else %}<h2>Not eligible</h2><ul>{% for reason in eligibility.reasons %}<li>{{ reason }}</li>{% endfor %}</ul>{% endif %}
+{% endblock %}

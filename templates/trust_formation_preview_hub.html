@@ -280,6 +280,8 @@
   </style>
 </head>
 <body>
+  {% set planning = formation_provenance(trust['trust_id']) %}
+  {% if planning %}<section><h2>Planning-to-formation provenance</h2><p>This provenance is not legal approval. Originating intake <a href="{{ url_for('intake_saved_snapshot', intake_id=planning.bridge.intake_id) }}">{{ planning.bridge.intake_id }}</a>; bridge <a href="{{ url_for('tpd1c.bridge_detail', bridge_id=planning.bridge.bridge_id) }}">{{ planning.bridge.bridge_id }}</a>; workflow {{ planning.bridge.workflow_key }}; confirmed {{ planning.bridge.confirmed_at }} by {{ planning.bridge.confirmed_by }}; deviations {{ planning.deviation_count }}.</p>{% for p in planning.profiles %}<a href="{{ url_for('tpd1c.continuity_detail', profile_id=p.continuity_profile_id) }}">Continuity Profile: {{ p.subject_name }}</a>{% endfor %}</section>{% endif %}
 <div class="console-wrap">
 
   <div class="hero">

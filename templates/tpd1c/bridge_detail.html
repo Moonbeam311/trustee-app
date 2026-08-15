@@ -1,0 +1,59 @@
+{% extends "base.html" %}{% block content %}
+<style>
+.formation-fields { display:grid; gap:16px; margin:20px 0; }
+.formation-field { border:1px solid #d1d5db; border-radius:10px; padding:16px; background:#fff; }
+.formation-field-grid { display:grid; grid-template-columns:minmax(180px, 1fr) minmax(260px, 2fr); gap:16px; align-items:start; }
+.formation-field label { display:block; font-weight:700; margin-bottom:4px; }
+.formation-field input, .formation-field select { box-sizing:border-box; width:100%; margin:6px 0 10px; }
+.formation-source { font-size:13px; color:#4b5563; overflow-wrap:anywhere; }
+.formation-original { margin-top:8px; padding:8px; background:#f3f4f6; border-radius:6px; overflow-wrap:anywhere; }
+@media (max-width:760px) { .formation-field-grid { grid-template-columns:1fr; } }
+</style>
+<h1>Formation Proposal {{ bridge.bridge_id }}</h1>
+<p>Status: {{ bridge.bridge_status }} · Intake: <a href="{{ url_for('intake_saved_snapshot', intake_id=bridge.intake_id) }}">{{ bridge.intake_id }}</a> · Workflow: {{ bridge.workflow_key }}</p>
+<p><strong>Preparation is not legal or execution approval. Every required formation value must be explicitly confirmed.</strong></p>
+{% if bridge.bridge_status == 'needs_review' %}
+<form method="post" action="{{ url_for('tpd1c.bridge_acknowledge_source', bridge_id=bridge.bridge_id) }}">
+  <input type="hidden" name="_csrf_token" value="{{ tpd1c_csrf_token() }}">
+  <p>The planning source changed after preparation. Acknowledgment succeeds only when fingerprint verification proves the change is metadata-only.</p>
+  <button type="submit">Acknowledge verified source version and rebase</button>
+</form>
+{% endif %}
+<form method="post" action="{{ url_for('tpd1c.bridge_confirm', bridge_id=bridge.bridge_id) }}">
+<input type="hidden" name="_csrf_token" value="{{ tpd1c_csrf_token() }}">
+<div class="formation-fields">
+{% for row in proposals %}
+{% set control = field_controls[row.target_field] %}
+{% set current_value = row.confirmed_value if row.confirmation_status == 'confirmed' else row.proposed_value or '' %}
+<section class="formation-field" data-field="{{ row.target_field }}" data-step="{{ row.target_step }}">
+  <div class="formation-field-grid">
+    <div>
+      <strong>{{ control.label }}</strong> <span>(step {{ row.target_step }})</span>
+      <div class="formation-source">{{ row.source_record_type }} / {{ row.source_field_id }}<br>{{ row.source_classification }} · {{ row.confirmation_requirement }}</div>
+      <div class="formation-original"><strong>Original planning value:</strong> {{ row.original_source_value or 'No reliable structured source' }}</div>
+    </div>
+    <div>
+      <label for="formation-{{ row.target_field }}">Confirmed formation value{% if row.target_field in required_fields %} (required){% endif %}</label>
+      {% if control.type == 'select' %}
+      <select id="formation-{{ row.target_field }}" name="{{ row.target_field }}"{% if row.target_field in required_fields %} required{% endif %}>
+        <option value="">Select {{ control.label }}</option>
+        {% for value, label in control.choices %}<option value="{{ value }}"{% if current_value == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+      {% else %}
+      <input id="formation-{{ row.target_field }}" type="{{ control.type }}" name="{{ row.target_field }}" value="{{ current_value }}"{% if row.target_field in required_fields %} required{% endif %}>
+      {% endif %}
+      <label for="deviation-{{ row.target_field }}">Deviation reason (required only when changing a proposed value)</label>
+      <input id="deviation-{{ row.target_field }}" name="deviation_reason__{{ row.target_field }}" value="{{ row.deviation_reason or '' }}">
+    </div>
+  </div>
+</section>
+{% endfor %}
+</div>
+<button type="submit">Explicitly confirm formation values</button></form>
+{% if bridge.bridge_status == 'confirmed' or bridge.bridge_status == 'trust_created' %}
+<form method="post" action="{{ url_for('tpd1c.bridge_create_or_resume', bridge_id=bridge.bridge_id) }}"><input type="hidden" name="_csrf_token" value="{{ tpd1c_csrf_token() }}"><button>Create or safely resume draft trust</button></form>
+{% endif %}
+<p><a href="{{ url_for('tpd1c.continuity_new', bridge_id=bridge.bridge_id, intake_id=bridge.intake_id, matter_id=bridge.matter_id or '', trust_id=bridge.trust_id or '') }}">Create or link a Continuity Profile</a></p>
+<form method="post" action="{{ url_for('tpd1c.bridge_link_continuity', bridge_id=bridge.bridge_id) }}"><input type="hidden" name="_csrf_token" value="{{ tpd1c_csrf_token() }}"><label>Existing Continuity Profile ID <input name="continuity_profile_id" required></label><button>Link existing profile</button></form>
+<h2>Immutable events</h2><ul>{% for event in events %}<li>{{ event.created_at }} — {{ event.event_type }} — {{ event.actor_id }}</li>{% endfor %}</ul>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% block content %}<h1>New Continuity Profile</h1>
+<p>The subject must be explicitly selected. Beneficiary status never grants authority or selects the subject.</p>
+<form method="post"><input type="hidden" name="_csrf_token" value="{{ tpd1c_csrf_token() }}">
+<label>Whose affairs are being organized? <input name="subject_name" required></label>
+<label>Subject type <select name="subject_type"><option>person</option><option>business owner</option><option>fiduciary</option><option>other designated person</option></select></label>
+<label>Capacity or capacities <input name="subject_capacities" required></label><label>Primary purpose <textarea name="primary_purpose" required></textarea></label>
+{% for key in ['subject_object_id','intake_id','matter_id','bridge_id','trust_id'] %}<label>{{ key }} <input name="{{ key }}" value="{{ defaults.get(key,'') }}"></label>{% endfor %}
+<button>Create profile</button></form>{% endblock %}

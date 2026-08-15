@@ -12,6 +12,8 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set planning = formation_provenance(trust['trust_id']) %}
+{% if planning %}<section><h2>Planning provenance</h2><p>Intake <a href="{{ url_for('intake_saved_snapshot', intake_id=planning.bridge.intake_id) }}">{{ planning.bridge.intake_id }}</a> · Recommendation {{ planning.bridge.recommendation_id }} · Workflow {{ planning.bridge.workflow_key }} · Bridge <a href="{{ url_for('tpd1c.bridge_detail', bridge_id=planning.bridge.bridge_id) }}">{{ planning.bridge.bridge_id }}</a> · Confirmed by {{ planning.bridge.confirmed_by }} at {{ planning.bridge.confirmed_at }} · Deviations {{ planning.deviation_count }}</p>{% for p in planning.profiles %}<p>Continuity Profile: <a href="{{ url_for('tpd1c.continuity_detail', profile_id=p.continuity_profile_id) }}">{{ p.subject_name }}</a></p>{% endfor %}<p><a href="{{ url_for('tpd1c.continuity_new', bridge_id=planning.bridge.bridge_id, intake_id=planning.bridge.intake_id, matter_id=planning.bridge.matter_id or '', trust_id=trust['trust_id']) }}">Create Continuity Profile for an explicitly selected subject</a></p></section>{% endif %}
 <h2>Trust Detail</h2>
 
 <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
