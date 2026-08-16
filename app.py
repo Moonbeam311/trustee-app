@@ -8159,8 +8159,41 @@ def admin_index():
         "instrument_count": get_instrument_count(),
     }
     export_policy = get_export_policy()
-    return render_template("admin_index.html", trusts=trusts, report=report, export_policy=export_policy,
-        trust_summaries=trust_summaries)
+    username = session.get("username") or "unknown"
+    role = session.get("role") or "Authorized User"
+    firm_id = session.get("firm_id") or "FIRM-001"
+    recent_activity = []
+    for row in get_audit_log(8):
+        item = dict(row)
+        recent_activity.append({
+            "created_at": item.get("created_at") or "",
+            "entity_type": item.get("entity_type") or "Institutional record",
+            "entity_id": item.get("entity_id") or "",
+            "action": item.get("action") or "Activity recorded",
+        })
+
+    incomplete_trusts = sum(
+        1 for item in trust_summaries if int(item.get("incomplete_count") or 0) > 0
+    )
+    admin_context = {
+        "username": username,
+        "role": role,
+        "firm_id": firm_id,
+        "is_master_admin": is_master_admin(),
+        "can_manage_permissions": user_has_effective_permission(username, "manage_permissions"),
+        "can_view_audit": user_has_effective_permission(username, "view_audit"),
+        "can_export_documents": user_has_effective_permission(username, "export_documents"),
+        "incomplete_trusts": incomplete_trusts,
+        "recent_activity": recent_activity,
+    }
+    return render_template(
+        "admin_index.html",
+        trusts=trusts,
+        report=report,
+        export_policy=export_policy,
+        trust_summaries=trust_summaries,
+        admin_context=admin_context,
+    )
 
 
 @app.route("/users")

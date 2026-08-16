@@ -1,1090 +1,124 @@
-{# POST-V2-5A DEFAULT EXPANSION / COLLAPSE UX PATCH: active operator surfaces expanded; legacy duplicate and system-control surfaces preserved but collapsed. #}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
- {% include "_platform_shell.html" %}
- <title>Admin Trust Operations</title>
- <style>
- body {
- font-family: Arial, sans-serif;
- margin: 24px;
- color: #1f2328;
- background:
- radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32%),
- linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
- }
- .admin-wrap {
- max-width: 1380px;
- margin: 0 auto;
- }
- .admin-hero {
- border: 1px solid #cbd5e1;
- border-radius: 18px;
- background: linear-gradient(135deg, #0f172a 0%, #1e293b 52%, #334155 100%);
- color: #fff;
- padding: 26px;
- margin: 18px 0;
- box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18);
- }
- .admin-hero h1 {
- margin: 0 0 8px 0;
- font-size: 32px;
- letter-spacing: -0.02em;
- }
- .admin-hero p {
- margin: 0;
- color: #cbd5e1;
- line-height: 1.5;
- }
- .admin-hero-actions {
- display: flex;
- flex-wrap: wrap;
- gap: 10px;
- margin-top: 18px;
- }
- .admin-hero-actions a {
- display: inline-block;
- padding: 10px 13px;
- border-radius: 999px;
- background: rgba(255,255,255,0.12);
- border: 1px solid rgba(255,255,255,0.22);
- color: #fff;
- text-decoration: none;
- font-weight: 700;
- }
- .admin-hero-actions a:hover {
- background: rgba(255,255,255,0.2);
- }
- .admin-hero-actions a.primary-hero-action {
- background: #facc15;
- border-color: #facc15;
- color: #111827;
- }
- .admin-section-label {
- margin: 24px 0 10px;
- font-size: 13px;
- text-transform: uppercase;
- letter-spacing: 0.08em;
- color: #64748b;
- font-weight: 800;
- }
- 
-  .workspace-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 14px;
-  }
-  .workspace-card {
-  display: block;
-  padding: 18px;
-  border: 1px solid #d0d7de;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  color: #1f2328;
-  text-decoration: none;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
-  }
-  .workspace-card:hover {
-  background: #eef2ff;
-  border-color: #818cf8;
-  transform: translateY(-1px);
-  }
-  .workspace-card strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 16px;
-  letter-spacing: 0.04em;
-  }
-  .workspace-card span {
-  display: block;
-  color: #57606a;
-  line-height: 1.4;
-  }
-  @media (max-width: 980px) {
-  .workspace-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  }
-  @media (max-width: 640px) {
-  .workspace-grid {
-  grid-template-columns: 1fr;
-  }
-  }
-
-  .admin-grid {
- display: grid;
- grid-template-columns: repeat(4, minmax(0, 1fr));
- gap: 12px;
- margin-top: 12px;
- }
- .admin-two-grid {
- display: grid;
- grid-template-columns: 1.15fr 0.85fr;
- gap: 16px;
- align-items: start;
- }
- .admin-card {
- border: 1px solid #d0d7de;
- border-radius: 16px;
- background: rgba(255,255,255,0.96);
- padding: 18px;
- margin-bottom: 18px;
- box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
- }
- .admin-card h2 {
- margin: 0 0 8px 0;
- font-size: 20px;
- }
- .admin-card p {
- line-height: 1.45;
- }
- .admin-muted {
- color: #57606a;
- }
- .admin-actions {
- display: flex;
- flex-wrap: wrap;
- gap: 8px;
- margin-top: 10px;
- }
- .admin-actions a,
- .admin-button {
- display: inline-block;
- padding: 8px 11px;
- border-radius: 10px;
- border: 1px solid #d0d7de;
- background: #f8fafc;
- text-decoration: none;
- font-weight: 700;
- color: #1f2328;
- transition: transform 0.08s ease, background 0.12s ease, border-color 0.12s ease;
- }
- .admin-actions a:hover,
- .admin-button:hover {
- background: #eef2ff;
- border-color: #818cf8;
- transform: translateY(-1px);
- }
- .admin-actions a.primary-action {
- background: #1d4ed8;
- border-color: #1d4ed8;
- color: #fff;
- }
- .admin-actions a.primary-action:hover {
- background: #1e40af;
- }
- .admin-actions a.resume-action {
- background: #111827;
- border-color: #111827;
- color: #fff;
- }
- .admin-actions a.warning-action {
- background: #fff7ed;
- border-color: #fed7aa;
- color: #9a3412;
- }
- .metric {
- border: 1px solid #d0d7de;
- border-radius: 14px;
- padding: 16px;
- background: #fff;
- box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
- }
- .metric h3 {
- margin: 0 0 6px 0;
- font-size: 13px;
- text-transform: uppercase;
- letter-spacing: 0.06em;
- color: #64748b;
- }
- .metric p {
- margin: 0;
- font-size: 28px;
- font-weight: 800;
- color: #0f172a;
- }
- table {
- border-collapse: collapse;
- width: 100%;
- margin-top: 12px;
- background: #fff;
- font-size: 14px;
- }
- th, td {
- border: 1px solid #e5e7eb;
- padding: 9px;
- text-align: left;
- vertical-align: top;
- }
- th {
- background: #f8fafc;
- color: #334155;
- }
- .trust-launch-grid {
- display: grid;
- grid-template-columns: repeat(2, minmax(0, 1fr));
- gap: 12px;
- margin-top: 12px;
- }
- .trust-launch-card {
- padding: 14px;
- border: 1px solid #e5e7eb;
- border-radius: 14px;
- background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
- }
- .trust-launch-title {
- display: flex;
- justify-content: space-between;
- gap: 10px;
- align-items: baseline;
- margin-bottom: 10px;
- }
- .trust-launch-title strong {
- font-size: 16px;
- }
- .badge {
- display: inline-block;
- padding: 3px 8px;
- border-radius: 999px;
- background: #e0f2fe;
- color: #075985;
- font-size: 12px;
- font-weight: 800;
- white-space: nowrap;
- }
- .status-line {
- display: flex;
- flex-wrap: wrap;
- gap: 8px;
- margin-top: 8px;
- }
- .status-pill {
- display: inline-block;
- padding: 4px 8px;
- border-radius: 999px;
- background: #f1f5f9;
- color: #475569;
- font-size: 12px;
- font-weight: 700;
- }
- .shortcut-strip {
- display: grid;
- grid-template-columns: repeat(6, minmax(0, 1fr));
- gap: 10px;
- margin: 16px 0 18px;
- }
- .shortcut-strip a {
- display: block;
- padding: 13px;
- border-radius: 14px;
- background: #ffffff;
- border: 1px solid #dbe3ef;
- text-decoration: none;
- color: #0f172a;
- font-weight: 800;
- box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
- }
- .shortcut-strip a span {
- display: block;
- margin-top: 4px;
- color: #64748b;
- font-size: 12px;
- font-weight: 600;
- }
- details.admin-card {
- display: block;
- }
- details.admin-card summary {
- cursor: pointer;
- font-size: 20px;
- font-weight: 800;
- list-style: none;
- }
- details.admin-card summary::-webkit-details-marker {
- display: none;
- }
- details.admin-card summary::after {
- content: "Open";
- float: right;
- font-size: 12px;
- padding: 4px 9px;
- border-radius: 999px;
- background: #f1f5f9;
- color: #475569;
- font-weight: 800;
- }
- details.admin-card[open] summary::after {
- content: "Close";
- }
- @media (max-width: 980px) {
- .admin-grid,
- .admin-two-grid,
- .trust-launch-grid,
- .shortcut-strip {
- grid-template-columns: 1fr;
- }
- }
- </style>
-
-<style>
-/* ADR-6B institutional shell color system */
-:root {
-  --shell-navy: #0f172a;
-  --shell-blue: #1d4ed8;
-  --shell-indigo: #4338ca;
-  --shell-gold: #facc15;
-  --shell-green: #15803d;
-  --shell-purple: #7e22ce;
-  --shell-red: #b91c1c;
-  --shell-slate: #475569;
-  --shell-soft: #f8fafc;
-}
-
-.workspace-grid a:nth-child(1) { border-top: 5px solid var(--shell-navy); }
-.workspace-grid a:nth-child(2) { border-top: 5px solid var(--shell-blue); }
-.workspace-grid a:nth-child(3) { border-top: 5px solid var(--shell-green); }
-.workspace-grid a:nth-child(4) { border-top: 5px solid var(--shell-purple); }
-.workspace-grid a:nth-child(5) { border-top: 5px solid var(--shell-indigo); }
-.workspace-grid a:nth-child(6) { border-top: 5px solid var(--shell-gold); }
-.workspace-grid a:nth-child(7) { border-top: 5px solid var(--shell-red); }
-
-.workspace-grid a:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14);
-}
-
-.admin-recommended-start {
-  border-left: 6px solid var(--shell-blue);
-}
-
-.admin-pilot-notice {
-  border-left: 6px solid var(--shell-gold);
-  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
-}
-
-.legacy-quick-launch,
-.legacy-command-map {
-  border-left: 6px solid var(--shell-slate);
-  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-}
-
-.railway-readiness-card {
-  border-left: 6px solid var(--shell-red);
-}
-
-.admin-section-label {
-  color: var(--shell-slate);
-}
-</style>
-
-
-<style>
-.admin-command-map .admin-action-grid,
-.intake-command-center .admin-action-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 12px 0;
-}
-.admin-command-map .primary-action,
-.intake-command-center .primary-action {
-  display: inline-block;
-  padding: 10px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-}
-.intake-command-center {
-  border-left: 4px solid rgba(212, 175, 55, 0.8);
-}
-</style>
-
-
-<style>
-.promoted-intake-panel {
-  border-left: 5px solid rgba(212, 175, 55, 0.9);
-  margin: 18px 0;
-  padding: 18px;
-}
-
-.intake-action-grid {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 12px !important;
-  margin: 14px 0 !important;
-}
-
-.intake-action-grid a {
-  display: inline-block !important;
-  padding: 10px 16px !important;
-  border-radius: 10px !important;
-  text-decoration: none !important;
-}
-</style>
-
-
-<style>
-.admin-pilot-notice {
-  border-left: 5px solid rgba(255, 193, 7, 0.95);
-}
-
-.railway-readiness-card {
-  border-left: 5px solid rgba(90, 160, 255, 0.95);
-}
-
-.railway-readiness-card ul {
-  margin-top: 10px;
-  padding-left: 22px;
-}
-
-.railway-readiness-card li {
-  margin-bottom: 6px;
-}
-</style>
-
-
-<style>
-.policy-switch-grid {
-  display: grid;
-  gap: 14px;
-  margin-top: 14px;
-}
-
-.policy-switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 14px;
-  border: 1px solid rgba(212, 175, 55, 0.25);
-  border-radius: 12px;
-}
-
-.policy-switch-label strong {
-  display: block;
-  margin-bottom: 4px;
-}
-
-.policy-switch-label small {
-  opacity: 0.8;
-}
-
-.policy-toggle-button {
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-}
-
-.policy-switch {
-  position: relative;
-  display: inline-block;
-  width: 72px;
-  height: 34px;
-  border-radius: 999px;
-  background: #777;
-  vertical-align: middle;
-  transition: 0.2s;
-}
-
-.policy-switch.on {
-  background: #2e7d32;
-}
-
-.policy-switch.off {
-  background: #9a3412;
-}
-
-.policy-switch-knob {
-  position: absolute;
-  height: 28px;
-  width: 28px;
-  left: 3px;
-  top: 3px;
-  background: white;
-  border-radius: 50%;
-  transition: 0.2s;
-}
-
-.policy-switch.on .policy-switch-knob {
-  transform: translateX(38px);
-}
-
-.policy-state {
-  display: inline-block;
-  margin-left: 10px;
-  font-weight: 700;
-}
-</style>
-
-<!-- POST-V2-3B VISUAL POLISH ACTIVE -->
-<style>
-.admin-command-center { border: 1px solid #cbd5e1; border-radius: 18px; background: #f8fafc; padding: 20px; margin: 20px 0; }
-.admin-command-center h2 { margin-top: 0; }
-.admin-command-center .workspace-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.admin-command-center .workspace-card { border: 1px solid #d0d7de; border-radius: 14px; background: white; padding: 14px; text-decoration: none; color: inherit; }
-.admin-command-center .workspace-card strong { display: block; margin-bottom: 6px; }
-.admin-command-center .workspace-card span { display: block; color: #475569; line-height: 1.35; }
-</style>
-<style>
-.post-v2-3d-collapse-plan { border: 1px solid #cbd5e1; border-radius: 16px; padding: 16px; margin: 22px 0; background: #f8fafc; }
-.post-v2-3d-collapse-plan h2 { margin-top: 0; }
-.post-v2-3d-collapse-plan details { border: 1px solid #d0d7de; border-radius: 12px; background: #ffffff; margin: 10px 0; padding: 12px; }
-.post-v2-3d-collapse-plan summary { cursor: pointer; font-weight: 700; }
-.post-v2-3d-collapse-plan ul { margin-bottom: 0; }
-.post-v2-3d-badge { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 8px; margin-left: 6px; font-size: 0.85em; background: #fff; }
-</style>
-<!-- POST-V2-3E SECTION GOVERNANCE LABELS ACTIVE -->
-<style>
-.section-governance-label { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; padding: 2px 9px; margin-left: 8px; font-size: 0.78em; font-weight: 700; background: #ffffff; color: #334155; vertical-align: middle; }
-.section-governance-label.active { background: #eef6ff; }
-.section-governance-label.legacy { background: #fff7ed; }
-.section-governance-label.duplicate { background: #f8fafc; }
-.section-governance-label.system { background: #f0fdf4; }
-</style>
-<!-- POST-V2-3F GOVERNANCE LABEL PRECISION FIX ACTIVE -->
+  {% include "_platform_shell.html" %}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Institutional Command Center</title>
+  <style>
+    :root { --ink:#172033; --muted:#5d687b; --line:#d8deea; --panel:#fff; --navy:#172554; --blue:#1d4ed8; --soft:#f4f7fb; --gold:#f4c95d; --danger:#991b1b; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:linear-gradient(180deg,#eef3f9,#f8fafc 360px); font:15px/1.5 Arial,sans-serif; }
+    a:focus-visible, button:focus-visible, summary:focus-visible { outline:3px solid #f59e0b; outline-offset:3px; }
+    .command-shell { width:min(1440px,calc(100% - 32px)); margin:24px auto 48px; }
+    .command-hero { padding:28px; border-radius:20px; color:#fff; background:linear-gradient(125deg,#101a38,#172554 58%,#1e3a8a); box-shadow:0 16px 40px rgba(15,23,42,.18); }
+    .command-hero h1 { margin:0 0 6px; font-size:clamp(28px,4vw,42px); line-height:1.1; }
+    .command-hero p { max-width:780px; margin:0; color:#dbeafe; }
+    .context-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:22px; }
+    .context-item { min-width:0; padding:12px 14px; border:1px solid rgba(255,255,255,.22); border-radius:12px; background:rgba(255,255,255,.09); }
+    .context-item small { display:block; color:#bfdbfe; text-transform:uppercase; letter-spacing:.06em; }
+    .context-item strong { overflow-wrap:anywhere; }
+    .hero-actions,.action-list { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; }
+    .hero-actions a,.action-list a { display:inline-flex; align-items:center; min-height:42px; max-width:100%; padding:9px 12px; border:1px solid #cbd5e1; border-radius:10px; color:#1e3a8a; background:#fff; text-decoration:none; font-weight:700; overflow-wrap:anywhere; }
+    .hero-actions a { color:#fff; border-color:rgba(255,255,255,.3); background:rgba(255,255,255,.1); }
+    .hero-actions a.primary,.action-list a.primary { color:#111827; border-color:var(--gold); background:var(--gold); }
+    .section-heading { margin:30px 0 12px; }
+    .section-heading h2 { margin:0; font-size:22px; }
+    .section-heading p { margin:4px 0 0; color:var(--muted); }
+    .summary-grid,.lane-grid,.two-grid { display:grid; gap:14px; }
+    .summary-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .lane-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .two-grid { grid-template-columns:1.1fr .9fr; }
+    .card { min-width:0; padding:19px; border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.96); box-shadow:0 5px 18px rgba(15,23,42,.05); }
+    .card h2,.card h3 { margin:0 0 7px; }
+    .card p { margin:5px 0; color:var(--muted); }
+    .metric strong { display:block; margin-top:5px; font-size:27px; color:var(--navy); }
+    .lane-label,.state-label { display:inline-block; margin-bottom:8px; padding:3px 8px; border-radius:999px; color:#1e3a8a; background:#dbeafe; font-size:11px; font-weight:800; letter-spacing:.07em; text-transform:uppercase; }
+    .state-label.protected { color:#7f1d1d; background:#fee2e2; }
+    .state-label.readonly { color:#374151; background:#e5e7eb; }
+    .activity-list { margin:12px 0 0; padding:0; list-style:none; }
+    .activity-list li { padding:11px 0; border-top:1px solid #e5e7eb; }
+    .activity-list time { display:block; color:var(--muted); font-size:12px; }
+    .activity-list strong { overflow-wrap:anywhere; }
+    .trust-table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th,td { padding:10px; border-bottom:1px solid #e5e7eb; text-align:left; vertical-align:top; }
+    th { color:#475569; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+    details.card summary { cursor:pointer; font-weight:800; }
+    .quiet-list { columns:2; padding-left:20px; }
+    .warning { color:var(--danger)!important; font-weight:700; }
+    @media(max-width:950px){ .context-grid,.summary-grid,.lane-grid,.two-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+    @media(max-width:640px){ .command-shell{width:min(100% - 20px,1440px);margin-top:10px}.command-hero{padding:20px}.context-grid,.summary-grid,.lane-grid,.two-grid{grid-template-columns:1fr}.quiet-list{columns:1}.action-list a,.hero-actions a{width:100%;justify-content:center} }
+  </style>
 </head>
-
 <body>
-
-
-
-<div class="page-shell admin-wrap">
- {% include "_platform_nav.html" %}
-
- <section class="admin-hero">
- <h1>Admin Trust Operations</h1>
- <p>
- Central command surface for trust execution, packet review, document output, reports, users, and system controls.
- {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
- Current operator scope: Master Admin — full global platform visibility.
- {% elif session.get("role") == "Admin" %}
- Current operator scope: Restricted Admin — limited visibility and no global user/role control.
- {% else %}
- Current operator scope: {{ session.get("role") or "Unknown" }}.
- {% endif %}
- </p>
- <div class="admin-hero-actions">
- <a class="primary-hero-action" href="/resume">Resume Process</a>
- <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
- <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
- </div>
- </section>
-
- 
-<div class="admin-card admin-recommended-start">
-  <!-- POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
-<section class="admin-operator-groups admin-command-center">
-  <h2>Institutional Command Groups</h2>
-  <p>Primary grouped access for institutional administration. Use these cards as the main operating map before using legacy shortcuts below.</p>
-  <div class="workspace-grid">
-    <a class="workspace-card" href="{{ url_for('system_health_dashboard') }}"><strong>System Status</strong><span>Health, system checks, and operating condition.</span></a>
-    <a class="workspace-card" href="{{ url_for('governance_dashboard') }}"><strong>Governance</strong><span>Directives, policies, relationships, evidence, and V2 certification.</span></a>
-    <a class="workspace-card" href="{{ url_for('matters_dashboard') }}"><strong>Matters / Trusts</strong><span>Matter records, trust operations, intake, and execution.</span></a>
-    <a class="workspace-card" href="{{ url_for('fiduciary_dashboard') }}"><strong>People / Fiduciaries</strong><span>Fiduciaries, users, roles, and institutional actors.</span></a>
-    <a class="workspace-card" href="{{ url_for('export_center') }}"><strong>Documents / Exports</strong><span>Generated records, documents, exports, media, and forms.</span></a>
-    <a class="workspace-card" href="{{ url_for('continuity_asset_dashboard') }}"><strong>Archive / Continuity</strong><span>Continuity assets, archive readiness, and recovery support.</span></a>
-    <a class="workspace-card" href="{{ url_for('security_dashboard') }}"><strong>Security / Access</strong><span>Security, permissions, roles, and user access.</span></a>
-    <a class="workspace-card" href="{{ url_for('admin_audit_log') }}"><strong>Developer / Diagnostics</strong><span>Audit log, diagnostics, storage checks, and developer review.</span></a>
-  </div>
-  <p><strong>Certified Baseline Preserved:</strong> v2-certified-baseline-2026-07-10</p>
-</section>
-<!-- /POST-V2-3A-R1 ADMIN OPERATOR GROUPS -->
-
-
-
-{# POST-V2-5B ADMIN VISUAL PRIORITY / OPERATOR GUIDANCE PATCH #}
-<section class="admin-operator-guidance" data-post-v2-5b="operator-guidance">
-  <h2>Operator Guidance</h2>
-  <p><strong>Start here:</strong> review the Recommended Next Action first, then move into the active Institutional Command Center.</p>
-  <p>Active operating surfaces are prioritized for daily work. Legacy compatibility, duplicate entry points, and system controls remain preserved for continuity, recovery, and administrative reference.</p>
-  <p>No legacy access has been removed. Governed sections are intentionally retained so operators can work without losing institutional history.</p>
-</section>
-
-
-
-{# POST-V2-6A ADMIN WORKSPACE NAVIGATION COHERENCE PATCH #}
-<section class="admin-card" data-post-v2-6a="workspace-navigation">
-  <h2>IOS Workspace Navigation <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
-  <p class="admin-muted">Use these governed workspace routes to move from the Admin dashboard into the institutional operating areas without losing return-path continuity.</p>
-  <div class="admin-actions">
-    <a href="/admin/workspace/system">System Workspace</a>
-    <a href="/admin/workspace/governance">Governance Workspace</a>
-    <a href="/admin/workspace/administer">Administer Workspace</a>
-    <a href="/admin/workspace/archive">Archive Workspace</a>
-    <a href="/admin/workspace/developer">Developer Workspace</a>
-  </div>
-</section>
-
-<h2>Recommended Next Action <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
-  <p class="admin-muted">
-    <strong>New matter?</strong> Start with <strong>Start New Intake</strong>.
-    <strong>Existing trust?</strong> Use <strong>Existing Trust Operations</strong>.
-    <strong>Need proof, review, or audit trail?</strong> Open the <strong>Lifecycle Ledger</strong> from the Intake Dashboard.
-  </p>
-</div>
-
-
-<!-- ADR-7 executive dashboard scaffold -->
-<section class="admin-card executive-home">
-  <h2>Executive Home <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
-  <p class="admin-muted">
-    This home workspace answers four questions: where was I, what needs attention,
-    what should I do next, and is the institution healthy?
-  </p>
-
-  <div class="admin-grid">
-    <div class="metric">
-      <h3>Institution Health</h3>
-      <p>Version 1 Certified</p>
+<main class="command-shell" id="main-content">
+  <header class="command-hero">
+    <span class="lane-label">Active operating surface</span>
+    <h1>Institutional Command Center</h1>
+    <p>Start, administer, govern, execute, certify, and preserve institutional work from one role-aware operating surface.</p>
+    <div class="context-grid" aria-label="Current institutional context">
+      <div class="context-item"><small>Institution / firm</small><strong>{{ admin_context.firm_id }}</strong></div>
+      <div class="context-item"><small>Operator</small><strong>{{ admin_context.username }}</strong></div>
+      <div class="context-item"><small>Role</small><strong>{{ admin_context.role }}</strong></div>
+      <div class="context-item"><small>Security context</small><strong>Firm-scoped authenticated session</strong></div>
     </div>
-    <div class="metric">
-      <h3>Trust Portfolio</h3>
-      <p>{{ report.trust_count }}</p>
+    <nav class="hero-actions" aria-label="Primary command center actions">
+      <a class="primary" href="{{ url_for('identity_intake') }}">Start New Intake</a>
+      <a href="{{ url_for('intake_dashboard') }}">Continue Intake</a>
+      <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
+      <a href="/resume">Resume Process</a>
+      <a href="{{ url_for('change_password') }}">Account Settings</a>
+    </nav>
+  </header>
+
+  <section aria-labelledby="attention-heading">
+    <div class="section-heading"><h2 id="attention-heading">Attention and readiness</h2><p>Bounded indicators derived from existing firm-scoped records.</p></div>
+    <div class="summary-grid">
+      <article class="card metric"><span class="state-label">Portfolio</span><h3>Visible trusts</h3><strong>{{ report.trust_count }}</strong></article>
+      <article class="card metric"><span class="state-label">Attention</span><h3>Trusts with incomplete areas</h3><strong>{{ admin_context.incomplete_trusts }}</strong></article>
+      <article class="card metric"><span class="state-label readonly">Records</span><h3>Beneficiaries</h3><strong>{{ report.beneficiary_count }}</strong></article>
+      <article class="card metric"><span class="state-label readonly">Records</span><h3>Instruments</h3><strong>{{ report.instrument_count }}</strong></article>
     </div>
-    <div class="metric">
-      <h3>Pending Reviews</h3>
-      <p>0</p>
+  </section>
+
+  <section aria-labelledby="lanes-heading">
+    <div class="section-heading"><h2 id="lanes-heading">Institutional work lanes</h2><p>Daily work first; registries and protected controls remain available without crowding the primary path.</p></div>
+    <div class="lane-grid">
+      <article class="card" id="lane-create"><span class="lane-label">Create</span><h3>Open new institutional work</h3><div class="action-list"><a class="primary" href="{{ url_for('identity_intake') }}">New Intake</a><a href="{{ url_for('matters_dashboard') }}">New or Existing Matter</a><a href="{{ url_for('create_trust_launch') }}">New Trust</a><a href="{{ url_for('document_generate') }}">Generate Document</a><a href="{{ url_for('certificate_studio_home') }}">Certificate Studio</a></div></article>
+      <article class="card" id="lane-administer"><span class="lane-label">Administer</span><h3>Manage people, property, and trust operations</h3><div class="action-list"><a class="primary" href="/">Trusts</a><a href="{{ url_for('matters_dashboard') }}">Matters</a><a href="{{ url_for('portfolio_dashboard') }}">Portfolio</a><a href="{{ url_for('add_property') }}">Property</a><a href="{{ url_for('link_account') }}">Accounts</a><a href="{{ url_for('ledger_entry') }}">Ledger</a><a href="{{ url_for('execution_dashboard') }}">Transfers</a><a href="{{ url_for('fiduciary_dashboard') }}">Fiduciaries</a><a href="{{ url_for('admin_ios_workspace', workspace_key='people') }}">Beneficiaries</a><a href="{{ url_for('admin_ios_workspace', workspace_key='people') }}">People</a><a href="{{ url_for('genealogy_dashboard') }}">Genealogy</a></div></article>
+      <article class="card" id="lane-govern"><span class="lane-label">Govern</span><h3>Direct institutional authority</h3><div class="action-list"><a class="primary" href="{{ url_for('governance_dashboard') }}">Governance Workspace</a><a href="{{ url_for('governance_registry') }}">Governance Registry</a><a href="{{ url_for('governance_registry') }}#directives">Directives</a><a href="{{ url_for('decision_dashboard') }}">Decisions</a><a href="{{ url_for('governance_registry') }}#policies">Policies</a><a href="{{ url_for('governance_registry') }}">Resolutions</a><a href="{{ url_for('governance_registry') }}">Memoranda</a><a href="{{ url_for('governance_registry') }}">Opinions</a><a href="{{ url_for('governance_registry') }}">Precedents</a><a href="{{ url_for('governance_relationship_lifecycle_dashboard') }}">Relationships</a></div></article>
+      <article class="card" id="lane-execute"><span class="lane-label">Execute</span><h3>Complete authorized work</h3><div class="action-list"><a class="primary" href="{{ url_for('execution_dashboard') }}">Execution Sessions</a><a href="{{ url_for('execution_dashboard') }}">Signatures</a><a href="{{ url_for('execution_dashboard') }}">Execution Objects</a><a href="{{ url_for('execution_dashboard') }}">Transfers</a><a href="{{ url_for('execution_task_new') }}">New Execution Task</a><a href="{{ url_for('certificate_registry') }}">Execution Certificates</a></div></article>
+      <article class="card" id="lane-document"><span class="lane-label">Document and certify</span><h3>Create controlled outputs and evidence</h3><div class="action-list"><a class="primary" href="{{ url_for('document_dashboard') }}">Documents</a><a href="{{ url_for('document_platform_home') }}">Document Platform</a><a href="{{ url_for('admin_ios_workspace', workspace_key='library') }}">Templates and Forms</a><a href="{{ url_for('certificate_studio_home') }}">Certificate Studio</a><a href="{{ url_for('certificate_registry') }}">Certificate Registry</a><a href="{{ url_for('governance_evidence_export_index') }}">Evidence</a><a href="{{ url_for('report_center') }}">Reports</a><a href="{{ url_for('export_center') }}">Exports</a></div></article>
+      <article class="card" id="lane-preserve"><span class="lane-label">Preserve</span><h3>Protect institutional continuity</h3><div class="action-list"><a class="primary" href="{{ url_for('audit_dashboard') }}">Audit</a><a href="{{ url_for('admin_ios_workspace', workspace_key='archive') }}">Archive</a><a href="{{ url_for('continuity_asset_dashboard') }}">Continuity Assets</a><a href="{{ url_for('governance_evidence_export_index') }}">Evidence</a><a href="{{ url_for('governance_evidence_export_manifest') }}">Manifests</a><a href="{{ url_for('continuity_certificate_verify') }}">Certificate Verification</a><a href="{{ url_for('system_health_dashboard') }}">Recovery Readiness</a></div><p class="warning">Destructive recovery actions are not exposed from this dashboard.</p></article>
+      <article class="card" id="lane-learn"><span class="lane-label">Learn and research</span><h3>Use institutional guidance and knowledge</h3><div class="action-list"><a class="primary" href="{{ url_for('learning_dashboard') }}">Learning</a><a href="/admin/articles">Articles</a><a href="{{ url_for('admin_ios_workspace', workspace_key='research') }}">Research</a><a href="/videos">Videos</a><a href="/discussions">Discussions</a><a href="{{ url_for('decision_dashboard') }}">Decision Support</a><a href="/visualization">Visualization</a><a href="{{ url_for('media_dashboard') }}">Media</a></div></article>
+      {% if admin_context.role == 'Admin' %}
+      <article class="card" id="lane-system"><span class="lane-label protected">System administration</span><h3>Authorized institutional controls</h3><div class="action-list">{% if admin_context.is_master_admin %}<a class="primary" href="{{ url_for('users_dashboard') }}">Users</a><a href="{{ url_for('role_dashboard') }}">Roles</a><a href="{{ url_for('permissions_dashboard') }}">Permissions</a>{% endif %}<a href="{{ url_for('security_dashboard') }}">Security</a><a href="{{ url_for('system_health_dashboard') }}">System Health</a><a href="{{ url_for('export_center') }}">Exports</a><a href="/admin/workspace/system">System Workspace</a>{% if admin_context.is_master_admin %}<a href="/admin/workspace/developer">Developer Tools</a>{% endif %}</div></article>
+      {% endif %}
     </div>
-    <div class="metric">
-      <h3>Audit Exceptions</h3>
-      <p>0</p>
+  </section>
+
+  <section aria-labelledby="continue-heading">
+    <div class="section-heading"><h2 id="continue-heading">Continue work</h2><p>Resume existing workflows without creating new state from the dashboard.</p></div>
+    <div class="two-grid">
+      <article class="card"><h3>Resume an institutional workflow</h3><div class="action-list"><a class="primary" href="/resume">Resume Process</a><a href="{{ url_for('intake_dashboard') }}">Saved Intakes</a><a href="{{ url_for('matters_dashboard') }}">Open Matters</a><a href="{{ url_for('execution_dashboard') }}">Execution Work</a><a href="{{ url_for('execution_dashboard') }}">Transfers</a><a href="{{ url_for('document_dashboard') }}">Document Tasks</a></div></article>
+      <article class="card"><h3>Recent institutional activity</h3><p>Latest eight firm-scoped audit events; details and sensitive payloads are omitted.</p><ul class="activity-list">{% for item in admin_context.recent_activity %}<li><time>{{ item.created_at }}</time><strong>{{ item.action|replace('_',' ')|title }}</strong> · {{ item.entity_type|replace('_',' ')|title }}{% if item.entity_id %} {{ item.entity_id }}{% endif %}</li>{% else %}<li>No recent activity is available for this firm.</li>{% endfor %}</ul>{% if admin_context.can_view_audit %}<div class="action-list"><a href="{{ url_for('admin_audit_log') }}">Open Audit Log Viewer</a></div>{% endif %}</article>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="admin-card continue-work-panel">
-  <h2>Continue Where You Left Off <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
-  <p class="admin-muted">
-    Resume the latest matter, trust, execution packet, funding review, or lifecycle ledger.
-  </p>
-  <div class="admin-actions">
-    <a class="primary-action" href="/resume">Resume Process</a>
-    <a href="{{ url_for('intake_dashboard') }}">Review Saved Intakes</a>
-    <a href="{{ url_for('create_trust_launch') }}">Start Trust Creation</a>
-    <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
-  </div>
-</section>
+  <section aria-labelledby="trust-heading">
+    <div class="section-heading"><h2 id="trust-heading">Visible trust operations</h2><p>Firm-scoped trust readiness and existing certified workflow entry points.</p></div>
+    <article class="card trust-table-wrap">
+      {% if trust_summaries %}<table><thead><tr><th>Trust</th><th>Type</th><th>Readiness</th><th>Missing areas</th><th>Actions</th></tr></thead><tbody>{% for item in trust_summaries %}<tr><td><strong>{{ item.trust_name }}</strong><br><small>{{ item.firm_trust_code or item.trust_id }}</small></td><td>{{ item.trust_type }}</td><td>{{ item.packet_status }}<br>{{ item.ready_count }} ready / {{ item.incomplete_count }} incomplete</td><td>{% for area in item.missing_areas %}<div>{{ area }}</div>{% else %}None{% endfor %}</td><td><div class="action-list"><a class="primary" href="{{ url_for('trust_execution_dashboard',trust_id=item.trust_id) }}">Execution</a><a href="{{ url_for('trust_packet_preview',trust_id=item.trust_id) }}">Packet Preview</a><a href="{{ url_for('trust_controlled_packet_export',trust_id=item.trust_id) }}">Download Packet</a><a href="{{ url_for('trust_branding_settings',trust_id=item.trust_id) }}">Branding</a><a href="{{ url_for('trust_declaration_output_surface',trust_id=item.trust_id) }}">Declaration</a><a href="{{ url_for('trust_certificate_of_trust_output_surface',trust_id=item.trust_id) }}">Certificate</a><a href="{{ url_for('trust_articles_output_surface',trust_id=item.trust_id) }}">Articles</a><a href="{{ url_for('trust_trustee_acceptance_output_surface',trust_id=item.trust_id) }}">Trustee Acceptance</a><a href="{{ url_for('financial_summary',trust_id=item.trust_id) }}">Financial Summary</a><a href="{{ url_for('form1041_dashboard',trust_id=item.trust_id) }}">Form 1041</a></div></td></tr>{% endfor %}</tbody></table>{% else %}<p>No trust records are visible in the current firm context.</p>{% endif %}
+    </article>
+  </section>
 
-<section class="admin-card institutional-activity-panel">
-  <h2>Recent Institutional Activity <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
-  <p class="admin-muted">
-    Activity timeline placeholder. ADR-7E will connect this panel to audit, matter,
-    trust, document, execution, and archive events.
-  </p>
-  <ul>
-    <li>Dashboard reconstruction active.</li>
-    <li>Institutional workspace map installed.</li>
-    <li>Instrument registry schema added.</li>
-  </ul>
-</section>
-
-
-{% include "_institutional_workspace_map.html" %}
-
-<!-- ADR-7C legacy compatibility center -->
-<details class="admin-card legacy-compatibility-center">
-  <summary><!-- POST-V2-3D COLLAPSE CONTROLS ACTIVE -->
-<section class="post-v2-3d-collapse-plan">
-  <h2>Admin Layout Controls</h2>
-  <p>Non-destructive containment plan for legacy, duplicate, and system-control areas. No routes or links are removed in this milestone.</p>
-  <details>
-    <summary>Legacy Compatibility <span class="post-v2-3d-badge">preserve</span></summary>
-    <ul><li>Legacy Compatibility Center</li><li>Legacy Quick Start</li></ul>
-  </details>
-  <details>
-    <summary>Duplicate Entry Points <span class="post-v2-3d-badge">contain</span></summary>
-
-{# POST-V2-8A DUPLICATE ENTRY POINT LABELING PATCH
-   Non-destructive operator labels added to duplicate entry point groups.
-   Routes remain preserved. Redirects are not activated in this patch.
-#}
-    <ul><li>Existing Trust Command Cards <span class="section-governance-label duplicate">GOVERNED COMPATIBILITY SURFACE</span></li><li>Learning & Guidance Suite <span class="section-governance-label duplicate">GOVERNED COMPATIBILITY SURFACE</span></li><li>Report Launch Area <span class="section-governance-label duplicate">RELABEL / REDIRECT CANDIDATE</span></li><li>Admin Tools <span class="section-governance-label duplicate">RELABEL / REDIRECT CANDIDATE</span></li><li>Operational Shortcuts <span class="section-governance-label duplicate">RELABEL / REDIRECT CANDIDATE</span></li></ul>
-  </details>
-  <details>
-    <summary>System Controls <span class="post-v2-3d-badge">protect</span></summary>
-    <ul><li>Hosted Baseline Seed</li><li>Database Backup</li><li>System Policy Controls</li><li>Security Layer</li></ul>
-  </details>
-  <p><strong>Certified Baseline Preserved:</strong> v2-certified-baseline-2026-07-10</p>
-</section>
-Legacy Compatibility Center</summary>
-  <p class="admin-muted">
-    Older shortcuts, hosted review notices, and command-map links are preserved here during the executive dashboard rebuild.
-    Prefer the Executive Home and Institutional Command Center above for normal navigation.
-  </p>
-
-  <div class="admin-actions">
-    <a href="/resume">Resume Process</a>
-    <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
-    <a href="/learning">Learning Hub</a>
-    <a href="{{ url_for('certificate_registry') }}">Certificates</a>
-    <a href="/reports">Report Center</a>
-    <a href="/execution">Execution</a>
-  </div>
-
-  <hr>
-
-  <h3>Legacy Shortcut Map</h3>
-  <div class="admin-actions">
-    <a class="primary-action" href="#intake-command-center">Intake & Lifecycle</a>
-    <a href="#trust-operations">Trust Operations</a>
-    <a href="#document-export-center">Documents & Exports</a>
-    <a href="#learning-guidance">Learning & Guidance</a>
-    <a href="#system-security">System Health & Security</a>
-    <a href="#admin-tools">Admin Tools</a>
-  </div>
-
-  <hr>
-
-  <h3>Deployment Notice</h3>
-  <p class="admin-muted">
-    This hosted deployment is a Version 1 certified baseline under hosted review until persistence, backups, permissions,
-    export controls, and sensitive-data handling are fully verified.
-  </p>
-</details>
-
-<div class="admin-section-label" id="intake-command-center">Intake & Lifecycle Command Center</div>
-<div class="admin-card intake-command-center promoted-intake-panel">
-  <h2>Intake Command Center <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
-  <p class="admin-muted">
-    Recommended first step for new matters. Begin intake, review saved sessions, and follow each matter from first interview through final archive.
-  </p>
-
-  <div class="admin-actions intake-action-grid">
-    <a class="primary-action" href="{{ url_for('identity_intake') }}">Start New Intake</a>
-    <a href="{{ url_for('intake_dashboard') }}">Review Saved Intakes</a>
-    <a href="{{ url_for('intake_dashboard') }}">Open Lifecycle Ledger from Intake Dashboard</a>
-  </div>
-
-  <p class="admin-muted">
-    The Lifecycle Ledger is opened from a saved intake record and shows the full chain from intake through final archive.
-  </p>
-</div>
-
-
-<div class="admin-section-label">System Snapshot</div>
- <div class="admin-card">
- <div class="admin-grid">
- <div class="metric">
- <h3>Trusts</h3>
- <p>{{ report['trust_count'] }}</p>
- </div>
- <div class="metric">
- <h3>Beneficiaries</h3>
- <p>{{ report['beneficiary_count'] }}</p>
- </div>
- <div class="metric">
- <h3>Distributions</h3>
- <p>{{ report['distribution_count'] }}</p>
- </div>
- <div class="metric">
- <h3>Instruments</h3>
- <p>{{ report['instrument_count'] }}</p>
- </div>
- </div>
- </div>
-
- <div class="admin-section-label">Existing Trust Operations</div>
- <div class="admin-card">
- <h2>Existing Trust Operations Dashboard <span class="section-governance-label active">ACTIVE OPERATING SURFACE</span></h2>
- <p class="admin-muted">Primary operating surface for trust readiness, packet status, and execution entry.</p>
-
- {% if trust_summaries %}
- <table class="trust-table trust-table-compact">
- <thead>
- <tr>
- <th>Trust</th>
- <th>Type</th>
- <th>Packet Status</th>
- <th>Ready</th>
- <th>Missing / Fixes</th>
- <th>Primary Actions</th>
- </tr>
- </thead>
- <tbody>
- {% for item in trust_summaries %}
- <tr>
- <td>
- <strong>{{ item.trust_name }}</strong><br>
- <small>{{ item.firm_trust_code or item.trust_id }}</small><br>
- <small class="admin-muted">Created: {{ item.created_at_display }} | Updated: {{ item.last_updated }}</small>
- </td>
- <td>{{ item.trust_type }}</td>
- <td>
- <span class="{% if item.packet_ready %}trust-status-ready{% else %}trust-status-warning{% endif %}">
- {{ item.packet_status }}
- </span>
- </td>
- <td>
- <strong>{{ item.ready_count }}</strong> ready<br>
- <span class="admin-muted">{{ item.incomplete_count }} incomplete</span>
- </td>
- <td>
- {% if item.missing_areas %}
- {% for area in item.missing_areas %}
- <div class="trust-small trust-muted">{{ area }}</div>
- {% endfor %}
- {% else %}
- <span class="trust-status-ready">No missing areas</span>
- {% endif %}
-
- {% if item.quick_fix_links %}
- <div style="margin-top:6px;">
- {% for link in item.quick_fix_links %}
- <div><a href="{{ link.url }}">{{ link.label }}</a></div>
- {% endfor %}
- </div>
- {% endif %}
- </td>
- <td>
- <div class="admin-actions">
- 
- <a class="primary-action" href="{{ url_for('trust_execution_dashboard', trust_id=item.trust_id) }}">Execution</a>
- <a href="{{ url_for('trust_packet_preview', trust_id=item.trust_id) }}">Packet Preview</a>
- <a href="{{ url_for('trust_controlled_packet_export', trust_id=item.trust_id) }}">Download Packet</a>
- </div>
- </td>
- </tr>
- {% endfor %}
- </tbody>
- </table>
- {% else %}
- <p>No trust records found yet.</p>
- {% endif %}
- </div>
-
- <div class="admin-card">
- <h2>Existing Trust Command Cards <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
- <p class="admin-muted">Fast entry into each trust’s live workflow and controlled output surfaces.</p>
-
- {% if trusts %}
- <div class="trust-launch-grid">
- {% for trust in trusts %}
- <div class="trust-launch-card">
- <div class="trust-launch-title">
- <strong>{{ trust['trust_name'] or 'Unnamed Trust' }}</strong>
- <span class="badge">{{ trust['firm_trust_code'] or trust['trust_id'] }}</span>
- </div>
- <div class="admin-actions">
- 
- <a class="primary-action" href="{{ url_for('trust_execution_dashboard', trust_id=trust['trust_id']) }}">Open Execution</a>
- <a href="{{ url_for('trust_packet_preview', trust_id=trust['trust_id']) }}">Packet Preview</a>
- <a href="{{ url_for('trust_controlled_packet_export', trust_id=trust['trust_id']) }}">Download ZIP</a>
- </div>
- <div class="admin-actions">
- <a href="{{ url_for('trust_branding_settings', trust_id=trust['trust_id']) }}">Branding</a>
-<a href="{{ url_for('trust_declaration_output_surface', trust_id=trust['trust_id']) }}">Declaration</a>
-<a href="{{ url_for('trust_certificate_of_trust_output_surface', trust_id=trust['trust_id']) }}">Certificate</a>
-<a href="{{ url_for('trust_articles_output_surface', trust_id=trust['trust_id']) }}">Articles</a>
- <a href="{{ url_for('trust_trustee_acceptance_output_surface', trust_id=trust['trust_id']) }}">Trustee Acceptance</a>
- <a href="{{ url_for('financial_summary', trust_id=trust['trust_id']) }}">Financial Summary</a>
- <a href="{{ url_for('form1041_dashboard', trust_id=trust['trust_id']) }}">Form 1041</a>
- </div>
- </div>
- {% endfor %}
- </div>
- {% else %}
- <p>No trust records found yet.</p>
- {% endif %}
- </div>
-
- <div class="admin-two-grid">
- <div class="admin-card">
-<h2 id="document-export-center">Legacy Quick Start <span class="section-governance-label legacy">LEGACY COMPATIBILITY</span></h2>
- <p class="admin-muted">Legacy pathways preserved during the navigation reconstruction. Prefer the Institutional Command Center above for normal use.</p>
- <div class="admin-actions">
- 
- <a class="primary-action" href="{{ url_for('create_trust_launch') }}">Create Trust</a>
- <a href="/">View Existing Trusts</a>
- <a href="/learning">Learning Hub</a>
- <a href="/workspaces">Workspace</a>
- <a href="/reports">Report Center</a>
- </div>
- </div>
-
- <div class="admin-card">
- <h2 id="learning-guidance">Learning & Guidance Suite <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
- <p class="admin-muted">Central learning surface for trust concepts, guided forms, trust-type references, and tutorial support.</p>
- <div class="admin-actions">
- <a class="primary-action" href="/learning">Learning Hub</a>
- <a href="/learning/trust-types">Trust Types</a>
- <a href="/forms">Forms Guide</a>
- <a href="/videos">Video Tutorials</a>
- <a href="/admin/learning/article/new">New Learning Article</a>
- <a href="/admin/forms/new">New Form Guide</a>
- <a href="/videos/upload">Upload Video</a>
- </div>
- </div>
-
-<div class="admin-card">
-<h2>Hosted Baseline Seed <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
-<p class="admin-muted">Manual, admin-only seed control for hosted Railway databases. This creates missing ABC baseline trusts and starter Learning/Form records without overwriting existing data.</p>
-<form method="POST" action="/admin/seed-hosted-baseline" onsubmit="return confirm('Run hosted baseline seed now? This will create only missing baseline records and will not overwrite existing data.');">
-  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-  <button type="submit" class="primary-action">Seed Hosted Baseline Data</button>
-</form>
-</div>
-
-<div class="admin-card">
-<h2>Database Backup <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
-<p class="admin-muted">Master Admin database backup control. Downloads the currently configured SQLite database file from DB_PATH. Use this before major changes, after hosted seeding, and before deployment-risk operations.</p>
-<div class="admin-actions">
-
-{# POST-V2-9A SYSTEM CONTROL WARNING LABEL PATCH
-   Non-destructive warning label added to visible database backup control.
-   No confirmation gate, redirect, route deletion, or permission change in this patch.
-#}
-  <a class="primary-action" href="/admin/backup/database.zip">Download Database Backup ZIP <span class="section-governance-label system">MEDIUM RISK — DOWNLOADS LIVE DATABASE COPY</span></a>
-</div>
-</div>
-
-<div class="admin-card">
-
-<h2 id="system-security">System Policy Controls <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></h2>
-
-<div class="policy-switch-grid">
-
-  <div class="policy-switch-row">
-    <div class="policy-switch-label">
-      <strong>Packet Export Mode</strong>
-      <small>Strict requires readiness checks before packet export. Advisory allows warnings.</small>
-    </div>
-    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="policy_key" value="strict_packet_export">
-      <button type="submit" class="policy-toggle-button" title="Toggle Packet Export Mode">
-        <span class="policy-switch {% if export_policy.strict_packet_export %}on{% else %}off{% endif %}">
-          <span class="policy-switch-knob"></span>
-        </span>
-        <span class="policy-state">
-          {% if export_policy.strict_packet_export %}Strict{% else %}Advisory{% endif %}
-        </span>
-      </button>
-    </form>
-  </div>
-
-  <div class="policy-switch-row">
-    <div class="policy-switch-label">
-      <strong>Exports</strong>
-      <small>When disabled, controlled packet/DOCX/PDF export routes should be blocked.</small>
-    </div>
-    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="policy_key" value="allow_exports">
-      <button type="submit" class="policy-toggle-button" title="Toggle All Exports">
-        <span class="policy-switch {% if export_policy.allow_exports %}on{% else %}off{% endif %}">
-          <span class="policy-switch-knob"></span>
-        </span>
-        <span class="policy-state">
-          {% if export_policy.allow_exports %}Enabled{% else %}Disabled{% endif %}
-        </span>
-      </button>
-    </form>
-  </div>
-
-  <div class="policy-switch-row">
-    <div class="policy-switch-label">
-      <strong>Read-Only Mode</strong>
-      <small>When enabled, write actions and POST submissions should be blocked.</small>
-    </div>
-    <form method="POST" action="{{ url_for('admin_toggle_export_policy') }}">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="policy_key" value="read_only_mode">
-      <button type="submit" class="policy-toggle-button" title="Toggle Read-Only Mode">
-        <span class="policy-switch {% if export_policy.read_only_mode %}on{% else %}off{% endif %}">
-          <span class="policy-switch-knob"></span>
-        </span>
-        <span class="policy-state">
-          {% if export_policy.read_only_mode %}Enabled{% else %}Disabled{% endif %}
-        </span>
-      </button>
-    </form>
-  </div>
-
-</div>
-
-<p class="admin-muted">System policies control export authority, write access, and packet readiness behavior.</p>
-
-</div>
- </div>
-
- <div class="admin-two-grid">
- <div class="admin-card">
- <h2>Report Launch Area <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
- <p class="admin-muted">System-wide PDF exports and guided report center.</p>
- <div class="admin-actions">
- <a href="/reports/portfolio.pdf" target="_blank">Portfolio PDF</a>
- <a href="/reports/audit.pdf" target="_blank">Audit Log PDF</a>
- <a href="/reports/fiduciaries.pdf" target="_blank">Fiduciary PDF</a>
- <a class="primary-action" href="/reports">Report Center</a>
- </div>
- </div>
-
- <div class="admin-card">
- <h2 id="admin-tools">Admin Tools <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
- <div class="admin-actions">
- {% if session.get("username") == "admin" and session.get("role") == "Admin" %}
- <a class="primary-action" href="{{ url_for('users_dashboard') }}">Manage Users</a>
- <a href="{{ url_for('admin_audit_log') }}">Audit Log Viewer</a>
- {% endif %}
- <a href="/admin/learning/article/new">New Learning Article</a>
- <a href="/admin/forms/new">New Form Guide</a>
- <a href="/videos/upload">Upload Video</a>
- <a href="/workspaces/new">New Workspace</a>
- <a href="/discussions/new">New Thread</a>
- <a href="/execution/tasks/new">New Task</a>
- <a href="/documents/generate">Generate Document</a>
- </div>
- </div>
- </div>
-
- <div class="admin-card">
- <h2>Operational Shortcuts <span class="section-governance-label duplicate">DUPLICATE ENTRY POINT</span></h2>
- <div class="admin-actions">
- <a href="{{ url_for('workflow_hub') }}">Workflow Hub</a>
- <a href="{{ url_for('export_center') }}">Export Center</a>
- <a href="{{ url_for('audit_dashboard') }}">Audit Trail</a>
- <a href="{{ url_for('permissions_dashboard') }}">Permissions</a>
- <a href="{{ url_for('security_dashboard') }}">Security</a>
- <a href="{{ url_for('system_health_dashboard') }}">System Health</a>
- <a href="{{ url_for('trust_minutes_dashboard') }}">Trust Minutes</a>
- <a href="{{ url_for('certificate_registry') }}">Certificate Registry</a>
- <a href="/documents">Documents</a>
- <a href="/visualization">Visualization</a>
- <a href="/decision">Decision Engine</a>
- </div>
- </div>
-
- <details class="admin-card">
- <summary>Route and Handoff Files</summary>
- <ul>
- <li>handoff/ROUTE_INVENTORY.txt</li>
- <li>handoff/ROUTE_CONSISTENCY_REPORT.txt</li>
- <li>handoff/MODULE_STATUS.txt</li>
- <li>handoff/PROJECT_HANDOFF.txt</li>
- <li>handoff/FILE_MANIFEST.txt</li>
- <li>handoff/ADMIN_MANIFEST.txt</li>
- <li>handoff/FINAL_STABILIZATION_SUMMARY.txt</li>
- </ul>
- </details>
-
- <details class="admin-card" open>
- <summary>Security Layer <span class="section-governance-label system">PROTECTED SYSTEM CONTROL</span></summary>
- <p><a href="{{ url_for('security_dashboard') }}">Open Security Dashboard</a></p>
- <p class="admin-muted">Hosted review reminder: confirm storage, access, backups, and export controls before live sensitive-data use.</p>
- </details>
-</div>
-{% include "_institutional_property_notice.html" %}
+  <section aria-labelledby="secondary-heading">
+    <div class="section-heading"><h2 id="secondary-heading">Secondary and protected resources</h2><p>Certified compatibility links remain discoverable through progressive disclosure.</p></div>
+    <details class="card"><summary>Workspace navigation and legacy compatibility</summary><div class="action-list"><a href="/admin/workspace/governance">Governance Workspace</a><a href="/admin/workspace/administer">Administer Workspace</a><a href="/admin/workspace/archive">Archive Workspace</a><a href="/workspaces">Workspaces</a><a href="/workspaces/new">New Workspace</a><a href="/learning/trust-types">Trust Types</a><a href="/admin/learning/article/new">New Learning Article</a><a href="/admin/forms/new">New Form Guide</a><a href="/videos/upload">Upload Video</a><a href="/discussions/new">New Thread</a><a href="/reports/portfolio.pdf">Portfolio PDF</a><a href="/reports/audit.pdf">Audit PDF</a><a href="/reports/fiduciaries.pdf">Fiduciary PDF</a></div></details>
+    {% if admin_context.is_master_admin %}<details class="card"><summary>Protected system controls</summary><p class="warning">These controls retain their existing server-side gates. Recovery execution is intentionally absent.</p><div class="action-list"><a href="/admin/backup/database.zip">Database Backup</a><a href="/admin/storage-diagnostics">Storage Diagnostics</a><a href="/admin/certificate-types">Certificate Framework</a><a href="/admin/certificates/unified">Unified Certificate Registry</a></div></details>{% endif %}
+    <details class="card"><summary>Route and handoff references</summary><ul class="quiet-list"><li>ROUTE_INVENTORY.txt</li><li>ROUTE_CONSISTENCY_REPORT.txt</li><li>MODULE_STATUS.txt</li><li>PROJECT_HANDOFF.txt</li><li>FILE_MANIFEST.txt</li><li>ADMIN_MANIFEST.txt</li><li>FINAL_STABILIZATION_SUMMARY.txt</li></ul></details>
+  </section>
+  {% include "_institutional_property_notice.html" %}
+</main>
 </body>
 </html>
-
-Active operator surfaces remain expanded by default.
-Legacy compatibility, duplicate entry points, and system controls remain preserved but collapsed by default.
-No routes, links, templates, or permissions are removed by this milestone.
--->
-
-
-Active operator surfaces remain expanded by default.
-Legacy compatibility, duplicate entry points, and system controls remain preserved but collapsed by default.
-No routes, links, templates, or permissions are removed by this milestone.
--->
