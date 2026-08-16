@@ -15,9 +15,20 @@ DECISION_PATH = PUBLIC_ROOT / "HOS_WEB_2B_DEPLOYMENT_CONFIGURATION_DECISION_LOCK
 MANIFEST_PATH = DEPLOYMENT_ROOT / "public-artifact-manifest.json"
 HOSTING_PATH = DEPLOYMENT_ROOT / "hosting-architecture.json"
 HEADERS_PATH = DEPLOYMENT_ROOT / "security-headers-blueprint.json"
-EXPECTED_COMMIT = "db051e2ba45d5cf1b9f163e653e7ba5d2443d3fc"
+CERTIFIED_RENDERED_BASELINE = "db051e2ba45d5cf1b9f163e653e7ba5d2443d3fc"
 EXPECTED_DOMAIN = "hindsfoot-os.com"
 EXPECTED_MASTER_HASH = "5B2B4406D71AEDF9B74BF4BE9252FC402F80841B49874DD9E3DC3A4BD83F5A07"
+APPROVED_CONFIGURATION_PATHS = {
+    "public_site/HOS_WEB_2B_DEPLOYMENT_CONFIGURATION_DECISION_LOCK.md",
+    "public_site/deployment/hosting-architecture.json",
+    "public_site/deployment/public-artifact-manifest.json",
+    "public_site/deployment/security-headers-blueprint.json",
+    "public_site/scripts/audit_hos_web_2b.py",
+}
+ALLOWED_POST_BASELINE_SUBJECTS = {
+    "Certify Hindsfoot deployment configuration",
+    "Repair deployment configuration post-commit audit",
+}
 PROTECTED_PATHS = {
     "docs/version_3_completion_addendum_2026-08-14.md",
     "docs/version_3_locked_plan_recovery_2026-08-14.md",
@@ -84,7 +95,42 @@ headers = json.loads(HEADERS_PATH.read_text(encoding="utf-8"))
 decision = DECISION_PATH.read_text(encoding="utf-8")
 
 check("repository branch", git("branch", "--show-current") == "system-1-annual-evaluation")
-check("certified HEAD", git("rev-parse", "HEAD") == EXPECTED_COMMIT)
+check(
+    "certified rendered baseline is an ancestor",
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", CERTIFIED_RENDERED_BASELINE, "HEAD"],
+        cwd=REPO_ROOT,
+        check=False,
+    ).returncode
+    == 0,
+)
+post_baseline_commits = git("rev-list", "--reverse", f"{CERTIFIED_RENDERED_BASELINE}..HEAD").splitlines()
+post_baseline_subjects = [git("show", "-s", "--format=%s", commit) for commit in post_baseline_commits]
+post_baseline_paths = {
+    path
+    for commit in post_baseline_commits
+    for path in git("diff-tree", "--no-commit-id", "--name-only", "-r", commit).splitlines()
+    if path
+}
+check("post-baseline commits present", bool(post_baseline_commits))
+check(
+    "post-baseline subjects allowlisted",
+    all(subject in ALLOWED_POST_BASELINE_SUBJECTS for subject in post_baseline_subjects),
+    post_baseline_subjects,
+)
+check(
+    "post-baseline paths repository-only",
+    post_baseline_paths <= APPROVED_CONFIGURATION_PATHS,
+    sorted(post_baseline_paths),
+)
+check(
+    "prospective repair subject supported",
+    "Repair deployment configuration post-commit audit" in ALLOWED_POST_BASELINE_SUBJECTS,
+)
+check(
+    "prospective repair path supported",
+    "public_site/scripts/audit_hos_web_2b.py" in APPROVED_CONFIGURATION_PATHS,
+)
 check("manifest exact count declaration", manifest["exact_file_count"] == 25)
 check("manifest file count", len(manifest["files"]) == 25)
 
@@ -129,6 +175,9 @@ for entry in manifest["files"]:
     check(f"byte size: {artifact}", source.stat().st_size == entry["byte_size"])
     check(f"SHA-256: {artifact}", sha256(source) == entry["sha256"])
     check(f"repository boundary: {artifact}", repository == f"public_site/{artifact}")
+    baseline_blob = git("rev-parse", f"{CERTIFIED_RENDERED_BASELINE}:{repository}")
+    current_blob = git("hash-object", "--", repository)
+    check(f"baseline byte identity: {artifact}", current_blob == baseline_blob)
 
 check("candidate domain exact", hosting["candidate_domain"] == EXPECTED_DOMAIN)
 check("domain registration inactive", hosting["domain_registration"] == "UNVERIFIED_NOT_PURCHASED")
@@ -192,12 +241,17 @@ check("no domain ownership claim", ownership_claim not in record_text.lower())
 master = PUBLIC_ROOT / "assets/images/brand/hindsfoot_os_master.png"
 check("locked master-logo hash", sha256(master) == EXPECTED_MASTER_HASH)
 
-status_lines = git("status", "--short").splitlines()
+status_lines = subprocess.check_output(
+    ["git", "status", "--short"],
+    cwd=REPO_ROOT,
+    text=True,
+    encoding="utf-8",
+).splitlines()
 status_paths = {line[3:].replace("\\", "/") for line in status_lines if line}
 check("protected paths remain untracked", PROTECTED_PATHS <= status_paths)
 check(
     "tracked/authenticated scope unchanged",
-    all(path.startswith("public_site/") or path in PROTECTED_PATHS for path in status_paths),
+    all(path in APPROVED_CONFIGURATION_PATHS or path in PROTECTED_PATHS for path in status_paths),
     sorted(status_paths),
 )
 check("staged files absent", not git("diff", "--cached", "--name-only"))
