@@ -14,6 +14,8 @@
       <p class="page-subtitle">Use this page to understand what the platform does, where to begin, and how to manage users and roles.</p>
     </div>
 
+    {% include "_guide_ai_foundation.html" %}
+
     <div class="platform-card">
       <h2>What this app is</h2>
       <p>This is a trust operating platform for learning, planning, documenting, reporting, and reviewing trust-related workflows.</p>
@@ -69,12 +71,13 @@
         <li>Use the guidance prompt field to write what should be checked next.</li>
         <li>Do not rely on a single record when proving a parent-child or lineage connection.</li>
         <li>Look for a second confirming source such as a census, obituary, deed, church record, or family record.</li>
-        <li>Mark the verification status honestly:
+        <li>Classify the evidence state honestly:
           <ul>
-            <li><strong>unverified</strong> — only a lead</li>
-            <li><strong>in review</strong> — under active tracing</li>
-            <li><strong>partially verified</strong> — some support, more needed</li>
-            <li><strong>verified</strong> — supported by sufficient confirming evidence</li>
+            <li><strong>documented</strong> — supported by an identified record or source</li>
+            <li><strong>corroborated</strong> — supported by additional confirming evidence</li>
+            <li><strong>inferred</strong> — a reasoned relationship or conclusion not yet fully established by the record</li>
+            <li><strong>disputed</strong> — conflicting evidence or interpretations remain</li>
+            <li><strong>unresolved</strong> — the available evidence does not yet support a reliable conclusion</li>
           </ul>
         </li>
       </ol>
