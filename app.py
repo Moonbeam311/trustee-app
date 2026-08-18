@@ -2873,6 +2873,7 @@ ROLE_RULES = {
     "video_detail": {"Admin", "Trustee", "Viewer"},
     "video_upload": {"Admin", "Trustee"},
     "video_edit": {"Admin"},
+    "work_learning_hub": {"Admin", "Trustee", "Viewer"},
     "workspace_dashboard": {"Admin", "Trustee", "Viewer"},
     "workspace_new": {"Admin", "Trustee"},
     "workspace_detail": {"Admin", "Trustee", "Viewer"},
@@ -10739,6 +10740,47 @@ def create_workspace_note(payload):
     conn.commit()
     conn.close()
 
+def build_work_learning_hub_context():
+    """Build the read-only P-01 Work & Learning Hub context."""
+    return {
+        "hub_name": "Work & Learning Hub",
+        "states": (
+            {
+                "key": "explore",
+                "name": "Explore and Learn",
+                "description": (
+                    "Review learning resources, terminology, possibilities, "
+                    "questions, and supporting material."
+                ),
+            },
+            {
+                "key": "develop",
+                "name": "Work and Develop",
+                "description": (
+                    "Use protected planning workspaces to organize purpose, "
+                    "notes, discussions, tasks, and draft documents."
+                ),
+            },
+            {
+                "key": "govern",
+                "name": "Confirm and Govern",
+                "description": (
+                    "Review developing work deliberately before any approved "
+                    "material enters a governed institutional process."
+                ),
+            },
+        ),
+        "workspaces": get_all_workspaces(),
+        "operator": session.get("username"),
+        "role": session.get("role"),
+        "firm_id": session.get("firm_id"),
+        "governance_boundary": (
+            "Exploratory and developing material does not automatically become "
+            "a governed institutional record."
+        ),
+    }
+
+
 def get_workspace_note_sections():
     return [
         "goals",
@@ -12255,6 +12297,12 @@ def video_edit(video_id):
         return redirect(url_for("video_detail", video_id=video_id))
 
     return render_template("video_upload.html", mode="edit", video=video)
+
+@app.route("/work-learning-hub")
+def work_learning_hub():
+    context = build_work_learning_hub_context()
+    return render_template("work_learning_hub.html", context=context)
+
 
 @app.route("/workspaces")
 def workspace_dashboard():

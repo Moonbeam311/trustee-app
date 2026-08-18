@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>{{ context.hub_name }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+    .hub-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+    .card { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; }
+    .workspace-list { margin-top: 18px; }
+    .boundary { border: 1px solid #9ca3af; border-radius: 10px; padding: 14px; margin-top: 18px; background: #fff; }
+    .meta { font-size: 14px; color: #4b5563; }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    {% include "_platform_nav.html" %}
+
+    <div class="page-header">
+      <h1>{{ context.hub_name }}</h1>
+    </div>
+
+    <p class="page-subtitle">
+      Protected exploratory and planning environment for learning, developing work,
+      and deliberate review before governed institutional action.
+    </p>
+
+    <p class="meta">
+      Operator: {{ context.operator or "unknown" }}
+      | Role: {{ context.role or "unknown" }}
+      | Firm: {{ context.firm_id or "unknown" }}
+    </p>
+
+    <div class="hub-grid">
+      <div class="card">
+        <h2>Explore and Learn</h2>
+        <p>{{ context.states[0].description }}</p>
+        <p>
+          <a href="/learning">Learning</a> |
+          <a href="/videos">Videos</a> |
+          <a href="/guide">Guide / AI Assistance</a> |
+          <a href="/discussions">Discussions</a>
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Work and Develop</h2>
+        <p>{{ context.states[1].description }}</p>
+        <p>
+          <a href="/workspaces">Workspaces</a> |
+          <a href="/workspaces/new">New Workspace</a>
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Confirm and Govern</h2>
+        <p>{{ context.states[2].description }}</p>
+        <p>
+          <a href="/decision">Decision</a> |
+          <a href="/documents">Documents</a> |
+          <a href="/execution">Execution</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="boundary">
+      <strong>Governance boundary:</strong>
+      {{ context.governance_boundary }}
+    </div>
+
+    <div class="workspace-list">
+      <h2>Current Planning Workspaces</h2>
+
+      {% for workspace in context.workspaces %}
+        <div class="card">
+          <h3>
+            <a href="/workspaces/{{ workspace['workspace_id'] }}">
+              {{ workspace['title'] }}
+            </a>
+          </h3>
+          <p><strong>Status:</strong> {{ workspace['status'] }}</p>
+          <p><strong>Purpose:</strong> {{ workspace['purpose'] }}</p>
+        </div>
+      {% else %}
+        <p>No planning workspaces are currently available in this firm context.</p>
+      {% endfor %}
+    </div>
+
+    {% include "_institutional_property_notice.html" %}
+  </div>
+</body>
+</html>
