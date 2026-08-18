@@ -1,0 +1,21 @@
+<style>
+  .utility-nav { position:relative; z-index:2; display:flex; visibility:visible; opacity:1; width:100%; min-height:58px; height:auto; overflow:visible; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin:0 0 14px; padding:10px 12px; border:1px solid #c69a3a; border-radius:12px; background:#f5f0e5; box-shadow:0 4px 14px rgba(17,16,14,.08); box-sizing:border-box; font-family:Arial,sans-serif; }
+  .utility-nav::before { content:"Hindsfoot OS controls"; margin-right:auto; color:#11100e; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+  .utility-nav a { display:inline-flex; visibility:visible; opacity:1; align-items:center; justify-content:center; min-height:42px; padding:9px 13px; border:1px solid #c69a3a; border-radius:8px; color:#11100e; background:#fff; text-decoration:none; font-weight:700; line-height:1.2; }
+  .utility-nav a:hover { color:#11100e; border-color:#11100e; background:#fffaf0; }
+  .utility-nav a:focus-visible { outline:3px solid #173f67; outline-offset:2px; box-shadow:0 0 0 2px #fff; }
+  .utility-nav .utility-logout { border-color:#11100e; background:transparent; }
+  @media(max-width:640px){ .utility-nav{justify-content:stretch;overflow:visible;width:calc(100% - 20px)}.utility-nav::before{flex:1 0 100%;margin:0}.utility-nav a{flex:1 1 calc(50% - 10px);min-width:0} }
+</style>
+
+<nav class="utility-nav" aria-label="Hindsfoot OS utility navigation">
+  <a class="hindsfoot-utility-brand" href="{{ url_for('home') }}">Hindsfoot OS</a>
+  <a class="hindsfoot-utility-link" href="{{ url_for('guide_page') }}">User Guide</a>
+
+  {% if session.get("username") %}
+    <a class="hindsfoot-utility-link" href="{{ url_for('change_password') }}">Account Settings</a>
+    <a class="utility-logout" href="{{ url_for('logout') }}">Log Out</a>
+  {% else %}
+    <a class="hindsfoot-utility-link" href="{{ url_for('login') }}">Log In</a>
+  {% endif %}
+</nav>

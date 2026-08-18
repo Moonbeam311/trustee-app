@@ -10,12 +10,6 @@
     body { margin:0; color:var(--ink); background:linear-gradient(180deg,#eef3f9,#f8fafc 360px); font:15px/1.5 Arial,sans-serif; }
     a:focus-visible, button:focus-visible, summary:focus-visible { outline:3px solid #f59e0b; outline-offset:3px; }
     .command-shell { width:min(1440px,calc(100% - 32px)); margin:24px auto 48px; }
-    .utility-nav { position:relative; z-index:2; display:flex; visibility:visible; opacity:1; width:100%; min-height:58px; height:auto; overflow:visible; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:10px; margin:0 0 14px; padding:10px 12px; border:1px solid #c69a3a; border-radius:12px; background:#f5f0e5; box-shadow:0 4px 14px rgba(17,16,14,.08); }
-    .utility-nav::before { content:"Hindsfoot OS controls"; margin-right:auto; color:#11100e; font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
-    .utility-nav a { display:inline-flex; visibility:visible; opacity:1; align-items:center; justify-content:center; min-height:42px; padding:9px 13px; border:1px solid #c69a3a; border-radius:8px; color:#11100e; background:#fff; text-decoration:none; font-weight:700; line-height:1.2; }
-    .utility-nav a:hover { color:#11100e; border-color:#11100e; background:#fffaf0; }
-    .utility-nav a:focus-visible { outline:3px solid #173f67; outline-offset:2px; box-shadow:0 0 0 2px #fff; }
-    .utility-nav .utility-logout { border-color:#11100e; background:transparent; }
     .command-hero { padding:28px; border-radius:20px; color:#fff; background:linear-gradient(125deg,#101a38,#172554 58%,#1e3a8a); box-shadow:0 16px 40px rgba(15,23,42,.18); }
     .command-hero h1 { margin:0 0 6px; font-size:clamp(28px,4vw,42px); line-height:1.1; }
     .command-hero p { max-width:780px; margin:0; color:#dbeafe; }
@@ -53,17 +47,12 @@
     .quiet-list { columns:2; padding-left:20px; }
     .warning { color:var(--danger)!important; font-weight:700; }
     @media(max-width:950px){ .context-grid,.summary-grid,.lane-grid,.two-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-    @media(max-width:640px){ .command-shell{width:min(100% - 20px,1440px);margin-top:10px;overflow-x:hidden}.utility-nav{justify-content:stretch;overflow:visible}.utility-nav::before{flex:1 0 100%;margin:0}.utility-nav a{flex:1 1 calc(50% - 10px);min-width:0}.command-hero{padding:20px}.context-grid,.summary-grid,.lane-grid,.two-grid{grid-template-columns:1fr}.quiet-list{columns:1}.action-list a,.hero-actions a{width:100%;justify-content:center} }
+    @media(max-width:640px){ .command-shell{width:min(100% - 20px,1440px);margin-top:10px;overflow-x:hidden}.command-hero{padding:20px}.context-grid,.summary-grid,.lane-grid,.two-grid{grid-template-columns:1fr}.quiet-list{columns:1}.action-list a,.hero-actions a{width:100%;justify-content:center} }
   </style>
 </head>
 <body>
 <main class="command-shell" id="main-content">
-  <nav class="utility-nav" aria-label="Authenticated utility navigation">
-    <a href="{{ url_for('home') }}">Hindsfoot OS</a>
-    <a href="{{ url_for('guide_page') }}">User Guide</a>
-    <a href="{{ url_for('change_password') }}">Account Settings</a>
-    <a class="utility-logout" href="{{ url_for('logout') }}">Log Out</a>
-  </nav>
+  {% include "_hindsfoot_utility_nav.html" %}
   <header class="command-hero">
     <span class="lane-label">Active operating surface</span>
     <h1>Institutional Command Center</h1>
