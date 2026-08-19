@@ -20,7 +20,21 @@
     <p><strong>Owner:</strong> {{ workspace['owner'] }}</p>
     <p><strong>Status:</strong> {{ workspace['status'] }}</p>
     <p><strong>Purpose:</strong> {{ workspace['purpose'] }}</p>
-    <p><a href="/workspaces/{{ workspace['workspace_id'] }}/edit">Edit Workspace</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/notes/new">Add Note</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions">View Discussions</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions/new">New Thread</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks">View Tasks</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks/new">New Task</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/documents">View Documents</a> | <a href="/workspaces/{{ workspace['workspace_id'] }}/documents/generate">Generate Document</a></p>
+    <p>
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/edit">Edit Workspace</a> |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/notes/new">Add Note</a> |
+      <a href="{{ url_for('workspace_questions', workspace_id=workspace['workspace_id']) }}">View Questions</a>
+      {% if session.get('role') in ['Admin', 'Trustee'] %}
+        | <a href="{{ url_for('workspace_question_new', workspace_id=workspace['workspace_id']) }}">New Question</a>
+      {% endif %}
+      |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions">View Discussions</a> |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions/new">New Thread</a> |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks">View Tasks</a> |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks/new">New Task</a> |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/documents">View Documents</a> |
+      <a href="/workspaces/{{ workspace['workspace_id'] }}/documents/generate">Generate Document</a>
+    </p>
   </div>
 
   <div class="box">

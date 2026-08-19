@@ -32,6 +32,17 @@ from flask import session, Flask, request, render_template, redirect, url_for, m
 from services.services_execution_recovery import get_archive_topology, build_continuity_dashboard_profile
 from services.services_object_dashboard import build_object_dashboard_context
 from services.services_system_workspace import build_system_workspace_oversight
+from services.services_work_learning_questions import (
+    ensure_work_learning_question_tables,
+    create_hub_question,
+    get_hub_questions_for_workspace,
+    get_hub_question,
+    update_hub_question_status,
+    add_question_learning_resource,
+    get_question_learning_resources,
+    remove_question_learning_resource,
+    QUESTION_STATUSES,
+)
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
     list_identity_assets,
@@ -2879,6 +2890,12 @@ ROLE_RULES = {
     "workspace_detail": {"Admin", "Trustee", "Viewer"},
     "workspace_edit": {"Admin", "Trustee"},
     "workspace_note_new": {"Admin", "Trustee"},
+    "workspace_questions": {"Admin", "Trustee", "Viewer"},
+    "workspace_question_new": {"Admin", "Trustee"},
+    "workspace_question_detail": {"Admin", "Trustee", "Viewer"},
+    "workspace_question_status": {"Admin", "Trustee"},
+    "workspace_question_resource_add": {"Admin", "Trustee"},
+    "workspace_question_resource_remove": {"Admin", "Trustee"},
     "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
     "discussion_new": {"Admin", "Trustee"},
     "discussion_thread": {"Admin", "Trustee", "Viewer"},
@@ -12359,6 +12376,302 @@ def workspace_detail(workspace_id):
         threads=threads,
         note_sections=get_workspace_note_sections()
     )
+
+
+
+@app.route("/workspaces/<workspace_id>/questions")
+def workspace_questions(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_question_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    questions = get_hub_questions_for_workspace(
+        workspace_id=workspace_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    return render_template(
+        "workspace_questions.html",
+        workspace=workspace,
+        questions=questions,
+    )
+
+
+@app.route("/workspaces/<workspace_id>/questions/new", methods=["GET", "POST"])
+def workspace_question_new(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_question_tables()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "workspace_question_form.html",
+                workspace=workspace,
+                error_message="Invalid or missing CSRF token.",
+            ), 400
+
+        question_text = (request.form.get("question_text") or "").strip()
+        if not question_text:
+            return render_template(
+                "workspace_question_form.html",
+                workspace=workspace,
+                error_message="Question text is required.",
+            ), 400
+
+        firm_id = session.get("firm_id") or "FIRM-001"
+        owner_id = workspace.get("owner_id") or get_current_owner()
+        actor = session.get("username") or session.get("user_id") or "unknown"
+
+        question_id = create_hub_question(
+            workspace_id=workspace_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            question_text=question_text,
+            created_by=str(actor),
+        )
+
+        return redirect(url_for(
+            "workspace_question_detail",
+            workspace_id=workspace_id,
+            question_id=question_id,
+        ))
+
+    return render_template(
+        "workspace_question_form.html",
+        workspace=workspace,
+    )
+
+
+@app.route("/workspaces/<workspace_id>/questions/<question_id>")
+def workspace_question_detail(workspace_id, question_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_question_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    question = get_hub_question(
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not question or question.get("workspace_id") != workspace_id:
+        return render_template(
+            "access_denied.html",
+            reason="This question is not available within the current workspace context.",
+        ), 403
+
+    resources = get_question_learning_resources(
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    learning_articles = get_learning_articles()
+    trust_types = get_trust_type_cards()
+    form_guides = get_form_guides()
+
+    return render_template(
+        "workspace_question_detail.html",
+        workspace=workspace,
+        question=question,
+        resources=resources,
+        question_statuses=QUESTION_STATUSES,
+        learning_articles=learning_articles,
+        trust_types=trust_types,
+        form_guides=form_guides,
+    )
+
+
+@app.route(
+    "/workspaces/<workspace_id>/questions/<question_id>/status",
+    methods=["POST"],
+)
+def workspace_question_status(workspace_id, question_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_question_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    question = get_hub_question(
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not question or question.get("workspace_id") != workspace_id:
+        return render_template(
+            "access_denied.html",
+            reason="This question is not available within the current workspace context.",
+        ), 403
+
+    status = (request.form.get("status") or "").strip()
+
+    try:
+        updated = update_hub_question_status(
+            question_id=question_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            status=status,
+        )
+    except ValueError:
+        return "Invalid question status.", 400
+
+    if not updated:
+        return "Question status was not updated.", 404
+
+    return redirect(url_for(
+        "workspace_question_detail",
+        workspace_id=workspace_id,
+        question_id=question_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/questions/<question_id>/resources/add",
+    methods=["POST"],
+)
+def workspace_question_resource_add(workspace_id, question_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_question_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    question = get_hub_question(
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not question or question.get("workspace_id") != workspace_id:
+        return render_template(
+            "access_denied.html",
+            reason="This question is not available within the current workspace context.",
+        ), 403
+
+    resource_type = (request.form.get("resource_type") or "").strip()
+    resource_key = (request.form.get("resource_key") or "").strip()
+
+    resource_exists = False
+
+    if resource_type == "learning_article":
+        resource_exists = bool(get_learning_article_by_id(resource_key))
+    elif resource_type == "trust_type":
+        resource_exists = bool(get_trust_type_detail(resource_key))
+    elif resource_type == "form_guide":
+        resource_exists = bool(get_form_guide_by_name(resource_key))
+
+    if not resource_exists:
+        return "Learning resource was not found.", 400
+
+    actor = session.get("username") or session.get("user_id") or "unknown"
+
+    add_question_learning_resource(
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+        resource_type=resource_type,
+        resource_key=resource_key,
+        added_by=str(actor),
+    )
+
+    return redirect(url_for(
+        "workspace_question_detail",
+        workspace_id=workspace_id,
+        question_id=question_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/questions/<question_id>/resources/<relationship_id>/remove",
+    methods=["POST"],
+)
+def workspace_question_resource_remove(
+    workspace_id,
+    question_id,
+    relationship_id,
+):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_question_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    question = get_hub_question(
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not question or question.get("workspace_id") != workspace_id:
+        return render_template(
+            "access_denied.html",
+            reason="This question is not available within the current workspace context.",
+        ), 403
+
+    remove_question_learning_resource(
+        relationship_id=relationship_id,
+        question_id=question_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    return redirect(url_for(
+        "workspace_question_detail",
+        workspace_id=workspace_id,
+        question_id=question_id,
+    ))
 
 
 @app.route("/workspaces/<workspace_id>/edit", methods=["GET", "POST"])

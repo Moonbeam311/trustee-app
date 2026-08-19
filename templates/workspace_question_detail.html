@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>Question — {{ workspace['title'] }}</title>
+</head>
+<body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+    {% include "_platform_nav.html" %}
+
+    <div class="page-header">
+      <h1>Question</h1>
+      <p>{{ workspace['title'] }}</p>
+    </div>
+
+    <section>
+      <h2>{{ question['question_text'] }}</h2>
+      <p>
+        <strong>Status:</strong> {{ question['status'] }}
+        | <strong>ID:</strong> {{ question['question_id'] }}
+      </p>
+
+      <p>
+        This question and its learning links are working material only.
+        A resolved question is not automatically a verified or governed fact.
+      </p>
+    </section>
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <section>
+        <h2>Question Status</h2>
+
+        <form
+          method="post"
+          action="{{ url_for(
+            'workspace_question_status',
+            workspace_id=workspace['workspace_id'],
+            question_id=question['question_id']
+          ) }}"
+        >
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+          <select name="status">
+            {% for status in question_statuses %}
+              <option
+                value="{{ status }}"
+                {% if status == question['status'] %}selected{% endif %}
+              >
+                {{ status }}
+              </option>
+            {% endfor %}
+          </select>
+
+          <button type="submit">Update Status</button>
+        </form>
+      </section>
+    {% endif %}
+
+    <section>
+      <h2>Relevant Learning Resources</h2>
+
+      {% for resource in resources %}
+        <div>
+          <strong>{{ resource['resource_type'] }}</strong>:
+          {% if resource['resource_type'] == 'learning_article' %}
+            <a href="{{ url_for('learning_article', article_id=resource['resource_key']) }}">
+              {{ resource['resource_key'] }}
+            </a>
+          {% elif resource['resource_type'] == 'trust_type' %}
+            <a href="{{ url_for('trust_type_detail', slug=resource['resource_key']) }}">
+              {{ resource['resource_key'] }}
+            </a>
+          {% elif resource['resource_type'] == 'form_guide' %}
+            <a href="{{ url_for('form_guide_detail', form_name=resource['resource_key']) }}">
+              {{ resource['resource_key'] }}
+            </a>
+          {% else %}
+            {{ resource['resource_key'] }}
+          {% endif %}
+
+          {% if session.get('role') in ['Admin', 'Trustee'] %}
+            <form
+              method="post"
+              style="display:inline"
+              action="{{ url_for(
+                'workspace_question_resource_remove',
+                workspace_id=workspace['workspace_id'],
+                question_id=question['question_id'],
+                relationship_id=resource['relationship_id']
+              ) }}"
+            >
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+              <button type="submit">Remove</button>
+            </form>
+          {% endif %}
+        </div>
+      {% else %}
+        <p>No learning resources are linked yet.</p>
+      {% endfor %}
+    </section>
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <section>
+        <h2>Add Learning Resource</h2>
+
+        <form
+          method="post"
+          action="{{ url_for(
+            'workspace_question_resource_add',
+            workspace_id=workspace['workspace_id'],
+            question_id=question['question_id']
+          ) }}"
+        >
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+          <p>
+            <label>
+              Learning Article
+              <select name="resource_key">
+                <option value="">Select article</option>
+                {% for article in learning_articles %}
+                  <option value="{{ article['article_id'] }}">
+                    {{ article['title'] }}
+                  </option>
+                {% endfor %}
+              </select>
+            </label>
+            <button name="resource_type" value="learning_article" type="submit">
+              Add Article
+            </button>
+          </p>
+        </form>
+
+        <form
+          method="post"
+          action="{{ url_for(
+            'workspace_question_resource_add',
+            workspace_id=workspace['workspace_id'],
+            question_id=question['question_id']
+          ) }}"
+        >
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+          <p>
+            <label>
+              Trust Type
+              <select name="resource_key">
+                <option value="">Select trust type</option>
+                {% for item in trust_types %}
+                  <option value="{{ item['slug'] }}">
+                    {{ item['label'] }}
+                  </option>
+                {% endfor %}
+              </select>
+            </label>
+            <button name="resource_type" value="trust_type" type="submit">
+              Add Trust Type
+            </button>
+          </p>
+        </form>
+
+        <form
+          method="post"
+          action="{{ url_for(
+            'workspace_question_resource_add',
+            workspace_id=workspace['workspace_id'],
+            question_id=question['question_id']
+          ) }}"
+        >
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+          <p>
+            <label>
+              Form Guide
+              <select name="resource_key">
+                <option value="">Select form guide</option>
+                {% for guide in form_guides %}
+                  <option value="{{ guide['form_name'] }}">
+                    {{ guide['form_name'] }}
+                  </option>
+                {% endfor %}
+              </select>
+            </label>
+            <button name="resource_type" value="form_guide" type="submit">
+              Add Form Guide
+            </button>
+          </p>
+        </form>
+      </section>
+    {% endif %}
+
+    <p>
+      <a href="{{ url_for('workspace_questions', workspace_id=workspace['workspace_id']) }}">
+        Return to Questions
+      </a>
+      |
+      <a href="{{ url_for('workspace_detail', workspace_id=workspace['workspace_id']) }}">
+        Return to Workspace
+      </a>
+    </p>
+
+    {% include "_institutional_property_notice.html" %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>Questions — {{ workspace['title'] }}</title>
+</head>
+<body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+    {% include "_platform_nav.html" %}
+
+    <div class="page-header">
+      <h1>Questions</h1>
+      <p>{{ workspace['title'] }}</p>
+    </div>
+
+    <p>
+      Questions are working artifacts used to organize exploration and learning.
+      They do not automatically become governed institutional facts.
+    </p>
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <p>
+        <a href="{{ url_for('workspace_question_new', workspace_id=workspace['workspace_id']) }}">
+          Add Question
+        </a>
+      </p>
+    {% endif %}
+
+    {% for question in questions %}
+      <section>
+        <h2>
+          <a href="{{ url_for(
+            'workspace_question_detail',
+            workspace_id=workspace['workspace_id'],
+            question_id=question['question_id']
+          ) }}">
+            {{ question['question_text'] }}
+          </a>
+        </h2>
+        <p>
+          <strong>Status:</strong> {{ question['status'] }}
+          | <strong>ID:</strong> {{ question['question_id'] }}
+        </p>
+      </section>
+    {% else %}
+      <p>No questions have been recorded for this workspace.</p>
+    {% endfor %}
+
+    <p>
+      <a href="{{ url_for('workspace_detail', workspace_id=workspace['workspace_id']) }}">
+        Return to Workspace
+      </a>
+    </p>
+
+    {% include "_institutional_property_notice.html" %}
+  </div>
+</body>
+</html>
