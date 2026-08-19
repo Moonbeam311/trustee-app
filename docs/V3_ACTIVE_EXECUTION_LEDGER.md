@@ -42,17 +42,23 @@ Missing evidence = NOT DOCUMENTED / NOT RECOVERED.
 Certified work may not be reconstructed merely because it is absent from conversational context.
 
 ## Current Authorized Action
-V3-CTL-2F — establish the Git-anchored control root by exact commit, push, and remote verification.
+V3-MOD-WLH-P03C.4C — resume the documented P-03 authorization / CSRF / firm-scope regression gate under V3-CTL-2 control.
 
 ## V3-CTL-2 Control Status
 - V3-CTL-2A — PASS — authoritative current-state recovery
-- V3-CTL-2B — PASS — canonical active execution ledger created
-- V3-CTL-2C — PASS — machine-readable control manifest created
-- V3-CTL-2D — PASS — fail-closed guard implemented
-- V3-CTL-2E — COMPLETE — negative-control testing exposed manifest self-trust weakness
-- V3-CTL-2E-R1 — PASS — Git-anchored trust-root repair; bootstrap cannot authorize feature work
-- V3-CTL-2F — ACTIVE — control-root commit and remote verification
+- V3-CTL-2B — PASS — canonical active execution ledger
+- V3-CTL-2C — PASS — machine-readable control manifest
+- V3-CTL-2D — PASS — fail-closed executable guard
+- V3-CTL-2E — PASS — negative-control regression identified manifest self-trust weakness
+- V3-CTL-2E-R1 — PASS — Git-anchored trust-root repair
+- V3-CTL-2F — PASS — control root committed, pushed, and remotely anchored
+- V3-CTL-2F.3 — PASS — remote-root tamper rejection
+- V3-CTL-2G — CERTIFIED — continuity control complete; P03C.4C is the exact resumed gate
 
+## Active Execution State
+V3-CTL-2 — CERTIFIED
+V3-MOD-WLH-P03C.4C — IN PROGRESS / AUTHORIZED TO RESUME
+P-04 and later WLH phases — NOT AUTHORIZED
 
 ## Current Prohibitions
 - Do not resume P03 feature work.
