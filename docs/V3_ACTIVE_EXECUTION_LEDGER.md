@@ -222,3 +222,20 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Canonical Trust Read Contract Activation — 2026-08-20
+
+V3-SVC-TRUST-1 — ACTIVE
+
+Purpose:
+Establish a bounded, reusable, firm-scoped, authorization-aware canonical read
+boundary for existing Trust records without adding or changing Trust mutation
+behavior.
+
+Restrictions:
+- Read contract only; no Trust create, update, delete, or lifecycle implementation.
+- No schema, route, template, or source database change unless separately stopped and authorized.
+- No trust-handoff integration repair.
+- No Governance, Continuity, Execution, Documents, Accounts / Assets, or Archive formalization.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
