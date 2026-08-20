@@ -16,7 +16,7 @@
     "V3-MOD-WLH-P01": "0b0ab79",
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8"
   },
-  "active_phase": "V3-SVC-EXEC-1",
+  "active_phase": "V3-SVC-ARCH-1",
   "suspended_feature_phase": "V3-MOD-WLH-P03C.4C",
   "allowed_dirty_paths": [
     "app.py",
@@ -46,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "d263d9f44f3d3b6342cda1c21b739ec2d95d75aa9c24c7229789018dd15f2dc6",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "21d0a49a813b137feb8469414d75c0cc7c4e28e5ad9771699902a7d7a5fabbb6",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

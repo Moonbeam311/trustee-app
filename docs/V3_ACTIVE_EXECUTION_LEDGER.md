@@ -465,3 +465,19 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Archive Package Descriptor Contract Activation — 2026-08-20
+
+V3-SVC-ARCH-1 — ACTIVE
+
+Purpose:
+Establish a bounded, reusable, read-only descriptor boundary over existing
+archive, manifest, handoff, export, integrity, and finalization metadata without
+creating artifacts or mutating their independently governed lifecycles.
+
+Restrictions:
+- Descriptor reads only; no package generation, finalization, freeze, handoff, export-history, or recovery mutation.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
