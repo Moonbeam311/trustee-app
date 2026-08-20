@@ -367,3 +367,19 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Document Producer/Adapter Contract Activation — 2026-08-20
+
+V3-SVC-DOC-1 — ACTIVE
+
+Purpose:
+Establish a bounded, reusable contract separating governed source records,
+document context production, rendering adapters, optional persistence/provenance,
+and delivery without migrating or redesigning existing generators.
+
+Restrictions:
+- No schema, route, template, source database, archive, or execution change.
+- Generated documents remain derived outputs, not substitutes for governed sources.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
