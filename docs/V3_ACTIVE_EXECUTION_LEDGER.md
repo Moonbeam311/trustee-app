@@ -239,3 +239,34 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Canonical Trust Read Contract Closure — 2026-08-20
+
+V3-SVC-TRUST-1 — COMPLETE / CANONICAL READ CONTRACT ESTABLISHED
+
+Preserved evidence:
+- `services/services_trust_contract.py`
+- `tests/test_v3_svc_trust_contract.py`
+- `docs/v3_trust_read_contract.md`
+
+Verification record:
+- Same-firm and Draft Trust reads, missing and denied behavior, cross-firm isolation, firm-scoped listing, explicit authorization, legacy-schema fail-closed behavior, and no-mutation behavior passed disposable-database tests.
+- Existing Trust firm-identity regressions passed.
+- The public boundary exposes reads only and introduces no Trust mutation path.
+- Existing application routes and callers remain unchanged.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, caller, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-FID-1 — Fiduciary Authority Read/Decision Contract
+
+Status:
+- V3-SVC-FID-1 is authorized as the next controlled action but is not active.
+- V3-SVC-FID-1 has not begun.
+
+Restrictions:
+- No Fiduciary implementation until separate operator authorization.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+

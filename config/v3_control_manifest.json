@@ -25,14 +25,11 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
-    "services/services_trust_contract.py",
-    "tests/test_v3_svc_trust_contract.py",
-    "docs/v3_trust_read_contract.md",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-SVC-TRUST-1",
+  "next_authorized_action": "V3-SVC-FID-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -49,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "07efb2e363caf243a22557728534ace9cc0811897f21a42d38b99245e92c4499",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "2a893130e9d31faa135c2e7c2f8ad25a96eedc7cd9f72a72a1d10c5dab37dc64",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {
