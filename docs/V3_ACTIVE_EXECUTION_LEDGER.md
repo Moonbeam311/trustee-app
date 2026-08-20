@@ -18,7 +18,7 @@ SHA-256: 3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c
 - V3-MOD-WLH-P02 — CERTIFIED — commit fe83ee928232033a88f66a70a7b9e6333901fee8
 
 ## Suspended Feature Work
-V3-MOD-WLH-P03C.4C — IN PROGRESS
+V3-MOD-WLH-P03C.4C — SUSPENDED / PRESERVED
 Feature work is suspended until V3-CTL-2 fail-closed control verification passes.
 
 Current P03 implementation footprint:
@@ -42,7 +42,7 @@ Missing evidence = NOT DOCUMENTED / NOT RECOVERED.
 Certified work may not be reconstructed merely because it is absent from conversational context.
 
 ## Current Authorized Action
-V3-MOD-WLH-P03C.4C — resume the documented P-03 authorization / CSRF / firm-scope regression gate under V3-CTL-2 control.
+V3-MOD-WLH-P03C.4C — preserved for later resumption only after the active audit sequence closes and control authorization is explicitly restored.
 
 ## V3-CTL-2 Control Status
 - V3-CTL-2A — PASS — authoritative current-state recovery
@@ -57,7 +57,7 @@ V3-MOD-WLH-P03C.4C — resume the documented P-03 authorization / CSRF / firm-sc
 
 ## Active Execution State
 V3-CTL-2 — CERTIFIED
-V3-MOD-WLH-P03C.4C — IN PROGRESS / AUTHORIZED TO RESUME
+V3-MOD-WLH-P03C.4C — SUSPENDED / PRESERVED
 P-04 and later WLH phases — NOT AUTHORIZED
 
 ## Current Prohibitions
@@ -70,7 +70,7 @@ P-04 and later WLH phases — NOT AUTHORIZED
 
 ## Operator-Authorized Capability Audit — 2026-08-19
 
-V3-AUD-TRUST-HANDOFF — ACTIVE
+V3-AUD-TRUST-HANDOFF — COMPLETE / REPAIR REQUIRED AT INTEGRATION LAYER
 
 Purpose:
 Read-only audit of the current Hindsfoot OS repository to determine the
@@ -88,3 +88,24 @@ Restrictions:
 - No new requirement based solely on architectural preference.
 - V3-MOD-WLH-P03C.4C remains preserved and suspended.
 - P-04 remains unauthorized.
+
+## Operator-Authorized Service Contract Audit — 2026-08-20
+
+V3-AUD-SERVICE-CONTRACTS — ACTIVE
+
+Purpose:
+Read-only inventory and boundary audit of existing institutional service
+contracts across Fiduciary, Trust, Accounts/Assets, Governance, Execution,
+Documents, Continuity, and Archive/Recovery.
+
+Classification:
+EXPLICIT CONTRACT / IMPLICIT CONTRACT / FRAGMENTED CONTRACT /
+NO CONTRACT FOUND / NOT DOCUMENTED
+
+Restrictions:
+- No service-contract implementation during this audit.
+- No refactor based only on architectural preference.
+- Reuse existing service boundaries where evidence supports them.
+- V3-MOD-WLH-P03C.4C remains preserved and suspended.
+- P-04 remains unauthorized.
+
