@@ -41,8 +41,10 @@ FORMATION_FIELD_CONTROLS = {
     "generate_schedule_recommendations": {"label": "Generate initial schedule recommendations", "type": "select", "choices": (("yes", "Yes"), ("no", "No"))},
 }
 PROHIBITED_SECRET_NAMES = {
-    "password", "password_value", "pin", "token", "recovery_code", "secret_answer",
-    "encryption_key", "card_number", "cvv",
+    "password", "password_value", "pin", "token", "access_token", "authentication_token",
+    "recovery_code", "recovery_codes", "backup_code", "backup_codes",
+    "secret_answer", "security_answer", "security_answers",
+    "encryption_key", "private_key", "card_number", "cvv", "cvc",
 }
 SECRET_VALUE_PATTERNS = (
     re.compile(r"(?i)\b(password|passcode|recovery code|secret answer|private key)\s*[:=]"),
