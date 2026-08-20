@@ -109,3 +109,25 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains preserved and suspended.
 - P-04 remains unauthorized.
 
+## Service Contract Audit Closure — 2026-08-20
+
+V3-AUD-SERVICE-CONTRACTS — COMPLETE / FORMALIZATION RECOMMENDED
+
+Preserved evidence:
+- `docs/v3_service_contract_inventory_boundary_audit_2026-08-20.md`
+
+AUTHORIZED NEXT ACTION:
+V3-SVC-PLAN-1 — Service Contract Formalization Planning
+
+Status:
+- V3-SVC-PLAN-1 is authorized as the next controlled action but is not active.
+
+Restrictions:
+- Planning only.
+- No implementation.
+- No schema change.
+- No service refactor.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
