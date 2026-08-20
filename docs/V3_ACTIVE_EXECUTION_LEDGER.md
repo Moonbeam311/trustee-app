@@ -270,3 +270,20 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Fiduciary Authority Read/Decision Contract Activation — 2026-08-20
+
+V3-SVC-FID-1 — ACTIVE
+
+Purpose:
+Establish a bounded, reusable, firm- and trust-scoped Fiduciary authority
+read/decision boundary while keeping institutional records, recorded authority
+evidence, and application permissions explicitly separate.
+
+Restrictions:
+- Read/decision support only; no Fiduciary CRUD or permission mutation.
+- No legal-authority inference from title, capacity, or application role.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
