@@ -25,6 +25,10 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
+    "services/services_intake_trust_bridge.py",
+    "docs/v3_governance_service_contract.md",
+    "docs/v3_continuity_service_contract.md",
+    "tests/test_v3_svc_govcont_contract.py",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
