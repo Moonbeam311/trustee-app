@@ -383,3 +383,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Document Producer/Adapter Contract Closure — 2026-08-20
+
+V3-SVC-DOC-1 — COMPLETE / PRODUCER-ADAPTER CONTRACT ESTABLISHED
+
+Preserved evidence:
+- `services/services_document_contract.py`
+- `tests/test_v3_svc_document_contract.py`
+- `docs/v3_document_contract.md`
+
+Verification record:
+- Same-firm source production, missing/cross-firm failure, source identity, missing-field preservation, transient TXT/JSON rendering, safe delivery metadata, scoped document references, secret rejection, and no-mutation behavior passed disposable-database tests.
+- Generated output remains derived and does not replace or mutate governed source records.
+- Transient rendering creates no document, export, execution, certificate, or archive persistence.
+- Existing HTML/PDF/CSV/ZIP generators, routes, templates, persistence lifecycles, and delivery paths remain unmigrated and independently owned.
+- Existing universal document-object mapping compatibility passed.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, caller, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-EXEC-1 — Execution Read/Orchestration Contract
+
+Status:
+- V3-SVC-EXEC-1 is authorized as the next controlled action but is not active.
+- V3-SVC-EXEC-1 has not begun.
+
+Restrictions:
+- No Execution implementation until separate operator authorization.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
