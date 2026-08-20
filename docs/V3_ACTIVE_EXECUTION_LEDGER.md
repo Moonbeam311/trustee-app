@@ -431,3 +431,37 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Execution Read/Orchestration Contract Closure — 2026-08-20
+
+V3-SVC-EXEC-1 — COMPLETE / READ-ORCHESTRATION CONTRACT ESTABLISHED
+
+Preserved evidence:
+- `services/services_execution_contract.py`
+- `tests/test_v3_svc_execution_contract.py`
+- `docs/v3_execution_contract.md`
+
+Verification record:
+- Same-firm session and transfer reads, missing and cross-firm denial, Trust mismatch denial, recorded readiness/blocker interpretation, explicit authorization, and no-mutation behavior passed disposable-database tests.
+- The canonical boundary performs direct reads and does not invoke legacy execution/evidence/recovery helpers that may create or repair records.
+- Execution-session firm scope is inherited through the canonical Trust contract; transfers require canonical Trust access plus exact firm and Trust equality.
+- Recommendations remain decision/navigation context and never advance, finalize, sign, certify, archive, or recover governed state.
+- Current Trust, Fiduciary, Account/Asset, and Document contract compatibility passed.
+- The historical POST-V2-19-R1 transfer audit's static helper contract passed, but its route fixture was stale: it expected `T-0001` in a legacy root database whose current hash differs from the audit's embedded hash. This was not classified as a current Execution regression and the audit was not modified.
+- Existing routes, templates, lifecycle owners, and callers remain unchanged.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, caller, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-ARCH-1 — Archive Package Descriptor Contract
+
+Status:
+- V3-SVC-ARCH-1 is authorized as the next controlled action but is not active.
+- V3-SVC-ARCH-1 has not begun.
+
+Restrictions:
+- No Archive implementation until separate operator authorization.
+- No schema, route, template, source database, restoration, or recovery mutation.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
