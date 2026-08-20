@@ -515,3 +515,24 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Trust Successor Handoff Planning Operator Authorization — 2026-08-20
+
+V3-THO-PLAN-0 — OPERATOR AUTHORIZATION CONTROL TRANSITION
+
+AUTHORIZED NEXT PHASE:
+V3-THO-PLAN-1 — Unified Trust Successor Handoff Integration Planning
+
+Scope:
+- Planning only.
+- Design the smallest safe integration sequence using the established V3 service contracts.
+
+Explicit exclusions:
+- No implementation or trust-handoff repair.
+- No schema, route, template, or source database change.
+- No V3-MOD-WLH-P03C.4C resumption.
+- No P-04 work.
+
+Status:
+- V3-THO-PLAN-1 is operator-authorized as the next controlled planning action.
+- No handoff implementation phase is active or authorized.
+
