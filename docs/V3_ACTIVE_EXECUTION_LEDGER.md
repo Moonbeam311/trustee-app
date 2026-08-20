@@ -335,3 +335,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Account/Asset Read Aggregation Closure — 2026-08-20
+
+V3-SVC-AA-1 — COMPLETE / READ AGGREGATION CONTRACT ESTABLISHED
+
+Preserved evidence:
+- `services/services_account_asset_contract.py`
+- `tests/test_v3_svc_account_asset_contract.py`
+- `docs/v3_account_asset_contract.md`
+
+Verification record:
+- Same-firm, Trust-scoped, missing, wrong-Trust, cross-firm, aggregate, canonical-Trust compatibility, safe-field, and no-mutation behavior passed disposable-database tests.
+- Account and property outputs are source-attributed and exclude passwords, PINs, tokens, full credentials, fabricated balances, and unsupported valuations.
+- Continuity classifications remain property metadata; readiness, custody, evidence, and archive behavior remain Continuity-owned and are not invoked.
+- Ledger, chart-of-accounts, accounting, tax, transfer, custody, and archive sources remain excluded and independently owned.
+- Existing routes and callers remain unchanged.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, caller, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-DOC-1 — Document Producer/Adapter Contract
+
+Status:
+- V3-SVC-DOC-1 is authorized as the next controlled action but is not active.
+- V3-SVC-DOC-1 has not begun.
+
+Restrictions:
+- No Document implementation until separate operator authorization.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
