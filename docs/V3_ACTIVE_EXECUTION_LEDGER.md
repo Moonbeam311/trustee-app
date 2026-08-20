@@ -481,3 +481,37 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Archive Package Descriptor Contract Closure — 2026-08-20
+
+V3-SVC-ARCH-1 — COMPLETE / PACKAGE DESCRIPTOR CONTRACT ESTABLISHED
+
+Preserved evidence:
+- `services/services_archive_contract.py`
+- `tests/test_v3_svc_archive_contract.py`
+- `docs/v3_archive_contract.md`
+
+Verification record:
+- Same-firm descriptor reads, missing/cross-firm denial, source mismatch denial, exact Trust/transfer/handoff scope, recorded-only inventory, and no-mutation behavior passed disposable-database tests.
+- Stored export hashes are exposed only as recorded, unverified export hashes; manifest, content, package, file, and V3 control hashes remain distinct.
+- Recorded handoff archive status is not promoted to package finalization or certification.
+- Descriptor calls create no output, manifest, handoff, correction, export-history, finalization, freeze, Continuity, Execution, or recovery record.
+- Trust and Execution contracts provide source scope; Fiduciary, Account/Asset, Document, Governance, and Continuity compatibility passed without new coupling.
+- Legacy Archive workspace audits retain historical branch/worktree assumptions and were not treated as current descriptor-contract gates; their read-only separation invariant was independently verified.
+- Existing routes, templates, producers, exporters, lifecycle owners, and recovery topology remain unchanged.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, caller, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+NOT DOCUMENTED
+
+Status:
+- The preserved formalization plan names no phase after V3-SVC-ARCH-1.
+- A future trust-handoff repair phase is explicitly not proposed for authorization by that plan.
+- No later implementation phase is active or authorized; explicit operator direction is required.
+
+Restrictions:
+- No trust-handoff integration repair.
+- No archive generation, finalization, handoff, export-history, restoration, or recovery mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
