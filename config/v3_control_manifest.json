@@ -29,7 +29,7 @@
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-THO-PLAN-1",
+  "next_authorized_action": "V3-THO-CTX-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -46,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "7347f7e85989fec8b91a28b5c2e9141ade9721aec03d8f75801b11caa7d62fce",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "e1b4dc30e0b4122e2974d8c4c2605d0c93507fca7b691f8d0575343dfd0b4726",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {
