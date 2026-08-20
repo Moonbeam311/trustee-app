@@ -25,6 +25,9 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
+    "services/services_trust_contract.py",
+    "tests/test_v3_svc_trust_contract.py",
+    "docs/v3_trust_read_contract.md",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
