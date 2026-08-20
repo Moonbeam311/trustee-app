@@ -131,3 +131,21 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Service Contract Formalization Planning Activation — 2026-08-20
+
+V3-SVC-PLAN-1 — ACTIVE
+
+Purpose:
+Planning-only definition and sequencing of bounded future service-contract
+formalization phases using the preserved service-contract audit and current
+repository evidence.
+
+Restrictions:
+- Planning only.
+- No implementation.
+- No schema change.
+- No service refactor.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
