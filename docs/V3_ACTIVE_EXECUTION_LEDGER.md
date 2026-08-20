@@ -566,3 +566,19 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Canonical Trust–Continuity Context Adapter Activation — 2026-08-20
+
+V3-THO-CTX-1 — ACTIVE
+
+Purpose:
+Establish a bounded read-only, firm-scoped adapter between canonical Trust
+context and existing Continuity Profile context without creating or changing
+either source domain.
+
+Restrictions:
+- Context/relationship resolution only; no profile creation, automatic linking, readiness update, activation transition, event write, or handoff implementation.
+- No schema, route, template, or source database change.
+- No unified handoff aggregate, workspace, acceptance, or package work.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
