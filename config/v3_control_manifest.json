@@ -25,14 +25,11 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
-    "services/services_fiduciary_authority.py",
-    "tests/test_v3_svc_fiduciary_authority.py",
-    "docs/v3_fiduciary_authority_contract.md",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-SVC-FID-1",
+  "next_authorized_action": "V3-SVC-AA-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -49,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "953c49b6c3075ac370b500ebfddd8920903a437d159dabd97ce659d8c17fc31d",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "9313ab2c4859e647810073274ce5f4eea39bd9b683c4f402c88c3298ef89f44e",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

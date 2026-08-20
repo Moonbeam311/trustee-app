@@ -287,3 +287,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Fiduciary Authority Read/Decision Contract Closure — 2026-08-20
+
+V3-SVC-FID-1 — COMPLETE / AUTHORITY READ CONTRACT ESTABLISHED
+
+Preserved evidence:
+- `services/services_fiduciary_authority.py`
+- `tests/test_v3_svc_fiduciary_authority.py`
+- `docs/v3_fiduciary_authority_contract.md`
+
+Verification record:
+- Same-firm, missing, cross-firm, trust-scoped, explicit-authorization, inactive-status, missing-scope, and no-mutation behavior passed disposable-database tests.
+- Recorded role and authority scope remain evidence only and do not produce a legal-authority conclusion.
+- Application roles and permissions remain separate; the decision contract never grants system permission.
+- Acceptance status, appointment basis, controlled capability mapping, and record-specific audit references remain NOT DOCUMENTED where absent from current persistence.
+- Existing routes and callers remain unchanged.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, caller, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-AA-1 — Account/Asset Read Aggregation
+
+Status:
+- V3-SVC-AA-1 is authorized as the next controlled action but is not active.
+- V3-SVC-AA-1 has not begun.
+
+Restrictions:
+- No Account/Asset implementation until separate operator authorization.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
