@@ -46,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "8618ec7d500fe39d1cf7e3f7fe06aa440a1cfd5039862997ecc5bebb8366fb8f",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "38d95226fa05420336d1ceb6ac11252835c72dcc2f44b1dd3797f3de1c3f20ab",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {
