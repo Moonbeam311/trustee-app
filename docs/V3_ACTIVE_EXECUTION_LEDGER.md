@@ -415,3 +415,19 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Execution Read/Orchestration Contract Activation — 2026-08-20
+
+V3-SVC-EXEC-1 — ACTIVE
+
+Purpose:
+Establish a bounded, reusable read/orchestration boundary over existing
+execution-session and transfer state without consolidating or advancing their
+separate governed lifecycles.
+
+Restrictions:
+- Read/recommendation only; no task, transfer, signature, certificate, handoff, or recovery mutation.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
