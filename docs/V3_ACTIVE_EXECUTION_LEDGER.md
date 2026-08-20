@@ -319,3 +319,19 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Account/Asset Read Aggregation Activation — 2026-08-20
+
+V3-SVC-AA-1 — ACTIVE
+
+Purpose:
+Establish a bounded, reusable, firm- and trust-scoped read aggregation boundary
+for existing account and property/asset records without changing persistence,
+accounting, Continuity, custody, archive, or transfer ownership.
+
+Restrictions:
+- Read aggregation only; no Account, Asset, ledger, transfer, or custody mutation.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
