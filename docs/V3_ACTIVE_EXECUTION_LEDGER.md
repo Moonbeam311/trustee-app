@@ -131,6 +131,22 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Explicit Governance and Continuity Contract Baseline Activation — 2026-08-20
+
+V3-SVC-GOVCONT-1 — ACTIVE
+
+Purpose:
+Preserve the existing explicit Governance and TPD-1C Continuity service
+contracts through bounded documentation and regression evidence without
+redesign, schema change, route migration, or cross-domain implementation.
+
+Restrictions:
+- No Trust, Fiduciary, Accounts / Assets, Documents, Execution, or Archive / Recovery formalization.
+- No schema change or route/template redesign.
+- No trust-handoff integration implementation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
 ## Service Contract Formalization Planning Activation — 2026-08-20
 
 V3-SVC-PLAN-1 — ACTIVE
