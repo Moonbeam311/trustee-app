@@ -149,3 +149,27 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Service Contract Formalization Planning Closure — 2026-08-20
+
+V3-SVC-PLAN-1 — COMPLETE / IMPLEMENTATION PLAN READY
+
+V3-SVC-PLAN-1.1 — Planning Artifact Preservation and Control Closure — COMPLETE
+
+Preserved evidence:
+- `docs/v3_service_contract_formalization_plan_2026-08-20.md`
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-GOVCONT-1 — Explicit Contract Preservation Baseline
+
+Status:
+- V3-SVC-GOVCONT-1 is proposed as the next controlled action and is not active.
+- V3-SVC-GOVCONT-1 has not begun.
+
+Restrictions:
+- No implementation until separate operator authorization.
+- No schema change.
+- No service refactor.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
