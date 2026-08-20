@@ -189,3 +189,36 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Explicit Governance and Continuity Contract Baseline Closure — 2026-08-20
+
+V3-SVC-GOVCONT-1 — COMPLETE / EXPLICIT CONTRACT BASELINE PRESERVED
+
+Preserved evidence:
+- `docs/v3_governance_service_contract.md`
+- `docs/v3_continuity_service_contract.md`
+- `tests/test_v3_svc_govcont_contract.py`
+
+Verification record:
+- Current Governance service, lifecycle, relationship, firm-scope, provenance, and authorization invariants passed applicable contract tests and audits.
+- Continuity profile, child-record, firm-isolation, readiness, activation-state, immutable-event, and caller-compatibility behavior passed disposable-database tests.
+- Secret-material rejection was strengthened to include `security_answer` and `private_key` while retaining all previously prohibited secret fields.
+- `scripts/audit_governance_create_review_approve_flow_10a.py` is PARTIALLY STALE / CURRENT INVARIANTS PRESERVED.
+- No real Governance regression was found.
+- Legacy audit-harness reconciliation remains a separate optional controlled task.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Browser validation was not required because no route, template, or UI contract changed.
+
+NEXT AUTHORIZED ACTION:
+V3-SVC-TRUST-1 — Canonical Trust Read Contract
+
+Status:
+- V3-SVC-TRUST-1 is authorized as the next controlled action but is not active.
+- V3-SVC-TRUST-1 has not begun.
+
+Restrictions:
+- No Trust implementation until separate operator authorization.
+- No schema, route, template, or source database change.
+- No trust-handoff integration repair.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
