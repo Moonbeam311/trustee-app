@@ -1220,3 +1220,37 @@ Restrictions:
 - Do not resume or stage P03.
 - No executable application, schema, runtime, or source-database change.
 
+## Service Contract Audit Preservation and Repair Authorization — 2026-08-21
+
+- `V3-AUD-SERVICE-CONTRACTS` — COMPLETE / AUDIT PRESERVED. Verdict:
+  `C — REPAIR REQUIRED / BOUNDED INTEGRATION DEFECTS IDENTIFIED`.
+- `V3-AUD-SERVICE-CONTRACTS-PRES-2` — COMPLETE. The completed audit artifact
+  was reconstructed from preserved evidence, registered, committed, and
+  remotely guarded without changing its findings.
+- `V3-AUD-SERVICE-CONTRACTS-AUTH-1` — COMPLETE / REPAIR SCOPE AUTHORIZED.
+
+Trust-binding disposition:
+- `REQUIRED_V3_REPAIR`.
+- Direct Continuity-profile creation must validate a supplied canonical Trust
+  in the same firm and enforce agreement between supplied Trust and bridge
+  provenance.
+
+Event-history read disposition:
+- `UNSUPPORTED_FUTURE_CAPABILITY`.
+- Event-history read work is excluded from R1. Immutable event storage remains
+  unchanged, and no public read API is authorized.
+
+NEXT AUTHORIZED ACTION:
+V3-AUD-SERVICE-CONTRACTS-R1
+
+Status:
+- `V3-AUD-SERVICE-CONTRACTS-R1` — AUTHORIZED NEXT / NOT STARTED.
+- `V3-MOD-WLH-P03C.4C` — PRESERVED / SUSPENDED / UNSTAGED.
+
+Restrictions:
+- Do not begin R1 in this authorization run.
+- R1 is limited to Trust/firm/bridge binding validation and focused service and
+  route regressions.
+- No event-history API, schema redesign, unrelated route/UI work, P03, or
+  source-database mutation.
+
