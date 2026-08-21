@@ -802,3 +802,19 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Structured Successor Acceptance Record and Read Contract Activation — 2026-08-21
+
+V3-THO-ACC-1A — ACTIVE
+
+Purpose:
+Establish the dedicated successor-acceptance persistence structure and canonical
+firm-scoped, Trust-scoped read contract defined by the preserved formalization
+plan, without implementing acceptance recording or any other mutation workflow.
+
+Restrictions:
+- No acceptance submission, recording, lifecycle-transition, document-execution, activation, responsibility, permission, acknowledgement, route, or template implementation.
+- Schema work is additive and tested only against disposable databases.
+- No source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
