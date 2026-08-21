@@ -25,6 +25,10 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
+    "routes_tpd1c.py",
+    "templates/tpd1c/successor_handoff.html",
+    "templates/trust_detail.html",
+    "tests/test_v3_tho_ui_workspace.py",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
