@@ -975,3 +975,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Handoff Workspace Acceptance Visibility Closure — 2026-08-21
+
+V3-THO-ACC-1D — BROWSER VERIFIED / REGRESSION VERIFIED
+
+Preserved evidence:
+- `services/services_handoff_read_aggregate.py`
+- `routes_tpd1c.py`
+- `templates/tpd1c/successor_handoff.html`
+- `tests/test_v3_tho_acc_1d_workspace.py`
+- `docs/v3_successor_acceptance_handoff_visibility_contract.md`
+
+Verification record:
+- The existing Handoff aggregate composes structured Acceptance and evidence/provenance only through the canonical 1A and 1C contracts under the existing firm- and Trust-scoped read policy.
+- The workspace distinguishes accepted, pending, designated-without-Acceptance, and legacy-document-without-structured-Acceptance scenarios without legal, authority, activation, responsibility, access, or acknowledgement overstatement.
+- The workspace contains no Acceptance mutation controls and GET requests create no Acceptance, transition, evidence, Document, Continuity, responsibility, Fiduciary, user, role, or permission mutation.
+- Operator browser validation passed all four Acceptance scenarios and the linked Continuity context in the official Hindsfoot OS shell.
+- Initial isolated-runtime firm and disposable fixture-schema issues were corrected without application-code repair and were not classified as application defects.
+- Nineteen focused UI/aggregate tests and seventy-seven combined 1A/1B/1C/1D/prior-contract/firm-scope tests passed.
+- Source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-1E — Continuity Acceptance Evidence Boundary
+
+Status:
+- V3-THO-ACC-1E is authorized as the next controlled action but is not active.
+- V3-THO-ACC-1E has not begun.
+
+Restrictions:
+- Do not begin Continuity evidence-boundary implementation without separate operator authorization.
+- Acceptance is not a universal Continuity prerequisite and must not silently activate Continuity or transfer responsibility.
+- No source database mutation, P03 resumption, or P04 work.
+
