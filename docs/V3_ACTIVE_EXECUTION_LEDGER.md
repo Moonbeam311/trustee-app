@@ -1069,3 +1069,31 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Successor Acceptance End-to-End Certification Closure — 2026-08-21
+
+V3-THO-ACC-1F — CERTIFIED
+
+Preserved evidence:
+- `docs/v3_successor_acceptance_end_to_end_certification_2026-08-21.md`
+
+Certification record:
+- The complete `V3-THO-ACC-1A` through `V3-THO-ACC-1F` Successor Acceptance implementation sequence is certified; this is not certification of all Version 3.
+- Ninety-two disposable-database regression tests passed across Acceptance, Trust, Fiduciary, Continuity, Document, Execution, Handoff, authorization, isolation, legacy, and no-mutation contracts.
+- A fresh governed scenario passed maker proposal, evidence attachment, independent reviewer finalization, canonical read, Handoff rendering, and Continuity evidence consumption without activation, responsibility, authority, or access mutation.
+- Operator browser certification passed the official Hindsfoot OS Handoff and linked Continuity views.
+- Browser reads changed none of nineteen governed Acceptance, Document, Continuity, Fiduciary, authorization, Trust, or Archive tables.
+- Disposable Flask runtime and fixtures were removed; source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+- Handoff acknowledgement remains outside the certified sequence and is not authorized by this closure.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-PKG-1 — Handoff Document/Archive Package Adapter
+
+Status:
+- V3-THO-PKG-1 is authorized as the next controlled action but is not active.
+- V3-THO-PKG-1 has not begun.
+
+Restrictions:
+- Do not begin package-adapter implementation without separate operator authorization.
+- Package output remains derived and must not automatically finalize Archive, activate Continuity, grant access, or acknowledge handoff receipt.
+- No source database mutation, P03 resumption, or P04 work.
+

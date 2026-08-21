@@ -16,7 +16,7 @@
     "V3-MOD-WLH-P01": "0b0ab79",
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8"
   },
-  "active_phase": "V3-THO-ACC-1F",
+  "active_phase": "V3-THO-PKG-1",
   "suspended_feature_phase": "V3-MOD-WLH-P03C.4C",
   "allowed_dirty_paths": [
     "app.py",
@@ -51,7 +51,7 @@
     "docs/v3_successor_acceptance_end_to_end_certification_2026-08-21.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-THO-ACC-1F",
+  "next_authorized_action": "V3-THO-PKG-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -68,7 +68,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "a7473d75090090d2268d3e04cfff0861e39abdc702a1fb3793896943f0aea7bf",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "945b264199be1c2f1ebec690875de80df16330657735887ab49e3fd3472161ff",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {
