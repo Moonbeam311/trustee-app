@@ -854,3 +854,25 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Governed Successor Acceptance Recording and Lifecycle Service Activation — 2026-08-21
+
+V3-THO-ACC-1B — ACTIVE
+
+Operator authorization policy:
+- `record_successor_acceptance` is the dedicated maker permission.
+- `verify_successor_acceptance` is the dedicated reviewer permission and includes governed supersession review.
+- Default seeding assigns both permissions to Admin only under the existing complete-admin permission convention; Trustee and Viewer receive no default Acceptance write authority.
+- Permission possession does not override mandatory maker/reviewer actor separation.
+- The same actor may not create and verify the same governed transition.
+
+Purpose:
+Implement Acceptance-only proposal, evidence, independent review, lifecycle,
+idempotency, and immutable provenance behavior without changing any related
+institutional source domain.
+
+Restrictions:
+- No Acceptance UI/routes, Continuity activation, responsibility transfer, Fiduciary authority change, user creation, role assignment, unrelated permission grant, Execution authority, or handoff acknowledgement.
+- All write tests use disposable databases; no source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
