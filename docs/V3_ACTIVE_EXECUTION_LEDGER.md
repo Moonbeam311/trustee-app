@@ -876,3 +876,38 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Governed Successor Acceptance Recording and Lifecycle Service Closure — 2026-08-21
+
+V3-THO-ACC-1B — IMPLEMENTED / REGRESSION VERIFIED
+
+Preserved evidence:
+- `database/db.py`
+- `database/migrations_successor_acceptance.py`
+- `services/services_successor_acceptance_lifecycle.py`
+- `tests/test_v3_tho_acc_1b_contract.py`
+- `docs/v3_successor_acceptance_lifecycle_service_contract.md`
+
+Verification record:
+- Dedicated `record_successor_acceptance` and `verify_successor_acceptance` permissions use the existing effective-permission architecture; Admin receives both by established default seeding, while Trustee and Viewer receive neither by default.
+- The same actor is rejected from making and reviewing the same Acceptance transition regardless of held permissions.
+- Maker operations create idempotent pending proposals and attach evidence without finalizing state; reviewer operations independently finalize or reject exact proposals.
+- Evidence-backed accepted, declined, withdrawn, and superseded transitions follow the preserved lifecycle and reject invalid or conflicting transitions.
+- The server context fingerprint remains canonical duplicate prevention; caller replay keys remain unimplemented.
+- Immutable Acceptance domain events preserve maker, reviewer, time, prior/resulting state, evidence, reason, firm, Trust, Fiduciary, related proposal, and context fingerprint.
+- Acceptance writes do not mutate Trust, Fiduciary authority, Continuity activation/readiness/responsibility, users, roles, permissions, Execution authority, Document generation, or handoff acknowledgement.
+- Ten focused 1B tests, eight 1A compatibility tests, and thirty-nine prior-contract/authorization/firm-scope tests passed; static compilation passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-1C — Acceptance Evidence and Document Adapter
+
+Status:
+- V3-THO-ACC-1C is authorized as the next controlled action but is not active.
+- V3-THO-ACC-1C has not begun.
+
+Restrictions:
+- Do not begin evidence/document adapter implementation without separate operator authorization.
+- Document generation must not transition Acceptance; no broad template redesign or Continuity mutation.
+- No source database mutation, P03 resumption, or P04 work.
+
