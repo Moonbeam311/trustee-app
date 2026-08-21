@@ -1192,3 +1192,31 @@ Restrictions:
 - The Guide may not mutate institutional records or perform proposed actions.
 - No source database mutation, P03 resumption, or P04 work.
 
+## Final Certification Reconciliation and Authority Review — 2026-08-21
+
+- `V3-CERT-REC-1.1` — COMPLETE. The final-certification requirements
+  reconciliation was preserved without product implementation.
+- `V3-CERT-REC-1.2` — COMPLETE / READ-ONLY AUTHORITY AUDIT. It confirmed that
+  no next phase was then authorized.
+- `V3-CERT-AUTH-1` — COMPLETE / NO NEXT PHASE SELECTED. Repository evidence
+  alone did not uniquely authorize a mandatory next phase.
+
+## Operator Next-Phase Authority Activation — 2026-08-21
+
+`V3-CERT-AUTH-2` — CONTROL AUTHORITY ACTIVATION COMPLETE
+
+The operator explicitly selected `V3-AUD-SERVICE-CONTRACTS` as the next
+Version 3 phase after inferred authority was exhausted.
+
+NEXT AUTHORIZED ACTION:
+V3-AUD-SERVICE-CONTRACTS
+
+Status:
+- `V3-AUD-SERVICE-CONTRACTS` — AUTHORIZED NEXT / NOT STARTED.
+- `V3-MOD-WLH-P03C.4C` — PRESERVED / SUSPENDED / UNSTAGED.
+
+Restrictions:
+- Do not begin `V3-AUD-SERVICE-CONTRACTS` in this control-activation run.
+- Do not resume or stage P03.
+- No executable application, schema, runtime, or source-database change.
+
