@@ -629,3 +629,36 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Unified Handoff Read Aggregate Closure — 2026-08-20
+
+V3-THO-AGG-1 — COMPLETE / UNIFIED READ AGGREGATE ESTABLISHED
+
+Preserved evidence:
+- `services/services_handoff_read_aggregate.py`
+- `tests/test_v3_tho_agg_contract.py`
+- `docs/v3_unified_handoff_read_aggregate_contract.md`
+
+Verification record:
+- The ephemeral `TrustSuccessorHandoffContext` composes canonical Trust, Trust–Continuity, Fiduciary, Account/Asset, Governance, Continuity, Document, Execution, and Archive reads without aggregate persistence.
+- Trust is the governed root; native source identifiers and domain ownership remain preserved.
+- Explicit Trust, Continuity, Fiduciary, and Governance authorization decisions are required, and same-firm Trust/profile scope remains enforced.
+- Digital-access output is allowlisted metadata; prohibited secret material is not exposed, and successor or fiduciary status grants no application permission.
+- Continuity readiness remains authoritative; integration gaps are evidence-derived administrative review signals and make no legal, completion, or certification claim.
+- Aggregate reads create no profile, event, permission, transition, document, archive, export, handoff, or other governed mutation.
+- Eighty-one disposable-database aggregate and prior-contract compatibility tests passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-UI-1 — Read-Only Successor Handoff Workspace
+
+Status:
+- V3-THO-UI-1 is authorized as the next controlled action but is not active.
+- V3-THO-UI-1 has not begun.
+
+Restrictions:
+- No workspace implementation until separate operator authorization.
+- No schema, source database, acceptance, activation, package, permission, or source-record mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
