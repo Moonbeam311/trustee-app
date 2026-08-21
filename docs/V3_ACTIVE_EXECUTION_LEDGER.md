@@ -1023,3 +1023,33 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Continuity Acceptance Evidence Boundary Closure — 2026-08-21
+
+V3-THO-ACC-1E — IMPLEMENTED / REGRESSION VERIFIED
+
+Preserved evidence:
+- `services/services_continuity_acceptance_evidence.py`
+- `tests/test_v3_tho_acc_1e_contract.py`
+- `docs/v3_continuity_acceptance_evidence_boundary_contract.md`
+
+Verification record:
+- Continuity consumers can read exact firm-, Trust-, Profile-, and Fiduciary-scoped canonical Acceptance state, context, evidence, and provenance through separately owned contracts.
+- The current Continuity contract has no structured authoritative source declaring Acceptance required for a specific activation; requirement status remains `NOT DOCUMENTED` and free-text activation evidence is not interpreted as policy.
+- Acceptance evidence contributes `INFORMATIONAL ONLY` context, never becomes a universal prerequisite, and does not change existing Continuity readiness.
+- Reads create no Continuity Profile, event, activation transition, responsibility assignment, Fiduciary authority change, or application-access change.
+- Six focused 1E tests and eighty-eight combined 1A/1B/1C/1D/1E/prior-contract/firm-scope tests passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-1F — End-to-End Regression and Browser Certification
+
+Status:
+- V3-THO-ACC-1F is authorized as the next controlled action but is not active.
+- V3-THO-ACC-1F has not begun.
+
+Restrictions:
+- Do not begin end-to-end certification without separate operator authorization.
+- No new Acceptance, Continuity, authority, responsibility, permission, or acknowledgement semantics.
+- No source database mutation, P03 resumption, or P04 work.
+
