@@ -23,6 +23,7 @@
     <a href="/upload_document"><button>Upload Document</button></a>
     <a href="/ledger_entry"><button>Add Ledger Entry</button></a>
     <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}"><button>Trust Execution</button></a>
+    <a href="{{ url_for('tpd1c.successor_handoff_workspace', trust_id=trust.trust_id) }}"><button>Successor Handoff</button></a>
 </div>
 
 {# POST-V2-11B TRUST TO GOVERNANCE LINK PATCH #}

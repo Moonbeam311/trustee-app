@@ -7,7 +7,8 @@ from pathlib import Path
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 from flask_wtf.csrf import generate_csrf
 
-from database.db import user_has_effective_permission
+from database.db import get_roles_by_trust_id, user_has_effective_permission
+from services.services_handoff_read_aggregate import build_trust_successor_handoff_context
 from services.services_intake_trust_bridge import (
     BridgeError, FORMATION_FIELD_CONTROLS, REQUIRED_FIELDS, acknowledge_source_rebase, add_continuity_record, confirm_bridge, create_continuity_profile,
     create_or_resume_trust, evaluate_eligibility, get_bridge, get_continuity_profile,
@@ -80,6 +81,44 @@ def permission_required(name):
             return func(*args, **kwargs)
         return wrapped
     return decorator
+
+
+def _operator_can_read_trust(trust_id):
+    """Mirror the established Trust-detail assignment policy in this blueprint."""
+    if not _actor() or not _firm():
+        return False
+    if session.get("is_master_admin") or session.get("role") == "Admin":
+        return True
+    username = _actor().strip().lower()
+    return any(
+        str(row["full_name"] or "").strip().lower() == username
+        for row in get_roles_by_trust_id(trust_id)
+    )
+
+
+@tpd1c.route("/trust/<trust_id>/successor-handoff")
+@permission_required("view_dashboard")
+def successor_handoff_workspace(trust_id):
+    """Render the canonical successor-handoff aggregate without mutation."""
+    trust_check = lambda candidate: candidate == trust_id and _operator_can_read_trust(candidate)
+    continuity_check = lambda profile_id: get_continuity_profile(
+        _db_path(), profile_id, _firm()
+    ) is not None
+    aggregate = build_trust_successor_handoff_context(
+        trust_id,
+        db_path=_db_path(),
+        trust_authorization_check=trust_check,
+        continuity_authorization_check=continuity_check,
+        fiduciary_authorization_check=lambda _fiduciary_id, candidate_trust: (
+            candidate_trust == trust_id and trust_check(trust_id)
+        ),
+        governance_authorization_check=trust_check,
+        execution_id=request.args.get("execution_id"),
+        transfer_id=request.args.get("transfer_id"),
+    )
+    if aggregate is None:
+        abort(404)
+    return render_template("tpd1c/successor_handoff.html", handoff=aggregate)
 
 
 @tpd1c.route("/intake/<intake_id>/recommendations/declaration_of_trust/trust-formation-bridge", methods=["GET", "POST"])

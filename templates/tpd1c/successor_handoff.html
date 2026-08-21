@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+{% set identity = handoff.identity %}
+{% set continuity = handoff.continuity %}
+<style>
+  .handoff-header { border-bottom: 3px solid #111; margin-bottom: 18px; padding-bottom: 12px; }
+  .handoff-nav { display:flex; flex-wrap:wrap; gap:12px; margin:12px 0; }
+  .handoff-nav a { color:#111; font-weight:700; }
+  .handoff-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
+  .handoff-panel { border:1px solid #d5d5d5; border-radius:8px; padding:14px; margin:14px 0; overflow-wrap:anywhere; }
+  .handoff-panel h2 { margin-top:0; font-size:1.15rem; }
+  .handoff-table { width:100%; border-collapse:collapse; }
+  .handoff-table th,.handoff-table td { border-bottom:1px solid #ddd; padding:7px; text-align:left; vertical-align:top; }
+  .handoff-state { display:inline-block; border:1px solid #777; border-radius:999px; padding:3px 9px; font-size:.82rem; font-weight:700; }
+  .handoff-note { background:#f4f4f4; border-left:4px solid #555; padding:10px; }
+  .handoff-empty { color:#666; font-style:italic; }
+</style>
+
+<header class="handoff-header">
+  <p class="handoff-state">READ ONLY</p>
+  <h1>Successor Handoff</h1>
+  <p><strong>{{ identity.trust.trust_name or handoff.root_trust_id }}</strong> · {{ handoff.root_trust_id }}</p>
+  <p class="handoff-note">This workspace presents recorded institutional evidence. It does not appoint or activate a successor, grant application access, establish legal authority, execute a recommendation, or certify completion.</p>
+  <nav class="handoff-nav" aria-label="Handoff context navigation">
+    <a href="{{ url_for('trust_detail', trust_id=handoff.root_trust_id) }}">Return to Trust</a>
+    {% for item in continuity.profiles %}
+      <a href="{{ url_for('tpd1c.continuity_detail', profile_id=item.continuity_profile_id) }}">Continuity Profile {{ item.continuity_profile_id }}</a>
+    {% endfor %}
+  </nav>
+</header>
+
+<section class="handoff-panel" id="readiness">
+  <h2>Handoff readiness</h2>
+  <p><span class="handoff-state">{{ handoff.readiness.status }}</span> · {{ handoff.readiness.gap_count }} recorded gap(s)</p>
+  <p>{{ handoff.readiness.disclaimer }}</p>
+  {% if handoff.readiness.gaps %}
+  <ul>{% for gap in handoff.readiness.gaps %}<li>{{ gap.code|replace('_',' ')|title }} · Source: {{ gap.source_domain }} / {{ gap.source_record_id }}</li>{% endfor %}</ul>
+  {% else %}<p class="handoff-empty">No evidence-derived integration gaps are recorded.</p>{% endif %}
+</section>
+
+<div class="handoff-grid">
+  <section class="handoff-panel" id="identity">
+    <h2>Trust identity</h2>
+    <p><strong>Name:</strong> {{ identity.trust.trust_name or 'NOT DOCUMENTED' }}</p>
+    <p><strong>Status:</strong> {{ identity.trust.status or 'NOT DOCUMENTED' }}</p>
+    <p><strong>Current trustee:</strong> {{ identity.current_trustee or 'NOT DOCUMENTED' }}</p>
+    <p><strong>Continuity:</strong> {{ continuity.state }}</p>
+  </section>
+  <section class="handoff-panel" id="successor-authority">
+    <h2>Successor and fiduciary authority</h2>
+    <p><strong>Recorded successor:</strong> {{ identity.successor_trustee or 'MISSING' }}</p>
+    <p><strong>Evidence state:</strong> {{ handoff.fiduciary_authority.state }}</p>
+    {% for row in handoff.fiduciary_authority.records %}
+      <p><strong>{{ row.full_name or row.fiduciary_id }}</strong><br>Role/capacity: {{ row.role_title or 'NOT DOCUMENTED' }}<br>Recorded authority scope: {{ row.authority_scope or 'UNRESOLVED' }}<br>Authority evidence: {{ row.authority_evidence.authority_evidence_state }}</p>
+    {% else %}<p class="handoff-empty">No scoped fiduciary authority record is available.</p>{% endfor %}
+  </section>
+</div>
+
+<section class="handoff-panel" id="responsibilities">
+  <h2>Responsibilities and activation context</h2>
+  {% for profile in continuity.profiles %}
+    <h3>{{ profile.profile.subject_name or profile.continuity_profile_id }} · {{ profile.readiness.classification }}</h3>
+    <table class="handoff-table"><thead><tr><th>Responsibility</th><th>Current party</th><th>Successor party</th><th>Authority/source</th></tr></thead><tbody>
+    {% for row in profile.responsibilities %}<tr><td>{{ row.description or row.category or 'NOT DOCUMENTED' }}</td><td>{{ row.current_responsible_party or 'MISSING' }}</td><td>{{ row.successor_responsible_party or 'MISSING' }}</td><td>{{ row.authority_source or 'UNRESOLVED' }}{% if row.supporting_document_reference %}<br>{{ row.supporting_document_reference }}{% endif %}</td></tr>{% else %}<tr><td colspan="4" class="handoff-empty">No responsibility records.</td></tr>{% endfor %}
+    </tbody></table>
+    <p><strong>Activation plans:</strong> {% if profile.activation_plans %}{% for plan in profile.activation_plans %}{{ plan.status or 'NOT DOCUMENTED' }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}MISSING{% endif %}</p>
+  {% else %}<p class="handoff-empty">No Continuity Profile linked. Profile creation remains a separate governed action.</p>{% endfor %}
+</section>
+
+<section class="handoff-panel" id="accounts-assets">
+  <h2>Accounts and assets</h2>
+  <div class="handoff-grid">
+    <div><h3>Accounts</h3><ul>{% for row in handoff.accounts_assets.accounts %}<li>{{ row.account_label or row.account_id }} · {{ row.institution or 'Institution not documented' }} · {{ row.masked_number or 'Safe identifier not documented' }}</li>{% else %}<li class="handoff-empty">No scoped accounts.</li>{% endfor %}</ul></div>
+    <div><h3>Assets</h3><ul>{% for row in handoff.accounts_assets.assets %}<li>{{ row.property_name or row.property_id }} · {{ row.property_type or row.asset_class or 'Type not documented' }} · Responsible: {{ row.responsible_party or 'NOT DOCUMENTED' }}</li>{% else %}<li class="handoff-empty">No scoped assets.</li>{% endfor %}</ul></div>
+  </div>
+</section>
+
+<section class="handoff-panel" id="access-continuity">
+  <h2>Access and operational continuity</h2>
+  {% for profile in continuity.profiles %}{% for row in profile.digital_access_metadata %}
+    <article><h3>{{ row.institution_service or row.institution or row.service_name or 'Service not documented' }}</h3><p>Account: {{ row.account_label or 'NOT DOCUMENTED' }} · Category: {{ row.account_category or 'NOT DOCUMENTED' }}</p><p>Login identifier: {{ row.login_identifier or 'NOT DOCUMENTED' }} · Vault reference: {{ row.vault_reference or 'MISSING' }}</p><p>Recovery: {{ row.recovery_procedure or 'MISSING' }} · MFA: {{ row.mfa_method or 'NOT DOCUMENTED' }} · Custodian: {{ row.mfa_device_custodian or 'NOT DOCUMENTED' }}</p><p>Emergency-access metadata: {{ row.emergency_access_authorization or 'NOT DOCUMENTED' }} · Successor party: {{ row.successor_responsible_party or 'NOT DOCUMENTED' }}</p></article>
+  {% else %}<p class="handoff-empty">No digital-access metadata for this profile.</p>{% endfor %}{% else %}<p class="handoff-empty">No linked Continuity access context.</p>{% endfor %}
+</section>
+
+<section class="handoff-panel" id="obligations">
+  <h2>Receivables and payables</h2>
+  {% for profile in continuity.profiles %}
+    <h3>Receivables</h3><ul>{% for row in profile.receivables %}<li>{{ row.payer_debtor or 'Payer not documented' }} · {{ row.description or 'Description not documented' }} · Successor collector: {{ row.successor_collector or 'NOT DOCUMENTED' }} · {{ row.status or 'NOT DOCUMENTED' }}</li>{% else %}<li class="handoff-empty">No receivables.</li>{% endfor %}</ul>
+    <h3>Payables</h3><ul>{% for row in profile.payables %}<li>{{ row.creditor_payee or 'Payee not documented' }} · {{ row.description or 'Description not documented' }} · Successor party: {{ row.successor_responsible_party or 'NOT DOCUMENTED' }} · {{ row.continuity_instruction or row.status or 'NOT DOCUMENTED' }}</li>{% else %}<li class="handoff-empty">No payables.</li>{% endfor %}</ul>
+  {% else %}<p class="handoff-empty">No linked obligation context.</p>{% endfor %}
+</section>
+
+<div class="handoff-grid">
+  <section class="handoff-panel" id="governance"><h2>Governance</h2><p><span class="handoff-state">{{ handoff.governance.state }}</span></p>{% for link in handoff.governance.links %}<p>{{ link.record.title or link.governance_id }} · {{ link.relationship.relationship_type or 'Relationship not documented' }} · {{ link.record.lifecycle_state or link.record.status or 'NOT DOCUMENTED' }}<br><small>Source {{ link.governance_type }} / {{ link.governance_id }}</small></p>{% else %}<p class="handoff-empty">No applicable scoped governance links.</p>{% endfor %}</section>
+  <section class="handoff-panel" id="execution"><h2>Execution</h2><p><span class="handoff-state">{{ handoff.execution.state }}</span></p><p>Recommended next action: {{ handoff.execution.orchestration.recommended_next_action }}</p>{% if handoff.execution.orchestration.execution %}<p>Execution state: {{ handoff.execution.orchestration.execution.current_state or 'NOT DOCUMENTED' }}</p>{% endif %}{% if handoff.execution.orchestration.transfer %}<p>Transfer state: {{ handoff.execution.orchestration.transfer.current_state or 'NOT DOCUMENTED' }} · Readiness: {{ handoff.execution.orchestration.transfer.readiness_status }}</p>{% endif %}<p class="handoff-empty">Recommendations are not executed by this workspace.</p></section>
+  <section class="handoff-panel" id="documents"><h2>Documents</h2><p><span class="handoff-state">{{ handoff.documents.state }}</span></p><ul>{% for row in handoff.documents.references %}<li>{{ row.document_title or row.document_id }} · {{ row.document_category or 'Category not documented' }} · Source {{ row.document_id }}</li>{% else %}<li class="handoff-empty">No existing document references.</li>{% endfor %}</ul><p>No document is generated by this workspace.</p></section>
+  <section class="handoff-panel" id="archive"><h2>Archive</h2><p><span class="handoff-state">{{ handoff.archive.state }}</span></p><ul>{% for row in handoff.archive.descriptors %}<li>{{ row.package_id }} · {{ row.recorded_status or 'NOT DOCUMENTED' }} · Transfer {{ row.source_object_id }}</li>{% else %}<li class="handoff-empty">No recorded archive descriptors.</li>{% endfor %}</ul><p>No handoff, export, or finalization is created by this workspace.</p></section>
+</div>
+
+<section class="handoff-panel" id="provenance"><h2>Source references</h2><ul>{% for row in handoff.provenance %}<li>{{ row.source_domain }} · {{ row.source_record_id }}</li>{% endfor %}</ul></section>
+{% endblock %}
