@@ -28,6 +28,11 @@
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "docs/v3_successor_acceptance_contract_formalization_plan_2026-08-21.md",
+    "database/migrations_successor_acceptance.py",
+    "database/startup_migrations.py",
+    "services/services_successor_acceptance.py",
+    "tests/test_v3_tho_acc_1a_contract.py",
+    "docs/v3_successor_acceptance_record_read_contract.md",
     "scripts/v3_control_guard.py"
   ],
   "next_authorized_action": "V3-THO-ACC-1A",
