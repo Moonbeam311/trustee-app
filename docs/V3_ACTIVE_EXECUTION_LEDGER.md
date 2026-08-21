@@ -614,3 +614,18 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Unified Handoff Read Aggregate Activation — 2026-08-20
+
+V3-THO-AGG-1 — ACTIVE
+
+Purpose:
+Compose the established Trust, Trust–Continuity, Fiduciary, Account/Asset,
+Governance, Continuity, Document, Execution, and Archive read contracts into a
+source-attributed, firm-scoped successor-handoff context without persistence.
+
+Restrictions:
+- Read aggregation only; no schema, routes, templates, workspace, package, acknowledgement, acceptance, activation, event, or permission mutation.
+- No duplicate or parallel institutional source records.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
