@@ -755,3 +755,18 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Successor Acceptance Contract Formalization Planning Activation — 2026-08-21
+
+V3-THO-ACC-PLAN-1 — ACTIVE
+
+Purpose:
+Define the governed successor-acceptance source record, lifecycle, evidence,
+provenance, idempotency, authorization, domain boundaries, compatibility, and
+bounded implementation sequence before any acceptance implementation.
+
+Restrictions:
+- Planning only; no acceptance schema, service, route, template, acknowledgement, activation, permission, or source-record implementation.
+- No source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
