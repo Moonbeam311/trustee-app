@@ -911,3 +911,19 @@ Restrictions:
 - Document generation must not transition Acceptance; no broad template redesign or Continuity mutation.
 - No source database mutation, P03 resumption, or P04 work.
 
+## Acceptance Evidence and Document Adapter Activation — 2026-08-21
+
+V3-THO-ACC-1C — ACTIVE
+
+Purpose:
+Connect canonical Acceptance records and immutable lifecycle provenance to
+scoped Document and governed external evidence references without changing
+Document ownership or creating an Acceptance transition from document presence.
+
+Restrictions:
+- No UI/routes, document-generation rewrite, Acceptance lifecycle change, Continuity activation, Fiduciary authority change, permission change, or handoff acknowledgement.
+- Document generation, execution, evidence linking, and Acceptance recording remain distinct governed operations.
+- All evidence tests use disposable databases/files; no source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
