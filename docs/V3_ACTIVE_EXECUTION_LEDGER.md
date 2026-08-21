@@ -1007,3 +1007,19 @@ Restrictions:
 - Acceptance is not a universal Continuity prerequisite and must not silently activate Continuity or transfer responsibility.
 - No source database mutation, P03 resumption, or P04 work.
 
+## Continuity Acceptance Evidence Boundary Activation — 2026-08-21
+
+V3-THO-ACC-1E — ACTIVE
+
+Purpose:
+Allow Continuity consumers to read canonical successor Acceptance as separately
+owned institutional evidence without making it a universal activation
+prerequisite or performing any Continuity transition or responsibility change.
+
+Restrictions:
+- No UI/routes, Acceptance lifecycle changes, Continuity activation, responsibility assignment, Fiduciary authority change, or application authorization change.
+- No new activation-requirement mechanism may be invented when the current Continuity contract does not document one.
+- All tests use disposable databases; no source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
