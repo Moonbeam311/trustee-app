@@ -710,3 +710,18 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Successor Acceptance Contract Audit Activation — 2026-08-21
+
+V3-THO-ACC-AUD-1 — ACTIVE
+
+Purpose:
+Perform a bounded read-only audit of current successor designation, acceptance,
+fiduciary authority, Continuity activation, operational responsibility,
+application access, execution authority, and handoff-acknowledgement semantics.
+
+Restrictions:
+- Audit only; no acceptance, acknowledgement, activation, permission, schema, route, template, test, or source-record implementation.
+- No source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
