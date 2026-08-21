@@ -770,3 +770,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Successor Acceptance Contract Formalization Planning Closure — 2026-08-21
+
+V3-THO-ACC-PLAN-1 — COMPLETE / IMPLEMENTATION PLAN READY
+
+V3-THO-ACC-PLAN-1.1 — Planning Artifact Preservation and Control Closure — COMPLETE
+
+Preserved evidence:
+- `docs/v3_successor_acceptance_contract_formalization_plan_2026-08-21.md`
+
+Planning result:
+- A dedicated normalized successor-acceptance record is recommended because acceptance has independent identity, evidence, lifecycle, provenance, idempotency, and supersession semantics.
+- Acceptance remains separate from designation, Fiduciary authority, Continuity activation, operational responsibility, application access, Execution authority, and handoff acknowledgement.
+- Document generation and execution do not themselves record acceptance.
+- Continuity activation may require acceptance only where an authoritative governed source expressly requires it; acceptance never silently activates Continuity.
+- The server-derived acceptance-context fingerprint is canonical institutional duplicate prevention; an optional caller key is request replay protection only.
+- Legacy generated documents remain `LEGACY DOCUMENT / ACCEPTANCE STATE NOT STRUCTURALLY VERIFIED` and are not retroactively promoted.
+- Exact acceptance write-role policy remains `NOT DOCUMENTED` and blocks a later write-service phase, not the read-only first implementation phase.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-1A — Structured Successor Acceptance Record and Read Contract
+
+Status:
+- V3-THO-ACC-1A is authorized as the next controlled action but is not active.
+- V3-THO-ACC-1A has not begun.
+
+Restrictions:
+- No implementation until separately activated through the V3 control procedure.
+- The first phase is limited to the structured record, migration, canonical read contract, documentation, and disposable-database tests; no governed acceptance write API or UI.
+- No Continuity activation, Fiduciary authority, responsibility, permission, handoff acknowledgement, source database, or source-record mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
