@@ -25,15 +25,11 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
-    "routes_tpd1c.py",
-    "templates/tpd1c/successor_handoff.html",
-    "templates/trust_detail.html",
-    "tests/test_v3_tho_ui_workspace.py",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-THO-UI-1",
+  "next_authorized_action": "V3-THO-ACC-AUD-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -50,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "ab448685476766427a97acefd303f549b02dfa75712783cc6053b244f54b1756",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "180255e75908dc5a1d7a3ca9050a091474a07dc0e9794405cb1c80a79b3ee11d",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

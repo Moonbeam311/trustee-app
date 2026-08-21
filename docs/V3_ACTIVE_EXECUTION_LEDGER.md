@@ -677,3 +677,36 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Read-Only Successor Handoff Workspace Closure — 2026-08-21
+
+V3-THO-UI-1 — COMPLETE / READ-ONLY HANDOFF WORKSPACE ESTABLISHED
+
+Preserved evidence:
+- `routes_tpd1c.py`
+- `templates/trust_detail.html`
+- `templates/tpd1c/successor_handoff.html`
+- `tests/test_v3_tho_ui_workspace.py`
+
+Verification record:
+- The authenticated, firm-scoped Trust-rooted workspace renders the canonical `TrustSuccessorHandoffContext` without rebuilding source-domain data.
+- The workspace presents Trust identity, linked or unlinked Continuity context, fiduciary authority evidence, readiness gaps, responsibilities, accounts/assets, safe digital-access metadata, obligations, Governance, Execution, Documents, Archive, and source references.
+- The workspace is explicitly read-only and exposes no handoff mutation controls; it creates no profile, link, event, activation, acknowledgement, document, archive, export, permission, or other governed mutation.
+- Operator external-browser validation passed for linked and unlinked Trust scenarios after the in-app browser transport was independently classified as externally blocked by a tooling runtime collision.
+- Browser validation confirmed the Hindsfoot OS shell, Trust and Continuity navigation, evidence/readiness semantics, absence of legal-authority overstatement, absence of prohibited secret material, and absence of handoff mutation controls.
+- Post-browser inspection returned `V3-THO-UI-1_BROWSER_NO_MUTATION=PASS`.
+- Nineteen focused disposable-database UI, aggregate, and context compatibility tests passed.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-AUD-1 — Successor Acceptance Contract Audit
+
+Status:
+- V3-THO-ACC-AUD-1 is authorized as the next controlled action but is not active.
+- V3-THO-ACC-AUD-1 has not begun.
+
+Restrictions:
+- Audit first; no successor acceptance implementation until separately authorized and supported by sufficient evidence.
+- No schema, activation, permission, package, source database, or source-record mutation under this closure.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
