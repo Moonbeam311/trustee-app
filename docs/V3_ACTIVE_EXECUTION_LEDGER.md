@@ -109,6 +109,7 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains preserved and suspended.
 - P-04 remains unauthorized.
 
+
 ## Service Contract Audit Closure — 2026-08-20
 
 V3-AUD-SERVICE-CONTRACTS — COMPLETE / FORMALIZATION RECOMMENDED
@@ -956,6 +957,21 @@ Status:
 Restrictions:
 - Do not begin workspace visibility implementation without separate operator authorization.
 - No Acceptance recording controls, Continuity activation, responsibility transfer, permission mutation, or source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
+## Handoff Workspace Acceptance Visibility Activation — 2026-08-21
+
+V3-THO-ACC-1D — ACTIVE
+
+Purpose:
+Expose canonical structured Acceptance state, evidence references, provenance,
+and evidence-derived gaps in the existing read-only Successor Handoff aggregate
+and workspace without adding any Acceptance mutation surface.
+
+Restrictions:
+- No Acceptance recording, review, evidence attachment, document generation, Continuity activation, responsibility assignment, permission change, or handoff acknowledgement.
+- All automated and browser validation uses disposable databases and files; no source database mutation.
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 

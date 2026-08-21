@@ -40,6 +40,11 @@
     "services/services_successor_acceptance_evidence.py",
     "tests/test_v3_tho_acc_1c_contract.py",
     "docs/v3_successor_acceptance_evidence_adapter_contract.md",
+    "services/services_handoff_read_aggregate.py",
+    "routes_tpd1c.py",
+    "templates/tpd1c/successor_handoff.html",
+    "tests/test_v3_tho_acc_1d_workspace.py",
+    "docs/v3_successor_acceptance_handoff_visibility_contract.md",
     "scripts/v3_control_guard.py"
   ],
   "next_authorized_action": "V3-THO-ACC-1D",
@@ -59,7 +64,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "733c6ba52fe3aeb31c66d550fc0aa42d7e957d9a36691cc340ca58a5e9ab2071",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "40c0ab50cc2ac1f918b25364ed8dad6148a93cc2faf895ab5aafe626a76ec8b9",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {
