@@ -927,3 +927,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Acceptance Evidence and Document Adapter Closure — 2026-08-21
+
+V3-THO-ACC-1C — IMPLEMENTED / REGRESSION VERIFIED
+
+Preserved evidence:
+- `services/services_successor_acceptance_evidence.py`
+- `tests/test_v3_tho_acc_1c_contract.py`
+- `docs/v3_successor_acceptance_evidence_adapter_contract.md`
+
+Verification record:
+- The Acceptance evidence adapter links exact firm-, Trust-, Fiduciary-, and Acceptance-scoped canonical Document references or opaque governed external references without creating shadow evidence storage.
+- Evidence attachment delegates to the 1B maker-authorized lifecycle service; reviewer reliance and maker/reviewer provenance are derived from immutable Acceptance events.
+- Document generation, document execution, evidence linking, independent review, and Acceptance recording remain distinct governed operations; document presence does not create or transition Acceptance.
+- Legacy generated Acceptance documents remain `LEGACY DOCUMENT / ACCEPTANCE STATE NOT STRUCTURALLY VERIFIED` unless a separately governed structured Acceptance record references them.
+- The adapter does not mutate Continuity, Fiduciary authority, application authorization, Trust facts, Document truth, Execution authority, or handoff acknowledgement.
+- Eight focused 1C tests and fifty-eight combined 1A/1B/Document/Trust/Fiduciary/Continuity/Governance/firm-scope tests passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-1D — Handoff Workspace Acceptance Visibility
+
+Status:
+- V3-THO-ACC-1D is authorized as the next controlled action but is not active.
+- V3-THO-ACC-1D has not begun.
+
+Restrictions:
+- Do not begin workspace visibility implementation without separate operator authorization.
+- No Acceptance recording controls, Continuity activation, responsibility transfer, permission mutation, or source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
