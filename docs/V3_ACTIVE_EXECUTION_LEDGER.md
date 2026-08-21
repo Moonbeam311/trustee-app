@@ -818,3 +818,39 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Structured Successor Acceptance Record and Read Contract Closure — 2026-08-21
+
+V3-THO-ACC-1A — IMPLEMENTED / REGRESSION VERIFIED
+
+Preserved evidence:
+- `database/migrations_successor_acceptance.py`
+- `database/startup_migrations.py`
+- `services/services_successor_acceptance.py`
+- `tests/test_v3_tho_acc_1a_contract.py`
+- `docs/v3_successor_acceptance_record_read_contract.md`
+
+Verification record:
+- A dedicated additive `successor_acceptances` table owns only the separate institutional acceptance fact and references canonical Trust and Fiduciary identity.
+- Required identity, appointment/source context, evidence-oriented lifecycle, provenance, evidence references, supersession reference, and server-derived context fingerprint are structurally represented.
+- The normalized server-derived fingerprint is uniquely constrained as canonical institutional duplicate prevention; caller idempotency keys were not implemented.
+- The public Acceptance service contains only deterministic fingerprint derivation and firm/Trust-scoped reads; it exposes no recording, transition, activation, responsibility, permission, or acknowledgement API.
+- Accepted status does not establish legal validity, Fiduciary authority, Continuity activation, operational responsibility, application access, Execution authority, or handoff acknowledgement.
+- Legacy generated documents create no structured acceptance and remain `LEGACY DOCUMENT / ACCEPTANCE STATE NOT STRUCTURALLY VERIFIED`.
+- Eight focused disposable-database 1A tests and sixty startup/prior-contract/firm-scope compatibility tests passed; static compilation passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-ACC-1B — Governed Acceptance Recording and Lifecycle Service
+
+Status:
+- V3-THO-ACC-1B is authorized as the next controlled action but is not active.
+- V3-THO-ACC-1B has not begun.
+
+Restrictions:
+- Do not begin recording/lifecycle implementation without separate operator authorization.
+- Exact write-role policy remains `NOT DOCUMENTED` and is a required stop condition until explicitly decided.
+- No route, template, Continuity activation, responsibility transfer, permission grant, handoff acknowledgement, or source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
