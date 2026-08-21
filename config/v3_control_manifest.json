@@ -56,6 +56,8 @@
     "tests/test_v3_tho_guide_1_contract.py",
     "docs/v3_guide_successor_handoff_interpretation_contract.md",
     "docs/v3_operator_next_phase_authority_2026-08-21.md",
+    "docs/v3_service_contract_integrity_audit_2026-08-21.md",
+    "docs/v3_service_contract_audit_artifact_reconstruction_preservation_2026-08-21.md",
     "scripts/v3_control_guard.py"
   ],
   "next_authorized_action": "V3-AUD-SERVICE-CONTRACTS",
