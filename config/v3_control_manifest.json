@@ -25,14 +25,11 @@
     "templates/workspace_program_detail.html",
     "templates/workspace_program_form.html",
     "templates/workspace_programs.html",
-    "services/services_trust_continuity_context.py",
-    "tests/test_v3_tho_ctx_contract.py",
-    "docs/v3_trust_continuity_context_adapter_contract.md",
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-THO-CTX-1",
+  "next_authorized_action": "V3-THO-AGG-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -49,7 +46,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "32fe7a37790e0955146e7960e84b620ea8fe21556aa820c26cde618c2fd5eb07",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "5195c639f45b0486448fa74b0576f2ad4a7763ddf2219ee9503ee316381dbb1c",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

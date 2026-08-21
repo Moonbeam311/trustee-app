@@ -582,3 +582,35 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Canonical Trust–Continuity Context Adapter Closure — 2026-08-20
+
+V3-THO-CTX-1 — COMPLETE / CANONICAL CONTEXT ADAPTER ESTABLISHED
+
+Preserved evidence:
+- `services/services_trust_continuity_context.py`
+- `tests/test_v3_tho_ctx_contract.py`
+- `docs/v3_trust_continuity_context_adapter_contract.md`
+
+Verification record:
+- Repository schema establishes `TRUST_TO_CONTINUITY_CARDINALITY=ZERO_OR_MANY`; no canonical primary/latest profile rule was inferred.
+- Trust-to-Continuity resolution returns all authorized same-firm linked profile summaries deterministically or an explicit `UNLINKED` state.
+- Continuity-to-Trust resolution returns canonical Trust context, explicit `UNLINKED`, or safe `NOT_FOUND_OR_NOT_ACCESSIBLE` state.
+- Canonical Trust scope, existing Continuity firm scope, and explicit caller-owned Trust/Profile authorization checks remain required.
+- Adapter reads create no Trust, profile, link, readiness, activation, event, audit, or handoff mutation.
+- Current Trust, TPD-1C Continuity, route, and firm-identity disposable-database regressions passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected documents, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-AGG-1 — Unified Handoff Read Aggregate
+
+Status:
+- V3-THO-AGG-1 is authorized as the next controlled action but is not active.
+- V3-THO-AGG-1 has not begun.
+
+Restrictions:
+- No aggregate implementation until separate operator authorization.
+- No schema, route, template, source database, acceptance, activation, workspace, or package mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
