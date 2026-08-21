@@ -52,6 +52,9 @@
     "services/services_handoff_package_adapter.py",
     "tests/test_v3_tho_pkg_1_contract.py",
     "docs/v3_successor_handoff_package_adapter_contract.md",
+    "services/services_guide_handoff_interpretation.py",
+    "tests/test_v3_tho_guide_1_contract.py",
+    "docs/v3_guide_successor_handoff_interpretation_contract.md",
     "scripts/v3_control_guard.py"
   ],
   "next_authorized_action": "V3-THO-GUIDE-1",
@@ -71,7 +74,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "50ac6b1b83f1bb06f5734389141e49b5f3cdb99106ede74f2e6d85710c31ea4f",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "04a5ca72adf59b4cf31062202314cf60eb121f2183d55233d596b351fd8e30f3",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

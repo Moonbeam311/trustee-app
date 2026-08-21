@@ -1145,3 +1145,19 @@ Restrictions:
 - Guide may interpret recorded gaps and recommend navigation only; it must not mutate institutional records or invent legal conclusions.
 - No source database mutation, P03 resumption, or P04 work.
 
+## Guide Interpretation Adapter Activation — 2026-08-21
+
+V3-THO-GUIDE-1 — ACTIVE
+
+Purpose:
+Provide deterministic, source-attributed, read-only Guide interpretations of
+the canonical successor Handoff aggregate and package descriptor while keeping
+all institutional action under separately governed operator authority.
+
+Restrictions:
+- Guide output is limited to recorded facts, system status, source-supported relationships, inference, conflict, recommendation, and proposed action.
+- No institutional mutation, legal certification, Acceptance or Continuity transition, responsibility or authority change, Document/Archive action, Execution, or access grant.
+- No route/template work unless explicitly required by preserved evidence; all tests use disposable data only.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
