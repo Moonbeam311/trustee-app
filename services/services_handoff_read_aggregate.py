@@ -18,6 +18,8 @@ import services.services_document_contract as document_contract
 import services.services_execution_contract as execution_contract
 import services.services_fiduciary_authority as fiduciary_contract
 import services.services_governance as governance_contract
+import services.services_successor_acceptance as acceptance_contract
+import services.services_successor_acceptance_evidence as acceptance_evidence_contract
 import services.services_trust_contract as trust_contract
 import services.services_trust_continuity_context as context_contract
 from services.services_intake_trust_bridge import (
@@ -31,6 +33,7 @@ TrustAuthorizationCheck = Callable[[str], bool]
 ContinuityAuthorizationCheck = Callable[[str], bool]
 FiduciaryAuthorizationCheck = Callable[[str, str | None], bool]
 GovernanceAuthorizationCheck = Callable[[str], bool]
+AcceptanceAuthorizationCheck = Callable[[str, str], bool]
 
 AVAILABLE = "AVAILABLE"
 UNLINKED = "UNLINKED"
@@ -38,6 +41,66 @@ MISSING = "MISSING"
 UNRESOLVED = "UNRESOLVED"
 NOT_DOCUMENTED = "NOT DOCUMENTED"
 NOT_APPLICABLE = "NOT APPLICABLE"
+
+
+def _acceptance_section(
+    trust: dict[str, Any],
+    *,
+    acceptance_check: AcceptanceAuthorizationCheck,
+    document_check: TrustAuthorizationCheck,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Compose canonical Acceptance reads without requiring write permissions."""
+    trust_id = _text(trust.get("trust_id"))
+    try:
+        records = acceptance_contract.list_successor_acceptances_for_trust(
+            trust_id, authorization_check=acceptance_check
+        )
+    except acceptance_contract.SuccessorAcceptanceReadContractError:
+        return ({
+            "state": NOT_DOCUMENTED,
+            "display_state": "NOT DOCUMENTED / NO ACCEPTANCE EVIDENCE",
+            "records": [],
+            "legacy_documents": [],
+            "write_controls_available": False,
+        }, [])
+
+    items = []
+    provenance = []
+    for record in records:
+        evidence = acceptance_evidence_contract.describe_acceptance_evidence(
+            record["acceptance_id"],
+            expected_trust_id=trust_id,
+            expected_fiduciary_id=record["fiduciary_id"],
+            acceptance_authorization_check=acceptance_check,
+            document_authorization_check=document_check,
+        )
+        items.append({**record, "evidence_visibility": evidence or {"evidence_items": []}})
+        provenance.append(_source("SuccessorAcceptance", record["acceptance_id"]))
+
+    states = {item["acceptance_status"] for item in items}
+    if "ACCEPTED_RECORDED" in states:
+        display_state = "ACCEPTANCE RECORDED"
+    elif "PENDING_EVIDENCE" in states:
+        display_state = "ACCEPTANCE PENDING REVIEW"
+    elif states:
+        display_state = " / ".join(sorted(states))
+    elif _text(trust.get("successor_trustee_name")):
+        display_state = "DESIGNATED / ACCEPTANCE NOT RECORDED"
+    else:
+        display_state = "NOT DOCUMENTED / NO ACCEPTANCE EVIDENCE"
+    return ({
+        "state": AVAILABLE if items else MISSING,
+        "display_state": display_state,
+        "records": items,
+        "legacy_documents": [],
+        "write_controls_available": False,
+        "legal_validity_established": False,
+        "appointment_validity_established": False,
+        "continuity_activated": False,
+        "responsibility_assigned": False,
+        "application_access_granted": False,
+        "handoff_acknowledged": False,
+    }, provenance)
 
 TRUST_FIELDS = (
     "trust_id", "trust_name", "short_name", "jurisdiction", "effective_date",
@@ -230,6 +293,7 @@ def build_trust_successor_handoff_context(
     continuity_authorization_check: ContinuityAuthorizationCheck | None,
     fiduciary_authorization_check: FiduciaryAuthorizationCheck | None,
     governance_authorization_check: GovernanceAuthorizationCheck | None,
+    acceptance_authorization_check: AcceptanceAuthorizationCheck | None = None,
     execution_id: Any = None,
     transfer_id: Any = None,
 ) -> dict[str, Any] | None:
@@ -250,6 +314,11 @@ def build_trust_successor_handoff_context(
     if trust_row is None:
         return None
     trust = _select(dict(trust_row), TRUST_FIELDS)
+    acceptance_check = acceptance_authorization_check or (
+        lambda _acceptance_id, candidate_trust: (
+            candidate_trust == trust_key and trust_check(candidate_trust)
+        )
+    )
 
     contexts = context_contract.resolve_continuity_contexts_for_trust(
         trust_key, db_path=db_path, trust_authorization_check=trust_check,
@@ -294,6 +363,10 @@ def build_trust_successor_handoff_context(
     documents = document_contract.list_document_references(
         trust_key, authorization_check=trust_check
     )
+    acceptance, acceptance_provenance = _acceptance_section(
+        trust, acceptance_check=acceptance_check, document_check=trust_check
+    )
+    provenance.extend(acceptance_provenance)
     orchestration = execution_contract.build_orchestration_context(
         trust_key, authorization_check=trust_check,
         execution_id=execution_id, transfer_id=transfer_id,
@@ -324,6 +397,13 @@ def build_trust_successor_handoff_context(
         trust, fiduciaries, continuity, inventory, execution,
         documents, archives, security_gaps,
     )
+    if acceptance["display_state"] != "ACCEPTANCE RECORDED":
+        gaps.append({
+            "code": "successor_acceptance_not_recorded",
+            "evidence": acceptance["display_state"],
+            **_source("SuccessorAcceptance", trust_key),
+        })
+        readiness = "needs_attention"
     result = {
         "contract_version": "V3-THO-AGG-1",
         "aggregate_type": "TrustSuccessorHandoffContext",
@@ -341,6 +421,7 @@ def build_trust_successor_handoff_context(
             "legal_authority_conclusion": False,
             "system_permission_granted": False,
         },
+        "successor_acceptance": acceptance,
         "continuity": continuity,
         "accounts_assets": inventory,
         "governance": governance,

@@ -2,6 +2,7 @@
 {% block content %}
 {% set identity = handoff.identity %}
 {% set continuity = handoff.continuity %}
+{% set acceptance = handoff.successor_acceptance|default({'state':'NOT DOCUMENTED','display_state':'NOT DOCUMENTED / NO ACCEPTANCE EVIDENCE','records':[],'legacy_documents':[]}, true) %}
 <style>
   .handoff-header { border-bottom: 3px solid #111; margin-bottom: 18px; padding-bottom: 12px; }
   .handoff-nav { display:flex; flex-wrap:wrap; gap:12px; margin:12px 0; }
@@ -55,6 +56,32 @@
     {% else %}<p class="handoff-empty">No scoped fiduciary authority record is available.</p>{% endfor %}
   </section>
 </div>
+
+<section class="handoff-panel" id="successor-acceptance">
+  <h2>Successor Acceptance</h2>
+  <p><span class="handoff-state">{{ acceptance.display_state }}</span></p>
+  <p class="handoff-note">Acceptance is recorded institutional evidence. It does not establish legal or appointment validity, activate Continuity, assign operational responsibility, grant application access, or acknowledge receipt of this handoff.</p>
+  {% for row in acceptance.records %}
+    <article>
+      <h3>{{ row.acceptance_status }} · {{ row.acceptance_id }}</h3>
+      <p><strong>Fiduciary:</strong> {{ row.fiduciary_id }} · <strong>Capacity:</strong> {{ row.role_capacity }}</p>
+      <p><strong>Appointment:</strong> {{ row.appointment_reference }} · <strong>Source:</strong> {{ row.appointment_source_reference }}</p>
+      <p><strong>Recorded:</strong> {{ row.accepted_at or row.provenance.recorded_at or 'NOT DOCUMENTED' }} · <strong>Recorded by:</strong> {{ row.provenance.recorded_by or 'NOT DOCUMENTED' }}</p>
+      <h4>Evidence and review provenance</h4>
+      <ul>
+      {% for evidence in row.evidence_visibility.evidence_items %}
+        <li>{{ evidence.source_type }} / {{ evidence.identifier }} · {{ evidence.acceptance_review_status }} · Owner: {{ evidence.source_owner }}{% if evidence.maker_actor_ids %}<br>Maker: {{ evidence.maker_actor_ids|join(', ') }}{% endif %}{% if evidence.reviewer_actor_ids %} · Reviewer: {{ evidence.reviewer_actor_ids|join(', ') }}{% endif %}</li>
+      {% else %}<li class="handoff-empty">NOT DOCUMENTED / NO ACCEPTANCE EVIDENCE</li>{% endfor %}
+      </ul>
+    </article>
+  {% else %}
+    <p class="handoff-empty">{{ acceptance.display_state }}. A successor designation is not an Acceptance record.</p>
+  {% endfor %}
+  {% for legacy in acceptance.legacy_documents %}
+    <p>{{ legacy.classification }} · {{ legacy.document.document_id }}</p>
+  {% endfor %}
+  <p class="handoff-empty">Document presence does not record Acceptance. This workspace provides no Acceptance write actions.</p>
+</section>
 
 <section class="handoff-panel" id="responsibilities">
   <h2>Responsibilities and activation context</h2>

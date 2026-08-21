@@ -112,6 +112,9 @@ def successor_handoff_workspace(trust_id):
         fiduciary_authorization_check=lambda _fiduciary_id, candidate_trust: (
             candidate_trust == trust_id and trust_check(trust_id)
         ),
+        acceptance_authorization_check=lambda _acceptance_id, candidate_trust: (
+            candidate_trust == trust_id and trust_check(trust_id)
+        ),
         governance_authorization_check=trust_check,
         execution_id=request.args.get("execution_id"),
         transfer_id=request.args.get("transfer_id"),
