@@ -16,7 +16,7 @@
     "V3-MOD-WLH-P01": "0b0ab79",
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8"
   },
-  "active_phase": "V3-THO-PKG-1",
+  "active_phase": "V3-THO-GUIDE-1",
   "suspended_feature_phase": "V3-MOD-WLH-P03C.4C",
   "allowed_dirty_paths": [
     "app.py",
@@ -54,7 +54,7 @@
     "docs/v3_successor_handoff_package_adapter_contract.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-THO-PKG-1",
+  "next_authorized_action": "V3-THO-GUIDE-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -71,7 +71,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "ab28b3c6831c5a9d7c47df3103900594961f0d67b35783149d7def7dad92d8bb",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "50ac6b1b83f1bb06f5734389141e49b5f3cdb99106ede74f2e6d85710c31ea4f",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

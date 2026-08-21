@@ -1114,3 +1114,34 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Handoff Document / Archive Package Adapter Closure — 2026-08-21
+
+V3-THO-PKG-1 — IMPLEMENTED / REGRESSION VERIFIED
+
+Preserved evidence:
+- `services/services_handoff_package_adapter.py`
+- `tests/test_v3_tho_pkg_1_contract.py`
+- `docs/v3_successor_handoff_package_adapter_contract.md`
+
+Verification record:
+- The package adapter is an ephemeral derived descriptor over the canonical unified Handoff aggregate and owns no source record, file, manifest, Archive handoff, export history, package lifecycle, or permission.
+- Trust, Fiduciary, Acceptance, Continuity, Account/Asset, Governance, optional Execution, Document, Archive, gaps, and provenance sections retain canonical ownership and explicit inclusion/reference/availability classifications.
+- Acceptance lifecycle and legacy-document meanings remain intact; Continuity is not activated, responsibility is not assigned, and Acceptance is not made a universal activation prerequisite.
+- Document and Archive content is reference-only; no ZIP, PDF, manifest, output, package record, handoff, export, finalization, seal, or recovery record is produced.
+- Unresolved gaps remain visible and package completeness, required-item policy, generated-at time, and legal certification are not inferred.
+- Eleven focused PKG-1 tests and one hundred seven combined PKG/Acceptance/Handoff/Archive/Document/Execution/Trust/Fiduciary/Continuity/firm-scope tests passed.
+- No route or template changed; browser validation was not required.
+- Source database, protected records, and suspended V3-MOD-WLH-P03C.4C work remained preserved.
+
+NEXT AUTHORIZED ACTION:
+V3-THO-GUIDE-1 — Guide Interpretation Adapter
+
+Status:
+- V3-THO-GUIDE-1 is authorized as the next controlled action but is not active.
+- V3-THO-GUIDE-1 has not begun.
+
+Restrictions:
+- Do not begin Guide integration without separate operator authorization.
+- Guide may interpret recorded gaps and recommend navigation only; it must not mutate institutional records or invent legal conclusions.
+- No source database mutation, P03 resumption, or P04 work.
+
