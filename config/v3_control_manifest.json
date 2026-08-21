@@ -48,6 +48,7 @@
     "services/services_continuity_acceptance_evidence.py",
     "tests/test_v3_tho_acc_1e_contract.py",
     "docs/v3_continuity_acceptance_evidence_boundary_contract.md",
+    "docs/v3_successor_acceptance_end_to_end_certification_2026-08-21.md",
     "scripts/v3_control_guard.py"
   ],
   "next_authorized_action": "V3-THO-ACC-1F",
@@ -67,7 +68,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "5ed716cd27c971d67cbd95c8991655bc1ab3f8238ad7581968673c31bef70444",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "a7473d75090090d2268d3e04cfff0861e39abdc702a1fb3793896943f0aea7bf",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

@@ -1053,3 +1053,19 @@ Restrictions:
 - No new Acceptance, Continuity, authority, responsibility, permission, or acknowledgement semantics.
 - No source database mutation, P03 resumption, or P04 work.
 
+## Successor Acceptance End-to-End Certification Activation — 2026-08-21
+
+V3-THO-ACC-1F — ACTIVE
+
+Purpose:
+Certify the complete 1A–1E Successor Acceptance implementation through full
+disposable-database regression, a fresh governed lifecycle scenario, and an
+operator-reviewed isolated browser gate.
+
+Restrictions:
+- Certification introduces no new Acceptance, Continuity, authority, responsibility, access, Execution, or acknowledgement semantics.
+- No certification commit or closure may occur before explicit operator browser PASS and post-browser no-mutation proof.
+- All executable and browser evidence uses disposable databases and files; no source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
