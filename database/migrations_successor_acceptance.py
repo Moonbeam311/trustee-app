@@ -8,6 +8,7 @@ from typing import Any
 
 
 ACCEPTANCE_TABLE = "successor_acceptances"
+ACCEPTANCE_EVENT_TABLE = "successor_acceptance_events"
 ACCEPTANCE_STATES = (
     "PENDING_EVIDENCE",
     "ACCEPTED_RECORDED",
@@ -46,6 +47,39 @@ def _require_source_schema(connection: sqlite3.Connection) -> None:
             )
     if failures:
         raise SuccessorAcceptanceMigrationError(" ".join(failures))
+
+
+def _seed_acceptance_permissions(connection: sqlite3.Connection) -> int:
+    """Seed the two dedicated permissions when the canonical RBAC tables exist."""
+    permission_columns = _columns(connection, "permissions")
+    mapping_columns = _columns(connection, "role_permissions")
+    if not {"permission_id", "permission_name", "description"}.issubset(
+        permission_columns
+    ) or not {"role_name", "permission_name"}.issubset(mapping_columns):
+        return 0
+    before = connection.total_changes
+    connection.executemany(
+        """INSERT OR IGNORE INTO permissions
+           (permission_id, permission_name, description) VALUES (?,?,?)""",
+        [
+            (
+                "PERM-013",
+                "record_successor_acceptance",
+                "Record successor acceptance proposals and evidence",
+            ),
+            (
+                "PERM-014",
+                "verify_successor_acceptance",
+                "Independently review successor acceptance transitions",
+            ),
+        ],
+    )
+    connection.executemany(
+        """INSERT OR IGNORE INTO role_permissions (role_name, permission_name)
+           VALUES ('Admin', ?)""",
+        [("record_successor_acceptance",), ("verify_successor_acceptance",)],
+    )
+    return connection.total_changes - before
 
 
 def apply_successor_acceptance_schema(db_path: str | Path) -> dict[str, Any]:
@@ -109,6 +143,37 @@ def apply_successor_acceptance_schema(db_path: str | Path) -> dict[str, Any]:
             CREATE INDEX IF NOT EXISTS ix_successor_acceptances_fiduciary
             ON successor_acceptances(firm_id, trust_id, fiduciary_id, acceptance_status);
 
+            CREATE TABLE IF NOT EXISTS successor_acceptance_events (
+                event_id TEXT PRIMARY KEY,
+                acceptance_id TEXT NOT NULL,
+                firm_id TEXT NOT NULL,
+                trust_id TEXT NOT NULL,
+                fiduciary_id TEXT NOT NULL,
+                event_type TEXT NOT NULL CHECK (event_type IN (
+                    'TRANSITION_PROPOSED',
+                    'EVIDENCE_ATTACHED',
+                    'TRANSITION_FINALIZED',
+                    'REVIEW_REJECTED'
+                )),
+                maker_actor_id TEXT NOT NULL,
+                reviewer_actor_id TEXT,
+                prior_state TEXT,
+                resulting_state TEXT,
+                evidence_document_id TEXT,
+                external_evidence_reference TEXT,
+                reason TEXT,
+                context_fingerprint TEXT NOT NULL,
+                related_event_id TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (acceptance_id)
+                    REFERENCES successor_acceptances(acceptance_id) ON DELETE RESTRICT,
+                FOREIGN KEY (related_event_id)
+                    REFERENCES successor_acceptance_events(event_id) ON DELETE RESTRICT
+            );
+
+            CREATE INDEX IF NOT EXISTS ix_successor_acceptance_events_record
+            ON successor_acceptance_events(firm_id, trust_id, acceptance_id, created_at);
+
             CREATE TRIGGER IF NOT EXISTS trg_successor_acceptance_source_scope_insert
             BEFORE INSERT ON successor_acceptances
             BEGIN
@@ -133,10 +198,38 @@ def apply_successor_acceptance_schema(db_path: str | Path) -> dict[str, Any]:
             BEGIN
                 SELECT RAISE(ABORT, 'Successor acceptance context is immutable.');
             END;
+
+            CREATE TRIGGER IF NOT EXISTS trg_successor_acceptance_event_scope
+            BEFORE INSERT ON successor_acceptance_events
+            BEGIN
+                SELECT CASE WHEN NOT EXISTS (
+                    SELECT 1 FROM successor_acceptances
+                    WHERE acceptance_id = NEW.acceptance_id
+                      AND firm_id = NEW.firm_id
+                      AND trust_id = NEW.trust_id
+                      AND fiduciary_id = NEW.fiduciary_id
+                      AND context_fingerprint = NEW.context_fingerprint
+                ) THEN RAISE(ABORT, 'Acceptance event context does not match its record.') END;
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS trg_successor_acceptance_events_no_update
+            BEFORE UPDATE ON successor_acceptance_events
+            BEGIN
+                SELECT RAISE(ABORT, 'Successor acceptance events are immutable.');
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS trg_successor_acceptance_events_no_delete
+            BEFORE DELETE ON successor_acceptance_events
+            BEGIN
+                SELECT RAISE(ABORT, 'Successor acceptance events are immutable.');
+            END;
             """
         )
+        permissions_seeded = _seed_acceptance_permissions(connection)
         connection.commit()
-        return validate_successor_acceptance_schema(connection)
+        result = validate_successor_acceptance_schema(connection)
+        result["permission_rows_seeded"] = permissions_seeded
+        return result
     except Exception:
         connection.rollback()
         raise
@@ -154,22 +247,23 @@ def validate_successor_acceptance_schema(
         else connection_or_path
     )
     try:
-        table = connection.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-            (ACCEPTANCE_TABLE,),
-        ).fetchone()
+        table_rows = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name IN (?,?)",
+            (ACCEPTANCE_TABLE, ACCEPTANCE_EVENT_TABLE),
+        ).fetchall()
+        tables = {str(row[0]) for row in table_rows}
         indexes = {
             str(row[0])
             for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name=?",
-                (ACCEPTANCE_TABLE,),
+                "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name IN (?,?)",
+                (ACCEPTANCE_TABLE, ACCEPTANCE_EVENT_TABLE),
             ).fetchall()
         }
         triggers = {
             str(row[0])
             for row in connection.execute(
-                "SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name=?",
-                (ACCEPTANCE_TABLE,),
+                "SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name IN (?,?)",
+                (ACCEPTANCE_TABLE, ACCEPTANCE_EVENT_TABLE),
             ).fetchall()
         }
         required_columns = {
@@ -183,28 +277,38 @@ def validate_successor_acceptance_schema(
         }
         row_count = (
             connection.execute("SELECT COUNT(*) FROM successor_acceptances").fetchone()[0]
-            if table
+            if ACCEPTANCE_TABLE in tables
+            else 0
+        )
+        event_count = (
+            connection.execute("SELECT COUNT(*) FROM successor_acceptance_events").fetchone()[0]
+            if ACCEPTANCE_EVENT_TABLE in tables
             else 0
         )
         complete = (
-            table is not None
+            tables == {ACCEPTANCE_TABLE, ACCEPTANCE_EVENT_TABLE}
             and required_columns.issubset(_columns(connection, ACCEPTANCE_TABLE))
             and {
                 "ix_successor_acceptances_trust",
                 "ix_successor_acceptances_fiduciary",
                 "sqlite_autoindex_successor_acceptances_2",
+                "ix_successor_acceptance_events_record",
             }.issubset(indexes)
             and {
                 "trg_successor_acceptance_source_scope_insert",
                 "trg_successor_acceptance_context_immutable",
+                "trg_successor_acceptance_event_scope",
+                "trg_successor_acceptance_events_no_update",
+                "trg_successor_acceptance_events_no_delete",
             }.issubset(triggers)
         )
         return {
             "schema_complete": complete,
-            "tables": [ACCEPTANCE_TABLE] if table else [],
+            "tables": sorted(tables),
             "indexes": sorted(indexes),
             "triggers": sorted(triggers),
             "acceptance_rows": row_count,
+            "event_rows": event_count,
         }
     finally:
         if owns_connection:

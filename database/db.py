@@ -3154,6 +3154,8 @@ def ensure_role_tables():
         ("PERM-010", "manage_permissions", "View and manage permission matrix"),
         ("PERM-011", "view_security", "View security dashboard and audit integrity"),
         ("PERM-012", "manage_tax_reports", "Create, view, print, and export K-1 / 1041 reports"),
+        ("PERM-013", "record_successor_acceptance", "Record successor acceptance proposals and evidence"),
+        ("PERM-014", "verify_successor_acceptance", "Independently review successor acceptance transitions"),
     ]
 
     cur.executemany("""
@@ -3166,7 +3168,8 @@ def ensure_role_tables():
             "view_dashboard", "create_trust", "edit_trust", "view_documents",
             "generate_documents", "export_documents", "manage_users",
             "manage_roles", "view_audit", "manage_permissions",
-            "view_security", "manage_tax_reports"
+            "view_security", "manage_tax_reports",
+            "record_successor_acceptance", "verify_successor_acceptance"
         ],
         "Trustee": [
             "view_dashboard", "create_trust", "edit_trust", "view_documents",
@@ -3642,6 +3645,8 @@ def reseed_default_role_permissions():
         ("PERM-010", "manage_permissions", "View and manage permission matrix"),
         ("PERM-011", "view_security", "View security dashboard and audit integrity"),
         ("PERM-012", "manage_tax_reports", "Create, view, print, and export K-1 / 1041 reports"),
+        ("PERM-013", "record_successor_acceptance", "Record successor acceptance proposals and evidence"),
+        ("PERM-014", "verify_successor_acceptance", "Independently review successor acceptance transitions"),
     ]
 
     default_role_permissions = {
@@ -3649,7 +3654,8 @@ def reseed_default_role_permissions():
             "view_dashboard", "create_trust", "edit_trust", "view_documents",
             "generate_documents", "export_documents", "manage_users",
             "manage_roles", "view_audit", "manage_permissions",
-            "view_security", "manage_tax_reports"
+            "view_security", "manage_tax_reports",
+            "record_successor_acceptance", "verify_successor_acceptance"
         ],
         "Trustee": [
             "view_dashboard", "create_trust", "edit_trust", "view_documents",
