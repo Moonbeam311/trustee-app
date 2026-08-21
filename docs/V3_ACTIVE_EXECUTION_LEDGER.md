@@ -662,3 +662,18 @@ Restrictions:
 - V3-MOD-WLH-P03C.4C remains suspended.
 - P-04 remains unauthorized.
 
+## Read-Only Successor Handoff Workspace Activation — 2026-08-20
+
+V3-THO-UI-1 — ACTIVE
+
+Purpose:
+Expose the canonical `TrustSuccessorHandoffContext` through one authenticated,
+firm-scoped, Trust-rooted institutional workspace without rebuilding or
+mutating source-domain records.
+
+Restrictions:
+- Read-only route, template, navigation, tests, and isolated browser validation only.
+- No acknowledgement, acceptance, activation, permission grant, package generation, archive finalization, or source-record mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
