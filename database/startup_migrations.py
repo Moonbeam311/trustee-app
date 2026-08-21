@@ -7,6 +7,10 @@ from database.migrations_matter_intake import (
     apply_matter_intake_bridge_schema,
     MatterIntakeMigrationError,
 )
+from database.migrations_successor_acceptance import (
+    apply_successor_acceptance_schema,
+    SuccessorAcceptanceMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -35,8 +39,20 @@ def run_additive_startup_migrations(
             "event_rows": 0,
         }
 
+    try:
+        acceptance_result = apply_successor_acceptance_schema(db_path)
+    except SuccessorAcceptanceMigrationError as exc:
+        acceptance_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "acceptance_rows": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
+        "successor_acceptance": acceptance_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
+        "acceptance_records_created": 0,
     }
