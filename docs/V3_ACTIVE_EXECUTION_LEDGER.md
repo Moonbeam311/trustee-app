@@ -1097,3 +1097,20 @@ Restrictions:
 - Package output remains derived and must not automatically finalize Archive, activate Continuity, grant access, or acknowledge handoff receipt.
 - No source database mutation, P03 resumption, or P04 work.
 
+## Handoff Document / Archive Package Adapter Activation — 2026-08-21
+
+V3-THO-PKG-1 — ACTIVE
+
+Purpose:
+Assemble a derived, read-only successor Handoff package descriptor from current
+canonical Trust, Fiduciary, Acceptance, Continuity, Governance, Execution,
+Document, Archive, and Handoff sources without creating a package lifecycle or
+shadow institutional truth.
+
+Restrictions:
+- No package file generation unless the preserved plan expressly requires it; no automatic Archive finalization, Continuity activation, responsibility transfer, access grant, or acknowledgement.
+- No routes/templates, Acceptance writes, authority changes, permission changes, or unrelated Document/Archive workflow changes.
+- All tests use disposable databases and directories; no source database mutation.
+- V3-MOD-WLH-P03C.4C remains suspended.
+- P-04 remains unauthorized.
+
