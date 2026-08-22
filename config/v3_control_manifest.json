@@ -59,6 +59,10 @@
     "docs/v3_service_contract_integrity_audit_2026-08-21.md",
     "docs/v3_service_contract_audit_artifact_reconstruction_preservation_2026-08-21.md",
     "docs/v3_service_contract_repair_scope_authorization_2026-08-21.md",
+    "services/services_intake_trust_bridge.py",
+    "tests/test_v3_aud_service_contracts_r1.py",
+    "docs/v3_service_contracts_r1_trust_binding_repair_2026-08-21.md",
+    "docs/v3_service_contracts_r1_path_registration_2026-08-21.md",
     "scripts/v3_control_guard.py"
   ],
   "next_authorized_action": "V3-AUD-SERVICE-CONTRACTS-R1",
