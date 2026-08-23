@@ -1308,3 +1308,37 @@ Restrictions:
 - Do not reopen R1, its browser certification, or its fixture/auth sequence.
 - Do not modify the governed source database.
 - P03 product work begins only in the separately executed P03C.4C phase.
+
+## P03C.4C Focused Security Regression Path Registration — 2026-08-23
+
+`V3-MOD-WLH-P03C.4C-R1` — TEST CONTRACT PATH REGISTERED.
+
+Purpose:
+
+Provide the missing focused automated regression evidence for the preserved
+P03C.4C authorization and firm-scope contracts without modifying P03 product
+implementation.
+
+Registered regression path:
+
+- `tests/test_v3_mod_wlh_p03c4c_security_regression.py`
+
+Authorized test scope:
+
+- P03 route-role authorization contract;
+- Viewer read versus Admin/Trustee mutation boundary;
+- browser-supplied firm/owner scope rejection contract;
+- same-firm Work & Learning Program service access;
+- cross-firm and cross-owner program isolation;
+- child read/write firm-scope precondition contract;
+- preservation of the already-passing P03 CSRF contract;
+- P01/P02 compatibility regression.
+
+Restrictions:
+
+- Test-only work under this registration.
+- No P03 product-code repair unless a focused regression subsequently proves an
+  implementation defect and a separately bounded repair is authorized.
+- No P-04.
+- No governed source-database mutation.
+- No Flask or browser work under this path-registration action.
