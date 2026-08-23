@@ -1342,3 +1342,47 @@ Restrictions:
 - No P-04.
 - No governed source-database mutation.
 - No Flask or browser work under this path-registration action.
+
+## P03C.4C Completion and Control Closure — 2026-08-23
+
+`V3-MOD-WLH-P03C.4C` — COMPLETE / IMPLEMENTED / REGRESSION VERIFIED /
+REMOTELY ANCHORED.
+
+Implementation commit:
+
+`914a900b60441a0dddbb5478804e2ef95144d4db`
+
+Verification record:
+
+- the tailored-program workspace foundation is committed as the exact six-file
+  P03 implementation boundary;
+- the focused authorization, CSRF, and firm-scope regression contract is
+  remotely anchored;
+- authorization regression passed;
+- CSRF regression passed;
+- same-firm, cross-firm, cross-owner, child-record, and listing scope
+  regressions passed;
+- P01/P02/P03C.4C compatibility regression passed;
+- the governed source database remained unchanged;
+- the P03 implementation worktree is clean;
+- no P03-specific manual browser gate was documented after the preserved
+  security-regression gate;
+- no later WLH phase is authorized by this closure.
+
+NEXT AUTHORIZED ACTION:
+
+NOT DOCUMENTED
+
+Status:
+
+- `V3-MOD-WLH-P03C.4C` — COMPLETE / CLOSED.
+- P-04 and later WLH phases — NOT AUTHORIZED.
+- Explicit operator direction is required before another Version 3 phase is
+  activated.
+
+Restrictions:
+
+- Do not infer P-04 from phase numbering.
+- Do not begin P-04.
+- Do not modify the governed source database.
+- Do not stage or commit unrelated preserved files.
