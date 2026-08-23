@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>Tailored Programs — {{ workspace['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 980px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; margin-bottom: 16px; background: #f9fafb; }
+    .program { border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; margin-bottom: 12px; background: white; }
+    .boundary { border-left: 4px solid #6b7280; padding: 12px; background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <p>
+    <a href="{{ url_for('workspace_detail', workspace_id=workspace['workspace_id']) }}">
+      Return to Workspace
+    </a>
+  </p>
+
+  <h1>Tailored Programs</h1>
+  <p><strong>Workspace:</strong> {{ workspace['title'] }}</p>
+
+  <div class="boundary">
+    <strong>Working-material boundary:</strong>
+    Tailored programs are developing planning artifacts. Creating, editing,
+    comparing, or revising a program does not make it an approved or governed
+    institutional record.
+  </div>
+
+  {% if session.get('role') in ['Admin', 'Trustee'] %}
+    <p>
+      <a href="{{ url_for('workspace_program_new', workspace_id=workspace['workspace_id']) }}">
+        New Tailored Program
+      </a>
+    </p>
+  {% endif %}
+
+  <div class="box">
+    {% for program in programs %}
+      <div class="program">
+        <h2>
+          <a href="{{ url_for(
+            'workspace_program_detail',
+            workspace_id=workspace['workspace_id'],
+            program_id=program['program_id']
+          ) }}">
+            {{ program['title'] }}
+          </a>
+        </h2>
+
+        <p><strong>Program ID:</strong> {{ program['program_id'] }}</p>
+        <p><strong>Status:</strong> {{ program['status'] }}</p>
+        <p><strong>Purpose:</strong> {{ program['purpose'] or 'Not yet stated.' }}</p>
+      </div>
+    {% else %}
+      <p>No tailored programs have been created in this workspace.</p>
+    {% endfor %}
+  </div>
+
+  {% include "_institutional_property_notice.html" %}
+</body>
+</html>

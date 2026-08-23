@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>{{ program['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 1080px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; margin-bottom: 16px; background: #f9fafb; }
+    .item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: white; }
+    .boundary { border-left: 4px solid #6b7280; padding: 12px; background: #f3f4f6; margin-bottom: 16px; }
+    label { display: block; font-weight: bold; margin-top: 10px; margin-bottom: 5px; }
+    input, textarea { width: 100%; padding: 9px; box-sizing: border-box; }
+    textarea { min-height: 90px; }
+  </style>
+</head>
+<body>
+  <p>
+    <a href="{{ url_for(
+      'workspace_programs',
+      workspace_id=workspace['workspace_id']
+    ) }}">Return to Programs</a>
+    |
+    <a href="{{ url_for(
+      'workspace_detail',
+      workspace_id=workspace['workspace_id']
+    ) }}">Return to Workspace</a>
+  </p>
+
+  <h1>{{ program['title'] }}</h1>
+
+  <div class="boundary">
+    <strong>Governance boundary:</strong>
+    This tailored program is protected working material. Goals, alternatives,
+    scenarios, working status, and revision snapshots are not governed facts,
+    approvals, professional conclusions, or promoted institutional records.
+  </div>
+
+  <div class="box">
+    <p><strong>Program ID:</strong> {{ program['program_id'] }}</p>
+    <p><strong>Workspace ID:</strong> {{ program['workspace_id'] }}</p>
+    <p><strong>Status:</strong> {{ program['status'] }}</p>
+    <p><strong>Purpose:</strong> {{ program['purpose'] or 'Not yet stated.' }}</p>
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <p>
+        <a href="{{ url_for(
+          'workspace_program_edit',
+          workspace_id=workspace['workspace_id'],
+          program_id=program['program_id']
+        ) }}">Edit Current Working Program</a>
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Goals</h2>
+
+    {% for goal in goals %}
+      <div class="item">
+        <p>{{ goal['goal_text'] }}</p>
+        <p><small>Status: {{ goal['status'] }}</small></p>
+      </div>
+    {% else %}
+      <p>No goals recorded yet.</p>
+    {% endfor %}
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <form method="post" action="{{ url_for(
+        'workspace_program_goal_add',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <label>New Goal</label>
+        <textarea name="goal_text"></textarea>
+        <p><button type="submit">Add Working Goal</button></p>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Alternatives</h2>
+
+    {% for alternative in alternatives %}
+      <div class="item">
+        <p><strong>{{ alternative['title'] }}</strong></p>
+        <p>{{ alternative['description'] or '' }}</p>
+        <p><small>Status: {{ alternative['status'] }}</small></p>
+      </div>
+    {% else %}
+      <p>No alternatives recorded yet.</p>
+    {% endfor %}
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <form method="post" action="{{ url_for(
+        'workspace_program_alternative_add',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <label>Alternative Title</label>
+        <input type="text" name="title">
+
+        <label>Description</label>
+        <textarea name="description"></textarea>
+
+        <p><button type="submit">Add Working Alternative</button></p>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Scenarios</h2>
+
+    {% for scenario in scenarios %}
+      <div class="item">
+        <p><strong>{{ scenario['title'] }}</strong></p>
+        <p>{{ scenario['scenario_text'] }}</p>
+        <p><small>Status: {{ scenario['status'] }}</small></p>
+      </div>
+    {% else %}
+      <p>No scenarios recorded yet.</p>
+    {% endfor %}
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <form method="post" action="{{ url_for(
+        'workspace_program_scenario_add',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        <label>Scenario Title</label>
+        <input type="text" name="title">
+
+        <label>Scenario</label>
+        <textarea name="scenario_text"></textarea>
+
+        <p><button type="submit">Add Working Scenario</button></p>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Revision Snapshots</h2>
+
+    <p>
+      Revision snapshots preserve earlier working states. A snapshot does not
+      signify approval, verification, promotion, or governance.
+    </p>
+
+    {% for revision in revisions %}
+      <div class="item">
+        <p><strong>Revision {{ revision['revision_number'] }}</strong></p>
+        <p>{{ revision['revision_note'] or 'No revision note.' }}</p>
+        <p><small>Captured: {{ revision['created_at'] }}</small></p>
+      </div>
+    {% else %}
+      <p>No revision snapshots have been captured.</p>
+    {% endfor %}
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <form method="post" action="{{ url_for(
+        'workspace_program_revision_create',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+        <label>Revision Note</label>
+        <textarea name="revision_note"></textarea>
+
+        <p><button type="submit">Capture Revision Snapshot</button></p>
+      </form>
+    {% endif %}
+  </div>
+
+  {% include "_institutional_property_notice.html" %}
+</body>
+</html>

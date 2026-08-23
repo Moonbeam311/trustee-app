@@ -28,6 +28,11 @@
         | <a href="{{ url_for('workspace_question_new', workspace_id=workspace['workspace_id']) }}">New Question</a>
       {% endif %}
       |
+      <a href="{{ url_for('workspace_programs', workspace_id=workspace['workspace_id']) }}">View Programs</a>
+      {% if session.get('role') in ['Admin', 'Trustee'] %}
+        | <a href="{{ url_for('workspace_program_new', workspace_id=workspace['workspace_id']) }}">New Program</a>
+      {% endif %}
+      |
       <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions">View Discussions</a> |
       <a href="/workspaces/{{ workspace['workspace_id'] }}/discussions/new">New Thread</a> |
       <a href="/workspaces/{{ workspace['workspace_id'] }}/tasks">View Tasks</a> |

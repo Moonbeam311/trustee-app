@@ -43,6 +43,22 @@ from services.services_work_learning_questions import (
     remove_question_learning_resource,
     QUESTION_STATUSES,
 )
+from services.services_work_learning_programs import (
+    ensure_work_learning_program_tables,
+    create_hub_program,
+    get_hub_programs_for_workspace,
+    get_hub_program,
+    update_hub_program,
+    create_program_goal,
+    get_program_goals,
+    create_program_alternative,
+    get_program_alternatives,
+    create_program_scenario,
+    get_program_scenarios,
+    create_program_revision,
+    get_program_revisions,
+    PROGRAM_STATUSES,
+)
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
     list_identity_assets,
@@ -2896,6 +2912,14 @@ ROLE_RULES = {
     "workspace_question_status": {"Admin", "Trustee"},
     "workspace_question_resource_add": {"Admin", "Trustee"},
     "workspace_question_resource_remove": {"Admin", "Trustee"},
+    "workspace_programs": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_new": {"Admin", "Trustee"},
+    "workspace_program_detail": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_edit": {"Admin", "Trustee"},
+    "workspace_program_goal_add": {"Admin", "Trustee"},
+    "workspace_program_alternative_add": {"Admin", "Trustee"},
+    "workspace_program_scenario_add": {"Admin", "Trustee"},
+    "workspace_program_revision_create": {"Admin", "Trustee"},
     "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
     "discussion_new": {"Admin", "Trustee"},
     "discussion_thread": {"Admin", "Trustee", "Viewer"},
@@ -12671,6 +12695,404 @@ def workspace_question_resource_remove(
         "workspace_question_detail",
         workspace_id=workspace_id,
         question_id=question_id,
+    ))
+
+
+
+@app.route("/workspaces/<workspace_id>/programs")
+def workspace_programs(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_program_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    programs = get_hub_programs_for_workspace(
+        workspace_id=workspace_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    return render_template(
+        "workspace_programs.html",
+        workspace=workspace,
+        programs=programs,
+    )
+
+
+@app.route("/workspaces/<workspace_id>/programs/new", methods=["GET", "POST"])
+def workspace_program_new(workspace_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_program_tables()
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "workspace_program_form.html",
+                workspace=workspace,
+                mode="new",
+                program=None,
+                program_statuses=PROGRAM_STATUSES,
+                error_message="Invalid or missing CSRF token.",
+            ), 400
+
+        firm_id = session.get("firm_id") or "FIRM-001"
+        owner_id = workspace.get("owner_id") or get_current_owner()
+        actor = session.get("username") or session.get("user_id") or "unknown"
+
+        try:
+            program_id = create_hub_program(
+                workspace_id=workspace_id,
+                firm_id=firm_id,
+                owner_id=owner_id,
+                title=request.form.get("title"),
+                purpose=request.form.get("purpose"),
+                created_by=str(actor),
+            )
+        except ValueError:
+            return render_template(
+                "workspace_program_form.html",
+                workspace=workspace,
+                mode="new",
+                program=None,
+                program_statuses=PROGRAM_STATUSES,
+                error_message="Program title is required.",
+            ), 400
+
+        return redirect(url_for(
+            "workspace_program_detail",
+            workspace_id=workspace_id,
+            program_id=program_id,
+        ))
+
+    return render_template(
+        "workspace_program_form.html",
+        workspace=workspace,
+        mode="new",
+        program=None,
+        program_statuses=PROGRAM_STATUSES,
+    )
+
+
+@app.route("/workspaces/<workspace_id>/programs/<program_id>")
+def workspace_program_detail(workspace_id, program_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_program_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    program = get_hub_program(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not program or program.get("workspace_id") != workspace_id:
+        return render_template(
+            "access_denied.html",
+            reason="This tailored program is not available within the current workspace context.",
+        ), 403
+
+    return render_template(
+        "workspace_program_detail.html",
+        workspace=workspace,
+        program=program,
+        goals=get_program_goals(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        alternatives=get_program_alternatives(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        scenarios=get_program_scenarios(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        revisions=get_program_revisions(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        program_statuses=PROGRAM_STATUSES,
+    )
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/edit",
+    methods=["GET", "POST"],
+)
+def workspace_program_edit(workspace_id, program_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return render_template(
+            "access_denied.html",
+            reason="This workspace is not available within your assigned firm scope.",
+        ), 403
+
+    ensure_work_learning_program_tables()
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    program = get_hub_program(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not program or program.get("workspace_id") != workspace_id:
+        return render_template(
+            "access_denied.html",
+            reason="This tailored program is not available within the current workspace context.",
+        ), 403
+
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template(
+                "workspace_program_form.html",
+                workspace=workspace,
+                mode="edit",
+                program=program,
+                program_statuses=PROGRAM_STATUSES,
+                error_message="Invalid or missing CSRF token.",
+            ), 400
+
+        try:
+            updated = update_hub_program(
+                program_id=program_id,
+                firm_id=firm_id,
+                owner_id=owner_id,
+                title=request.form.get("title"),
+                purpose=request.form.get("purpose"),
+                status=(request.form.get("status") or "").strip(),
+            )
+        except ValueError:
+            return render_template(
+                "workspace_program_form.html",
+                workspace=workspace,
+                mode="edit",
+                program=program,
+                program_statuses=PROGRAM_STATUSES,
+                error_message="Program title and a valid working status are required.",
+            ), 400
+
+        if not updated:
+            return "Program was not updated.", 404
+
+        return redirect(url_for(
+            "workspace_program_detail",
+            workspace_id=workspace_id,
+            program_id=program_id,
+        ))
+
+    return render_template(
+        "workspace_program_form.html",
+        workspace=workspace,
+        mode="edit",
+        program=program,
+        program_statuses=PROGRAM_STATUSES,
+    )
+
+
+def _workspace_program_context(workspace_id, program_id):
+    workspace = get_workspace_by_id(workspace_id)
+    if not workspace:
+        return None, None, None, None
+
+    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id = workspace.get("owner_id") or get_current_owner()
+
+    program = get_hub_program(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    )
+
+    if not program or program.get("workspace_id") != workspace_id:
+        return workspace, None, firm_id, owner_id
+
+    return workspace, program, firm_id, owner_id
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/goals",
+    methods=["POST"],
+)
+def workspace_program_goal_add(workspace_id, program_id):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason="This tailored program is not available within the current workspace context.",
+        ), 403
+
+    actor = session.get("username") or session.get("user_id") or "unknown"
+
+    try:
+        create_program_goal(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            goal_text=request.form.get("goal_text"),
+            created_by=str(actor),
+        )
+    except ValueError:
+        return "Goal text is required.", 400
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/alternatives",
+    methods=["POST"],
+)
+def workspace_program_alternative_add(workspace_id, program_id):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason="This tailored program is not available within the current workspace context.",
+        ), 403
+
+    actor = session.get("username") or session.get("user_id") or "unknown"
+
+    try:
+        create_program_alternative(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            title=request.form.get("title"),
+            description=request.form.get("description"),
+            created_by=str(actor),
+        )
+    except ValueError:
+        return "Alternative title is required.", 400
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/scenarios",
+    methods=["POST"],
+)
+def workspace_program_scenario_add(workspace_id, program_id):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason="This tailored program is not available within the current workspace context.",
+        ), 403
+
+    actor = session.get("username") or session.get("user_id") or "unknown"
+
+    try:
+        create_program_scenario(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            title=request.form.get("title"),
+            scenario_text=request.form.get("scenario_text"),
+            created_by=str(actor),
+        )
+    except ValueError:
+        return "Scenario title and scenario text are required.", 400
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/revisions",
+    methods=["POST"],
+)
+def workspace_program_revision_create(workspace_id, program_id):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason="This tailored program is not available within the current workspace context.",
+        ), 403
+
+    actor = session.get("username") or session.get("user_id") or "unknown"
+
+    create_program_revision(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+        revision_note=request.form.get("revision_note"),
+        created_by=str(actor),
+    )
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
     ))
 
 

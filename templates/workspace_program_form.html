@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>{% if mode == 'edit' %}Edit Tailored Program{% else %}New Tailored Program{% endif %}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    label { display: block; font-weight: bold; margin-top: 14px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
+    textarea { min-height: 120px; }
+    .error { color: #991b1b; background: #fef2f2; border: 1px solid #fecaca; padding: 10px; border-radius: 8px; }
+    .boundary { border-left: 4px solid #6b7280; padding: 12px; background: #f3f4f6; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <p>
+    {% if mode == 'edit' and program %}
+      <a href="{{ url_for(
+        'workspace_program_detail',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">Return to Program</a>
+    {% else %}
+      <a href="{{ url_for(
+        'workspace_programs',
+        workspace_id=workspace['workspace_id']
+      ) }}">Return to Programs</a>
+    {% endif %}
+  </p>
+
+  <h1>{% if mode == 'edit' %}Edit Tailored Program{% else %}New Tailored Program{% endif %}</h1>
+
+  <div class="boundary">
+    This form edits protected working material. Saving it does not approve,
+    verify, promote, or govern the program.
+  </div>
+
+  {% if error_message %}
+    <div class="error">{{ error_message }}</div>
+  {% endif %}
+
+  <form method="post">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+
+    <label>Program Title</label>
+    <input
+      type="text"
+      name="title"
+      value="{{ program['title'] if program else '' }}"
+    >
+
+    <label>Purpose</label>
+    <textarea name="purpose">{{ program['purpose'] if program and program['purpose'] else '' }}</textarea>
+
+    {% if mode == 'edit' %}
+      <label>Working Status</label>
+      <select name="status">
+        {% for status in program_statuses %}
+          <option
+            value="{{ status }}"
+            {% if program and program['status'] == status %}selected{% endif %}
+          >
+            {{ status }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <p>
+        <small>
+          “ready_for_review” identifies working material ready for human review.
+          It does not mean approved or governed.
+        </small>
+      </p>
+    {% endif %}
+
+    <p><button type="submit">Save Working Program</button></p>
+  </form>
+
+  {% include "_institutional_property_notice.html" %}
+</body>
+</html>
