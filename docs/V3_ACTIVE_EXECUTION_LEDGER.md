@@ -1473,3 +1473,55 @@ Restrictions:
 - Do not modify product code or the governed source database.
 - P04 product work begins only under its separately executed bounded
   implementation directive.
+
+## V3-MOD-WLH-P04 Bounded Product Path Registration — 2026-08-23
+
+`V3-MOD-WLH-P04` — AUTHORIZED / BOUNDED IMPLEMENTATION PATHS REGISTERED.
+
+Purpose:
+
+Implement the Work & Learning Hub working-issue layer for assumptions, gaps,
+conflicts, and unresolved issues while preserving the P03 working-material
+boundary.
+
+Authorized P04 product paths:
+
+- `app.py`
+- `services/services_work_learning_programs.py`
+- `templates/workspace_program_detail.html`
+- `tests/test_v3_mod_wlh_p04.py`
+
+P04 semantic boundary:
+
+- working issues remain Work & Learning Hub-owned planning artifacts;
+- issue state does not establish a governed fact, approval, professional
+  conclusion, legal authority, or institutional promotion;
+- P04 reuses the Guide evidence-state vocabulary
+  `documented / corroborated / inferred / disputed / unresolved`;
+- evidence-state selection remains a working classification and does not by
+  itself verify evidence;
+- issue resolution means only that the operator has addressed the working
+  issue inside the program;
+- no P05 source/reference relationship is created by P04;
+- no P06 handoff capability is created by P04;
+- no P07 governed promotion capability is created by P04;
+- no P08 unified provenance subsystem is created by P04;
+- no HOS-DOC-1 or HOS-DEMO-1 implementation is authorized.
+
+Required P04 gates:
+
+- preserve P01/P02/P03 regression behavior;
+- enforce firm and owner scope through the canonical parent program;
+- preserve Viewer read-only behavior;
+- require CSRF on P04 mutation routes;
+- prevent browser-supplied firm/owner scope;
+- use disposable SQLite data for product regression and browser validation;
+- perform manual browser validation because P04 changes rendered behavior;
+- preserve governed source database and protected V3 records.
+
+Status:
+
+- `V3-MOD-WLH-P04` — AUTHORIZED / IMPLEMENTATION NOT YET COMMITTED.
+- `V3-MOD-WLH-P05` through `V3-MOD-WLH-P08` — NOT AUTHORIZED.
+- `HOS-DOC-1` — NOT AUTHORIZED.
+- `HOS-DEMO-1` — NOT AUTHORIZED.
