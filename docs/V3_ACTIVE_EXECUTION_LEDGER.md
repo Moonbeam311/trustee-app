@@ -1386,3 +1386,90 @@ Restrictions:
 - Do not begin P-04.
 - Do not modify the governed source database.
 - Do not stage or commit unrelated preserved files.
+
+## Expanded V3 Integration Scope Lock and P04 Authorization — 2026-08-23
+
+`V3-REC-INTEGRATE-2` — COMPLETE / CONTROL SCOPE LOCK.
+
+Operator decision:
+
+Following the read-only `V3-REC-INTEGRATE-1` forensic recovery audit, the
+remaining Version 3 product boundary is intentionally expanded to integrate
+the documented Work & Learning Hub and Hindsfoot OS capabilities that were
+paused, interrupted, partially implemented, or supported by reusable adjacent
+institutional architecture.
+
+Expanded Integrated V3 remaining boundary:
+
+- `V3-MOD-WLH-P04` — assumptions, gaps, conflicts, and unresolved issues;
+- `V3-MOD-WLH-P05` — sources, references, and attribution;
+- `V3-MOD-WLH-P06` — saved-state continuity and authorized workspace handoff;
+- `V3-MOD-WLH-P07` — explicit promotion of working material into governed
+  institutional records;
+- `V3-MOD-WLH-P08` — unified Work & Learning Hub provenance and audit history;
+- `HOS-DOC-1` — generated-document attribution and provenance integration;
+- `HOS-DEMO-1` — safe governed demonstration environment;
+- only the bounded cross-module integration, regression, browser, preservation,
+  and certification work required to make those documented capabilities operate
+  coherently.
+
+Hard Version 3 boundary:
+
+- Do not add unrelated new feature families merely because adjacent capability
+  is discovered during integration.
+- Reuse existing canonical V3 service, evidence, authorization, provenance,
+  Document, Continuity, Handoff, Governance, Execution, Archive, and Guide
+  contracts where current repository evidence supports reuse.
+- Do not reconstruct or duplicate an institutional subsystem when a newer
+  canonical subsystem already owns that responsibility.
+- Existing implementation under another phase name is reusable evidence, but
+  does not automatically certify a target WLH/HOS phase.
+- Each target phase must establish its own integration, regression, security,
+  preservation, and certification boundary.
+- Route/template/rendered behavior changes require isolated Flask/manual browser
+  validation using disposable data before the corresponding phase may close.
+- The governed source database remains protected.
+
+Dependency decision:
+
+`V3-MOD-WLH-P04` is deliberately selected as the first Expanded Integrated V3
+product phase because assumptions, gaps, conflicts, and unresolved issues form
+the working-evidence layer required before source attribution, handoff,
+governed promotion, and unified provenance can be integrated coherently.
+
+P04 implementation intent:
+
+- create the minimum WLH-owned persistence and service boundary necessary for
+  assumptions, gaps, conflicts, and unresolved issues;
+- reuse established Guide/gap/evidence terminology and semantics where
+  compatible;
+- do not store WLH records inside Continuity, Handoff, Guide, Governance, or
+  other independently owned domain tables;
+- preserve firm scope, workspace/program ownership, explicit authorization,
+  CSRF protection, provenance, and non-authoritative working-state semantics;
+- do not implement P05, P06, P07, P08, HOS-DOC-1, or HOS-DEMO-1 inside P04
+  merely because reusable infrastructure exists.
+
+NEXT AUTHORIZED ACTION:
+
+V3-MOD-WLH-P04
+
+Status:
+
+- `V3-REC-INTEGRATE-1` — COMPLETE / READ-ONLY FORENSIC RECOVERY.
+- `V3-REC-INTEGRATE-2` — COMPLETE / EXPANDED V3 SCOPE LOCKED.
+- `V3-MOD-WLH-P03C.4C` — COMPLETE / CLOSED.
+- `V3-MOD-WLH-P04` — AUTHORIZED NEXT / NOT STARTED.
+- `V3-MOD-WLH-P05` through `V3-MOD-WLH-P08` — IN EXPANDED V3 BOUNDARY /
+  NOT YET AUTHORIZED.
+- `HOS-DOC-1` — IN EXPANDED V3 BOUNDARY / NOT YET AUTHORIZED.
+- `HOS-DEMO-1` — IN EXPANDED V3 BOUNDARY / NOT YET AUTHORIZED.
+
+Restrictions:
+
+- This control transition does not implement P04.
+- Do not begin P05 or any later WLH phase.
+- Do not begin HOS-DOC-1 or HOS-DEMO-1.
+- Do not modify product code or the governed source database.
+- P04 product work begins only under its separately executed bounded
+  implementation directive.
