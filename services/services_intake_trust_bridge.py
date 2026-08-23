@@ -610,8 +610,23 @@ def create_continuity_profile(db_path, firm_id, subject_name, subject_type, capa
     migrate_intake_trust_bridge(db_path)
     conn = _connect(db_path)
     try:
-        if bridge_id and not conn.execute("SELECT 1 FROM intake_trust_formation_bridges WHERE bridge_id=? AND firm_id=?", (bridge_id, firm_id)).fetchone():
-            raise BridgeError("Bridge is not available in this firm.")
+        bridge = None
+        if bridge_id:
+            bridge = conn.execute(
+                "SELECT bridge_id,trust_id FROM intake_trust_formation_bridges WHERE bridge_id=? AND firm_id=?",
+                (bridge_id, firm_id),
+            ).fetchone()
+            if not bridge:
+                raise BridgeError("Bridge is not available in this firm.")
+        if trust_id:
+            trust = conn.execute(
+                "SELECT trust_id FROM trusts WHERE trust_id=? AND firm_id=?",
+                (trust_id, firm_id),
+            ).fetchone()
+            if not trust:
+                raise BridgeError("Trust is not available in this firm.")
+            if bridge and bridge["trust_id"] != trust_id:
+                raise BridgeError("Trust does not match the bridge's governed Trust provenance.")
         now, profile_id = _now(), _id("CP")
         conn.execute("""
             INSERT INTO continuity_profiles
