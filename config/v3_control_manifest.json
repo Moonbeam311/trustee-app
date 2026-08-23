@@ -16,8 +16,8 @@
     "V3-MOD-WLH-P01": "0b0ab79",
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8"
   },
-  "active_phase": "V3-AUD-SERVICE-CONTRACTS-R1",
-  "suspended_feature_phase": "V3-MOD-WLH-P03C.4C",
+  "active_phase": "V3-MOD-WLH-P03C.4C",
+  "suspended_feature_phase": null,
   "allowed_dirty_paths": [
     "app.py",
     "templates/workspace_detail.html",
@@ -65,7 +65,7 @@
     "docs/v3_service_contracts_r1_path_registration_2026-08-21.md",
     "scripts/v3_control_guard.py"
   ],
-  "next_authorized_action": "V3-AUD-SERVICE-CONTRACTS-R1",
+  "next_authorized_action": "V3-MOD-WLH-P03C.4C",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -82,7 +82,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "6459a8b9edddac53ee3db8459dbb4bfcdce704485f456f50712c73a540645ce2",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "a87f30b352f78e2b9edf61c5ac186015ed17b3919e0895bb44dd45d6afc5b2d7",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {

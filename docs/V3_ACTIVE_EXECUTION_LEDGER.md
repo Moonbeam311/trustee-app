@@ -1254,3 +1254,57 @@ Restrictions:
 - No event-history API, schema redesign, unrelated route/UI work, P03, or
   source-database mutation.
 
+
+## R1 Trust-Binding Repair Closure and WLH P03 Control Restoration — 2026-08-23
+
+`V3-AUD-SERVICE-CONTRACTS-R1` — COMPLETE / IMPLEMENTED / REGRESSION VERIFIED /
+BROWSER CERTIFIED / REMOTELY ANCHORED.
+
+Implementation commit:
+
+`467724293244ecb5672012109e6652469e531bc7`
+
+R1 closure evidence confirms:
+
+- canonical same-firm Trust validation on Continuity Profile creation;
+- bridge/Trust governed-provenance agreement;
+- fail-closed nonexistent and cross-firm Trust handling without profile/event creation;
+- preservation of unbound pre-Trust Continuity Profiles;
+- focused service and route regression completion;
+- successful provenance-controlled manual browser certification;
+- source-database, protected-record, and P03 preservation.
+
+The service-contract repair sequence is closed. The audit's event-history-read
+finding remains `UNSUPPORTED_FUTURE_CAPABILITY`; it is not a required follow-up
+and does not block closure.
+
+CONTROL RESTORATION:
+
+`V3-MOD-WLH-P03C.4C` is restored as the exact next controlled Version 3 phase.
+
+NEXT AUTHORIZED ACTION:
+
+V3-MOD-WLH-P03C.4C
+
+Status:
+
+- `V3-AUD-SERVICE-CONTRACTS-R1` — COMPLETE / CLOSED.
+- `V3-AUD-SERVICE-CONTRACTS` repair sequence — COMPLETE / CLOSED.
+- `V3-MOD-WLH-P03C.4C` — AUTHORIZED NEXT / NOT STARTED.
+- P-04 and later WLH phases — NOT AUTHORIZED.
+
+P03C.4C resumes at its preserved documented gate:
+
+- authorization regression;
+- CSRF regression;
+- firm-scope regression.
+
+This control transition does not itself resume, edit, normalize, restore, stage,
+or test the preserved P03 implementation footprint.
+
+Restrictions:
+
+- Do not begin P-04.
+- Do not reopen R1, its browser certification, or its fixture/auth sequence.
+- Do not modify the governed source database.
+- P03 product work begins only in the separately executed P03C.4C phase.
