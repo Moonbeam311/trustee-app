@@ -1607,3 +1607,68 @@ Status:
 NEXT AUTHORIZED ACTION:
 
 V3-MOD-WLH-P05
+
+## V3-MOD-WLH-P05 Relationship Model and Implementation Path Registration — 2026-08-24
+
+`V3-MOD-WLH-P05` remains the authorized active phase.
+
+Read-only P05 contract audits established:
+
+- general Work & Learning Hub source/reference attribution is authorized;
+- no dedicated P05 source/reference persistence exists in the current WLH layer;
+- `hub_question_learning_resources` is a P02 learning-resource relationship
+  table and is not P05 source-attribution storage;
+- no existing exact P05 program/issue source relationship implementation was
+  found;
+- controlling authority does not uniquely specify Program, Issue, or Question
+  as the exclusive child attachment target.
+
+OPERATOR ARCHITECTURE DECISION:
+
+`PROGRAM ROOT + OPTIONAL ISSUE CHILD`
+
+The tailored Program is the canonical P05 relationship root because it already
+carries canonical workspace, firm, and owner scope.
+
+A P05 source/reference may optionally identify one P04 working issue as its
+specific working target. The issue remains subordinate to the same Program and
+must pass the same firm/owner-scoped parent authorization.
+
+Questions are not made P05 attribution targets. Certified P02
+question-learning-resource relationships remain separately owned and are not
+reclassified as evidence/source attribution.
+
+P05 semantic boundaries:
+
+- a reference identifies attribution only;
+- reference existence is not verification;
+- reference existence does not change a P04 issue evidence state;
+- reference existence does not make a working statement a governed fact;
+- reference existence does not constitute professional approval;
+- reference existence does not promote material into a governed record;
+- Document, Governance, Evidence, Guide, and P02 records remain canonically
+  owned by their existing subsystems;
+- P05 may reference compatible canonical records without copying or replacing
+  their authoritative storage;
+- P06 handoff, P07 promotion, P08 unified provenance, HOS-DOC-1 completion, and
+  HOS-DEMO-1 remain unauthorized.
+
+Authorized P05 implementation paths:
+
+- `app.py`
+- `services/services_work_learning_programs.py`
+- `templates/workspace_program_detail.html`
+- `tests/test_v3_mod_wlh_p05.py`
+
+No other product path is authorized by this registration.
+
+P05 implementation is not started by this control record.
+
+NEXT AUTHORIZED ACTION:
+
+Implement the bounded P05 Program-root / optional-Issue-child source/reference
+attribution layer using only the registered paths, existing canonical contracts,
+disposable test data, required security regression, and manual browser
+certification before product commit.
+
+Do not begin P06.

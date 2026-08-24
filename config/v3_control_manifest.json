@@ -57,7 +57,11 @@
     "tests/test_v3_aud_service_contracts_r1.py",
     "docs/v3_service_contracts_r1_trust_binding_repair_2026-08-21.md",
     "docs/v3_service_contracts_r1_path_registration_2026-08-21.md",
-    "scripts/v3_control_guard.py"
+    "scripts/v3_control_guard.py",
+    "app.py",
+    "services/services_work_learning_programs.py",
+    "templates/workspace_program_detail.html",
+    "tests/test_v3_mod_wlh_p05.py"
   ],
   "next_authorized_action": "V3-MOD-WLH-P05",
   "prohibited_actions": [
@@ -76,7 +80,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "7acf90238d09d1cde6db99581c93633bc82c50c0c0f9b50fbe5fb31b7a266ca1",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "16866558c62ffa86dd5219333c7b520123ffefaf79d71db596b8bde8179b1e93",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "certified_controls": {
