@@ -1525,3 +1525,85 @@ Status:
 - `V3-MOD-WLH-P05` through `V3-MOD-WLH-P08` — NOT AUTHORIZED.
 - `HOS-DOC-1` — NOT AUTHORIZED.
 - `HOS-DEMO-1` — NOT AUTHORIZED.
+
+## V3-MOD-WLH-P04 Completion Closeout and P05 Control Authorization — 2026-08-24
+
+`V3-MOD-WLH-P04` — IMPLEMENTED / REGRESSION VERIFIED / MANUAL BROWSER
+CERTIFIED / REMOTELY ANCHORED / CONTROL CLOSED.
+
+P04 implementation evidence:
+
+- bounded implementation paths were remotely registered by
+  `122fe633f59dcf90606145c6e5bc289d3ef508a2`;
+- exact four-file P04 product implementation was committed as
+  `79ecc66f4385a6b259ff451e2218ae512c70476a`;
+- the combined P01/P02/P03/P04 regression boundary passed 44 tests before
+  browser certification, after browser certification, at the staged boundary,
+  and after remote product anchoring;
+- manual browser certification passed using an isolated disposable runtime;
+- disposable browser evidence recorded three P04 working issues and two
+  revision snapshots;
+- the tested Gap persisted as evidence state `documented`, working status
+  `resolved`, with its working resolution note;
+- P04 preserved the Work & Learning Hub non-authoritative planning boundary;
+- P04 preserved Admin/Trustee mutation and Viewer read-only role semantics;
+- P04 mutation routes require CSRF protection;
+- firm and owner scope remain derived from canonical workspace/program context;
+- browser-supplied firm/owner scope is not accepted;
+- P04 reuses the established
+  `documented / corroborated / inferred / disputed / unresolved`
+  evidence-state vocabulary;
+- P04 does not implement P05 source-attribution ownership, P06 handoff,
+  P07 governed promotion, P08 unified provenance, HOS-DOC-1, or HOS-DEMO-1;
+- the governed source database and protected V3 records remained unchanged.
+
+P04 working-issue scope:
+
+- assumption;
+- gap;
+- conflict;
+- unresolved issue;
+- open / resolved / dismissed working disposition;
+- evidence-state classification;
+- working resolution note;
+- inclusion in program revision snapshots.
+
+Control decision:
+
+P04 is complete and its temporary dirty-path authorization is retired.
+
+Under the already locked Expanded Integrated V3 sequence, the next bounded
+Work & Learning Hub phase is:
+
+`V3-MOD-WLH-P05`
+
+P05 purpose:
+
+Establish first-class Work & Learning Hub source/reference attribution while
+reusing existing canonical source, evidence, Guide, Document, Governance, and
+question-learning-resource contracts where compatible.
+
+P05 boundaries:
+
+- P05 may identify and attribute sources/references;
+- P05 must not treat the existence of a reference as verification;
+- P05 must not create a shadow Document, Governance, Evidence, or provenance
+  subsystem;
+- P05 must remain firm/owner scoped through canonical WLH parents;
+- P05 must preserve the distinction between working evidence classification
+  and governed institutional facts;
+- P05 does not authorize P06 handoff, P07 promotion, P08 unified provenance,
+  HOS-DOC-1 completion, or HOS-DEMO-1.
+
+Status:
+
+- `V3-MOD-WLH-P04` — COMPLETE / CONTROL CLOSED.
+- `V3-MOD-WLH-P05` — AUTHORIZED NEXT / NOT STARTED.
+- `V3-MOD-WLH-P06` through `V3-MOD-WLH-P08` — IN EXPANDED V3 BOUNDARY /
+  NOT YET AUTHORIZED.
+- `HOS-DOC-1` — IN EXPANDED V3 BOUNDARY / NOT YET AUTHORIZED.
+- `HOS-DEMO-1` — IN EXPANDED V3 BOUNDARY / NOT YET AUTHORIZED.
+
+NEXT AUTHORIZED ACTION:
+
+V3-MOD-WLH-P05
