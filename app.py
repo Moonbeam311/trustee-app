@@ -55,6 +55,12 @@ from services.services_work_learning_programs import (
     get_program_alternatives,
     create_program_scenario,
     get_program_scenarios,
+    create_program_issue,
+    get_program_issues,
+    update_program_issue,
+    ISSUE_TYPES,
+    ISSUE_STATUSES,
+    ISSUE_EVIDENCE_STATES,
     create_program_revision,
     get_program_revisions,
     PROGRAM_STATUSES,
@@ -2919,6 +2925,8 @@ ROLE_RULES = {
     "workspace_program_goal_add": {"Admin", "Trustee"},
     "workspace_program_alternative_add": {"Admin", "Trustee"},
     "workspace_program_scenario_add": {"Admin", "Trustee"},
+    "workspace_program_issue_add": {"Admin", "Trustee"},
+    "workspace_program_issue_update": {"Admin", "Trustee"},
     "workspace_program_revision_create": {"Admin", "Trustee"},
     "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
     "discussion_new": {"Admin", "Trustee"},
@@ -12831,6 +12839,14 @@ def workspace_program_detail(workspace_id, program_id):
             firm_id=firm_id,
             owner_id=owner_id,
         ),
+        issues=get_program_issues(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        issue_types=ISSUE_TYPES,
+        issue_statuses=ISSUE_STATUSES,
+        issue_evidence_states=ISSUE_EVIDENCE_STATES,
         revisions=get_program_revisions(
             program_id=program_id,
             firm_id=firm_id,
@@ -13051,6 +13067,113 @@ def workspace_program_scenario_add(workspace_id, program_id):
         )
     except ValueError:
         return "Scenario title and scenario text are required.", 400
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/issues",
+    methods=["POST"],
+)
+def workspace_program_issue_add(workspace_id, program_id):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "This tailored program is not available within "
+                "the current workspace context."
+            ),
+        ), 403
+
+    actor = (
+        session.get("username")
+        or session.get("user_id")
+        or "unknown"
+    )
+
+    try:
+        create_program_issue(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            issue_type=request.form.get("issue_type"),
+            statement=request.form.get("statement"),
+            evidence_state=request.form.get("evidence_state"),
+            created_by=str(actor),
+        )
+    except ValueError as exc:
+        return f"Invalid working issue: {exc}", 400
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/issues/<issue_id>/update",
+    methods=["POST"],
+)
+def workspace_program_issue_update(
+    workspace_id,
+    program_id,
+    issue_id,
+):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "This tailored program is not available within "
+                "the current workspace context."
+            ),
+        ), 403
+
+    try:
+        changed = update_program_issue(
+            issue_id=issue_id,
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            evidence_state=request.form.get("evidence_state"),
+            status=request.form.get("status"),
+            resolution_note=request.form.get("resolution_note"),
+        )
+    except ValueError as exc:
+        return f"Invalid working issue update: {exc}", 400
+
+    if not changed:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "This working issue is not available within "
+                "the current tailored-program context."
+            ),
+        ), 403
 
     return redirect(url_for(
         "workspace_program_detail",

@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 import json
 import uuid
 
+from services.guide_foundation import GENEALOGY_EVIDENCE_STATES
+
 
 PROGRAM_STATUSES = (
     "draft",
@@ -35,6 +37,24 @@ SCENARIO_STATUSES = (
     "tested",
     "retired",
 )
+
+# P04 owns working issue records inside the Work & Learning Hub.
+# The evidence-state vocabulary is reused from the Guide foundation while
+# persistence and lifecycle ownership remain with the tailored program.
+ISSUE_TYPES = (
+    "assumption",
+    "gap",
+    "conflict",
+    "unresolved_issue",
+)
+
+ISSUE_STATUSES = (
+    "open",
+    "resolved",
+    "dismissed",
+)
+
+ISSUE_EVIDENCE_STATES = tuple(GENEALOGY_EVIDENCE_STATES)
 
 
 def _now():
@@ -120,6 +140,26 @@ def ensure_work_learning_program_tables():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_hub_program_scenarios_program
         ON hub_program_scenarios (program_id)
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS hub_program_issues (
+            issue_id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            issue_type TEXT NOT NULL,
+            statement TEXT NOT NULL,
+            evidence_state TEXT NOT NULL DEFAULT 'unresolved',
+            status TEXT NOT NULL DEFAULT 'open',
+            resolution_note TEXT,
+            created_by TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS idx_hub_program_issues_program
+        ON hub_program_issues (program_id, status, created_at)
     """)
 
     cur.execute("""
@@ -460,6 +500,155 @@ def get_program_scenarios(*, program_id, firm_id, owner_id):
     return [dict(row) for row in rows]
 
 
+
+def create_program_issue(
+    *,
+    program_id,
+    firm_id,
+    owner_id,
+    issue_type,
+    statement,
+    evidence_state,
+    created_by,
+):
+    """Create one non-authoritative P04 working issue."""
+
+    if not _program_available(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    ):
+        raise ValueError("program_not_available_in_context")
+
+    issue_type = (issue_type or "").strip().lower()
+    statement = (statement or "").strip()
+    evidence_state = (
+        (evidence_state or "unresolved").strip().lower()
+    )
+
+    if issue_type not in ISSUE_TYPES:
+        raise ValueError("invalid_program_issue_type")
+
+    if not statement:
+        raise ValueError("program_issue_statement_required")
+
+    if evidence_state not in ISSUE_EVIDENCE_STATES:
+        raise ValueError("invalid_program_issue_evidence_state")
+
+    issue_id = _id("ISS")
+    now = _now()
+
+    conn = get_connection()
+    conn.execute("""
+        INSERT INTO hub_program_issues (
+            issue_id,
+            program_id,
+            issue_type,
+            statement,
+            evidence_state,
+            status,
+            resolution_note,
+            created_by,
+            created_at,
+            updated_at
+        ) VALUES (?, ?, ?, ?, ?, 'open', NULL, ?, ?, ?)
+    """, (
+        issue_id,
+        program_id,
+        issue_type,
+        statement,
+        evidence_state,
+        created_by,
+        now,
+        now,
+    ))
+    conn.commit()
+    conn.close()
+    return issue_id
+
+
+def get_program_issues(*, program_id, firm_id, owner_id):
+    """Return P04 working issues only after canonical parent scope resolves."""
+
+    if not _program_available(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    ):
+        return []
+
+    conn = get_connection()
+    conn.row_factory = __import__("sqlite3").Row
+    rows = conn.execute("""
+        SELECT *
+        FROM hub_program_issues
+        WHERE program_id = ?
+        ORDER BY
+            CASE status
+                WHEN 'open' THEN 1
+                WHEN 'resolved' THEN 2
+                ELSE 3
+            END,
+            created_at,
+            issue_id
+    """, (program_id,)).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+def update_program_issue(
+    *,
+    issue_id,
+    program_id,
+    firm_id,
+    owner_id,
+    evidence_state,
+    status,
+    resolution_note,
+):
+    """Update only the working classification/disposition of a scoped issue."""
+
+    if not _program_available(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    ):
+        return False
+
+    evidence_state = (
+        (evidence_state or "unresolved").strip().lower()
+    )
+    status = (status or "").strip().lower()
+
+    if evidence_state not in ISSUE_EVIDENCE_STATES:
+        raise ValueError("invalid_program_issue_evidence_state")
+
+    if status not in ISSUE_STATUSES:
+        raise ValueError("invalid_program_issue_status")
+
+    conn = get_connection()
+    cur = conn.execute("""
+        UPDATE hub_program_issues
+        SET evidence_state = ?,
+            status = ?,
+            resolution_note = ?,
+            updated_at = ?
+        WHERE issue_id = ?
+          AND program_id = ?
+    """, (
+        evidence_state,
+        status,
+        (resolution_note or "").strip() or None,
+        _now(),
+        issue_id,
+        program_id,
+    ))
+    conn.commit()
+    changed = cur.rowcount
+    conn.close()
+    return bool(changed)
+
+
 def build_program_snapshot(*, program_id, firm_id, owner_id):
     program = get_hub_program(
         program_id=program_id,
@@ -482,6 +671,11 @@ def build_program_snapshot(*, program_id, firm_id, owner_id):
             owner_id=owner_id,
         ),
         "scenarios": get_program_scenarios(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        "issues": get_program_issues(
             program_id=program_id,
             firm_id=firm_id,
             owner_id=owner_id,

@@ -32,8 +32,9 @@
   <div class="boundary">
     <strong>Governance boundary:</strong>
     This tailored program is protected working material. Goals, alternatives,
-    scenarios, working status, and revision snapshots are not governed facts,
-    approvals, professional conclusions, or promoted institutional records.
+    scenarios, assumptions, gaps, conflicts, unresolved issues, working status,
+    and revision snapshots are not governed facts, approvals, professional
+    conclusions, or promoted institutional records.
   </div>
 
   <div class="box">
@@ -138,6 +139,136 @@
         <textarea name="scenario_text"></textarea>
 
         <p><button type="submit">Add Working Scenario</button></p>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="box">
+    <h2>Assumptions, Gaps, Conflicts &amp; Unresolved Issues</h2>
+
+    <p>
+      These are working issues inside this tailored program. Their type,
+      evidence state, or resolution status does not make them verified,
+      authoritative, governed, or promoted institutional records.
+    </p>
+
+    <p>
+      <small>
+        Evidence-state vocabulary:
+        documented → corroborated → inferred → disputed → unresolved.
+        P04 records the working classification only; source attribution is a
+        later controlled capability.
+      </small>
+    </p>
+
+    {% for issue in issues %}
+      <div class="item">
+        <p>
+          <strong>
+            {{ issue['issue_type'] | replace('_', ' ') | title }}
+          </strong>
+        </p>
+
+        <p>{{ issue['statement'] }}</p>
+
+        <p>
+          <small>
+            Evidence state: {{ issue['evidence_state'] }}
+            |
+            Working status: {{ issue['status'] }}
+          </small>
+        </p>
+
+        {% if issue['resolution_note'] %}
+          <p>
+            <strong>Working resolution note:</strong>
+            {{ issue['resolution_note'] }}
+          </p>
+        {% endif %}
+
+        {% if session.get('role') in ['Admin', 'Trustee'] %}
+          <form method="post" action="{{ url_for(
+            'workspace_program_issue_update',
+            workspace_id=workspace['workspace_id'],
+            program_id=program['program_id'],
+            issue_id=issue['issue_id']
+          ) }}">
+            <input
+              type="hidden"
+              name="_csrf_token"
+              value="{{ csrf_token() }}"
+            >
+
+            <label>Evidence State</label>
+            <select name="evidence_state">
+              {% for state in issue_evidence_states %}
+                <option
+                  value="{{ state }}"
+                  {% if state == issue['evidence_state'] %}selected{% endif %}
+                >{{ state | title }}</option>
+              {% endfor %}
+            </select>
+
+            <label>Working Status</label>
+            <select name="status">
+              {% for state in issue_statuses %}
+                <option
+                  value="{{ state }}"
+                  {% if state == issue['status'] %}selected{% endif %}
+                >{{ state | title }}</option>
+              {% endfor %}
+            </select>
+
+            <label>Working Resolution Note</label>
+            <textarea name="resolution_note">{{ issue['resolution_note'] or '' }}</textarea>
+
+            <p>
+              <button type="submit">Update Working Issue</button>
+            </p>
+          </form>
+        {% endif %}
+      </div>
+    {% else %}
+      <p>No assumptions, gaps, conflicts, or unresolved issues recorded yet.</p>
+    {% endfor %}
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <form method="post" action="{{ url_for(
+        'workspace_program_issue_add',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input
+          type="hidden"
+          name="_csrf_token"
+          value="{{ csrf_token() }}"
+        >
+
+        <label>Working Issue Type</label>
+        <select name="issue_type">
+          {% for issue_type in issue_types %}
+            <option value="{{ issue_type }}">
+              {{ issue_type | replace('_', ' ') | title }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <label>Statement</label>
+        <textarea name="statement"></textarea>
+
+        <label>Evidence State</label>
+        <select name="evidence_state">
+          {% for state in issue_evidence_states %}
+            <option
+              value="{{ state }}"
+              {% if state == 'unresolved' %}selected{% endif %}
+            >{{ state | title }}</option>
+          {% endfor %}
+        </select>
+
+        <p>
+          <button type="submit">Add Working Issue</button>
+        </p>
       </form>
     {% endif %}
   </div>
