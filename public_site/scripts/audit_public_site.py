@@ -35,6 +35,7 @@ ASSETS = (
     "assets/images/brand/hindsfoot_emblem_circle_512.png",
     "assets/images/brand/hindsfoot_header_seal_512.png",
     "assets/images/brand/hindsfoot_os_hero_identity_no_principle.png",
+    "assets/images/brand/hindsfoot_os_public_hero_hybrid_approved.png",
     "assets/images/brand/apple-touch-icon-180.png",
     "assets/images/brand/favicon-32.png",
     "assets/images/brand/favicon-16.png",
@@ -189,13 +190,92 @@ home = (ROOT / "index.html").read_text(encoding="utf-8")
 check("locked homepage principle", all(fragment in home for fragment in ("Sure Footing Across", "Generations.")))
 check("locked descriptor preserved", "The Personal Institutional Operating System" in home)
 check("locked official tagline preserved", "Govern your affairs. Preserve your record. Carry your legacy forward." in home)
-check("editorial hero uses artwork-forward derivative", "hindsfoot_os_hero_identity_no_principle.png" in home and "hero-logo-frame" not in home)
-hero_source = re.search(r'<section class="hero">.*?</section>', home, re.S)
-hero_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", hero_source.group(0))).strip() if hero_source else ""
-check("hero principle appears once in visible hero source", hero_text.count("Sure Footing Across Generations.") == 1)
-check("hero descriptor has local serif small-caps treatment", all(marker in css for marker in (".hero-descriptor", "font-variant-caps: all-small-caps", "font-family: var(--serif)")))
-check("hero remains two-column through 960px", "@media (max-width: 959px)" in css and "grid-template-columns: minmax(320px,.88fr) minmax(420px,1.12fr)" in css)
-check("descriptor uses short fixed ornamental rules", "flex: 0 0 clamp(2rem,3vw,3rem)" in css and ".descriptor-text" in css)
+approved_hero_name = "hindsfoot_os_public_hero_hybrid_approved.png"
+check(
+    "approved single-hybrid hero used exactly once",
+    home.count(approved_hero_name) == 1
+    and "hindsfoot_os_hero_identity_no_principle.png" not in home,
+)
+
+hero_source = re.search(
+    r'<section class="hero hybrid-image-hero">.*?</section>',
+    home,
+    re.S,
+)
+
+hero_text = (
+    re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", hero_source.group(0))).strip()
+    if hero_source
+    else ""
+)
+
+check(
+    "approved hybrid hero semantic principle appears once",
+    hero_text.count("Sure Footing Across Generations.") == 1,
+)
+
+check(
+    "approved hybrid hero semantic descriptor appears once",
+    hero_text.count("The Personal Institutional Operating System") == 1,
+)
+
+check(
+    "approved hybrid hero semantic tagline appears once",
+    hero_text.count(
+        "Govern your affairs. Preserve your record. Carry your legacy forward."
+    ) == 1,
+)
+
+check(
+    "approved hybrid hero responsive image contract",
+    all(
+        marker in css
+        for marker in (
+            ".hybrid-hero-image",
+            "width: 100%",
+            "height: auto",
+            ".hybrid-hero-container",
+        )
+    ),
+)
+
+check(
+    "approved hybrid hero preserves both CTA hotspots",
+    all(
+        marker in home
+        for marker in (
+            "hybrid-hero-hotspot-how",
+            'href="how-it-works.html"',
+            "hybrid-hero-hotspot-demo",
+            'href="request-demo.html"',
+        )
+    ),
+)
+
+approved_hero = ROOT / "assets/images/brand/hindsfoot_os_public_hero_hybrid_approved.png"
+with approved_hero.open("rb") as stream:
+    approved_signature = stream.read(24)
+
+approved_dimensions = (
+    struct.unpack(">II", approved_signature[16:24])
+    if approved_signature[:8] == b"\x89PNG\r\n\x1a\n"
+    else (0, 0)
+)
+
+check(
+    "approved hybrid hero dimensions locked",
+    approved_dimensions == (1672, 941),
+    approved_dimensions,
+)
+
+approved_hash = hashlib.sha256(approved_hero.read_bytes()).hexdigest()
+
+check(
+    "approved hybrid hero hash locked",
+    approved_hash
+    == "4028b8d9b50706b103a30a306b2f343a0a2d9c7b2de1d8e26fee59a10e0242d3",
+    approved_hash,
+)
 check("journey preserves six ordered steps", all(home.find(label) < home.find(next_label) for label, next_label in zip(
     ("Intake</h3>", "Guided proposal</h3>", "Explicit confirmation</h3>", "Governed record</h3>", "Administration</h3>"),
     ("Guided proposal</h3>", "Explicit confirmation</h3>", "Governed record</h3>", "Administration</h3>", "Continuity</h3>"),

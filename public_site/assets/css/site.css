@@ -367,3 +367,76 @@ textarea { min-height: 145px; resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ========================================================================
+   V3-PUBLIC-SITE-REENTRY-1E.1 APPROVED HYBRID HERO
+   One unified approved public hero image.
+   ======================================================================== */
+
+.hybrid-image-hero {
+  padding: clamp(1rem, 2.4vw, 2.25rem) 0;
+}
+
+.hybrid-hero-container {
+  position: relative;
+}
+
+.hybrid-hero-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  border: 1px solid rgba(139, 104, 37, 0.22);
+  box-shadow: 0 16px 38px rgba(17, 16, 14, 0.09);
+}
+
+.hybrid-hero-semantic {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.hybrid-hero-hotspot {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  border-radius: 0.6rem;
+}
+
+.hybrid-hero-hotspot-how {
+  left: 49%;
+  top: 80%;
+  width: 18.5%;
+  height: 9.5%;
+}
+
+.hybrid-hero-hotspot-demo {
+  left: 68%;
+  top: 80%;
+  width: 23%;
+  height: 9.5%;
+}
+
+.hybrid-hero-hotspot:focus-visible {
+  outline: 4px solid #173f67;
+  outline-offset: 3px;
+  background: rgba(255,255,255,0.10);
+}
+
+@media (max-width: 640px) {
+  .hybrid-image-hero {
+    padding: 0.75rem 0 1.25rem;
+  }
+
+  .hybrid-hero-image {
+    box-shadow: 0 10px 24px rgba(17,16,14,0.08);
+  }
+}
+
+/* End V3-PUBLIC-SITE-REENTRY-1E.1 APPROVED HYBRID HERO */
