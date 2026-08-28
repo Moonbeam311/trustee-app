@@ -1672,3 +1672,43 @@ disposable test data, required security regression, and manual browser
 certification before product commit.
 
 Do not begin P06.
+
+## V3-MOD-WLH-P05 Certification Closure and P06 Registration Gate — 2026-08-28
+
+R1B adjudication established the external P05 certification chain. The P05
+product closure anchor is
+`9908c317c3fcd9e6837d0fda6242a80d7c12200e`, and the P05 certification
+requirements are closed.
+
+Control decision:
+
+- `V3-MOD-WLH-P05` is control-closed.
+- P05 product repair is not required.
+- The August 26 preservation lock remains historical but is not a P05 closure
+  blocker.
+- P06 implementation remains locked.
+- The next authorized action is only `V3-MOD-WLH-P06-REG-1` — P06
+  Architecture / Path Registration and Gate Definition.
+- P06's broad scope remains saved-state continuity and authorized workspace
+  handoff.
+- P06 requires a separate architecture/path-registration gate before any P06
+  implementation path may become dirty.
+
+Preserved unrelated work:
+
+- `public_site/README.md`
+- `public_site/assets/js/site.js`
+- `templates/auth/login.html`
+
+These pre-existing tracked modifications remain preserved unrelated work. They
+are not P05 or P06 implementation. The two existing protected untracked
+recovery documents remain protected records, not P06 work:
+
+- `docs/version_3_completion_addendum_2026-08-14.md`
+- `docs/version_3_locked_plan_recovery_2026-08-14.md`
+
+No P06 product implementation path is registered by this closure entry.
+
+NEXT AUTHORIZED ACTION:
+
+`V3-MOD-WLH-P06-REG-1`
