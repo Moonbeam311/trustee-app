@@ -58,6 +58,9 @@ from services.services_work_learning_programs import (
     create_program_issue,
     get_program_issues,
     update_program_issue,
+    create_program_source_reference,
+    get_program_source_references,
+    SOURCE_REFERENCE_TYPES,
     ISSUE_TYPES,
     ISSUE_STATUSES,
     ISSUE_EVIDENCE_STATES,
@@ -2927,6 +2930,7 @@ ROLE_RULES = {
     "workspace_program_scenario_add": {"Admin", "Trustee"},
     "workspace_program_issue_add": {"Admin", "Trustee"},
     "workspace_program_issue_update": {"Admin", "Trustee"},
+    "workspace_program_source_reference_add": {"Admin", "Trustee"},
     "workspace_program_revision_create": {"Admin", "Trustee"},
     "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
     "discussion_new": {"Admin", "Trustee"},
@@ -12847,6 +12851,12 @@ def workspace_program_detail(workspace_id, program_id):
         issue_types=ISSUE_TYPES,
         issue_statuses=ISSUE_STATUSES,
         issue_evidence_states=ISSUE_EVIDENCE_STATES,
+        source_references=get_program_source_references(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        source_reference_types=SOURCE_REFERENCE_TYPES,
         revisions=get_program_revisions(
             program_id=program_id,
             firm_id=firm_id,
@@ -13174,6 +13184,63 @@ def workspace_program_issue_update(
                 "the current tailored-program context."
             ),
         ), 403
+
+    return redirect(url_for(
+        "workspace_program_detail",
+        workspace_id=workspace_id,
+        program_id=program_id,
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/source-references",
+    methods=["POST"],
+)
+def workspace_program_source_reference_add(
+    workspace_id,
+    program_id,
+):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    ensure_work_learning_program_tables()
+
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "This tailored program is not available within "
+                "the current workspace context."
+            ),
+        ), 403
+
+    actor = (
+        session.get("username")
+        or session.get("user_id")
+        or "unknown"
+    )
+
+    try:
+        create_program_source_reference(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+            source_type=request.form.get("source_type"),
+            source_reference=request.form.get(
+                "source_reference"
+            ),
+            source_label=request.form.get("source_label"),
+            source_notes=request.form.get("source_notes"),
+            issue_id=request.form.get("issue_id"),
+            created_by=str(actor),
+        )
+    except ValueError as exc:
+        return f"Invalid source reference: {exc}", 400
 
     return redirect(url_for(
         "workspace_program_detail",

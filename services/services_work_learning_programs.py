@@ -57,6 +57,18 @@ ISSUE_STATUSES = (
 ISSUE_EVIDENCE_STATES = tuple(GENEALOGY_EVIDENCE_STATES)
 
 
+# P05 owns source/reference attribution for tailored-program working
+# material. These values classify the reference relationship only.
+# They do not verify the referenced material or change P04 evidence
+# state.
+SOURCE_REFERENCE_TYPES = (
+    "document_reference",
+    "governance_reference",
+    "external_reference",
+    "other_reference",
+)
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -160,6 +172,43 @@ def ensure_work_learning_program_tables():
     cur.execute("""
         CREATE INDEX IF NOT EXISTS idx_hub_program_issues_program
         ON hub_program_issues (program_id, status, created_at)
+    """)
+
+    # P05 source/reference attribution is a relationship layer owned
+    # by the tailored Program. Firm and owner scope remain canonical
+    # on hub_programs rather than being duplicated here.
+    #
+    # issue_id == "" means the reference applies to the Program root.
+    # A non-empty issue_id identifies one P04 working issue inside the
+    # same scoped Program.
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS hub_program_source_references (
+            source_reference_id TEXT PRIMARY KEY,
+            program_id TEXT NOT NULL,
+            issue_id TEXT NOT NULL DEFAULT '',
+            source_type TEXT NOT NULL,
+            source_reference TEXT NOT NULL,
+            source_label TEXT,
+            source_notes TEXT,
+            created_by TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(
+                program_id,
+                issue_id,
+                source_type,
+                source_reference
+            )
+        )
+    """)
+
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS
+            idx_hub_program_source_references_program
+        ON hub_program_source_references (
+            program_id,
+            issue_id,
+            created_at
+        )
     """)
 
     cur.execute("""
@@ -649,6 +698,165 @@ def update_program_issue(
     return bool(changed)
 
 
+
+def create_program_source_reference(
+    *,
+    program_id,
+    firm_id,
+    owner_id,
+    source_type,
+    source_reference,
+    source_label,
+    source_notes,
+    issue_id,
+    created_by,
+):
+    """Record one P05 attribution relationship.
+
+    The tailored Program remains the canonical root. An optional P04
+    issue may be identified as the working child target. Recording a
+    reference does not verify the source, alter issue evidence state,
+    create a governed fact, or perform promotion.
+    """
+
+    if not _program_available(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    ):
+        raise ValueError("program_not_available_in_context")
+
+    source_type = (source_type or "").strip().lower()
+    source_reference = (source_reference or "").strip()
+    source_label = (source_label or "").strip() or None
+    source_notes = (source_notes or "").strip() or None
+    issue_id = (issue_id or "").strip()
+
+    if source_type not in SOURCE_REFERENCE_TYPES:
+        raise ValueError(
+            "invalid_program_source_reference_type"
+        )
+
+    if not source_reference:
+        raise ValueError(
+            "program_source_reference_required"
+        )
+
+    if issue_id:
+        issue_ids = {
+            row["issue_id"]
+            for row in get_program_issues(
+                program_id=program_id,
+                firm_id=firm_id,
+                owner_id=owner_id,
+            )
+        }
+
+        if issue_id not in issue_ids:
+            raise ValueError(
+                "program_source_reference_issue_not_available"
+            )
+
+    candidate_id = _id("SRC")
+    now = _now()
+
+    conn = get_connection()
+
+    conn.execute("""
+        INSERT OR IGNORE INTO hub_program_source_references (
+            source_reference_id,
+            program_id,
+            issue_id,
+            source_type,
+            source_reference,
+            source_label,
+            source_notes,
+            created_by,
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        candidate_id,
+        program_id,
+        issue_id,
+        source_type,
+        source_reference,
+        source_label,
+        source_notes,
+        created_by,
+        now,
+    ))
+
+    row = conn.execute("""
+        SELECT source_reference_id
+        FROM hub_program_source_references
+        WHERE program_id = ?
+          AND issue_id = ?
+          AND source_type = ?
+          AND source_reference = ?
+        LIMIT 1
+    """, (
+        program_id,
+        issue_id,
+        source_type,
+        source_reference,
+    )).fetchone()
+
+    conn.commit()
+    conn.close()
+
+    if not row:
+        raise RuntimeError(
+            "program_source_reference_identity_not_found"
+        )
+
+    return row[0]
+
+
+def get_program_source_references(
+    *,
+    program_id,
+    firm_id,
+    owner_id,
+):
+    """Return P05 references only after canonical Program scope resolves."""
+
+    if not _program_available(
+        program_id=program_id,
+        firm_id=firm_id,
+        owner_id=owner_id,
+    ):
+        return []
+
+    conn = get_connection()
+    conn.row_factory = __import__("sqlite3").Row
+
+    rows = conn.execute("""
+        SELECT
+            r.source_reference_id,
+            r.program_id,
+            r.issue_id,
+            r.source_type,
+            r.source_reference,
+            r.source_label,
+            r.source_notes,
+            r.created_by,
+            r.created_at,
+            i.issue_type,
+            i.statement AS issue_statement
+        FROM hub_program_source_references AS r
+        LEFT JOIN hub_program_issues AS i
+          ON i.issue_id = r.issue_id
+         AND i.program_id = r.program_id
+        WHERE r.program_id = ?
+        ORDER BY
+            r.created_at,
+            r.source_reference_id
+    """, (program_id,)).fetchall()
+
+    conn.close()
+    return [dict(row) for row in rows]
+
+
 def build_program_snapshot(*, program_id, firm_id, owner_id):
     program = get_hub_program(
         program_id=program_id,
@@ -676,6 +884,11 @@ def build_program_snapshot(*, program_id, firm_id, owner_id):
             owner_id=owner_id,
         ),
         "issues": get_program_issues(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+        "source_references": get_program_source_references(
             program_id=program_id,
             firm_id=firm_id,
             owner_id=owner_id,

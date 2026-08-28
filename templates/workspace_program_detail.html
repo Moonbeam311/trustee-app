@@ -72,7 +72,7 @@
         workspace_id=workspace['workspace_id'],
         program_id=program['program_id']
       ) }}">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
         <label>New Goal</label>
         <textarea name="goal_text"></textarea>
         <p><button type="submit">Add Working Goal</button></p>
@@ -99,7 +99,7 @@
         workspace_id=workspace['workspace_id'],
         program_id=program['program_id']
       ) }}">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
         <label>Alternative Title</label>
         <input type="text" name="title">
 
@@ -130,7 +130,7 @@
         workspace_id=workspace['workspace_id'],
         program_id=program['program_id']
       ) }}">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
 
         <label>Scenario Title</label>
         <input type="text" name="title">
@@ -157,7 +157,8 @@
         Evidence-state vocabulary:
         documented → corroborated → inferred → disputed → unresolved.
         P04 records the working classification only; source attribution is a
-        later controlled capability.
+        later controlled capability relative to P04 and is handled separately
+        below by P05.
       </small>
     </p>
 
@@ -196,7 +197,7 @@
             <input
               type="hidden"
               name="_csrf_token"
-              value="{{ csrf_token() }}"
+              value="{{ wtf_csrf_token() }}"
             >
 
             <label>Evidence State</label>
@@ -241,7 +242,7 @@
         <input
           type="hidden"
           name="_csrf_token"
-          value="{{ csrf_token() }}"
+          value="{{ wtf_csrf_token() }}"
         >
 
         <label>Working Issue Type</label>
@@ -274,6 +275,138 @@
   </div>
 
   <div class="box">
+    <h2>Source &amp; Reference Attribution</h2>
+
+    <p>
+      P05 records attribution relationships for tailored-program working
+      material. A reference belongs to this Program first and may optionally
+      identify one P04 working issue as its specific working target.
+    </p>
+
+    <p>
+      Recording a reference does not verify the referenced content, does not
+      change a working issue's evidence state or status, does not establish a
+      governed fact or professional approval, and does not promote working
+      material into a governed institutional record.
+    </p>
+
+    <p>
+      <small>
+        Canonical Document, Governance, Evidence, Guide, and other source
+        records remain owned by their existing subsystems. P02 question
+        learning resources remain separate from P05 source attribution.
+      </small>
+    </p>
+
+    {% for source in source_references %}
+      <div class="item">
+        <p>
+          <strong>
+            {{ source['source_type'] | replace('_', ' ') | title }}
+          </strong>
+          —
+          {{ source['source_reference'] }}
+        </p>
+
+        {% if source['source_label'] %}
+          <p>
+            <strong>Reference label:</strong>
+            {{ source['source_label'] }}
+          </p>
+        {% endif %}
+
+        {% if source['source_notes'] %}
+          <p>
+            <strong>Attribution notes:</strong>
+            {{ source['source_notes'] }}
+          </p>
+        {% endif %}
+
+        {% if source['issue_id'] %}
+          <p>
+            <strong>Working issue target:</strong>
+            {{ source['issue_type'] | replace('_', ' ') | title }}
+            —
+            {{ source['issue_statement'] }}
+          </p>
+        {% else %}
+          <p><strong>Target:</strong> Program-level reference</p>
+        {% endif %}
+
+        <p>
+          <small>
+            Recorded: {{ source['created_at'] }}
+            |
+            By: {{ source['created_by'] }}
+          </small>
+        </p>
+      </div>
+    {% else %}
+      <p>No source or reference attribution has been recorded yet.</p>
+    {% endfor %}
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <form method="post" action="{{ url_for(
+        'workspace_program_source_reference_add',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input
+          type="hidden"
+          name="_csrf_token"
+          value="{{ wtf_csrf_token() }}"
+        >
+
+        <label>Source / Reference Type</label>
+        <select name="source_type">
+          {% for source_type in source_reference_types %}
+            <option value="{{ source_type }}">
+              {{ source_type | replace('_', ' ') | title }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <label>Source Reference</label>
+        <input
+          type="text"
+          name="source_reference"
+          placeholder="Document ID, governance ID, external reference, URL, or other reference"
+        >
+
+        <label>Reference Label</label>
+        <input
+          type="text"
+          name="source_label"
+          placeholder="Optional working label"
+        >
+
+        <label>Attribution Notes</label>
+        <textarea
+          name="source_notes"
+          placeholder="Optional attribution context"
+        ></textarea>
+
+        <label>Optional Working Issue Target</label>
+        <select name="issue_id">
+          <option value="">Program-level reference</option>
+
+          {% for issue in issues %}
+            <option value="{{ issue['issue_id'] }}">
+              {{ issue['issue_type'] | replace('_', ' ') | title }}
+              —
+              {{ issue['statement'] }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <p>
+          <button type="submit">Add Source Reference</button>
+        </p>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="box">
     <h2>Revision Snapshots</h2>
 
     <p>
@@ -297,7 +430,7 @@
         workspace_id=workspace['workspace_id'],
         program_id=program['program_id']
       ) }}">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
 
         <label>Revision Note</label>
         <textarea name="revision_note"></textarea>
