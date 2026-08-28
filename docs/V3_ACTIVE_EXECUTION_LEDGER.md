@@ -1712,3 +1712,224 @@ No P06 product implementation path is registered by this closure entry.
 NEXT AUTHORIZED ACTION:
 
 `V3-MOD-WLH-P06-REG-1`
+
+## V3-MOD-WLH-P06 Architecture, Product-Path, and Certification-Gate Registration — 2026-08-28
+
+Read-only architecture adjudication under
+`V3-MOD-WLH-P06-REG-1B` established the bounded implementation contract for:
+
+`V3-MOD-WLH-P06`
+
+Purpose:
+
+Saved-state continuity and authorized workspace handoff.
+
+### Canonical ownership decision
+
+The Work & Learning Hub already owns canonical Program current state and
+append-only revision snapshots.
+
+Existing Successor Acceptance, Continuity, Trust Handoff aggregate/package,
+Guide interpretation, Governance, Execution, Document, Archive, and governed
+evidence subsystems retain their existing canonical ownership.
+
+P06 uses an adapter/aggregate integration boundary. It does not create a second
+Continuity subsystem, a second Handoff subsystem, a second Successor Acceptance
+lifecycle, or duplicate authoritative persistence.
+
+### Saved-state decision
+
+Existing Work & Learning Hub Program snapshot/revision behavior is sufficient
+for saved-state ownership.
+
+P06 may select either:
+
+- the current authorized Program working state; or
+- an existing saved Program revision.
+
+Merely displaying or packaging a Program state must not create another revision.
+
+### Data-model decision
+
+P06 requires no new authoritative table and no migration.
+
+The P06 integration descriptor is ephemeral and non-governed. It may compose
+an authorized Program state with an authorized canonical successor-handoff
+package descriptor, but it may not create a package record, archive record,
+Successor Acceptance event, Continuity activation, responsibility assignment,
+Execution advancement, application-access change, or handoff acknowledgement.
+
+### Authorized P06 product paths
+
+The exact implementation boundary is:
+
+- `services/services_work_learning_program_handoff.py`
+- `app.py`
+- `templates/workspace_program_detail.html`
+- `templates/workspace_program_handoff.html`
+- `tests/test_v3_mod_wlh_p06.py`
+
+No other product path is authorized by this registration.
+
+Explicitly excluded from P06 modification ownership:
+
+- `services/services_work_learning_programs.py`
+- `services/services_handoff_read_aggregate.py`
+- `services/services_handoff_package_adapter.py`
+- `services/services_guide_handoff_interpretation.py`
+- `services/services_continuity_acceptance_evidence.py`
+- `services/services_successor_acceptance.py`
+- `services/services_successor_acceptance_lifecycle.py`
+- `services/services_successor_acceptance_evidence.py`
+- `routes_tpd1c.py`
+- `templates/tpd1c/successor_handoff.html`
+- database migration paths
+- P01 through P05 regression-test sources
+
+Those components remain canonical/reused contracts and are not made P06-owned.
+
+### Authorization and security gates
+
+P06 implementation and certification must establish:
+
+- Admin same-scope initiation/read authorization;
+- Trustee same-scope initiation/read authorization subject to existing
+  workspace and Trust authorization;
+- Viewer authorized read-only rendering with no initiation/mutation controls;
+- CSRF rejection before adapter invocation;
+- server-derived firm, owner, workspace, Program, revision, Trust, and handoff
+  scope;
+- rejection of browser-supplied firm or owner authority;
+- wrong-firm failure;
+- wrong-owner failure;
+- wrong workspace/Program failure;
+- wrong or cross-Program revision failure;
+- wrong Trust/successor/handoff/Acceptance-context failure;
+- Program authorization may not bypass Trust authorization;
+- Trust authorization may not bypass Program/workspace authorization;
+- inaccessible object identity/state/provenance may not leak;
+- canonical Handoff, Continuity, Successor Acceptance, Acceptance Event,
+  Document, Governance, Execution, Archive, and governed evidence records
+  remain unchanged;
+- Program-state packaging creates no implicit Program revision;
+- package output must report no mutation, no archival/package creation, no
+  acceptance change, no Continuity activation, and no handoff acknowledgement;
+- secret material must be rejected;
+- P06 endpoints must not invoke Successor Acceptance lifecycle mutation
+  functions.
+
+### Regression contract
+
+The P06 compatibility gate must include the applicable existing contracts:
+
+- `tests/test_v3_mod_wlh_p01.py`
+- `tests/test_v3_mod_wlh_p02.py`
+- `tests/test_v3_mod_wlh_p03c4c_security_regression.py`
+- `tests/test_v3_mod_wlh_p04.py`
+- `tests/test_v3_mod_wlh_p05.py`
+- `tests/test_v3_tho_acc_1a_contract.py`
+- `tests/test_v3_tho_acc_1b_contract.py`
+- `tests/test_v3_tho_acc_1c_contract.py`
+- `tests/test_v3_tho_acc_1d_workspace.py`
+- `tests/test_v3_tho_acc_1e_contract.py`
+- `tests/test_v3_tho_agg_contract.py`
+- `tests/test_v3_tho_ui_workspace.py`
+- `tests/test_v3_tho_pkg_1_contract.py`
+- `tests/test_v3_tho_guide_1_contract.py`
+- `tests/test_tpd1c_bridge_continuity.py`
+
+The new `tests/test_v3_mod_wlh_p06.py` owns the cross-boundary P06 integration
+contract.
+
+### Manual browser certification
+
+Manual browser certification is mandatory because P06 changes Program Detail,
+adds role-sensitive controls, and adds a composite handoff/status surface.
+
+Disposable browser certification must verify:
+
+- Admin, Trustee, and Viewer rendering;
+- current-state versus saved-revision labeling;
+- CSRF rejection;
+- valid same-scope handoff selection;
+- wrong workspace, Program, revision, firm, owner, and Trust behavior;
+- direct URL access;
+- browser back/refresh behavior;
+- no canonical handoff mutation controls;
+- working-versus-governed boundary language;
+- P05 attribution displayed as attribution, not verification;
+- Acceptance/Continuity status without legal-validity implication;
+- linkage to the existing canonical Trust handoff workspace;
+- no P07 promotion control;
+- no Program Detail layout/navigation regression.
+
+### Disposable-data and governed-data contract
+
+All P06 automated/runtime/browser certification must use disposable SQLite
+data.
+
+Required test fixtures include:
+
+- Admin, Trustee, and Viewer;
+- two firms;
+- at least two owners;
+- multiple workspaces and Programs;
+- current Program state and at least two saved revisions;
+- P04 issues and P05 source references;
+- same-scope and cross-scope Trusts;
+- linked and unlinked Continuity profiles;
+- missing, pending, and accepted Successor Acceptance states;
+- Acceptance evidence and canonical provenance;
+- wrong/cross-Program revision selection;
+- canonical package sections;
+- secret-material rejection.
+
+No P06 database migration is authorized.
+
+The governed source database must remain byte-identical at SHA-256:
+
+`3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c`
+
+### P06 hard boundary
+
+P06 may:
+
+- display canonical Continuity/Handoff status read-only;
+- reference canonical evidence through existing authorization-aware adapters;
+- display P05 source attribution as working attribution;
+- compose a current or saved Program working state into an ephemeral,
+  explicitly non-governed handoff descriptor.
+
+P06 may not:
+
+- create or change Successor Acceptance lifecycle state;
+- activate Continuity;
+- assign responsibility;
+- advance Execution;
+- acknowledge an institutional handoff;
+- grant application access;
+- create governed package/archive records;
+- implement P07 governed promotion;
+- implement P08 unified provenance;
+- implement HOS-DOC-1;
+- implement HOS-DEMO-1.
+
+### Dirty-work decision
+
+The existing preserved unrelated dirty paths do not overlap the registered P06
+product boundary.
+
+### Control decision
+
+`V3-MOD-WLH-P06-REG-1B` established the architecture and exact product path set.
+
+This registration authorizes only the bounded implementation phase:
+
+`V3-MOD-WLH-P06-IMP-1`
+
+P06 is not complete, regression-certified, browser-certified, committed, or
+control-closed by this record.
+
+NEXT AUTHORIZED ACTION:
+
+V3-MOD-WLH-P06-IMP-1

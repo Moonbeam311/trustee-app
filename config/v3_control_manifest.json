@@ -17,7 +17,7 @@
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8",
     "V3-MOD-WLH-P05": "9908c317c3fcd9e6837d0fda6242a80d7c12200e"
   },
-  "active_phase": "V3-MOD-WLH-P06-REG-1",
+  "active_phase": "V3-MOD-WLH-P06-IMP-1",
   "suspended_feature_phase": null,
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
@@ -61,9 +61,14 @@
     "scripts/v3_control_guard.py",
     "public_site/README.md",
     "public_site/assets/js/site.js",
-    "templates/auth/login.html"
+    "templates/auth/login.html",
+    "services/services_work_learning_program_handoff.py",
+    "app.py",
+    "templates/workspace_program_detail.html",
+    "templates/workspace_program_handoff.html",
+    "tests/test_v3_mod_wlh_p06.py"
   ],
-  "next_authorized_action": "V3-MOD-WLH-P06-REG-1",
+  "next_authorized_action": "V3-MOD-WLH-P06-IMP-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -80,7 +85,7 @@
   "guard_path": "scripts/v3_control_guard.py",
   "authority_ref": "origin/system-1-annual-evaluation",
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "8b7f70c230096241a0c876ecd608856856a5492db0482cf492a7e4700e86e7c4",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "f28c4eaf3553c7f69370dbac35d2edec010ac80be47ce4c347b9fd1fe208bede",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
