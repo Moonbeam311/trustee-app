@@ -2144,3 +2144,273 @@ lifecycle-neutral preparation layer.
 - No manifest phase-state change is made by R2.
 - The next recommended phase is the read-only implementation-boundary
   reconstruction `V3-MOD-WLH-P07-REG-1B`.
+
+## V3-MOD-WLH-P07 Exact Implementation Boundary Registration — 2026-08-29
+
+`V3-MOD-WLH-P07-REG-1C` registers the implementation boundary resolved by
+`V3-MOD-WLH-P07-REG-1A-R2`, `V3-MOD-WLH-P07-REG-1B`, and
+`V3-MOD-WLH-P07-REG-1B-R1`. This record does not implement P07.
+
+### Canonical service and authority ownership
+
+P07 uses a bounded extension of
+`services/services_fiduciary_authority.py` to resolve structured, immutable,
+same-firm and same-Trust approval-capability evidence. The extension remains an
+authority-evidence decision boundary; it grants no application permission and
+writes no promotion state.
+
+The new canonical Governed Program Promotion owner is
+`services/services_governed_program_promotion.py`. It exclusively owns request
+creation, approval/rejection transitions, execution, destination creation,
+event append, provenance linkage, idempotency, and transaction boundaries.
+Routes may not write canonical tables directly.
+
+Authority rules are locked as follows:
+
+- Admin, Trustee, and Viewer may read only within server-resolved firm, owner,
+  workspace, Program, saved-revision, Trust, assignment, and visibility scope.
+- Admin and Trustee may prepare and request; Trustee requires Trust assignment.
+- Only a distinct Admin or Trustee principal with an active, structured,
+  same-firm/same-Trust `APPROVE_GOVERNED_PROGRAM_PROMOTION` Fiduciary capability
+  grant may approve or reject. Application role alone is insufficient, and the
+  requester may not approve the request.
+- A scoped Admin or Trustee may trigger execution after approval, but only the
+  canonical service performs the write after re-resolving source, scope,
+  approval, state, and idempotency.
+- Viewer may never prepare, request, approve, reject, or execute.
+- P07 exposes no authority-grant creation route. Approval authority must already
+  exist through its independently governed authority source.
+
+### Request-state and event contract
+
+The locked workflow is:
+
+`P06 preparation -> PENDING request -> APPROVED or REJECTED -> EXECUTED`
+
+Only an existing saved Program revision is promotable. CURRENT state must first
+be saved through the existing Program revision contract; P07 must not create a
+revision implicitly.
+
+Allowed request states are `PENDING`, `APPROVED`, `REJECTED`, and `EXECUTED`.
+`REJECTED` and `EXECUTED` are terminal. Reverse and stale transitions fail
+closed. Identical repeats return existing state without another event.
+
+The request record fields are:
+
+`request_id`, `firm_id`, `owner_id`, `workspace_id`, `program_id`,
+`program_revision_id`, `trust_id`, `source_revision_sha256`,
+`promotion_action`, `destination_family`, `request_status`, `requested_by`,
+`requested_at`, `request_reason`, `approved_by`, `approval_authority_id`,
+`approval_reason`, `approved_at`, `rejected_by`, `rejection_reason`,
+`rejected_at`, `executed_by`, `executed_at`, `destination_record_id`,
+`promotion_event_id`, `idempotency_key`, `source_lock_key`, `created_at`, and
+`updated_at`.
+
+Each state change appends an immutable authoritative event:
+
+- `REQUESTED`: initial state to `PENDING`;
+- `APPROVED`: `PENDING` to `APPROVED`;
+- `REJECTED`: `PENDING` to `REJECTED`;
+- `PROMOTION_RECORDED`: `APPROVED` to `EXECUTED`, atomically with the governed
+  destination and permanent source link.
+
+Events are append-only and protected against update and deletion.
+
+### Trusted-input and idempotency contract
+
+Request POST fields are limited to `_csrf_token`, `revision_id`, `trust_id`,
+and `request_reason`. Approval POST fields are limited to `_csrf_token` and
+`approval_reason`. Rejection POST fields are limited to `_csrf_token` and
+`rejection_reason`. Execution accepts `_csrf_token` only.
+
+Firm, owner, actor, role, Fiduciary, successor, approval, execution,
+destination, event, idempotency, source-lock, and timestamp authority fields
+are prohibited browser inputs. Path and form identifiers are selectors only;
+the server must re-resolve every object and authority immediately before use.
+
+The server-derived request identity is:
+
+`SHA256(firm_id | owner_id | workspace_id | program_id | revision_id |
+trust_id | PROMOTE_SAVED_REVISION | GOVERNED_PROGRAM_PROMOTION)`
+
+Approval identity is:
+
+`SHA256(request_id | APPROVE_OR_REJECT | authority_grant_id | outcome)`
+
+Execution identity is:
+
+`SHA256(request_id | PROMOTION_RECORDED | request_idempotency_key)`
+
+Identical request, approval, and execution retries return the existing result
+without a duplicate row or event. A different approval outcome, destination,
+or action conflicts. Execution uses `BEGIN IMMEDIATE`, an expected-state
+conditional update, and unique constraints; one concurrent execution wins and
+an identical loser returns the committed result.
+
+### Registered schema contract
+
+The additive migration is
+`database/migrations_governed_program_promotion.py`. It is registered through
+`database/startup_migrations.py`, must be idempotent, and must create no
+authority, request, promotion, or event rows during installation.
+
+It owns these conceptual schema additions:
+
+1. `fiduciary_authority_capabilities`: immutable authority grant identity,
+   firm, Trust, Fiduciary, authenticated principal, capability, authority basis,
+   source reference, effective/expiry interval, creator, and timestamp.
+2. `fiduciary_authority_capability_events`: append-only `GRANTED`/`REVOKED`
+   evidence with actor, reason, and timestamp. Current authority is derived from
+   the event history and effective interval.
+3. `governed_program_promotion_requests`: exact request fields and four-state
+   lifecycle, immutable source/scope, unique idempotency and source-lock keys,
+   and references to authority, destination, and execution event.
+4. `governed_program_promotions`: immutable `GOVERNED_RECORDED` destination,
+   permanent Program-revision/Trust provenance, approval provenance, request
+   identity, and unique idempotency key.
+5. `governed_program_promotion_events`: complete scoped authoritative event
+   provenance, prior/resulting state, actor, authority reference, reason,
+   timestamp, and unique event idempotency identity, with no-update/no-delete
+   enforcement.
+
+Scope, relationship, immutability, and unique constraints must fail closed.
+Destination, permanent link, request transition, and `PROMOTION_RECORDED` event
+must commit atomically or roll back completely.
+
+### Registered route and template contract
+
+Exact routes:
+
+1. `GET /workspaces/<workspace_id>/programs/<program_id>/promotion` — scoped
+   Admin/Trustee/Viewer read of eligibility, requests, and status.
+2. `POST /workspaces/<workspace_id>/programs/<program_id>/promotion/requests` —
+   scoped Admin/Trustee CSRF-protected request creation.
+3. `POST /workspaces/<workspace_id>/programs/<program_id>/promotion/requests/<request_id>/approve`
+   — distinct capability-authorized approval.
+4. `POST /workspaces/<workspace_id>/programs/<program_id>/promotion/requests/<request_id>/reject`
+   — distinct capability-authorized rejection.
+5. `POST /workspaces/<workspace_id>/programs/<program_id>/promotion/requests/<request_id>/execute`
+   — scoped execution trigger delegated to the canonical service.
+6. `GET /workspaces/<workspace_id>/programs/<program_id>/promotions/<promotion_id>`
+   — scoped read-only governed result, event, and provenance.
+
+All POST routes require CSRF validation before service invocation. Missing or
+invalid CSRF and malformed/unknown fields return 400. Unauthenticated requests
+redirect to login. Viewer mutation, invalid authority, self-approval, and scope
+denial return a generic 403. Missing or inaccessible request/result identifiers
+return a nondisclosing 404. Invalid, stale, rejected, reverse, or conflicting
+transitions return 409. Identical completed retries redirect to the existing
+request or result with no mutation.
+
+Templates are limited to:
+
+- `templates/workspace_program_detail.html`: role-safe P07 navigation/status
+  while preserving exactly seven P05 CSRF tokens;
+- `templates/workspace_program_promotion.html`: eligibility, request state,
+  approval/rejection, execution, Viewer read-only status, governed result,
+  event/provenance, and institutional-effect boundaries.
+
+The P06 Handoff template and behavior remain unchanged.
+
+### Exact P07 product boundary
+
+Only these paths are authorized for P07 implementation:
+
+1. `database/migrations_governed_program_promotion.py` — new migration;
+2. `database/startup_migrations.py` — existing migration registration;
+3. `services/services_fiduciary_authority.py` — bounded authority extension;
+4. `services/services_governed_program_promotion.py` — new canonical service;
+5. `app.py` — existing routes and endpoint role rules;
+6. `templates/workspace_program_detail.html` — existing navigation/status;
+7. `templates/workspace_program_promotion.html` — new P07 UI;
+8. `tests/test_v3_svc_fiduciary_authority.py` — authority regression tests;
+9. `tests/test_startup_migrations.py` — migration regression tests;
+10. `tests/test_v3_mod_wlh_p07.py` — new focused P07 contract tests.
+
+No path outside this set may change without a separate control amendment.
+
+### Mutation and security contract
+
+Successful execution creates one P07 request record, one governed destination,
+one permanent source link, and append-only request/approval/execution events.
+The saved Program revision, P06 preparation, Continuity, Successor Acceptance
+and its events, Handoff, existing Governance registry, Execution, Document,
+Transfer, and Archive remain unchanged.
+
+Identical retries produce no additional mutation. Failed, rejected, stale,
+unauthorized, cross-scope, malformed, CSRF-invalid, and conflicting requests
+produce no governed destination or prohibited canonical mutation.
+
+Security requires authentication, endpoint role allowance, same firm, owner,
+workspace, Program, saved revision, Trust, required assignment, distinct active
+Fiduciary approval capability, server-side re-resolution, browser-authority
+field rejection, CSRF before mutation, inaccessible-object nondisclosure,
+Viewer mutation denial, state-transition enforcement, and transactional
+idempotency/concurrency control.
+
+P07 must not mutate Acceptance, activate Continuity, acknowledge Handoff,
+advance the Execution subsystem, create Document/Transfer/Archive state, expose
+P08 controls, or imply legal validity, legal advice, or source verification.
+
+### Test, disposable-data, and browser contract
+
+Focused tests must cover authority ownership; application-role/Fiduciary
+separation; Admin, Trustee, Viewer, assignment, and scope boundaries; saved-only
+revision handling; CSRF ordering; prohibited browser fields; nondisclosure;
+request, approval, rejection, and execution transitions; self-approval denial;
+immutable events; idempotent request/approval/execution; concurrency;
+conflicting targets; exact successful and failed mutation deltas; migration
+idempotence; and full P01-P06, Fiduciary Authority, Acceptance, Archive, and
+Program Detail seven-token regressions.
+
+All mutation certification must use a fresh disposable P06-capable fixture with
+the P07 migration applied after `DB_PATH` is established and before repository
+imports where required. It must include same- and cross-scope firms, owners,
+workspaces, Programs, revisions, Trusts, Admin, Trustee, Viewer, and a distinct
+Trustee approver with an active P07 capability grant. Pre/post `quick_check` and
+canonical table snapshots must prove the exact success delta, zero retry and
+failure delta, and governed-database byte preservation.
+
+The manual browser role set is: Admin requester without approval grant, Trustee
+requester with Trust assignment, distinct Trustee approver with an active P07
+grant, and Viewer. Execution is triggered by a scoped Admin/Trustee but written
+only by the service.
+
+The required browser checks are:
+
+1. Admin/Trustee see saved-revision eligibility and request controls.
+2. CURRENT is visibly ineligible.
+3. Admin application role alone cannot approve.
+4. Requester cannot self-approve.
+5. The distinct authorized Trustee sees approve/reject controls.
+6. Viewer is read-only with no mutation controls.
+7. Request displays `PENDING`.
+8. Approval displays `APPROVED` without governed destination creation.
+9. Rejection displays terminal `REJECTED` and no execution control.
+10. Execution creates one visible `GOVERNED_RECORDED` result.
+11. Saved revision and firm/owner/workspace/Program/Trust provenance are visible.
+12. Authoritative lifecycle events are visible read-only.
+13. Refresh, Back, and identical retry create no duplicate.
+14. Conflicting target/action fails closed.
+15. Direct URLs remain scoped and nondisclosing.
+16. Working-versus-governed and attribution-not-verification language is visible.
+17. The institutional-effect disclaimer is visible.
+18. No Acceptance, Continuity, Handoff acknowledgement, Execution-subsystem,
+    Document, Transfer, Archive, legal-validity, or P08 implication appears.
+19. Program Detail remains correct with exactly seven P05 CSRF tokens.
+20. P06 Handoff remains unchanged.
+
+### REG-1C authorization decision
+
+The P07 contract is fully registered. Product mutation is authorized only for
+the exact ten-path boundary above and only in:
+
+`V3-MOD-WLH-P07-IMP-1`
+
+This registration does not execute implementation, migration, testing, or
+browser certification. Control-file changes require a separate control-only
+commit/push authorization.
+
+NEXT AUTHORIZED ACTION:
+
+`V3-MOD-WLH-P07-IMP-1`
