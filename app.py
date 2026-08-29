@@ -68,6 +68,13 @@ from services.services_work_learning_programs import (
     get_program_revisions,
     PROGRAM_STATUSES,
 )
+from services.services_work_learning_program_handoff import (
+    CURRENT as PROGRAM_HANDOFF_CURRENT,
+    SAVED_REVISION as PROGRAM_HANDOFF_SAVED_REVISION,
+    WorkLearningProgramHandoffError,
+    build_work_learning_program_handoff_descriptor,
+)
+from services.services_intake_trust_bridge import get_continuity_profile
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
     list_identity_assets,
@@ -2932,6 +2939,8 @@ ROLE_RULES = {
     "workspace_program_issue_update": {"Admin", "Trustee"},
     "workspace_program_source_reference_add": {"Admin", "Trustee"},
     "workspace_program_revision_create": {"Admin", "Trustee"},
+    "workspace_program_handoff_prepare": {"Admin", "Trustee"},
+    "workspace_program_handoff": {"Admin", "Trustee", "Viewer"},
     "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
     "discussion_new": {"Admin", "Trustee"},
     "discussion_thread": {"Admin", "Trustee", "Viewer"},
@@ -13284,6 +13293,144 @@ def workspace_program_revision_create(workspace_id, program_id):
         workspace_id=workspace_id,
         program_id=program_id,
     ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/handoff/prepare",
+    methods=["POST"],
+)
+def workspace_program_handoff_prepare(workspace_id, program_id):
+    """Select an ephemeral P06 view; this endpoint performs no persistence."""
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason="This handoff context is not available.",
+        ), 403
+
+    state_mode = (request.form.get("state_mode") or "").strip().upper()
+    revision_id = (request.form.get("revision_id") or "").strip()
+    trust_id = (request.form.get("trust_id") or "").strip()
+    invalid_selection = state_mode not in {
+        PROGRAM_HANDOFF_CURRENT,
+        PROGRAM_HANDOFF_SAVED_REVISION,
+    } or not trust_id
+    if state_mode == PROGRAM_HANDOFF_CURRENT and revision_id:
+        invalid_selection = True
+    if state_mode == PROGRAM_HANDOFF_SAVED_REVISION:
+        invalid_selection = invalid_selection or not any(
+            row.get("revision_id") == revision_id
+            and row.get("program_id") == program_id
+            for row in get_program_revisions(
+                program_id=program_id,
+                firm_id=firm_id,
+                owner_id=owner_id,
+            )
+        )
+    if not (
+        get_trust_by_id(trust_id)
+        and operator_can_access_trust(trust_id)
+    ):
+        invalid_selection = True
+    if invalid_selection:
+        return render_template(
+            "access_denied.html",
+            reason="This handoff context is not available.",
+        ), 403
+
+    return redirect(url_for(
+        "workspace_program_handoff",
+        workspace_id=workspace_id,
+        program_id=program_id,
+        trust_id=trust_id,
+        state_mode=state_mode,
+        revision_id=(revision_id or None),
+    ))
+
+
+@app.route("/workspaces/<workspace_id>/programs/<program_id>/handoff")
+def workspace_program_handoff(workspace_id, program_id):
+    """Render a separately authorized, ephemeral Program/Handoff aggregate."""
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id,
+        program_id,
+    )
+    if not workspace or not program:
+        return render_template(
+            "access_denied.html",
+            reason="This handoff context is not available.",
+        ), 403
+
+    trust_id = (request.args.get("trust_id") or "").strip()
+    state_mode = (request.args.get("state_mode") or "").strip().upper()
+    revision_id = (request.args.get("revision_id") or "").strip() or None
+    selection_supplied = bool(trust_id or state_mode or revision_id)
+    descriptor = None
+    canonical_handoff_url = None
+
+    def trust_check(candidate):
+        return bool(
+            candidate == trust_id
+            and get_trust_by_id(candidate)
+            and operator_can_access_trust(candidate)
+        )
+
+    try:
+        if selection_supplied:
+            descriptor = build_work_learning_program_handoff_descriptor(
+                program_id=program_id,
+                workspace_id=workspace_id,
+                firm_id=firm_id,
+                owner_id=owner_id,
+                state_mode=state_mode,
+                revision_id=revision_id,
+                trust_id=trust_id,
+                db_path=DB_PATH,
+                trust_authorization_check=trust_check,
+                continuity_authorization_check=lambda profile_id: (
+                    get_continuity_profile(DB_PATH, profile_id, firm_id) is not None
+                ),
+                fiduciary_authorization_check=lambda _fiduciary_id, candidate: (
+                    candidate == trust_id and trust_check(trust_id)
+                ),
+                acceptance_authorization_check=lambda _acceptance_id, candidate: (
+                    candidate == trust_id and trust_check(trust_id)
+                ),
+                governance_authorization_check=trust_check,
+            )
+            canonical_handoff_url = url_for(
+                "tpd1c.successor_handoff_workspace",
+                trust_id=trust_id,
+            )
+    except (WorkLearningProgramHandoffError, ValueError):
+        return render_template(
+            "access_denied.html",
+            reason="This handoff context is not available.",
+        ), 403
+
+    return render_template(
+        "workspace_program_handoff.html",
+        workspace=workspace,
+        program=program,
+        handoff=descriptor,
+        canonical_handoff_url=canonical_handoff_url,
+        handoff_trusts=(
+            get_visible_trusts_for_current_operator()
+            if session.get("role") in {"Admin", "Trustee"}
+            else []
+        ),
+        revisions=get_program_revisions(
+            program_id=program_id,
+            firm_id=firm_id,
+            owner_id=owner_id,
+        ),
+    )
 
 
 @app.route("/workspaces/<workspace_id>/edit", methods=["GET", "POST"])

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>Program Handoff Context — {{ program['title'] }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 1080px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; margin-bottom: 16px; background: #f9fafb; }
+    .item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 10px; background: white; }
+    .boundary { border-left: 4px solid #6b7280; padding: 12px; background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <p><a href="{{ url_for('workspace_program_detail', workspace_id=workspace['workspace_id'], program_id=program['program_id']) }}">Return to Program</a></p>
+  <h1>Program Handoff Context</h1>
+
+  <div class="boundary">
+    <strong>Working-versus-governed boundary:</strong> This is an ephemeral
+    integration view, not a governed institutional record. Program material is
+    working material. The canonical Handoff package is included as read-only
+    reference context and remains owned by its canonical subsystem. Source
+    attribution is not verification.
+  </div>
+
+  {% if session.get('role') in ['Admin', 'Trustee'] %}
+    <div class="box">
+      <h2>Prepare Ephemeral Handoff View</h2>
+      <form method="post" action="{{ url_for(
+        'workspace_program_handoff_prepare',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">
+        <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
+        <label>Authorized Trust</label>
+        <select name="trust_id" required>
+          <option value="">Select an authorized Trust</option>
+          {% for trust in handoff_trusts %}
+            <option value="{{ trust['trust_id'] }}">{{ trust['trust_name'] or trust['trust_id'] }}</option>
+          {% endfor %}
+        </select>
+        <label>Program State</label>
+        <select name="state_mode" required>
+          <option value="CURRENT">Current working state</option>
+          <option value="SAVED_REVISION">Saved revision selection</option>
+        </select>
+        <label>Saved Revision ID (required only for saved revision)</label>
+        <select name="revision_id">
+          <option value="">None — use current state</option>
+          {% for revision in revisions %}
+            <option value="{{ revision['revision_id'] }}">Revision {{ revision['revision_number'] }} — {{ revision['revision_id'] }}</option>
+          {% endfor %}
+        </select>
+        <p><button type="submit">Prepare Ephemeral Handoff View</button></p>
+      </form>
+    </div>
+  {% else %}
+    <p>Viewer access is read-only. No preparation or mutation control is available.</p>
+  {% endif %}
+
+  {% if handoff %}
+  <div class="box">
+    <h2>Identity and Selected State</h2>
+    <p><strong>Program:</strong> {{ program['title'] }} ({{ handoff['program_id'] }})</p>
+    <p><strong>Workspace:</strong> {{ workspace['title'] }} ({{ handoff['workspace_id'] }})</p>
+    <p><strong>State mode:</strong> {{ 'SAVED REVISION' if handoff['state_mode'] == 'SAVED_REVISION' else 'CURRENT' }}</p>
+    {% if handoff['revision_id'] %}
+      <p><strong>Revision:</strong> {{ handoff['revision_number'] }} ({{ handoff['revision_id'] }})</p>
+    {% endif %}
+  </div>
+
+  {% set snapshot = handoff['program_snapshot'] %}
+  <div class="box">
+    <h2>Working Program Content Summary</h2>
+    <p><strong>Purpose:</strong> {{ snapshot['program']['purpose'] or 'Not stated.' }}</p>
+    <p><strong>Working status:</strong> {{ snapshot['program']['status'] }}</p>
+    <p>Goals: {{ snapshot['goals'] | length }}; Alternatives: {{ snapshot['alternatives'] | length }}; Scenarios: {{ snapshot['scenarios'] | length }}</p>
+  </div>
+
+  <div class="box">
+    <h2>P04 Working Issue Context</h2>
+    {% for issue in handoff['p04_issues'] %}
+      <div class="item"><strong>{{ issue['issue_type'] | replace('_', ' ') | title }}</strong><p>{{ issue['statement'] }}</p><small>{{ issue['evidence_state'] }} / {{ issue['status'] }}</small></div>
+    {% else %}<p>No P04 working issues in this state.</p>{% endfor %}
+  </div>
+
+  <div class="box">
+    <h2>P05 Source / Reference Attribution</h2>
+    <p>These references are working attribution only. Source attribution is not verification.</p>
+    {% for source in handoff['p05_source_references'] %}
+      <div class="item"><strong>{{ source['source_type'] | replace('_', ' ') | title }}</strong><p>{{ source['source_reference'] }}</p></div>
+    {% else %}<p>No P05 source attribution in this state.</p>{% endfor %}
+  </div>
+
+  {% set package = handoff['canonical_handoff_package_descriptor'] %}
+  <div class="box">
+    <h2>Canonical Successor Handoff Status and Provenance</h2>
+    <p><strong>Trust:</strong> {{ package['root_trust_id'] }}</p>
+    <p><strong>Readiness:</strong> {{ package['readiness']['status'] }}</p>
+    <p><strong>Gaps:</strong> {{ package['readiness']['gap_count'] }}</p>
+    <p>Canonical source references and provenance remain reference-only where classified by the package adapter.</p>
+    <ul>{% for item in package['content_index'] %}<li>{{ item['source_owner'] }} — {{ item['canonical_object_id'] }} — {{ item['status'] }}</li>{% endfor %}</ul>
+    {% if canonical_handoff_url %}<p><a href="{{ canonical_handoff_url }}">Open canonical Trust Handoff workspace</a></p>{% endif %}
+  </div>
+
+  <div class="box">
+    <h2>No Institutional Effect</h2>
+    <p>Successor Acceptance is not created or changed. Continuity is not activated. Responsibility is not assigned. Execution is not advanced. Application access is not changed. Handoff is not acknowledged. No archive or package record is created. No P07 promotion occurs.</p>
+    <p>There are no canonical mutation buttons in this view.</p>
+  </div>
+  {% else %}
+    <div class="box">
+      <h2>No Handoff Context Selected</h2>
+      <p>No ephemeral descriptor has been prepared. Select an authorized Trust and Program state to render one.</p>
+    </div>
+  {% endif %}
+  {% include "_institutional_property_notice.html" %}
+</body>
+</html>

@@ -440,6 +440,36 @@
     {% endif %}
   </div>
 
+  <div class="box" id="program-handoff">
+    <h2>P06 Program Handoff Context</h2>
+    <div class="boundary">
+      Program current state and revision snapshots remain working material;
+      P06 does not govern or promote them. P05 source attribution remains
+      attribution, not verification. Continuity and Handoff data remain owned
+      by their canonical subsystems.
+    </div>
+    <p>
+      Preparing or viewing this ephemeral context does not activate Continuity,
+      record or change Successor Acceptance, acknowledge a handoff, or create a
+      governed package or archive record.
+    </p>
+
+    {% if session.get('role') in ['Admin', 'Trustee'] %}
+      <p>
+        <a href="{{ url_for(
+        'workspace_program_handoff',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">Open P06 Handoff Preparation</a>
+      </p>
+    {% else %}
+      <p>
+        Viewer access is read-only. No preparation or mutation control is
+        available.
+      </p>
+    {% endif %}
+  </div>
+
   {% include "_institutional_property_notice.html" %}
 </body>
 </html>
