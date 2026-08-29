@@ -2002,3 +2002,145 @@ Control decision:
 NEXT AUTHORIZED ACTION:
 
 `V3-MOD-WLH-P07-REG-1`
+
+## V3-MOD-WLH-P07 Normative Governed-Promotion Architecture Lock — 2026-08-29
+
+`V3-MOD-WLH-P07-REG-1A-R2` establishes the normative architecture decision
+needed before any P07 implementation-boundary reconstruction. It does not
+authorize product implementation, schema work, routes, templates, tests, or
+browser certification.
+
+### Destination decision
+
+No existing canonical record family accurately represents the P07 act without
+also implying a distinct lifecycle action. Handoff, Continuity, Successor
+Acceptance, Execution, Transfer, Document, and Archive remain independently
+owned and must not be created, activated, accepted, advanced, transferred,
+executed, or archived by P07. The generic Governance registry contains useful
+precedent but does not define a Program/Workspace source type, a P07 approval
+contract, or an event-backed idempotent promotion operation.
+
+P07 therefore requires a new canonical **Governed Program Promotion Record**
+family. This record represents only the institutional decision that one
+specific saved Work & Learning Hub Program revision has crossed the explicit
+working-to-governed boundary. It is not a Successor Acceptance, Continuity
+activation, Handoff acknowledgement, execution, transfer, document, package,
+or archive record.
+
+The Governed Program Promotion subsystem is a new canonical lifecycle owner.
+The Work & Learning Hub may prepare and request promotion, but it may not write
+the governed record, provenance link, or event directly. The eventual canonical
+owner service must atomically create the governed promotion record, its
+permanent source link, and its authoritative lifecycle event.
+
+Exact service path, API, table names, migration design, routes, templates,
+tests, and browser contract remain reserved for read-only
+`V3-MOD-WLH-P07-REG-1B` reconstruction.
+
+### Source and lifecycle decision
+
+The only promotable source is an existing saved Program revision. A mutable
+CURRENT Program view may be prepared by P06 but must first be saved through the
+existing Program revision contract before P07 may accept a request. P07 must
+not silently create a Program revision, and P06 remains revision-neutral.
+
+The normative operation is `CREATE_AND_LINK`:
+
+- create one Governed Program Promotion Record in `GOVERNED_RECORDED` state;
+- permanently link it to the exact saved revision and its server-resolved firm,
+  owner, workspace, Program, and Trust context;
+- leave the Program, revision, P06 descriptor, and all referenced canonical
+  records historically intact;
+- perform no lifecycle transition in Acceptance, Continuity, Handoff,
+  Execution, Transfer, Document, Governance, or Archive;
+- prohibit destructive rollback or deletion of the promotion fact;
+- permit correction, retirement, or supersession only through a separately
+  authorized append-only lifecycle action, never by rewriting history.
+
+A second promotion of the same saved revision for the same Trust, governed
+action, and destination family is prohibited. An identical retry returns the
+existing governed result. A different destination or governed action from the
+same revision fails closed unless a later, explicitly registered lifecycle rule
+authorizes it.
+
+### Role and approval decision
+
+- **View:** Admin, Trustee, and Viewer may view promotion status only after all
+  server-resolved firm, owner, workspace, Program, revision, Trust, assignment,
+  and object-access checks applicable to that operator pass.
+- **Prepare:** Admin and Trustee may prepare within their authorized Program and
+  Trust scope. Viewer remains read-only.
+- **Request:** Admin or Trustee may request promotion only within the same
+  server-resolved scope and, for Trustee, an existing Trust assignment. Request
+  authority is not approval authority.
+- **Approve:** approval requires an explicit, active, recorded institutional or
+  fiduciary authority decision for the selected Trust and promotion action.
+  Application role `Admin` or `Trustee` alone is insufficient. The current role
+  names do not themselves confer this approval authority; implementation must
+  fail closed until the canonical authority decision is positively established.
+- **Execute:** only the new Governed Program Promotion canonical owner service
+  may execute the write, after independently re-resolving scope, source,
+  approval, and idempotency. No browser role writes canonical tables directly.
+
+Viewer may never prepare, request, approve, or execute promotion.
+
+### Event and idempotency decision
+
+Every successful promotion requires one append-only authoritative transition
+event owned by the Governed Program Promotion subsystem. The governed record,
+permanent source link, and event must be committed atomically.
+
+The event must preserve at minimum:
+
+- event and promotion identifiers;
+- actor identity and the separately resolved approval-authority reference;
+- firm, owner, workspace, Program, saved revision, and Trust identifiers;
+- source revision reference and destination promotion-record reference;
+- action, result, authority basis, reason where supplied, timestamp, and
+  deterministic idempotency identity.
+
+The event is authoritative proof that the internal promotion transition was
+recorded, not merely optional audit commentary. Once committed it is immutable;
+later correction, retirement, or supersession must append another event.
+
+The deterministic idempotency identity is the normalized tuple:
+
+`firm_id | owner_id | workspace_id | program_id | revision_id | trust_id |
+promotion_action | destination_family`
+
+The identity is server-derived and uniquely constrained. Replaying the same
+normalized request returns the existing promotion record and event without a
+duplicate write. Reusing the source for a conflicting target or action is denied
+unless an explicit later lifecycle rule authorizes that operation.
+
+### Institutional-effect and inherited-security decision
+
+P07 records an internal governed institutional transition in Hindsfoot. It does
+not by itself establish legal validity, execute an external legal instrument,
+constitute Successor Acceptance, activate Continuity, acknowledge Handoff,
+advance Execution, create Transfer/Document/Archive state, provide legal advice,
+or verify P05 source attribution.
+
+P07 inherits without weakening:
+
+- Viewer non-mutation;
+- CSRF validation before any mutation adapter executes;
+- same-firm and applicable same-owner boundaries;
+- workspace, Program, saved-revision, and Trust authorization;
+- server-side re-resolution of every authority-bearing identifier;
+- rejection or disregard of browser-supplied firm, owner, actor, approval, and
+  canonical-destination authority fields;
+- inaccessible-object nondisclosure and no secret material;
+- attribution-not-verification and working-versus-governed boundaries.
+
+P06 remains an ephemeral, read-oriented, non-activating, non-accepting,
+non-archiving, non-acknowledging, Program-revision-neutral, and canonical
+lifecycle-neutral preparation layer.
+
+### R2 control decision
+
+- The normative P07 model is locked.
+- P07 product implementation remains denied.
+- No manifest phase-state change is made by R2.
+- The next recommended phase is the read-only implementation-boundary
+  reconstruction `V3-MOD-WLH-P07-REG-1B`.
