@@ -1933,3 +1933,72 @@ control-closed by this record.
 NEXT AUTHORIZED ACTION:
 
 V3-MOD-WLH-P06-IMP-1
+
+## V3-MOD-WLH-P06 Completion Baseline Registration and P07 Registration Lock — 2026-08-29
+
+`V3-MOD-WLH-P06` is COMPLETE / MACHINE CERTIFIED / MANUAL BROWSER
+CERTIFIED / CANONICALLY NONPERSISTENT / SECURITY-AUTHORIZATION CERTIFIED /
+COMMITTED / PUSHED / REMOTELY VERIFIED.
+
+Verified product baseline:
+
+- commit: `140e628cdc09c0fb8bb5ca294951ab165b094cb9`
+- parent: `dfc0e9969d862c60230159b2d60de896bb740dc2`
+- remote branch: `origin/system-1-annual-evaluation`
+- governed database SHA-256:
+  `3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c`
+
+Exact committed P06 product boundary:
+
+- `services/services_work_learning_program_handoff.py`
+- `app.py`
+- `templates/workspace_program_detail.html`
+- `templates/workspace_program_handoff.html`
+- `tests/test_v3_mod_wlh_p06.py`
+
+Completed P06 control and certification chain:
+
+- `V3-MOD-WLH-P06-IMP-1`
+- `V3-MOD-WLH-P06-IMP-1A`
+- `V3-MOD-WLH-P06-CERT-1A-R3A-R2B-R4A`
+- `V3-MOD-WLH-P06-CERT-1B-R2C-R1`
+- `V3-MOD-WLH-P06-CERT-1B-R3-CX1`
+- `V3-MOD-WLH-P06-CLOSE-1`
+- `V3-MOD-WLH-P06-COMMIT-1`
+
+Closure findings:
+
+- P06 implementation is complete.
+- Machine HTTP certification passed for Admin, Trustee, and Viewer.
+- Manual browser certification passed.
+- Canonical lifecycle state remained unchanged through machine and browser
+  actions.
+- Security, CSRF, role, Program, workspace, revision, Trust, firm, and owner
+  authorization boundaries passed.
+- The exact five-path P06 commit was pushed and independently verified.
+- No P06 product defect remains established.
+- The governed database and preserved unrelated dirty work remain
+  byte-identical.
+
+Next-gate determination:
+
+- The integrated V3 scope lock orders `V3-MOD-WLH-P07` after completed P06.
+- The same scope lock requires each target phase to establish its own bounded
+  integration, regression, security, preservation, and certification contract.
+- No P07 architecture, product-path, migration, security, regression, browser,
+  or implementation subphase is currently registered.
+- P07 product work is therefore not authorized.
+- The first unresolved obligation is a read-only P07 architecture, ownership,
+  path, persistence, security, regression, browser, and certification-gate
+  registration.
+
+Control decision:
+
+- `V3-MOD-WLH-P06` is control-closed at the verified remote commit.
+- P06 product paths are removed from the active dirty-path authorization.
+- P07 implementation is not started or authorized.
+- Only the bounded P07 registration gate is eligible as the next action.
+
+NEXT AUTHORIZED ACTION:
+
+`V3-MOD-WLH-P07-REG-1`
