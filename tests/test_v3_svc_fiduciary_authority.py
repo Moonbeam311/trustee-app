@@ -5,6 +5,7 @@ import pytest
 
 import database.db as database_db
 import services.services_fiduciary_authority as fiduciary
+from database.migrations_governed_program_promotion import apply_governed_program_promotion_schema
 
 
 @pytest.fixture()
@@ -100,5 +101,56 @@ def test_public_contract_contains_no_write_or_permission_mutation():
         name for name, value in inspect.getmembers(fiduciary, inspect.isfunction)
         if not name.startswith("_")
     }
-    assert public == {"get_fiduciary_by_id", "list_fiduciaries", "list_fiduciaries_for_trust", "evaluate_authority_evidence"}
+    assert public == {"get_fiduciary_by_id", "list_fiduciaries", "list_fiduciaries_for_trust", "evaluate_authority_evidence", "resolve_promotion_approval_capability"}
     assert not any(token in name for name in public for token in ("create", "update", "delete", "grant", "transition"))
+
+
+def test_structured_p07_capability_is_same_firm_same_trust_and_event_derived(
+    fiduciary_database,
+):
+    path, active_firm = fiduciary_database
+    apply_governed_program_promotion_schema(path)
+    connection = sqlite3.connect(path)
+    connection.execute(
+        """INSERT INTO fiduciary_authority_capabilities VALUES
+           (?,?,?,?,?,?,?,?,?,?,?,?)""",
+        ("AUTH-1", "FIRM-A", "TR-A", "FID-001", "approver", fiduciary.PROMOTION_APPROVAL_CAPABILITY,
+         "Recorded appointment", "SRC-1", "2026-01-01T00:00:00+00:00", None, "registrar", "2026-01-01T00:00:00+00:00"),
+    )
+    connection.execute(
+        "INSERT INTO fiduciary_authority_capability_events VALUES (?,?,?,?,?,?,?)",
+        ("AE-1", "AUTH-1", "GRANTED", "registrar", "Recorded grant", "2026-01-01T00:00:00+00:00", "grant-1"),
+    )
+    connection.commit()
+    connection.close()
+    assert fiduciary.resolve_promotion_approval_capability(
+        "approver", firm_id="FIRM-A", trust_id="TR-A"
+    )["authority_grant_id"] == "AUTH-1"
+    assert fiduciary.resolve_promotion_approval_capability(
+        "approver", firm_id="FIRM-A", trust_id="TR-B"
+    ) is None
+    active_firm["id"] = "FIRM-B"
+    assert fiduciary.resolve_promotion_approval_capability(
+        "approver", firm_id="FIRM-B", trust_id="TR-A"
+    ) is None
+
+
+def test_revoked_p07_capability_fails_closed(fiduciary_database):
+    path, _ = fiduciary_database
+    apply_governed_program_promotion_schema(path)
+    connection = sqlite3.connect(path)
+    connection.execute(
+        "INSERT INTO fiduciary_authority_capabilities VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        ("AUTH-2", "FIRM-A", "TR-A", "FID-001", "approver", fiduciary.PROMOTION_APPROVAL_CAPABILITY,
+         "Recorded appointment", "SRC-2", "2026-01-01T00:00:00+00:00", None, "registrar", "2026-01-01T00:00:00+00:00"),
+    )
+    connection.executemany(
+        "INSERT INTO fiduciary_authority_capability_events VALUES (?,?,?,?,?,?,?)",
+        [("AE-2", "AUTH-2", "GRANTED", "registrar", "Grant", "2026-01-01T00:00:00+00:00", "grant-2"),
+         ("AE-3", "AUTH-2", "REVOKED", "registrar", "Revoked", "2026-02-01T00:00:00+00:00", "revoke-2")],
+    )
+    connection.commit()
+    connection.close()
+    assert fiduciary.resolve_promotion_approval_capability(
+        "approver", firm_id="FIRM-A", trust_id="TR-A"
+    ) is None

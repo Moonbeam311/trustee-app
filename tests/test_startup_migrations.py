@@ -93,6 +93,25 @@ class StartupMigrationTests(unittest.TestCase):
 
         self.assertEqual(before, after)
 
+    def test_p07_schema_is_idempotent_and_creates_no_lifecycle_rows(self) -> None:
+        first = run_additive_startup_migrations(self.db_path)
+        second = run_additive_startup_migrations(self.db_path)
+        self.assertTrue(first["governed_program_promotion"]["schema_complete"])
+        self.assertTrue(second["governed_program_promotion"]["schema_complete"])
+        self.assertEqual(first["promotion_records_created"], 0)
+        connection = sqlite3.connect(self.db_path)
+        try:
+            for table in (
+                "fiduciary_authority_capabilities",
+                "fiduciary_authority_capability_events",
+                "governed_program_promotion_requests",
+                "governed_program_promotions",
+                "governed_program_promotion_events",
+            ):
+                self.assertEqual(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0], 0)
+        finally:
+            connection.close()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

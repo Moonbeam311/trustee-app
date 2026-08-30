@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  {% include "_platform_shell.html" %}
+  <meta charset="utf-8">
+  <title>Governed Program Promotion</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 1080px; }
+    .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; margin-bottom: 16px; background: #f9fafb; }
+    .item { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin: 10px 0; background: white; }
+    .boundary { border-left: 4px solid #6b7280; padding: 12px; background: #f3f4f6; }
+    .governed { border-left-color: #166534; background: #f0fdf4; }
+    label { display: block; font-weight: bold; margin-top: 8px; }
+    select, input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+  <p>
+    <a href="{{ url_for('workspace_program_detail', workspace_id=workspace['workspace_id'], program_id=program['program_id']) }}">Return to Program Detail</a>
+    |
+    <a href="{{ url_for('workspace_program_handoff', workspace_id=workspace['workspace_id'], program_id=program['program_id']) }}">P06 Handoff Preparation</a>
+  </p>
+  <h1>Governed Program Promotion</h1>
+  <div class="box">
+    <p><strong>Program:</strong> {{ program['title'] }} ({{ program['program_id'] }})</p>
+    <p><strong>Workspace:</strong> {{ workspace['workspace_id'] }}</p>
+    <p><strong>CURRENT state:</strong> working and ineligible for promotion. Capture a saved revision first.</p>
+    {% if selected_trust_id %}<p><strong>Trust:</strong> {{ selected_trust_id }}</p>{% endif %}
+  </div>
+
+  <div class="boundary">
+    <strong>Working versus governed boundary:</strong> P06 remains preparation only.
+    Source references are attribution, not verification. P07 records an internal
+    governed institutional state only after independent approval; it does not
+    establish legal validity, execute an external instrument, create Successor
+    Acceptance, activate Continuity, acknowledge Handoff, advance another
+    Execution subsystem, or create Document, Transfer, Archive, or P08 state.
+    This display is not legal advice.
+  </div>
+
+  {% if mode == 'result' and result %}
+    <div class="box governed">
+      <h2>Governed Result</h2>
+      <p>This result is recorded as <strong>GOVERNED_RECORDED</strong>.</p>
+      <p><strong>Status:</strong> {{ result['promotion']['governance_state'] }}</p>
+      <p><strong>Promotion ID:</strong> {{ result['promotion']['promotion_id'] }}</p>
+      <p><strong>Saved revision:</strong> {{ result['promotion']['program_revision_id'] }}</p>
+      <p><strong>Trust:</strong> {{ result['promotion']['trust_id'] }}</p>
+      <p><strong>Recorded:</strong> {{ result['promotion']['recorded_at'] }}</p>
+      <p><strong>Approved by:</strong> {{ result['promotion']['approved_by'] }}</p>
+      <p><strong>Recorded by:</strong> {{ result['promotion']['executed_by'] }}</p>
+      <p>Permanent provenance links this governed result to the saved Program revision and request.</p>
+    </div>
+    <div class="box">
+      <h2>Authoritative Lifecycle Events</h2>
+      {% for event in result['events'] %}
+        <div class="item"><strong>{{ event['event_type'] }}</strong> — {{ event['resulting_state'] }} by {{ event['actor_username'] }} at {{ event['event_at'] }}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="box">
+      <h2>Trust Context</h2>
+      <form method="get">
+        <label for="trust_id">Authorized Trust</label>
+        <select id="trust_id" name="trust_id">
+          <option value="">Select an authorized Trust</option>
+          {% for trust in visible_trusts %}
+            <option value="{{ trust['trust_id'] }}" {% if trust['trust_id'] == selected_trust_id %}selected{% endif %}>{{ trust['trust_name'] or trust['trust_id'] }}</option>
+          {% endfor %}
+        </select>
+        <p><button type="submit">View Eligibility and Status</button></p>
+      </form>
+    </div>
+
+    {% if promotion_state %}
+      <div class="box">
+        <h2>Saved Revision Eligibility</h2>
+        {% for revision in promotion_state['revisions'] %}
+          <div class="item">
+            <p><strong>Revision {{ revision['revision_number'] }}</strong> — {{ revision['revision_id'] }}</p>
+            <p>{{ revision['revision_note'] or 'No revision note.' }}</p>
+            {% if session.get('role') in ['Admin', 'Trustee'] %}
+              <form method="post" action="{{ url_for('workspace_program_promotion_request', workspace_id=workspace['workspace_id'], program_id=program['program_id']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
+                <input type="hidden" name="revision_id" value="{{ revision['revision_id'] }}">
+                <input type="hidden" name="trust_id" value="{{ selected_trust_id }}">
+                <label>Request reason</label>
+                <textarea name="request_reason"></textarea>
+                <p><button type="submit">Request Governed Promotion</button></p>
+              </form>
+            {% endif %}
+          </div>
+        {% else %}<p>No saved revision is eligible. CURRENT cannot be promoted.</p>{% endfor %}
+      </div>
+
+      <div class="box">
+        <h2>Promotion Requests</h2>
+        {% for item in promotion_state['requests'] %}
+          <div class="item">
+            <p><strong>{{ item['request_status'] }}</strong> — {{ item['request_id'] }}</p>
+            <p>Saved revision: {{ item['program_revision_id'] }} | Requested by: {{ item['requested_by'] }}</p>
+            {% if item['request_status'] == 'PENDING' and capability_by_request.get(item['request_id']) %}
+              <form method="post" action="{{ url_for('workspace_program_promotion_approve', workspace_id=workspace['workspace_id'], program_id=program['program_id'], request_id=item['request_id']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
+                <label>Approval reason</label><textarea name="approval_reason"></textarea>
+                <p><button type="submit">Approve as Authorized Fiduciary</button></p>
+              </form>
+              <form method="post" action="{{ url_for('workspace_program_promotion_reject', workspace_id=workspace['workspace_id'], program_id=program['program_id'], request_id=item['request_id']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
+                <label>Rejection reason</label><textarea name="rejection_reason"></textarea>
+                <p><button type="submit">Reject as Authorized Fiduciary</button></p>
+              </form>
+            {% endif %}
+            {% if item['request_status'] == 'APPROVED' and session.get('role') in ['Admin', 'Trustee'] %}
+              <form method="post" action="{{ url_for('workspace_program_promotion_execute', workspace_id=workspace['workspace_id'], program_id=program['program_id'], request_id=item['request_id']) }}">
+                <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
+                <p><button type="submit">Record Governed Promotion</button></p>
+              </form>
+            {% endif %}
+            {% if item['destination_record_id'] %}
+              <p><a href="{{ url_for('workspace_program_promotion_result', workspace_id=workspace['workspace_id'], program_id=program['program_id'], promotion_id=item['destination_record_id']) }}">View governed result and provenance</a></p>
+            {% endif %}
+          </div>
+        {% else %}<p>No promotion requests recorded for this context.</p>{% endfor %}
+        {% if session.get('role') == 'Viewer' %}<p>Viewer access is read-only. No request, approval, rejection, or execution control is available.</p>{% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
+  {% include "_institutional_property_notice.html" %}
+</body>
+</html>

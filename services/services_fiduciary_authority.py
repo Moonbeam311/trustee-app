@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
+from datetime import datetime, timezone
 
 import database.db as fiduciary_db
 
@@ -17,6 +18,7 @@ ACTIVE_RECORDED_STATUSES = {
     "Accepted",
     "Verified",
 }
+PROMOTION_APPROVAL_CAPABILITY = "APPROVE_GOVERNED_PROGRAM_PROMOTION"
 
 
 class FiduciaryAuthorityContractError(RuntimeError):
@@ -196,3 +198,72 @@ def evaluate_authority_evidence(
         "recorded_authority_scope": record.get("authority_scope"),
         "fiduciary": record,
     }
+
+
+def resolve_promotion_approval_capability(
+    principal_username: Any,
+    *,
+    firm_id: Any,
+    trust_id: Any,
+    at_time: datetime | None = None,
+) -> dict[str, Any] | None:
+    """Resolve active, immutable P07 approval evidence for one principal.
+
+    This is evidence resolution only. It neither grants authority nor writes
+    promotion state. The caller must independently enforce application role,
+    object scope, requester separation, and lifecycle state.
+    """
+    principal = _text(principal_username)
+    firm = _text(firm_id)
+    trust = _text(trust_id)
+    if not all((principal, firm, trust)):
+        return None
+
+    now = (at_time or datetime.now(timezone.utc)).isoformat()
+    connection = fiduciary_db.get_connection()
+    try:
+        required = {
+            "fiduciary_authority_capabilities",
+            "fiduciary_authority_capability_events",
+        }
+        present = {
+            row[0]
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            ).fetchall()
+        }
+        if not required.issubset(present):
+            raise FiduciaryAuthorityContractError(
+                "The structured P07 capability schema is required."
+            )
+        row = connection.execute(
+            """
+            SELECT capability.*
+            FROM fiduciary_authority_capabilities AS capability
+            WHERE capability.firm_id = ?
+              AND capability.trust_id = ?
+              AND lower(capability.principal_username) = lower(?)
+              AND capability.capability = ?
+              AND capability.effective_at <= ?
+              AND (capability.expires_at IS NULL OR capability.expires_at > ?)
+              AND EXISTS (
+                  SELECT 1
+                  FROM fiduciary_authority_capability_events AS granted
+                  WHERE granted.authority_grant_id = capability.authority_grant_id
+                    AND granted.event_type = 'GRANTED'
+              )
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM fiduciary_authority_capability_events AS revoked
+                  WHERE revoked.authority_grant_id = capability.authority_grant_id
+                    AND revoked.event_type = 'REVOKED'
+                    AND revoked.event_at <= ?
+              )
+            ORDER BY capability.effective_at DESC, capability.authority_grant_id
+            LIMIT 1
+            """,
+            (firm, trust, principal, PROMOTION_APPROVAL_CAPABILITY, now, now, now),
+        ).fetchone()
+    finally:
+        connection.close()
+    return dict(row) if row else None

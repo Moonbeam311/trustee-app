@@ -74,6 +74,18 @@ from services.services_work_learning_program_handoff import (
     WorkLearningProgramHandoffError,
     build_work_learning_program_handoff_descriptor,
 )
+from services.services_governed_program_promotion import (
+    PromotionError,
+    create_promotion_request,
+    approve_promotion_request,
+    reject_promotion_request,
+    execute_promotion_request,
+    get_governed_promotion,
+    list_program_promotion_state,
+)
+from services.services_fiduciary_authority import (
+    resolve_promotion_approval_capability,
+)
 from services.services_intake_trust_bridge import get_continuity_profile
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
@@ -2941,6 +2953,12 @@ ROLE_RULES = {
     "workspace_program_revision_create": {"Admin", "Trustee"},
     "workspace_program_handoff_prepare": {"Admin", "Trustee"},
     "workspace_program_handoff": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_promotion": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_promotion_request": {"Admin", "Trustee"},
+    "workspace_program_promotion_approve": {"Admin", "Trustee"},
+    "workspace_program_promotion_reject": {"Admin", "Trustee"},
+    "workspace_program_promotion_execute": {"Admin", "Trustee"},
+    "workspace_program_promotion_result": {"Admin", "Trustee", "Viewer"},
     "discussion_dashboard": {"Admin", "Trustee", "Viewer"},
     "discussion_new": {"Admin", "Trustee"},
     "discussion_thread": {"Admin", "Trustee", "Viewer"},
@@ -13430,6 +13448,207 @@ def workspace_program_handoff(workspace_id, program_id):
             firm_id=firm_id,
             owner_id=owner_id,
         ),
+    )
+
+
+def _p07_actor_context(workspace_id, program_id):
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id, program_id
+    )
+    return {
+        "workspace": workspace,
+        "program": program,
+        "firm_id": firm_id,
+        "owner_id": owner_id,
+        "actor": (session.get("username") or "").strip(),
+        "role": (session.get("role") or "").strip(),
+    }
+
+
+def _p07_trust_check(trust_id):
+    return bool(get_trust_by_id(trust_id) and operator_can_access_trust(trust_id))
+
+
+def _p07_error(error):
+    status = getattr(error, "status_code", 409)
+    if status == 404:
+        return "Promotion record not found.", 404
+    if status == 400:
+        return "Malformed promotion request.", 400
+    if status == 403:
+        return render_template(
+            "access_denied.html", reason="This promotion action is not available."
+        ), 403
+    return "Promotion transition conflict.", 409
+
+
+@app.route("/workspaces/<workspace_id>/programs/<program_id>/promotion")
+def workspace_program_promotion(workspace_id, program_id):
+    context = _p07_actor_context(workspace_id, program_id)
+    if not context["workspace"] or not context["program"]:
+        return render_template(
+            "access_denied.html", reason="This promotion context is not available."
+        ), 403
+    trust_id = (request.args.get("trust_id") or "").strip()
+    promotion_state = None
+    if trust_id:
+        try:
+            promotion_state = list_program_promotion_state(
+                workspace_id=workspace_id,
+                program_id=program_id,
+                trust_id=trust_id,
+                firm_id=context["firm_id"],
+                owner_id=context["owner_id"],
+                actor=context["actor"],
+                role=context["role"],
+                trust_authorization_check=_p07_trust_check,
+            )
+        except PromotionError as exc:
+            return _p07_error(exc)
+    requests = promotion_state["requests"] if promotion_state else []
+    capability_by_request = {}
+    for promotion_request in requests:
+        grant = resolve_promotion_approval_capability(
+            context["actor"],
+            firm_id=context["firm_id"],
+            trust_id=promotion_request["trust_id"],
+        )
+        capability_by_request[promotion_request["request_id"]] = bool(
+            grant
+            and promotion_request["requested_by"].lower() != context["actor"].lower()
+        )
+    return render_template(
+        "workspace_program_promotion.html",
+        mode="index",
+        **context,
+        selected_trust_id=trust_id,
+        visible_trusts=get_visible_trusts_for_current_operator(),
+        promotion_state=promotion_state,
+        capability_by_request=capability_by_request,
+        result=None,
+    )
+
+
+def _p07_validate_form(allowed_fields):
+    if not validate_csrf_token():
+        return False
+    return set(request.form.keys()).issubset(set(allowed_fields) | {"_csrf_token"})
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/promotion/requests",
+    methods=["POST"],
+)
+def workspace_program_promotion_request(workspace_id, program_id):
+    if not _p07_validate_form({"revision_id", "trust_id", "request_reason"}):
+        return "Invalid, missing, or unexpected request field.", 400
+    context = _p07_actor_context(workspace_id, program_id)
+    if not context["workspace"] or not context["program"]:
+        return render_template("access_denied.html", reason="This promotion context is not available."), 403
+    try:
+        result = create_promotion_request(
+            workspace_id=workspace_id, program_id=program_id,
+            revision_id=request.form.get("revision_id"),
+            trust_id=request.form.get("trust_id"),
+            request_reason=request.form.get("request_reason"),
+            firm_id=context["firm_id"], owner_id=context["owner_id"],
+            actor=context["actor"], role=context["role"],
+            trust_authorization_check=_p07_trust_check,
+        )
+    except PromotionError as exc:
+        return _p07_error(exc)
+    return redirect(url_for(
+        "workspace_program_promotion", workspace_id=workspace_id,
+        program_id=program_id, trust_id=result["trust_id"],
+    ))
+
+
+def _p07_decision(workspace_id, program_id, request_id, *, outcome):
+    allowed = {"approval_reason"} if outcome == "approve" else {"rejection_reason"}
+    if not _p07_validate_form(allowed):
+        return "Invalid, missing, or unexpected request field.", 400
+    context = _p07_actor_context(workspace_id, program_id)
+    if not context["workspace"] or not context["program"]:
+        return "Promotion request not found.", 404
+    service = approve_promotion_request if outcome == "approve" else reject_promotion_request
+    reason_name = "approval_reason" if outcome == "approve" else "rejection_reason"
+    try:
+        result = service(
+            request_id=request_id, actor=context["actor"], role=context["role"],
+            reason=request.form.get(reason_name), firm_id=context["firm_id"],
+            owner_id=context["owner_id"], workspace_id=workspace_id,
+            program_id=program_id, trust_authorization_check=_p07_trust_check,
+        )
+    except PromotionError as exc:
+        return _p07_error(exc)
+    return redirect(url_for(
+        "workspace_program_promotion", workspace_id=workspace_id,
+        program_id=program_id, trust_id=result["trust_id"],
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/promotion/requests/<request_id>/approve",
+    methods=["POST"],
+)
+def workspace_program_promotion_approve(workspace_id, program_id, request_id):
+    return _p07_decision(workspace_id, program_id, request_id, outcome="approve")
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/promotion/requests/<request_id>/reject",
+    methods=["POST"],
+)
+def workspace_program_promotion_reject(workspace_id, program_id, request_id):
+    return _p07_decision(workspace_id, program_id, request_id, outcome="reject")
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/promotion/requests/<request_id>/execute",
+    methods=["POST"],
+)
+def workspace_program_promotion_execute(workspace_id, program_id, request_id):
+    if not _p07_validate_form(set()):
+        return "Invalid, missing, or unexpected request field.", 400
+    context = _p07_actor_context(workspace_id, program_id)
+    if not context["workspace"] or not context["program"]:
+        return "Promotion request not found.", 404
+    try:
+        result = execute_promotion_request(
+            request_id=request_id, actor=context["actor"], role=context["role"],
+            firm_id=context["firm_id"], owner_id=context["owner_id"],
+            workspace_id=workspace_id, program_id=program_id,
+            trust_authorization_check=_p07_trust_check,
+        )
+    except PromotionError as exc:
+        return _p07_error(exc)
+    return redirect(url_for(
+        "workspace_program_promotion_result", workspace_id=workspace_id,
+        program_id=program_id, promotion_id=result["promotion_id"],
+    ))
+
+
+@app.route(
+    "/workspaces/<workspace_id>/programs/<program_id>/promotions/<promotion_id>"
+)
+def workspace_program_promotion_result(workspace_id, program_id, promotion_id):
+    context = _p07_actor_context(workspace_id, program_id)
+    if not context["workspace"] or not context["program"]:
+        return "Promotion result not found.", 404
+    try:
+        result = get_governed_promotion(
+            promotion_id=promotion_id, workspace_id=workspace_id,
+            program_id=program_id, firm_id=context["firm_id"],
+            owner_id=context["owner_id"], actor=context["actor"],
+            role=context["role"], trust_authorization_check=_p07_trust_check,
+        )
+    except PromotionError as exc:
+        return _p07_error(exc)
+    return render_template(
+        "workspace_program_promotion.html", mode="result", **context,
+        selected_trust_id=result["promotion"]["trust_id"],
+        visible_trusts=[], promotion_state=None, capability_by_request={},
+        result=result,
     )
 
 

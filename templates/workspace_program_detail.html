@@ -470,6 +470,22 @@
     {% endif %}
   </div>
 
+  <div class="box" id="program-promotion">
+    <h2>P07 Governed Promotion</h2>
+    <div class="boundary">
+      P07 is a separate governed institutional recording workflow. It consumes
+      an existing saved revision; it does not convert P06 preparation or the
+      editable CURRENT state into governed state.
+    </div>
+    <p>
+      <a href="{{ url_for(
+        'workspace_program_promotion',
+        workspace_id=workspace['workspace_id'],
+        program_id=program['program_id']
+      ) }}">Open Governed Promotion Status</a>
+    </p>
+  </div>
+
   {% include "_institutional_property_notice.html" %}
 </body>
 </html>

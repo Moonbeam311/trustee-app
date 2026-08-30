@@ -11,6 +11,10 @@ from database.migrations_successor_acceptance import (
     apply_successor_acceptance_schema,
     SuccessorAcceptanceMigrationError,
 )
+from database.migrations_governed_program_promotion import (
+    apply_governed_program_promotion_schema,
+    GovernedProgramPromotionMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -49,10 +53,22 @@ def run_additive_startup_migrations(
             "acceptance_rows": 0,
         }
 
+    try:
+        promotion_result = apply_governed_program_promotion_schema(db_path)
+    except GovernedProgramPromotionMigrationError as exc:
+        promotion_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
+        "governed_program_promotion": promotion_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
+        "promotion_records_created": 0,
     }
