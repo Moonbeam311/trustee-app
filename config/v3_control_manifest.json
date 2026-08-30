@@ -1,25 +1,5 @@
 {
-  "control_version": "V3-CTL-2",
-  "repository": "trustee-app-system1-user",
-  "branch": "system-1-annual-evaluation",
-  "certified_head": "140e628cdc09c0fb8bb5ca294951ab165b094cb9",
-  "remote_ref": "origin/system-1-annual-evaluation",
-  "source_db": {
-    "path": "data/trustee_app.db",
-    "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c"
-  },
-  "protected_paths": [
-    "docs/version_3_completion_addendum_2026-08-14.md",
-    "docs/version_3_locked_plan_recovery_2026-08-14.md"
-  ],
-  "certified_phases": {
-    "V3-MOD-WLH-P01": "0b0ab79",
-    "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8",
-    "V3-MOD-WLH-P05": "9908c317c3fcd9e6837d0fda6242a80d7c12200e",
-    "V3-MOD-WLH-P06": "140e628cdc09c0fb8bb5ca294951ab165b094cb9"
-  },
-  "active_phase": "V3-MOD-WLH-P07-IMP-1",
-  "suspended_feature_phase": null,
+  "active_phase": "V3-MOD-WLH-P07-COMMIT-1R-REG-1",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -73,7 +53,34 @@
     "public_site/assets/js/site.js",
     "templates/auth/login.html"
   ],
-  "next_authorized_action": "V3-MOD-WLH-P07-IMP-1",
+  "authority_ref": "origin/system-1-annual-evaluation",
+  "branch": "system-1-annual-evaluation",
+  "certified_controls": {
+    "V3-CTL-2": {
+      "control_root_commit": "8161475ef00a31e7a8acd64aec8b40f1802e086e",
+      "negative_control_regression": "PASS",
+      "remote_anchor": "PASS",
+      "remote_root_tamper_rejection": "PASS",
+      "status": "CERTIFIED"
+    }
+  },
+  "certified_head": "140e628cdc09c0fb8bb5ca294951ab165b094cb9",
+  "certified_phases": {
+    "V3-MOD-WLH-P01": "0b0ab79",
+    "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8",
+    "V3-MOD-WLH-P05": "9908c317c3fcd9e6837d0fda6242a80d7c12200e",
+    "V3-MOD-WLH-P06": "140e628cdc09c0fb8bb5ca294951ab165b094cb9",
+    "V3-MOD-WLH-P07": "462bf83919739dae0fa258771d1a14cbf971f1b8"
+  },
+  "control_files": {
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "bc81a490ce2dbe8892ae4303c6437cad88a5123fad8776d2710d4c071606d308",
+    "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
+    "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
+  },
+  "control_version": "V3-CTL-2",
+  "guard_path": "scripts/v3_control_guard.py",
+  "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
+  "next_authorized_action": "V3-MOD-WLH-P07-COMMIT-1R-REG-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -82,25 +89,19 @@
     "modify source DB",
     "stage or commit unrelated files"
   ],
+  "protected_paths": [
+    "docs/version_3_completion_addendum_2026-08-14.md",
+    "docs/version_3_locked_plan_recovery_2026-08-14.md"
+  ],
   "protected_sha256": {
     "docs/version_3_completion_addendum_2026-08-14.md": "4d01651b3c169b51db4521c261e8f857173e849dfe5ab076caf5e7abc8fd92d3",
     "docs/version_3_locked_plan_recovery_2026-08-14.md": "e4e212343fad5562c10adc1ffd0646ba8ddfb985a5e3bf3ce650ecf2c7b6e9da"
   },
-  "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "guard_path": "scripts/v3_control_guard.py",
-  "authority_ref": "origin/system-1-annual-evaluation",
-  "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "bc81a490ce2dbe8892ae4303c6437cad88a5123fad8776d2710d4c071606d308",
-    "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
-    "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
+  "remote_ref": "origin/system-1-annual-evaluation",
+  "repository": "trustee-app-system1-user",
+  "source_db": {
+    "path": "data/trustee_app.db",
+    "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c"
   },
-  "certified_controls": {
-    "V3-CTL-2": {
-      "status": "CERTIFIED",
-      "control_root_commit": "8161475ef00a31e7a8acd64aec8b40f1802e086e",
-      "remote_anchor": "PASS",
-      "negative_control_regression": "PASS",
-      "remote_root_tamper_rejection": "PASS"
-    }
-  }
+  "suspended_feature_phase": null
 }
