@@ -73,7 +73,7 @@
     "V3-MOD-WLH-P07": "462bf83919739dae0fa258771d1a14cbf971f1b8"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "79ec1fd503288057545d3e6a8a5f3ff3598a9a8fd4110665e889263422bd0c63",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "f5e7fbf4f75817a5edc559f0694146cb4bca961972a203b34c037603e35b9fa3",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
