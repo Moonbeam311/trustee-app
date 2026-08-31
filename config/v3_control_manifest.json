@@ -51,7 +51,10 @@
     "scripts/v3_control_guard.py",
     "public_site/README.md",
     "public_site/assets/js/site.js",
-    "templates/auth/login.html"
+    "templates/auth/login.html",
+    "services/services_work_learning_provenance.py",
+    "templates/workspace_program_provenance.html",
+    "tests/test_v3_mod_wlh_p08.py"
   ],
   "authority_ref": "origin/system-1-annual-evaluation",
   "branch": "system-1-annual-evaluation",
