@@ -2510,3 +2510,48 @@ Post-reconciliation authority:
 - `next_authorized_action=NOT DOCUMENTED`
 - Any later V3 phase requires separate operator authorization and control registration.
 
+## V3-MOD-WLH-P08-REG-1D-AUTH-1 — Exact Five-Path Product Boundary Registration
+
+Status: `COMPLETE / CONTROL-ONLY AUTHORIZATION`
+
+Registration baseline:
+
+- Control HEAD before registration: `d9ebd0fef56bb74821649ea8e016fe11dc489f22`
+- P08 architecture lock: `PROVEN`
+- P08 implementation state: `NOT STARTED`
+- No P08 product mutation occurred during registration.
+
+Authorized P08 product boundary:
+
+1. `services/services_work_learning_provenance.py`
+2. `app.py`
+3. `templates/workspace_program_provenance.html`
+4. `templates/workspace_program_detail.html`
+5. `tests/test_v3_mod_wlh_p08.py`
+
+Locked implementation contract:
+
+- P08 is the unified Work & Learning Hub provenance and audit-history layer.
+- P08 is a derived/read-oriented integration model over canonical source systems.
+- P08 does not create a duplicate authoritative lifecycle owner.
+- No new authoritative P08 persistence table is authorized.
+- No P08 migration is authorized.
+- No permission creation, reseeding, role change, user-permission override, security-route change, security-template change, Global 411 Firewall change, or Master Admin security change is authorized.
+- Application security permissions remain separate from institutional authority.
+- Existing firm scope, owner scope, Trust authorization, Viewer read-only behavior, CSRF boundaries, and fail-closed behavior remain mandatory.
+- Existing P05 attribution, P06 handoff preparation, and P07 governed-promotion provenance remain canonical inputs and may not be rewritten by P08.
+- P08 may expose unified provenance but may not imply source verification, legal validity, external legal effect, Continuity activation, Successor Acceptance, Handoff acknowledgement, unrelated Execution, Document, Transfer, Archive, or permission state.
+- P09 or any later phase is not authorized by this registration.
+
+Control disposition:
+
+- `ACTIVE_PHASE=V3-MOD-WLH-P08-IMP-1`
+- `AUTHORIZED_NEXT_ACTION=V3-MOD-WLH-P08-IMP-1`
+- `P08_PRODUCT_MUTATION_AUTHORITY=AUTHORIZED_FOR_REGISTERED_FIVE_PATH_BOUNDARY_ONLY`
+- `P08_CONTROL_MUTATION_AUTHORITY=DENIED_AFTER_REGISTRATION`
+- `SECURITY_ARCHITECTURE_MUTATION_AUTHORITY=DENIED`
+- `PERMISSION_MUTATION_AUTHORITY=DENIED`
+- `MIGRATION_AUTHORITY=DENIED`
+- `NEXT_IMPLEMENTATION_PHASE=V3-MOD-WLH-P08-IMP-1`
+
+

@@ -1,5 +1,5 @@
 {
-  "active_phase": "V3-MOD-WLH-P07-COMMIT-1R-REG-1",
+  "active_phase": "V3-MOD-WLH-P08-IMP-1",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -103,5 +103,26 @@
     "path": "data/trustee_app.db",
     "sha256": "3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c"
   },
-  "suspended_feature_phase": null
+  "suspended_feature_phase": null,
+  "v3_mod_wlh_p08_registration": {
+    "phase": "V3-MOD-WLH-P08",
+    "registration_phase": "V3-MOD-WLH-P08-REG-1D-AUTH-1",
+    "architecture_state": "PROVEN",
+    "implementation_state": "NOT_STARTED",
+    "registration_head": "d9ebd0fef56bb74821649ea8e016fe11dc489f22",
+    "authorized_next_action": "V3-MOD-WLH-P08-IMP-1",
+    "product_mutation_authority": "AUTHORIZED_FOR_REGISTERED_FIVE_PATH_BOUNDARY_ONLY",
+    "control_mutation_authority": "DENIED_AFTER_THIS_REGISTRATION",
+    "security_mutation_authority": "DENIED",
+    "permission_mutation_authority": "DENIED",
+    "persistence_boundary": "DERIVED_READ_MODEL_NO_NEW_AUTHORITATIVE_PERSISTENCE",
+    "migration_authority": "DENIED",
+    "registered_product_paths": [
+      "services/services_work_learning_provenance.py",
+      "app.py",
+      "templates/workspace_program_provenance.html",
+      "templates/workspace_program_detail.html",
+      "tests/test_v3_mod_wlh_p08.py"
+    ]
+  }
 }
