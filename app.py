@@ -86,6 +86,10 @@ from services.services_governed_program_promotion import (
 from services.services_fiduciary_authority import (
     resolve_promotion_approval_capability,
 )
+from services.services_work_learning_provenance import (
+    WorkLearningProvenanceError,
+    build_work_learning_provenance_descriptor,
+)
 from services.services_intake_trust_bridge import get_continuity_profile
 from services.services_institutional_assets import (
     ensure_institutional_asset_vault_tables,
@@ -2954,6 +2958,7 @@ ROLE_RULES = {
     "workspace_program_handoff_prepare": {"Admin", "Trustee"},
     "workspace_program_handoff": {"Admin", "Trustee", "Viewer"},
     "workspace_program_promotion": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_provenance": {"Admin", "Trustee", "Viewer"},
     "workspace_program_promotion_request": {"Admin", "Trustee"},
     "workspace_program_promotion_approve": {"Admin", "Trustee"},
     "workspace_program_promotion_reject": {"Admin", "Trustee"},
@@ -12889,6 +12894,7 @@ def workspace_program_detail(workspace_id, program_id):
             firm_id=firm_id,
             owner_id=owner_id,
         ),
+        visible_trusts=get_visible_trusts_for_current_operator(),
         program_statuses=PROGRAM_STATUSES,
     )
 
@@ -13480,6 +13486,66 @@ def _p07_error(error):
             "access_denied.html", reason="This promotion action is not available."
         ), 403
     return "Promotion transition conflict.", 409
+
+
+
+@app.route("/workspaces/<workspace_id>/programs/<program_id>/provenance")
+def workspace_program_provenance(workspace_id, program_id):
+    context = _p07_actor_context(workspace_id, program_id)
+    if not context["workspace"] or not context["program"]:
+        return render_template(
+            "access_denied.html",
+            reason="This provenance context is not available.",
+        ), 403
+
+    trust_id = (request.args.get("trust_id") or "").strip()
+    revision_id = (request.args.get("revision_id") or "").strip()
+
+    if not trust_id or not revision_id:
+        return render_template(
+            "access_denied.html",
+            reason="This provenance context is not available.",
+        ), 403
+
+    try:
+        descriptor = build_work_learning_provenance_descriptor(
+            workspace_id=workspace_id,
+            program_id=program_id,
+            revision_id=revision_id,
+            trust_id=trust_id,
+            firm_id=context["firm_id"],
+            owner_id=context["owner_id"],
+            actor=context["actor"],
+            role=context["role"],
+            db_path=DB_PATH,
+            trust_authorization_check=_p07_trust_check,
+            continuity_authorization_check=lambda profile_id: (
+                get_continuity_profile(
+                    DB_PATH,
+                    profile_id,
+                    context["firm_id"],
+                ) is not None
+            ),
+            fiduciary_authorization_check=lambda _fiduciary_id, candidate: (
+                candidate == trust_id and _p07_trust_check(trust_id)
+            ),
+            governance_authorization_check=_p07_trust_check,
+            acceptance_authorization_check=lambda _acceptance_id, candidate: (
+                candidate == trust_id and _p07_trust_check(trust_id)
+            ),
+        )
+    except WorkLearningProvenanceError:
+        return render_template(
+            "access_denied.html",
+            reason="This provenance context is not available.",
+        ), 403
+
+    return render_template(
+        "workspace_program_provenance.html",
+        workspace=context["workspace"],
+        program=context["program"],
+        descriptor=descriptor,
+    )
 
 
 @app.route("/workspaces/<workspace_id>/programs/<program_id>/promotion")

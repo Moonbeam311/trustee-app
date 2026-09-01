@@ -486,6 +486,45 @@
     </p>
   </div>
 
+  <div class="box" id="program-provenance">
+    <h2>P08 Unified Program Provenance / Audit History</h2>
+    <div class="boundary">
+      P08 is a derived, read-only, source-native view. Selecting a saved
+      revision and an authorized Trust changes navigation context only. It does
+      not create or modify P06 preparation, P07 promotion, or any institutional
+      record. Source attribution is not verification.
+    </div>
+
+    {% if revisions and visible_trusts %}
+      {% for trust in visible_trusts %}
+        <div class="item">
+          <strong>{{ trust['name'] or trust['trust_id'] }}</strong>
+          <ul>
+            {% for revision in revisions %}
+              <li>
+                <a href="{{ url_for(
+                  'workspace_program_provenance',
+                  workspace_id=workspace['workspace_id'],
+                  program_id=program['program_id'],
+                  trust_id=trust['trust_id'],
+                  revision_id=revision['revision_id']
+                ) }}">
+                  Open Unified Provenance &mdash;
+                  {{ revision['revision_id'] }} /
+                  {{ trust['name'] or trust['trust_id'] }}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    {% elif not revisions %}
+      <p>No saved Program revision is available for read-only provenance navigation.</p>
+    {% else %}
+      <p>No authorized Trust is visible for read-only provenance navigation.</p>
+    {% endif %}
+  </div>
+
   {% include "_institutional_property_notice.html" %}
 </body>
 </html>

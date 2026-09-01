@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width:1100px; margin:0 auto; padding:24px;">
+
+  <p>
+    <a href="{{ url_for('workspace_program_detail',
+                        workspace_id=workspace.workspace_id,
+                        program_id=program.program_id) }}">
+      ← Program Detail
+    </a>
+  </p>
+
+  <h1>Program Provenance</h1>
+
+  <p>
+    This is a derived, read-only view of source-native Work & Learning Program,
+    Handoff, and governed promotion provenance.
+  </p>
+
+  <div style="padding:14px; border:1px solid #d1d5db; border-radius:8px; margin:18px 0;">
+    <strong>Boundary:</strong>
+    This view does not create, verify, approve, execute, acknowledge, activate,
+    transfer, archive, or establish legal validity. Source attribution is not verification.
+  </div>
+
+  <h2>Context</h2>
+  <table class="table">
+    <tr><th>Workspace</th><td>{{ descriptor.workspace_id }}</td></tr>
+    <tr><th>Program</th><td>{{ descriptor.program_id }}</td></tr>
+    <tr><th>Saved Revision</th><td>{{ descriptor.revision_id }}</td></tr>
+    <tr><th>Trust</th><td>{{ descriptor.trust_id }}</td></tr>
+    <tr><th>Model</th><td>{{ descriptor.architecture }}</td></tr>
+  </table>
+
+  <h2>Unified Provenance Timeline</h2>
+
+  {% if descriptor.timeline %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Source</th>
+        <th>Event</th>
+        <th>Source ID</th>
+        <th>Recorded At</th>
+        <th>Actor</th>
+        <th>Status / Meaning</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for item in descriptor.timeline %}
+      <tr>
+        <td>{{ item.source_family }}</td>
+        <td>{{ item.event_type }}</td>
+        <td>{{ item.source_id or "Not recorded" }}</td>
+        <td>{{ item.occurred_at or "Not recorded" }}</td>
+        <td>{{ item.actor or "Not recorded" }}</td>
+        <td>{{ item.status or "Not recorded" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p>No authorized source-native provenance events are available for this context.</p>
+  {% endif %}
+
+  <h2>Source Attribution</h2>
+  <p><strong>Attribution only; not verification.</strong></p>
+
+  {% if descriptor.source_references %}
+    <ul>
+    {% for source in descriptor.source_references %}
+      <li>
+        {{ source.title or source.source_reference or source.reference_id or "Source reference" }}
+      </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>No Program source references are recorded for this saved revision.</p>
+  {% endif %}
+
+  <h2>Governed Promotion</h2>
+  <p>Requests: {{ descriptor.promotion_requests|length }}</p>
+  <p>Governed promotion records: {{ descriptor.promotions|length }}</p>
+  <p>Source-native P07 events shown: {{ descriptor.promotion_events|length }}</p>
+
+  <h2>No Institutional Effect</h2>
+  <ul>
+    <li>No new persistence is created by this view.</li>
+    <li>No Program revision is created or changed.</li>
+    <li>No P06 Handoff acknowledgement is created.</li>
+    <li>No P07 request, approval, rejection, or promotion is created.</li>
+    <li>No Successor Acceptance is created or changed.</li>
+    <li>No Continuity state or responsibility is changed.</li>
+    <li>No user, role, permission, or application access is changed.</li>
+    <li>No legal validity is inferred.</li>
+  </ul>
+
+  {% if session.get('role') == 'Viewer' %}
+  <p><strong>Viewer access is read-only.</strong></p>
+  {% endif %}
+
+</div>
+{% endblock %}
