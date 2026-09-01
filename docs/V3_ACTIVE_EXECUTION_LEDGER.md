@@ -2554,4 +2554,57 @@ Control disposition:
 - `MIGRATION_AUTHORITY=DENIED`
 - `NEXT_IMPLEMENTATION_PHASE=V3-MOD-WLH-P08-IMP-1`
 
+## V3-MOD-WLH-P08 Closeout Certification - 2026-09-01
+
+Phase: `V3-MOD-WLH-P08-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - P08 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+Certified product commit:
+
+`8e6e292e8fbe06b35126b54c06c257947fa3f29f`
+
+Product parent:
+
+`e97cee50568dad6e8d1795dc1e55b36132669834`
+
+Exact certified product boundary:
+
+1. `app.py`
+2. `services/services_work_learning_provenance.py`
+3. `templates/workspace_program_detail.html`
+4. `templates/workspace_program_provenance.html`
+5. `tests/test_v3_mod_wlh_p08.py`
+
+Certification record:
+
+- Product commit, push, and remote verification: `PASS`.
+- Focused P08 tests: `15 passed`.
+- Complete P01-P08 Work & Learning Hub regression: `103 passed`.
+- P03 security regression: `9 passed`.
+- Human browser certification: `PASS`.
+- Viewer direct Program Detail navigation to saved-revision / authorized-Trust provenance: `PASS`.
+- Wrong-scope Program request failed closed without disclosure: `PASS`.
+- Governed database and preserved unrelated dirty work remained byte-identical.
+
+Architecture closure:
+
+- `P08_ARCHITECTURE=DERIVED_UNIFIED_READ_MODEL`.
+- P08 remains derived, read-only, source-native, and based on canonical P01-P07 records.
+- P05 attribution remains attribution, not verification.
+- P06 remains preparation-only and does not gain a fabricated event.
+- P07 remains the authoritative lifecycle owner and no P07 event is duplicated.
+- Generic `audit_log` is not domain truth.
+- No new authoritative persistence, migration, permission family, security authority, or fiduciary authority is created.
+- No legal-validity, Successor Acceptance, Continuity activation, Handoff acknowledgement, or unrelated Execution, Document, Transfer, or Archive effect is inferred.
+
+Control disposition:
+
+- `V3-MOD-WLH-P08` is registered in `certified_phases` at the certified product commit.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `active_phase=V3-MOD-WLH-P08-CLOSEOUT-CERTIFICATION`.
+- `next_authorized_action=NOT DOCUMENTED`.
+- `P09_AUTHORITY=NOT_AUTHORIZED`.
+- Any later V3 phase requires separate explicit authorization and control registration.
+
 

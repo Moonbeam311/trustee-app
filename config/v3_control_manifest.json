@@ -1,5 +1,5 @@
 {
-  "active_phase": "V3-MOD-WLH-P08-IMP-1",
+  "active_phase": "V3-MOD-WLH-P08-CLOSEOUT-CERTIFICATION",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -73,17 +73,18 @@
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8",
     "V3-MOD-WLH-P05": "9908c317c3fcd9e6837d0fda6242a80d7c12200e",
     "V3-MOD-WLH-P06": "140e628cdc09c0fb8bb5ca294951ab165b094cb9",
-    "V3-MOD-WLH-P07": "462bf83919739dae0fa258771d1a14cbf971f1b8"
+    "V3-MOD-WLH-P07": "462bf83919739dae0fa258771d1a14cbf971f1b8",
+    "V3-MOD-WLH-P08": "8e6e292e8fbe06b35126b54c06c257947fa3f29f"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "f5e7fbf4f75817a5edc559f0694146cb4bca961972a203b34c037603e35b9fa3",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "cc877b6b3ee7e585923cea63c7c0eeac6b7e01ab04da6d54539b7146e3a0b1aa",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "V3-MOD-WLH-P08-IMP-1",
+  "next_authorized_action": "NOT DOCUMENTED",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -111,15 +112,19 @@
     "phase": "V3-MOD-WLH-P08",
     "registration_phase": "V3-MOD-WLH-P08-REG-1D-AUTH-1",
     "architecture_state": "PROVEN",
-    "implementation_state": "NOT_STARTED",
+    "implementation_state": "CERTIFIED_COMPLETE",
     "registration_head": "d9ebd0fef56bb74821649ea8e016fe11dc489f22",
-    "authorized_next_action": "V3-MOD-WLH-P08-IMP-1",
-    "product_mutation_authority": "AUTHORIZED_FOR_REGISTERED_FIVE_PATH_BOUNDARY_ONLY",
+    "authorized_next_action": "NOT DOCUMENTED",
+    "product_commit": "8e6e292e8fbe06b35126b54c06c257947fa3f29f",
+    "product_mutation_authority": "DENIED_AFTER_CERTIFICATION",
     "control_mutation_authority": "DENIED_AFTER_THIS_REGISTRATION",
     "security_mutation_authority": "DENIED",
     "permission_mutation_authority": "DENIED",
     "persistence_boundary": "DERIVED_READ_MODEL_NO_NEW_AUTHORITATIVE_PERSISTENCE",
     "migration_authority": "DENIED",
+    "automated_certification": "PASS",
+    "human_browser_certification": "PASS",
+    "remote_verification": "PASS",
     "registered_product_paths": [
       "services/services_work_learning_provenance.py",
       "app.py",
