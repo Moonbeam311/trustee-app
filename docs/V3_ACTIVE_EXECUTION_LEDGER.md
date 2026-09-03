@@ -2812,3 +2812,149 @@ IMPLEMENTATION AUTHORITY:
 NEXT BOUNDED ACTION:
 - V3-MOD-WLH-P09-AUTH-1
 - Read-only implementation-authority and canonical-path audit.
+
+## V3-MOD-WLH-P09-REG-2 — Exact P09 Implementation Boundary Registration
+
+STATUS:
+- P09-ARCH-1A through P09-ARCH-1F remain LOCKED.
+- P09-AUTH-1C completed PASS.
+- Implementation architecture is now adjudicated.
+- Product implementation is authorized only within the exact paths below.
+- No implementation has yet been performed by this registration.
+
+IMPLEMENTATION ARCHITECTURE:
+- NARROW_REFERENTIAL_PERSISTENCE
+
+PERSISTENCE ACTIVATION:
+- ADDITIVE_STARTUP_MIGRATION
+- Dedicated P09 additive migration is required.
+- database/startup_migrations.py registration is required.
+- Migration may create only empty P09 schema objects.
+- Migration must create no authority assignments, claims, verification results,
+  reviews, determinations, source references, permissions, or other lifecycle
+  records.
+
+REFERENTIAL MODEL:
+- Physical cross-phase SQLite foreign keys to lazy P04/P05 tables are not
+  required.
+- P09 service validation must resolve canonical Program, issue, and source
+  references through existing scoped P04/P05 contracts before accepting writes.
+- P09 may store canonical identifiers required for referential linkage.
+- P09 may not copy canonical P04/P05 source or issue facts.
+
+OWNERSHIP:
+- P04 remains canonical working-issue owner.
+- P05 remains canonical source-attribution owner.
+- P08 remains derived provenance/history owner.
+- P09 owns only P09-specific:
+  authority classifications,
+  claim/proposition records,
+  claim/source evidence relationships,
+  verification results,
+  conflict/review governance,
+  determinations,
+  and P09-native immutable history.
+
+HISTORY:
+- Generic audit_log is not P09 domain truth.
+- Prior classification history may not be rewritten.
+- Verification failures may not be silently dropped.
+- Conflict and review history may not be erased.
+- Reopening must preserve prior history.
+- Determinations must preserve backtrace.
+
+SECURITY:
+- Existing Work & Learning role architecture is reused.
+- Admin and Trustee may perform authorized P09 mutations.
+- Viewer is read-only.
+- No new permission is authorized.
+- No security architecture mutation is authorized.
+- Firm, owner, workspace, and Program scope must be server-derived.
+- Client-supplied firm_id and owner_id are prohibited.
+
+P08:
+- Initial P09 implementation must not modify
+  services/services_work_learning_provenance.py.
+- Later P08/P09 provenance integration requires separate authority.
+
+EXACT AUTHORIZED PRODUCT PATHS:
+- services/services_work_learning_authority.py
+- database/migrations_work_learning_authority.py
+- database/startup_migrations.py
+- app.py
+- templates/workspace_program_authority.html
+- templates/workspace_program_detail.html
+
+EXACT AUTHORIZED TEST PATHS:
+- tests/test_v3_mod_wlh_p09.py
+- tests/test_startup_migrations.py
+
+EXPLICITLY EXCLUDED FROM P09 PRODUCT IMPLEMENTATION:
+- services/services_work_learning_programs.py
+- services/services_work_learning_provenance.py
+- services/services_governed_program_promotion.py
+- database/db.py
+- database/migrations_governed_program_promotion.py
+- tests/test_v3_mod_wlh_p03c4c_security_regression.py
+- tests/test_v3_mod_wlh_p04.py
+- tests/test_v3_mod_wlh_p05.py
+- tests/test_v3_mod_wlh_p07.py
+- tests/test_v3_mod_wlh_p08.py
+- config/v3_control_manifest.json
+- docs/V3_ACTIVE_EXECUTION_LEDGER.md
+- scripts/v3_control_guard.py
+- data/trustee_app.db
+- trustee_app.db
+- public_site/README.md
+- public_site/assets/js/site.js
+- templates/auth/login.html
+- docs/version_3_completion_addendum_2026-08-14.md
+- docs/version_3_locked_plan_recovery_2026-08-14.md
+
+IMPLEMENTATION TEST CONTRACT:
+- Fresh disposable database schema.
+- Migration idempotence.
+- Startup migration preserves previous migration results.
+- Migration creates zero P09 lifecycle/domain rows.
+- No permission changes.
+- Program-root P05 source reference support.
+- P04 issue-bound P05 source reference support.
+- Wrong Program / firm / owner fail closed.
+- Viewer mutation denied.
+- Admin / Trustee bounded mutation allowed.
+- Authority tiers bounded.
+- CONTROLLING requires human confirmation.
+- Machine-final CONTROLLING prohibited.
+- UNRESOLVED is valid.
+- SUPERSEDED requires express evidence.
+- NOT_APPLICABLE requires objective scope evidence.
+- Verification dimensions remain independent.
+- Negative verification results retained.
+- Claim/source cardinality MANY_TO_MANY.
+- Failed claim support cannot be overridden by source tier.
+- Source locator may not be fabricated.
+- Conflict review state remains separate from relationship status.
+- Reopen preserves prior history.
+- Determination backtrace required.
+- P05 attribution remains attribution-not-verification.
+- Legal-validity inference prohibited.
+- Generic audit_log prohibited as P09 domain truth.
+- Existing P01-P08 regression must remain PASS.
+- Existing P03 security regression must remain PASS.
+
+IMPLEMENTATION AUTHORITY:
+- AUTHORIZED_EXACT_PATHS_ONLY.
+
+PERSISTENCE AUTHORITY:
+- AUTHORIZED_P09_REFERENTIAL_STATE_ONLY.
+
+MIGRATION AUTHORITY:
+- AUTHORIZED_P09_ADDITIVE_SCHEMA_ONLY.
+- Disposable/test database execution is permitted during implementation testing.
+- Existing governed/runtime production data must not be altered by registration.
+- Any browser validation against a disposable database must use an explicitly
+  isolated DB_PATH.
+
+NEXT BOUNDED ACTION:
+- V3-MOD-WLH-P09-IMPL-1
+- Codex implementation within exact registered paths.

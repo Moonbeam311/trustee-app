@@ -1,5 +1,5 @@
 {
-  "active_phase": "V3-MOD-WLH-P09-REG-1",
+  "active_phase": "V3-MOD-WLH-P09-REG-2",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -77,14 +77,14 @@
     "V3-MOD-WLH-P08": "8e6e292e8fbe06b35126b54c06c257947fa3f29f"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "90e5f6e26c70d94130b26c4e4ba77eb147192a6dea3ef99131ba3a28509badae",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "8eb2fdfcdd038c92413bffce10b548b79ffd1a5ede6469bc800ab9fd452c557c",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "V3-MOD-WLH-P09-AUTH-1",
+  "next_authorized_action": "V3-MOD-WLH-P09-IMPL-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -140,14 +140,14 @@
     "architecture": "DERIVED_SOURCE_AUTHORITY_CLASSIFICATION",
     "architecture_contract": "P09-ARCH-1A_THROUGH_P09-ARCH-1F",
     "architecture_state": "LOCKED",
-    "implementation_state": "NOT_AUTHORIZED",
-    "authorized_next_action": "V3-MOD-WLH-P09-AUTH-1",
+    "implementation_state": "AUTHORIZED_NOT_STARTED",
+    "authorized_next_action": "V3-MOD-WLH-P09-IMPL-1",
     "canonical_source_owner": "P05",
     "provenance_history_owner": "P08",
     "authority_function": "CLASSIFY_AND_CONTEXTUALIZE_ONLY",
-    "product_mutation_authority": "DENIED_PENDING_AUTHORIZATION",
-    "persistence_authority": "DENIED_PENDING_AUTHORIZATION",
-    "migration_authority": "DENIED",
+    "product_mutation_authority": "AUTHORIZED_EXACT_PATHS_ONLY",
+    "persistence_authority": "AUTHORIZED_P09_REFERENTIAL_STATE_ONLY",
+    "migration_authority": "AUTHORIZED_P09_ADDITIVE_SCHEMA_ONLY",
     "permission_mutation_authority": "DENIED",
     "security_mutation_authority": "DENIED",
     "legal_validity_inference": "PROHIBITED",
@@ -155,6 +155,49 @@
     "numeric_authority_scoring": "PROHIBITED",
     "shadow_source_registry": "PROHIBITED",
     "shadow_provenance_event_system": "PROHIBITED",
-    "retention_policy": "DEFERRED_SEPARATE_ARCHITECTURE"
+    "retention_policy": "DEFERRED_SEPARATE_ARCHITECTURE",
+    "implementation_architecture": "NARROW_REFERENTIAL_PERSISTENCE",
+    "persistence_activation_mechanism": "ADDITIVE_STARTUP_MIGRATION",
+    "architecture_adjudication": "P09-AUTH-1C-PASS",
+    "implementation_registration_phase": "V3-MOD-WLH-P09-REG-2",
+    "implementation_registration_base_head": "25c0604f25d6c35e7a7b907d64d9ba1ecddb6e81",
+    "canonical_fact_duplication": "PROHIBITED",
+    "p08_initial_implementation_modification": "DENIED",
+    "new_permission_required": "NO",
+    "security_mutation_required": "NO",
+    "authorized_product_paths": [
+      "services/services_work_learning_authority.py",
+      "database/migrations_work_learning_authority.py",
+      "database/startup_migrations.py",
+      "app.py",
+      "templates/workspace_program_authority.html",
+      "templates/workspace_program_detail.html"
+    ],
+    "authorized_test_paths": [
+      "tests/test_v3_mod_wlh_p09.py",
+      "tests/test_startup_migrations.py"
+    ],
+    "explicitly_excluded_product_paths": [
+      "services/services_work_learning_programs.py",
+      "services/services_work_learning_provenance.py",
+      "services/services_governed_program_promotion.py",
+      "database/db.py",
+      "database/migrations_governed_program_promotion.py",
+      "tests/test_v3_mod_wlh_p03c4c_security_regression.py",
+      "tests/test_v3_mod_wlh_p04.py",
+      "tests/test_v3_mod_wlh_p05.py",
+      "tests/test_v3_mod_wlh_p07.py",
+      "tests/test_v3_mod_wlh_p08.py",
+      "config/v3_control_manifest.json",
+      "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
+      "scripts/v3_control_guard.py",
+      "data/trustee_app.db",
+      "trustee_app.db",
+      "public_site/README.md",
+      "public_site/assets/js/site.js",
+      "templates/auth/login.html",
+      "docs/version_3_completion_addendum_2026-08-14.md",
+      "docs/version_3_locked_plan_recovery_2026-08-14.md"
+    ]
   }
 }
