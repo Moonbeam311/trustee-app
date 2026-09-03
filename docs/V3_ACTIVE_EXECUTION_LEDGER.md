@@ -2608,3 +2608,207 @@ Control disposition:
 - Any later V3 phase requires separate explicit authorization and control registration.
 
 
+
+## V3-MOD-WLH-P09-REG-1 — Source Authority Architecture Registration
+
+STATUS:
+- P08 remains CLOSED_CERTIFIED.
+- P09 architecture is human-approved and LOCKED.
+- P09 implementation is NOT authorized.
+- This registration authorizes only V3-MOD-WLH-P09-AUTH-1.
+
+PHASE:
+- V3-MOD-WLH-P09
+- Source Authority Classification and Evidence Weighting
+
+ARCHITECTURE:
+- DERIVED_SOURCE_AUTHORITY_CLASSIFICATION
+
+OWNERSHIP:
+- P04 owns working issue context.
+- P05 owns canonical source attribution.
+- P08 owns derived provenance/history.
+- P09 owns only authority classification, explicit verification,
+  claim/evidence relationship, conflict/review governance,
+  and determination traceability.
+- P09 may not create a shadow source registry.
+- P09 may not create a shadow provenance/event subsystem.
+
+AUTHORITY TIERS:
+- TIER_1_GOVERNING_AUTHORITY
+- TIER_2_HIGH_AUTHORITY_LEGAL_INTERPRETATION
+- TIER_3_PROFESSIONAL_EDUCATIONAL_SECONDARY_MATERIAL
+- TIER_4_CLAIMS_REQUIRING_INDEPENDENT_VERIFICATION
+
+P09-ARCH-1A:
+- CLASSIFY_AND_CONTEXTUALIZE_ONLY.
+- Classification does not imply verification.
+- Legal-validity inference is prohibited.
+- Automatic governing effect is prohibited.
+- Numeric authority scoring is prohibited.
+- Shadow source registry is prohibited.
+- Shadow provenance subsystem is prohibited.
+
+P09-ARCH-1B:
+- ISSUE_RELATIVE_AUTHORITY_RELATIONSHIP.
+- Source tier may be global.
+- CONTROLLING status is never global.
+- Relationship states:
+  CONTROLLING,
+  PERSUASIVE,
+  SUPERSEDED,
+  NOT_APPLICABLE,
+  UNRESOLVED.
+- Scope modifiers:
+  FULL,
+  PARTIAL,
+  CONCURRENT.
+- Conflict context requires an ISSUE_OR_CLAIM.
+- CONTROLLING requires an identified basis.
+- Known supersession linkage is required.
+- Automatic legal hierarchy is prohibited.
+- Automatic legal/interpretive conflict resolution is prohibited.
+- Higher tier does not mechanically win.
+- Same-tier conflict has no mechanical tiebreaker.
+- UNRESOLVED is a valid state.
+
+P09-ARCH-1C:
+- TIERED_ASSIGNMENT_WITH_HUMAN_GOVERNANCE.
+- Machine suggestions are allowed.
+- Machine-final CONTROLLING is prohibited.
+- Machine-final UNRESOLVED is allowed.
+- Machine SUPERSEDED requires express evidence.
+- Machine NOT_APPLICABLE requires objective scope evidence.
+- CONTROLLING requires human confirmation.
+- Assignment basis is required.
+- Assignment provenance is required.
+- Trustee decision does not equal legal opinion.
+- Professional authority must be identified.
+- Unsupported status escalation is prohibited.
+
+P09-ARCH-1D:
+- MULTI_DIMENSION_SOURCE_AND_CLAIM_VERIFICATION.
+- Verification dimensions:
+  SOURCE_IDENTITY_VERIFIED,
+  SOURCE_TEXT_VERIFIED,
+  CITATION_VERIFIED,
+  AUTHORITY_CLASSIFICATION_VERIFIED,
+  CLAIM_SUPPORT_VERIFIED.
+- A single global verified flag is prohibited.
+- Verification basis and provenance are required.
+- Negative verification states:
+  SOURCE_IDENTITY_NOT_VERIFIED,
+  SOURCE_TEXT_MISMATCH,
+  CITATION_MISMATCH,
+  AUTHORITY_CLASSIFICATION_DISPUTED,
+  CLAIM_NOT_SUPPORTED,
+  INSUFFICIENT_EVIDENCE.
+- Machine source identity verification requires evidence.
+- Machine source-text verification requires direct comparison.
+- Machine citation verification requires direct comparison.
+- Machine authority verification is suggest-only unless objective.
+- Machine claim-support verification is suggest-or-flag only.
+- Verified source does not equal true claim.
+- Claim support does not equal ultimate truth.
+- Legal-validity verification is prohibited.
+- Verification failure may not be silently dropped.
+
+P09-ARCH-1E:
+- EVIDENCE_TRIGGERED_HUMAN_GOVERNED_REVIEW.
+- Review states:
+  DETECTED,
+  REVIEW_REQUIRED,
+  UNDER_REVIEW,
+  RESOLVED,
+  UNRESOLVED,
+  CLOSED_NO_CONFLICT.
+- Review state is separate from relationship status.
+- Automatic conflict detection is allowed.
+- Automatic interpretive conflict resolution is prohibited.
+- Objective evidence closure is allowed only when objectively established.
+- Tier 1 disputes automatically escalate to REVIEW_REQUIRED.
+- Tier 1 substantive conflict machine-finalization is prohibited.
+- Machine UNRESOLVED is a safe state and not a substantive resolution.
+- Review lanes:
+  SYSTEM_REVIEW,
+  OPERATOR_OR_FIDUCIARY_REVIEW,
+  PROFESSIONAL_REVIEW.
+- Professional review may be recommended but never assumed.
+- Resolution basis is required.
+- Resolution provenance is required.
+- Supporting-source linkage is required.
+- Conflict history may not be erased.
+- Prior classification history may not be rewritten.
+- UNRESOLVED may reopen on new evidence.
+- RESOLVED may reopen on new material evidence.
+- Machine objective closure is allowed.
+- Machine interpretive closure is prohibited.
+- Conflict does not create governing authority.
+- Review result does not equal legal opinion.
+
+P09-ARCH-1F:
+- ISSUE_RELATIVE_CLAIM_EVIDENCE_GRAPH.
+- Traceability chain:
+  ISSUE_OR_QUESTION
+  -> CLAIM_OR_PROPOSITION
+  -> SOURCE_REFERENCE
+  -> SOURCE_LOCATOR
+  -> EVIDENCE_RELATIONSHIP
+  -> VERIFICATION
+  -> AUTHORITY_CLASSIFICATION
+  -> CONFLICT_OR_REVIEW
+  -> DETERMINATION.
+- P05 remains canonical source owner.
+- P08 remains provenance/history owner.
+- Shadow source/provenance systems are prohibited.
+- Claim context is required.
+- Source locator is required when available.
+- Evidence relationships:
+  DIRECT_SUPPORT,
+  PARTIAL_SUPPORT,
+  CONTRADICTS,
+  QUALIFIES,
+  CONTEXT_ONLY,
+  DOES_NOT_SUPPORT,
+  UNRESOLVED.
+- Claim/source cardinality is MANY_TO_MANY.
+- Source authority may not override failed claim support.
+- Evidence presentation types:
+  DIRECT_QUOTATION,
+  PARAPHRASE,
+  SUMMARY,
+  REFERENCE_ONLY.
+- Evidence presentation type is required.
+- Missing source text may not be reconstructed.
+- Unsupported claims may not be silently dropped.
+- Claim support does not equal ultimate truth.
+- Determination backtrace is required.
+- Material claim changes may not silently reuse prior support.
+- AI analysis is not underlying evidence.
+- AI may suggest an evidence relationship.
+- AI may not fabricate a source locator.
+- Supporting-source linkage is required.
+- Traceability creates neither governing authority nor legal validity.
+
+CONTRADICTION / BOUNDARY AUDIT:
+- PASS.
+- Classification may not silently imply verification.
+- Explicit multi-dimensional verification remains separately permitted.
+- Objective machine closure does not authorize legal or interpretive
+  conflict resolution.
+- Machine UNRESOLVED is a safe review state, not a substantive
+  Tier 1 resolution.
+- P05 canonical-source ownership remains intact.
+- P08 provenance/history ownership remains intact.
+
+RETENTION:
+- Retention duration is NOT established by P09.
+- Possible life-of-trust, life-of-matter, or longer institutional retention
+  remains a separate future retention-policy architecture.
+
+IMPLEMENTATION AUTHORITY:
+- NOT AUTHORIZED.
+
+NEXT BOUNDED ACTION:
+- V3-MOD-WLH-P09-AUTH-1
+- Read-only implementation-authority and canonical-path audit.
