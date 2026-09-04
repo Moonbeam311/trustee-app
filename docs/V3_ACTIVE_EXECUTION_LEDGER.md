@@ -3027,3 +3027,87 @@ Control disposition:
 - `migration_authority=DENIED_AFTER_CERTIFICATION`.
 - `next_authorized_action=NOT DOCUMENTED`.
 - Any later V3 phase requires separate explicit authorization and control registration.
+
+## HOS-DOC-1 Exact Implementation Boundary Registration - 2026-09-04
+
+Phase: `HOS-DOC-1-REG-1`
+
+Status: **COMPLETE / CONTROL-ONLY IMPLEMENTATION AUTHORIZATION**
+
+Architecture:
+
+`HOS_DOC_1_ARCHITECTURE=CANONICAL_DERIVED_DOCUMENT_ATTRIBUTION_INTEGRATION`
+
+Primary target:
+
+`generated_documents`
+
+Authority findings:
+
+- Three existing generated-document rows are preserved.
+- All three have owner, creator, creation time, and resolving Workspace identity.
+- All three have no Trust ID.
+- No authoritative firm scope for those historical rows was proven.
+- Historical firm scope must not be invented or backfilled.
+- Existing unresolved rows therefore remain preserved and fail closed for firm-scoped access.
+
+Authorized additive schema only:
+
+- `firm_id`
+- `source_record_type`
+- `source_record_id`
+- `generation_basis`
+
+Existing canonical fields retained:
+
+- `owner_id` = owner scope
+- `created_by` = generation actor
+- `created_at` = generation time
+- `status` = document workflow status
+
+New-write rules:
+
+- owner scope is server-derived;
+- firm scope is server-derived;
+- client-supplied owner or firm scope is prohibited;
+- an optional Trust ID must resolve through the canonical authorized Trust contract;
+- absent Trust ID means governed source attribution is not established;
+- workflow status `final` does not establish legal or institutional finality.
+
+Migration rules:
+
+- additive and idempotent only;
+- if `generated_documents` is absent, migration defers and does not create that legacy-owned table;
+- existing rows are not deleted, rewritten, or assigned invented firm/source provenance;
+- migration creates no operational records and performs no historical scope backfill.
+
+Authorized product paths:
+
+1. `database/migrations_generated_document_attribution.py`
+2. `database/startup_migrations.py`
+3. `services/services_document_contract.py`
+4. `app.py`
+5. `templates/document_detail.html`
+6. `templates/document_generate_form.html`
+
+Authorized test paths:
+
+1. `tests/test_hos_doc_1.py`
+2. `tests/test_startup_migrations.py`
+
+Explicit boundaries:
+
+- no `database/db.py` mutation;
+- no live database mutation during implementation/certification;
+- no universal Document registry replacement;
+- no shadow provenance subsystem;
+- no adoption of legacy universal verified flags;
+- no rewrite of specialized PDF/DOCX/export producers;
+- no new permission family;
+- no authentication/security architecture change;
+- no P05/P08/P09 ownership transfer;
+- `HOS-DEMO-1` remains unauthorized.
+
+Next authorized action:
+
+`HOS-DOC-1-IMP-1`

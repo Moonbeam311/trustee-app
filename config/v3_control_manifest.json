@@ -1,5 +1,5 @@
 {
-  "active_phase": "V3-MOD-WLH-P09-CLOSEOUT-CERTIFICATION",
+  "active_phase": "HOS-DOC-1-REG-1",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -54,7 +54,12 @@
     "templates/auth/login.html",
     "services/services_work_learning_provenance.py",
     "templates/workspace_program_provenance.html",
-    "tests/test_v3_mod_wlh_p08.py"
+    "tests/test_v3_mod_wlh_p08.py",
+    "database/migrations_generated_document_attribution.py",
+    "services/services_document_contract.py",
+    "templates/document_detail.html",
+    "templates/document_generate_form.html",
+    "tests/test_hos_doc_1.py"
   ],
   "authority_ref": "origin/system-1-annual-evaluation",
   "branch": "system-1-annual-evaluation",
@@ -78,14 +83,14 @@
     "V3-MOD-WLH-P09": "4678a84eb5b439e5e349d7a77a53c078c2024df0"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "10b58cfe1e8248f2354a17d286563a7d2fc5384e18ec68fa2fcd88355f8259e2",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "517065df4058834460691cde66008b076ffc51b441b64a391a21746940579a22",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "NOT DOCUMENTED",
+  "next_authorized_action": "HOS-DOC-1-IMP-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -205,5 +210,76 @@
     "human_browser_certification": "PASS",
     "remote_verification": "PASS",
     "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT"
+  },
+  "hos_doc_1_registration": {
+    "phase": "HOS-DOC-1",
+    "registration_phase": "HOS-DOC-1-REG-1",
+    "registration_base_head": "45cc8a6d0d7a1aa5b4d08aeed60651182ca17f69",
+    "architecture": "CANONICAL_DERIVED_DOCUMENT_ATTRIBUTION_INTEGRATION",
+    "architecture_state": "LOCKED",
+    "implementation_state": "AUTHORIZED_NOT_STARTED",
+    "authorized_next_action": "HOS-DOC-1-IMP-1",
+    "primary_persistence_lane": "generated_documents",
+    "persistence_activation_mechanism": "ADDITIVE_STARTUP_MIGRATION",
+    "legacy_rows_observed": 3,
+    "legacy_row_rewrite": "PROHIBITED",
+    "legacy_row_delete": "PROHIBITED",
+    "legacy_firm_scope": "UNRESOLVED",
+    "legacy_firm_backfill": "PROHIBITED_WITHOUT_SEPARATE_PROVEN_AUTHORITY",
+    "existing_generation_actor_field": "created_by",
+    "existing_generation_time_field": "created_at",
+    "existing_owner_scope_field": "owner_id",
+    "existing_workflow_status_field": "status",
+    "authorized_additive_columns": [
+      "firm_id",
+      "source_record_type",
+      "source_record_id",
+      "generation_basis"
+    ],
+    "new_write_owner_scope": "SERVER_DERIVED_REQUIRED",
+    "new_write_firm_scope": "SERVER_DERIVED_REQUIRED",
+    "client_owner_scope": "PROHIBITED",
+    "client_firm_scope": "PROHIBITED",
+    "trust_source_if_supplied": "CANONICAL_TRUST_VALIDATION_REQUIRED",
+    "no_trust_source": "SOURCE_ATTRIBUTION_NOT_ESTABLISHED",
+    "workflow_finality": "DOES_NOT_ESTABLISH_LEGAL_OR_INSTITUTIONAL_FINALITY",
+    "shadow_provenance_system": "PROHIBITED",
+    "new_document_registry": "PROHIBITED",
+    "specialized_export_rewrite": "PROHIBITED",
+    "legacy_universal_verified_flags": "PROHIBITED",
+    "new_permission_required": "NO",
+    "security_mutation_required": "NO",
+    "authorized_product_paths": [
+      "database/migrations_generated_document_attribution.py",
+      "database/startup_migrations.py",
+      "services/services_document_contract.py",
+      "app.py",
+      "templates/document_detail.html",
+      "templates/document_generate_form.html"
+    ],
+    "authorized_test_paths": [
+      "tests/test_hos_doc_1.py",
+      "tests/test_startup_migrations.py"
+    ],
+    "explicitly_excluded_product_paths": [
+      "database/db.py",
+      "data/trustee_app.db",
+      "trustee_app.db",
+      "services/services_document_adapters.py",
+      "services/services_document_object_model.py",
+      "services/services_document_registry.py",
+      "services/services_work_learning_programs.py",
+      "services/services_work_learning_provenance.py",
+      "services/services_work_learning_authority.py",
+      "services/services_intake.py",
+      "services/services_governance.py",
+      "services/services_execution_exports.py",
+      "public_site/README.md",
+      "public_site/assets/js/site.js",
+      "templates/auth/login.html",
+      "docs/version_3_completion_addendum_2026-08-14.md",
+      "docs/version_3_locked_plan_recovery_2026-08-14.md"
+    ],
+    "hos_demo_1_authority": "NOT_AUTHORIZED"
   }
 }
