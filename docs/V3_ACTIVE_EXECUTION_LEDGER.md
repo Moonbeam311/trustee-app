@@ -2958,3 +2958,72 @@ MIGRATION AUTHORITY:
 NEXT BOUNDED ACTION:
 - V3-MOD-WLH-P09-IMPL-1
 - Codex implementation within exact registered paths.
+
+## V3-MOD-WLH-P09 Closeout Certification - 2026-09-04
+
+Phase: `V3-MOD-WLH-P09-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - P09 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+Certified product commit:
+
+`4678a84eb5b439e5e349d7a77a53c078c2024df0`
+
+Product parent:
+
+`3d52a62e6ef99b5dedd4093879771e48a4b1a49b`
+
+Exact certified product boundary:
+
+1. `app.py`
+2. `database/migrations_work_learning_authority.py`
+3. `database/startup_migrations.py`
+4. `services/services_work_learning_authority.py`
+5. `templates/workspace_program_authority.html`
+6. `templates/workspace_program_detail.html`
+7. `tests/test_startup_migrations.py`
+8. `tests/test_v3_mod_wlh_p09.py`
+
+Certification record:
+
+- Product commit, push, and remote verification: `PASS`.
+- Focused P09 / startup migration tests: `21 passed`.
+- Complete P01-P09 Work & Learning Hub plus P03 security regression: `124 passed`.
+- Human browser certification — Admin: `PASS`.
+- Human browser certification — Trustee: `PASS`.
+- Human browser certification — Viewer: `PASS`.
+- Governed database remained byte-identical.
+- Runtime database remained byte-identical.
+- Five unrelated dirty paths remained byte-identical.
+- No P09 product repair was required during certification.
+
+Architecture closure:
+
+- `P09_ARCHITECTURE=DERIVED_SOURCE_AUTHORITY_CLASSIFICATION`.
+- `P09_IMPLEMENTATION_ARCHITECTURE=NARROW_REFERENTIAL_PERSISTENCE`.
+- P04 remains canonical working-issue owner.
+- P05 remains canonical source-attribution owner.
+- P08 remains provenance/history owner.
+- P09 classifies and contextualizes; classification does not imply verification.
+- Verification remains explicit and multi-dimensional.
+- Source authority may not override failed claim support.
+- Legal-validity inference remains prohibited.
+- Automatic governing effect remains prohibited.
+- Numeric authority scoring remains prohibited.
+- Shadow source registry remains prohibited.
+- Shadow provenance/event subsystem remains prohibited.
+- Existing Admin / Trustee / Viewer role architecture is reused.
+- No new permission family was created.
+- No security architecture mutation was created.
+- P09 persistence remains limited to P09-native narrow referential state.
+- Retention policy remains deferred to separate architecture.
+
+Control disposition:
+
+- `V3-MOD-WLH-P09` is registered in `certified_phases` at the certified product commit.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `active_phase=V3-MOD-WLH-P09-CLOSEOUT-CERTIFICATION`.
+- `product_mutation_authority=DENIED_AFTER_CERTIFICATION`.
+- `migration_authority=DENIED_AFTER_CERTIFICATION`.
+- `next_authorized_action=NOT DOCUMENTED`.
+- Any later V3 phase requires separate explicit authorization and control registration.
