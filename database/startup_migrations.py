@@ -15,6 +15,10 @@ from database.migrations_governed_program_promotion import (
     apply_governed_program_promotion_schema,
     GovernedProgramPromotionMigrationError,
 )
+from database.migrations_work_learning_authority import (
+    apply_work_learning_authority_schema,
+    WorkLearningAuthorityMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -63,12 +67,20 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        authority_result = apply_work_learning_authority_schema(db_path)
+    except WorkLearningAuthorityMigrationError as exc:
+        authority_result = {"schema_complete": False, "deferred": True,
+                            "reason": str(exc), "records_created": 0}
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
         "governed_program_promotion": promotion_result,
+        "work_learning_authority": authority_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
         "promotion_records_created": 0,
+        "authority_records_created": 0,
     }

@@ -68,6 +68,15 @@ from services.services_work_learning_programs import (
     get_program_revisions,
     PROGRAM_STATUSES,
 )
+from services.services_work_learning_authority import (
+    get_program_authority_read_model, classify_source_authority,
+    record_authority_relationship, create_claim,
+    add_claim_evidence, record_verification, record_review,
+    record_determination, SOURCE_TIERS, RELATIONSHIP_STATES,
+    EVIDENCE_RELATIONSHIPS, VERIFICATION_DIMENSIONS, VERIFICATION_STATES,
+    PRESENTATION_TYPES, SCOPE_MODIFIERS, REVIEW_STATES, REVIEW_LANES,
+    DETERMINATION_STATES,
+)
 from services.services_work_learning_program_handoff import (
     CURRENT as PROGRAM_HANDOFF_CURRENT,
     SAVED_REVISION as PROGRAM_HANDOFF_SAVED_REVISION,
@@ -2947,6 +2956,8 @@ ROLE_RULES = {
     "workspace_programs": {"Admin", "Trustee", "Viewer"},
     "workspace_program_new": {"Admin", "Trustee"},
     "workspace_program_detail": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_authority": {"Admin", "Trustee", "Viewer"},
+    "workspace_program_authority_mutate": {"Admin", "Trustee"},
     "workspace_program_edit": {"Admin", "Trustee"},
     "workspace_program_goal_add": {"Admin", "Trustee"},
     "workspace_program_alternative_add": {"Admin", "Trustee"},
@@ -13317,6 +13328,73 @@ def workspace_program_revision_create(workspace_id, program_id):
         workspace_id=workspace_id,
         program_id=program_id,
     ))
+
+
+@app.route("/workspaces/<workspace_id>/programs/<program_id>/authority")
+def workspace_program_authority(workspace_id, program_id):
+    workspace, program, firm_id, owner_id = _workspace_program_context(
+        workspace_id, program_id
+    )
+    if not workspace or not program:
+        return render_template("access_denied.html", reason="This authority context is not available."), 403
+    try:
+        model = get_program_authority_read_model(
+            program_id=program_id, workspace_id=workspace_id,
+            firm_id=firm_id, owner_id=owner_id,
+        )
+    except ValueError:
+        return render_template("access_denied.html", reason="This authority context is not available."), 403
+    return render_template(
+        "workspace_program_authority.html", workspace=workspace,
+        program=program, model=model, source_tiers=SOURCE_TIERS,
+        relationship_states=RELATIONSHIP_STATES,
+        evidence_relationships=EVIDENCE_RELATIONSHIPS,
+        presentation_types=PRESENTATION_TYPES,
+        verification_dimensions=VERIFICATION_DIMENSIONS,
+        verification_states=VERIFICATION_STATES, scope_modifiers=SCOPE_MODIFIERS,
+        review_states=REVIEW_STATES, review_lanes=REVIEW_LANES,
+        determination_states=DETERMINATION_STATES,
+    )
+
+
+@app.route("/workspaces/<workspace_id>/programs/<program_id>/authority/<action>", methods=["POST"])
+def workspace_program_authority_mutate(workspace_id, program_id, action):
+    if not validate_csrf_token():
+        return "Invalid or missing CSRF token.", 400
+    workspace, program, firm_id, owner_id = _workspace_program_context(workspace_id, program_id)
+    if not workspace or not program:
+        return render_template("access_denied.html", reason="This authority context is not available."), 403
+    fields = {
+        "claim": {"_csrf_token", "issue_id", "proposition"},
+        "classification": {"_csrf_token", "source_reference_id", "authority_tier", "classification_basis", "classification_provenance", "prior_classification_id", "professional_authority", "actor_capacity"},
+        "relationship": {"_csrf_token", "issue_id", "claim_id", "source_reference_id", "classification_id", "relationship_state", "scope_modifier", "relationship_basis", "relationship_provenance", "human_confirmed", "professional_authority", "actor_capacity", "express_evidence", "objective_scope_evidence", "prior_relationship_id"},
+        "evidence": {"_csrf_token", "claim_id", "source_reference_id", "relationship_type", "presentation_type", "source_locator", "evidence_basis", "provenance", "actor_capacity"},
+        "verification": {"_csrf_token", "claim_id", "evidence_id", "source_reference_id", "classification_id", "dimension", "result_state", "verification_basis", "provenance", "actor_capacity", "professional_authority", "finalized", "direct_source_comparison", "objective_evidence"},
+        "review": {"_csrf_token", "claim_id", "evidence_id", "prior_review_id", "authority_relationship_id", "supporting_source_reference_id", "review_state", "review_lane", "resolution_basis", "provenance", "actor_capacity", "professional_authority"},
+        "determination": {"_csrf_token", "claim_id", "issue_id", "determination_state", "determination_basis", "provenance", "actor_capacity", "backtrace"},
+    }
+    if action not in fields or set(request.form) - fields[action]:
+        return "Invalid authority request.", 400
+    actor = str(session.get("username") or session.get("user_id") or "unknown")
+    common = dict(program_id=program_id, workspace_id=workspace_id, firm_id=firm_id, owner_id=owner_id)
+    try:
+        if action == "claim":
+            create_claim(**common, proposition=request.form.get("proposition"), issue_id=request.form.get("issue_id") or "", created_by=actor)
+        elif action == "classification":
+            classify_source_authority(**common, source_reference_id=request.form.get("source_reference_id"), authority_tier=request.form.get("authority_tier"), classification_basis=request.form.get("classification_basis"), classification_provenance=request.form.get("classification_provenance"), decision_origin="OPERATOR_OR_FIDUCIARY", prior_classification_id=request.form.get("prior_classification_id") or None, professional_authority=request.form.get("professional_authority"), actor=actor, actor_capacity=request.form.get("actor_capacity"))
+        elif action == "relationship":
+            record_authority_relationship(**common, issue_id=request.form.get("issue_id"), claim_id=request.form.get("claim_id") or None, source_reference_id=request.form.get("source_reference_id"), classification_id=request.form.get("classification_id"), relationship_state=request.form.get("relationship_state"), scope_modifier=request.form.get("scope_modifier") or None, relationship_basis=request.form.get("relationship_basis"), relationship_provenance=request.form.get("relationship_provenance"), decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=request.form.get("human_confirmed")=="1", professional_authority=request.form.get("professional_authority"), actor=actor, actor_capacity=request.form.get("actor_capacity"), express_evidence=request.form.get("express_evidence"), objective_scope_evidence=request.form.get("objective_scope_evidence"), prior_relationship_id=request.form.get("prior_relationship_id") or None)
+        elif action == "evidence":
+            add_claim_evidence(**common, claim_id=request.form.get("claim_id"), source_reference_id=request.form.get("source_reference_id"), relationship_type=request.form.get("relationship_type"), presentation_type=request.form.get("presentation_type"), source_locator=request.form.get("source_locator"), evidence_basis=request.form.get("evidence_basis"), provenance=request.form.get("provenance"), actor=actor, actor_capacity=request.form.get("actor_capacity"))
+        elif action == "verification":
+            record_verification(**common, claim_id=request.form.get("claim_id") or None, evidence_id=request.form.get("evidence_id") or None, source_reference_id=request.form.get("source_reference_id") or None, classification_id=request.form.get("classification_id") or None, dimension=request.form.get("dimension"), result_state=request.form.get("result_state"), verification_basis=request.form.get("verification_basis"), provenance=request.form.get("provenance"), decision_origin="OPERATOR_OR_FIDUCIARY", finalized=request.form.get("finalized")=="1", direct_source_comparison=request.form.get("direct_source_comparison"), objective_evidence=request.form.get("objective_evidence"), professional_authority=request.form.get("professional_authority"), actor=actor, actor_capacity=request.form.get("actor_capacity"))
+        elif action == "review":
+            record_review(**common, claim_id=request.form.get("claim_id"), evidence_id=request.form.get("evidence_id") or None, prior_review_id=request.form.get("prior_review_id") or None, authority_relationship_id=request.form.get("authority_relationship_id") or None, supporting_source_reference_id=request.form.get("supporting_source_reference_id"), review_state=request.form.get("review_state"), review_lane=request.form.get("review_lane"), resolution_basis=request.form.get("resolution_basis"), provenance=request.form.get("provenance"), actor=actor, actor_capacity=request.form.get("actor_capacity"), professional_authority=request.form.get("professional_authority"), machine_generated=False)
+        else:
+            record_determination(**common, claim_id=request.form.get("claim_id"), issue_id=request.form.get("issue_id") or "", determination_state=request.form.get("determination_state"), determination_basis=request.form.get("determination_basis"), provenance=request.form.get("provenance"), actor=actor, actor_capacity=request.form.get("actor_capacity"), backtrace=[x.strip() for x in (request.form.get("backtrace") or "").split(",") if x.strip()])
+    except ValueError as exc:
+        return f"Invalid authority request: {exc}", 400
+    return redirect(url_for("workspace_program_authority", workspace_id=workspace_id, program_id=program_id))
 
 
 @app.route(

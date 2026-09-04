@@ -39,6 +39,12 @@ class StartupMigrationTests(unittest.TestCase):
                 permission_name TEXT NOT NULL
             );
 
+            CREATE TABLE permissions (
+                permission_name TEXT PRIMARY KEY
+            );
+
+            INSERT INTO permissions VALUES ('matter_detail');
+
             INSERT INTO role_permissions (
                 role_name,
                 permission_name
@@ -109,6 +115,30 @@ class StartupMigrationTests(unittest.TestCase):
                 "governed_program_promotion_events",
             ):
                 self.assertEqual(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0], 0)
+        finally:
+            connection.close()
+
+    def test_p09_schema_is_fresh_safe_empty_and_preserves_result_keys(self) -> None:
+        before_connection = sqlite3.connect(self.db_path)
+        before_permissions = tuple(before_connection.execute(
+            f"SELECT COUNT(*) FROM {table}"
+        ).fetchone()[0] for table in ("permissions", "role_permissions"))
+        before_connection.close()
+        result = run_additive_startup_migrations(self.db_path)
+        repeated = run_additive_startup_migrations(self.db_path)
+        self.assertTrue(result["work_learning_authority"]["schema_complete"])
+        self.assertTrue(repeated["work_learning_authority"]["schema_complete"])
+        self.assertIsInstance(result["work_learning_authority"], dict)
+        self.assertEqual(result["authority_records_created"], 0)
+        for legacy_key in ("matter_intake_bridge", "successor_acceptance", "governed_program_promotion", "operational_links_created", "operational_events_created", "acceptance_records_created", "promotion_records_created"):
+            self.assertIn(legacy_key, result)
+        connection = sqlite3.connect(self.db_path)
+        try:
+            self.assertEqual(tuple(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0] for table in ("permissions", "role_permissions")), before_permissions)
+            for table in ("hub_program_authority_classifications", "hub_program_authority_relationships", "hub_program_authority_claims", "hub_program_authority_evidence", "hub_program_authority_verifications", "hub_program_authority_reviews", "hub_program_authority_determinations"):
+                self.assertEqual(connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0], 0)
+                trigger_names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='trigger' AND tbl_name=?", (table,))}
+                self.assertEqual(trigger_names, {f"p09_{table}_no_update", f"p09_{table}_no_delete"})
         finally:
             connection.close()
 
