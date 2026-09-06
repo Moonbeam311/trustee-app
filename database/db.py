@@ -3711,6 +3711,13 @@ def ensure_firm_columns():
     add_column("audit_log", "firm_id TEXT")
     add_column("trusts", "firm_id TEXT")
 
+    cur.execute(
+        "SELECT 1 FROM sqlite_master "
+        "WHERE type='table' AND name='workspaces'"
+    )
+    if cur.fetchone():
+        add_column("workspaces", "firm_id TEXT")
+
     conn.commit()
     conn.close()
 
