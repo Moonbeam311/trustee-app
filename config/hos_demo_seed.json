@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "runtime_type": "HOS-DEMO-1",
+  "firm_id": "FIRM-DEMO-001",
+  "firm_name": "Hindsfoot Demonstration Firm",
+  "scenario_id": "HOS-DEMO-SYNTHETIC-001",
+  "scenario_label": "Synthetic Family Trust Demonstration",
+  "users": [
+    {
+      "user_id": "DEMO-USR-ADMIN",
+      "username": "demo-admin",
+      "role_name": "Admin",
+      "status": "active",
+      "password_env": "HOS_DEMO_ADMIN_PASSWORD"
+    },
+    {
+      "user_id": "DEMO-USR-TRUSTEE",
+      "username": "demo-trustee",
+      "role_name": "Trustee",
+      "status": "active",
+      "password_env": "HOS_DEMO_TRUSTEE_PASSWORD"
+    },
+    {
+      "user_id": "DEMO-USR-VIEWER",
+      "username": "demo-viewer",
+      "role_name": "Viewer",
+      "status": "active",
+      "password_env": "HOS_DEMO_VIEWER_PASSWORD"
+    }
+  ],
+  "synthetic_notice": "FICTIONAL DEMONSTRATION DATA ONLY. No person, trust, asset, account, or relationship represents a real client, family, fiduciary, beneficiary, or property.",
+  "scenario": {
+    "scenario_id": "HOS-DEMO-SYNTHETIC-001",
+    "scenario_label": "Synthetic Family Stewardship Demonstration",
+    "trust": {
+      "trust_id": "TR-DEMO-001",
+      "trust_name": "Demonstration Family Stewardship Trust",
+      "short_name": "Demo Family Trust",
+      "jurisdiction": "NEW JERSEY",
+      "effective_date": "2026-01-01",
+      "trust_type": "revocable",
+      "trust_purpose": "family_stewardship_demonstration",
+      "accounting_method": "cash",
+      "workflow_mode": "private_office",
+      "settlor_name": "Jordan Example",
+      "trustee_name": "Taylor Example",
+      "successor_trustee_name": "Casey Example",
+      "beneficiary_name": "Example Family Beneficiaries",
+      "record_visibility": "private",
+      "workflow_mode_confirmed": "yes",
+      "ai_explanations": "enabled",
+      "recommended_guidance": "enabled",
+      "initial_corpus_description": "Synthetic demonstration property only; no real asset.",
+      "property_mapping_timing": "post_creation",
+      "asset_categories": "demonstration",
+      "generate_schedule_recommendations": "yes",
+      "status": "Draft",
+      "owner_id": "demo-admin",
+      "firm_id": "FIRM-DEMO-001",
+      "firm_trust_number": 1,
+      "firm_trust_code": "TR-DEMO-001"
+    }
+  }
+}
