@@ -19,6 +19,10 @@ from database.migrations_work_learning_authority import (
     apply_work_learning_authority_schema,
     WorkLearningAuthorityMigrationError,
 )
+from database.migrations_generated_document_attribution import (
+    apply_generated_document_attribution_schema,
+    GeneratedDocumentAttributionMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -73,14 +77,31 @@ def run_additive_startup_migrations(
         authority_result = {"schema_complete": False, "deferred": True,
                             "reason": str(exc), "records_created": 0}
 
+    try:
+        document_attribution_result = (
+            apply_generated_document_attribution_schema(db_path)
+        )
+    except GeneratedDocumentAttributionMigrationError as exc:
+        document_attribution_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "columns_added": 0,
+            "legacy_rows_preserved": 0,
+            "legacy_rows_updated": 0,
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
         "governed_program_promotion": promotion_result,
         "work_learning_authority": authority_result,
+        "generated_document_attribution": document_attribution_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
         "promotion_records_created": 0,
         "authority_records_created": 0,
+        "generated_document_attribution_records_created": 0,
     }

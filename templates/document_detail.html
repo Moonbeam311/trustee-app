@@ -21,6 +21,37 @@
       <p><strong>Workspace:</strong> <a href="/workspaces/{{ workspace['workspace_id'] }}">{{ workspace['title'] }}</a></p>
     {% endif %}
     <p><strong>Created By:</strong> {{ document['created_by'] }}</p>
+    <p><strong>Generated At:</strong> {{ document.get('created_at') or 'Not documented' }}</p>
+  </div>
+
+  <div class="box">
+    <h2>Attribution &amp; Provenance</h2>
+
+    <p><strong>Firm Scope:</strong>
+      {{ document.get('firm_id') or 'Unresolved / not attributed' }}
+    </p>
+
+    {% if document.get('source_record_type') and document.get('source_record_id') %}
+      <p><strong>Source Attribution:</strong>
+        {{ document.get('source_record_type') }}
+        {{ document.get('source_record_id') }}
+      </p>
+    {% else %}
+      <p><strong>Source Attribution:</strong> Not established</p>
+    {% endif %}
+
+    <p><strong>Generation Basis:</strong>
+      {{ document.get('generation_basis') or 'Not documented' }}
+    </p>
+
+    <p><strong>Derived Output:</strong> Yes</p>
+    <p><strong>Persistence:</strong> Persisted generated-document record</p>
+
+    <p><strong>Finality:</strong>
+      Not established by document generation or workflow status.
+      A workflow status of <code>final</code> does not establish
+      legal or institutional finality.
+    </p>
   </div>
 
   <div class="box">

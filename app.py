@@ -10456,20 +10456,46 @@ def get_document_template_by_id(template_id):
     conn.close()
     return dict(row) if row else None
 
+def _current_generated_document_scope():
+    """Return authenticated owner and firm scope for generated documents."""
+    from database.db import get_current_firm_id
+    from flask import has_request_context, session as flask_session
+
+    owner_id = str(get_current_owner() or "").strip()
+
+    firm_id = ""
+    if has_request_context():
+        firm_id = str(
+            flask_session.get("firm_id") or ""
+        ).strip()
+
+    if not firm_id:
+        firm_id = str(get_current_firm_id() or "").strip()
+
+    return owner_id, firm_id
+
+
 def get_generated_documents():
-    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id, firm_id = _current_generated_document_scope()
+    if not owner_id or not firm_id:
+        return []
+
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM generated_documents
         WHERE owner_id = ?
           AND firm_id = ?
         ORDER BY created_at DESC, title
-    """, (get_current_owner(), firm_id)).fetchall()
+    """, (owner_id, firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
+
 def get_generated_documents_by_workspace(workspace_id):
-    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id, firm_id = _current_generated_document_scope()
+    if not owner_id or not firm_id:
+        return []
+
     conn = _learning_conn()
     rows = conn.execute("""
         SELECT * FROM generated_documents
@@ -10477,43 +10503,129 @@ def get_generated_documents_by_workspace(workspace_id):
           AND owner_id = ?
           AND firm_id = ?
         ORDER BY created_at DESC, title
-    """, (workspace_id, get_current_owner(), firm_id)).fetchall()
+    """, (workspace_id, owner_id, firm_id)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
+
 def get_generated_document_by_id(document_id):
-    firm_id = session.get("firm_id") or "FIRM-001"
+    owner_id, firm_id = _current_generated_document_scope()
+    if not owner_id or not firm_id:
+        return None
+
     conn = _learning_conn()
     row = conn.execute("""
         SELECT * FROM generated_documents
         WHERE document_id = ?
+          AND owner_id = ?
           AND firm_id = ?
-    """, (document_id, firm_id)).fetchone()
+    """, (document_id, owner_id, firm_id)).fetchone()
     conn.close()
     return dict(row) if row else None
 
+
 def create_generated_document(payload):
+    from services.services_document_contract import (
+        DocumentContractError,
+        _build_persistent_generated_document_attribution,
+    )
+
     payload = dict(payload)
-    payload.setdefault("firm_id", session.get("firm_id") or "FIRM-001")
+
+    owner_id, server_firm_id = _current_generated_document_scope()
+    actor = str(session.get("username") or "unknown").strip()
+
+    if not owner_id:
+        raise ValueError(
+            "Generated-document owner scope is unavailable."
+        )
+
+    if not server_firm_id:
+        raise ValueError(
+            "Generated-document firm scope is unavailable."
+        )
+
+    requested_trust_id = str(
+        payload.get("trust_id") or ""
+    ).strip()
+
+    authorization_check = None
+    if requested_trust_id:
+        authorization_check = (
+            lambda candidate:
+            deny_unassigned_trust_access(candidate) is None
+        )
+
+    try:
+        attribution = (
+            _build_persistent_generated_document_attribution(
+                requested_trust_id,
+                authorization_check=authorization_check,
+                generated_by=actor,
+                firm_id=server_firm_id,
+            )
+        )
+    except DocumentContractError as exc:
+        raise ValueError(str(exc)) from exc
+
+    firm_id = str(
+        attribution.get("firm_id") or ""
+    ).strip()
+
+    if not firm_id:
+        raise ValueError(
+            "Generated-document firm scope is unavailable."
+        )
+
+    if firm_id != server_firm_id:
+        raise ValueError(
+            "Generated-document firm scope does not match authenticated scope."
+        )
+
+    source_type = attribution.get("source_record_type")
+    source_id = attribution.get("source_record_id")
+
+    resolved_trust_id = (
+        source_id
+        if source_type == "trust" and source_id
+        else None
+    )
 
     conn = _learning_conn()
     conn.execute("""
         INSERT INTO generated_documents (
-            document_id, workspace_id, trust_id, template_id, title, content, status, created_by, firm_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            document_id,
+            workspace_id,
+            trust_id,
+            template_id,
+            title,
+            content,
+            status,
+            created_by,
+            owner_id,
+            firm_id,
+            source_record_type,
+            source_record_id,
+            generation_basis
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         payload.get("document_id"),
         payload.get("workspace_id"),
-        payload.get("trust_id"),
+        resolved_trust_id,
         payload.get("template_id"),
         payload.get("title"),
         payload.get("content"),
         payload.get("status"),
-        payload.get("created_by"),
-        payload.get("firm_id"),
+        actor,
+        owner_id,
+        firm_id,
+        source_type,
+        source_id,
+        attribution.get("generation_basis"),
     ))
     conn.commit()
     conn.close()
+
 
 def render_document_template(template_body, values):
     content = template_body or ""
@@ -14604,10 +14716,18 @@ def document_generate():
             "title": title,
             "content": content,
             "status": request.form.get("status") or "draft",
-            "created_by": session.get("username") or "unknown",
-            "owner_id": get_current_owner(),
         }
-        create_generated_document(payload)
+
+        try:
+            create_generated_document(payload)
+        except ValueError as exc:
+            return render_template(
+                "document_generate_form.html",
+                templates=templates,
+                workspaces=workspaces,
+                error_message=str(exc),
+            ), 400
+
         return redirect(url_for("document_detail", document_id=document_id))
 
     return render_template("document_generate_form.html", templates=templates, workspaces=workspaces)
@@ -14698,10 +14818,18 @@ def workspace_document_generate(workspace_id):
             "title": title,
             "content": content,
             "status": request.form.get("status") or "draft",
-            "created_by": session.get("username") or "unknown",
-            "owner_id": get_current_owner(),
         }
-        create_generated_document(payload)
+
+        try:
+            create_generated_document(payload)
+        except ValueError as exc:
+            return render_template(
+                "document_generate_form.html",
+                workspace=workspace,
+                templates=templates,
+                error_message=str(exc),
+            ), 400
+
         return redirect(url_for("document_detail", document_id=document_id))
 
     return render_template("document_generate_form.html", workspace=workspace, templates=templates)

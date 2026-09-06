@@ -120,6 +120,84 @@ def produce_trust_document_context(
     return context
 
 
+def _build_persistent_generated_document_attribution(
+    trust_id: Any,
+    *,
+    authorization_check: AuthorizationCheck | None,
+    generated_by: Any = None,
+    firm_id: Any = None,
+) -> dict[str, Any]:
+    """Resolve attribution for the existing generated_documents lane.
+
+    This function derives attribution only. It does not create, update,
+    delete, finalize, archive, or otherwise mutate a generated-document row.
+    """
+
+    firm_id = _text(firm_id) or _text(document_db.get_current_firm_id())
+    if not firm_id:
+        raise DocumentContractError(
+            "Generated-document firm scope is unavailable."
+        )
+
+    actor = _text(generated_by) or "NOT DOCUMENTED"
+    source_id = _text(trust_id)
+
+    if not source_id:
+        attribution = {
+            "firm_id": firm_id,
+            "source_record_type": None,
+            "source_record_id": None,
+            "generation_basis": "SOURCE_ATTRIBUTION_NOT_ESTABLISHED",
+            "generated_by": actor,
+        }
+        _assert_no_secret_material(attribution)
+        return attribution
+
+    if authorization_check is None:
+        raise DocumentContractError(
+            "An explicit Trust authorization check is required."
+        )
+
+    context = produce_trust_document_context(
+        source_id,
+        "persistent_generated_document",
+        authorization_check=authorization_check,
+        generated_by=actor,
+    )
+
+    if context is None:
+        raise DocumentContractError(
+            "Trust source is unavailable or not authorized."
+        )
+
+    source = context.get("source") or {}
+
+    resolved_type = _text(source.get("object_type"))
+    resolved_id = _text(source.get("object_id"))
+    resolved_firm = _text(source.get("firm_id"))
+
+    if (
+        resolved_type != "trust"
+        or resolved_id != source_id
+        or not resolved_firm
+        or resolved_firm != firm_id
+    ):
+        raise DocumentContractError(
+            "Trust source is unavailable or not authorized."
+        )
+
+    attribution = {
+        "firm_id": resolved_firm,
+        "source_record_type": "trust",
+        "source_record_id": resolved_id,
+        "generation_basis": "CANONICAL_TRUST_CONTEXT",
+        "generated_by": actor,
+    }
+
+    _assert_no_secret_material(attribution)
+    return attribution
+
+
 def describe_output_capabilities() -> dict[str, Any]:
     """Describe only formats implemented by this transient adapter boundary."""
     return {
