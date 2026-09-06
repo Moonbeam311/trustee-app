@@ -3149,3 +3149,87 @@ Control disposition:
 - `next_authorized_action=NOT DOCUMENTED`.
 - `HOS-DEMO-1` remains `NOT_AUTHORIZED`.
 - HOS-DOC closeout does not authorize HOS-DEMO-1.
+
+## HOS-DEMO-1 Exact Implementation Boundary Registration - 2026-09-06
+
+Phase: `HOS-DEMO-1-REG-1B`
+
+Status: **COMPLETE / CONTROL-ONLY IMPLEMENTATION AUTHORIZATION**
+
+Architecture:
+
+`HOS_DEMO_1_ARCHITECTURE=ISOLATED_RESETTABLE_PROMOTIONAL_RUNTIME`
+
+Purpose:
+
+Establish a safe governed demonstration environment using a fresh,
+synthetic, disposable Hindsfoot runtime without copying, reading for
+seed, rewriting, or otherwise deriving demonstration records from either
+live application database.
+
+Locked runtime boundaries:
+
+- demonstration data is synthetic only;
+- demonstration runtime uses an isolated `DB_PATH`;
+- demonstration uploads use an isolated `UPLOAD_FOLDER`;
+- demonstration exports use an isolated `EXPORT_ROOT`;
+- governed `data/trustee_app.db` is prohibited;
+- runtime `trustee_app.db` is prohibited;
+- live-database cloning is prohibited;
+- live-database reads for demo seeding are prohibited;
+- demo reset means discard and rebuild the isolated runtime only.
+
+Identity and authorization:
+
+- use one dedicated nonproduction demonstration firm;
+- `FIRM-001` is prohibited as the demonstration firm;
+- `FIRM-002` is prohibited as the demonstration firm;
+- the exact demonstration identifier must be supplied explicitly by the
+  authorized seed configuration and regression proven;
+- seed writes must supply explicit firm scope and must not rely on the
+  existing fallback firm resolver;
+- reuse the canonical Admin / Trustee / Viewer role-permission model;
+- no permission bypass is authorized;
+- no firm-scope bypass is authorized;
+- no global production `DEMO_MODE` subsystem is authorized.
+
+Startup and seed boundaries:
+
+- `app.py` must not be imported to build/seed the fresh demo database;
+- normal application import/start is allowed only after `DB_PATH`,
+  `UPLOAD_FOLDER`, and `EXPORT_ROOT` are bound to the isolated runtime;
+- `ENSURE_HOSTED_ADMIN` must remain disabled;
+- `ENSURE_HOSTED_TEST_TRUST` must remain disabled;
+- hosted portfolio seed activation must remain disabled;
+- hosted self-heal, hosted test-trust seed, and hosted portfolio seed are
+  not HOS-DEMO seed mechanisms;
+- demo credentials must not be committed as plaintext repository secrets.
+
+Authorized product paths:
+
+1. `scripts/hos_demo_seed.py`
+2. `scripts/hos_demo_runtime.py`
+3. `config/hos_demo_seed.json`
+
+Authorized test path:
+
+1. `tests/test_hos_demo_1.py`
+
+Explicit core exclusions:
+
+- `app.py`
+- `database/db.py`
+- `database/startup_migrations.py`
+- `templates/auth/login.html`
+- `data/trustee_app.db`
+- `trustee_app.db`
+
+No authentication/security architecture mutation is authorized.
+No new permission family is authorized.
+No core application mutation is authorized.
+No recovery/reset route reuse is authorized.
+
+Next authorized product action after this control registration is
+remotely anchored:
+
+`HOS-DEMO-1-IMP-1`

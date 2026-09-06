@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-DOC-1-CLOSEOUT-CERTIFICATION",
+  "active_phase": "HOS-DEMO-1-REG-1B",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -59,7 +59,11 @@
     "services/services_document_contract.py",
     "templates/document_detail.html",
     "templates/document_generate_form.html",
-    "tests/test_hos_doc_1.py"
+    "tests/test_hos_doc_1.py",
+    "scripts/hos_demo_seed.py",
+    "scripts/hos_demo_runtime.py",
+    "config/hos_demo_seed.json",
+    "tests/test_hos_demo_1.py"
   ],
   "authority_ref": "origin/system-1-annual-evaluation",
   "branch": "system-1-annual-evaluation",
@@ -84,14 +88,14 @@
     "HOS-DOC-1": "8d0aabbb2d34933c16cffdb00f652a2353508f59"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "9eb37febf2d48932536cd7b40e57910f327212af9b798467b8ad1b8169e0150c",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "4bba62922fec5ef67024b514377ba2dce29c80d399b67709de899a9d91c20a95",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "NOT DOCUMENTED",
+  "next_authorized_action": "HOS-DEMO-1-IMP-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -289,5 +293,62 @@
     "automated_certification": "PASS",
     "human_browser_certification": "PASS",
     "remote_verification": "PASS"
+  },
+  "hos_demo_1_registration": {
+    "phase": "HOS-DEMO-1",
+    "registration_phase": "HOS-DEMO-1-REG-1B",
+    "registration_base_head": "28b6351cfb8a3a6ee7acacb1e64536f7076dfa4e",
+    "architecture": "ISOLATED_RESETTABLE_PROMOTIONAL_RUNTIME",
+    "architecture_state": "LOCKED",
+    "implementation_state": "AUTHORIZED_NOT_STARTED",
+    "authorized_next_action": "HOS-DEMO-1-IMP-1",
+    "authorized_product_paths": [
+      "scripts/hos_demo_seed.py",
+      "scripts/hos_demo_runtime.py",
+      "config/hos_demo_seed.json"
+    ],
+    "authorized_test_paths": [
+      "tests/test_hos_demo_1.py"
+    ],
+    "database_origin": "FRESH_SYNTHETIC_BUILD",
+    "synthetic_data_only": "REQUIRED",
+    "demo_firm_identity": "DEDICATED_NONPRODUCTION_NOT_FIRM001_OR_FIRM002",
+    "demo_firm_identifier": "IMPLEMENTATION_CONFIGURED_WITH_REGRESSION_PROOF",
+    "firm_001_use": "PROHIBITED",
+    "firm_002_use": "PROHIBITED",
+    "seed_firm_scope": "EXPLICIT_REQUIRED_NO_FALLBACK",
+    "live_database_access": "PROHIBITED",
+    "live_database_clone": "PROHIBITED",
+    "live_database_seed_read": "PROHIBITED",
+    "database_isolation": "DB_PATH_REQUIRED",
+    "upload_isolation": "UPLOAD_FOLDER_REQUIRED",
+    "export_isolation": "EXPORT_ROOT_REQUIRED",
+    "app_import_for_seed": "PROHIBITED",
+    "runtime_app_import": "ALLOWED_ONLY_AFTER_ISOLATED_ENVIRONMENT_BOUND",
+    "hosted_bootstrap_flags": "REQUIRED_OFF",
+    "hosted_self_heal_reuse": "PROHIBITED",
+    "hosted_test_trust_seed_reuse": "PROHIBITED",
+    "hosted_portfolio_seed_reuse": "PROHIBITED",
+    "permission_model": "REUSE_CANONICAL_ADMIN_TRUSTEE_VIEWER",
+    "new_permission_family": "PROHIBITED",
+    "permission_bypass": "PROHIBITED",
+    "firm_scope_bypass": "PROHIBITED",
+    "global_demo_mode": "PROHIBITED",
+    "reset_model": "DISCARD_AND_REBUILD_ISOLATED_RUNTIME_ONLY",
+    "recovery_reset_route_reuse": "PROHIBITED",
+    "repository_plaintext_passwords": "PROHIBITED",
+    "core_product_mutation_required": "NO",
+    "explicitly_excluded_product_paths": [
+      "app.py",
+      "database/db.py",
+      "database/startup_migrations.py",
+      "templates/auth/login.html",
+      "data/trustee_app.db",
+      "trustee_app.db",
+      "public_site/README.md",
+      "public_site/assets/js/site.js",
+      "docs/version_3_completion_addendum_2026-08-14.md",
+      "docs/version_3_locked_plan_recovery_2026-08-14.md"
+    ]
   }
 }
