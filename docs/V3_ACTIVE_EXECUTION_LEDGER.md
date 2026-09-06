@@ -3233,3 +3233,48 @@ Next authorized product action after this control registration is
 remotely anchored:
 
 `HOS-DEMO-1-IMP-1`
+
+## HOS-DEMO-1 Closeout Certification - 2026-09-06
+
+Phase: `HOS-DEMO-1-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - HOS-DEMO-1 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+Certified product commit:
+
+`e914d0993aa26c0b67c442a6541bb20c7d48ec32`
+
+Certification findings:
+
+- automated HOS-DEMO regression certification passed with 8 focused tests;
+- demonstration runtime was built from fresh synthetic data only;
+- demonstration firm scope was explicitly established as `FIRM-DEMO-001`;
+- synthetic Admin, Trustee, and Viewer identities reused the canonical role-permission model;
+- synthetic trust `TR-DEMO-001` was isolated to the demonstration firm;
+- seed construction did not import `app.py`;
+- runtime application import occurred only after isolated environment binding;
+- isolated `DB_PATH`, `UPLOAD_FOLDER`, and `EXPORT_ROOT` boundaries were preserved;
+- live database access, cloning, and seed reads remained prohibited and absent;
+- Admin browser certification passed at `/admin`;
+- Trustee browser certification passed at `/workspace`;
+- Viewer browser certification passed at `/portfolio`;
+- Viewer access to `/admin/audit-log` was correctly denied with HTTP 403;
+- transient certification credentials were not committed as repository plaintext secrets;
+- the disposable certification runtime was removed after browser validation;
+- governed and runtime live databases remained byte-identical;
+- no `app.py`, `database/db.py`, or startup-migration product mutation was introduced;
+- no new permission family, permission bypass, firm-scope bypass, or global production demo mode was introduced;
+- the certified product commit was pushed and remote-verified.
+
+Control disposition:
+
+- `HOS-DEMO-1` is certified at `e914d0993aa26c0b67c442a6541bb20c7d48ec32`.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `automated_certification=PASS`.
+- `human_browser_certification=PASS`.
+- `remote_verification=PASS`.
+- `product_mutation_authority=DENIED_AFTER_CERTIFICATION`.
+- `migration_authority=DENIED_AFTER_CERTIFICATION`.
+- `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
+- `next_authorized_action=NOT DOCUMENTED`.
+- Any later V3 phase requires separate explicit authorization and control registration.
