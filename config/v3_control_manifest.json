@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-DOC-1-REG-1",
+  "active_phase": "HOS-DOC-1-CLOSEOUT-CERTIFICATION",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -80,17 +80,18 @@
     "V3-MOD-WLH-P06": "140e628cdc09c0fb8bb5ca294951ab165b094cb9",
     "V3-MOD-WLH-P07": "462bf83919739dae0fa258771d1a14cbf971f1b8",
     "V3-MOD-WLH-P08": "8e6e292e8fbe06b35126b54c06c257947fa3f29f",
-    "V3-MOD-WLH-P09": "4678a84eb5b439e5e349d7a77a53c078c2024df0"
+    "V3-MOD-WLH-P09": "4678a84eb5b439e5e349d7a77a53c078c2024df0",
+    "HOS-DOC-1": "8d0aabbb2d34933c16cffdb00f652a2353508f59"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "517065df4058834460691cde66008b076ffc51b441b64a391a21746940579a22",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "a1ea1b3ed41ef5fe5f29ddfae0a886054e610c7fb3d2192e4c28124d9bc5040a",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "HOS-DOC-1-IMP-1",
+  "next_authorized_action": "NOT DOCUMENTED",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -217,8 +218,8 @@
     "registration_base_head": "45cc8a6d0d7a1aa5b4d08aeed60651182ca17f69",
     "architecture": "CANONICAL_DERIVED_DOCUMENT_ATTRIBUTION_INTEGRATION",
     "architecture_state": "LOCKED",
-    "implementation_state": "AUTHORIZED_NOT_STARTED",
-    "authorized_next_action": "HOS-DOC-1-IMP-1",
+    "implementation_state": "CERTIFIED_COMPLETE",
+    "authorized_next_action": "NOT DOCUMENTED",
     "primary_persistence_lane": "generated_documents",
     "persistence_activation_mechanism": "ADDITIVE_STARTUP_MIGRATION",
     "legacy_rows_observed": 3,
@@ -280,6 +281,13 @@
       "docs/version_3_completion_addendum_2026-08-14.md",
       "docs/version_3_locked_plan_recovery_2026-08-14.md"
     ],
-    "hos_demo_1_authority": "NOT_AUTHORIZED"
+    "hos_demo_1_authority": "NOT_AUTHORIZED",
+    "product_commit": "8d0aabbb2d34933c16cffdb00f652a2353508f59",
+    "product_mutation_authority": "DENIED_AFTER_CERTIFICATION",
+    "migration_authority": "DENIED_AFTER_CERTIFICATION",
+    "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT",
+    "automated_certification": "PASS",
+    "human_browser_certification": "PASS",
+    "remote_verification": "PASS"
   }
 }

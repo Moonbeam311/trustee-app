@@ -3111,3 +3111,41 @@ Explicit boundaries:
 Next authorized action:
 
 `HOS-DOC-1-IMP-1`
+
+## HOS-DOC-1 Closeout Certification - 2026-09-06
+
+Phase: `HOS-DOC-1-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - HOS-DOC-1 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+Certified product commit:
+
+`8d0aabbb2d34933c16cffdb00f652a2353508f59`
+
+Certification findings:
+
+- automated HOS-DOC regression certification passed;
+- fresh disposable R4 human browser certification passed;
+- authenticated generated-document firm scope persisted as `FIRM-001`;
+- blank Trust attribution persisted with no invented source record;
+- generation basis persisted as `SOURCE_ATTRIBUTION_NOT_ESTABLISHED`;
+- legacy generated-document firm/source attribution was not backfilled;
+- live governed and runtime databases remained byte-identical;
+- no global `database/db.py` firm-resolution repair was performed;
+- workflow status does not establish legal or institutional finality;
+- TPL-002 literal backslash-n content pre-existed in canonical template data;
+- the certified product commit was pushed and remote-verified.
+
+Control disposition:
+
+- `HOS-DOC-1` is certified at `8d0aabbb2d34933c16cffdb00f652a2353508f59`.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `automated_certification=PASS`.
+- `human_browser_certification=PASS`.
+- `remote_verification=PASS`.
+- `product_mutation_authority=DENIED_AFTER_CERTIFICATION`.
+- `migration_authority=DENIED_AFTER_CERTIFICATION`.
+- `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
+- `next_authorized_action=NOT DOCUMENTED`.
+- `HOS-DEMO-1` remains `NOT_AUTHORIZED`.
+- HOS-DOC closeout does not authorize HOS-DEMO-1.
