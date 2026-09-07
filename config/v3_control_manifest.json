@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-OPS-WLH-REPAIR-1-REG-1",
+  "active_phase": "HOS-OPS-WLH-REPAIR-1-CLOSEOUT-CERTIFICATION",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -86,17 +86,18 @@
     "V3-MOD-WLH-P08": "8e6e292e8fbe06b35126b54c06c257947fa3f29f",
     "V3-MOD-WLH-P09": "4678a84eb5b439e5e349d7a77a53c078c2024df0",
     "HOS-DOC-1": "8d0aabbb2d34933c16cffdb00f652a2353508f59",
-    "HOS-DEMO-1": "e914d0993aa26c0b67c442a6541bb20c7d48ec32"
+    "HOS-DEMO-1": "e914d0993aa26c0b67c442a6541bb20c7d48ec32",
+    "HOS-OPS-WLH-REPAIR-1": "02973f313a05bd72d857cd683c4a2c1e2f4c3ca6"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "dfaaee6347fcbb62096e25e13b8214a7725fb7c63ef8faf3d296085d336abd9b",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "fb6130c84f18838fe2a32a6d4f3c10f3ccc593c94f5c26f07ee6aac72d660975",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "HOS-OPS-WLH-REPAIR-1-IMP-1",
+  "next_authorized_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -365,8 +366,8 @@
     "registration_base_head": "31369b5e26bf60f302ae60cb30103ccfbd7c6587",
     "architecture": "CANONICAL_ADDITIVE_FRESH_DATABASE_WORKSPACE_SCHEMA_COMPLETENESS_REPAIR",
     "architecture_state": "LOCKED",
-    "implementation_state": "AUTHORIZED_NOT_STARTED",
-    "authorized_next_action": "HOS-OPS-WLH-REPAIR-1-IMP-1",
+    "implementation_state": "CERTIFIED_COMPLETE",
+    "authorized_next_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
     "defect": "FRESH_DATABASE_MISSING_CANONICAL_WORKSPACES_TABLE_CAUSES_WLH_HTTP_500",
     "schema_owner": "CANONICAL_STARTUP_SCHEMA_MIGRATION",
     "authorized_product_paths": [
@@ -402,6 +403,18 @@
     "live_database_mutation": "PROHIBITED",
     "new_permission_family": "PROHIBITED",
     "security_architecture_mutation": "PROHIBITED",
-    "browser_recheck": "REQUIRED"
+    "browser_recheck": "PASS",
+    "certified_product_commit": "02973f313a05bd72d857cd683c4a2c1e2f4c3ca6",
+    "automated_certification": "PASS",
+    "focused_regression": "34_PASSED",
+    "human_browser_certification": "PASS",
+    "original_http_500_blocker": "CLOSED",
+    "remote_verification": "PASS",
+    "live_database_preservation": "PASS",
+    "disposable_runtime_teardown": "PASS",
+    "product_mutation_authority": "DENIED_AFTER_CERTIFICATION",
+    "migration_authority": "DENIED_AFTER_CERTIFICATION",
+    "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT",
+    "preview_resume_authority": "READ_ONLY_ONLY"
   }
 }

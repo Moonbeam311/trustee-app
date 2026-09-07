@@ -3370,3 +3370,54 @@ Required certification gates:
 Next authorized action after this registration is remotely anchored:
 
 `HOS-OPS-WLH-REPAIR-1-IMP-1`
+
+## HOS-OPS-WLH-REPAIR-1 Closeout Certification - 2026-09-07
+
+Phase: `HOS-OPS-WLH-REPAIR-1-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - HOS-OPS-WLH-REPAIR-1 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+Certified product commit:
+
+`02973f313a05bd72d857cd683c4a2c1e2f4c3ca6`
+
+Certification findings:
+
+- canonical additive fresh-database `workspaces` schema repair completed;
+- required workspace schema contains `workspace_id`, `title`,
+  `workspace_type`, `trust_type_focus`, `purpose`, `owner`, `status`,
+  `owner_id`, `firm_id`, `created_at`, and `updated_at`;
+- fresh disposable database schema creation passed;
+- repeated startup migration execution remained idempotent;
+- existing legacy workspace rows remained preserved;
+- no legacy row rewrite, deletion, firm backfill, or owner backfill occurred;
+- existing `ensure_firm_columns()` no-create behavior remained preserved;
+- firm-scoped workspace behavior remained enforced;
+- final focused and compatibility regression passed with 34 tests;
+- canonical application startup invocation of
+  `run_additive_startup_migrations()` was verified;
+- HOS-DEMO seed and runtime product files remained unchanged;
+- fresh isolated HOS-DEMO browser certification passed;
+- `/work-learning-hub` rendered successfully in `FIRM-DEMO-001`;
+- original `sqlite3.OperationalError: no such table: workspaces`
+  operator blocker is CLOSED;
+- disposable certification runtime was safely stopped and removed;
+- governed and runtime live databases remained byte-identical;
+- no `app.py` route bypass was introduced;
+- no new permission family or authentication/security mutation was introduced;
+- product commit was pushed and remote-verified.
+
+Control disposition:
+
+- `HOS-OPS-WLH-REPAIR-1` is certified at `02973f313a05bd72d857cd683c4a2c1e2f4c3ca6`.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `automated_certification=PASS`.
+- `human_browser_certification=PASS`.
+- `original_http_500_blocker=CLOSED`.
+- `remote_verification=PASS`.
+- `product_mutation_authority=DENIED_AFTER_CERTIFICATION`.
+- `migration_authority=DENIED_AFTER_CERTIFICATION`.
+- `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
+- `next_authorized_action=HOS-OPS-PREVIEW-1B-RESUME-1`.
+- preview resumption is read-only operator review only;
+  no product mutation is authorized by this closeout.
