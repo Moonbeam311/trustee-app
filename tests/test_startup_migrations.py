@@ -330,5 +330,74 @@ class StartupMigrationTests(unittest.TestCase):
         self.assertEqual(count, 1)
 
 
+    def test_workspace_schema_is_fresh_safe_empty_and_idempotent(
+        self,
+    ) -> None:
+        first = run_additive_startup_migrations(
+            self.db_path
+        )
+        second = run_additive_startup_migrations(
+            self.db_path
+        )
+
+        self.assertTrue(
+            first["workspace_schema"]["schema_complete"]
+        )
+        self.assertTrue(
+            second["workspace_schema"]["schema_complete"]
+        )
+
+        self.assertTrue(
+            first["workspace_schema"]["table_created"]
+        )
+        self.assertFalse(
+            second["workspace_schema"]["table_created"]
+        )
+
+        self.assertEqual(
+            first["workspace_records_created"],
+            0,
+        )
+        self.assertEqual(
+            second["workspace_records_created"],
+            0,
+        )
+
+        connection = sqlite3.connect(
+            self.db_path
+        )
+
+        columns = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA table_info(workspaces)"
+            ).fetchall()
+        }
+
+        count = connection.execute(
+            "SELECT COUNT(*) FROM workspaces"
+        ).fetchone()[0]
+
+        connection.close()
+
+        self.assertTrue(
+            {
+                "workspace_id",
+                "title",
+                "workspace_type",
+                "trust_type_focus",
+                "purpose",
+                "owner",
+                "status",
+                "owner_id",
+                "firm_id",
+                "created_at",
+                "updated_at",
+            }.issubset(columns)
+        )
+
+        self.assertEqual(count, 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
