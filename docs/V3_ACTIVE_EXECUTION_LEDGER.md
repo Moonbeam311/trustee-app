@@ -3278,3 +3278,95 @@ Control disposition:
 - `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
 - `next_authorized_action=NOT DOCUMENTED`.
 - Any later V3 phase requires separate explicit authorization and control registration.
+
+## HOS-OPS-WLH-REPAIR-1 Fresh-Database Schema Repair Registration - 2026-09-07
+
+Phase: `HOS-OPS-WLH-REPAIR-1-REG-1`
+
+Status: **AUTHORIZED / BOUNDED REPAIR NOT YET STARTED**
+
+Architecture:
+
+`HOS_OPS_WLH_REPAIR_1_ARCHITECTURE=CANONICAL_ADDITIVE_FRESH_DATABASE_WORKSPACE_SCHEMA_COMPLETENESS_REPAIR`
+
+Observed defect:
+
+- the operator-facing `/work-learning-hub` route is present;
+- the route reaches the canonical firm-scoped `get_all_workspaces()` query;
+- a fresh isolated HOS-DEMO database does not contain the `workspaces` table;
+- the resulting operator-visible failure is `sqlite3.OperationalError: no such table: workspaces`;
+- current product code contains no canonical product creator for that table;
+- `ensure_firm_columns()` is intentionally limited to adding `firm_id` only when an existing `workspaces` table is present.
+
+Repair ownership:
+
+- canonical additive startup/schema migration path;
+- no demo-only shadow schema;
+- no route bypass;
+- no exception-based concealment of the missing schema.
+
+Required fresh-database `workspaces` contract:
+
+- `workspace_id`;
+- `title`;
+- `workspace_type`;
+- `trust_type_focus`;
+- `purpose`;
+- `owner`;
+- `status`;
+- `owner_id`;
+- `firm_id`;
+- `created_at`;
+- `updated_at`.
+
+Existing-table preservation:
+
+- existing `workspaces` tables must be preserved;
+- no drop or destructive recreation;
+- no legacy row rewrite;
+- no legacy row delete;
+- no firm or owner backfill without separate proven authority;
+- existing `ensure_firm_columns()` no-create behavior remains locked.
+
+Absent-table behavior:
+
+- create the canonical `workspaces` table idempotently through the startup/schema path;
+- creation must support the existing Work & Learning Hub application contract;
+- repeated startup/migration execution must remain safe.
+
+Explicit prohibitions:
+
+- no HOS-DEMO seed product mutation;
+- no `app.py` query bypass;
+- no replacement or shadow Work & Learning Hub subsystem;
+- no reopening of V3-MOD-WLH-P01 through P09;
+- no live database mutation during implementation or certification;
+- no unrelated schema cleanup;
+- no new permission family;
+- no authentication/security architecture change;
+- no automatic legacy workspace backfill.
+
+Authorized product paths:
+
+1. `database/migrations_workspace_schema.py`
+2. `database/startup_migrations.py`
+
+Authorized test paths:
+
+1. `tests/test_hos_ops_wlh_repair_1.py`
+2. `tests/test_startup_migrations.py`
+
+Required certification gates:
+
+- fresh disposable database creates the canonical `workspaces` schema;
+- repeated migration is idempotent;
+- an existing legacy `workspaces` table and rows remain preserved;
+- firm-scope behavior remains enforced;
+- HOS-DEMO seed remains unchanged;
+- governed and runtime live databases remain byte-identical;
+- isolated Flask browser recheck proves `/work-learning-hub` returns HTTP 200;
+- operator preview resumes only after the blocker repair passes.
+
+Next authorized action after this registration is remotely anchored:
+
+`HOS-OPS-WLH-REPAIR-1-IMP-1`
