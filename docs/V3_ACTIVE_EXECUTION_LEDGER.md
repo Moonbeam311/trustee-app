@@ -3421,3 +3421,88 @@ Control disposition:
 - `next_authorized_action=HOS-OPS-PREVIEW-1B-RESUME-1`.
 - preview resumption is read-only operator review only;
   no product mutation is authorized by this closeout.
+
+## HOS-OPS-DOCUMENTS-REPAIR-1 Fresh-Database Document Base-Schema Repair Registration - 2026-09-07
+
+Phase: `HOS-OPS-DOCUMENTS-REPAIR-1-REG-1`
+
+Status: **AUTHORIZED / BOUNDED REPAIR NOT YET STARTED**
+
+Architecture:
+
+`CANONICAL_ADDITIVE_FRESH_DATABASE_DOCUMENT_BASE_SCHEMA_COMPLETENESS_REPAIR`
+
+Observed defect:
+
+- `/documents` is an existing operator-facing route;
+- a fresh isolated HOS-DEMO database does not contain `document_templates`;
+- the resulting request fails with `sqlite3.OperationalError: no such table: document_templates`;
+- the same fresh database also lacks the `generated_documents` base table required by the next dashboard query;
+- this is a base-schema completeness defect, not an HOS-DOC-1 attribution defect.
+
+Document-template base contract:
+
+- `template_id`;
+- `name`;
+- `category`;
+- `description`;
+- `template_body`;
+- `status`;
+- `created_at`;
+- `updated_at`.
+
+Generated-document base contract:
+
+- `document_id`;
+- `workspace_id`;
+- `trust_id`;
+- `template_id`;
+- `title`;
+- `content`;
+- `status`;
+- `created_by`;
+- `created_at`;
+- `updated_at`;
+- `owner_id`.
+
+HOS-DOC preservation:
+
+- HOS-DOC-1 remains certified and closed;
+- its attribution migration continues to own `firm_id`,
+  `source_record_type`, `source_record_id`, and `generation_basis`;
+- the new base-schema migration must run before the existing HOS-DOC
+  attribution migration on fresh startup;
+- the HOS-DOC migration itself must not be modified.
+
+Explicit prohibitions:
+
+- no document-template row seeding;
+- no substitution of the Institutional Document Platform template service;
+- no `document_templates` firm/creator normalization;
+- no `app.py` route bypass;
+- no HOS-DEMO seed mutation;
+- no existing-row rewrite, delete, or backfill;
+- no table drop or destructive recreation;
+- no live database mutation during implementation/certification;
+- no new permission family;
+- no authentication/security architecture change.
+
+Authorized product paths:
+
+1. `database/migrations_document_base_schema.py`
+2. `database/startup_migrations.py`
+
+Authorized test paths:
+
+1. `tests/test_hos_ops_documents_repair_1.py`
+2. `tests/test_startup_migrations.py`
+
+Required browser certification:
+
+- fresh isolated HOS-DEMO runtime;
+- authenticated Admin request to `/documents`;
+- HTTP 200 required before blocker closure.
+
+Next authorized product action:
+
+`HOS-OPS-DOCUMENTS-REPAIR-1-IMP-1`

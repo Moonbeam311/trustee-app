@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-OPS-WLH-REPAIR-1-CLOSEOUT-CERTIFICATION",
+  "active_phase": "HOS-OPS-DOCUMENTS-REPAIR-1-REG-1",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -90,14 +90,14 @@
     "HOS-OPS-WLH-REPAIR-1": "02973f313a05bd72d857cd683c4a2c1e2f4c3ca6"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "fb6130c84f18838fe2a32a6d4f3c10f3ccc593c94f5c26f07ee6aac72d660975",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "c83048a6607100da9a9a8ac85b338570c0833f88e9e761eb0b39d56295576b96",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
+  "next_authorized_action": "HOS-OPS-DOCUMENTS-REPAIR-1-IMP-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -416,5 +416,90 @@
     "migration_authority": "DENIED_AFTER_CERTIFICATION",
     "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT",
     "preview_resume_authority": "READ_ONLY_ONLY"
+  },
+  "hos_ops_documents_repair_1_registration": {
+    "phase": "HOS-OPS-DOCUMENTS-REPAIR-1",
+    "registration_phase": "HOS-OPS-DOCUMENTS-REPAIR-1-REG-1",
+    "registration_base_head": "a45d127ff1a306395c39099f2667765fb37055bc",
+    "architecture": "CANONICAL_ADDITIVE_FRESH_DATABASE_DOCUMENT_BASE_SCHEMA_COMPLETENESS_REPAIR",
+    "architecture_state": "LOCKED",
+    "implementation_state": "AUTHORIZED_NOT_STARTED",
+    "authorized_next_action": "HOS-OPS-DOCUMENTS-REPAIR-1-IMP-1",
+    "observed_route": "/documents",
+    "observed_defect": "fresh isolated database lacks document_templates; generated_documents is also absent",
+    "observed_exception": "sqlite3.OperationalError: no such table: document_templates",
+    "schema_owner": "CANONICAL_ADDITIVE_STARTUP_MIGRATION",
+    "document_templates_absent_behavior": "CREATE_IDEMPOTENTLY",
+    "document_templates_required_columns": [
+      "template_id",
+      "name",
+      "category",
+      "description",
+      "template_body",
+      "status",
+      "created_at",
+      "updated_at"
+    ],
+    "document_templates_template_seed": "PROHIBITED",
+    "document_templates_firm_id_normalization": "NOT_AUTHORIZED",
+    "document_templates_created_by_normalization": "NOT_AUTHORIZED",
+    "generated_documents_absent_behavior": "CREATE_LEGACY_BASE_TABLE_IDEMPOTENTLY",
+    "generated_documents_base_columns": [
+      "document_id",
+      "workspace_id",
+      "trust_id",
+      "template_id",
+      "title",
+      "content",
+      "status",
+      "created_by",
+      "created_at",
+      "updated_at",
+      "owner_id"
+    ],
+    "hos_doc_attribution_owner": "database/migrations_generated_document_attribution.py",
+    "hos_doc_attribution_columns": [
+      "firm_id",
+      "source_record_type",
+      "source_record_id",
+      "generation_basis"
+    ],
+    "startup_order_contract": "DOCUMENT_BASE_SCHEMA_BEFORE_HOS_DOC_ATTRIBUTION",
+    "hos_doc_1_reopened": "NO",
+    "hos_doc_migration_mutation": "PROHIBITED",
+    "existing_document_templates_table": "PRESERVE",
+    "existing_generated_documents_table": "PRESERVE",
+    "existing_row_rewrite": "PROHIBITED",
+    "existing_row_delete": "PROHIBITED",
+    "legacy_backfill": "PROHIBITED",
+    "table_drop": "PROHIBITED",
+    "table_recreate": "PROHIBITED",
+    "service_template_substitution": "PROHIBITED",
+    "hos_demo_seed_mutation": "PROHIBITED",
+    "app_route_mutation": "PROHIBITED",
+    "live_database_mutation": "PROHIBITED_DURING_IMPLEMENTATION_AND_CERTIFICATION",
+    "new_permission_family": "PROHIBITED",
+    "security_architecture_mutation": "PROHIBITED",
+    "authorized_product_paths": [
+      "database/migrations_document_base_schema.py",
+      "database/startup_migrations.py"
+    ],
+    "authorized_test_paths": [
+      "tests/test_hos_ops_documents_repair_1.py",
+      "tests/test_startup_migrations.py"
+    ],
+    "required_certification": [
+      "fresh database creates document_templates base schema",
+      "fresh database creates generated_documents legacy base schema",
+      "HOS-DOC attribution migration completes in same startup run",
+      "repeated startup is idempotent",
+      "existing document tables and rows remain preserved",
+      "no template rows are seeded",
+      "HOS-DOC-1 behavior remains preserved",
+      "fresh isolated /documents browser request returns HTTP 200",
+      "live databases remain byte-identical"
+    ],
+    "browser_recheck": "FRESH_ISOLATED_HOS_DEMO_DOCUMENTS_ROUTE",
+    "original_http_500_blocker": "OPEN_PENDING_IMPLEMENTATION"
   }
 }
