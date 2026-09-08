@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-OPS-DOCUMENTS-REPAIR-1-REG-1",
+  "active_phase": "HOS-OPS-DOCUMENTS-REPAIR-1-CLOSEOUT-CERTIFICATION",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -78,6 +78,7 @@
   },
   "certified_head": "140e628cdc09c0fb8bb5ca294951ab165b094cb9",
   "certified_phases": {
+    "HOS-OPS-DOCUMENTS-REPAIR-1": "69470296165fb278e53102ec1b81538896280ca5",
     "V3-MOD-WLH-P01": "0b0ab79",
     "V3-MOD-WLH-P02": "fe83ee928232033a88f66a70a7b9e6333901fee8",
     "V3-MOD-WLH-P05": "9908c317c3fcd9e6837d0fda6242a80d7c12200e",
@@ -90,14 +91,14 @@
     "HOS-OPS-WLH-REPAIR-1": "02973f313a05bd72d857cd683c4a2c1e2f4c3ca6"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "c83048a6607100da9a9a8ac85b338570c0833f88e9e761eb0b39d56295576b96",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "14f47a0bb30351b3cb81a162366ac01336510f5ab584222a5bc96736d5cec1b7",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "HOS-OPS-DOCUMENTS-REPAIR-1-IMP-1",
+  "next_authorized_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -423,8 +424,9 @@
     "registration_base_head": "a45d127ff1a306395c39099f2667765fb37055bc",
     "architecture": "CANONICAL_ADDITIVE_FRESH_DATABASE_DOCUMENT_BASE_SCHEMA_COMPLETENESS_REPAIR",
     "architecture_state": "LOCKED",
-    "implementation_state": "AUTHORIZED_NOT_STARTED",
-    "authorized_next_action": "HOS-OPS-DOCUMENTS-REPAIR-1-IMP-1",
+    "implementation_state": "CERTIFIED_COMPLETE",
+    "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT",
+    "preview_resume_authority": "READ_ONLY_ONLY",
     "observed_route": "/documents",
     "observed_defect": "fresh isolated database lacks document_templates; generated_documents is also absent",
     "observed_exception": "sqlite3.OperationalError: no such table: document_templates",
@@ -500,6 +502,6 @@
       "live databases remain byte-identical"
     ],
     "browser_recheck": "FRESH_ISOLATED_HOS_DEMO_DOCUMENTS_ROUTE",
-    "original_http_500_blocker": "OPEN_PENDING_IMPLEMENTATION"
+    "original_http_500_blocker": "CLOSED_CERTIFIED"
   }
 }

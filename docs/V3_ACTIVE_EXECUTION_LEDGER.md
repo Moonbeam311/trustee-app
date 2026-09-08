@@ -3506,3 +3506,21 @@ Required browser certification:
 Next authorized product action:
 
 `HOS-OPS-DOCUMENTS-REPAIR-1-IMP-1`
+
+## HOS-OPS-DOCUMENTS-REPAIR-1 Closeout Certification - 2026-09-07
+
+Phase: `HOS-OPS-DOCUMENTS-REPAIR-1-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - HOS-OPS-DOCUMENTS-REPAIR-1 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+- Product commit `69470296165fb278e53102ec1b81538896280ca5` is remotely anchored.
+- Fresh isolated authenticated Admin request to `/documents` returned HTTP 200.
+- Original fresh-database `/documents` HTTP 500 blocker is closed.
+- Required document base schemas and HOS-DOC attribution startup ordering are certified.
+- No template rows were seeded.
+- HOS-DOC-1 remained closed and was not modified or reopened.
+- Live databases remained byte-identical.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
+- `preview_resume_authority=READ_ONLY_ONLY`.
+- `next_authorized_action=HOS-OPS-PREVIEW-1B-RESUME-1`.
