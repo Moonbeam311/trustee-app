@@ -3524,3 +3524,92 @@ Status: **PASS - HOS-OPS-DOCUMENTS-REPAIR-1 COMPLETE / CERTIFIED / REMOTELY VERI
 - `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
 - `preview_resume_authority=READ_ONLY_ONLY`.
 - `next_authorized_action=HOS-OPS-PREVIEW-1B-RESUME-1`.
+
+## HOS-OPS-EXECUTION-REPAIR-1 Registration - 2026-09-08
+
+Phase: `HOS-OPS-EXECUTION-REPAIR-1-REG-1`
+
+Architecture: `CANONICAL_ADDITIVE_FRESH_DATABASE_EXECUTION_TASK_SCHEMA_COMPLETENESS_REPAIR`
+
+Status: **LOCKED / IMPLEMENTATION AUTHORIZED NOT STARTED**
+
+Observed blocker:
+
+- authenticated fresh isolated request to `/execution` returns HTTP 500;
+- exception: `sqlite3.OperationalError: no such table: execution_tasks`;
+- current canonical additive startup migration chain does not provision `execution_tasks`.
+
+Historical provenance:
+
+- `2e17dca7d90edf77da69ba98d97d78aa52e82c90` introduced fresh-database `execution_tasks` provisioning;
+- `0213058ec8eedf5552c0338a97fe8a5c5f7be4cd` removed that helper;
+- `6b03202234c3f3ad945432edc40fbd87a1c098b2` establishes the modern Execution task application contract;
+- `68a2bf820c00cb24b69a0f58dcc903c63b13bbd7` establishes firm-scoped Execution task behavior.
+
+Required application columns:
+
+- `task_id`;
+- `workspace_id`;
+- `trust_id`;
+- `title`;
+- `task_type`;
+- `description`;
+- `related_form`;
+- `related_report`;
+- `priority`;
+- `status`;
+- `due_date`;
+- `assigned_to`;
+- `owner_id`;
+- `created_at`;
+- `updated_at`;
+- `firm_id`.
+
+Fresh-table compatibility:
+
+- preserve historical `id INTEGER PRIMARY KEY AUTOINCREMENT` on newly created `execution_tasks` tables;
+- do not restore the obsolete historical schema verbatim.
+
+Preservation contract:
+
+- existing `execution_tasks` table: preserve; no drop or recreate;
+- missing required columns: add idempotently;
+- no legacy row rewrite;
+- no legacy row delete;
+- no scope backfill without separately proven authority;
+- no Execution task seed rows.
+
+Explicit prohibitions:
+
+- no `app.py` route mutation;
+- no HOS-DEMO seed mutation;
+- no live database mutation during implementation or certification;
+- no new permission family;
+- no authentication/security architecture mutation;
+- no Institutional Execution architecture mutation.
+
+Authorized product paths:
+
+1. `database/migrations_execution_task_schema.py`
+2. `database/startup_migrations.py`
+
+Authorized test paths:
+
+1. `tests/test_hos_ops_execution_repair_1.py`
+2. `tests/test_startup_migrations.py`
+
+Required certification:
+
+- fresh database creates the modern `execution_tasks` schema;
+- newly created table preserves legacy integer autoincrement ID compatibility;
+- repeated startup is idempotent;
+- existing table and rows remain preserved;
+- missing required columns are added additively;
+- no task rows are seeded;
+- current create-task and status-update contracts remain compatible;
+- fresh isolated authenticated `/execution` request returns HTTP 200;
+- governed live databases remain byte-identical.
+
+Next authorized product action:
+
+`HOS-OPS-EXECUTION-REPAIR-1-IMP-1`
