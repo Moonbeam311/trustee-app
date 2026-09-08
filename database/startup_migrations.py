@@ -19,6 +19,10 @@ from database.migrations_work_learning_authority import (
     apply_work_learning_authority_schema,
     WorkLearningAuthorityMigrationError,
 )
+from database.migrations_document_base_schema import (
+    apply_document_base_schema,
+    DocumentBaseSchemaMigrationError,
+)
 from database.migrations_generated_document_attribution import (
     apply_generated_document_attribution_schema,
     GeneratedDocumentAttributionMigrationError,
@@ -82,6 +86,21 @@ def run_additive_startup_migrations(
                             "reason": str(exc), "records_created": 0}
 
     try:
+        document_base_result = apply_document_base_schema(db_path)
+    except DocumentBaseSchemaMigrationError as exc:
+        document_base_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "document_templates_table_created": False,
+            "generated_documents_table_created": False,
+            "document_templates_rows_preserved": 0,
+            "generated_documents_rows_preserved": 0,
+            "template_rows_seeded": 0,
+            "records_created": 0,
+        }
+
+    try:
         document_attribution_result = (
             apply_generated_document_attribution_schema(db_path)
         )
@@ -116,6 +135,7 @@ def run_additive_startup_migrations(
         "successor_acceptance": acceptance_result,
         "governed_program_promotion": promotion_result,
         "work_learning_authority": authority_result,
+        "document_base_schema": document_base_result,
         "generated_document_attribution": document_attribution_result,
         "workspace_schema": workspace_result,
         "operational_links_created": result.get("link_rows", 0),
