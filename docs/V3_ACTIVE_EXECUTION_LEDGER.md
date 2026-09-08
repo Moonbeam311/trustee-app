@@ -3613,3 +3613,28 @@ Required certification:
 Next authorized product action:
 
 `HOS-OPS-EXECUTION-REPAIR-1-IMP-1`
+
+## HOS-OPS-EXECUTION-REPAIR-1 Closeout Certification - 2026-09-08
+
+Phase: `HOS-OPS-EXECUTION-REPAIR-1-CLOSEOUT-CERTIFICATION`
+
+Status: **PASS - HOS-OPS-EXECUTION-REPAIR-1 COMPLETE / CERTIFIED / REMOTELY VERIFIED**
+
+- Product commit `a3fd22aaa44d972a96603608736477aeca5c20fb` is remotely anchored.
+- Canonical additive startup migration now provisions the modern `execution_tasks` schema on fresh databases.
+- Newly created tables preserve historical `id INTEGER PRIMARY KEY AUTOINCREMENT` compatibility.
+- Existing tables and rows remain preserved; no destructive recreation, row rewrite, delete, or scope backfill occurred.
+- Fresh isolated startup created the required modern Execution schema with zero task rows.
+- Focused and broader regression certification passed: 45 tests.
+- Fresh isolated authenticated Admin request to `/execution` returned HTTP 200.
+- The original `sqlite3.OperationalError: no such table: execution_tasks` blocker is closed.
+- No Execution task rows were seeded.
+- No `app.py`, HOS-DEMO seed, authentication, permission, security, export, or Institutional Execution architecture mutation occurred.
+- Governed live databases remained byte-identical.
+- The older Documents preview runtime on port 58820 was not restarted or reseeded; its disposable artifacts remain preserved.
+- `implementation_state=CERTIFIED_COMPLETE`.
+- `product_mutation_authority=DENIED_AFTER_CERTIFICATION`.
+- `migration_authority=DENIED_AFTER_CERTIFICATION`.
+- `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
+- `preview_resume_authority=READ_ONLY_ONLY`.
+- `next_authorized_action=HOS-OPS-PREVIEW-1B-RESUME-1`.
