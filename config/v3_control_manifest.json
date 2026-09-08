@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-OPS-EXECUTION-REPAIR-1-CLOSEOUT-CERTIFICATION",
+  "active_phase": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-REG-1",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -91,14 +91,14 @@
     "HOS-OPS-WLH-REPAIR-1": "02973f313a05bd72d857cd683c4a2c1e2f4c3ca6"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "5217b6a5ad8b21fab9b4fc1b3d9c29f7ec23c4a852972653c7dfd2f62b3ffc9a",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "b524a69ac2eafb10854cca6804dd3b39cf81d748f68db7c15592a21befb0f787",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
+  "next_authorized_action": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-IMP-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -587,5 +587,41 @@
     "migration_authority": "DENIED_AFTER_CERTIFICATION",
     "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT",
     "preview_resume_authority": "READ_ONLY_ONLY"
+  },
+  "hos_ops_visualization_row_access_repair_1_registration": {
+    "phase": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1",
+    "registration_phase": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-REG-1",
+    "registration_base_head": "daa28759ea9fa94dfe00159f21c7bae272a99422",
+    "architecture": "FUNCTION_LOCAL_VISUALIZATION_PROVIDER_ROW_NORMALIZATION",
+    "architecture_state": "LOCKED",
+    "implementation_state": "AUTHORIZED_NOT_STARTED",
+    "authorized_next_action": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-IMP-1",
+    "observed_route": "/visualization/trust-map",
+    "secondary_route_same_helper": "/visualization/analytics",
+    "observed_exception": "AttributeError: sqlite3.Row object has no attribute get",
+    "defect_class": "APPLICATION_ROW_ACCESS_COMPATIBILITY",
+    "repair_boundary": "GET_TRUST_RELATIONSHIP_SUMMARY_FUNCTION_ONLY",
+    "provider_contract_mutation": "PROHIBITED",
+    "database_db_mutation": "PROHIBITED",
+    "schema_migration_mutation": "PROHIBITED",
+    "route_template_mutation": "PROHIBITED",
+    "hos_demo_seed_mutation": "PROHIBITED",
+    "auth_permission_security_mutation": "PROHIBITED",
+    "live_database_mutation": "PROHIBITED",
+    "summary_semantics_change": "PROHIBITED",
+    "authorized_product_paths": [
+      "app.py"
+    ],
+    "authorized_test_paths": [
+      "tests/test_hos_ops_visualization_row_access_repair_1.py"
+    ],
+    "required_certification": [
+      "sqlite3.Row providers normalize locally",
+      "dict providers remain compatible",
+      "summary semantics remain unchanged",
+      "authenticated /visualization/trust-map returns HTTP 200",
+      "authenticated /visualization/analytics returns HTTP 200",
+      "governed live databases remain byte-identical"
+    ]
   }
 }

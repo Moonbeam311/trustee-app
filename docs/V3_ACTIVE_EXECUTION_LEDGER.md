@@ -3638,3 +3638,23 @@ Status: **PASS - HOS-OPS-EXECUTION-REPAIR-1 COMPLETE / CERTIFIED / REMOTELY VERI
 - `control_mutation_authority=DENIED_AFTER_THIS_CLOSEOUT`.
 - `preview_resume_authority=READ_ONLY_ONLY`.
 - `next_authorized_action=HOS-OPS-PREVIEW-1B-RESUME-1`.
+
+## HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1 Registration - 2026-09-08
+
+Phase: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-REG-1`
+
+Status: **REGISTERED / ARCHITECTURE LOCKED / IMPLEMENTATION AUTHORIZED NOT STARTED**
+
+Observed blocker: authenticated `/visualization/trust-map` returns HTTP 500.
+Observed exception: `AttributeError: sqlite3.Row object has no attribute get`.
+Secondary affected route: `/visualization/analytics`, which calls the same summary helper.
+Defect class: `APPLICATION_ROW_ACCESS_COMPATIBILITY`.
+Locked architecture: `FUNCTION_LOCAL_VISUALIZATION_PROVIDER_ROW_NORMALIZATION`.
+Repair boundary: `get_trust_relationship_summary()` only.
+Canonical provider contracts remain unchanged.
+`database/db.py`, schemas, migrations, routes, templates, HOS-DEMO seed, auth, permissions, and security are outside repair authority.
+Authorized product path: `app.py`.
+Authorized test path: `tests/test_hos_ops_visualization_row_access_repair_1.py`.
+Summary semantics and firm scoping must remain unchanged.
+Governed live databases must remain byte-identical.
+Next authorized action: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-IMP-1`.
