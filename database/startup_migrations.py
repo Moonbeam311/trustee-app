@@ -31,6 +31,10 @@ from database.migrations_workspace_schema import (
     apply_workspace_schema,
     WorkspaceSchemaMigrationError,
 )
+from database.migrations_execution_task_schema import (
+    apply_execution_task_schema,
+    ExecutionTaskSchemaMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -130,6 +134,20 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        execution_task_result = apply_execution_task_schema(db_path)
+    except ExecutionTaskSchemaMigrationError as exc:
+        execution_task_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "table_created": False,
+            "columns_added": [],
+            "legacy_rows_preserved": 0,
+            "legacy_rows_updated": 0,
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -138,6 +156,7 @@ def run_additive_startup_migrations(
         "document_base_schema": document_base_result,
         "generated_document_attribution": document_attribution_result,
         "workspace_schema": workspace_result,
+        "execution_task_schema": execution_task_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
@@ -145,4 +164,5 @@ def run_additive_startup_migrations(
         "authority_records_created": 0,
         "generated_document_attribution_records_created": 0,
         "workspace_records_created": 0,
+        "execution_task_records_created": 0,
     }
