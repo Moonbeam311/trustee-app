@@ -3658,3 +3658,44 @@ Authorized test path: `tests/test_hos_ops_visualization_row_access_repair_1.py`.
 Summary semantics and firm scoping must remain unchanged.
 Governed live databases must remain byte-identical.
 Next authorized action: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-IMP-1`.
+
+## HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-REC-14E — Runtime Database Incident Resolution Registration
+
+- Date: 2026-09-09.
+- Incident class: `RUNTIME_LIVE_DATABASE_BYTE_MUTATION`.
+- Scope: Visualization repair certification only.
+- Pre-incident root `trustee_app.db` SHA256: `25fe115ce04349966bddc6de3f54533e3f19c4df4df92d46da17734f2c7759a5`.
+- Incident root `trustee_app.db` SHA256: `76ebb4095fe45bb19bb2c32cee415f856345df486c38a50ee8644c8b732342de`.
+- Tracked governed `data/trustee_app.db` SHA256 remains `3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c`.
+- Causal mechanism: pytest collection/import could bind `database.db` to the default root DB before isolated test setup; importing `app` then executes startup initialization and additive schema writes.
+- Exact pre-incident root bytes were not recovered from accessible searched sources.
+- Recovery limitation: administrator-only VSS / Windows Backup sources were not inspected because elevation was not completed.
+- No restoration claim is made.
+- No equivalence claim is made between the incident root image and the lost pre-incident image.
+- The root database is not reclassified by this incident resolution.
+- Historical ledger statements remain historical records and are not rewritten.
+- During Visualization certification, root `trustee_app.db` must remain byte-identical at the incident hash and `data/trustee_app.db` must remain byte-identical at the governed-source hash.
+- Any pytest/application-import certification run must establish a disposable process-level `DB_PATH` before pytest collection or application import.
+- Binding either repository database during certification is prohibited.
+- Database architecture/disposition remains a separate future governance question.
+- Next authorized action: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-ISOLATED-CERT-1`.
+
+## HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-CLOSE-1A — Certification Complete / Product Commit Pending
+
+- Date: 2026-09-10.
+- Repair architecture: `FUNCTION_LOCAL_VISUALIZATION_PROVIDER_ROW_NORMALIZATION`.
+- Product implementation remains limited to `app.py` and `tests/test_hos_ops_visualization_row_access_repair_1.py`.
+- Focused isolated regression certification: `PASS` — 2 tests passed.
+- Authenticated `/visualization/trust-map`: HTTP `200`.
+- Authenticated `/visualization/analytics`: HTTP `200`.
+- Human browser certification: `PASS`.
+- Post-browser runtime error audit: `PASS`.
+- Original `sqlite3.Row` HTTP-500 defect: `CLOSED_AT_CERTIFICATION_GATE`.
+- Root runtime `trustee_app.db` remains byte-identical at incident-evidence SHA256 `76ebb4095fe45bb19bb2c32cee415f856345df486c38a50ee8644c8b732342de`.
+- Tracked governed `data/trustee_app.db` remains byte-identical at SHA256 `3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c`.
+- No restoration claim is made for the lost pre-incident runtime image.
+- No equivalence claim is made between the incident runtime image and the lost pre-incident image.
+- Runtime database incident state: `CONTAINED_CERTIFICATION_COMPLETE_NO_RESTORATION`.
+- Product commit has not yet occurred.
+- Unrelated preserved dirty work remains excluded from the Visualization product boundary.
+- Next authorized action: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-PRODUCT-COMMIT-1`.
