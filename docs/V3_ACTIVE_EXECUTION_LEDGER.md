@@ -3699,3 +3699,22 @@ Next authorized action: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-IMP-1`.
 - Product commit has not yet occurred.
 - Unrelated preserved dirty work remains excluded from the Visualization product boundary.
 - Next authorized action: `HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-PRODUCT-COMMIT-1`.
+## HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-CLOSEOUT-CERTIFICATION — Final Certified Closeout / Preview Resume
+
+- Date: 2026-09-10.
+- Certified product commit: `1ccc91dc10804e8d815ed4484209c5b617ce5156`.
+- Product commit parent / prior control anchor: `8cc7c2800aa8a10bf3d9e5bed0e2352998e18539`.
+- Product commit boundary: `app.py` and `tests/test_hos_ops_visualization_row_access_repair_1.py` only.
+- Remote product verification: `PASS`.
+- Visualization automated, authenticated HTTP, human-browser, and post-browser certification remain `PASS` as recorded at CLOSE-1A.
+- Original `sqlite3.Row` HTTP-500 defect: `CLOSED_CERTIFIED`.
+- Implementation state: `CERTIFIED_COMPLETE`.
+- Root runtime `trustee_app.db` remains incident-evidence SHA256 `76ebb4095fe45bb19bb2c32cee415f856345df486c38a50ee8644c8b732342de`.
+- Tracked governed `data/trustee_app.db` remains SHA256 `3fcbbe1092072c47fe7e43fb1ab075f6ff626079511c948a1275936776b71d3c`.
+- Runtime database incident remains `CONTAINED_CERTIFICATION_COMPLETE_NO_RESTORATION`.
+- No restoration or equivalence claim is made for the lost pre-incident runtime image.
+- Product mutation authority: `DENIED_AFTER_CERTIFICATION`.
+- Control mutation authority after this closeout: `DENIED_AFTER_THIS_CLOSEOUT`.
+- Preview resume authority: `READ_ONLY_ONLY`.
+- Five unrelated preserved dirty paths remain outside this repair boundary.
+- Next authorized action: `HOS-OPS-PREVIEW-1B-RESUME-1`.

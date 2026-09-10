@@ -1,5 +1,5 @@
 {
-  "active_phase": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-CLOSE-1",
+  "active_phase": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-CLOSEOUT-CERTIFICATION",
   "allowed_dirty_paths": [
     "config/v3_control_manifest.json",
     "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
@@ -92,14 +92,14 @@
     "HOS-OPS-WLH-REPAIR-1": "02973f313a05bd72d857cd683c4a2c1e2f4c3ca6"
   },
   "control_files": {
-    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "b73a1b6f2a19725bffbbabe8b3ff03630979528b6fa33e1205b131442bae001c",
+    "docs/V3_ACTIVE_EXECUTION_LEDGER.md": "64ded612a2ddc7b0d14929c8786dacb07daa0ca8b9fc5882d15f95718097e63f",
     "docs/v3_control/v3_mod_wlh_p05_certification_closure_2026-08-28.md": "944af7ad800d25d88e7380aeeef20f13992cd9d5cf988e00dad6c3f3464a0d99",
     "scripts/v3_control_guard.py": "719d06948f836c3039ef8b3e7384047533dc20ebe5d0d83d9326e739d44c2a83"
   },
   "control_version": "V3-CTL-2",
   "guard_path": "scripts/v3_control_guard.py",
   "ledger_path": "docs/V3_ACTIVE_EXECUTION_LEDGER.md",
-  "next_authorized_action": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-PRODUCT-COMMIT-1",
+  "next_authorized_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
   "prohibited_actions": [
     "resume P03 feature implementation before guard PASS",
     "reconstruct certified P01",
@@ -595,8 +595,8 @@
     "registration_base_head": "daa28759ea9fa94dfe00159f21c7bae272a99422",
     "architecture": "FUNCTION_LOCAL_VISUALIZATION_PROVIDER_ROW_NORMALIZATION",
     "architecture_state": "LOCKED",
-    "implementation_state": "CERTIFIED_UNCOMMITTED_INCIDENT_CONTAINED",
-    "authorized_next_action": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-PRODUCT-COMMIT-1",
+    "implementation_state": "CERTIFIED_COMPLETE",
+    "authorized_next_action": "HOS-OPS-PREVIEW-1B-RESUME-1",
     "observed_route": "/visualization/trust-map",
     "secondary_route_same_helper": "/visualization/analytics",
     "observed_exception": "AttributeError: sqlite3.Row object has no attribute get",
@@ -634,7 +634,13 @@
     "post_browser_runtime_error_audit": "PASS",
     "repository_database_preservation": "PASS",
     "worktree_preservation": "PASS",
-    "product_commit": "PENDING"
+    "product_commit": "1ccc91dc10804e8d815ed4484209c5b617ce5156",
+    "certified_product_commit": "1ccc91dc10804e8d815ed4484209c5b617ce5156",
+    "remote_verification": "PASS",
+    "original_http_500_blocker": "CLOSED_CERTIFIED",
+    "product_mutation_authority": "DENIED_AFTER_CERTIFICATION",
+    "control_mutation_authority": "DENIED_AFTER_THIS_CLOSEOUT",
+    "preview_resume_authority": "READ_ONLY_ONLY"
   },
   "hos_ops_visualization_row_access_repair_1_runtime_database_incident_resolution": {
     "incident_class": "RUNTIME_LIVE_DATABASE_BYTE_MUTATION",
@@ -649,6 +655,6 @@
     "equivalence_claim": "PROHIBITED",
     "historical_ledger_rewrite": "PROHIBITED",
     "future_test_policy": "PROCESS_LEVEL_DISPOSABLE_DB_PATH_REQUIRED_BEFORE_PYTEST_COLLECTION",
-    "authorized_next_action": "HOS-OPS-VISUALIZATION-ROW-ACCESS-REPAIR-1-PRODUCT-COMMIT-1"
+    "authorized_next_action": "HOS-OPS-PREVIEW-1B-RESUME-1"
   }
 }
