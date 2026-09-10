@@ -595,7 +595,17 @@ def init_db():
         review_date TEXT,
         expiration_date TEXT,
         responsible_party TEXT,
-        custodian TEXT
+        custodian TEXT,
+        continuity_classification TEXT,
+        custody_classification TEXT,
+        continuity_priority INTEGER DEFAULT 0,
+        heritage_significance TEXT,
+        preservation_requirements TEXT,
+        restricted_access_level TEXT,
+        lineage_association TEXT,
+        memorial_status INTEGER DEFAULT 0,
+        sacred_status INTEGER DEFAULT 0,
+        continuity_notes TEXT
     )
     """)
 
@@ -676,6 +686,16 @@ def init_db():
         ("expiration_date", "TEXT"),
         ("responsible_party", "TEXT"),
         ("custodian", "TEXT"),
+        ("continuity_classification", "TEXT"),
+        ("custody_classification", "TEXT"),
+        ("continuity_priority", "INTEGER DEFAULT 0"),
+        ("heritage_significance", "TEXT"),
+        ("preservation_requirements", "TEXT"),
+        ("restricted_access_level", "TEXT"),
+        ("lineage_association", "TEXT"),
+        ("memorial_status", "INTEGER DEFAULT 0"),
+        ("sacred_status", "INTEGER DEFAULT 0"),
+        ("continuity_notes", "TEXT"),
     ]:
         if col[0] not in prop_cols:
             cur.execute(f"ALTER TABLE properties ADD COLUMN {col[0]} {col[1]}")
