@@ -10396,7 +10396,8 @@ def get_trust_relationship_summary():
     except Exception:
         trusts = []
 
-    for trust in trusts:
+    for trust_record in trusts:
+        trust = dict(trust_record)
         trust_id = trust.get("trust_id")
         row = {
             "trust_id": trust_id,
@@ -10409,27 +10410,32 @@ def get_trust_relationship_summary():
         }
 
         try:
-            row["fiduciaries"] = len([f for f in get_all_fiduciaries() if f.get("trust_id") == trust_id])
+            fiduciaries = [dict(item) for item in get_all_fiduciaries()]
+            row["fiduciaries"] = len([f for f in fiduciaries if f.get("trust_id") == trust_id])
         except Exception:
             pass
 
         try:
-            row["instruments"] = len([i for i in get_all_instruments() if i.get("trust_id") == trust_id])
+            instruments = [dict(item) for item in get_all_instruments()]
+            row["instruments"] = len([i for i in instruments if i.get("trust_id") == trust_id])
         except Exception:
             pass
 
         try:
-            row["documents"] = len([d for d in get_generated_documents() if d.get("trust_id") == trust_id])
+            documents = [dict(item) for item in get_generated_documents()]
+            row["documents"] = len([d for d in documents if d.get("trust_id") == trust_id])
         except Exception:
             pass
 
         try:
-            row["tasks"] = len([t for t in get_all_execution_tasks() if t.get("trust_id") == trust_id])
+            tasks = [dict(item) for item in get_all_execution_tasks()]
+            row["tasks"] = len([t for t in tasks if t.get("trust_id") == trust_id])
         except Exception:
             pass
 
         try:
-            row["workspace_links"] = len([w for w in get_all_workspaces() if (w.get("trust_type_focus") or "").lower() in (trust.get("trust_type") or "").lower()])
+            workspaces = [dict(item) for item in get_all_workspaces()]
+            row["workspace_links"] = len([w for w in workspaces if (w.get("trust_type_focus") or "").lower() in (trust.get("trust_type") or "").lower()])
         except Exception:
             pass
 
