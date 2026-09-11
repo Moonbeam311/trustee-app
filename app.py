@@ -16701,6 +16701,10 @@ def transfer_support_doc_edit(transfer_id, support_doc_id):
     if support_doc.transfer_id_fk != transfer.id:
         abort(404)
 
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
+        return redirect(url_for("transfer_detail", transfer_id=transfer.transfer_id))
+
     if request.method == "POST":
         if not validate_csrf_token():
             abort(400)
@@ -16725,6 +16729,10 @@ def transfer_external_tracking(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
+
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
+        return redirect(url_for("transfer_detail", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
         if not validate_csrf_token():
