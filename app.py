@@ -15617,6 +15617,34 @@ def trust_execution_dashboard(trust_id):
         .all()
     )
 
+    # Finding-24B: Training completion is a terminal instructional state,
+    # not an institutional finalization state.
+    institutional_transfers = [
+        t for t in transfers
+        if getattr(t, "mode", "") != "training"
+    ]
+
+    transfer_status_summary = {
+        "total": len(transfers),
+        "completed": sum(
+            1 for t in institutional_transfers
+            if getattr(t, "status", "") == "completed"
+        ),
+        "open": sum(
+            1 for t in transfers
+            if getattr(t, "status", "") not in {"completed", "training_complete"}
+        ),
+        "training": sum(
+            1 for t in transfers
+            if getattr(t, "mode", "") == "training"
+        ),
+        "training_complete": sum(
+            1 for t in transfers
+            if getattr(t, "status", "") == "training_complete"
+        ),
+        "institutional": len(institutional_transfers),
+    }
+
     transfer_proof_counts = {
         t.transfer_id: len(get_media_by_entity("transfer", t.transfer_id))
         for t in transfers
@@ -15641,7 +15669,7 @@ def trust_execution_dashboard(trust_id):
         "proof_attached": 0,
     }
 
-    for t in transfers:
+    for t in institutional_transfers:
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
         proof_count = transfer_proof_counts.get(t.transfer_id, 0)
         ledger_ok = ledger_count > 0
@@ -15664,7 +15692,7 @@ def trust_execution_dashboard(trust_id):
 
     # === INT-18G: execution chain health summary ===
     execution_chain_health = {
-        "total": len(transfers),
+        "total": len(institutional_transfers),
         "finalized": 0,
         "ledger_posted": 0,
         "minutes_verified": 0,
@@ -15719,7 +15747,7 @@ def trust_execution_dashboard(trust_id):
         print("⚠️ INT-18G minute health summary failed:", e)
         transfer_minute_counts = {}
 
-    for t in transfers:
+    for t in institutional_transfers:
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
         minute_count = transfer_minute_counts.get(t.transfer_id, 0)
 
@@ -15834,7 +15862,7 @@ def trust_execution_dashboard(trust_id):
         "correction_review_needed": 0,
     }
 
-    for t in transfers:
+    for t in institutional_transfers:
         ledger_count = transfer_ledger_counts.get(t.transfer_id, 0)
         minute_count = transfer_minute_counts.get(t.transfer_id, 0)
         handoff_count = transfer_archive_handoff_counts.get(t.transfer_id, 0)
@@ -15883,8 +15911,16 @@ def trust_execution_dashboard(trust_id):
             return True
         if active_transfer_filter == "completed":
             return t.status == "completed"
+        if active_transfer_filter == "training_complete":
+            return t.status == "training_complete"
         if active_transfer_filter == "open":
-            return t.status != "completed"
+            return t.status not in {"completed", "training_complete"}
+
+        # Institutional execution/hybrid/archive filters do not classify
+        # instructional Training packets.
+        if getattr(t, "mode", "") == "training":
+            return False
+
         if active_transfer_filter == "hybrid_complete":
             return ledger_ok and external_ok and proof_ok
         if active_transfer_filter == "hybrid_partial":
@@ -15949,6 +15985,7 @@ def trust_execution_dashboard(trust_id):
           transfer_proof_counts=transfer_proof_counts,
           transfer_ledger_counts=transfer_ledger_counts,
           transfer_completion_summary=transfer_completion_summary,
+          transfer_status_summary=transfer_status_summary,
           execution_chain_health=execution_chain_health,
           transfer_minute_counts=transfer_minute_counts,
           transfer_archive_handoff_counts=transfer_archive_handoff_counts,
