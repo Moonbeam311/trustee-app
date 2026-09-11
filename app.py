@@ -368,6 +368,8 @@ generate_transfer_id,
     get_or_create_transfer_record,
     populate_transfer_record_bundle,
     calculate_control_strength,
+    can_complete_training_transfer,
+    complete_training_transfer,
     can_finalize_transfer,
     finalize_transfer,
 )
@@ -16027,8 +16029,8 @@ def transfer_asset(transfer_id):
     if gate:
         return gate
 
-    if request.method == "POST" and transfer.status == "completed":
-        flash("Completed transfers are read-only.", "warning")
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
@@ -16081,8 +16083,8 @@ def transfer_classification(transfer_id):
     if gate:
         return gate
 
-    if request.method == "POST" and transfer.status == "completed":
-        flash("Completed transfers are read-only.", "warning")
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
@@ -16131,8 +16133,8 @@ def transfer_assignment(transfer_id):
     if gate:
         return gate
 
-    if request.method == "POST" and transfer.status == "completed":
-        flash("Completed transfers are read-only.", "warning")
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if not validate_capacity_for_step("assignment", transfer.current_capacity):
@@ -16195,8 +16197,8 @@ def transfer_trustee_acceptance(transfer_id):
     if gate:
         return gate
 
-    if request.method == "POST" and transfer.status == "completed":
-        flash("Completed transfers are read-only.", "warning")
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
@@ -16246,8 +16248,8 @@ def transfer_control_evidence(transfer_id):
     if gate:
         return gate
 
-    if request.method == "POST" and transfer.status == "completed":
-        flash("Completed transfers are read-only.", "warning")
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
@@ -16297,8 +16299,8 @@ def transfer_records(transfer_id):
     if gate:
         return gate
 
-    if request.method == "POST" and transfer.status == "completed":
-        flash("Completed transfers are read-only.", "warning")
+    if request.method == "POST" and transfer.status in {"completed", "training_complete"}:
+        flash("Completed transfer packets are read-only.", "warning")
         return redirect(url_for("transfer_review", transfer_id=transfer.transfer_id))
 
     if request.method == "POST":
@@ -16359,7 +16361,10 @@ def transfer_review(transfer_id):
     if gate:
         return gate
     record_bundle = transfer.record_bundle
-    allowed, missing = can_finalize_transfer(transfer)
+    if transfer.mode == "training":
+        allowed, missing = can_complete_training_transfer(transfer)
+    else:
+        allowed, missing = can_finalize_transfer(transfer)
 
     if request.method == "POST":
         if not validate_csrf_token():
@@ -16372,6 +16377,53 @@ def transfer_review(transfer_id):
                 can_finalize=allowed,
                 missing_items=missing,
                 control_strength=calculate_control_strength(transfer.control_change_status),
+            )
+
+        if transfer.status == "training_complete":
+            flash("Completed training packets are read-only.", "warning")
+            return redirect(
+                url_for("transfer_review", transfer_id=transfer.transfer_id)
+            )
+
+        if transfer.mode == "training":
+            if not allowed:
+                flash(
+                    "Training packet cannot be completed. Required instructional "
+                    "elements are missing.",
+                    "error",
+                )
+                if missing:
+                    for item in missing:
+                        flash(f"Missing: {item}", "warning")
+                return redirect(
+                    url_for("transfer_review", transfer_id=transfer.transfer_id)
+                )
+
+            success, missing = complete_training_transfer(
+                transfer=transfer,
+                performed_by=session.get("username") or "unknown",
+                capacity_used=transfer.current_capacity,
+                commit=False,
+            )
+
+            if success:
+                ext_db.session.commit()
+                flash(
+                    f"Training packet {transfer.transfer_id} completed. "
+                    "No institutional transfer finalization was asserted.",
+                    "success",
+                )
+                return redirect(
+                    url_for("transfer_review", transfer_id=transfer.transfer_id)
+                )
+
+            flash(
+                "Training packet is incomplete and cannot be completed. Missing: "
+                + ", ".join(missing),
+                "warning",
+            )
+            return redirect(
+                url_for("transfer_review", transfer_id=transfer.transfer_id)
             )
 
         # LEDGER-A: enforce value before finalize

@@ -37,6 +37,13 @@
   <div style="border:1px solid #bbf7d0; background:#f0fdf4; color:#166534; padding:12px; border-radius:8px; margin:14px 0;">
     <strong>Completed Packet:</strong> This transfer has been finalized and is now in read-only mode.
   </div>
+{% elif transfer.status == "training_complete" %}
+  <div style="border:1px solid #bfdbfe; background:#eff6ff; color:#1e40af; padding:12px; border-radius:8px; margin:14px 0;">
+    <strong>Training Packet Complete:</strong>
+    This instructional workflow is complete and read-only.
+    No institutional transfer finalization, external verification, ledger posting,
+    or real-world execution is asserted.
+  </div>
 {% endif %}
 
 <h3>Summary</h3>
@@ -57,17 +64,40 @@
   <h3>Missing Items</h3>
   <ul>
     {% for item in missing_items %}
-      <li>{{ item }}</li>
+      {% if item == "external_verification_or_proof" and transfer.mode != "training" %}
+        <li>
+          External verification or linked proof is required before institutional finalization.
+          <a href="{{ url_for('transfer_external_tracking', transfer_id=transfer.transfer_id) }}">Update External Tracking</a>
+          |
+          <a href="{{ url_for('media_upload') }}?trust_id={{ transfer.trust_id }}&entity_type=transfer&entity_id={{ transfer.transfer_id }}&category=external_transfer_proof&description=External proof for {{ transfer.transfer_id }}">Attach External Proof</a>
+          |
+          <a href="{{ url_for('evidence_by_entity', entity_type='transfer', entity_id=transfer.transfer_id) }}">View Linked Proof</a>
+        </li>
+      {% else %}
+        <li>{{ item }}</li>
+      {% endif %}
     {% endfor %}
   </ul>
 {% endif %}
 
 <form method="post">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-  {% if can_finalize %}
+
+  {% if transfer.status == "training_complete" %}
+    <button type="submit" disabled>Training Packet Complete</button>
+
+  {% elif transfer.mode == "training" %}
+    {% if can_finalize %}
+      <button type="submit">Complete Training Packet</button>
+    {% else %}
+      <button type="submit" disabled>Cannot Complete Training Yet</button>
+    {% endif %}
+
+  {% elif can_finalize %}
     <button type="submit">{% include '_transfer_execution_gate.html' %}
 
 Finalize Transfer</button>
+
   {% else %}
     <button type="submit" disabled>Cannot Finalize Yet</button>
   {% endif %}

@@ -188,7 +188,8 @@ def populate_transfer_record_bundle(
     return record
 
 
-def can_finalize_transfer(transfer: Transfer) -> tuple[bool, list[str]]:
+def _packet_missing_requirements(transfer: Transfer) -> list[str]:
+    """Return missing internal packet requirements shared by both modes."""
     missing: list[str] = []
 
     if not transfer.asset_name:
@@ -204,9 +205,65 @@ def can_finalize_transfer(transfer: Transfer) -> tuple[bool, list[str]]:
     if not transfer.records_complete:
         missing.append("records")
 
+    return missing
+
+
+def can_complete_training_transfer(
+    transfer: Transfer,
+) -> tuple[bool, list[str]]:
+    """Validate instructional completion without asserting real execution."""
+    missing = _packet_missing_requirements(transfer)
+
+    if getattr(transfer, "mode", None) != "training":
+        missing.append("training_mode_required")
+
+    return (len(missing) == 0, missing)
+
+
+def complete_training_transfer(
+    transfer: Transfer,
+    performed_by: str | None = None,
+    capacity_used: str | None = None,
+    commit: bool = False,
+) -> tuple[bool, list[str]]:
+    """Close a training packet without institutional finalization effects."""
+    allowed, missing = can_complete_training_transfer(transfer)
+    if not allowed:
+        return False, missing
+
+    transfer.status = "training_complete"
+
+    add_transfer_action(
+        transfer=transfer,
+        action_type="training_completed",
+        performed_by=performed_by,
+        capacity_used=capacity_used,
+        notes=(
+            "Training packet completed. Instructional workflow only; "
+            "no institutional transfer finalization asserted."
+        ),
+        commit=False,
+    )
+
+    if commit:
+        db.session.commit()
+
+    return True, []
+
+
+def can_finalize_transfer(transfer: Transfer) -> tuple[bool, list[str]]:
+    missing = _packet_missing_requirements(transfer)
+
+    # Training is an instructional workflow and must never cross the
+    # institutional finalization boundary.
+    if getattr(transfer, "mode", None) == "training":
+        missing.append("training_context_requires_training_completion")
+        return False, missing
+
     # === II-A SOFT HYBRID ENFORCEMENT ===
-    # Require at least one external execution proof before finalization.
-    # Full ledger enforcement comes after ledger timing is redesigned.
+    # Require at least one external execution proof before institutional
+    # finalization. Full ledger enforcement comes after ledger timing is
+    # redesigned.
     proof_count = 0
     try:
         proof_count = len(get_media_by_entity("transfer", transfer.transfer_id))
