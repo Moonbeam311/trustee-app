@@ -49,9 +49,9 @@
 </ul>
 
 <h3>Generated Records</h3>
-<pre>{{ transfer.schedule_a_text or '' }}</pre>
-<pre>{{ transfer.transfer_log_text or '' }}</pre>
-<pre>{{ transfer.minutes_text or '' }}</pre>
+<pre>{{ record_bundle.schedule_a_text if record_bundle else '' }}</pre>
+<pre>{{ record_bundle.transfer_log_text if record_bundle else '' }}</pre>
+<pre>{{ record_bundle.minutes_text if record_bundle else '' }}</pre>
 
 {% if missing_items %}
   <h3>Missing Items</h3>
