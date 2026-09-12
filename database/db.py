@@ -2794,9 +2794,17 @@ def ensure_fiduciary_tables():
         appointment_date TEXT,
         effective_date TEXT,
         status TEXT,
-        notes TEXT
+        notes TEXT,
+        firm_id TEXT
     )
     """)
+
+    existing_cols = [
+        row["name"]
+        for row in cur.execute("PRAGMA table_info(fiduciaries)").fetchall()
+    ]
+    if "firm_id" not in existing_cols:
+        cur.execute("ALTER TABLE fiduciaries ADD COLUMN firm_id TEXT")
 
     conn.commit()
     conn.close()
