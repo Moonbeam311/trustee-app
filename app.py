@@ -16867,6 +16867,16 @@ def transfer_archive_handoff_correction(transfer_id, handoff_id):
     if gate:
         return gate
 
+    if transfer.mode == "training":
+        flash(
+            "Training transfers do not enter institutional archive handoff "
+            "or certified archive export workflows.",
+            "warning",
+        )
+        return redirect(
+            url_for("transfer_detail", transfer_id=transfer.transfer_id)
+        )
+
     import uuid
     import sqlite3
     from database.db import (
@@ -17035,6 +17045,16 @@ def transfer_archive_handoff_export_package(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
+
+    if transfer.mode == "training":
+        flash(
+            "Training transfers do not enter institutional archive handoff "
+            "or certified archive export workflows.",
+            "warning",
+        )
+        return redirect(
+            url_for("transfer_detail", transfer_id=transfer.transfer_id)
+        )
 
     import csv
     import hashlib
@@ -17389,6 +17409,16 @@ def transfer_archive_handoff_audit_export_pdf(transfer_id):
     if gate:
         return gate
 
+    if transfer.mode == "training":
+        flash(
+            "Training transfers do not enter institutional archive handoff "
+            "or certified archive export workflows.",
+            "warning",
+        )
+        return redirect(
+            url_for("transfer_detail", transfer_id=transfer.transfer_id)
+        )
+
     import hashlib
     import sqlite3
     from datetime import datetime
@@ -17570,6 +17600,16 @@ def transfer_archive_handoff_audit_export_txt(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
+
+    if transfer.mode == "training":
+        flash(
+            "Training transfers do not enter institutional archive handoff "
+            "or certified archive export workflows.",
+            "warning",
+        )
+        return redirect(
+            url_for("transfer_detail", transfer_id=transfer.transfer_id)
+        )
 
     import sqlite3
     from datetime import datetime
@@ -17857,6 +17897,16 @@ def transfer_archive_handoff(transfer_id):
     transfer, gate = get_transfer_for_active_firm_or_404(transfer_id)
     if gate:
         return gate
+
+    if transfer.mode == "training":
+        flash(
+            "Training transfers do not enter institutional archive handoff "
+            "or certified archive export workflows.",
+            "warning",
+        )
+        return redirect(
+            url_for("transfer_detail", transfer_id=transfer.transfer_id)
+        )
 
     import uuid
     import sqlite3
