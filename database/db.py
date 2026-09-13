@@ -577,6 +577,22 @@ def init_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS tutorial_videos (
+        video_id TEXT PRIMARY KEY,
+        title TEXT,
+        category TEXT,
+        trust_type TEXT,
+        description TEXT,
+        file_path TEXT,
+        thumbnail_path TEXT,
+        transcript_notes TEXT,
+        visibility TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     trust_cols = [row["name"] for row in cur.execute("PRAGMA table_info(trusts)").fetchall()]
     for col in [
         ("grantor_name", "TEXT"),
