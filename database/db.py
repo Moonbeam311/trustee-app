@@ -559,6 +559,24 @@ def init_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS learning_articles (
+        article_id TEXT PRIMARY KEY,
+        title TEXT,
+        category TEXT,
+        subcategory TEXT,
+        trust_type TEXT,
+        summary TEXT,
+        body TEXT,
+        difficulty_level TEXT,
+        related_forms TEXT,
+        related_reports TEXT,
+        status TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
     trust_cols = [row["name"] for row in cur.execute("PRAGMA table_info(trusts)").fetchall()]
     for col in [
         ("grantor_name", "TEXT"),
