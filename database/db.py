@@ -594,6 +594,83 @@ def init_db():
     """)
 
     cur.execute("""
+    CREATE TABLE IF NOT EXISTS decision_rules (
+        rule_id TEXT PRIMARY KEY,
+        goal TEXT,
+        asset_type TEXT,
+        control_level TEXT,
+        suggested_trust_type TEXT,
+        suggested_forms TEXT,
+        considerations TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cur.executemany("""
+    INSERT OR IGNORE INTO decision_rules (
+        rule_id,
+        goal,
+        asset_type,
+        control_level,
+        suggested_trust_type,
+        suggested_forms,
+        considerations,
+        created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, [
+        (
+            "RULE-001",
+            "estate_planning",
+            "general_assets",
+            "high_control",
+            "revocable",
+            "Form 1040;Form 1041",
+            "Revocable structures are often explored where flexibility and ongoing control are priorities.",
+            "2026-04-12 22:47:02",
+        ),
+        (
+            "RULE-002",
+            "asset_protection",
+            "real_estate",
+            "reduced_personal_control",
+            "irrevocable",
+            "Form 1041;Form 56",
+            "Irrevocable structures are often explored where stronger separation and reduced unilateral control are part of the objective.",
+            "2026-04-12 22:47:02",
+        ),
+        (
+            "RULE-003",
+            "real_property_holding",
+            "real_estate",
+            "management_focus",
+            "land",
+            "Form 1041",
+            "Land trust discussions often arise where title holding and real property management structure are central.",
+            "2026-04-12 22:47:02",
+        ),
+        (
+            "RULE-004",
+            "insurance_planning",
+            "insurance_policy",
+            "reduced_personal_control",
+            "insurance",
+            "Form 1041",
+            "Insurance trust structures are often discussed where policy ownership and insurance-related planning objectives are involved.",
+            "2026-04-12 22:47:02",
+        ),
+        (
+            "RULE-005",
+            "tax_planning",
+            "mixed_assets",
+            "structured_control",
+            "complex",
+            "Form 1041;Form 1041-X;Form 8841",
+            "Complex trust discussions often require careful review of distributions, retained activity, and reporting implications.",
+            "2026-04-12 22:47:02",
+        ),
+    ])
+
+    cur.execute("""
     CREATE TABLE IF NOT EXISTS discussion_threads (
         thread_id TEXT PRIMARY KEY,
         workspace_id TEXT,
