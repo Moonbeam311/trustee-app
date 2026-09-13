@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Generate Document</title>
   <style>
@@ -12,6 +13,9 @@
   </style>
 </head>
 <body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
   <p><a href="/documents">Back to Document Generator</a></p>
   <h1>Generate Document</h1>
 
@@ -110,6 +114,7 @@
 
     <p><button type="submit">Generate Draft</button></p>
   </form>
+  </div>
 {% include "_institutional_property_notice.html" %}
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>{{ document['title'] }}</title>
   <style>
@@ -10,6 +11,9 @@
   </style>
 </head>
 <body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
   <p><a href="/documents">Back to Document Generator</a></p>
   <h1>{{ document['title'] }}</h1>
 
@@ -57,6 +61,7 @@
   <div class="box">
     <h2>Generated Content</h2>
     <pre>{{ document['content'] }}</pre>
+  </div>
   </div>
 {% include "_institutional_property_notice.html" %}
 </body>
