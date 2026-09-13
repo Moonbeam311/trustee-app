@@ -34,7 +34,9 @@
 <body>
   {% include "_hindsfoot_utility_nav.html" %}
     <div class="container">
+        {% block primary_navigation %}
         {% include "_nav.html" %}
+        {% endblock %}
         {% block content %}{% endblock %}
     </div>
 {% include "_institutional_property_notice.html" %}
