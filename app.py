@@ -10801,8 +10801,8 @@ def create_discussion_thread(payload):
     conn.execute("""
         INSERT INTO discussion_threads (
             thread_id, workspace_id, title, category, related_trust_type,
-            related_form, created_by, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            related_form, created_by, status, owner_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
         payload.get("thread_id"),
         payload.get("workspace_id"),
@@ -10812,6 +10812,7 @@ def create_discussion_thread(payload):
         payload.get("related_form"),
         payload.get("created_by"),
         payload.get("status"),
+        payload.get("owner_id"),
     ))
     conn.commit()
     conn.close()
@@ -10830,14 +10831,15 @@ def create_discussion_message(payload):
     conn = _learning_conn()
     conn.execute("""
         INSERT INTO discussion_messages (
-            message_id, thread_id, parent_message_id, author, body
-        ) VALUES (?, ?, ?, ?, ?)
+            message_id, thread_id, parent_message_id, author, body, owner_id
+        ) VALUES (?, ?, ?, ?, ?, ?)
     """, (
         payload.get("message_id"),
         payload.get("thread_id"),
         payload.get("parent_message_id"),
         payload.get("author"),
         payload.get("body"),
+        payload.get("owner_id"),
     ))
     conn.commit()
     conn.close()
@@ -14040,13 +14042,21 @@ def discussion_reply(thread_id):
                 error_message="Invalid or missing CSRF token."
             )
 
-        message_id = get_next_discussion_message_id()
+        message_id = (request.form.get("message_id") or "").strip()
+        body = (request.form.get("body") or "").strip()
+        if not message_id or not body:
+            return render_template(
+                "discussion_reply_form.html",
+                thread=thread,
+                error_message="Message ID and body are required."
+            )
+
         payload = {
             "message_id": message_id,
             "thread_id": thread_id,
-            "parent_message_id": request.form.get("parent_message_id"),
+            "parent_message_id": request.form.get("parent_message_id") or "",
             "author": session.get("username") or "unknown",
-            "body": request.form.get("body"),
+            "body": body,
             "owner_id": get_current_owner(),
         }
         create_discussion_message(payload)

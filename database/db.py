@@ -593,6 +593,35 @@ def init_db():
     )
     """)
 
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS discussion_threads (
+        thread_id TEXT PRIMARY KEY,
+        workspace_id TEXT,
+        title TEXT,
+        category TEXT,
+        related_trust_type TEXT,
+        related_form TEXT,
+        created_by TEXT,
+        status TEXT,
+        owner_id TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS discussion_messages (
+        message_id TEXT PRIMARY KEY,
+        thread_id TEXT,
+        parent_message_id TEXT,
+        author TEXT,
+        body TEXT,
+        owner_id TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+
     trust_cols = [row["name"] for row in cur.execute("PRAGMA table_info(trusts)").fetchall()]
     for col in [
         ("grantor_name", "TEXT"),
