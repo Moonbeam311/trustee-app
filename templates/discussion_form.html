@@ -1,10 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Discussion Form</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 900px; }
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
     label { display: block; font-weight: bold; margin-top: 12px; margin-bottom: 6px; }
     input, textarea, select { width: 100%; padding: 10px; box-sizing: border-box; }
     textarea { min-height: 100px; }
@@ -12,6 +13,9 @@
   </style>
 </head>
 <body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
   <p><a href="/discussions">Back to Discussions</a></p>
   <h1>New Discussion Thread</h1>
 
@@ -63,6 +67,7 @@
 
     <p><button type="submit">Save Thread</button></p>
   </form>
+</div>
 {% include "_institutional_property_notice.html" %}
 </body>
 </html>

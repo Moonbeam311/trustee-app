@@ -1,16 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>{{ thread['title'] }}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; max-width: 960px; }
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
     .box { border: 1px solid #d1d5db; border-radius: 10px; padding: 16px; background: #f9fafb; margin-bottom: 16px; }
     .message { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; background: white; margin-bottom: 10px; }
     .meta { color: #6b7280; font-size: 13px; }
   </style>
 </head>
 <body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
   <p><a href="/discussions">Back to Discussions</a></p>
   <h1>{{ thread['title'] }}</h1>
 
@@ -37,6 +41,7 @@
       <p>No messages yet.</p>
     {% endfor %}
   </div>
+</div>
 {% include "_institutional_property_notice.html" %}
 </body>
 </html>

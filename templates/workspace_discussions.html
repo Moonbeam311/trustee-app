@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+  {% include "_platform_shell.html" %}
   <meta charset="utf-8">
   <title>Workspace Discussions</title>
   <style>
@@ -9,6 +10,9 @@
   </style>
 </head>
 <body>
+  {% include "_hindsfoot_utility_nav.html" %}
+  <div class="page-shell">
+  {% include "_platform_nav.html" %}
   <p><a href="/workspaces/{{ workspace['workspace_id'] }}">Back to Workspace</a></p>
   <h1>Workspace Discussions: {{ workspace['title'] }}</h1>
   <p><a href="/workspaces/{{ workspace['workspace_id'] }}/discussions/new">New Workspace Thread</a></p>
@@ -22,6 +26,7 @@
   {% else %}
     <p>No discussions yet for this workspace.</p>
   {% endfor %}
+</div>
 {% include "_institutional_property_notice.html" %}
 </body>
 </html>
