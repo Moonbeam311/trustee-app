@@ -20,12 +20,19 @@ This service does not:
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from pathlib import Path
 from typing import Any
 
 
 class GenealogyRelationshipReviewServiceError(RuntimeError):
     pass
+
+
+def generate_genealogy_relationship_review_id() -> str:
+    """Return one system-issued canonical genealogy review ID."""
+
+    return "GRR-" + uuid.uuid4().hex[:20].upper()
 
 
 HUMAN_DECISION_ORIGINS = (
