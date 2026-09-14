@@ -110,3 +110,23 @@ def test_evidence_integration_does_not_create_second_store():
 
     for token in prohibited:
         assert token not in source
+
+
+def test_genealogy_evidence_launcher_imports_firm_scope_locally():
+    source = _function_source(
+        "genealogy_relationship_evidence_new"
+    )
+
+    assert (
+        "from database.db import "
+        "DB_PATH, get_current_firm_id"
+    ) in source
+
+
+def test_media_upload_imports_firm_scope_locally():
+    source = _function_source("media_upload")
+
+    assert (
+        "from database.db import "
+        "DB_PATH, get_current_firm_id"
+    ) in source

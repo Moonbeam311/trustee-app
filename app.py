@@ -10259,6 +10259,7 @@ def genealogy_person_new():
 def genealogy_relationship_evidence_new(assertion_id):
     """Launch existing Media Evidence for one scoped assertion."""
 
+    from database.db import DB_PATH, get_current_firm_id
     from services.services_genealogy_relationship_evidence import (
         GenealogyRelationshipEvidenceServiceError,
         build_genealogy_relationship_media_link,
@@ -11743,6 +11744,7 @@ def media_dashboard():
 
 @app.route("/media/upload", methods=["GET", "POST"])
 def media_upload():
+    from database.db import DB_PATH, get_current_firm_id
     from services.services_genealogy_relationship_evidence import (
         GENEALOGY_RELATIONSHIP_MEDIA_ENTITY_TYPE,
         GenealogyRelationshipEvidenceServiceError,
