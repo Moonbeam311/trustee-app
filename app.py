@@ -2923,6 +2923,7 @@ ROLE_RULES = {
     "portfolio_dashboard": {"Admin", "Trustee", "Viewer"},
     "fiduciary_dashboard": {"Admin", "Trustee"},
     "genealogy_dashboard": {"Admin", "Trustee"},
+    "genealogy_legacy_workspace": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "report_center": {"Admin", "Trustee"},
@@ -10129,6 +10130,38 @@ def fiduciary_new():
     return render_template("fiduciary_form.html", trusts=trusts)
 
 
+
+
+@app.route("/genealogy/legacy-workspace")
+def genealogy_legacy_workspace():
+    """Read-only canonical Genealogy & Legacy workspace."""
+    from database.db import DB_PATH, get_current_firm_id
+    from services.services_genealogy_legacy_read_model import (
+        build_genealogy_legacy_read_model,
+    )
+
+    owner_id = str(get_current_owner() or "").strip()
+    firm_id = str(get_current_firm_id() or "").strip()
+
+    if not owner_id or not firm_id:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "An active owner and firm scope are required "
+                "for Genealogy & Legacy."
+            ),
+        ), 403
+
+    model = build_genealogy_legacy_read_model(
+        DB_PATH,
+        owner_id,
+        firm_id,
+    )
+
+    return render_template(
+        "genealogy_legacy_workspace.html",
+        model=model,
+    )
 
 
 @app.route("/genealogy")

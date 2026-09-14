@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block primary_navigation %}
+{% include "_platform_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container">
+  <header>
+    <p class="eyebrow">Legacy and continuity</p>
+    <h1>Genealogy &amp; Legacy</h1>
+    <p>
+      A read-only canonical view of people, explicit relationship
+      assertions, role context, connected evidence, and governed review
+      history.
+    </p>
+  </header>
+
+  <section aria-labelledby="genealogy-summary-title">
+    <h2 id="genealogy-summary-title">Workspace summary</h2>
+    <dl>
+      <div>
+        <dt>People</dt>
+        <dd>{{ model["summary"]["person_count"] }}</dd>
+      </div>
+      <div>
+        <dt>Relationship assertions</dt>
+        <dd>{{ model["summary"]["relationship_assertion_count"] }}</dd>
+      </div>
+      <div>
+        <dt>Source connected</dt>
+        <dd>{{ model["summary"]["source_connected_count"] }}</dd>
+      </div>
+      <div>
+        <dt>Reviewed assertions</dt>
+        <dd>{{ model["summary"]["reviewed_assertion_count"] }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section aria-labelledby="genealogy-status-title">
+    <h2 id="genealogy-status-title">Review status</h2>
+
+    {% if model["summary"]["status_counts"] %}
+      <ul>
+        {% for status, count in model["summary"]["status_counts"].items() %}
+          <li>
+            <strong>{{ status|replace("_", " ")|title }}</strong>:
+            {{ count }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No canonical relationship assertions are recorded in this scope.</p>
+    {% endif %}
+  </section>
+
+  <section aria-labelledby="genealogy-people-title">
+    <h2 id="genealogy-people-title">People and relationships</h2>
+
+    {% if model["persons"] %}
+      {% for item in model["persons"] %}
+        <article>
+          <h3>{{ item["person"]["display_name"] }}</h3>
+          <p>
+            Person ID:
+            <code>{{ item["person"]["person_id"] }}</code>
+          </p>
+
+          <h4>Institutional roles</h4>
+          {% if item["role_links"] %}
+            <ul>
+              {% for role in item["role_links"] %}
+                <li>
+                  {{ role["capacity_label"] or role["role_type"] }}
+                  —
+                  <code>{{ role["role_record_id"] }}</code>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>No explicit institutional role links are recorded.</p>
+          {% endif %}
+
+          <h4>Relationship assertions</h4>
+          {% if item["relationships"] %}
+            {% for relationship in item["relationships"] %}
+              <section>
+                <p>
+                  <strong>
+                    {{ relationship["assertion"]["relationship_type"]
+                       |replace("_", " ")|title }}
+                  </strong>
+                </p>
+
+                <p>
+                  Direction:
+                  {{ relationship["direction"]|title }}
+                </p>
+
+                {% if relationship["counterparty_person"] %}
+                  <p>
+                    Related person:
+                    {{ relationship["counterparty_person"]["display_name"] }}
+                  </p>
+                {% else %}
+                  <p>Related person is outside this rendered person index.</p>
+                {% endif %}
+
+                <p>
+                  Status:
+                  <strong>
+                    {{ relationship["assertion_status"]
+                       |replace("_", " ")|title }}
+                  </strong>
+                </p>
+
+                <p>
+                  Source connected:
+                  {{ "Yes" if relationship["source_connected"] else "No" }}
+                </p>
+
+                <p>
+                  Evidence records:
+                  {{ relationship["evidence"]|length }}
+                  · Review records:
+                  {{ relationship["reviews"]|length }}
+                </p>
+              </section>
+            {% endfor %}
+          {% else %}
+            <p>No explicit canonical relationship assertions are recorded.</p>
+          {% endif %}
+        </article>
+      {% endfor %}
+    {% else %}
+      <p>
+        No canonical Person records are currently recorded for this
+        owner and firm scope.
+      </p>
+    {% endif %}
+  </section>
+
+  <aside aria-labelledby="genealogy-boundary-title">
+    <h2 id="genealogy-boundary-title">Governance boundary</h2>
+    <p>
+      A connected source does not automatically confirm a relationship.
+      Relationship assertions retain their explicit review status until
+      a governed human review records a permitted status transition.
+    </p>
+    <p>
+      Legacy genealogy records remain a separate compatibility surface.
+      Name-based parent or spouse fields are not automatically converted
+      into canonical Person relationships.
+    </p>
+    <p>
+      Genealogy records alone do not establish inheritance, ownership,
+      citizenship, legal status, authority, or entitlement.
+    </p>
+  </aside>
+</section>
+{% endblock %}
