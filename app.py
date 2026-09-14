@@ -2925,6 +2925,7 @@ ROLE_RULES = {
     "genealogy_dashboard": {"Admin", "Trustee"},
     "genealogy_legacy_workspace": {"Admin", "Trustee"},
     "genealogy_person_new": {"Admin", "Trustee"},
+    "genealogy_relationship_new": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "report_center": {"Admin", "Trustee"},
@@ -10294,6 +10295,187 @@ def genealogy_new():
 
 
 
+
+
+@app.route(
+    "/genealogy/legacy-workspace/relationship/new",
+    methods=["GET", "POST"],
+)
+def genealogy_relationship_new():
+    """Create one explicit canonical genealogy relationship assertion."""
+    from database.db import DB_PATH, get_current_firm_id
+    from services.services_genealogy_relationships import (
+        GenealogyRelationshipServiceError,
+        create_genealogy_relationship_assertion,
+        generate_genealogy_relationship_assertion_id,
+    )
+    from services.services_person_identity import (
+        PersonIdentityServiceError,
+        list_person_identities,
+    )
+
+    owner_id = str(get_current_owner() or "").strip()
+    firm_id = str(get_current_firm_id() or "").strip()
+
+    if not owner_id or not firm_id:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "An active owner and firm scope are required "
+                "to create a canonical genealogy relationship assertion."
+            ),
+        ), 403
+
+    relationship_types = (
+        {
+            "value": "PARENT_OF",
+            "label": "Parent of",
+        },
+        {
+            "value": "CHILD_OF",
+            "label": "Child of",
+        },
+    )
+    allowed_relationship_types = {
+        item["value"]
+        for item in relationship_types
+    }
+
+    try:
+        people = list_person_identities(
+            DB_PATH,
+            owner_id,
+            firm_id,
+        )
+    except PersonIdentityServiceError as exc:
+        return render_template(
+            "genealogy_relationship_form.html",
+            people=[],
+            relationship_types=relationship_types,
+            form_values={},
+            error_message=str(exc),
+        ), 400
+
+    form_values = {
+        "subject_person_id": "",
+        "relationship_type": "",
+        "related_person_id": "",
+        "assertion_basis": "",
+        "notes": "",
+    }
+
+    if request.method == "POST":
+        form_values = {
+            "subject_person_id": str(
+                request.form.get("subject_person_id") or ""
+            ).strip(),
+            "relationship_type": str(
+                request.form.get("relationship_type") or ""
+            ).strip(),
+            "related_person_id": str(
+                request.form.get("related_person_id") or ""
+            ).strip(),
+            "assertion_basis": str(
+                request.form.get("assertion_basis") or ""
+            ).strip(),
+            "notes": str(
+                request.form.get("notes") or ""
+            ).strip(),
+        }
+
+        if not validate_csrf_token():
+            return render_template(
+                "genealogy_relationship_form.html",
+                people=people,
+                relationship_types=relationship_types,
+                form_values=form_values,
+                error_message="Invalid or missing CSRF token.",
+            ), 400
+
+        if len(people) < 2:
+            return render_template(
+                "genealogy_relationship_form.html",
+                people=people,
+                relationship_types=relationship_types,
+                form_values=form_values,
+                error_message=(
+                    "At least two canonical Person records are required "
+                    "before a relationship assertion can be created."
+                ),
+            ), 400
+
+        if (
+            form_values["relationship_type"]
+            not in allowed_relationship_types
+        ):
+            return render_template(
+                "genealogy_relationship_form.html",
+                people=people,
+                relationship_types=relationship_types,
+                form_values=form_values,
+                error_message=(
+                    "Select one of the currently supported "
+                    "relationship types."
+                ),
+            ), 400
+
+        try:
+            created = create_genealogy_relationship_assertion(
+                DB_PATH,
+                {
+                    "assertion_id": (
+                        generate_genealogy_relationship_assertion_id()
+                    ),
+                    "owner_id": owner_id,
+                    "firm_id": firm_id,
+                    "subject_person_id": (
+                        form_values["subject_person_id"]
+                    ),
+                    "relationship_type": (
+                        form_values["relationship_type"]
+                    ),
+                    "related_person_id": (
+                        form_values["related_person_id"]
+                    ),
+                    "assertion_basis": (
+                        form_values["assertion_basis"]
+                    ),
+                    "notes": form_values["notes"],
+                    "created_by": (
+                        session.get("username")
+                        or owner_id
+                    ),
+                },
+            )
+        except GenealogyRelationshipServiceError as exc:
+            return render_template(
+                "genealogy_relationship_form.html",
+                people=people,
+                relationship_types=relationship_types,
+                form_values=form_values,
+                error_message=str(exc),
+            ), 400
+
+        log_change(
+            "genealogy_relationship",
+            created["assertion_id"],
+            "create",
+            (
+                "Canonical genealogy relationship assertion created "
+                "as USER_ASSERTED"
+            ),
+        )
+
+        return redirect(
+            url_for("genealogy_legacy_workspace")
+        )
+
+    return render_template(
+        "genealogy_relationship_form.html",
+        people=people,
+        relationship_types=relationship_types,
+        form_values=form_values,
+    )
 
 
 TRUST_TYPE_LABELS = {

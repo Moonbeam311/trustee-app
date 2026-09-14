@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block primary_navigation %}
+{% include "_platform_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container">
+  <header>
+    <p class="eyebrow">Genealogy &amp; Legacy</p>
+    <h1>Add Relationship Assertion</h1>
+    <p>
+      Record one explicit directional relationship between two existing
+      canonical Person identities in the current owner and firm scope.
+    </p>
+  </header>
+
+  {% if error_message %}
+    <p role="alert"><strong>{{ error_message }}</strong></p>
+  {% endif %}
+
+  {% if people|length < 2 %}
+    <p>
+      At least two canonical Person records are required before a
+      relationship assertion can be created.
+      <a href="{{ url_for('genealogy_person_new') }}">Add another Person</a>.
+    </p>
+  {% endif %}
+
+  <form method="POST">
+    <input
+      type="hidden"
+      name="_csrf_token"
+      value="{{ wtf_csrf_token() }}"
+    >
+
+    <p>
+      <label for="subject-person">
+        <strong>Subject Person</strong>
+      </label><br>
+      <select
+        id="subject-person"
+        name="subject_person_id"
+        required
+      >
+        <option value="">Select a Person</option>
+        {% for person in people %}
+          <option
+            value="{{ person['person_id'] }}"
+            {% if form_values.get('subject_person_id') == person['person_id'] %}
+              selected
+            {% endif %}
+          >
+            {{ person["display_name"] }} — {{ person["person_id"] }}
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+
+    <p>
+      <label for="relationship-type">
+        <strong>Relationship</strong>
+      </label><br>
+      <select
+        id="relationship-type"
+        name="relationship_type"
+        required
+      >
+        <option value="">Select a relationship</option>
+        {% for relationship in relationship_types %}
+          <option
+            value="{{ relationship['value'] }}"
+            {% if form_values.get('relationship_type') == relationship['value'] %}
+              selected
+            {% endif %}
+          >
+            {{ relationship["label"] }}
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+
+    <p>
+      <label for="related-person">
+        <strong>Related Person</strong>
+      </label><br>
+      <select
+        id="related-person"
+        name="related_person_id"
+        required
+      >
+        <option value="">Select a Person</option>
+        {% for person in people %}
+          <option
+            value="{{ person['person_id'] }}"
+            {% if form_values.get('related_person_id') == person['person_id'] %}
+              selected
+            {% endif %}
+          >
+            {{ person["display_name"] }} — {{ person["person_id"] }}
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+
+    <p>
+      <label for="assertion-basis">
+        <strong>Assertion basis</strong>
+      </label><br>
+      <textarea
+        id="assertion-basis"
+        name="assertion_basis"
+        rows="4"
+      >{{ form_values.get("assertion_basis", "") }}</textarea>
+    </p>
+
+    <p>
+      <label for="relationship-notes">
+        <strong>Notes</strong>
+      </label><br>
+      <textarea
+        id="relationship-notes"
+        name="notes"
+        rows="4"
+      >{{ form_values.get("notes", "") }}</textarea>
+    </p>
+
+    <p>
+      <button
+        type="submit"
+        {% if people|length < 2 %}disabled{% endif %}
+      >
+        Create Relationship Assertion
+      </button>
+      <a href="{{ url_for('genealogy_legacy_workspace') }}">
+        Cancel
+      </a>
+    </p>
+  </form>
+
+  <aside aria-labelledby="relationship-boundary-title">
+    <h2 id="relationship-boundary-title">Relationship boundary</h2>
+
+    <p>
+      Hindsfoot assigns the assertion ID automatically. Every new
+      relationship assertion begins as <strong>User Asserted</strong>.
+    </p>
+
+    <p>
+      Direction matters. Creating one assertion does not automatically
+      create an inverse or reciprocal assertion.
+    </p>
+
+    <p>
+      A relationship assertion does not automatically establish
+      genealogical truth, inheritance, ownership, citizenship, legal
+      status, authority, or entitlement.
+    </p>
+
+    <p>
+      Connected evidence does not automatically confirm an assertion.
+      Confirmation remains a separate governed human-review action.
+    </p>
+  </aside>
+</section>
+{% endblock %}
