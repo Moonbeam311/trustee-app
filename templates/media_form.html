@@ -11,11 +11,24 @@
   </style>
 </head>
 <body>
-{% include '_nav.html' %}
+{% if canonical_genealogy %}
+  {% include '_platform_nav.html' %}
+{% else %}
+  {% include '_nav.html' %}
+{% endif %}
 
 <div class="box">
-  <p><a href="/media">Back to Media Evidence</a></p>
-  <h1>Upload Media Evidence</h1>
+  {% if canonical_genealogy %}
+    <p>
+      <a href="{{ url_for('genealogy_legacy_workspace') }}">
+        Back to Genealogy &amp; Legacy
+      </a>
+    </p>
+    <h1>Upload Relationship Evidence</h1>
+  {% else %}
+    <p><a href="/media">Back to Media Evidence</a></p>
+    <h1>Upload Media Evidence</h1>
+  {% endif %}
 
   {% if error_message %}
     <p class="error">{{ error_message }}</p>
@@ -24,19 +37,55 @@
   <form method="POST" enctype="multipart/form-data">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-    <label>Trust</label>
-    <select name="trust_id" required>
-      <option value="">Select Trust</option>
-      {% for trust in trusts %}
-      <option value="{{ trust['trust_id'] }}"{% if media_prefill and media_prefill.trust_id == trust['trust_id'] %} selected{% endif %}>{{ trust['trust_name'] }}</option>
-      {% endfor %}
-    </select>
+    {% if canonical_genealogy %}
+      <p>
+        <strong>Trust:</strong>
+        {% if media_prefill.trust_id %}
+          {{ media_prefill.trust_id }}
+        {% else %}
+          No trust association required for this canonical
+          genealogy relationship assertion.
+        {% endif %}
+      </p>
 
-    <label>Related Entity Type</label>
-    <input type="text" name="entity_type" value="{{ media_prefill.entity_type if media_prefill else '' }}" placeholder="e.g. trust, property, instrument">
+      <input
+        type="hidden"
+        name="trust_id"
+        value="{{ media_prefill.trust_id }}"
+      >
 
-    <label>Related Entity ID</label>
-    <input type="text" name="entity_id" value="{{ media_prefill.entity_id if media_prefill else '' }}" placeholder="e.g. T001, P001, INSTR-001">
+      <p>
+        <strong>Related entity:</strong>
+        {{ media_prefill.entity_type }}
+        /
+        {{ media_prefill.entity_id }}
+      </p>
+
+      <input
+        type="hidden"
+        name="entity_type"
+        value="{{ media_prefill.entity_type }}"
+      >
+      <input
+        type="hidden"
+        name="entity_id"
+        value="{{ media_prefill.entity_id }}"
+      >
+    {% else %}
+      <label>Trust</label>
+      <select name="trust_id" required>
+        <option value="">Select Trust</option>
+        {% for trust in trusts %}
+        <option value="{{ trust['trust_id'] }}"{% if media_prefill and media_prefill.trust_id == trust['trust_id'] %} selected{% endif %}>{{ trust['trust_name'] }}</option>
+        {% endfor %}
+      </select>
+
+      <label>Related Entity Type</label>
+      <input type="text" name="entity_type" value="{{ media_prefill.entity_type if media_prefill else '' }}" placeholder="e.g. trust, property, instrument">
+
+      <label>Related Entity ID</label>
+      <input type="text" name="entity_id" value="{{ media_prefill.entity_id if media_prefill else '' }}" placeholder="e.g. T001, P001, INSTR-001">
+    {% endif %}
 
     <label>Media Type</label>
     <select name="media_type" required>

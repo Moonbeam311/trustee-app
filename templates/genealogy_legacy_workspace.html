@@ -138,6 +138,16 @@
                   · Review records:
                   {{ relationship["reviews"]|length }}
                 </p>
+                <p>
+                  <a href="{{ url_for(
+                    'genealogy_relationship_evidence_new',
+                    assertion_id=relationship[
+                      'assertion'
+                    ]['assertion_id']
+                  ) }}">
+                    Attach Evidence
+                  </a>
+                </p>
               </section>
             {% endfor %}
           {% else %}

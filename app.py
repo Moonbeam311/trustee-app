@@ -2926,6 +2926,7 @@ ROLE_RULES = {
     "genealogy_legacy_workspace": {"Admin", "Trustee"},
     "genealogy_person_new": {"Admin", "Trustee"},
     "genealogy_relationship_new": {"Admin", "Trustee"},
+    "genealogy_relationship_evidence_new": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "report_center": {"Admin", "Trustee"},
@@ -10250,6 +10251,64 @@ def genealogy_person_new():
     )
 
 
+
+@app.route(
+    "/genealogy/legacy-workspace/relationship/"
+    "<assertion_id>/evidence/new"
+)
+def genealogy_relationship_evidence_new(assertion_id):
+    """Launch existing Media Evidence for one scoped assertion."""
+
+    from services.services_genealogy_relationship_evidence import (
+        GenealogyRelationshipEvidenceServiceError,
+        build_genealogy_relationship_media_link,
+    )
+
+    owner_id = get_current_owner()
+    firm_id = get_current_firm_id()
+
+    if not owner_id or not firm_id:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "An active owner and firm scope are required "
+                "for genealogy relationship evidence."
+            ),
+        ), 403
+
+    try:
+        media_link = build_genealogy_relationship_media_link(
+            DB_PATH,
+            assertion_id,
+            owner_id,
+            firm_id,
+        )
+    except GenealogyRelationshipEvidenceServiceError:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "The relationship assertion is not available "
+                "in the current genealogy scope."
+            ),
+        ), 403
+
+    params = {
+        "entity_type": media_link["related_entity_type"],
+        "entity_id": media_link["related_entity_id"],
+        "category": "genealogy_relationship_source",
+    }
+
+    if media_link.get("trust_id"):
+        params["trust_id"] = media_link["trust_id"]
+
+    return redirect(
+        url_for(
+            "media_upload",
+            **params,
+        )
+    )
+
+
 @app.route("/genealogy")
 def genealogy_dashboard():
 
@@ -11684,58 +11743,203 @@ def media_dashboard():
 
 @app.route("/media/upload", methods=["GET", "POST"])
 def media_upload():
+    from services.services_genealogy_relationship_evidence import (
+        GENEALOGY_RELATIONSHIP_MEDIA_ENTITY_TYPE,
+        GenealogyRelationshipEvidenceServiceError,
+        build_genealogy_relationship_media_link,
+    )
+
     trusts = get_visible_trusts_for_current_operator()
-    media_prefill = {
-        "trust_id": request.args.get("trust_id", ""),
-        "entity_type": request.args.get("entity_type", ""),
-        "entity_id": request.args.get("entity_id", ""),
-        "category": request.args.get("category", ""),
-        "description": request.args.get("description", ""),
-    }
+
+    requested_entity_type = (
+        request.form.get("entity_type")
+        if request.method == "POST"
+        else request.args.get("entity_type", "")
+    ) or request.args.get("entity_type", "")
+
+    requested_entity_id = (
+        request.form.get("entity_id")
+        if request.method == "POST"
+        else request.args.get("entity_id", "")
+    ) or request.args.get("entity_id", "")
+
+    canonical_genealogy = (
+        requested_entity_type
+        == GENEALOGY_RELATIONSHIP_MEDIA_ENTITY_TYPE
+    )
+
+    canonical_link = None
+
+    if canonical_genealogy:
+        owner_id = get_current_owner()
+        firm_id = get_current_firm_id()
+
+        if not owner_id or not firm_id:
+            return render_template(
+                "access_denied.html",
+                reason=(
+                    "An active owner and firm scope are required "
+                    "for genealogy relationship evidence."
+                ),
+            ), 403
+
+        try:
+            canonical_link = (
+                build_genealogy_relationship_media_link(
+                    DB_PATH,
+                    requested_entity_id,
+                    owner_id,
+                    firm_id,
+                )
+            )
+        except GenealogyRelationshipEvidenceServiceError:
+            return render_template(
+                "access_denied.html",
+                reason=(
+                    "The relationship assertion is not available "
+                    "in the current genealogy scope."
+                ),
+            ), 403
+
+    if canonical_link is not None:
+        media_prefill = {
+            "trust_id": (
+                canonical_link.get("trust_id") or ""
+            ),
+            "entity_type": canonical_link[
+                "related_entity_type"
+            ],
+            "entity_id": canonical_link[
+                "related_entity_id"
+            ],
+            "category": (
+                request.form.get("category")
+                if request.method == "POST"
+                else request.args.get(
+                    "category",
+                    "genealogy_relationship_source",
+                )
+            ),
+            "description": (
+                request.form.get("description")
+                if request.method == "POST"
+                else request.args.get("description", "")
+            ),
+        }
+    else:
+        media_prefill = {
+            "trust_id": (
+                request.form.get("trust_id")
+                if request.method == "POST"
+                else request.args.get("trust_id", "")
+            ),
+            "entity_type": requested_entity_type,
+            "entity_id": requested_entity_id,
+            "category": (
+                request.form.get("category")
+                if request.method == "POST"
+                else request.args.get("category", "")
+            ),
+            "description": (
+                request.form.get("description")
+                if request.method == "POST"
+                else request.args.get("description", "")
+            ),
+        }
 
     if request.method == "POST":
         if not validate_csrf_token():
-            return render_template("media_form.html", trusts=trusts, media_prefill=media_prefill, error_message="Invalid or missing CSRF token.")
+            return render_template(
+                "media_form.html",
+                trusts=trusts,
+                media_prefill=media_prefill,
+                canonical_genealogy=canonical_genealogy,
+                error_message="Invalid or missing CSRF token.",
+            )
 
         file = request.files.get("file")
+
         if file:
-            trust_id = request.form.get("trust_id")
-            if trust_id and not operator_can_access_trust(trust_id):
+            if canonical_link is not None:
+                trust_id = canonical_link.get("trust_id")
+                entity_type = canonical_link[
+                    "related_entity_type"
+                ]
+                entity_id = canonical_link[
+                    "related_entity_id"
+                ]
+            else:
+                trust_id = request.form.get("trust_id")
+                entity_type = request.form.get("entity_type")
+                entity_id = request.form.get("entity_id")
+
+            if (
+                trust_id
+                and not operator_can_access_trust(trust_id)
+            ):
                 log_change(
                     "security",
                     trust_id,
                     "media_upload_blocked",
-                    "User attempted to attach evidence to an inaccessible trust."
+                    (
+                        "User attempted to attach evidence "
+                        "to an inaccessible trust."
+                    ),
                 )
                 return render_template(
                     "access_denied.html",
-                    reason="You are not assigned to this trust."
+                    reason="You are not assigned to this trust.",
                 ), 403
 
             media_id = get_next_media_id()
             original_name = file.filename
             safe_name = secure_filename(original_name)
             filename = f"{media_id}_{safe_name}"
-            filepath = os.path.join(UPLOAD_FOLDER, filename)
+            filepath = os.path.join(
+                UPLOAD_FOLDER,
+                filename,
+            )
             file.save(filepath)
 
-            create_media_record({
+            payload = {
                 "media_id": media_id,
                 "trust_id": trust_id,
-                "related_entity_type": request.form.get("entity_type"),
-                "related_entity_id": request.form.get("entity_id"),
+                "related_entity_type": entity_type,
+                "related_entity_id": entity_id,
                 "media_type": request.form.get("media_type"),
                 "file_path": filepath,
                 "category": request.form.get("category"),
-                "description": request.form.get("description"),
+                "description": request.form.get(
+                    "description"
+                ),
                 "created_at": datetime.now().isoformat(),
-            })
+            }
 
-            log_change("media", media_id, "upload", "Media evidence uploaded")
+            if canonical_link is not None:
+                payload["firm_id"] = canonical_link["firm_id"]
+
+            create_media_record(payload)
+
+            log_change(
+                "media",
+                media_id,
+                "upload",
+                "Media evidence uploaded",
+            )
+
+        if canonical_genealogy:
+            return redirect(
+                url_for("genealogy_legacy_workspace")
+            )
 
         return redirect(url_for("media_dashboard"))
 
-    return render_template("media_form.html", trusts=trusts, media_prefill=media_prefill)
+    return render_template(
+        "media_form.html",
+        trusts=trusts,
+        media_prefill=media_prefill,
+        canonical_genealogy=canonical_genealogy,
+    )
 
 
 
