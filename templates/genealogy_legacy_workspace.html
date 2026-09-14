@@ -16,6 +16,14 @@
     </p>
   </header>
 
+  {% if session.get("role") in ["Admin", "Trustee"] %}
+    <p>
+      <a href="{{ url_for('genealogy_person_new') }}">
+        Add Person
+      </a>
+    </p>
+  {% endif %}
+
   <section aria-labelledby="genealogy-summary-title">
     <h2 id="genealogy-summary-title">Workspace summary</h2>
     <dl>

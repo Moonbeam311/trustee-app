@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block primary_navigation %}
+{% include "_platform_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<section class="container">
+  <header>
+    <p class="eyebrow">Genealogy &amp; Legacy</p>
+    <h1>Add Person</h1>
+    <p>
+      Create one explicit canonical Person identity for the current
+      owner and firm scope.
+    </p>
+  </header>
+
+  {% if error_message %}
+    <p role="alert">
+      <strong>{{ error_message }}</strong>
+    </p>
+  {% endif %}
+
+  <form method="POST">
+    <input
+      type="hidden"
+      name="_csrf_token"
+      value="{{ wtf_csrf_token() }}"
+    >
+
+    <p>
+      <label for="display_name">
+        <strong>Display name</strong>
+      </label><br>
+      <input
+        id="display_name"
+        name="display_name"
+        type="text"
+        required
+        value="{{ form_values.get('display_name', '') }}"
+      >
+    </p>
+
+    <p>
+      <label for="sort_name">
+        <strong>Sort name</strong>
+      </label><br>
+      <input
+        id="sort_name"
+        name="sort_name"
+        type="text"
+        value="{{ form_values.get('sort_name', '') }}"
+        placeholder="Optional, for example: Mishoe, Luna"
+      >
+    </p>
+
+    <p>
+      <label for="notes">
+        <strong>Identity notes</strong>
+      </label><br>
+      <textarea
+        id="notes"
+        name="notes"
+        rows="5"
+      >{{ form_values.get('notes', '') }}</textarea>
+    </p>
+
+    <p>
+      <button type="submit">Create Person</button>
+      <a href="{{ url_for('genealogy_legacy_workspace') }}">
+        Cancel
+      </a>
+    </p>
+  </form>
+
+  <aside>
+    <h2>Identity boundary</h2>
+    <p>
+      Hindsfoot assigns the Person ID automatically. Creating a Person
+      does not establish a family relationship, institutional role,
+      inheritance right, ownership interest, citizenship, legal status,
+      authority, or entitlement.
+    </p>
+    <p>
+      Matching names are not automatically merged. Relationships and
+      role/capacity links remain separate explicit governed actions.
+    </p>
+  </aside>
+</section>
+{% endblock %}

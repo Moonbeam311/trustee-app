@@ -2924,6 +2924,7 @@ ROLE_RULES = {
     "fiduciary_dashboard": {"Admin", "Trustee"},
     "genealogy_dashboard": {"Admin", "Trustee"},
     "genealogy_legacy_workspace": {"Admin", "Trustee"},
+    "genealogy_person_new": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "report_center": {"Admin", "Trustee"},
@@ -10161,6 +10162,90 @@ def genealogy_legacy_workspace():
     return render_template(
         "genealogy_legacy_workspace.html",
         model=model,
+    )
+
+
+@app.route(
+    "/genealogy/legacy-workspace/person/new",
+    methods=["GET", "POST"],
+)
+def genealogy_person_new():
+    """Create one explicit canonical Person identity."""
+
+    from database.db import DB_PATH, get_current_firm_id
+    from services.services_person_identity import (
+        PersonIdentityServiceError,
+        create_person_identity,
+        generate_person_identity_id,
+    )
+
+    owner_id = str(get_current_owner() or "").strip()
+    firm_id = str(get_current_firm_id() or "").strip()
+
+    if not owner_id or not firm_id:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "An active owner and firm scope are required "
+                "to create a canonical Person."
+            ),
+        ), 403
+
+    form_values = {
+        "display_name": (
+            request.form.get("display_name", "")
+            if request.method == "POST"
+            else ""
+        ),
+        "sort_name": (
+            request.form.get("sort_name", "")
+            if request.method == "POST"
+            else ""
+        ),
+        "notes": (
+            request.form.get("notes", "")
+            if request.method == "POST"
+            else ""
+        ),
+    }
+
+    if request.method == "POST":
+        try:
+            created = create_person_identity(
+                DB_PATH,
+                {
+                    "person_id": generate_person_identity_id(),
+                    "owner_id": owner_id,
+                    "firm_id": firm_id,
+                    "display_name": form_values["display_name"],
+                    "sort_name": form_values["sort_name"],
+                    "notes": form_values["notes"],
+                    "created_by": (
+                        session.get("username") or owner_id
+                    ),
+                },
+            )
+        except PersonIdentityServiceError as exc:
+            return render_template(
+                "genealogy_person_form.html",
+                form_values=form_values,
+                error_message=str(exc),
+            ), 400
+
+        log_change(
+            "person_identity",
+            created["person_id"],
+            "create",
+            "Canonical Person identity created",
+        )
+
+        return redirect(
+            url_for("genealogy_legacy_workspace")
+        )
+
+    return render_template(
+        "genealogy_person_form.html",
+        form_values=form_values,
     )
 
 

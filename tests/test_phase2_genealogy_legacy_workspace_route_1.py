@@ -38,7 +38,8 @@ def test_canonical_genealogy_workspace_is_separate_read_only_route():
     )
 
     end = text.index(
-        '@app.route("/genealogy")',
+        '@app.route(\n'
+        '    "/genealogy/legacy-workspace/person/new",',
         start,
     )
 
