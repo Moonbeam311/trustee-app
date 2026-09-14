@@ -39,6 +39,10 @@ from database.migrations_person_identity_schema import (
     apply_person_identity_schema,
     PersonIdentityMigrationError,
 )
+from database.migrations_person_role_link_schema import (
+    apply_person_role_link_schema,
+    PersonRoleLinkMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -165,6 +169,19 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        person_role_link_result = apply_person_role_link_schema(db_path)
+    except PersonRoleLinkMigrationError as exc:
+        person_role_link_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "person_role_links_table_created": False,
+            "person_role_link_rows_preserved": 0,
+            "person_role_link_rows_backfilled": 0,
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -175,6 +192,7 @@ def run_additive_startup_migrations(
         "workspace_schema": workspace_result,
         "execution_task_schema": execution_task_result,
         "person_identity_schema": person_identity_result,
+        "person_role_link_schema": person_role_link_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
