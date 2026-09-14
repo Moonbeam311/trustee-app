@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block primary_navigation %}
+  {% include "_platform_nav.html" %}
+{% endblock %}
+
+{% block content %}
+<section>
+  <p>
+    <a href="{{ url_for('genealogy_legacy_workspace') }}">
+      Back to Genealogy &amp; Legacy
+    </a>
+  </p>
+
+  <h1>Review Relationship Assertion</h1>
+
+  <p>
+    This records one explicit human-governed review in the
+    append-only genealogy relationship review history.
+  </p>
+
+  <p>
+    <strong>Assertion ID:</strong>
+    {{ assertion["assertion_id"] }}
+  </p>
+
+  <p>
+    <strong>Relationship:</strong>
+    {{ assertion["relationship_type"]|replace("_", " ")|title }}
+  </p>
+
+  <p>
+    <strong>Current status:</strong>
+    {{ assertion["assertion_status"]|replace("_", " ")|title }}
+  </p>
+
+  <p>
+    <strong>Reviewer:</strong>
+    {{ actor }}
+  </p>
+
+  {% if error_message %}
+    <p><strong>{{ error_message }}</strong></p>
+  {% endif %}
+
+  <form method="post">
+    <input
+      type="hidden"
+      name="_csrf_token"
+      value="{{ wtf_csrf_token() }}"
+    >
+
+    <p>
+      <label for="new_status">
+        New governed status
+      </label>
+      <select
+        id="new_status"
+        name="new_status"
+        required
+      >
+        <option value="">Select status</option>
+        {% for status in allowed_statuses %}
+          <option
+            value="{{ status }}"
+            {% if form_values["new_status"] == status %}
+              selected
+            {% endif %}
+          >
+            {{ status|replace("_", " ")|title }}
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+
+    <p>
+      <label for="review_basis">
+        Review basis
+      </label><br>
+      <textarea
+        id="review_basis"
+        name="review_basis"
+        rows="4"
+        required
+      >{{ form_values["review_basis"] }}</textarea>
+    </p>
+
+    <p>
+      <label for="provenance">
+        Provenance
+      </label><br>
+      <textarea
+        id="provenance"
+        name="provenance"
+        rows="3"
+        required
+      >{{ form_values["provenance"] }}</textarea>
+    </p>
+
+    <p>
+      <label for="decision_origin">
+        Decision origin
+      </label>
+      <select
+        id="decision_origin"
+        name="decision_origin"
+        required
+      >
+        <option
+          value="OPERATOR_OR_FIDUCIARY"
+          {% if form_values["decision_origin"] == "OPERATOR_OR_FIDUCIARY" %}
+            selected
+          {% endif %}
+        >
+          Operator or fiduciary
+        </option>
+
+        <option
+          value="PROFESSIONAL"
+          {% if form_values["decision_origin"] == "PROFESSIONAL" %}
+            selected
+          {% endif %}
+        >
+          Professional
+        </option>
+      </select>
+    </p>
+
+    <p>
+      <label for="actor_capacity">
+        Reviewer capacity
+      </label>
+      <input
+        id="actor_capacity"
+        name="actor_capacity"
+        value="{{ form_values['actor_capacity'] }}"
+        required
+      >
+    </p>
+
+    <p>
+      <label for="professional_authority">
+        Professional authority
+      </label>
+      <input
+        id="professional_authority"
+        name="professional_authority"
+        value="{{ form_values['professional_authority'] }}"
+      >
+      <small>
+        Required only when Decision origin is Professional.
+      </small>
+    </p>
+
+    <p>
+      <label>
+        <input
+          type="checkbox"
+          name="human_confirmed"
+          value="yes"
+          required
+          {% if form_values["human_confirmed"] %}
+            checked
+          {% endif %}
+        >
+        I explicitly confirm this governed status transition
+        as a human reviewer.
+      </label>
+    </p>
+
+    <button type="submit">
+      Record Governed Review
+    </button>
+  </form>
+
+  <h2>Governance boundary</h2>
+
+  <p>
+    A User Asserted relationship cannot move directly to
+    Confirmed. It must first enter Review Required.
+  </p>
+
+  <p>
+    Confirmed requires same-firm linked Media Evidence,
+    but evidence alone never confirms the relationship.
+  </p>
+
+  <p>
+    System-suggested review cannot finalize status.
+    Professional review requires identified professional
+    authority.
+  </p>
+
+  <p>
+    Review history is append-only. A governed review does
+    not independently establish inheritance, ownership,
+    citizenship, legal status, authority, entitlement,
+    or genealogical truth.
+  </p>
+</section>
+{% endblock %}

@@ -147,6 +147,15 @@
                   ) }}">
                     Attach Evidence
                   </a>
+                  ·
+                  <a href="{{ url_for(
+                    'genealogy_relationship_review',
+                    assertion_id=relationship[
+                      'assertion'
+                    ]['assertion_id']
+                  ) }}">
+                    Review Relationship
+                  </a>
                 </p>
               </section>
             {% endfor %}

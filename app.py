@@ -2927,6 +2927,7 @@ ROLE_RULES = {
     "genealogy_person_new": {"Admin", "Trustee"},
     "genealogy_relationship_new": {"Admin", "Trustee"},
     "genealogy_relationship_evidence_new": {"Admin", "Trustee"},
+    "genealogy_relationship_review": {"Admin", "Trustee"},
     "media_dashboard": {"Admin", "Trustee"},
     "role_dashboard": {"Admin"},
     "report_center": {"Admin", "Trustee"},
@@ -10356,6 +10357,212 @@ def genealogy_new():
 
 
 
+
+@app.route(
+    "/genealogy/legacy-workspace/relationship/"
+    "<assertion_id>/review",
+    methods=["GET", "POST"],
+)
+def genealogy_relationship_review(assertion_id):
+    """Perform one explicit human-governed relationship review."""
+
+    from database.db import DB_PATH, get_current_firm_id
+    from services.services_genealogy_relationships import (
+        GenealogyRelationshipServiceError,
+        get_genealogy_relationship_assertion,
+    )
+    from services.services_genealogy_relationship_reviews import (
+        ALLOWED_TRANSITIONS,
+        GenealogyRelationshipReviewServiceError,
+        generate_genealogy_relationship_review_id,
+        transition_genealogy_relationship_status,
+    )
+
+    owner_id = str(get_current_owner() or "").strip()
+    firm_id = str(get_current_firm_id() or "").strip()
+
+    if not owner_id or not firm_id:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "An active owner and firm scope are required "
+                "for genealogy relationship review."
+            ),
+        ), 403
+
+    try:
+        assertion = get_genealogy_relationship_assertion(
+            DB_PATH,
+            assertion_id,
+            owner_id,
+            firm_id,
+        )
+    except GenealogyRelationshipServiceError:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "The relationship assertion is not available "
+                "in the current genealogy scope."
+            ),
+        ), 403
+
+    if not assertion:
+        return render_template(
+            "access_denied.html",
+            reason=(
+                "The relationship assertion is not available "
+                "in the current genealogy scope."
+            ),
+        ), 403
+
+    current_status = str(assertion["assertion_status"])
+
+    status_order = (
+        "REVIEW_REQUIRED",
+        "CONFIRMED",
+        "CONFLICTING",
+        "UNRESOLVED",
+    )
+
+    allowed_statuses = tuple(
+        status
+        for status in status_order
+        if status in ALLOWED_TRANSITIONS.get(
+            current_status,
+            set(),
+        )
+    )
+
+    actor = str(
+        session.get("username") or owner_id
+    ).strip()
+
+    form_values = {
+        "new_status": "",
+        "review_basis": "",
+        "provenance": "",
+        "decision_origin": "OPERATOR_OR_FIDUCIARY",
+        "actor_capacity": str(
+            session.get("role") or "Operator"
+        ).strip(),
+        "professional_authority": "",
+        "human_confirmed": False,
+    }
+
+    if request.method == "POST":
+        form_values = {
+            "new_status": str(
+                request.form.get("new_status") or ""
+            ).strip(),
+            "review_basis": str(
+                request.form.get("review_basis") or ""
+            ).strip(),
+            "provenance": str(
+                request.form.get("provenance") or ""
+            ).strip(),
+            "decision_origin": str(
+                request.form.get("decision_origin") or ""
+            ).strip(),
+            "actor_capacity": str(
+                request.form.get("actor_capacity") or ""
+            ).strip(),
+            "professional_authority": str(
+                request.form.get(
+                    "professional_authority"
+                ) or ""
+            ).strip(),
+            "human_confirmed": (
+                request.form.get("human_confirmed")
+                == "yes"
+            ),
+        }
+
+        if not validate_csrf_token():
+            return render_template(
+                "genealogy_relationship_review_form.html",
+                assertion=assertion,
+                allowed_statuses=allowed_statuses,
+                actor=actor,
+                form_values=form_values,
+                error_message=(
+                    "Invalid or missing CSRF token."
+                ),
+            ), 400
+
+        if form_values["new_status"] not in allowed_statuses:
+            return render_template(
+                "genealogy_relationship_review_form.html",
+                assertion=assertion,
+                allowed_statuses=allowed_statuses,
+                actor=actor,
+                form_values=form_values,
+                error_message=(
+                    "Select a permitted governed status transition."
+                ),
+            ), 400
+
+        try:
+            review = transition_genealogy_relationship_status(
+                DB_PATH,
+                {
+                    "review_id": (
+                        generate_genealogy_relationship_review_id()
+                    ),
+                    "assertion_id": assertion_id,
+                    "owner_id": owner_id,
+                    "firm_id": firm_id,
+                    "new_status": form_values["new_status"],
+                    "review_basis": form_values["review_basis"],
+                    "provenance": form_values["provenance"],
+                    "decision_origin": (
+                        form_values["decision_origin"]
+                    ),
+                    "human_confirmed": (
+                        form_values["human_confirmed"]
+                    ),
+                    "actor": actor,
+                    "actor_capacity": (
+                        form_values["actor_capacity"]
+                    ),
+                    "professional_authority": (
+                        form_values[
+                            "professional_authority"
+                        ] or None
+                    ),
+                },
+            )
+        except GenealogyRelationshipReviewServiceError as exc:
+            return render_template(
+                "genealogy_relationship_review_form.html",
+                assertion=assertion,
+                allowed_statuses=allowed_statuses,
+                actor=actor,
+                form_values=form_values,
+                error_message=str(exc),
+            ), 400
+
+        log_change(
+            "genealogy_relationship_review",
+            review["review_id"],
+            "status_transition",
+            (
+                "Governed genealogy relationship review: "
+                f"{review['prior_status']} -> "
+                f"{review['new_status']}"
+            ),
+        )
+
+        return redirect(
+            url_for("genealogy_legacy_workspace")
+        )
+
+    return render_template(
+        "genealogy_relationship_review_form.html",
+        assertion=assertion,
+        allowed_statuses=allowed_statuses,
+        actor=actor,
+        form_values=form_values,
+    )
 
 @app.route(
     "/genealogy/legacy-workspace/relationship/new",
