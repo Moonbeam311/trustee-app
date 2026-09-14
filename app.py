@@ -12443,7 +12443,7 @@ def permissions_dashboard():
 def security_dashboard():
     checklist = [
         {"item": "Public/shareable link", "status": "Needs review"},
-        {"item": "Authentication required", "status": "Not yet enforced"},
+        {"item": "Protected application authentication", "status": "Enforced by global session gate"},
         {"item": "Uploads in private non-public storage", "status": "Needs review"},
         {"item": "Third-party transmission disabled by default", "status": "Current expectation"},
         {"item": "Debug mode disabled for deployment", "status": "Required before live use"},
