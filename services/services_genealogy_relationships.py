@@ -21,8 +21,20 @@ Later review/status services may govern deliberate status transitions.
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from pathlib import Path
 from typing import Any
+
+
+def generate_genealogy_relationship_assertion_id() -> str:
+    """Issue one opaque canonical genealogy relationship assertion ID.
+
+    Assertion IDs are system-issued infrastructure identifiers.
+    They do not encode relationship type, Person identity, genealogy,
+    owner, firm, trust, legal status, authority, or truth.
+    """
+
+    return f"GRA-{uuid.uuid4().hex[:20].upper()}"
 
 
 class GenealogyRelationshipServiceError(RuntimeError):
