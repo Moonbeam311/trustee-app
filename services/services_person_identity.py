@@ -13,8 +13,20 @@ It does not:
 from __future__ import annotations
 
 import sqlite3
+import uuid
 from pathlib import Path
 from typing import Any
+
+
+def generate_person_identity_id() -> str:
+    """Issue one opaque canonical Person identifier.
+
+    Person IDs are system-issued infrastructure identifiers.
+    They do not encode name, role, genealogy, owner, firm, legal status,
+    or any other substantive attribute.
+    """
+
+    return f"PER-{uuid.uuid4().hex[:20].upper()}"
 
 
 class PersonIdentityServiceError(RuntimeError):
