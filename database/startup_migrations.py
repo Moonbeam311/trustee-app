@@ -43,6 +43,10 @@ from database.migrations_person_role_link_schema import (
     apply_person_role_link_schema,
     PersonRoleLinkMigrationError,
 )
+from database.migrations_genealogy_relationship_schema import (
+    apply_genealogy_relationship_schema,
+    GenealogyRelationshipMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -182,6 +186,21 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        genealogy_relationship_result = (
+            apply_genealogy_relationship_schema(db_path)
+        )
+    except GenealogyRelationshipMigrationError as exc:
+        genealogy_relationship_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "genealogy_relationship_table_created": False,
+            "genealogy_relationship_rows_preserved": 0,
+            "genealogy_relationship_rows_backfilled": 0,
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -193,6 +212,7 @@ def run_additive_startup_migrations(
         "execution_task_schema": execution_task_result,
         "person_identity_schema": person_identity_result,
         "person_role_link_schema": person_role_link_result,
+        "genealogy_relationship_schema": genealogy_relationship_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
