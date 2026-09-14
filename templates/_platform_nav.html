@@ -8,6 +8,7 @@
 
     {% if session.get("role") in ["Admin", "Trustee"] %}
       <a href="/reports">Reports</a>
+      <a href="{{ url_for('genealogy_legacy_workspace') }}">Genealogy &amp; Legacy</a>
     {% endif %}
 
     {% if session.get("role") in ["Admin", "Trustee", "Viewer"] %}
