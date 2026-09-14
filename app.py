@@ -7327,6 +7327,11 @@ def admin_ios_workspace(workspace_key):
     if workspace_key not in IOS_WORKSPACE_META:
         workspace_key = "home"
 
+    if workspace_key == "developer":
+        gate = require_master_admin()
+        if gate:
+            return gate
+
     title, description = IOS_WORKSPACE_META[workspace_key]
 
     report = {
