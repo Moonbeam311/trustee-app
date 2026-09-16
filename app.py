@@ -7324,6 +7324,9 @@ def admin_ios_workspace(workspace_key):
         return redirect(url_for("login"))
 
     workspace_key = (workspace_key or "home").lower().strip()
+    if workspace_key == "governance-registry":
+        return redirect(url_for("governance_registry"))
+
     if workspace_key not in IOS_WORKSPACE_META:
         workspace_key = "home"
 
