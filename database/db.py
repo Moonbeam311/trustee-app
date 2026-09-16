@@ -1,7 +1,9 @@
 import os
+import secrets
 import sqlite3
 from pathlib import Path
 from datetime import date, timedelta, datetime
+from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_DB_PATH = BASE_DIR / "trustee_app.db"
@@ -2577,6 +2579,7 @@ def init_audit_table():
             entity_id TEXT,
             action TEXT,
             note TEXT,
+            firm_id TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             previous_hash TEXT,
             entry_hash TEXT,
@@ -2588,6 +2591,7 @@ def init_audit_table():
     existing_columns = {row["name"] for row in cur.fetchall()}
 
     migrations = {
+        "firm_id": "ALTER TABLE audit_log ADD COLUMN firm_id TEXT",
         "previous_hash": "ALTER TABLE audit_log ADD COLUMN previous_hash TEXT",
         "entry_hash": "ALTER TABLE audit_log ADD COLUMN entry_hash TEXT",
         "hash_algorithm": "ALTER TABLE audit_log ADD COLUMN hash_algorithm TEXT",
@@ -2601,14 +2605,15 @@ def init_audit_table():
     conn.close()
 
 
-def log_change(entity_type, entity_id, action, note=""):
+def log_change(entity_type, entity_id, action, note="", firm_id=None):
     import hashlib, json
 
-    try:
-        from flask import has_request_context, session
-        firm_id = session.get("firm_id", "FIRM-001") if has_request_context() else "FIRM-001"
-    except Exception:
-        firm_id = "FIRM-001"
+    if not firm_id:
+        try:
+            from flask import has_request_context, session
+            firm_id = session.get("firm_id", "FIRM-001") if has_request_context() else "FIRM-001"
+        except Exception:
+            firm_id = "FIRM-001"
 
     conn = get_connection()
     cur = conn.cursor()
@@ -3524,6 +3529,33 @@ def get_user_by_username(username):
     return row
 
 
+def get_user_by_username_in_firm(username, firm_id):
+    """Return one user only when both the global username and firm match."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT * FROM app_users
+        WHERE username = ? AND firm_id = ?
+        LIMIT 1
+    """, (username, firm_id))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+def get_user_by_username_in_firm_by_id(user_id, firm_id):
+    """Resolve a recovery-linked user without relying on a submitted username."""
+    conn = get_connection()
+    try:
+        return conn.execute("""
+            SELECT * FROM app_users
+            WHERE user_id = ? AND firm_id = ?
+            LIMIT 1
+        """, (user_id, firm_id)).fetchone()
+    finally:
+        conn.close()
+
+
 def create_app_user(data):
     data = dict(data)
     data.setdefault("firm_id", get_current_firm_id())
@@ -3596,6 +3628,155 @@ def update_app_user_password(username, password_hash):
     ))
     conn.commit()
     conn.close()
+
+
+def update_app_user_password_in_firm(username, firm_id, password_hash):
+    """Update exactly one firm-scoped user and report whether it existed."""
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        UPDATE app_users
+        SET password_hash = ?
+        WHERE username = ? AND firm_id = ?
+    """, (password_hash, username, firm_id))
+    changed = cur.rowcount == 1
+    conn.commit()
+    conn.close()
+    return changed
+
+
+def ensure_personal_firm_recovery_table():
+    """Create the additive Personal Firm recovery credential store."""
+    conn = get_connection()
+    try:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS personal_firm_recovery_credentials (
+                recovery_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                firm_id TEXT NOT NULL,
+                recovery_secret_hash TEXT NOT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                rotated_at TIMESTAMP,
+                last_successful_use_at TIMESTAMP,
+                UNIQUE (user_id, firm_id)
+            )
+        """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_personal_firm_recovery_user_firm
+            ON personal_firm_recovery_credentials (user_id, firm_id)
+        """)
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _new_personal_firm_recovery_material():
+    return secrets.token_urlsafe(24), secrets.token_urlsafe(48)
+
+
+def provision_personal_firm_recovery_credential(user_id, firm_id):
+    """Create or rotate a credential and disclose its raw secret to this caller once."""
+    recovery_id, recovery_secret = _new_personal_firm_recovery_material()
+    secret_hash = generate_password_hash(recovery_secret)
+    conn = get_connection()
+    try:
+        existing = conn.execute("""
+            SELECT created_at
+            FROM personal_firm_recovery_credentials
+            WHERE user_id = ? AND firm_id = ?
+        """, (user_id, firm_id)).fetchone()
+        if existing:
+            conn.execute("""
+                UPDATE personal_firm_recovery_credentials
+                SET recovery_id = ?, recovery_secret_hash = ?, is_active = 1,
+                    rotated_at = CURRENT_TIMESTAMP, last_successful_use_at = NULL
+                WHERE user_id = ? AND firm_id = ?
+            """, (recovery_id, secret_hash, user_id, firm_id))
+        else:
+            conn.execute("""
+                INSERT INTO personal_firm_recovery_credentials
+                    (recovery_id, user_id, firm_id, recovery_secret_hash, is_active)
+                VALUES (?, ?, ?, ?, 1)
+            """, (recovery_id, user_id, firm_id, secret_hash))
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+    return {"recovery_id": recovery_id, "recovery_secret": recovery_secret}
+
+
+def get_personal_firm_recovery_credential(recovery_id):
+    conn = get_connection()
+    try:
+        return conn.execute("""
+            SELECT * FROM personal_firm_recovery_credentials
+            WHERE recovery_id = ?
+            LIMIT 1
+        """, (recovery_id,)).fetchone()
+    finally:
+        conn.close()
+
+
+def verify_personal_firm_recovery_credential(recovery_id, recovery_secret):
+    """Return the active credential row on success; otherwise return None."""
+    if not recovery_id or not recovery_secret:
+        return None
+    row = get_personal_firm_recovery_credential(recovery_id)
+    if not row or not bool(row["is_active"]):
+        return None
+    if not check_password_hash(row["recovery_secret_hash"], recovery_secret):
+        return None
+    return row
+
+
+def mark_personal_firm_recovery_used(recovery_id):
+    conn = get_connection()
+    try:
+        conn.execute("""
+            UPDATE personal_firm_recovery_credentials
+            SET last_successful_use_at = CURRENT_TIMESTAMP
+            WHERE recovery_id = ? AND is_active = 1
+        """, (recovery_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def reset_password_and_rotate_personal_firm_recovery(
+    user_id, firm_id, password_hash, expected_recovery_id
+):
+    """Atomically reset one user's password and invalidate the prior credential."""
+    recovery_id, recovery_secret = _new_personal_firm_recovery_material()
+    recovery_secret_hash = generate_password_hash(recovery_secret)
+    conn = get_connection()
+    try:
+        cur = conn.execute("""
+            UPDATE app_users SET password_hash = ?
+            WHERE user_id = ? AND firm_id = ? AND lower(status) = 'active'
+        """, (password_hash, user_id, firm_id))
+        if cur.rowcount != 1:
+            raise ValueError("recovery target is unavailable")
+        cur = conn.execute("""
+            UPDATE personal_firm_recovery_credentials
+            SET recovery_id = ?, recovery_secret_hash = ?, is_active = 1,
+                rotated_at = CURRENT_TIMESTAMP,
+                last_successful_use_at = CURRENT_TIMESTAMP
+            WHERE user_id = ? AND firm_id = ? AND recovery_id = ? AND is_active = 1
+        """, (
+            recovery_id, recovery_secret_hash, user_id, firm_id, expected_recovery_id
+        ))
+        if cur.rowcount != 1:
+            raise ValueError("recovery credential is unavailable")
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+    return {"recovery_id": recovery_id, "recovery_secret": recovery_secret}
 
 
 

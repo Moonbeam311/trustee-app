@@ -1,67 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login</title>
-  <style>
-    body { font-family: Arial; background: #f6f8fa; padding: 40px; }
-    .box { background: white; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; }
-    input { width: 100%; margin-bottom: 10px; padding: 8px; }
-    .password-visibility { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; }
-    .password-visibility input { width: auto; margin: 0; padding: 0; }
-    button { width: 100%; padding: 10px; }
-    .error { color: red; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Hindsfoot OS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='branding/hindsfoot_os.css') }}">
 </head>
-<body>
-  {% include "_hindsfoot_utility_nav.html" %}
+<body class="brand-login-main">
+  <main class="brand-login-layout">
+    <section class="brand-login-logo-panel" aria-label="Hindsfoot OS">
+      <img
+        class="brand-login-logo"
+        src="{{ url_for('static', filename='branding/hindsfoot_os_logo.png') }}"
+        alt="Hindsfoot OS"
+      >
+      <p>Hindsfoot OS</p>
+    </section>
 
-<div class="box">
-  <h2>Login</h2>
+    <section class="brand-login-card">
+      <h1>Login</h1>
 
-  {% if error %}
-    <p class="error">{{ error }}</p>
-  {% endif %}
+    {% if error %}
+      <p class="brand-login-error" role="alert">{{ error }}</p>
+    {% endif %}
 
-  
-{% if error_message %}
-<div style="color:red; margin-bottom:10px;">
-  {{ error_message }}
-</div>
-{% endif %}
+    {% if error_message %}
+      <p class="brand-login-error" role="alert">{{ error_message }}</p>
+    {% endif %}
 
-<form method="POST">
+    <form method="POST">
       <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
 
-    <input type="text" name="username" placeholder="Username" required>
-    <input id="login-password" type="password" name="password" placeholder="Password" required>
-    <div class="password-visibility">
-      <input
-        id="show-password"
-        type="checkbox"
-        aria-controls="login-password"
-        aria-label="Show password"
-      >
-      <label for="show-password">Show password</label>
-    </div>
-    <button type="submit">Login</button>
-  </form>
+      <label for="login-username">Username</label>
+      <input id="login-username" type="text" name="username" autocomplete="username" required autofocus>
 
-  <p style="margin-top: 14px; text-align: center;">
-    <a href="/guide">Open User Guide</a>
-  </p>
-</div>
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" name="password" autocomplete="current-password" required>
 
-<script>
-  (function () {
-    var control = document.getElementById("show-password");
-    var password = document.getElementById("login-password");
-    if (!control || !password) return;
-    control.addEventListener("change", function () {
-      password.type = control.checked ? "text" : "password";
-    });
-  }());
-</script>
+      <div class="password-visibility">
+        <input
+          id="show-password"
+          type="checkbox"
+          aria-controls="login-password"
+          aria-label="Show password"
+        >
+        <label for="show-password">Show password</label>
+      </div>
 
-{% include "_institutional_property_notice.html" %}
+      <button type="submit">Login</button>
+    </form>
+
+    <p class="brand-login-guide">
+      <a href="{{ url_for('guide_page') }}">Open User Guide</a>
+    </p>
+    {% if config.PERSONAL_FIRM_RECOVERY_ENABLED %}
+    <p class="brand-login-guide">
+      <a href="{{ url_for('account_recovery') }}">Can’t access your account?</a>
+    </p>
+    {% endif %}
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      var control = document.getElementById("show-password");
+      var password = document.getElementById("login-password");
+      if (!control || !password) return;
+
+      control.addEventListener("change", function () {
+        password.type = control.checked ? "text" : "password";
+      });
+    }());
+  </script>
+
+  {% include "_institutional_property_notice.html" %}
 </body>
 </html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Recovery | Hindsfoot OS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='branding/hindsfoot_os.css') }}">
+</head>
+<body class="brand-login-main">
+  <main class="brand-login-layout">
+    <section class="brand-login-card">
+      <h1>Account Recovery</h1>
+      <p class="brand-login-guide"><a href="{{ url_for('forgot_username') }}">Forgot username</a></p>
+      <p class="brand-login-guide"><a href="{{ url_for('reset_password') }}">Reset password</a></p>
+      <p class="brand-login-guide"><a href="{{ url_for('login') }}">Return to Login</a></p>
+    </section>
+  </main>
+</body>
+</html>

@@ -26,6 +26,7 @@ from services.services_intake import build_instrument_draft_packet
 import json
 import os
 import base64
+import hashlib
 import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError, generate_csrf as generate_wtf_csrf_token
 from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
@@ -279,11 +280,18 @@ from database.db import (
     ensure_role_tables,
     ensure_user_tables,
     get_user_by_username,
+    get_user_by_username_in_firm,
+    get_user_by_username_in_firm_by_id,
     create_app_user,
     get_next_user_id,
     get_all_app_users,
     update_app_user,
     update_app_user_password,
+    update_app_user_password_in_firm,
+    ensure_personal_firm_recovery_table,
+    verify_personal_firm_recovery_credential,
+    mark_personal_firm_recovery_used,
+    reset_password_and_rotate_personal_firm_recovery,
     get_next_role_id,
     create_role_record,
     get_all_roles,
@@ -444,6 +452,14 @@ DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH.as_posix()}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["INSTITUTIONAL_CUSTODY_NOTICE"] = (
+    (os.getenv("INSTITUTIONAL_CUSTODY_NOTICE") or "").strip()
+    or "Institutional records, workflows, generated instruments, certificates, exports, and archive materials are maintained under fiduciary custody. Authorized Access Only."
+)
+app.config["PERSONAL_FIRM_RECOVERY_ENABLED"] = (
+    (os.getenv("PERSONAL_FIRM_RECOVERY_ENABLED") or "").strip().lower()
+    in {"1", "true", "yes", "on"}
+)
 ext_db.init_app(app)
 
 # Runtime SQLite schema compatibility for deployed databases.
@@ -658,6 +674,9 @@ LOGIN_ATTEMPTS_LIMIT = 5
 LOGIN_LOCKOUT_SECONDS = 300  # 5 minutes
 
 login_attempts = {}
+RECOVERY_ATTEMPTS_LIMIT = 5
+RECOVERY_LOCKOUT_SECONDS = 300
+recovery_attempts = {}
 SESSION_TIMEOUT_SECONDS = 900  # 15 minutes
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=SESSION_TIMEOUT_SECONDS)
 
@@ -8644,12 +8663,26 @@ def users_edit(username):
 
 @app.route("/users/<username>/reset_password", methods=["GET", "POST"])
 def users_reset_password(username):
-    gate = require_master_admin()
-    if gate:
-        return gate
-    user = get_user_by_username(username)
+    if not session.get("username"):
+        return redirect(url_for("login"))
+    if session.get("role") != "Admin" or not user_has_effective_permission(
+        session.get("username"), "manage_users"
+    ):
+        return render_template(
+            "access_denied.html", reason="Admin manage-users permission is required."
+        ), 403
+    active_firm_id = session.get("firm_id")
+    user = get_user_by_username_in_firm(username, active_firm_id)
     if not user:
-        return f"User {username} not found", 404
+        log_change(
+            "security",
+            session.get("username") or "unknown",
+            "user_password_reset_scope_denied",
+            "Password reset target was not available in the active firm.",
+        )
+        return render_template(
+            "access_denied.html", reason="This user is not available within your assigned firm scope."
+        ), 404
 
     if request.method == "POST":
         if not validate_csrf_token():
@@ -8672,8 +8705,13 @@ def users_reset_password(username):
                 error_message="Passwords do not match."
             )
 
-        update_app_user_password(username, generate_password_hash(password))
-        log_change("app_user", username, "reset_password", f"Master admin reset password for user '{username}'")
+        if not update_app_user_password_in_firm(
+            username, active_firm_id, generate_password_hash(password)
+        ):
+            return render_template(
+                "access_denied.html", reason="This user is not available within your assigned firm scope."
+            ), 404
+        log_change("app_user", username, "reset_password", "Authorized Admin reset a same-firm user password.")
         flash(f"Password reset successfully for {username}.")
         return redirect(url_for("users_dashboard"))
 
@@ -12599,6 +12637,9 @@ def enforce_session_timeout():
         "hosted_auth_diagnostic_once",
         "hosted_repair_admin_access_once",
         "hosted_trust_diagnostic_once",
+        "account_recovery",
+        "forgot_username",
+        "reset_password",
     }
 
     if request.endpoint not in public_endpoints:
@@ -12620,6 +12661,9 @@ def enforce_session_timeout():
         "hosted_auth_diagnostic_once",
         "hosted_repair_admin_access_once",
         "hosted_trust_diagnostic_once",
+        "account_recovery",
+        "forgot_username",
+        "reset_password",
     }
     if request.endpoint in allowed_routes or request.endpoint is None:
         return
@@ -12669,7 +12713,7 @@ def enforce_session_timeout():
 
     if request.method == "POST":
         export_policy = get_export_policy()
-        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "reset_admin_once", "admin_toggle_export_policy"}
+        read_only_exempt = {"login", "logout", "bootstrap_admin_once", "reset_admin_once", "admin_toggle_export_policy", "forgot_username", "reset_password"}
         if bool(export_policy.get("read_only_mode", False)) and request.endpoint not in read_only_exempt:
             log_change(
                 "security",
@@ -19015,6 +19059,141 @@ def admin_audit_log():
 @app.route("/guide")
 def guide_page():
     return render_template("guide_page.html")
+
+
+RECOVERY_FAILURE_MESSAGE = "The recovery information could not be verified."
+
+
+def _recovery_feature_gate():
+    if app.config.get("PERSONAL_FIRM_RECOVERY_ENABLED") is not True:
+        return render_template("access_denied.html", reason="Account recovery is unavailable."), 404
+    return None
+
+
+def _recovery_attempt_bucket(purpose, recovery_id, username=""):
+    # Submitted secrets are deliberately excluded from limiter keys.
+    normalized = f"{purpose}|{recovery_id.strip().lower()}|{username.strip().lower()}"
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+
+def _recovery_bucket_locked(bucket):
+    attempt = recovery_attempts.get(bucket) or {}
+    return float(attempt.get("locked_until") or 0) > datetime.now(UTC).timestamp()
+
+
+def _record_recovery_failure(bucket):
+    now_ts = datetime.now(UTC).timestamp()
+    attempt = recovery_attempts.get(bucket) or {"count": 0, "locked_until": 0}
+    if float(attempt.get("locked_until") or 0) <= now_ts:
+        attempt["count"] = int(attempt.get("count") or 0) + 1
+    if attempt["count"] >= RECOVERY_ATTEMPTS_LIMIT:
+        attempt["locked_until"] = now_ts + RECOVERY_LOCKOUT_SECONDS
+    recovery_attempts[bucket] = attempt
+
+
+def _active_user_for_recovery(credential):
+    if not credential:
+        return None
+    user = get_user_by_username_in_firm_by_id(
+        credential["user_id"], credential["firm_id"]
+    )
+    if not user or (user["status"] or "").lower() != "active":
+        return None
+    return user
+
+
+@app.route("/account-recovery")
+def account_recovery():
+    gate = _recovery_feature_gate()
+    if gate:
+        return gate
+    return render_template("auth/account_recovery.html")
+
+
+@app.route("/account-recovery/forgot-username", methods=["GET", "POST"])
+def forgot_username():
+    gate = _recovery_feature_gate()
+    if gate:
+        return gate
+    if request.method == "GET":
+        return render_template("auth/forgot_username.html")
+
+    recovery_id = (request.form.get("recovery_id") or "").strip()
+    recovery_secret = request.form.get("recovery_secret") or ""
+    bucket = _recovery_attempt_bucket("forgot_username", recovery_id)
+    if _recovery_bucket_locked(bucket):
+        return render_template("auth/forgot_username.html", error_message=RECOVERY_FAILURE_MESSAGE)
+
+    credential = verify_personal_firm_recovery_credential(recovery_id, recovery_secret)
+    user = _active_user_for_recovery(credential)
+    if not user:
+        _record_recovery_failure(bucket)
+        return render_template("auth/forgot_username.html", error_message=RECOVERY_FAILURE_MESSAGE)
+
+    recovery_attempts.pop(bucket, None)
+    mark_personal_firm_recovery_used(recovery_id)
+    log_change(
+        "account_recovery", credential["user_id"], "username_recovered",
+        "Local recovery credential verified.", firm_id=credential["firm_id"]
+    )
+    return render_template("auth/forgot_username.html", recovered_username=user["username"])
+
+
+@app.route("/account-recovery/reset-password", methods=["GET", "POST"])
+def reset_password():
+    gate = _recovery_feature_gate()
+    if gate:
+        return gate
+    if request.method == "GET":
+        return render_template("auth/reset_password.html")
+
+    username = (request.form.get("username") or "").strip()
+    recovery_id = (request.form.get("recovery_id") or "").strip()
+    recovery_secret = request.form.get("recovery_secret") or ""
+    new_password = request.form.get("new_password") or ""
+    confirm_password = request.form.get("confirm_password") or ""
+    bucket = _recovery_attempt_bucket("reset_password", recovery_id, username)
+    if _recovery_bucket_locked(bucket):
+        return render_template("auth/reset_password.html", error_message=RECOVERY_FAILURE_MESSAGE)
+
+    credential = verify_personal_firm_recovery_credential(recovery_id, recovery_secret)
+    user = _active_user_for_recovery(credential)
+    valid = bool(
+        user
+        and user["username"] == username
+        and credential["user_id"] == user["user_id"]
+        and credential["firm_id"] == user["firm_id"]
+        and new_password
+        and new_password == confirm_password
+    )
+    if not valid:
+        _record_recovery_failure(bucket)
+        return render_template("auth/reset_password.html", error_message=RECOVERY_FAILURE_MESSAGE)
+
+    try:
+        rotated = reset_password_and_rotate_personal_firm_recovery(
+            user["user_id"], user["firm_id"], generate_password_hash(new_password),
+            recovery_id,
+        )
+    except (ValueError, sqlite3.Error):
+        _record_recovery_failure(bucket)
+        return render_template("auth/reset_password.html", error_message=RECOVERY_FAILURE_MESSAGE)
+
+    recovery_attempts.pop(bucket, None)
+    log_change(
+        "account_recovery", user["user_id"], "password_reset",
+        "Local recovery password reset completed; recovery credential rotated.",
+        firm_id=user["firm_id"],
+    )
+    session.clear()
+    response = make_response(render_template(
+        "auth/reset_password.html",
+        recovery_complete=True,
+        new_recovery_id=rotated["recovery_id"],
+        new_recovery_secret=rotated["recovery_secret"],
+    ))
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 @app.route("/debug/auth-snapshot")

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forgot Username | Hindsfoot OS</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='branding/hindsfoot_os.css') }}">
+</head>
+<body class="brand-login-main">
+  <main class="brand-login-layout">
+    <section class="brand-login-card">
+      <h1>Forgot Username</h1>
+      {% if error_message %}<p class="brand-login-error" role="alert">{{ error_message }}</p>{% endif %}
+      {% if recovered_username %}
+        <p role="status">Your username is: <strong>{{ recovered_username }}</strong></p>
+      {% else %}
+      <p>Use the recovery identifier and recovery secret issued for account recovery. Do not enter your normal login password here.</p>
+      <form method="POST" autocomplete="off">
+        <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
+        <label for="recovery-id">Recovery identifier</label>
+        <input id="recovery-id" name="recovery_id" type="text" autocomplete="one-time-code" autocapitalize="none" spellcheck="false" required autofocus>
+        <label for="recovery-secret">Recovery secret</label>
+        <input id="recovery-secret" name="recovery_secret" type="password" autocomplete="one-time-code" required>
+        <button type="submit">Recover Username</button>
+      </form>
+      {% endif %}
+      <p class="brand-login-guide"><a href="{{ url_for('account_recovery') }}">Account Recovery</a></p>
+      <p class="brand-login-guide"><a href="{{ url_for('login') }}">Return to Login</a></p>
+    </section>
+  </main>
+</body>
+</html>

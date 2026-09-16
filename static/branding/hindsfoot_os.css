@@ -163,6 +163,139 @@
   text-align: center;
 }
 
+.brand-login-main {
+  min-height: 100vh;
+  margin: 0;
+  padding: clamp(1.25rem, 5vw, 3.5rem);
+  color: var(--hindsfoot-black);
+  background: var(--archive-ivory);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.5;
+}
+
+.brand-login-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 20rem) minmax(18rem, 26rem);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 7vw, 5rem);
+  width: min(100%, 54rem);
+  min-height: calc(100vh - 10rem);
+  margin: 0 auto;
+}
+
+.brand-login-logo-panel {
+  color: var(--continuity-blue);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.brand-login-logo-panel p {
+  margin: 1rem 0 0;
+}
+
+.brand-login-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 0.75rem;
+  border: 1px solid rgba(198, 154, 58, 0.7);
+  background: var(--hindsfoot-white);
+  object-fit: contain;
+}
+
+.brand-login-card {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  border-top: 4px solid var(--legacy-gold);
+  border-radius: 0.25rem;
+  background: var(--hindsfoot-white);
+  box-shadow: 0 1rem 2.5rem rgba(17, 16, 14, 0.12);
+}
+
+.brand-login-card h1 {
+  margin: 0 0 1.25rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2rem;
+}
+
+.brand-login-card label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+}
+
+.brand-login-card input[type="text"],
+.brand-login-card input[type="password"] {
+  width: 100%;
+  min-height: 2.75rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--continuity-blue);
+  border-radius: 0.2rem;
+  color: var(--hindsfoot-black);
+  background: var(--hindsfoot-white);
+  font: inherit;
+}
+
+.brand-login-card .password-visibility {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1.25rem;
+}
+
+.brand-login-card .password-visibility input,
+.brand-login-card .password-visibility label {
+  width: auto;
+  margin: 0;
+}
+
+.brand-login-card button {
+  width: 100%;
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  border: 2px solid var(--hindsfoot-black);
+  border-radius: 0.2rem;
+  color: var(--hindsfoot-white);
+  background: var(--hindsfoot-black);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.brand-login-card button:hover {
+  border-color: var(--legacy-gold);
+}
+
+.brand-login-card input:focus-visible,
+.brand-login-card button:focus-visible,
+.brand-login-guide a:focus-visible {
+  outline: 3px solid var(--continuity-blue);
+  outline-offset: 3px;
+  box-shadow: var(--brand-focus-ring);
+}
+
+.brand-login-error {
+  padding: 0.65rem 0.75rem;
+  border-left: 3px solid #a11b1b;
+  color: #7a1111;
+  background: #fff2f2;
+  font-weight: 700;
+}
+
+.brand-login-guide {
+  margin: 1.1rem 0 0;
+  text-align: center;
+}
+
+.brand-login-guide a {
+  color: var(--continuity-blue);
+  font-weight: 700;
+}
+
 @media (max-width: 760px) {
   .brand-utility {
     align-items: flex-start;
@@ -189,6 +322,21 @@
 
   .brand-primary-actions {
     justify-content: center;
+  }
+
+  .brand-login-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .brand-login-logo-panel {
+    width: min(58vw, 14rem);
+    margin: 0 auto;
+  }
+
+  .brand-login-card {
+    width: min(100%, 26rem);
+    margin: 0 auto;
   }
 }
 

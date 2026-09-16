@@ -96,7 +96,18 @@ def initialize_personal_firm(db_path, firm_id, username, password, owner_id=None
 
         if not check_password_hash(existing.get("password_hash") or "", password):
             raise ValueError("existing Personal Firm credentials do not match this invocation")
-        return {"status": "already_initialized", "db_path": str(target), "owner_id": existing_owner}
+        os.environ["DB_PATH"] = str(target)
+        os.environ["ENSURE_HOSTED_ADMIN"] = "0"
+        os.environ.pop("HOSTED_BOOTSTRAP_PASSWORD", None)
+        from database import db
+        db.DB_PATH = target
+        db.ensure_personal_firm_recovery_table()
+        return {
+            "status": "already_initialized",
+            "db_path": str(target),
+            "owner_id": existing_owner,
+            "recovery_schema_ready": True,
+        }
 
     target.parent.mkdir(parents=True, exist_ok=True)
     owner_id = owner_id or f"OWNER-{uuid.uuid4().hex.upper()}"
@@ -109,11 +120,13 @@ def initialize_personal_firm(db_path, firm_id, username, password, owner_id=None
 
     from werkzeug.security import generate_password_hash
     from database import db
+    db.DB_PATH = target
 
     db.ensure_role_tables()
     db.ensure_user_tables()
     db.ensure_user_permission_override_tables()
     db.init_audit_table()
+    db.ensure_personal_firm_recovery_table()
 
     connection = sqlite3.connect(target)
     try:
@@ -141,7 +154,12 @@ def initialize_personal_firm(db_path, firm_id, username, password, owner_id=None
     finally:
         connection.close()
 
-    return {"status": "initialized", "db_path": str(target), "owner_id": owner_id}
+    return {
+        "status": "initialized",
+        "db_path": str(target),
+        "owner_id": owner_id,
+        "recovery_schema_ready": True,
+    }
 
 
 def main(argv=None):
@@ -164,6 +182,7 @@ def main(argv=None):
         print(f"Initialization refused: {exc}", file=sys.stderr)
         return 2
     print(f"Personal Firm {result['status']} at {result['db_path']}")
+    print("Recovery schema ready; provision a credential separately with rotate_personal_firm_recovery.py.")
     return 0
 
 
