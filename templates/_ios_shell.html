@@ -21,5 +21,32 @@
     <a href="/admin/workspace/system">SYSTEM</a>
     <a href="/admin/workspace/developer">DEVELOPER</a>
     <a href="/logout">LOGOUT</a>
+
+    {% if session.get("role") == "Admin" %}
+      <a href="/admin">Admin</a>
+    {% endif %}
+
+    {% if session.get("role") in ["Admin", "Trustee"] %}
+      <a href="/reports">Reports</a>
+      <a href="{{ url_for('genealogy_legacy_workspace') }}">Genealogy &amp; Legacy</a>
+    {% endif %}
+
+    {% if session.get("role") in ["Admin", "Trustee", "Viewer"] %}
+      <a href="/work-learning-hub">Work &amp; Learning Hub</a>
+      <a href="/learning">Learning</a>
+      <a href="/videos">Videos</a>
+      <a href="/workspaces">Workspace</a>
+      <a href="/discussions">Discussions</a>
+      <a href="/decision">Decision</a>
+      {% if trust is defined and trust and trust.trust_id %}
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Execution</a>
+{% elif trust_id is defined and trust_id %}
+      <a href="{{ url_for('trust_execution_dashboard', trust_id=trust_id) }}">Execution</a>
+{% else %}
+      <a href="/execution">Execution</a>
+{% endif %}
+      <a href="/documents">Documents</a>
+      <a href="/visualization">Visualization</a>
+    {% endif %}
   </div>
 </section>
