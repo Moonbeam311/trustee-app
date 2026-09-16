@@ -1,13 +1,20 @@
 import csv
 import json
 import hashlib
+import os
 from pathlib import Path
 from datetime import datetime
 
 from services.services_institutional_execution import get_execution_session
 
 
-EXPORT_ROOT = Path("exports/execution_packages")
+_REPOSITORY_ROOT = Path(__file__).resolve().parent.parent
+_CONFIGURED_EXPORT_ROOT = os.getenv("EXPORT_ROOT")
+EXPORT_ROOT = (
+    Path(_CONFIGURED_EXPORT_ROOT).expanduser().resolve()
+    if _CONFIGURED_EXPORT_ROOT and _CONFIGURED_EXPORT_ROOT.strip()
+    else (_REPOSITORY_ROOT / "exports").resolve()
+) / "execution_packages"
 
 
 def _safe_write_json(path, data):

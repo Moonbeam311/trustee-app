@@ -176,6 +176,8 @@ from database.db import (
     get_all_trusts,
     get_trust_by_id,
     update_trust_fields,
+    get_trust_by_id_in_scope,
+    update_trust_fields_in_scope,
     get_next_property_id,
     create_property_record,
     get_property_by_id,
@@ -1129,7 +1131,7 @@ def get_current_owner():
     Returns the current authenticated owner identity.
     Centralized for Phase 5 owner isolation.
     """
-    return session.get("username")
+    return session.get("owner_id") or session.get("username")
 
 
 def get_trust_firm_id(trust):
@@ -2850,6 +2852,14 @@ def allowed_file(filename):
 
 
 ENDPOINT_PERMISSION_RULES = {
+    "create_trust_step1": "create_trust",
+    "create_trust_step2_grantor": "edit_trust",
+    "create_trust_step2": "edit_trust",
+    "create_trust_step3": "edit_trust",
+    "create_trust_step4": "edit_trust",
+    "create_trust_step5": "edit_trust",
+    "create_trust_step6": "edit_trust",
+    "create_trust_step7": "edit_trust",
     "permissions_dashboard": "manage_permissions",
     "security_dashboard": "view_security",
     "users_dashboard": "manage_users",
@@ -3488,6 +3498,10 @@ def create_trust_launch():
 @app.route("/create_trust_step1", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step1():
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template(
@@ -3519,7 +3533,8 @@ def create_trust_step1():
             "asset_categories": "Not Yet Selected",
             "generate_schedule_recommendations": "Not Yet Selected",
             "status": "Draft",
-        "owner_id": get_current_owner()
+            "firm_id": firm_id,
+            "owner_id": owner_id,
         }
         create_trust_record(trust)
         return redirect(url_for("create_trust_step2_grantor", trust_id=trust_id))
@@ -3529,19 +3544,23 @@ def create_trust_step1():
 @app.route("/create_trust_step2_grantor/<trust_id>", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step2_grantor(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
 
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("create_trust_step2_grantor.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields(trust_id, {
+        update_trust_fields_in_scope(trust_id, {
             "grantor_name": request.form.get("grantor_name"),
             "grantor_type": request.form.get("grantor_type"),
             "grantor_contact": request.form.get("grantor_contact"),
-        })
+        }, firm_id, owner_id)
 
         return redirect(url_for("create_trust_step2", trust_id=trust_id))
 
@@ -3551,102 +3570,126 @@ def create_trust_step2_grantor(trust_id):
 @app.route("/create_trust_step2/<trust_id>", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step2(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards(), error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields(trust_id, {
+        update_trust_fields_in_scope(trust_id, {
             "trust_type": request.form.get("trust_type"),
             "trust_purpose": request.form.get("trust_purpose"),
             "accounting_method": request.form.get("accounting_method"),
             "workflow_mode": request.form.get("workflow_mode"),
             "status": "Draft - Step 2 Complete",
-        })
+        }, firm_id, owner_id)
         return redirect(url_for("create_trust_step3", trust_id=trust_id))
     return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards())
 
 @app.route("/create_trust_step3/<trust_id>", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step3(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("create_trust_step3.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields(trust_id, {
+        update_trust_fields_in_scope(trust_id, {
             "settlor_name": request.form.get("settlor_name"),
             "trustee_name": request.form.get("trustee_name"),
             "successor_trustee_name": request.form.get("successor_trustee_name"),
             "beneficiary_name": request.form.get("beneficiary_name"),
             "status": "Draft - Step 3 Complete",
-        })
+        }, firm_id, owner_id)
         return redirect(url_for("create_trust_step4", trust_id=trust_id))
     return render_template("create_trust_step3.html", trust=trust)
 
 @app.route("/create_trust_step4/<trust_id>", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step4(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("create_trust_step4.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields(trust_id, {
+        update_trust_fields_in_scope(trust_id, {
             "record_visibility": request.form.get("record_visibility"),
             "workflow_mode_confirmed": request.form.get("workflow_mode_confirmed"),
             "ai_explanations": request.form.get("ai_explanations"),
             "recommended_guidance": request.form.get("recommended_guidance"),
             "status": "Draft - Step 4 Complete",
-        })
+        }, firm_id, owner_id)
         return redirect(url_for("create_trust_step5", trust_id=trust_id))
     return render_template("create_trust_step4.html", trust=trust)
 
 @app.route("/create_trust_step5/<trust_id>", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step5(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("create_trust_step5.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields(trust_id, {
+        update_trust_fields_in_scope(trust_id, {
             "initial_corpus_description": request.form.get("initial_corpus_description"),
             "property_mapping_timing": request.form.get("property_mapping_timing"),
             "asset_categories": request.form.get("asset_categories"),
             "generate_schedule_recommendations": request.form.get("generate_schedule_recommendations"),
             "status": "Draft - Step 5 Complete",
-        })
+        }, firm_id, owner_id)
         return redirect(url_for("create_trust_step6", trust_id=trust_id))
     return render_template("create_trust_step5.html", trust=trust)
 
 @app.route("/create_trust_step6/<trust_id>", methods=["GET", "POST"])
 @csrf.exempt
 def create_trust_step6(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("create_trust_step6.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields(trust_id, {"status": "Finalized"})
+        update_trust_fields_in_scope(trust_id, {"status": "Finalized"}, firm_id, owner_id)
         return redirect(url_for("trust_post_create_review", trust_id=trust_id))
     return render_template("create_trust_step6.html", trust=trust)
 
 @app.route("/create_trust_step7/<trust_id>")
 def create_trust_step7(trust_id):
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found"
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
     return render_template("create_trust_step7.html", trust=trust)
 
 @app.route("/add_property", methods=["GET", "POST"])
@@ -19001,7 +19044,8 @@ def login():
         if user and (user["status"] or "").lower() == "active" and check_password_hash(user["password_hash"], password):
             session["role"] = user["role_name"]
             session["username"] = user["username"]
-            session["firm_id"] = user["firm_id"] if "firm_id" in user.keys() and user["firm_id"] else "FIRM-001"
+            session["firm_id"] = user["firm_id"] if "firm_id" in user.keys() else None
+            session["owner_id"] = user["owner_id"] if "owner_id" in user.keys() else None
             session["last_activity"] = datetime.now(UTC).timestamp()
 
             login_attempts.pop(username, None)

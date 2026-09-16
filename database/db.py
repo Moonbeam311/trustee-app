@@ -950,6 +950,48 @@ def create_trust_record(trust_data):
     conn.commit()
     conn.close()
 
+
+def get_trust_by_id_in_scope(trust_id, firm_id, owner_id):
+    """Strict lookup for creation workflows; never resolves tenant fallbacks."""
+    firm_id = str(firm_id or "").strip()
+    owner_id = str(owner_id or "").strip()
+    if not firm_id or not owner_id:
+        return None
+    conn = get_connection()
+    try:
+        return conn.execute(
+            "SELECT * FROM trusts WHERE trust_id = ? AND firm_id = ? AND owner_id = ?",
+            (trust_id, firm_id, owner_id),
+        ).fetchone()
+    finally:
+        conn.close()
+
+
+def update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id):
+    """Strict update for creation workflows; scope values cannot be changed."""
+    firm_id = str(firm_id or "").strip()
+    owner_id = str(owner_id or "").strip()
+    if not firm_id or not owner_id:
+        return False
+    updates = {
+        key: value for key, value in dict(updates).items()
+        if key not in {"firm_id", "owner_id"}
+    }
+    if not updates:
+        return False
+    conn = get_connection()
+    try:
+        fields = ", ".join(f"{key} = ?" for key in updates)
+        values = list(updates.values()) + [trust_id, firm_id, owner_id]
+        cur = conn.execute(
+            f"UPDATE trusts SET {fields} WHERE trust_id = ? AND firm_id = ? AND owner_id = ?",
+            values,
+        )
+        conn.commit()
+        return bool(cur.rowcount)
+    finally:
+        conn.close()
+
 def ensure_table_firm_id_column(table_name, default_firm_id=None):
     """
     Hosted/legacy SQLite safety helper.
@@ -3455,9 +3497,16 @@ def ensure_user_tables():
         username TEXT UNIQUE,
         password_hash TEXT,
         role_name TEXT,
-        status TEXT
+        status TEXT,
+        firm_id TEXT,
+        owner_id TEXT
     )
     """)
+
+    existing_columns = {row["name"] for row in cur.execute("PRAGMA table_info(app_users)")}
+    for column_name in ("firm_id", "owner_id"):
+        if column_name not in existing_columns:
+            cur.execute(f"ALTER TABLE app_users ADD COLUMN {column_name} TEXT")
 
     conn.commit()
     conn.close()
@@ -3483,8 +3532,8 @@ def create_app_user(data):
     cur = conn.cursor()
     cur.execute("""
         INSERT INTO app_users (
-            user_id, username, password_hash, role_name, status, firm_id
-        ) VALUES (?, ?, ?, ?, ?, ?)
+            user_id, username, password_hash, role_name, status, firm_id, owner_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
     """, (
         data["user_id"],
         data["username"],
@@ -3492,6 +3541,7 @@ def create_app_user(data):
         data["role_name"],
         data["status"],
         data["firm_id"],
+        data.get("owner_id"),
     ))
     conn.commit()
     conn.close()
@@ -3876,6 +3926,7 @@ def ensure_firm_columns():
                 print(f"WARNING: {table}: {e}")
 
     add_column("app_users", "firm_id TEXT")
+    add_column("app_users", "owner_id TEXT")
     add_column("audit_log", "firm_id TEXT")
     add_column("trusts", "firm_id TEXT")
 
