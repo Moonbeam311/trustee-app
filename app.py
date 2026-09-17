@@ -452,6 +452,7 @@ DB_PATH = Path(os.getenv("DB_PATH", str(DEFAULT_DB_PATH))).resolve()
 
 app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{DB_PATH.as_posix()}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["INSTITUTION_DISPLAY_NAME"] = (os.getenv("INSTITUTION_DISPLAY_NAME") or "").strip()
 app.config["INSTITUTIONAL_CUSTODY_NOTICE"] = (
     (os.getenv("INSTITUTIONAL_CUSTODY_NOTICE") or "").strip()
     or "Institutional records, workflows, generated instruments, certificates, exports, and archive materials are maintained under fiduciary custody. Authorized Access Only."

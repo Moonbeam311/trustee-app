@@ -58,7 +58,7 @@
     <h1>Institutional Command Center</h1>
     <p>Start, administer, govern, execute, certify, and preserve institutional work from one role-aware operating surface.</p>
     <div class="context-grid" aria-label="Current institutional context">
-      <div class="context-item"><small>Institution / firm</small><strong>{{ admin_context.firm_id }}</strong></div>
+      <div class="context-item"><small>Institution / firm</small><strong>{{ config.get("INSTITUTION_DISPLAY_NAME") or admin_context.firm_id }}</strong>{% if config.get("INSTITUTION_DISPLAY_NAME") %}<small>Internal scope: {{ admin_context.firm_id }}</small>{% endif %}</div>
       <div class="context-item"><small>Operator</small><strong>{{ admin_context.username }}</strong></div>
       <div class="context-item"><small>Role</small><strong>{{ admin_context.role }}</strong></div>
       <div class="context-item"><small>Security context</small><strong>Firm-scoped authenticated session</strong></div>

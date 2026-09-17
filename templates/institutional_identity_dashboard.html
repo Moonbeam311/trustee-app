@@ -13,8 +13,8 @@
   <h2>Create Brand Package</h2>
   <form method="post" action="/institutional-identity/brand-package/new">
     <input name="package_name" value="Default Institution Brand">
-    <input name="institution_name" value="LUNA ISAAC MISHOE III Revocable Trust">
-    <input name="firm_id" value="FIRM-002">
+    <input name="institution_name" value="{{ config.get('INSTITUTION_DISPLAY_NAME') or '' }}">
+    <input name="firm_id" value="{{ session.get('firm_id') or '' }}">
     <input name="logo_path" placeholder="Logo asset path">
     <input name="seal_path" placeholder="Seal asset path">
     <input name="watermark_path" placeholder="Watermark asset path">
@@ -31,9 +31,9 @@
 <section class="admin-card">
   <h2>Create Digital Signature Profile</h2>
   <form method="post" action="/institutional-identity/signature-profile/new">
-    <input name="person_name" value="LUNA ISAAC MISHOE III">
+    <input name="person_name" value="{{ config.get('INSTITUTION_DISPLAY_NAME') or '' }}">
     <input name="person_role" value="Trustee">
-    <input name="firm_id" value="FIRM-002">
+    <input name="firm_id" value="{{ session.get('firm_id') or '' }}">
     <select name="signature_method">
       <option value="stored_digital_signature">Stored Digital Signature</option>
       <option value="typed_signature">Typed Signature</option>
@@ -45,7 +45,7 @@
     </select>
     <input name="signature_image_path" placeholder="Signature image asset path">
     <input name="initials_image_path" placeholder="Initials image asset path">
-    <input name="typed_signature" value="Luna Isaac Mishoe III">
+    <input name="typed_signature" value="{{ config.get('INSTITUTION_DISPLAY_NAME') or '' }}">
     <input name="title_block" value="Trustee">
     <input name="credential_block" placeholder="Credentials">
     <input name="certificate_reference" placeholder="Certificate reference">

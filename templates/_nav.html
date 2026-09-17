@@ -30,6 +30,13 @@
 <p class="hindsfoot-operator-context">
   <strong>Operator:</strong> {{ session.get("username") }}
   {% if session.get("role") %} | <strong>Role:</strong> {{ session.get("role") }}{% endif %}
-  {% if session.get("firm_id") %} | <strong>Firm:</strong> {{ session.get("firm_id") }}{% endif %}
+  {% if session.get("firm_id") %}
+    {% if config.get("INSTITUTION_DISPLAY_NAME") %}
+      | <strong>Institution:</strong> {{ config.get("INSTITUTION_DISPLAY_NAME") }}
+      | <strong>Internal Scope:</strong> {{ session.get("firm_id") }}
+    {% else %}
+      | <strong>Firm:</strong> {{ session.get("firm_id") }}
+    {% endif %}
+  {% endif %}
 </p>
 {% endif %}
