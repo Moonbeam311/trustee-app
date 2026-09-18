@@ -89,6 +89,14 @@
     <form method="POST" action="{{ url_for('intake_start') }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
+        {% if focused_intake_id %}
+            <input type="hidden" name="focused_intake_id" value="{{ focused_intake_id }}">
+            <div class="intake-note-card">
+                <strong>Continuing from a saved Focused Intake.</strong><br>
+                Your saved identity remains separate. Choose the Full Guided Intake lane you want to begin.
+            </div>
+        {% endif %}
+
         <h2>Step 1 — What brings you here today?</h2>
         <p style="line-height:1.55;">
             Choose one lane. This determines which intake path appears next.

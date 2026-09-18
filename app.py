@@ -124,6 +124,12 @@ from services.services_institutional_execution import (
     freeze_execution_archive,
 )
 from services.services_intake import ensure_intake_tables, get_intake_lanes, create_intake_session
+from database.intake_bridge_migration import ensure_intake_bridge_table
+from services.services_intake_bridge import (
+    IntakeBridgeError,
+    create_or_reuse_guided_intake,
+    establish_person_bridge,
+)
 from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from services.services_intake import build_client_snapshot
@@ -20226,22 +20232,99 @@ def intake_start():
     ensure_intake_tables()
     lanes = get_intake_lanes()
 
+    bridge_ui_enabled = (
+        os.getenv("HINDSFOOT_BRIDGE_1D_ENABLED", "").strip() == "1"
+    )
+
+    focused_intake_id = (
+        request.values.get("focused_intake_id") or ""
+    ).strip()
+
+    if focused_intake_id and not bridge_ui_enabled:
+        return render_template(
+            "access_denied.html",
+            reason="Focused-to-Guided intake bridge is not enabled in this runtime.",
+        ), 403
+
     if request.method == "POST":
         lane_key = request.form.get("intake_lane")
-        if not lane_key or lane_key not in lanes:
-            flash("Please select a valid intake path.", "warning")
-            return render_template("intake/start.html", lanes=lanes)
 
-        session_data = create_intake_session(
-            lane_key=lane_key,
-            created_by=session.get("username") if "session" in globals() else None
+        if lane_key not in lanes:
+            flash("Please select a valid intake path.", "warning")
+            return render_template(
+                "intake/start.html",
+                lanes=lanes,
+                focused_intake_id=focused_intake_id,
+                bridge_ui_enabled=bridge_ui_enabled,
+            )
+
+        actor = (session.get("username") or session.get("user_id") or "").strip()
+
+        if focused_intake_id:
+            firm_id = str(session.get("firm_id") or "").strip()
+            owner_id = str(session.get("owner_id") or "").strip()
+
+            if not firm_id or not owner_id or not actor:
+                return render_template(
+                    "access_denied.html",
+                    reason="Authenticated firm, owner, and actor scope are required.",
+                ), 403
+
+            try:
+                ensure_intake_bridge_table(DB_PATH)
+
+                establish_person_bridge(
+                    DB_PATH,
+                    owner_id=owner_id,
+                    firm_id=firm_id,
+                    focused_intake_id=focused_intake_id,
+                    created_by=actor,
+                )
+
+                bridge = create_or_reuse_guided_intake(
+                    DB_PATH,
+                    firm_id=firm_id,
+                    focused_intake_id=focused_intake_id,
+                    guided_lane_key=lane_key,
+                    created_by=actor,
+                    guided_session_factory=create_intake_session,
+                )
+
+                session_data = {
+                    "intake_id": bridge["guided_intake_id"],
+                }
+
+            except IntakeBridgeError:
+                flash(
+                    "Focused intake could not be linked to Full Guided Intake.",
+                    "warning",
+                )
+                return render_template(
+                    "intake/start.html",
+                    lanes=lanes,
+                    focused_intake_id=focused_intake_id,
+                    bridge_ui_enabled=bridge_ui_enabled,
+                ), 400
+
+        else:
+            session_data = create_intake_session(
+                lane_key=lane_key,
+                created_by=actor or None,
+            )
+
+        return redirect(
+            url_for(
+                "intake_universal_profile",
+                intake_id=session_data["intake_id"],
+            )
         )
 
-        return redirect(url_for("intake_universal_profile", intake_id=session_data["intake_id"]))
-
-    return render_template("intake/start.html", lanes=lanes)
-
-
+    return render_template(
+        "intake/start.html",
+        lanes=lanes,
+        focused_intake_id=focused_intake_id,
+        bridge_ui_enabled=bridge_ui_enabled,
+    )
 
 # -------------------------------------------------------------------
 # INT-1B — Intake Translation Map
@@ -23918,7 +24001,10 @@ def identity_intake_summary(intake_id):
     return render_template(
         "intake_identity_summary.html",
         intake=intake,
-        orchestration=orchestration
+        orchestration=orchestration,
+        bridge_ui_enabled=(
+            os.getenv("HINDSFOOT_BRIDGE_1D_ENABLED", "").strip() == "1"
+        ),
     )
 
 
