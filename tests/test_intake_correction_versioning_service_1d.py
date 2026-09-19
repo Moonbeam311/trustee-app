@@ -316,6 +316,98 @@ def test_confirmed_and_older_revisions_cannot_generate_snapshots(tmp_path):
         ).fetchone() == counts_before_older_rejection
 
 
+def test_proposed_operational_statuses_are_persisted_and_materialized(tmp_path):
+    db_path = _db(tmp_path)
+    revision = create_answer_revision(
+        db_path, "FIRM-1", "INT-1", _answers("home"), "user-1"
+    )
+    tasks = [
+        {**_tasks("Request document")[0], "operational_status": "pending_client"},
+        {**_tasks("Staff review")[0], "operational_status": "pending_staff"},
+        {
+            **_tasks("Professional review")[0],
+            "operational_status": "pending_professional",
+        },
+        _tasks("Default open")[0],
+        {**_tasks("Legacy null")[0], "operational_status": "pending_staff"},
+    ]
+    snapshot = create_snapshot_version(
+        db_path,
+        "FIRM-1",
+        "INT-1",
+        revision["answer_revision_id"],
+        _translations("status_preservation"),
+        tasks,
+        "engine-1",
+    )
+
+    with sqlite3.connect(db_path) as connection:
+        assert connection.execute(
+            "SELECT operational_status FROM intake_snapshot_proposed_tasks "
+            "WHERE snapshot_version_id = ? ORDER BY rowid",
+            (snapshot["snapshot_version_id"],),
+        ).fetchall() == [
+            ("pending_client",),
+            ("pending_staff",),
+            ("pending_professional",),
+            ("open",),
+            ("pending_staff",),
+        ]
+        connection.execute(
+            "UPDATE intake_snapshot_proposed_tasks SET operational_status = NULL "
+            "WHERE snapshot_version_id = ? AND title = 'Legacy null'",
+            (snapshot["snapshot_version_id"],),
+        )
+
+    first = confirm_snapshot(
+        db_path, "FIRM-1", "INT-1", snapshot["snapshot_version_id"], "reviewer"
+    )
+    second = confirm_snapshot(
+        db_path, "FIRM-1", "INT-1", snapshot["snapshot_version_id"], "reviewer"
+    )
+    assert first["materialized_task_count"] == 5
+    assert first["already_confirmed"] is False
+    assert second["materialized_task_count"] == 5
+    assert second["already_confirmed"] is True
+    with sqlite3.connect(db_path) as connection:
+        assert connection.execute(
+            "SELECT title, status FROM intake_followup_tasks "
+            "WHERE snapshot_version_id = ? ORDER BY id",
+            (snapshot["snapshot_version_id"],),
+        ).fetchall() == [
+            ("Request document", "pending_client"),
+            ("Staff review", "pending_staff"),
+            ("Professional review", "pending_professional"),
+            ("Default open", "open"),
+            ("Legacy null", "open"),
+        ]
+
+
+def test_invalid_operational_status_is_rejected_atomically(tmp_path):
+    db_path = _db(tmp_path)
+    revision = create_answer_revision(
+        db_path, "FIRM-1", "INT-1", _answers("home"), "user-1"
+    )
+
+    with pytest.raises(IntakeCorrectionVersioningError, match="operational_status"):
+        create_snapshot_version(
+            db_path,
+            "FIRM-1",
+            "INT-1",
+            revision["answer_revision_id"],
+            _translations("must_not_exist"),
+            [{**_tasks("Invalid status")[0], "operational_status": "in_progress"}],
+            "engine-1",
+        )
+
+    with sqlite3.connect(db_path) as connection:
+        assert connection.execute(
+            "SELECT (SELECT COUNT(*) FROM intake_snapshot_versions), "
+            "(SELECT COUNT(*) FROM intake_snapshot_translation_items), "
+            "(SELECT COUNT(*) FROM intake_snapshot_proposed_tasks)"
+        ).fetchone() == (0, 0, 0)
+
+
 def test_duplicate_answers_and_invalid_firm_intake_links_are_atomic(tmp_path):
     db_path = _db(tmp_path)
 

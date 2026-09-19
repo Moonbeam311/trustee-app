@@ -84,8 +84,8 @@ REQUIRED_COLUMNS = {
     "intake_snapshot_proposed_tasks": {
         "proposed_task_id", "snapshot_version_id", "generation_batch_id",
         "task_type", "priority", "title", "description", "source",
-        "proposal_status", "materialized_followup_task_id", "created_at",
-        "created_by", "materialized_at",
+        "operational_status", "proposal_status", "materialized_followup_task_id",
+        "created_at", "created_by", "materialized_at",
     },
 }
 
@@ -227,6 +227,65 @@ def test_governed_uniqueness_statuses_and_multiselect(tmp_path):
                 ) VALUES ('PROP-1', 'SNAP-1', 'BATCH-1', 'confirmed', 't1')
                 """
             )
+        with pytest.raises(sqlite3.IntegrityError):
+            connection.execute(
+                """
+                INSERT INTO intake_snapshot_proposed_tasks (
+                    proposed_task_id, snapshot_version_id, generation_batch_id,
+                    operational_status, created_at
+                ) VALUES ('PROP-BAD-OPERATIONAL', 'SNAP-1', 'BATCH-1',
+                          'in_progress', 't1')
+                """
+            )
+
+
+def test_existing_1c_proposed_tasks_receive_nullable_column_without_row_changes(tmp_path):
+    db_path = _make_legacy_db(tmp_path)
+    with sqlite3.connect(db_path) as connection:
+        connection.execute(
+            """
+            CREATE TABLE intake_snapshot_proposed_tasks (
+                proposed_task_id TEXT PRIMARY KEY,
+                snapshot_version_id TEXT NOT NULL,
+                generation_batch_id TEXT NOT NULL,
+                task_type TEXT,
+                priority TEXT,
+                title TEXT,
+                description TEXT,
+                source TEXT,
+                proposal_status TEXT NOT NULL DEFAULT 'proposed',
+                materialized_followup_task_id TEXT,
+                created_at TEXT NOT NULL,
+                created_by TEXT,
+                materialized_at TEXT
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO intake_snapshot_proposed_tasks (
+                proposed_task_id, snapshot_version_id, generation_batch_id,
+                title, created_at
+            ) VALUES ('PROP-LEGACY', 'SNAP-LEGACY', 'BATCH-LEGACY',
+                      'Existing proposal', 't0')
+            """
+        )
+
+    apply_intake_correction_versioning_schema(db_path)
+    apply_intake_correction_versioning_schema(db_path)
+
+    with sqlite3.connect(db_path) as connection:
+        columns = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA table_info(intake_snapshot_proposed_tasks)"
+            )
+        }
+        assert "operational_status" in columns
+        assert connection.execute(
+            "SELECT proposed_task_id, title, operational_status "
+            "FROM intake_snapshot_proposed_tasks"
+        ).fetchall() == [("PROP-LEGACY", "Existing proposal", None)]
 
 
 def test_absent_followup_table_is_not_created(tmp_path):

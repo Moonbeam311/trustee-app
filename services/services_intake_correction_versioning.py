@@ -17,6 +17,14 @@ class IntakeCorrectionVersioningError(RuntimeError):
     """Raised when a governed correction/versioning invariant is violated."""
 
 
+_OPERATIONAL_STATUSES = {
+    "open",
+    "pending_client",
+    "pending_staff",
+    "pending_professional",
+}
+
+
 def _required(value: Any, name: str) -> str:
     if value is None or not str(value).strip():
         raise ValueError(f"{name} is required")
@@ -206,6 +214,17 @@ def create_snapshot_version(
     answer_revision_id = _required(answer_revision_id, "answer_revision_id")
     translations = _items(translation_items, ("source_key",))
     tasks = _items(proposed_tasks, ("title",))
+    for task in tasks:
+        operational_status = task.get("operational_status")
+        if operational_status is None or not str(operational_status).strip():
+            operational_status = "open"
+        else:
+            operational_status = str(operational_status).strip()
+        if operational_status not in _OPERATIONAL_STATUSES:
+            raise IntakeCorrectionVersioningError(
+                f"unsupported operational_status: {operational_status}"
+            )
+        task["operational_status"] = operational_status
 
     connection = _connect(db_path)
     try:
@@ -305,15 +324,15 @@ def create_snapshot_version(
             INSERT INTO intake_snapshot_proposed_tasks (
                 proposed_task_id, snapshot_version_id, generation_batch_id,
                 task_type, priority, title, description, source,
-                proposal_status, created_at, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'proposed', ?, ?)
+                operational_status, proposal_status, created_at, created_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'proposed', ?, ?)
             """,
             [
                 (
                     f"IPT-{uuid4()}", snapshot_id, batch_id,
                     item.get("task_type"), item.get("priority"), item["title"],
-                    item.get("description"), item.get("source"), generated_at,
-                    generated_by,
+                    item.get("description"), item.get("source"),
+                    item["operational_status"], generated_at, generated_by,
                 )
                 for item in tasks
             ],
@@ -422,7 +441,7 @@ def confirm_snapshot(
                 "firm_id": firm_id,
                 "task_type": proposal["task_type"] or "staff_action",
                 "priority": proposal["priority"] or "normal",
-                "status": "open",
+                "status": proposal["operational_status"] or "open",
                 "title": proposal["title"],
                 "description": proposal["description"],
                 "source": proposal["source"] or "guided_intake_snapshot",

@@ -111,6 +111,13 @@ _CREATE_STATEMENTS = (
         title TEXT,
         description TEXT,
         source TEXT,
+        operational_status TEXT
+            CHECK (operational_status IS NULL OR operational_status IN (
+                'open',
+                'pending_client',
+                'pending_staff',
+                'pending_professional'
+            )),
         proposal_status TEXT NOT NULL DEFAULT 'proposed'
             CHECK (proposal_status IN (
                 'proposed',
@@ -130,6 +137,13 @@ _CREATE_STATEMENTS = (
 _FOLLOWUP_PROVENANCE_COLUMNS = {
     "snapshot_version_id": "TEXT",
     "generation_batch_id": "TEXT",
+}
+
+_PROPOSED_TASK_COLUMNS = {
+    "operational_status": (
+        "TEXT CHECK (operational_status IS NULL OR operational_status IN ("
+        "'open', 'pending_client', 'pending_staff', 'pending_professional'))"
+    ),
 }
 
 
@@ -167,6 +181,19 @@ def apply_intake_correction_versioning_schema(
             connection.execute(statement)
 
         added_columns = []
+        proposed_task_columns = {
+            row[1]
+            for row in connection.execute(
+                "PRAGMA table_info(intake_snapshot_proposed_tasks)"
+            )
+        }
+        for column_name, column_definition in _PROPOSED_TASK_COLUMNS.items():
+            if column_name not in proposed_task_columns:
+                connection.execute(
+                    "ALTER TABLE intake_snapshot_proposed_tasks "
+                    f"ADD COLUMN {column_name} {column_definition}"
+                )
+
         if _table_exists(connection, "intake_followup_tasks"):
             existing_columns = {
                 row[1]
