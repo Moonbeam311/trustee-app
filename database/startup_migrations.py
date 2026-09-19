@@ -51,6 +51,10 @@ from database.migrations_genealogy_relationship_review_schema import (
     apply_genealogy_relationship_review_schema,
     GenealogyRelationshipReviewMigrationError,
 )
+from database.intake_followup_reconciliation_migration import (
+    apply_intake_followup_reconciliation_schema,
+    IntakeFollowupReconciliationMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -221,6 +225,20 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        intake_followup_reconciliation_result = (
+            apply_intake_followup_reconciliation_schema(db_path)
+        )
+    except IntakeFollowupReconciliationMigrationError as exc:
+        intake_followup_reconciliation_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "table_created": False,
+            "reconciliation_rows": 0,
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -234,6 +252,7 @@ def run_additive_startup_migrations(
         "person_role_link_schema": person_role_link_result,
         "genealogy_relationship_schema": genealogy_relationship_result,
         "genealogy_relationship_review_schema": genealogy_relationship_review_result,
+        "intake_followup_reconciliation": intake_followup_reconciliation_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,

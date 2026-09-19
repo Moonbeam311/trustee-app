@@ -2413,11 +2413,28 @@ def create_intake_followup_task(
     }
 
 
-def list_intake_followup_tasks(intake_id):
+def list_intake_followup_tasks(intake_id, include_reconciled=False):
     ensure_intake_followup_task_tables()
 
     conn = get_connection()
     cur = conn.cursor()
+
+    reconciliation_table_exists = cur.execute("""
+        SELECT 1 FROM sqlite_master
+        WHERE type = 'table' AND name = 'intake_followup_reconciliations'
+    """).fetchone() is not None
+    reconciliation_filter = ""
+    params = [intake_id]
+    if reconciliation_table_exists and not include_reconciled:
+        firm_id = get_current_firm_id()
+        reconciliation_filter = """
+            AND NOT EXISTS (
+                SELECT 1 FROM intake_followup_reconciliations r
+                WHERE r.superseded_followup_task_id = intake_followup_tasks.id
+                  AND r.firm_id = ? AND r.intake_id = ?
+            )
+        """
+        params.extend((firm_id, intake_id))
 
     cur.execute("""
         SELECT id, intake_id, task_type, priority, status, title,
@@ -2425,6 +2442,7 @@ def list_intake_followup_tasks(intake_id):
                completed_at, completed_by
         FROM intake_followup_tasks
         WHERE intake_id = ?
+        """ + reconciliation_filter + """
         ORDER BY
             CASE status
                 WHEN 'open' THEN 1
@@ -2443,7 +2461,7 @@ def list_intake_followup_tasks(intake_id):
                 ELSE 5
             END,
             id ASC
-    """, (intake_id,))
+    """, tuple(params))
 
     rows = cur.fetchall()
     conn.close()
