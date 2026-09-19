@@ -157,6 +157,7 @@ from services.services_intake_correction_versioning import (
     create_answer_revision,
     create_snapshot_version,
     get_intake_correction_versioning_state,
+    get_latest_governed_answer_selections,
     list_snapshot_proposed_tasks,
 )
 from services.services_intake_correction_versioning_adapter import (
@@ -20426,12 +20427,22 @@ def intake_universal_profile(intake_id):
             proposed_tasks=proposed_tasks,
         )
 
+    correction_mode = request.args.get("correction") == "1"
+    current_answers = {}
+    if HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED and correction_mode:
+        current_answers = get_latest_governed_answer_selections(
+            DB_PATH,
+            str(session.get("firm_id") or "").strip(),
+            intake_id,
+        )
+
     return render_template(
         "intake/universal_profile.html",
         intake=intake,
         questions=questions,
         governed_mode=HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED,
-        correction_mode=(request.args.get("correction") == "1"),
+        correction_mode=correction_mode,
+        current_answers=current_answers,
     )
 
 

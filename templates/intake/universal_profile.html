@@ -129,9 +129,9 @@
                     {% for opt_key, opt_label in question.options.items() %}
                         <label class="intake-option">
                             {% if question.input_type == "multi" %}
-                                <input type="checkbox" name="{{ q_key }}" value="{{ opt_key }}">
+                                <input type="checkbox" name="{{ q_key }}" value="{{ opt_key }}"{% if opt_key in current_answers.get(q_key, []) %} checked{% endif %}>
                             {% else %}
-                                <input type="radio" name="{{ q_key }}" value="{{ opt_key }}" required>
+                                <input type="radio" name="{{ q_key }}" value="{{ opt_key }}"{% if opt_key in current_answers.get(q_key, []) %} checked{% endif %} required>
                             {% endif %}
                             <span class="intake-option-text">{{ opt_label }}</span>
                         </label>

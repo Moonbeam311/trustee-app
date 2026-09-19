@@ -155,6 +155,48 @@ def _row_dict(row: sqlite3.Row | None) -> dict[str, Any] | None:
     return dict(row) if row is not None else None
 
 
+def get_latest_governed_answer_selections(
+    db_path: str | Path,
+    firm_id: str,
+    intake_id: str,
+) -> dict[str, list[str]]:
+    """Return the latest governed selections, grouped by question key."""
+
+    firm_id = _required(firm_id, "firm_id")
+    intake_id = _required(intake_id, "intake_id")
+    connection = _connect_read_only(db_path)
+    try:
+        _validate_intake_scope(connection, firm_id, intake_id)
+        revision = connection.execute(
+            """
+            SELECT answer_revision_id
+            FROM intake_answer_revisions
+            WHERE firm_id = ? AND intake_id = ?
+            ORDER BY answer_revision_no DESC
+            LIMIT 1
+            """,
+            (firm_id, intake_id),
+        ).fetchone()
+        if revision is None:
+            return {}
+
+        selections: dict[str, list[str]] = {}
+        rows = connection.execute(
+            """
+            SELECT question_key, answer_key
+            FROM intake_answer_revision_items
+            WHERE answer_revision_id = ?
+            ORDER BY id
+            """,
+            (revision["answer_revision_id"],),
+        ).fetchall()
+        for row in rows:
+            selections.setdefault(row["question_key"], []).append(row["answer_key"])
+        return selections
+    finally:
+        connection.close()
+
+
 def create_answer_revision(
     db_path: str | Path,
     firm_id: str,
