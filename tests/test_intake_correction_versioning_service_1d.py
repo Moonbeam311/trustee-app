@@ -7,10 +7,12 @@ from database.intake_correction_versioning_migration import (
 )
 from services.services_intake_correction_versioning import (
     IntakeCorrectionVersioningError,
+    assert_intake_correction_versioning_schema_ready,
     confirm_snapshot,
     create_answer_revision,
     create_snapshot_version,
     get_intake_correction_versioning_state,
+    list_snapshot_proposed_tasks,
 )
 
 
@@ -447,3 +449,47 @@ def test_duplicate_answers_and_invalid_firm_intake_links_are_atomic(tmp_path):
 def test_requires_explicit_disposable_database_path():
     with pytest.raises(ValueError, match="db_path is required"):
         create_answer_revision("", "FIRM-1", "INT-1", [], "user-1")
+
+
+def test_schema_readiness_helper_is_read_only_and_detects_missing_schema(tmp_path):
+    db_path = _db(tmp_path)
+    with sqlite3.connect(db_path) as connection:
+        before = connection.execute("PRAGMA schema_version").fetchone()[0]
+    assert assert_intake_correction_versioning_schema_ready(db_path) is True
+    with sqlite3.connect(db_path) as connection:
+        after = connection.execute("PRAGMA schema_version").fetchone()[0]
+    assert after == before
+
+    incomplete = tmp_path / "incomplete.sqlite3"
+    with sqlite3.connect(incomplete) as connection:
+        connection.execute("CREATE TABLE intake_sessions (intake_id TEXT, firm_id TEXT)")
+    with pytest.raises(IntakeCorrectionVersioningError, match="missing tables"):
+        assert_intake_correction_versioning_schema_ready(incomplete)
+
+
+def test_proposed_task_reader_is_firm_intake_snapshot_scoped(tmp_path):
+    db_path = _db(tmp_path)
+    revision = create_answer_revision(
+        db_path, "FIRM-1", "INT-1", _answers("home"), "user-1"
+    )
+    snapshot = create_snapshot_version(
+        db_path, "FIRM-1", "INT-1", revision["answer_revision_id"],
+        _translations("scope"),
+        [{**_tasks()[0], "operational_status": "pending_client"}],
+        "engine-1",
+    )
+    rows = list_snapshot_proposed_tasks(
+        db_path, "FIRM-1", "INT-1", snapshot["snapshot_version_id"]
+    )
+    assert len(rows) == 1
+    assert rows[0]["proposal_status"] == "proposed"
+    assert rows[0]["operational_status"] == "pending_client"
+
+    with pytest.raises(IntakeCorrectionVersioningError, match="same intake"):
+        list_snapshot_proposed_tasks(
+            db_path, "FIRM-2", "INT-1", snapshot["snapshot_version_id"]
+        )
+    with pytest.raises(IntakeCorrectionVersioningError, match="does not belong"):
+        list_snapshot_proposed_tasks(
+            db_path, "FIRM-2", "INT-2", snapshot["snapshot_version_id"]
+        )

@@ -338,6 +338,55 @@
         More detailed review may be needed before documents are signed, assets are transferred, or formal action is taken.
     </div>
 
+    {% if governed_mode %}
+    <section class="snapshot-card no-print" style="margin-top:24px;">
+        <h2 style="margin-top:0;">Governed Snapshot Status</h2>
+        {% if governed_state and governed_state.answer_revision_no %}
+            <p><strong>Answer Revision:</strong> {{ governed_state.answer_revision_no }}</p>
+        {% endif %}
+        {% if governed_state and governed_state.snapshot_version_no %}
+            <p><strong>Snapshot Version:</strong> {{ governed_state.snapshot_version_no }}</p>
+        {% endif %}
+        {% set governed_status = governed_state.confirmation_state if governed_state else "not_generated" %}
+        <p><strong>Status:</strong>
+            {% if governed_status == "awaiting_confirmation" %}Awaiting Confirmation
+            {% elif governed_status == "confirmed" %}Confirmed
+            {% elif governed_status == "superseded" %}Superseded
+            {% else %}Not Generated{% endif %}
+        </p>
+        <p class="snapshot-muted">
+            Proposed items are not operational follow-up tasks until these answers are explicitly confirmed.
+        </p>
+        {% if governed_state and governed_state.confirmation_allowed %}
+        <form method="POST" action="{{ url_for('intake_confirm_snapshot', intake_id=snapshot.intake_id) }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="snapshot_version_id" value="{{ governed_state.current_snapshot_version.snapshot_version_id }}">
+            <button type="submit">Confirm These Answers</button>
+        </form>
+        {% endif %}
+        <div class="snapshot-actions">
+            <a href="{{ url_for('intake_universal_profile', intake_id=snapshot.intake_id, correction=1) }}">Review or Correct My Answers</a>
+        </div>
+    </section>
+
+    {% if proposed_tasks %}
+    <section class="snapshot-card no-print" style="margin-top:24px;">
+        <h2 style="margin-top:0;">Proposed Follow-Up</h2>
+        <p class="snapshot-muted">These proposals remain separate from active work until confirmation.</p>
+        <ul class="snapshot-list">
+            {% for proposal in proposed_tasks %}
+            <li>
+                <strong>{{ proposal.title }}</strong><br>
+                {{ proposal.description or "" }}<br>
+                Intended status: {{ proposal.operational_status }} |
+                Proposal status: {{ proposal.proposal_status }}
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+    {% endif %}
+
 
 
     <div class="followup-tasks-card no-print">

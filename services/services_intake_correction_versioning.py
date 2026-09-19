@@ -46,11 +46,81 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     return connection
 
 
+def _connect_read_only(db_path: str | Path) -> sqlite3.Connection:
+    path = _db_path(db_path).resolve()
+    try:
+        connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+    except sqlite3.Error as exc:
+        raise IntakeCorrectionVersioningError(
+            f"governed intake database is not readable: {exc}"
+        ) from exc
+    connection.row_factory = sqlite3.Row
+    return connection
+
+
 def _table_exists(connection: sqlite3.Connection, table_name: str) -> bool:
     return connection.execute(
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
         (table_name,),
     ).fetchone() is not None
+
+
+_GOVERNED_TABLES = {
+    "intake_answer_revisions",
+    "intake_answer_revision_items",
+    "intake_snapshot_versions",
+    "intake_snapshot_translation_items",
+    "intake_snapshot_proposed_tasks",
+}
+
+
+def assert_intake_correction_versioning_schema_ready(
+    db_path: str | Path,
+) -> bool:
+    """Verify the governed schema without creating or altering any objects."""
+
+    connection = _connect_read_only(db_path)
+    try:
+        missing = sorted(
+            table for table in _GOVERNED_TABLES
+            if not _table_exists(connection, table)
+        )
+        if missing:
+            raise IntakeCorrectionVersioningError(
+                "governed intake schema is not ready; missing tables: "
+                + ", ".join(missing)
+            )
+        if not _table_exists(connection, "intake_followup_tasks"):
+            raise IntakeCorrectionVersioningError(
+                "governed intake schema is not ready; missing table: "
+                "intake_followup_tasks"
+            )
+        proposed_columns = {
+            row["name"] for row in connection.execute(
+                "PRAGMA table_info(intake_snapshot_proposed_tasks)"
+            )
+        }
+        followup_columns = {
+            row["name"] for row in connection.execute(
+                "PRAGMA table_info(intake_followup_tasks)"
+            )
+        }
+        missing_columns = []
+        if "operational_status" not in proposed_columns:
+            missing_columns.append(
+                "intake_snapshot_proposed_tasks.operational_status"
+            )
+        for column in ("snapshot_version_id", "generation_batch_id"):
+            if column not in followup_columns:
+                missing_columns.append(f"intake_followup_tasks.{column}")
+        if missing_columns:
+            raise IntakeCorrectionVersioningError(
+                "governed intake schema is not ready; missing columns: "
+                + ", ".join(missing_columns)
+            )
+        return True
+    finally:
+        connection.close()
 
 
 def _validate_intake_scope(
@@ -507,7 +577,7 @@ def get_intake_correction_versioning_state(
 
     firm_id = _required(firm_id, "firm_id")
     intake_id = _required(intake_id, "intake_id")
-    connection = _connect(db_path)
+    connection = _connect_read_only(db_path)
     try:
         _validate_intake_scope(connection, firm_id, intake_id)
         revision = connection.execute(
@@ -571,6 +641,39 @@ def get_intake_correction_versioning_state(
             "correction_allowed": True,
             "confirmation_allowed": can_confirm,
         }
+    finally:
+        connection.close()
+
+
+def list_snapshot_proposed_tasks(
+    db_path: str | Path,
+    firm_id: str,
+    intake_id: str,
+    snapshot_version_id: str,
+) -> list[dict[str, Any]]:
+    """Read proposed tasks for exactly one scoped governed snapshot."""
+
+    firm_id = _required(firm_id, "firm_id")
+    intake_id = _required(intake_id, "intake_id")
+    snapshot_version_id = _required(snapshot_version_id, "snapshot_version_id")
+    connection = _connect_read_only(db_path)
+    try:
+        _validate_intake_scope(connection, firm_id, intake_id)
+        snapshot = connection.execute(
+            "SELECT 1 FROM intake_snapshot_versions "
+            "WHERE snapshot_version_id = ? AND firm_id = ? AND intake_id = ?",
+            (snapshot_version_id, firm_id, intake_id),
+        ).fetchone()
+        if snapshot is None:
+            raise IntakeCorrectionVersioningError(
+                "snapshot does not belong to the supplied firm/intake"
+            )
+        rows = connection.execute(
+            "SELECT * FROM intake_snapshot_proposed_tasks "
+            "WHERE snapshot_version_id = ? ORDER BY rowid",
+            (snapshot_version_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
     finally:
         connection.close()
 

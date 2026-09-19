@@ -99,6 +99,16 @@
         <strong>Purpose:</strong> These plain-language answers create the first fiduciary map.
     </div>
 
+    {% if governed_mode and correction_mode %}
+    <div class="intake-context-card">
+        <strong>Correction mode</strong>
+        <p>
+            Submitting a complete corrected answer set creates a new revision under this same Intake ID.
+            Previous confirmed history remains preserved, and the corrected snapshot will again require confirmation.
+        </p>
+    </div>
+    {% endif %}
+
     <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 

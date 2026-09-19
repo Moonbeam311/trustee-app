@@ -150,6 +150,22 @@ from services.services_intake import build_document_recommendations_tuned
 from services.services_intake import update_document_recommendation_status, build_workflow_launch_prep
 from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
 from services.services_intake import build_workflow_draft_packet
+from services.services_intake_correction_versioning import (
+    IntakeCorrectionVersioningError,
+    assert_intake_correction_versioning_schema_ready,
+    confirm_snapshot,
+    create_answer_revision,
+    create_snapshot_version,
+    get_intake_correction_versioning_state,
+    list_snapshot_proposed_tasks,
+)
+from services.services_intake_correction_versioning_adapter import (
+    build_governed_proposed_tasks,
+)
+
+HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED = (
+    os.getenv("HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED") == "1"
+)
 from services.services_intake import generate_workflow_draft_packet_docx, upsert_draft_readiness_record, list_draft_readiness_records
 from services.services_intake import get_document_draft_types_for_workflow, get_document_draft_type, get_document_draft_questions, save_document_draft_answers, build_document_draft_preview, ensure_document_draft_questionnaire_tables
 from services.services_intake import build_nonfinal_draft_document
@@ -20342,22 +20358,52 @@ def intake_universal_profile(intake_id):
     questions = get_universal_intake_questions()
 
     if request.method == "POST":
+        firm_id = str(session.get("firm_id") or "").strip()
+        created_by = session.get("username") or session.get("user_id")
+        if HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED:
+            try:
+                assert_intake_correction_versioning_schema_ready(DB_PATH)
+                get_intake_correction_versioning_state(DB_PATH, firm_id, intake_id)
+            except (IntakeCorrectionVersioningError, ValueError) as exc:
+                flash(f"Corrected answers could not be saved: {exc}", "warning")
+                return redirect(url_for(
+                    "intake_universal_profile", intake_id=intake_id, correction=1
+                ))
         result = save_universal_profile_answers(
             intake_id=intake_id,
             form_data=request.form,
-            created_by=session.get("username") if "session" in globals() else None
+            created_by=created_by
         )
         client_snapshot = build_client_snapshot(result)
         save_client_snapshot(
             intake_id=result["intake_id"],
             snapshot=client_snapshot,
-            created_by=session.get("username") if "session" in globals() else None
+            created_by=created_by
         )
-        auto_generate_followup_tasks_from_snapshot(
-            intake_id=result["intake_id"],
-            snapshot=client_snapshot,
-            created_by=session.get("username") if "session" in globals() else None
-        )
+        governed_state = None
+        proposed_tasks = []
+        if HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED:
+            revision = create_answer_revision(
+                DB_PATH, firm_id, intake_id, result["answers"], created_by
+            )
+            snapshot_version = create_snapshot_version(
+                DB_PATH, firm_id, intake_id, revision["answer_revision_id"],
+                result["translations"], build_governed_proposed_tasks(client_snapshot),
+                created_by,
+            )
+            governed_state = get_intake_correction_versioning_state(
+                DB_PATH, firm_id, intake_id
+            )
+            proposed_tasks = list_snapshot_proposed_tasks(
+                DB_PATH, firm_id, intake_id,
+                snapshot_version["snapshot_version_id"],
+            )
+        else:
+            auto_generate_followup_tasks_from_snapshot(
+                intake_id=result["intake_id"],
+                snapshot=client_snapshot,
+                created_by=created_by
+            )
         notes = []
         note_options = get_review_note_form_options()
         tasks = list_intake_followup_tasks(result["intake_id"])
@@ -20374,13 +20420,18 @@ def intake_universal_profile(intake_id):
             tasks=tasks,
             task_options=task_options,
             task_summary=task_summary,
-            task_groups=task_groups
+            task_groups=task_groups,
+            governed_mode=HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED,
+            governed_state=governed_state,
+            proposed_tasks=proposed_tasks,
         )
 
     return render_template(
         "intake/universal_profile.html",
         intake=intake,
-        questions=questions
+        questions=questions,
+        governed_mode=HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED,
+        correction_mode=(request.args.get("correction") == "1"),
     )
 
 
@@ -22971,11 +23022,28 @@ def intake_saved_snapshot(intake_id):
         intake_id=intake_id,
     )
 
-    auto_generate_followup_tasks_from_snapshot(
-        intake_id=intake_id,
-        snapshot=snapshot,
-        created_by=session.get("username") if "session" in globals() else None
-    )
+    governed_state = None
+    proposed_tasks = []
+    if HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED:
+        try:
+            assert_intake_correction_versioning_schema_ready(DB_PATH)
+            governed_state = get_intake_correction_versioning_state(
+                DB_PATH, firm_id, intake_id
+            )
+            current_snapshot = governed_state.get("current_snapshot_version")
+            if current_snapshot:
+                proposed_tasks = list_snapshot_proposed_tasks(
+                    DB_PATH, firm_id, intake_id,
+                    current_snapshot["snapshot_version_id"],
+                )
+        except (IntakeCorrectionVersioningError, ValueError) as exc:
+            flash(f"Governed snapshot status is unavailable: {exc}", "warning")
+    else:
+        auto_generate_followup_tasks_from_snapshot(
+            intake_id=intake_id,
+            snapshot=snapshot,
+            created_by=session.get("username") if "session" in globals() else None
+        )
     notes = list_intake_review_notes(intake_id)
     note_options = get_review_note_form_options()
     tasks = list_intake_followup_tasks(intake_id)
@@ -22994,7 +23062,49 @@ def intake_saved_snapshot(intake_id):
         task_summary=task_summary,
         task_groups=task_groups,
         matter_intake_links=matter_intake_links,
+        governed_mode=HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED,
+        governed_state=governed_state,
+        proposed_tasks=proposed_tasks,
     )
+
+
+@app.route("/intake/<intake_id>/snapshot/confirm", methods=["POST"])
+def intake_confirm_snapshot(intake_id):
+    if not HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED:
+        flash("Governed snapshot confirmation is not enabled.", "warning")
+        return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+    firm_id = str(session.get("firm_id") or "").strip()
+    confirmed_by = session.get("username") or session.get("user_id")
+    if not firm_id or not confirmed_by:
+        return redirect(url_for("login"))
+    submitted_snapshot_id = str(
+        request.form.get("snapshot_version_id") or ""
+    ).strip()
+    try:
+        assert_intake_correction_versioning_schema_ready(DB_PATH)
+        governed_state = get_intake_correction_versioning_state(
+            DB_PATH, firm_id, intake_id
+        )
+        current_snapshot = governed_state.get("current_snapshot_version")
+        if (
+            not current_snapshot
+            or current_snapshot.get("snapshot_version_id") != submitted_snapshot_id
+        ):
+            raise IntakeCorrectionVersioningError(
+                "Only the current governed snapshot may be confirmed."
+            )
+        if not governed_state.get("confirmation_allowed"):
+            if current_snapshot.get("confirmation_status") != "confirmed":
+                raise IntakeCorrectionVersioningError(
+                    "The current governed snapshot is not awaiting confirmation."
+                )
+        confirm_snapshot(
+            DB_PATH, firm_id, intake_id, submitted_snapshot_id, confirmed_by
+        )
+        flash("These intake answers were confirmed.", "success")
+    except (IntakeCorrectionVersioningError, ValueError) as exc:
+        flash(f"Snapshot confirmation was not accepted: {exc}", "warning")
+    return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
 
 
 @app.route("/intake/<intake_id>/resume")
