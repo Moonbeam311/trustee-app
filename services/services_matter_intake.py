@@ -534,6 +534,12 @@ def list_links_for_matter(
     connection = _connect(db_path)
 
     try:
+        if connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (LINK_TABLE,),
+        ).fetchone() is None:
+            return []
+
         sql = f"""
             SELECT *
             FROM {LINK_TABLE}
@@ -579,6 +585,12 @@ def list_links_for_intake(
     connection = _connect(db_path)
 
     try:
+        if connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (LINK_TABLE,),
+        ).fetchone() is None:
+            return []
+
         sql = f"""
             SELECT *
             FROM {LINK_TABLE}
