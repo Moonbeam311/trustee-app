@@ -1,5 +1,9 @@
 from datetime import datetime
-from database.db import get_connection, get_current_firm_id
+from database.db import (
+    get_connection,
+    get_current_firm_id,
+    reconcile_professional_review_issue_source_state_for_task,
+)
 
 
 INTAKE_LANES = {
@@ -2621,23 +2625,30 @@ def update_intake_followup_task_status(task_id, status, updated_by=None):
     conn = get_connection()
     cur = conn.cursor()
 
-    cur.execute("""
-        UPDATE intake_followup_tasks
-        SET status = ?,
-            updated_at = ?,
-            completed_at = ?,
-            completed_by = ?
-        WHERE id = ?
-    """, (
-        status,
-        now,
-        completed_at,
-        completed_by,
-        task_id,
-    ))
-
-    conn.commit()
-    conn.close()
+    try:
+        cur.execute("""
+            UPDATE intake_followup_tasks
+            SET status = ?,
+                updated_at = ?,
+                completed_at = ?,
+                completed_by = ?
+            WHERE id = ?
+        """, (
+            status,
+            now,
+            completed_at,
+            completed_by,
+            task_id,
+        ))
+        reconcile_professional_review_issue_source_state_for_task(
+            task_id, actor=updated_by, connection=conn
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def get_followup_task_form_options():
@@ -5478,6 +5489,7 @@ def build_draft_packet_open_issue_records(workflow_key, bridge_summary):
     packet = launch.get("packet", {}) or {}
 
     open_tasks = launch.get("open_tasks", []) or []
+    completed_tasks = launch.get("completed_tasks", []) or []
     review_flags = launch.get("review_flags", []) or []
     documents = launch.get("documents", []) or []
 
@@ -5487,7 +5499,20 @@ def build_draft_packet_open_issue_records(workflow_key, bridge_summary):
     if review_flags:
         for flag in review_flags:
             flag_text = flag.get("label") if isinstance(flag, dict) else flag
-            add_issue(f"Review flag: {flag_text}", source_object=flag)
+            issue_title = f"Review flag: {flag_text}"
+            matching_tasks = [
+                task for task in open_tasks + completed_tasks
+                if isinstance(task, dict)
+                and task.get("title") == issue_title
+                and str(task.get("id") or "").strip()
+            ]
+            source_object = None
+            if len(matching_tasks) == 1:
+                source_object = {
+                    "linked_record_type": "intake_followup_task",
+                    "linked_record_id": str(matching_tasks[0]["id"]),
+                }
+            add_issue(issue_title, source_object=source_object)
 
     if documents:
         add_issue("Document checklist must be confirmed before final document generation.")
@@ -7474,7 +7499,7 @@ def list_final_draft_resolution_actions(intake_id, workflow_key, document_key):
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT action_key, action_label, note, created_at, created_by
+        SELECT id, action_key, action_label, note, created_at, created_by
         FROM intake_final_draft_gate_actions
         WHERE intake_id = ?
           AND workflow_key = ?
@@ -7487,11 +7512,12 @@ def list_final_draft_resolution_actions(intake_id, workflow_key, document_key):
 
     return [
         {
-            "action_key": row[0],
-            "action_label": row[1],
-            "note": row[2] or "",
-            "created_at": format_intake_timestamp(row[3]) if row[3] else "",
-            "created_by": row[4] or "—",
+            "id": row[0],
+            "action_key": row[1],
+            "action_label": row[2],
+            "note": row[3] or "",
+            "created_at": format_intake_timestamp(row[4]) if row[4] else "",
+            "created_by": row[5] or "—",
         }
         for row in rows
     ]
@@ -7548,6 +7574,7 @@ def record_final_draft_resolution_actions(
             ))
 
             recorded.append({
+                "id": cur.lastrowid,
                 "action_key": action_key,
                 "action_label": action_label,
                 "note": note,

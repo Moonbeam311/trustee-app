@@ -492,6 +492,173 @@ def update_professional_review_issue(issue_id, firm_id, disposition, reviewer_no
     return event_id
 
 
+def reconcile_professional_review_issue_source_state_for_task(
+    task_id,
+    actor=None,
+    connection=None,
+):
+    """Apply a canonical follow-up task's state to its linked review issue."""
+    import json
+    import uuid
+    from datetime import UTC
+
+    source_record_type = "intake_followup_task"
+    source_record_id = str(task_id or "").strip()
+    result = {
+        "task_id": source_record_id or None,
+        "transitioned": False,
+        "transition_count": 0,
+        "source_state": None,
+        "source_status": None,
+    }
+    if not source_record_id:
+        result["reason"] = "malformed_provenance"
+        return result
+
+    owns_connection = connection is None
+    if owns_connection:
+        conn = get_connection()
+    else:
+        conn = connection
+
+    original_row_factory = conn.row_factory
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    try:
+        required_tables = {
+            row[0]
+            for row in cur.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table' "
+                "AND name IN ('intake_followup_tasks', 'professional_review_issues', "
+                "'professional_review_issue_events')"
+            ).fetchall()
+        }
+        if len(required_tables) != 3:
+            result["reason"] = "missing_source_tables"
+            return result
+
+        task = cur.execute(
+            "SELECT id, intake_id, firm_id, status FROM intake_followup_tasks WHERE id = ?",
+            (task_id,),
+        ).fetchone()
+        if not task:
+            result["reason"] = "missing_source_task"
+            return result
+
+        result["source_status"] = task["status"]
+
+        reconciliation_table_exists = cur.execute(
+            "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+            "AND name = 'intake_followup_reconciliations'"
+        ).fetchone() is not None
+        if reconciliation_table_exists:
+            superseded = cur.execute("""
+                SELECT 1
+                FROM intake_followup_reconciliations
+                WHERE superseded_followup_task_id = ?
+                  AND intake_id = ?
+                  AND firm_id = ?
+                LIMIT 1
+            """, (task["id"], task["intake_id"], task["firm_id"])).fetchone()
+            if superseded:
+                result["reason"] = "superseded_source_task"
+                return result
+
+        issues = cur.execute("""
+            SELECT *
+            FROM professional_review_issues
+            WHERE linked_record_type = ? AND linked_record_id = ?
+        """, (source_record_type, source_record_id)).fetchall()
+        if not issues:
+            result["reason"] = "no_linked_issue"
+            return result
+
+        human_dispositions = {"resolved", "accepted_risk", "escalated", "reopened"}
+        source_status = str(task["status"] or "").strip()
+        valid_active_statuses = {
+            "open", "pending_client", "pending_staff", "pending_professional", "deferred"
+        }
+        if source_status != "completed" and source_status not in valid_active_statuses:
+            result["reason"] = "invalid_source_status"
+            return result
+
+        now = datetime.now(UTC).isoformat()
+        event_actor = actor or "system"
+
+        for issue in issues:
+            if (str(issue["intake_id"] or "") != str(task["intake_id"] or "")
+                    or str(issue["firm_id"] or "") != str(task["firm_id"] or "")):
+                continue
+            if issue["disposition"] in human_dispositions:
+                continue
+
+            if source_status == "completed":
+                if issue["status"] == "resolved" and issue["disposition"] == "source_completed":
+                    result["source_state"] = "source_completed"
+                    continue
+                new_status = "resolved"
+                new_disposition = "source_completed"
+                resolved_by = event_actor
+                resolved_capacity = "Source-Derived"
+                resolved_at = now
+                event_type = "source_task_completed"
+            else:
+                if issue["status"] == "open" and issue["disposition"] == "source_reopened":
+                    result["source_state"] = "source_reopened"
+                    continue
+                if issue["disposition"] != "source_completed":
+                    continue
+                new_status = "open"
+                new_disposition = "source_reopened"
+                resolved_by = None
+                resolved_capacity = None
+                resolved_at = None
+                event_type = "source_task_reactivated"
+
+            result["source_state"] = new_disposition
+
+            cur.execute("""
+                UPDATE professional_review_issues
+                SET status = ?, disposition = ?, resolved_by = ?,
+                    resolved_capacity = ?, resolved_at = ?, updated_at = ?
+                WHERE issue_id = ?
+            """, (
+                new_status, new_disposition, resolved_by, resolved_capacity,
+                resolved_at, now, issue["issue_id"],
+            ))
+            event_notes = json.dumps({
+                "source_record_type": source_record_type,
+                "source_record_id": source_record_id,
+                "source_status": source_status,
+            }, sort_keys=True)
+            cur.execute("""
+                INSERT INTO professional_review_issue_events (
+                    event_id, issue_id, intake_id, firm_id, event_type,
+                    event_notes, actor, actor_capacity
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                "PRIE-" + uuid.uuid4().hex[:10].upper(),
+                issue["issue_id"], issue["intake_id"], issue["firm_id"],
+                event_type, event_notes, event_actor, "Source-Derived",
+            ))
+            result["transition_count"] += 1
+
+        result["transitioned"] = result["transition_count"] > 0
+        result["reason"] = "transitioned" if result["transitioned"] else "no_state_change"
+        if owns_connection and result["transitioned"]:
+            conn.commit()
+        return result
+    except Exception:
+        if owns_connection:
+            conn.rollback()
+        raise
+    finally:
+        conn.row_factory = original_row_factory
+        if owns_connection:
+            conn.close()
+
+
 def get_professional_review_issue_summary(intake_id, firm_id=None):
     issues = get_professional_review_issues(intake_id, firm_id=firm_id)
 
