@@ -152,6 +152,7 @@ from services.services_intake import get_workflow_bridge_definition, save_workfl
 from services.services_intake import build_workflow_draft_packet
 from services.services_intake_correction_versioning import (
     IntakeCorrectionVersioningError,
+    answers_match_latest_governed_revision,
     assert_intake_correction_versioning_schema_ready,
     confirm_snapshot,
     create_answer_revision,
@@ -20366,6 +20367,32 @@ def intake_universal_profile(intake_id):
             try:
                 assert_intake_correction_versioning_schema_ready(DB_PATH)
                 get_intake_correction_versioning_state(DB_PATH, firm_id, intake_id)
+                if request.args.get("correction") == "1":
+                    answer_items = []
+                    for question_key, question in questions.items():
+                        if question["input_type"] == "multi":
+                            answer_keys = request.form.getlist(question_key)
+                        else:
+                            answer_key = request.form.get(question_key)
+                            answer_keys = [answer_key] if answer_key else []
+                        for answer_key in answer_keys:
+                            answer_items.append({
+                                "question_key": question_key,
+                                "answer_key": answer_key,
+                                "answer_label": question["options"].get(
+                                    answer_key, answer_key
+                                ),
+                            })
+                    if answers_match_latest_governed_revision(
+                        DB_PATH, firm_id, intake_id, answer_items
+                    ):
+                        flash(
+                            "No changes were detected. Your current intake answers remain unchanged.",
+                            "info",
+                        )
+                        return redirect(url_for(
+                            "intake_saved_snapshot", intake_id=intake_id
+                        ))
             except (IntakeCorrectionVersioningError, ValueError) as exc:
                 flash(f"Corrected answers could not be saved: {exc}", "warning")
                 return redirect(url_for(

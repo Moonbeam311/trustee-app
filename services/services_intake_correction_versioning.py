@@ -202,6 +202,56 @@ def get_latest_governed_answer_selections(
         connection.close()
 
 
+def answers_match_latest_governed_revision(
+    db_path: str | Path,
+    firm_id: str,
+    intake_id: str,
+    answer_items: Iterable[Mapping[str, Any]],
+) -> bool:
+    """Compare submitted canonical answer identities with the latest revision."""
+
+    firm_id = _required(firm_id, "firm_id")
+    intake_id = _required(intake_id, "intake_id")
+    answers = _items(answer_items, ("question_key", "answer_key"))
+    submitted = [
+        (item["question_key"], item["answer_key"])
+        for item in answers
+    ]
+    if len(submitted) != len(set(submitted)):
+        raise IntakeCorrectionVersioningError("duplicate answer item in revision")
+
+    connection = _connect_read_only(db_path)
+    try:
+        _validate_intake_scope(connection, firm_id, intake_id)
+        revision = connection.execute(
+            """
+            SELECT answer_revision_id
+            FROM intake_answer_revisions
+            WHERE firm_id = ? AND intake_id = ?
+            ORDER BY answer_revision_no DESC
+            LIMIT 1
+            """,
+            (firm_id, intake_id),
+        ).fetchone()
+        if revision is None:
+            return False
+
+        governed = {
+            (row["question_key"], row["answer_key"])
+            for row in connection.execute(
+                """
+                SELECT question_key, answer_key
+                FROM intake_answer_revision_items
+                WHERE answer_revision_id = ?
+                """,
+                (revision["answer_revision_id"],),
+            ).fetchall()
+        }
+        return set(submitted) == governed
+    finally:
+        connection.close()
+
+
 def get_intake_revision_history(
     db_path: str | Path,
     firm_id: str,
