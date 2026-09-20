@@ -182,6 +182,34 @@ from services.services_intake import build_final_draft_section_editor_context, g
 from services.services_intake import generate_final_draft_preview_docx
 from services.services_intake import build_final_draft_version_register_context
 from services.services_intake import build_final_draft_completion_gate_context, record_final_draft_completion
+
+
+FINAL_DRAFT_GATE_PROGRESS_CONDITIONS = (
+    ("questionnaire_complete", "Controlled questionnaire complete"),
+    ("open_issues_reviewed", "Open issues reviewed / accepted"),
+    ("open_tasks_reviewed", "Open tasks reviewed / accepted"),
+    ("professional_review_recorded", "Professional review status recorded"),
+    ("required_documents_acknowledged", "Required documents acknowledged"),
+    ("admin_approved", "Admin intentionally approved final-draft preparation"),
+)
+
+
+def build_final_draft_gate_progress(gate):
+    """Map an already-evaluated gate record into read-only display data."""
+    conditions = [
+        {"key": key, "label": label, "complete": bool(gate.get(key))}
+        for key, label in FINAL_DRAFT_GATE_PROGRESS_CONDITIONS
+    ]
+    complete_count = sum(item["complete"] for item in conditions)
+    return {
+        "conditions": conditions,
+        "complete_count": complete_count,
+        "total_count": len(conditions),
+        "approved": (
+            complete_count == len(conditions)
+            and gate.get("gate_status") == "approved_for_final_draft_preparation"
+        ),
+    }
 from services.services_matter_intake import (
     MatterIntakeConflictError,
     MatterIntakeNotFoundError,
@@ -23795,6 +23823,7 @@ def intake_final_draft_gate_detail(intake_id, workflow_key, document_key):
     return render_template(
         "intake/final_draft_prep_gate.html",
         gate=gate,
+        final_draft_gate_progress=build_final_draft_gate_progress(gate),
         records=[],
         intake_id=intake_id
     )
@@ -23862,7 +23891,8 @@ def intake_final_draft_gate_resolution(intake_id, workflow_key, document_key):
 
     return render_template(
         "intake/final_draft_gate_resolution.html",
-        context=context
+        context=context,
+        final_draft_gate_progress=build_final_draft_gate_progress(context["gate"]),
     )
 
 
@@ -23895,7 +23925,8 @@ def intake_final_draft_admin_approval(intake_id, workflow_key, document_key):
 
     return render_template(
         "intake/final_draft_admin_approval.html",
-        context=context
+        context=context,
+        final_draft_gate_progress=build_final_draft_gate_progress(context["gate"]),
     )
 
 

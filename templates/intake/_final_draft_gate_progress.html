@@ -1,0 +1,28 @@
+<style>
+.gate-progress { border: 1px solid rgba(0,0,0,0.16); border-radius: 16px; background: rgba(255,255,255,0.04); padding: 18px; margin-bottom: 16px; }
+.gate-progress__summary { font-size: 1.08rem; font-weight: 700; margin: 0 0 14px; }
+.gate-progress__conditions { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; list-style: none; margin: 0; padding: 0; }
+.gate-progress__condition { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; padding: 11px 12px; }
+.gate-progress__state { flex: 0 0 auto; border: 1px solid rgba(0,0,0,0.16); border-radius: 999px; padding: 3px 8px; font-weight: 700; }
+.gate-progress__boundary { margin: 14px 0 0; opacity: 0.78; }
+</style>
+
+<section class="gate-progress" aria-labelledby="final-draft-gate-progress-title">
+    <h2 id="final-draft-gate-progress-title">Gate Condition Progress</h2>
+    <p class="gate-progress__summary" role="status" aria-live="polite">
+        {% if final_draft_gate_progress.approved %}
+            6 of 6 — Approved for Final-Draft Preparation
+        {% else %}
+            {{ final_draft_gate_progress.complete_count }} of 6 gate conditions complete
+        {% endif %}
+    </p>
+    <ol class="gate-progress__conditions" aria-label="Final-draft preparation gate conditions">
+        {% for condition in final_draft_gate_progress.conditions %}
+            <li class="gate-progress__condition">
+                <span>{{ condition.label }}</span>
+                <span class="gate-progress__state" aria-label="{{ condition.label }}: {{ 'Complete' if condition.complete else 'Pending' }}">{{ "Complete" if condition.complete else "Pending" }}</span>
+            </li>
+        {% endfor %}
+    </ol>
+    <p class="gate-progress__boundary">Preparation only — does not authorize signing, filing, execution, transfer, or final legal use.</p>
+</section>
