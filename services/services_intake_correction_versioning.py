@@ -12,6 +12,11 @@ import sqlite3
 from typing import Any, Iterable, Mapping
 from uuid import uuid4
 
+from services.services_intake_followup_reconciliation import (
+    IntakeFollowupReconciliationError,
+    reconcile_governed_snapshot_followup_successors_in_transaction,
+)
+
 
 class IntakeCorrectionVersioningError(RuntimeError):
     """Raised when a governed correction/versioning invariant is violated."""
@@ -684,6 +689,23 @@ def confirm_snapshot(
             """,
             (confirmed_at, confirmed_by, snapshot["answer_revision_id"]),
         )
+        if (
+            snapshot["supersedes_snapshot_id"] is not None
+            and _table_exists(connection, "intake_followup_reconciliations")
+        ):
+            try:
+                reconcile_governed_snapshot_followup_successors_in_transaction(
+                    connection,
+                    firm_id,
+                    intake_id,
+                    snapshot["supersedes_snapshot_id"],
+                    snapshot_version_id,
+                    confirmed_by,
+                )
+            except IntakeFollowupReconciliationError as exc:
+                raise IntakeCorrectionVersioningError(
+                    f"governed follow-up succession failed: {exc}"
+                ) from exc
         connection.commit()
         return {
             "snapshot_version_id": snapshot_version_id,

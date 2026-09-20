@@ -235,6 +235,187 @@ def reconcile_exact_followup_duplicates(
         connection.close()
 
 
+def reconcile_governed_snapshot_followup_successors(
+    db_path: str | Path,
+    firm_id: str,
+    intake_id: str,
+    predecessor_snapshot_version_id: str,
+    successor_snapshot_version_id: str,
+    reconciled_by: str,
+) -> dict[str, Any]:
+    """Ledger unique exact task successors across two governed snapshots."""
+
+    connection = _connect(db_path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        result = reconcile_governed_snapshot_followup_successors_in_transaction(
+            connection,
+            firm_id,
+            intake_id,
+            predecessor_snapshot_version_id,
+            successor_snapshot_version_id,
+            reconciled_by,
+        )
+        connection.commit()
+        return result
+    except (ValueError, IntakeFollowupReconciliationError):
+        connection.rollback()
+        raise
+    except sqlite3.Error as exc:
+        connection.rollback()
+        raise IntakeFollowupReconciliationError(str(exc)) from exc
+    finally:
+        connection.close()
+
+
+def reconcile_governed_snapshot_followup_successors_in_transaction(
+    connection: sqlite3.Connection,
+    firm_id: str,
+    intake_id: str,
+    predecessor_snapshot_version_id: str,
+    successor_snapshot_version_id: str,
+    reconciled_by: str,
+) -> dict[str, Any]:
+    """Ledger governed successors using a caller-owned SQLite transaction."""
+
+    firm_id = _required(firm_id, "firm_id")
+    intake_id = _required(intake_id, "intake_id")
+    predecessor_snapshot_version_id = _required(
+        predecessor_snapshot_version_id, "predecessor_snapshot_version_id"
+    )
+    successor_snapshot_version_id = _required(
+        successor_snapshot_version_id, "successor_snapshot_version_id"
+    )
+    reconciled_by = _required(reconciled_by, "reconciled_by")
+    try:
+        if connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' "
+            "AND name='intake_followup_reconciliations'"
+        ).fetchone() is None:
+            raise IntakeFollowupReconciliationError(
+                "intake_followup_reconciliations table is not installed"
+            )
+
+        snapshots = connection.execute(
+            """
+            SELECT snapshot_version_id, firm_id, intake_id, snapshot_version_no,
+                   generation_batch_id, confirmation_status,
+                   supersedes_snapshot_id
+            FROM intake_snapshot_versions
+            WHERE snapshot_version_id IN (?, ?)
+            """,
+            (predecessor_snapshot_version_id, successor_snapshot_version_id),
+        ).fetchall()
+        by_id = {row["snapshot_version_id"]: row for row in snapshots}
+        if set(by_id) != {
+            predecessor_snapshot_version_id, successor_snapshot_version_id
+        }:
+            raise IntakeFollowupReconciliationError("both snapshots must exist")
+        predecessor = by_id[predecessor_snapshot_version_id]
+        successor = by_id[successor_snapshot_version_id]
+        if any(
+            row["firm_id"] != firm_id or row["intake_id"] != intake_id
+            for row in snapshots
+        ):
+            raise IntakeFollowupReconciliationError(
+                "both snapshots must belong to the supplied firm and intake"
+            )
+        if any(
+            row["snapshot_version_id"] is None
+            or row["generation_batch_id"] is None
+            for row in snapshots
+        ):
+            raise IntakeFollowupReconciliationError(
+                "both snapshots must have governed generation provenance"
+            )
+        if successor["supersedes_snapshot_id"] != predecessor["snapshot_version_id"]:
+            raise IntakeFollowupReconciliationError(
+                "successor must directly supersede predecessor"
+            )
+        if successor["confirmation_status"] != "confirmed":
+            raise IntakeFollowupReconciliationError(
+                "successor snapshot must be confirmed"
+            )
+        if successor["snapshot_version_no"] <= predecessor["snapshot_version_no"]:
+            raise IntakeFollowupReconciliationError(
+                "successor snapshot version must be newer"
+            )
+
+        existing_rows = connection.execute(
+            """
+            SELECT superseded_followup_task_id, replacement_followup_task_id
+            FROM intake_followup_reconciliations
+            """
+        ).fetchall()
+        reconciled_predecessors = {row[0] for row in existing_rows}
+        used_replacements = {row[1] for row in existing_rows}
+        tasks = connection.execute(
+            """
+            SELECT id, firm_id, intake_id, task_type, priority, status, title,
+                   description, completed_at, completed_by,
+                   snapshot_version_id, generation_batch_id
+            FROM intake_followup_tasks
+            WHERE firm_id = ? AND intake_id = ?
+              AND snapshot_version_id IN (?, ?)
+            """,
+            (
+                firm_id, intake_id, predecessor_snapshot_version_id,
+                successor_snapshot_version_id,
+            ),
+        ).fetchall()
+        predecessor_tasks: dict[tuple[str, ...], list[sqlite3.Row]] = {}
+        successor_tasks: dict[tuple[str, ...], list[sqlite3.Row]] = {}
+        for task in tasks:
+            if (
+                task["snapshot_version_id"] == predecessor_snapshot_version_id
+                and task["generation_batch_id"] == predecessor["generation_batch_id"]
+                and task["id"] not in reconciled_predecessors
+                and _normalize(task["status"]) != "completed"
+                and task["completed_at"] is None
+                and task["completed_by"] is None
+            ):
+                predecessor_tasks.setdefault(_signature(task), []).append(task)
+            elif (
+                task["snapshot_version_id"] == successor_snapshot_version_id
+                and task["generation_batch_id"] == successor["generation_batch_id"]
+            ):
+                successor_tasks.setdefault(_signature(task), []).append(task)
+
+        created = []
+        now = datetime.now(timezone.utc).isoformat(timespec="seconds").replace(
+            "+00:00", "Z"
+        )
+        reason = "Exact governed snapshot operational follow-up succession"
+        for signature in sorted(set(predecessor_tasks) & set(successor_tasks)):
+            prior_matches = predecessor_tasks[signature]
+            successor_matches = successor_tasks[signature]
+            if len(prior_matches) != 1 or len(successor_matches) != 1:
+                continue
+            if successor_matches[0]["id"] in used_replacements:
+                continue
+            reconciliation_id = str(uuid4())
+            connection.execute(
+                """
+                INSERT INTO intake_followup_reconciliations (
+                    reconciliation_id, firm_id, intake_id,
+                    superseded_followup_task_id, replacement_followup_task_id,
+                    reconciliation_type, reason, reconciled_at, reconciled_by
+                ) VALUES (?, ?, ?, ?, ?, 'superseded_duplicate', ?, ?, ?)
+                """,
+                (
+                    reconciliation_id, firm_id, intake_id,
+                    prior_matches[0]["id"], successor_matches[0]["id"],
+                    reason, now, reconciled_by,
+                ),
+            )
+            created.append(reconciliation_id)
+        return {"records_created": len(created), "reconciliation_ids": created}
+    except (ValueError, IntakeFollowupReconciliationError):
+        raise
+    except sqlite3.Error as exc:
+        raise IntakeFollowupReconciliationError(str(exc)) from exc
+
+
 def get_intake_followup_reconciliation_history(
     db_path: str | Path, firm_id: str, intake_id: str
 ) -> list[dict[str, Any]]:
