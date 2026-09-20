@@ -28191,10 +28191,15 @@ def professional_review_issue_detail(issue_id):
         return redirect(url_for("intake_dashboard"))
 
     if request.method == "POST":
-        disposition = request.form.get("disposition") or "reopened"
+        disposition = request.form.get("disposition")
         reviewer_notes = request.form.get("reviewer_notes") or ""
         actor = session.get("username") or "system"
         actor_capacity = request.form.get("reviewer_capacity") or session.get("role") or "Admin"
+
+        allowed_dispositions = {"resolved", "accepted_risk", "escalated", "reopened"}
+        if disposition not in allowed_dispositions:
+            flash("Select a valid disposition before recording an issue action.", "warning")
+            return redirect(url_for("professional_review_issue_detail", issue_id=issue_id))
 
         if disposition in ("resolved", "accepted_risk", "escalated") and not reviewer_notes.strip():
             flash("Reviewer notes are required for issue disposition.", "warning")
@@ -28242,7 +28247,7 @@ def professional_review_issue_seed(intake_id, workflow_key):
     actor = session.get("username") or "system"
 
     draft_packet = build_workflow_draft_packet(intake_id, workflow_key)
-    created = seed_professional_review_issues_from_packet(
+    seed_result = seed_professional_review_issues_from_packet(
         intake_id=intake_id,
         firm_id=firm_id,
         workflow_key=workflow_key,
@@ -28250,5 +28255,13 @@ def professional_review_issue_seed(intake_id, workflow_key):
         actor=actor,
     )
 
-    flash(f"Professional review issues synchronized. New issues created: {created}.", "success")
+    created = int(seed_result.get("created", 0))
+    skipped = int(seed_result.get("skipped", 0))
+    provenance_enriched = int(seed_result.get("provenance_enriched", 0))
+    flash(
+        "Professional review issues synchronized. "
+        f"New issues created: {created}. Skipped: {skipped}. "
+        f"Provenance enriched: {provenance_enriched}.",
+        "success",
+    )
     return redirect(url_for("professional_review_issue_registry", intake_id=intake_id))

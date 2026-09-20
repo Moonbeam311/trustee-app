@@ -5447,8 +5447,32 @@ def build_draft_packet_questions(workflow_key, bridge_summary):
     return questions
 
 
-def build_draft_packet_open_issues(workflow_key, bridge_summary):
-    issues = []
+def build_draft_packet_open_issue_records(workflow_key, bridge_summary):
+    records = []
+
+    def add_issue(title, *, source="draft_packet_open_issue", category="Professional Review",
+                  severity="major", recommended_action=None, source_object=None):
+        linked_record_type = None
+        linked_record_id = None
+        if isinstance(source_object, dict):
+            candidate_type = source_object.get("linked_record_type") or source_object.get("source_record_type")
+            candidate_id = source_object.get("linked_record_id") or source_object.get("source_record_id")
+            if str(candidate_type or "").strip() and str(candidate_id or "").strip():
+                linked_record_type = str(candidate_type).strip()
+                linked_record_id = str(candidate_id).strip()
+
+        records.append({
+            "issue_title": title,
+            "issue_description": title,
+            "issue_source": source,
+            "issue_category": category,
+            "severity": severity,
+            "recommended_action": recommended_action or (
+                "Review this issue, add notes, then resolve, accept risk, escalate, or reopen."
+            ),
+            "linked_record_type": linked_record_type,
+            "linked_record_id": linked_record_id,
+        })
 
     launch = bridge_summary.get("launch", {}) or {}
     packet = launch.get("packet", {}) or {}
@@ -5458,30 +5482,38 @@ def build_draft_packet_open_issues(workflow_key, bridge_summary):
     documents = launch.get("documents", []) or []
 
     if open_tasks:
-        issues.append(f"{len(open_tasks)} open follow-up task(s) remain before final drafting.")
+        add_issue(f"{len(open_tasks)} open follow-up task(s) remain before final drafting.")
 
     if review_flags:
         for flag in review_flags:
-            issues.append(f"Review flag: {flag}")
+            flag_text = flag.get("label") if isinstance(flag, dict) else flag
+            add_issue(f"Review flag: {flag_text}", source_object=flag)
 
     if documents:
-        issues.append("Document checklist must be confirmed before final document generation.")
+        add_issue("Document checklist must be confirmed before final document generation.")
 
     text = _bridge_answer_text(bridge_summary)
 
     if "not sure" in text:
-        issues.append("One or more bridge answers indicate uncertainty that must be clarified.")
+        add_issue("One or more bridge answers indicate uncertainty that must be clarified.")
 
     if "none yet" in text:
-        issues.append("One or more required document categories may not be available yet.")
+        add_issue("One or more required document categories may not be available yet.")
 
     if workflow_key == "business_continuity_packet":
         if "liability" in text or "insurance" in text:
-            issues.append("Business liability/insurance concern requires review before final drafting.")
+            add_issue("Business liability/insurance concern requires review before final drafting.")
         if "sole proprietorship" in text or "dba" in text:
-            issues.append("Sole proprietor/DBA continuity authority should be handled carefully.")
+            add_issue("Sole proprietor/DBA continuity authority should be handled carefully.")
 
-    return issues
+    return records
+
+
+def build_draft_packet_open_issues(workflow_key, bridge_summary):
+    return [
+        record["issue_description"]
+        for record in build_draft_packet_open_issue_records(workflow_key, bridge_summary)
+    ]
 
 
 def build_draft_packet_readiness(bridge_summary):
@@ -5517,7 +5549,8 @@ def build_workflow_draft_packet(intake_id, workflow_key):
     )
 
     drafting_questions = build_draft_packet_questions(workflow_key, bridge_summary)
-    open_issues = build_draft_packet_open_issues(workflow_key, bridge_summary)
+    open_issue_records = build_draft_packet_open_issue_records(workflow_key, bridge_summary)
+    open_issues = [record["issue_description"] for record in open_issue_records]
     readiness = build_draft_packet_readiness(bridge_summary)
 
     return {
@@ -5530,6 +5563,7 @@ def build_workflow_draft_packet(intake_id, workflow_key):
         "recommendation": recommendation,
         "drafting_questions": drafting_questions,
         "open_issues": open_issues,
+        "open_issue_records": open_issue_records,
         "documents": launch.get("documents", []) or [],
         "open_tasks": launch.get("open_tasks", []) or [],
         "completed_tasks": launch.get("completed_tasks", []) or [],

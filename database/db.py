@@ -287,24 +287,55 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
 
     open_issues = []
     if isinstance(draft_packet, dict):
-        open_issues = draft_packet.get("open_issues") or []
+        open_issues = draft_packet.get("open_issue_records") or draft_packet.get("open_issues") or []
 
     conn = get_connection()
     cur = conn.cursor()
 
     created = 0
     skipped = 0
+    provenance_enriched = 0
 
     for issue in open_issues:
-        title = str(issue).strip()
+        record = issue if isinstance(issue, dict) else {}
+        title_value = (
+            record.get("issue_title") or record.get("issue_description")
+            if record
+            else issue
+        )
+        title = str(title_value or "").strip()
         if not title:
             continue
+
+        description = str(record.get("issue_description") or title).strip()
+        issue_source = str(record.get("issue_source") or "draft_packet_open_issue").strip()
+        issue_category = str(record.get("issue_category") or "Professional Review").strip()
+        severity = str(record.get("severity") or "major").strip()
+        recommended_action = str(record.get("recommended_action") or (
+            "Review this issue, add notes, then resolve, accept risk, escalate, or reopen."
+        )).strip()
+        linked_record_type = str(record.get("linked_record_type") or "").strip()
+        linked_record_id = str(record.get("linked_record_id") or "").strip()
+        if not (linked_record_type and linked_record_id):
+            linked_record_type = None
+            linked_record_id = None
 
         seed = "|".join([str(intake_id), str(workflow_key), title])
         issue_id = "PRI-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:10].upper()
 
-        cur.execute("SELECT issue_id FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
-        if cur.fetchone():
+        cur.execute("SELECT issue_id, linked_record_type, linked_record_id FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
+        existing = cur.fetchone()
+        if existing:
+            if (not str(existing[1] or "").strip() and not str(existing[2] or "").strip()
+                    and linked_record_type and linked_record_id):
+                cur.execute("""
+                    UPDATE professional_review_issues
+                    SET linked_record_type = ?, linked_record_id = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE issue_id = ?
+                      AND COALESCE(TRIM(linked_record_type), '') = ''
+                      AND COALESCE(TRIM(linked_record_id), '') = ''
+                """, (linked_record_type, linked_record_id, issue_id))
+                provenance_enriched += cur.rowcount
             skipped += 1
             continue
 
@@ -312,14 +343,13 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
             INSERT INTO professional_review_issues (
                 issue_id, intake_id, firm_id, workflow_key, issue_source,
                 issue_category, severity, issue_title, issue_description,
-                recommended_action, status, created_by
+                recommended_action, linked_record_type, linked_record_id, status, created_by
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            issue_id, intake_id, firm_id, workflow_key, "draft_packet_open_issue",
-            "Professional Review", "major", title[:180], title,
-            "Review this issue, add notes, then resolve, accept risk, escalate, or reopen.",
-            "open", actor
+            issue_id, intake_id, firm_id, workflow_key, issue_source,
+            issue_category, severity, title[:180], description,
+            recommended_action, linked_record_type, linked_record_id, "open", actor
         ))
         created += 1
 
@@ -329,6 +359,7 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
     return {
         "created": created,
         "skipped": skipped,
+        "provenance_enriched": provenance_enriched,
         "source_issue_count": len(open_issues),
         "normalized_issue_count": len(open_issues),
     }
@@ -381,19 +412,21 @@ def update_professional_review_issue(issue_id, firm_id, disposition, reviewer_no
     disposition values:
     resolved, accepted_risk, escalated, reopened
     """
-    import uuid
-    from datetime import datetime, UTC
-
-    ensure_professional_review_issue_tables()
-
     status_map = {
         "resolved": "resolved",
         "accepted_risk": "accepted_risk",
         "escalated": "escalated",
         "reopened": "open",
     }
+    if disposition not in status_map:
+        raise ValueError("Unsupported professional review issue disposition.")
 
-    new_status = status_map.get(disposition, "open")
+    import uuid
+    from datetime import datetime, UTC
+
+    ensure_professional_review_issue_tables()
+
+    new_status = status_map[disposition]
     now = datetime.now(UTC).isoformat()
 
     conn = get_connection()

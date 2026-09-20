@@ -26,7 +26,8 @@
 
   <form method="POST">
     <label>Disposition</label>
-    <select name="disposition">
+    <select name="disposition" required>
+      <option value="" selected disabled>Select disposition</option>
       <option value="resolved">Resolve</option>
       <option value="accepted_risk">Accept Risk</option>
       <option value="escalated">Escalate</option>
