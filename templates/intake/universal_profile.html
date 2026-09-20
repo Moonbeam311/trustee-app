@@ -109,7 +109,7 @@
     </div>
     {% endif %}
 
-    <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
+    <form method="POST" action="{{ url_for('intake_universal_profile', intake_id=intake.intake_id, correction=1) if correction_mode else url_for('intake_universal_profile', intake_id=intake.intake_id) }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
         {% for q_key, question in questions.items() %}

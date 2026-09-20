@@ -254,12 +254,21 @@ def test_changed_correction_and_initial_post_stay_on_existing_path(
 def test_correction_get_prefill_is_unchanged(governed_db, monkeypatch):
     import app as app_module
 
-    _seed_revision(governed_db, [("assets", "home"), ("decision_style", "shared")])
+    _seed_revision(
+        governed_db,
+        [("assets", "home"), ("decision_style", "shared")],
+    )
     _route_setup(monkeypatch, app_module, governed_db)
+
     with app_module.app.test_request_context(
         "/intake/INT-1/universal-profile?correction=1"
     ):
         app_module.session["firm_id"] = "FIRM-1"
         response = app_module.intake_universal_profile("INT-1")
+
     assert 'value="home" checked' in response
     assert 'value="shared" checked' in response
+    assert (
+        'action="/intake/INT-1/universal-profile?correction=1"'
+        in response
+    )
