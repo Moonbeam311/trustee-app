@@ -7087,21 +7087,26 @@ def evaluate_final_draft_prep_gate(intake_id, workflow_key, document_key):
     documents = draft_packet.get("documents", []) or []
 
     action_keys = {a.get("action_key") for a in actions}
-    resulting_statuses = {a.get("resulting_status") for a in actions}
 
     questionnaire_complete = 1 if len(missing_answers) == 0 else 0
 
+    # Professional Review owns substantive issue clearance.  The draft packet
+    # remains the safe fallback when no issue has yet been synchronized into
+    # that registry; review-gate history is evidence only, never clearance.
+    from database.db import get_professional_review_issue_summary
+
+    professional_review_summary = get_professional_review_issue_summary(
+        intake_id,
+        firm_id=get_current_firm_id(),
+    )
+    registry_total = int(professional_review_summary.get("total", 0) or 0)
+    registry_blocking = int(professional_review_summary.get("blocking", 0) or 0)
     open_issues_reviewed = 1 if (
-        len(open_issues) == 0
-        or "open_issues_reviewed" in action_keys
-        or "approved_for_final_draft_prep" in action_keys
+        registry_blocking == 0
+        and (registry_total > 0 or len(open_issues) == 0)
     ) else 0
 
-    open_tasks_reviewed = 1 if (
-        len(open_tasks) == 0
-        or "open_issues_reviewed" in action_keys
-        or "approved_for_final_draft_prep" in action_keys
-    ) else 0
+    open_tasks_reviewed = 1 if len(open_tasks) == 0 else 0
 
     professional_review_recorded = 1 if (
         "professional_review_required" in action_keys
@@ -7113,13 +7118,7 @@ def evaluate_final_draft_prep_gate(intake_id, workflow_key, document_key):
         }
     ) else 0
 
-    # Required documents are acknowledged if the document list is empty, or if
-    # review-gate action history shows an issue review / approval action.
-    required_documents_acknowledged = 1 if (
-        len(documents) == 0
-        or "open_issues_reviewed" in action_keys
-        or "approved_for_final_draft_prep" in action_keys
-    ) else 0
+    required_documents_acknowledged = 1 if len(documents) == 0 else 0
 
     hard_blocks = []
 
@@ -7554,9 +7553,6 @@ def evaluate_final_draft_prep_gate_with_resolutions(intake_id, workflow_key, doc
     # Apply deliberate resolution acknowledgments.
     if "missing_answers_acknowledged" in resolution_keys:
         base["questionnaire_complete"] = 1
-
-    if "open_issues_reviewed" in resolution_keys:
-        base["open_issues_reviewed"] = 1
 
     if "open_tasks_reviewed" in resolution_keys:
         base["open_tasks_reviewed"] = 1
