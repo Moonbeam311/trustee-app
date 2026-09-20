@@ -157,6 +157,7 @@ from services.services_intake_correction_versioning import (
     create_answer_revision,
     create_snapshot_version,
     get_intake_correction_versioning_state,
+    get_intake_revision_history,
     get_latest_governed_answer_selections,
     list_snapshot_proposed_tasks,
 )
@@ -23076,6 +23077,54 @@ def intake_saved_snapshot(intake_id):
         governed_mode=HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED,
         governed_state=governed_state,
         proposed_tasks=proposed_tasks,
+    )
+
+
+@app.route("/intake/<intake_id>/revision-history", methods=["GET"])
+def intake_revision_history(intake_id):
+    if not HINDSFOOT_INTAKE_VERSIONING_1E_ENABLED:
+        flash("Governed revision history is not enabled.", "warning")
+        return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+
+    firm_id = str(session.get("firm_id") or "").strip()
+    if not firm_id or not (session.get("user_id") or session.get("username")):
+        return redirect(url_for("login"))
+
+    try:
+        assert_intake_correction_versioning_schema_ready(DB_PATH)
+        history = get_intake_revision_history(DB_PATH, firm_id, intake_id)
+    except (IntakeCorrectionVersioningError, ValueError) as exc:
+        flash(f"Revision history is unavailable: {exc}", "warning")
+        return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+
+    questions = get_universal_intake_questions()
+
+    def readable(value):
+        return str(value or "Unknown").replace("_", " ").replace("-", " ").title()
+
+    def labels(entry):
+        question = questions.get(entry["question_key"], {})
+        return {
+            **entry,
+            "question_label": question.get("label") or readable(entry["question_key"]),
+            "answer_label": (
+                question.get("options", {}).get(entry["answer_key"])
+                or entry.get("answer_label")
+                or readable(entry["answer_key"])
+            ),
+        }
+
+    for revision in history:
+        revision["items"] = [labels(item) for item in revision["items"]]
+        revision["changes"] = {
+            key: [labels(item) for item in values]
+            for key, values in revision["changes"].items()
+        }
+
+    return render_template(
+        "intake/revision_history.html",
+        intake_id=intake_id,
+        revisions=history,
     )
 
 

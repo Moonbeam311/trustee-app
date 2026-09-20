@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<main style="max-width:1000px;margin:30px auto;padding:0 16px;">
+    <h1>Revision History</h1>
+    <p><strong>Intake ID:</strong> {{ intake_id }}</p>
+    <p>This is a read-only historical record. Prior revisions cannot be changed here.</p>
+
+    {% if not revisions %}
+    <p>No governed revisions are available for this intake.</p>
+    {% endif %}
+
+    {% for revision in revisions %}
+    <section style="border:1px solid rgba(0,0,0,.16);border-radius:12px;padding:18px;margin:20px 0;">
+        <h2>Revision {{ revision.answer_revision_no }}</h2>
+        <p><strong>Status:</strong> {{ revision.revision_status|replace('_', ' ')|title }}</p>
+        <p><strong>Created:</strong> {{ revision.created_at }}</p>
+        <p><strong>Confirmed:</strong> {{ revision.confirmed_at or 'Not confirmed' }}</p>
+        {% if revision.supersedes_revision_id %}
+        <p><strong>Supersedes:</strong> {{ revision.supersedes_revision_id }}</p>
+        {% endif %}
+
+        {% set snapshot = revision.snapshot_version %}
+        {% if snapshot %}
+        <h3>Translation Snapshot</h3>
+        <p>
+            Version {{ snapshot.snapshot_version_no }} —
+            {{ snapshot.confirmation_status|replace('_', ' ')|title }}
+        </p>
+        <p><strong>Generated:</strong> {{ snapshot.generated_at }}</p>
+        <p><strong>Confirmed:</strong> {{ snapshot.confirmed_at or 'Not confirmed' }}</p>
+        {% else %}
+        <p><strong>Translation Snapshot:</strong> Not generated</p>
+        {% endif %}
+
+        <h3>Answers</h3>
+        <ul>
+        {% for item in revision['items'] %}
+            <li><strong>{{ item.question_label }}:</strong> {{ item.answer_label }}</li>
+        {% endfor %}
+        </ul>
+
+        <h3>Changes from Previous Revision</h3>
+        {% if loop.first %}
+        <p>Baseline revision.</p>
+        {% elif not revision.changes.additions and not revision.changes.removals %}
+        <p>No selection changes.</p>
+        {% else %}
+            {% if revision.changes.additions %}
+            <h4>Added</h4>
+            <ul>{% for item in revision.changes.additions %}<li>{{ item.question_label }}: {{ item.answer_label }}</li>{% endfor %}</ul>
+            {% endif %}
+            {% if revision.changes.removals %}
+            <h4>Removed</h4>
+            <ul>{% for item in revision.changes.removals %}<li>{{ item.question_label }}: {{ item.answer_label }}</li>{% endfor %}</ul>
+            {% endif %}
+        {% endif %}
+    </section>
+    {% endfor %}
+
+    <p><a href="{{ url_for('intake_saved_snapshot', intake_id=intake_id) }}">Return to Current Translation Snapshot</a></p>
+</main>
+{% endblock %}

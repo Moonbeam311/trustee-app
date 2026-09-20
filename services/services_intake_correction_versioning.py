@@ -197,6 +197,94 @@ def get_latest_governed_answer_selections(
         connection.close()
 
 
+def get_intake_revision_history(
+    db_path: str | Path,
+    firm_id: str,
+    intake_id: str,
+) -> list[dict[str, Any]]:
+    """Return immutable governed revisions and read-time selection changes."""
+
+    firm_id = _required(firm_id, "firm_id")
+    intake_id = _required(intake_id, "intake_id")
+    connection = _connect_read_only(db_path)
+    try:
+        _validate_intake_scope(connection, firm_id, intake_id)
+        revisions = connection.execute(
+            """
+            SELECT *
+            FROM intake_answer_revisions
+            WHERE firm_id = ? AND intake_id = ?
+            ORDER BY answer_revision_no
+            """,
+            (firm_id, intake_id),
+        ).fetchall()
+
+        history: list[dict[str, Any]] = []
+        previous: dict[str, set[str]] = {}
+        for revision_row in revisions:
+            revision = dict(revision_row)
+            items = [
+                dict(row) for row in connection.execute(
+                    """
+                    SELECT *
+                    FROM intake_answer_revision_items
+                    WHERE answer_revision_id = ?
+                    ORDER BY id
+                    """,
+                    (revision["answer_revision_id"],),
+                ).fetchall()
+            ]
+            snapshot_row = connection.execute(
+                """
+                SELECT *
+                FROM intake_snapshot_versions
+                WHERE firm_id = ? AND intake_id = ? AND answer_revision_id = ?
+                ORDER BY snapshot_version_no DESC
+                LIMIT 1
+                """,
+                (firm_id, intake_id, revision["answer_revision_id"]),
+            ).fetchone()
+
+            current: dict[str, set[str]] = {}
+            for item in items:
+                current.setdefault(item["question_key"], set()).add(
+                    item["answer_key"]
+                )
+
+            additions: list[dict[str, str]] = []
+            removals: list[dict[str, str]] = []
+            if history:
+                for question_key in sorted(set(previous) | set(current)):
+                    for answer_key in sorted(
+                        current.get(question_key, set())
+                        - previous.get(question_key, set())
+                    ):
+                        additions.append({
+                            "question_key": question_key,
+                            "answer_key": answer_key,
+                        })
+                    for answer_key in sorted(
+                        previous.get(question_key, set())
+                        - current.get(question_key, set())
+                    ):
+                        removals.append({
+                            "question_key": question_key,
+                            "answer_key": answer_key,
+                        })
+
+            revision["items"] = items
+            revision["snapshot_version"] = _row_dict(snapshot_row)
+            revision["changes"] = {
+                "additions": additions,
+                "removals": removals,
+            }
+            history.append(revision)
+            previous = current
+        return history
+    finally:
+        connection.close()
+
+
 def create_answer_revision(
     db_path: str | Path,
     firm_id: str,

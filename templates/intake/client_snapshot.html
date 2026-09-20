@@ -366,6 +366,7 @@
         {% endif %}
         <div class="snapshot-actions">
             <a href="{{ url_for('intake_universal_profile', intake_id=snapshot.intake_id, correction=1) }}">Review or Correct My Answers</a>
+            <a href="{{ url_for('intake_revision_history', intake_id=snapshot.intake_id) }}">View Revision History</a>
         </div>
     </section>
 
