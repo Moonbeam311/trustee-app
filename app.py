@@ -28277,10 +28277,13 @@ def professional_review_issue_seed(intake_id, workflow_key):
     created = int(seed_result.get("created", 0))
     skipped = int(seed_result.get("skipped", 0))
     provenance_enriched = int(seed_result.get("provenance_enriched", 0))
+    source_cleared = int(seed_result.get("source_cleared", 0))
+    source_reappeared = int(seed_result.get("source_reappeared", 0))
     flash(
         "Professional review issues synchronized. "
         f"New issues created: {created}. Skipped: {skipped}. "
-        f"Provenance enriched: {provenance_enriched}.",
+        f"Provenance enriched: {provenance_enriched}. "
+        f"Source-cleared: {source_cleared}. Source-reappeared: {source_reappeared}.",
         "success",
     )
     return redirect(url_for("professional_review_issue_registry", intake_id=intake_id))

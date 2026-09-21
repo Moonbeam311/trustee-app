@@ -83,7 +83,10 @@ def test_legacy_aggregate_refreshes_in_place_and_preserves_governed_fields(isola
         row for row in _rows(isolated_db) if row["issue_id"] == "PRI-FEA57BEA0A"
     )
 
-    result = _seed({"open_issue_records": [_aggregate_record(24)]})
+    result = _seed({"open_issue_records": [
+        _aggregate_record(24),
+        {"issue_title": "A separate stable issue"},
+    ]})
     rows = _rows(isolated_db)
     aggregate = next(row for row in rows if row["issue_id"] == "PRI-FEA57BEA0A")
     after_other = next(row for row in rows if row["issue_id"] == before_other["issue_id"])
@@ -119,7 +122,10 @@ def test_legacy_aggregate_refreshes_in_place_and_preserves_governed_fields(isola
     assert _rows(isolated_db, "professional_review_issue_events") == []
 
     unchanged = dict(aggregate)
-    repeated = _seed({"open_issue_records": [_aggregate_record(24)]})
+    repeated = _seed({"open_issue_records": [
+        _aggregate_record(24),
+        {"issue_title": "A separate stable issue"},
+    ]})
     assert repeated["semantic_updated"] == 0
     assert next(row for row in _rows(isolated_db) if row["issue_id"] == "PRI-FEA57BEA0A") == unchanged
 

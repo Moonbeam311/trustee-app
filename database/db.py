@@ -283,12 +283,17 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
     """
     import hashlib
     import re
+    import uuid
+    from datetime import UTC, datetime
 
     ensure_professional_review_issue_tables()
 
     open_issues = []
     if isinstance(draft_packet, dict):
-        open_issues = draft_packet.get("open_issue_records") or draft_packet.get("open_issues") or []
+        if "open_issue_records" in draft_packet:
+            open_issues = draft_packet.get("open_issue_records") or []
+        else:
+            open_issues = draft_packet.get("open_issues") or []
 
     conn = get_connection()
     cur = conn.cursor()
@@ -297,6 +302,9 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
     skipped = 0
     provenance_enriched = 0
     semantic_updated = 0
+    source_cleared = 0
+    source_reappeared = 0
+    represented_issue_ids = set()
 
     aggregate_identity_key = "open_followup_tasks_remaining"
     aggregate_title_pattern = re.compile(
@@ -364,6 +372,7 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
                 )
             if candidates:
                 existing_id, issue_id, existing_title, existing_description = candidates[0]
+                represented_issue_ids.add(issue_id)
                 if existing_title != title[:180] or existing_description != description:
                     cur.execute("""
                         UPDATE professional_review_issues
@@ -371,6 +380,27 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
                         WHERE id = ?
                     """, (title[:180], description, existing_id))
                     semantic_updated += cur.rowcount
+                cur.execute("""
+                    UPDATE professional_review_issues
+                    SET status = 'open', disposition = 'source_reappeared',
+                        resolved_by = NULL, resolved_capacity = NULL, resolved_at = NULL,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ? AND disposition = 'source_cleared'
+                """, (existing_id,))
+                if cur.rowcount:
+                    source_reappeared += 1
+                    cur.execute("""
+                        INSERT INTO professional_review_issue_events (
+                            event_id, issue_id, intake_id, firm_id, event_type,
+                            event_notes, actor, actor_capacity
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        "PRIE-" + uuid.uuid4().hex[:10].upper(), issue_id, intake_id,
+                        firm_id, "source_condition_reappeared",
+                        "Source-derived reconciliation: issue is represented again in "
+                        "the current authoritative draft_packet.open_issue_records for "
+                        f"workflow {workflow_key}.", actor, "Source-Derived",
+                    ))
                 skipped += 1
                 continue
             issue_id = stable_issue_id
@@ -381,6 +411,7 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
         cur.execute("SELECT issue_id, linked_record_type, linked_record_id FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
         existing = cur.fetchone()
         if existing:
+            represented_issue_ids.add(existing[0])
             if (not str(existing[1] or "").strip() and not str(existing[2] or "").strip()
                     and linked_record_type and linked_record_id):
                 cur.execute("""
@@ -391,6 +422,28 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
                       AND COALESCE(TRIM(linked_record_id), '') = ''
                 """, (linked_record_type, linked_record_id, issue_id))
                 provenance_enriched += cur.rowcount
+            cur.execute("""
+                UPDATE professional_review_issues
+                SET status = 'open', disposition = 'source_reappeared',
+                    resolved_by = NULL, resolved_capacity = NULL, resolved_at = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE issue_id = ? AND intake_id = ? AND firm_id = ?
+                  AND workflow_key = ? AND disposition = 'source_cleared'
+            """, (issue_id, intake_id, firm_id, workflow_key))
+            if cur.rowcount:
+                source_reappeared += 1
+                cur.execute("""
+                    INSERT INTO professional_review_issue_events (
+                        event_id, issue_id, intake_id, firm_id, event_type,
+                        event_notes, actor, actor_capacity
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    "PRIE-" + uuid.uuid4().hex[:10].upper(), issue_id, intake_id,
+                    firm_id, "source_condition_reappeared",
+                    "Source-derived reconciliation: issue is represented again in "
+                    "the current authoritative draft_packet.open_issue_records for "
+                    f"workflow {workflow_key}.", actor, "Source-Derived",
+                ))
             skipped += 1
             continue
 
@@ -406,7 +459,52 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
             issue_category, severity, title[:180], description,
             recommended_action, linked_record_type, linked_record_id, "open", actor
         ))
+        represented_issue_ids.add(issue_id)
         created += 1
+
+    human_dispositions = {"resolved", "accepted_risk", "escalated", "reopened"}
+    cur.execute("""
+        SELECT issue_id, disposition
+        FROM professional_review_issues
+        WHERE intake_id = ? AND firm_id = ? AND workflow_key = ?
+          AND issue_source = 'draft_packet_open_issue'
+          AND COALESCE(TRIM(linked_record_type), '') = ''
+          AND COALESCE(TRIM(linked_record_id), '') = ''
+          AND status = 'open'
+    """, (intake_id, firm_id, workflow_key))
+    for existing_issue_id, disposition in cur.fetchall():
+        if existing_issue_id in represented_issue_ids or disposition in human_dispositions:
+            continue
+        if disposition not in (None, "", "source_reappeared"):
+            continue
+        now = datetime.now(UTC).isoformat()
+        cur.execute("""
+            UPDATE professional_review_issues
+            SET status = 'resolved', disposition = 'source_cleared',
+                resolved_by = ?, resolved_capacity = 'Source-Derived',
+                resolved_at = ?, updated_at = ?
+            WHERE issue_id = ? AND intake_id = ? AND firm_id = ? AND workflow_key = ?
+              AND status = 'open'
+              AND (disposition IS NULL OR TRIM(disposition) = ''
+                   OR disposition = 'source_reappeared')
+              AND COALESCE(TRIM(linked_record_type), '') = ''
+              AND COALESCE(TRIM(linked_record_id), '') = ''
+        """, (actor, now, now, existing_issue_id, intake_id, firm_id, workflow_key))
+        if not cur.rowcount:
+            continue
+        source_cleared += 1
+        cur.execute("""
+            INSERT INTO professional_review_issue_events (
+                event_id, issue_id, intake_id, firm_id, event_type,
+                event_notes, actor, actor_capacity
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "PRIE-" + uuid.uuid4().hex[:10].upper(), existing_issue_id, intake_id,
+            firm_id, "source_condition_cleared",
+            "Source-derived reconciliation: issue was absent from the current "
+            "authoritative draft_packet.open_issue_records for "
+            f"workflow {workflow_key}.", actor, "Source-Derived",
+        ))
 
     conn.commit()
     conn.close()
@@ -416,6 +514,8 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
         "skipped": skipped,
         "provenance_enriched": provenance_enriched,
         "semantic_updated": semantic_updated,
+        "source_cleared": source_cleared,
+        "source_reappeared": source_reappeared,
         "source_issue_count": len(open_issues),
         "normalized_issue_count": len(open_issues),
     }

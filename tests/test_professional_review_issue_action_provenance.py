@@ -124,13 +124,14 @@ def test_database_owner_rejects_unsupported_disposition_before_any_database_acce
 def test_legacy_string_and_aggregate_seed_without_fabricated_provenance(isolated_db):
     result = _seed({"open_issues": ["3 open follow-up task(s) remain before final drafting."]})
     rows = _fetch_all(isolated_db, "professional_review_issues")
-    assert result == {
-        "created": 1,
-        "skipped": 0,
-        "provenance_enriched": 0,
-        "source_issue_count": 1,
-        "normalized_issue_count": 1,
-    }
+    assert result["created"] == 1
+    assert result["skipped"] == 0
+    assert result["provenance_enriched"] == 0
+    assert result["semantic_updated"] == 0
+    assert result["source_cleared"] == 0
+    assert result["source_reappeared"] == 0
+    assert result["source_issue_count"] == 1
+    assert result["normalized_issue_count"] == 1
     assert rows[0]["issue_title"] == "3 open follow-up task(s) remain before final drafting."
     assert rows[0]["linked_record_type"] is None
     assert rows[0]["linked_record_id"] is None
