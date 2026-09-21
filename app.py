@@ -148,7 +148,7 @@ from services.services_intake import seed_default_intake_module_ledger, list_int
 from services.services_intake import build_document_recommendations, save_document_recommendations, list_saved_document_recommendations, ensure_intake_document_recommendation_tables
 from services.services_intake import build_document_recommendations_tuned
 from services.services_intake import update_document_recommendation_status, build_workflow_launch_prep
-from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
+from services.services_intake import get_workflow_bridge_definition, save_workflow_bridge_answers, list_workflow_bridge_answers, build_workflow_bridge_summary, ensure_workflow_bridge_tables
 from services.services_intake import build_workflow_draft_packet
 from services.services_intake_correction_versioning import (
     IntakeCorrectionVersioningError,
@@ -23527,12 +23527,31 @@ def intake_workflow_bridge(intake_id, workflow_key):
         flash("Workflow bridge answers saved.", "success")
         return redirect(url_for("intake_workflow_bridge_summary", intake_id=intake_id, workflow_key=workflow_key))
 
+    saved_answers = list_workflow_bridge_answers(intake_id, workflow_key)
+    questions_by_key = {
+        question.get("key"): question
+        for question in definition.get("questions", [])
+        if question.get("key")
+    }
+    answers = {}
+    for saved_answer in saved_answers:
+        question_key = saved_answer.get("question_key")
+        answer_key = saved_answer.get("answer_key")
+        question = questions_by_key.get(question_key)
+        if not question or answer_key not in question.get("options", {}):
+            continue
+        if question.get("input_type") == "checkbox":
+            answers.setdefault(question_key, []).append(answer_key)
+        else:
+            answers[question_key] = answer_key
+
     return render_template(
         "intake/workflow_bridge.html",
         intake_id=intake_id,
         workflow_key=workflow_key,
         definition=definition,
-        launch=launch
+        launch=launch,
+        answers=answers,
     )
 
 

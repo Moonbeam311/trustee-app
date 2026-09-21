@@ -129,9 +129,15 @@
                     {% for key, label in question.options.items() %}
                         <label class="bridge-option">
                             {% if question.input_type == "radio" %}
-                                <input type="radio" name="{{ question.key }}" value="{{ key }}">
+                                <input type="radio" name="{{ question.key }}" value="{{ key }}"
+                                {% if answers and answers.get(question.key) == key %}checked{% endif %}>
                             {% else %}
-                                <input type="checkbox" name="{{ question.key }}" value="{{ key }}">
+                                {% set selected = answers.get(question.key, []) if answers else [] %}
+                                {% if selected is string %}
+                                    {% set selected = [selected] %}
+                                {% endif %}
+                                <input type="checkbox" name="{{ question.key }}" value="{{ key }}"
+                                {% if key in selected %}checked{% endif %}>
                             {% endif %}
                             {{ label }}
                         </label>
