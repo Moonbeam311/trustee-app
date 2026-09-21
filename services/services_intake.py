@@ -5875,7 +5875,8 @@ def build_draft_packet_open_issue_records(workflow_key, bridge_summary):
     records = []
 
     def add_issue(title, *, source="draft_packet_open_issue", category="Professional Review",
-                  severity="major", recommended_action=None, source_object=None):
+                  severity="major", recommended_action=None, source_object=None,
+                  issue_identity_key=None):
         linked_record_type = None
         linked_record_id = None
         if isinstance(source_object, dict):
@@ -5896,6 +5897,7 @@ def build_draft_packet_open_issue_records(workflow_key, bridge_summary):
             ),
             "linked_record_type": linked_record_type,
             "linked_record_id": linked_record_id,
+            "issue_identity_key": issue_identity_key,
         })
 
     launch = bridge_summary.get("launch", {}) or {}
@@ -5907,7 +5909,10 @@ def build_draft_packet_open_issue_records(workflow_key, bridge_summary):
     documents = launch.get("documents", []) or []
 
     if open_tasks:
-        add_issue(f"{len(open_tasks)} open follow-up task(s) remain before final drafting.")
+        add_issue(
+            f"{len(open_tasks)} open follow-up task(s) remain before final drafting.",
+            issue_identity_key="open_followup_tasks_remaining",
+        )
 
     if review_flags:
         for flag in review_flags:

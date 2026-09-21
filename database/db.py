@@ -282,6 +282,7 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
     RC2-B3A-2A — Issue Sync Integration Fix.
     """
     import hashlib
+    import re
 
     ensure_professional_review_issue_tables()
 
@@ -295,6 +296,12 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
     created = 0
     skipped = 0
     provenance_enriched = 0
+    semantic_updated = 0
+
+    aggregate_identity_key = "open_followup_tasks_remaining"
+    aggregate_title_pattern = re.compile(
+        r"^\d+\s+open follow-up task\(s\) remain before final drafting\.$"
+    )
 
     for issue in open_issues:
         record = issue if isinstance(issue, dict) else {}
@@ -320,8 +327,56 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
             linked_record_type = None
             linked_record_id = None
 
-        seed = "|".join([str(intake_id), str(workflow_key), title])
-        issue_id = "PRI-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:10].upper()
+        identity_key = str(record.get("issue_identity_key") or "").strip()
+        is_semantic_aggregate = (
+            identity_key == aggregate_identity_key
+            or aggregate_title_pattern.fullmatch(title) is not None
+        )
+
+        if is_semantic_aggregate:
+            stable_seed = "|".join([
+                str(intake_id),
+                str(workflow_key),
+                f"identity:{aggregate_identity_key}",
+            ])
+            stable_issue_id = "PRI-" + hashlib.sha256(
+                stable_seed.encode("utf-8")
+            ).hexdigest()[:10].upper()
+            cur.execute("""
+                SELECT id, issue_id, issue_title, issue_description
+                FROM professional_review_issues
+                WHERE intake_id = ?
+                  AND firm_id = ?
+                  AND workflow_key = ?
+                  AND issue_source = ?
+            """, (intake_id, firm_id, workflow_key, issue_source))
+            candidates = [
+                row for row in cur.fetchall()
+                if aggregate_title_pattern.fullmatch(str(row[2] or "").strip())
+                or row[1] == stable_issue_id
+            ]
+            if len({row[0] for row in candidates}) > 1:
+                conn.rollback()
+                conn.close()
+                raise ValueError(
+                    "Multiple Professional Review aggregate issue candidates found "
+                    "for the same intake, firm, workflow, and source."
+                )
+            if candidates:
+                existing_id, issue_id, existing_title, existing_description = candidates[0]
+                if existing_title != title[:180] or existing_description != description:
+                    cur.execute("""
+                        UPDATE professional_review_issues
+                        SET issue_title = ?, issue_description = ?, updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                    """, (title[:180], description, existing_id))
+                    semantic_updated += cur.rowcount
+                skipped += 1
+                continue
+            issue_id = stable_issue_id
+        else:
+            seed = "|".join([str(intake_id), str(workflow_key), title])
+            issue_id = "PRI-" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:10].upper()
 
         cur.execute("SELECT issue_id, linked_record_type, linked_record_id FROM professional_review_issues WHERE issue_id = ?", (issue_id,))
         existing = cur.fetchone()
@@ -360,6 +415,7 @@ def seed_professional_review_issues_from_packet(intake_id, firm_id, workflow_key
         "created": created,
         "skipped": skipped,
         "provenance_enriched": provenance_enriched,
+        "semantic_updated": semantic_updated,
         "source_issue_count": len(open_issues),
         "normalized_issue_count": len(open_issues),
     }
