@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 from database.db import (
     get_connection,
     get_current_firm_id,
@@ -2338,6 +2339,51 @@ def ensure_intake_followup_task_tables():
         )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS intake_followup_task_lifecycle_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id TEXT NOT NULL UNIQUE,
+            task_id INTEGER NOT NULL,
+            intake_id TEXT NOT NULL,
+            firm_id TEXT,
+            event_type TEXT NOT NULL
+                CHECK (event_type IN ('no_successor_retired', 'reactivated')),
+            reason_code TEXT NOT NULL,
+            evidence_basis TEXT NOT NULL,
+            replacement_task_id INTEGER NULL
+                CHECK (replacement_task_id IS NULL),
+            actor TEXT NOT NULL,
+            actor_capacity TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """)
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS
+            idx_intake_followup_task_lifecycle_events_task
+        ON intake_followup_task_lifecycle_events (task_id, id)
+    """)
+    cur.execute("""
+        CREATE INDEX IF NOT EXISTS
+            idx_intake_followup_task_lifecycle_events_intake
+        ON intake_followup_task_lifecycle_events (intake_id, id)
+    """)
+    cur.execute("""
+        CREATE TRIGGER IF NOT EXISTS
+            prevent_intake_followup_task_lifecycle_events_update
+        BEFORE UPDATE ON intake_followup_task_lifecycle_events
+        BEGIN
+            SELECT RAISE(ABORT, 'lifecycle events are append-only');
+        END
+    """)
+    cur.execute("""
+        CREATE TRIGGER IF NOT EXISTS
+            prevent_intake_followup_task_lifecycle_events_delete
+        BEFORE DELETE ON intake_followup_task_lifecycle_events
+        BEGIN
+            SELECT RAISE(ABORT, 'lifecycle events are append-only');
+        END
+    """)
+
     conn.commit()
     conn.close()
 
@@ -2417,7 +2463,9 @@ def create_intake_followup_task(
     }
 
 
-def list_intake_followup_tasks(intake_id, include_reconciled=False):
+def list_intake_followup_tasks(
+    intake_id, include_reconciled=False, include_retired=False
+):
     ensure_intake_followup_task_tables()
 
     conn = get_connection()
@@ -2428,6 +2476,7 @@ def list_intake_followup_tasks(intake_id, include_reconciled=False):
         WHERE type = 'table' AND name = 'intake_followup_reconciliations'
     """).fetchone() is not None
     reconciliation_filter = ""
+    retirement_filter = ""
     params = [intake_id]
     if reconciliation_table_exists and not include_reconciled:
         firm_id = get_current_firm_id()
@@ -2440,13 +2489,29 @@ def list_intake_followup_tasks(intake_id, include_reconciled=False):
         """
         params.extend((firm_id, intake_id))
 
+    lifecycle_table_exists = cur.execute("""
+        SELECT 1 FROM sqlite_master
+        WHERE type = 'table'
+          AND name = 'intake_followup_task_lifecycle_events'
+    """).fetchone() is not None
+    if lifecycle_table_exists and not include_retired:
+        retirement_filter = """
+            AND COALESCE((
+                SELECT e.event_type
+                FROM intake_followup_task_lifecycle_events e
+                WHERE e.task_id = intake_followup_tasks.id
+                ORDER BY e.id DESC
+                LIMIT 1
+            ), '') != 'no_successor_retired'
+        """
+
     cur.execute("""
         SELECT id, intake_id, task_type, priority, status, title,
                description, source, created_at, updated_at, created_by,
                completed_at, completed_by
         FROM intake_followup_tasks
         WHERE intake_id = ?
-        """ + reconciliation_filter + """
+        """ + reconciliation_filter + retirement_filter + """
         ORDER BY
             CASE status
                 WHEN 'open' THEN 1
@@ -2491,6 +2556,354 @@ def list_intake_followup_tasks(intake_id, include_reconciled=False):
         }
         for row in rows
     ]
+
+
+def _latest_intake_followup_task_lifecycle_event(connection, task_id):
+    """Return the task's authoritative latest lifecycle event, if one exists."""
+    table_exists = connection.execute("""
+        SELECT 1 FROM sqlite_master
+        WHERE type = 'table'
+          AND name = 'intake_followup_task_lifecycle_events'
+    """).fetchone()
+    if not table_exists:
+        return None
+    row = connection.execute("""
+        SELECT id, event_id, task_id, intake_id, firm_id, event_type,
+               reason_code, evidence_basis, replacement_task_id, actor,
+               actor_capacity, created_at
+        FROM intake_followup_task_lifecycle_events
+        WHERE task_id = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (task_id,)).fetchone()
+    if not row:
+        return None
+    columns = (
+        "id", "event_id", "task_id", "intake_id", "firm_id", "event_type",
+        "reason_code", "evidence_basis", "replacement_task_id", "actor",
+        "actor_capacity", "created_at",
+    )
+    return dict(zip(columns, row))
+
+
+def list_intake_followup_task_lifecycle_events(
+    intake_id, task_id=None, firm_id=None
+):
+    ensure_intake_followup_task_tables()
+    connection = get_connection()
+    try:
+        conditions = ["intake_id = ?"]
+        params = [intake_id]
+        if task_id is not None:
+            conditions.append("task_id = ?")
+            params.append(task_id)
+        if firm_id is not None:
+            conditions.append("firm_id = ?")
+            params.append(firm_id)
+        rows = connection.execute("""
+            SELECT id, event_id, task_id, intake_id, firm_id, event_type,
+                   reason_code, evidence_basis, replacement_task_id, actor,
+                   actor_capacity, created_at
+            FROM intake_followup_task_lifecycle_events
+            WHERE """ + " AND ".join(conditions) + """
+            ORDER BY id ASC
+        """, tuple(params)).fetchall()
+        columns = (
+            "id", "event_id", "task_id", "intake_id", "firm_id",
+            "event_type", "reason_code", "evidence_basis",
+            "replacement_task_id", "actor", "actor_capacity", "created_at",
+        )
+        return [dict(zip(columns, row)) for row in rows]
+    finally:
+        connection.close()
+
+
+def _table_columns(connection, table_name):
+    if not connection.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+        (table_name,),
+    ).fetchone():
+        return None
+    return {row[1] for row in connection.execute(
+        'PRAGMA table_info("' + table_name + '")'
+    ).fetchall()}
+
+
+def evaluate_no_successor_retirement_eligibility(task_id, connection=None):
+    """Read-only, fail-closed eligibility decision for legacy task retirement."""
+    owns_connection = connection is None
+    if owns_connection:
+        connection = get_connection()
+    reasons = []
+    evidence = {}
+    try:
+        required_columns = {
+            "intake_followup_tasks": {
+                "id", "intake_id", "firm_id", "status", "title",
+                "snapshot_version_id", "generation_batch_id",
+            },
+            "intake_followup_task_lifecycle_events": {
+                "id", "task_id", "event_type",
+            },
+            "intake_followup_reconciliations": {
+                "superseded_followup_task_id", "replacement_followup_task_id",
+            },
+            "intake_snapshot_versions": {
+                "snapshot_version_id", "intake_id", "firm_id",
+            },
+            "intake_snapshot_proposed_tasks": {
+                "snapshot_version_id", "title", "materialized_followup_task_id",
+            },
+            "professional_review_issues": {
+                "linked_record_type", "linked_record_id",
+            },
+        }
+        missing_sources = []
+        for table_name, columns in required_columns.items():
+            actual_columns = _table_columns(connection, table_name)
+            if actual_columns is None or not columns.issubset(actual_columns):
+                missing_sources.append(table_name)
+        if missing_sources:
+            return {
+                "task_id": task_id,
+                "eligible": False,
+                "reason_codes": ["missing_required_governance_source"],
+                "evidence": {"missing_governance_sources": missing_sources},
+            }
+
+        task = connection.execute("""
+            SELECT id, intake_id, firm_id, status, title,
+                   snapshot_version_id, generation_batch_id
+            FROM intake_followup_tasks
+            WHERE id = ?
+        """, (task_id,)).fetchone()
+        if not task:
+            return {
+                "task_id": task_id,
+                "eligible": False,
+                "reason_codes": ["task_not_found"],
+                "evidence": {"task_exists": False},
+            }
+
+        task_id_value, intake_id, firm_id, status, title, snapshot_id, batch_id = task
+        normalized_status = str(status or "").strip().lower()
+        active_statuses = {
+            "open", "pending_client", "pending_staff",
+            "pending_professional", "deferred",
+        }
+        evidence.update({
+            "task_exists": True,
+            "status": status,
+            "snapshot_version_id": snapshot_id,
+            "generation_batch_id": batch_id,
+        })
+        if normalized_status not in active_statuses:
+            reasons.append("task_not_operationally_active")
+        if normalized_status == "completed":
+            reasons.append("task_completed")
+        if str(snapshot_id or "").strip():
+            reasons.append("task_has_snapshot_version")
+        if str(batch_id or "").strip():
+            reasons.append("task_has_generation_batch")
+
+        superseded = connection.execute("""
+            SELECT 1 FROM intake_followup_reconciliations
+            WHERE superseded_followup_task_id = ? LIMIT 1
+        """, (task_id_value,)).fetchone() is not None
+        replacement = connection.execute("""
+            SELECT 1 FROM intake_followup_reconciliations
+            WHERE replacement_followup_task_id = ? LIMIT 1
+        """, (task_id_value,)).fetchone() is not None
+        if superseded:
+            reasons.append("task_is_reconciled_superseded")
+        if replacement:
+            reasons.append("task_is_reconciliation_replacement")
+
+        materialized = connection.execute("""
+            SELECT 1
+            FROM intake_snapshot_proposed_tasks proposed
+            JOIN intake_snapshot_versions version
+              ON version.snapshot_version_id = proposed.snapshot_version_id
+            WHERE CAST(proposed.materialized_followup_task_id AS TEXT) =
+                  CAST(? AS TEXT)
+              AND version.intake_id = ?
+              AND version.firm_id = ?
+            LIMIT 1
+        """, (task_id_value, intake_id, firm_id)).fetchone() is not None
+        if materialized:
+            reasons.append("task_materialized_from_governed_proposal")
+
+        governed_title_lineage = connection.execute("""
+            SELECT 1
+            FROM intake_snapshot_proposed_tasks proposed
+            JOIN intake_snapshot_versions version
+              ON version.snapshot_version_id = proposed.snapshot_version_id
+            WHERE version.intake_id = ?
+              AND version.firm_id = ?
+              AND LOWER(TRIM(COALESCE(proposed.title, ''))) =
+                  LOWER(TRIM(COALESCE(?, '')))
+            LIMIT 1
+        """, (intake_id, firm_id, title)).fetchone() is not None
+        if governed_title_lineage:
+            reasons.append("governed_same_intake_title_lineage_exists")
+
+        professional_review_link = connection.execute("""
+            SELECT 1 FROM professional_review_issues
+            WHERE linked_record_type = 'intake_followup_task'
+              AND CAST(linked_record_id AS TEXT) = CAST(? AS TEXT)
+            LIMIT 1
+        """, (task_id_value,)).fetchone() is not None
+        if professional_review_link:
+            reasons.append("professional_review_issue_linked")
+
+        latest_event = _latest_intake_followup_task_lifecycle_event(
+            connection, task_id_value
+        )
+        effectively_retired = bool(
+            latest_event
+            and latest_event["event_type"] == "no_successor_retired"
+        )
+        if effectively_retired:
+            reasons.append("task_already_effectively_retired")
+        evidence.update({
+            "is_reconciled_superseded": superseded,
+            "is_reconciliation_replacement": replacement,
+            "is_materialized_proposed_task": materialized,
+            "has_governed_same_intake_title_lineage": governed_title_lineage,
+            "has_professional_review_link": professional_review_link,
+            "latest_lifecycle_event": latest_event,
+            "effectively_retired": effectively_retired,
+        })
+        return {
+            "task_id": task_id_value,
+            "eligible": not reasons,
+            "reason_codes": reasons,
+            "evidence": evidence,
+        }
+    finally:
+        if owns_connection:
+            connection.close()
+
+
+def _required_lifecycle_text(value, field_name):
+    normalized = str(value or "").strip()
+    if not normalized:
+        raise ValueError(field_name + " is required")
+    return normalized
+
+
+def record_no_successor_task_retirement(
+    task_id, actor, actor_capacity, evidence_basis, connection=None
+):
+    actor = _required_lifecycle_text(actor, "actor")
+    actor_capacity = _required_lifecycle_text(actor_capacity, "actor_capacity")
+    evidence_basis = _required_lifecycle_text(evidence_basis, "evidence_basis")
+    owns_connection = connection is None
+    if owns_connection:
+        ensure_intake_followup_task_tables()
+        connection = get_connection()
+    try:
+        decision = evaluate_no_successor_retirement_eligibility(
+            task_id, connection=connection
+        )
+        latest = decision.get("evidence", {}).get("latest_lifecycle_event")
+        if latest and latest["event_type"] == "no_successor_retired":
+            return {
+                "event_id": latest["event_id"],
+                "task_id": task_id,
+                "retired": True,
+                "already_retired": True,
+            }
+        if not decision["eligible"]:
+            raise ValueError(
+                "Task is not eligible for no-successor retirement: "
+                + ", ".join(decision["reason_codes"])
+            )
+        task = connection.execute(
+            "SELECT intake_id, firm_id FROM intake_followup_tasks WHERE id = ?",
+            (task_id,),
+        ).fetchone()
+        event_id = "IFTL-" + uuid.uuid4().hex.upper()
+        connection.execute("""
+            INSERT INTO intake_followup_task_lifecycle_events (
+                event_id, task_id, intake_id, firm_id, event_type, reason_code,
+                evidence_basis, replacement_task_id, actor, actor_capacity,
+                created_at
+            ) VALUES (?, ?, ?, ?, 'no_successor_retired',
+                      'legacy_unversioned_no_governed_successor', ?, NULL, ?, ?, ?)
+        """, (
+            event_id, task_id, task[0], task[1], evidence_basis, actor,
+            actor_capacity, datetime.utcnow().isoformat(timespec="seconds"),
+        ))
+        if owns_connection:
+            connection.commit()
+        return {
+            "event_id": event_id,
+            "task_id": task_id,
+            "retired": True,
+            "already_retired": False,
+        }
+    except Exception:
+        if owns_connection:
+            connection.rollback()
+        raise
+    finally:
+        if owns_connection:
+            connection.close()
+
+
+def record_no_successor_task_reactivation(
+    task_id, actor, actor_capacity, evidence_basis, connection=None
+):
+    actor = _required_lifecycle_text(actor, "actor")
+    actor_capacity = _required_lifecycle_text(actor_capacity, "actor_capacity")
+    evidence_basis = _required_lifecycle_text(evidence_basis, "evidence_basis")
+    owns_connection = connection is None
+    if owns_connection:
+        ensure_intake_followup_task_tables()
+        connection = get_connection()
+    try:
+        task = connection.execute(
+            "SELECT intake_id, firm_id FROM intake_followup_tasks WHERE id = ?",
+            (task_id,),
+        ).fetchone()
+        if not task:
+            raise ValueError("Task does not exist")
+        latest = _latest_intake_followup_task_lifecycle_event(connection, task_id)
+        if not latest or latest["event_type"] != "no_successor_retired":
+            return {
+                "event_id": latest["event_id"] if latest else None,
+                "task_id": task_id,
+                "reactivated": False,
+                "already_active": True,
+            }
+        event_id = "IFTL-" + uuid.uuid4().hex.upper()
+        connection.execute("""
+            INSERT INTO intake_followup_task_lifecycle_events (
+                event_id, task_id, intake_id, firm_id, event_type, reason_code,
+                evidence_basis, replacement_task_id, actor, actor_capacity,
+                created_at
+            ) VALUES (?, ?, ?, ?, 'reactivated',
+                      'legacy_unversioned_no_governed_successor', ?, NULL, ?, ?, ?)
+        """, (
+            event_id, task_id, task[0], task[1], evidence_basis, actor,
+            actor_capacity, datetime.utcnow().isoformat(timespec="seconds"),
+        ))
+        if owns_connection:
+            connection.commit()
+        return {
+            "event_id": event_id,
+            "task_id": task_id,
+            "reactivated": True,
+            "already_active": False,
+        }
+    except Exception:
+        if owns_connection:
+            connection.rollback()
+        raise
+    finally:
+        if owns_connection:
+            connection.close()
 
 
 def get_intake_followup_task_counts():
