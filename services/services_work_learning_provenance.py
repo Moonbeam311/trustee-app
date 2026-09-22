@@ -94,6 +94,16 @@ def _wave1_source_context(db_path: Any, source_ids: list[str], firm_id: str) -> 
         if "hub_authority_hierarchy_determinations" in tables:
             result["authority_hierarchy_determinations"] = [dict(row) for row in connection.execute(
                 f"SELECT * FROM hub_authority_hierarchy_determinations WHERE firm_id=? AND source_reference_id IN ({marks}) ORDER BY created_at,hierarchy_id", [firm_id, *source_ids])]
+        if "hub_jurisdiction_module_certifications" in tables:
+            result["jurisdiction_certifications"] = []
+            applicability_ids = [row["applicability_id"] for row in result["issue_applicability"]]
+            hierarchy_ids = [row["hierarchy_id"] for row in result.get("authority_hierarchy_determinations", [])]
+            if applicability_ids and hierarchy_ids:
+                app_marks = ",".join("?" for _ in applicability_ids)
+                hierarchy_marks = ",".join("?" for _ in hierarchy_ids)
+                result["jurisdiction_certifications"] = [dict(row) for row in connection.execute(
+                    f"SELECT * FROM hub_jurisdiction_module_certifications WHERE firm_id=? AND applicability_id IN ({app_marks}) AND hierarchy_id IN ({hierarchy_marks}) ORDER BY created_at,certification_id",
+                    [firm_id, *applicability_ids, *hierarchy_ids])]
         if "hub_program_source_change_checks" in tables:
             result["source_change_checks"] = [dict(row) for row in connection.execute(
                 f"SELECT * FROM hub_program_source_change_checks WHERE source_reference_id IN ({marks}) ORDER BY created_at,change_check_id", source_ids)]
@@ -376,6 +386,7 @@ def build_work_learning_provenance_descriptor(
         "authority_reviews": wave1["authority_reviews"],
         "authority_determinations": wave1["authority_determinations"],
         "authority_hierarchy_determinations": wave1.get("authority_hierarchy_determinations", []),
+        "jurisdiction_certifications": wave1.get("jurisdiction_certifications", []),
         "source_change_checks": wave1.get("source_change_checks", []),
         "authority_change_impacts": wave1.get("authority_change_impacts", []),
         "handoff_descriptor": handoff,
