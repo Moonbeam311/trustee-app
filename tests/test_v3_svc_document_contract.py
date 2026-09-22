@@ -110,14 +110,19 @@ def test_secret_and_unsupported_rendering_fail_closed(document_db):
         contract.render_document(context, "pdf")
 
 
-def test_public_contract_has_no_persistence_or_source_mutation_api():
+def test_public_contract_matches_governed_document_api_surface():
     public = {
         name for name, value in inspect.getmembers(contract, inspect.isfunction)
         if not name.startswith("_")
     }
     assert public == {
-        "produce_trust_document_context", "describe_output_capabilities",
-        "render_document", "build_delivery_metadata", "list_document_references",
+        "produce_trust_document_context",
+        "describe_output_capabilities",
+        "render_document",
+        "build_delivery_metadata",
+        "list_document_references",
         "get_document_reference",
+        "record_document_legal_state",
+        "get_document_legal_state_event",
+        "get_document_legal_state_history",
     }
-    assert not any(token in name for name in public for token in ("persist", "archive", "finalize", "approve", "update", "delete"))
