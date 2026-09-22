@@ -72,6 +72,8 @@ SOURCE_LIFECYCLE_STATES = (
     "CURRENT", "REVIEW_DUE", "SUPERSEDED", "WITHDRAWN", "DEPRECATED", "UNRESOLVED",
 )
 
+SOURCE_CHANGE_STATES = ("NO_CHANGE", "CHANGE_DETECTED", "REVIEW_DUE", "UNRESOLVED")
+
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
@@ -138,6 +140,65 @@ def get_source_metadata_history(*, program_id, firm_id, owner_id, source_referen
     conn = get_connection(); conn.row_factory = __import__("sqlite3").Row
     rows = conn.execute("SELECT * FROM hub_program_source_metadata WHERE program_id=? AND source_reference_id=? ORDER BY created_at,metadata_id", (program_id, source_reference_id)).fetchall()
     conn.close(); return [dict(row) for row in rows]
+
+
+def record_source_change_check(*, program_id, firm_id, owner_id,
+                               source_reference_id, observation_state,
+                               basis, provenance, actor, actor_capacity,
+                               metadata_id=None, prior_change_check_id=None):
+    """Record an observation only; this performs no fetch and asserts no elapsed-time change."""
+    if not _program_available(program_id=program_id, firm_id=firm_id, owner_id=owner_id):
+        raise ValueError("program_not_available_in_context")
+    if observation_state not in SOURCE_CHANGE_STATES:
+        raise ValueError("invalid_source_change_state")
+    basis = str(basis or "").strip()
+    provenance = str(provenance or "").strip()
+    actor = str(actor or "").strip()
+    actor_capacity = str(actor_capacity or "").strip()
+    if not basis: raise ValueError("change_check_basis_required")
+    if not provenance: raise ValueError("change_check_provenance_required")
+    if not actor: raise ValueError("actor_required")
+    if not actor_capacity: raise ValueError("actor_capacity_required")
+    conn = get_connection(); conn.row_factory = __import__("sqlite3").Row
+    source = conn.execute(
+        "SELECT * FROM hub_program_source_references WHERE source_reference_id=? AND program_id=?",
+        (source_reference_id, program_id),
+    ).fetchone()
+    if not source:
+        conn.close(); raise ValueError("source_not_available_in_context")
+    if metadata_id:
+        metadata = conn.execute(
+            "SELECT 1 FROM hub_program_source_metadata WHERE metadata_id=? AND program_id=? AND source_reference_id=?",
+            (metadata_id, program_id, source_reference_id),
+        ).fetchone()
+        if not metadata:
+            conn.close(); raise ValueError("metadata_not_available_in_context")
+    latest = conn.execute(
+        "SELECT * FROM hub_program_source_change_checks WHERE program_id=? AND source_reference_id=? ORDER BY created_at DESC,change_check_id DESC LIMIT 1",
+        (program_id, source_reference_id),
+    ).fetchone()
+    if latest and prior_change_check_id != latest["change_check_id"]:
+        conn.close(); raise ValueError("prior_change_check_required")
+    if not latest and prior_change_check_id:
+        conn.close(); raise ValueError("prior_change_check_not_available_in_context")
+    change_id = _id("CHG")
+    conn.execute("""INSERT INTO hub_program_source_change_checks
+      (change_check_id,program_id,source_reference_id,metadata_id,observation_state,basis,provenance,actor,actor_capacity,prior_change_check_id,created_at)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?)""", (change_id,program_id,source_reference_id,metadata_id,
+      observation_state,basis,provenance,actor,actor_capacity,prior_change_check_id,_now()))
+    conn.commit(); conn.close(); return change_id
+
+
+def get_source_change_check_history(*, program_id, firm_id, owner_id, source_reference_id):
+    if not _program_available(program_id=program_id, firm_id=firm_id, owner_id=owner_id):
+        return []
+    conn=get_connection(); conn.row_factory=__import__("sqlite3").Row
+    rows=conn.execute("SELECT * FROM hub_program_source_change_checks WHERE program_id=? AND source_reference_id=? ORDER BY created_at,change_check_id",(program_id,source_reference_id)).fetchall()
+    conn.close(); return [dict(row) for row in rows]
+
+
+record_program_source_change_check = record_source_change_check
+get_program_source_change_check_history = get_source_change_check_history
 
 
 def ensure_work_learning_program_tables():

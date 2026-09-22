@@ -91,6 +91,15 @@ def _wave1_source_context(db_path: Any, source_ids: list[str], firm_id: str) -> 
                 program_marks = ",".join("?" for _ in program_ids)
                 result["authority_determinations"] = [dict(row) for row in connection.execute(
                     f"SELECT * FROM hub_program_authority_determinations WHERE program_id IN ({program_marks}) ORDER BY created_at,determination_id", program_ids)]
+        if "hub_authority_hierarchy_determinations" in tables:
+            result["authority_hierarchy_determinations"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_authority_hierarchy_determinations WHERE firm_id=? AND source_reference_id IN ({marks}) ORDER BY created_at,hierarchy_id", [firm_id, *source_ids])]
+        if "hub_program_source_change_checks" in tables:
+            result["source_change_checks"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_program_source_change_checks WHERE source_reference_id IN ({marks}) ORDER BY created_at,change_check_id", source_ids)]
+        if "hub_authority_change_impacts" in tables:
+            result["authority_change_impacts"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_authority_change_impacts WHERE firm_id=? AND source_reference_id IN ({marks}) ORDER BY created_at,impact_id", [firm_id, *source_ids])]
     finally:
         connection.close()
     return result
@@ -366,6 +375,9 @@ def build_work_learning_provenance_descriptor(
         "issue_applicability": wave1["issue_applicability"],
         "authority_reviews": wave1["authority_reviews"],
         "authority_determinations": wave1["authority_determinations"],
+        "authority_hierarchy_determinations": wave1.get("authority_hierarchy_determinations", []),
+        "source_change_checks": wave1.get("source_change_checks", []),
+        "authority_change_impacts": wave1.get("authority_change_impacts", []),
         "handoff_descriptor": handoff,
         "promotion_requests": requests,
         "promotions": promotions,

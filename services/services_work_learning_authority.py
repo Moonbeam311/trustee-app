@@ -17,6 +17,8 @@ DETERMINATION_STATES=('SUPPORTED','PARTIALLY_SUPPORTED','CONTRADICTED','MIXED','
 CONTEXT_TYPES=('PROGRAM','MATTER','TRUST','OTHER')
 LEGAL_SCOPES=('CREATION','ADMINISTRATION','TAX','PROPERTY','TRANSACTION','LITIGATION','DIGITAL_ASSETS','OTHER')
 INDEPENDENT_SUPPORT_STATES=('YES','NO','UNRESOLVED')
+HIERARCHY_KINDS=('CONTROLLING_LAW','GOVERNING_INSTRUMENT','AUTHORITY_ORDER')
+CHANGE_IMPACT_STATES=('REVIEW_REQUIRED','UNDER_REVIEW','NO_IMPACT','RESOLVED','UNRESOLVED')
 
 def _id(p): return p+'-'+uuid.uuid4().hex[:10].upper()
 def _now(): return datetime.now(timezone.utc).isoformat()
@@ -45,6 +47,111 @@ def _claim(program_id,claim_id):
  r=_one('SELECT * FROM hub_program_authority_claims WHERE claim_id=? AND program_id=?',(claim_id,program_id))
  if not r: raise ValueError('claim_not_available_in_context')
  return r
+
+def _canonical_source(source_reference_id,firm_id):
+ r=_one('''SELECT s.*,p.firm_id FROM hub_program_source_references s
+ JOIN hub_programs p ON p.program_id=s.program_id WHERE s.source_reference_id=?''',(source_reference_id,))
+ if not r or r['firm_id']!=firm_id: raise ValueError('source_not_available_in_context')
+ return r
+
+def _document_exists(object_type,object_id,firm_id):
+ c=get_connection()
+ try:
+  table='documents' if object_type=='DOCUMENT' else 'generated_documents'
+  exists=c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(table,)).fetchone()
+  if not exists: return False
+  columns={row[1] for row in c.execute(f'PRAGMA table_info({table})').fetchall()}
+  if 'document_id' not in columns: return False
+  if 'firm_id' in columns:
+   return c.execute(f'SELECT 1 FROM {table} WHERE document_id=? AND firm_id=? LIMIT 1',(object_id,firm_id)).fetchone() is not None
+  return c.execute(f'SELECT 1 FROM {table} WHERE document_id=? LIMIT 1',(object_id,)).fetchone() is not None
+ finally: c.close()
+
+def record_authority_hierarchy_determination(*,firm_id,context_type,context_id,
+ subject,hierarchy_kind,source_reference_id,hierarchy_state,basis,provenance,
+ decision_origin,human_confirmed,actor,actor_capacity,applicability_jurisdiction=None,
+ document_object_type=None,document_object_id=None,prior_hierarchy_id=None):
+ firm_id=_required(firm_id,'firm_required'); context_id=_required(context_id,'context_required')
+ subject=_required(subject,'subject_required')
+ if context_type not in CONTEXT_TYPES: raise ValueError('invalid_context_type')
+ if hierarchy_kind not in HIERARCHY_KINDS: raise ValueError('invalid_hierarchy_kind')
+ if hierarchy_state not in RELATIONSHIP_STATES: raise ValueError('invalid_hierarchy_state')
+ if decision_origin not in DECISION_ORIGINS: raise ValueError('invalid_decision_origin')
+ _canonical_source(source_reference_id,firm_id)
+ basis=_required(basis,'hierarchy_basis_required'); provenance=_required(provenance,'hierarchy_provenance_required')
+ actor=_required(actor,'actor_required'); actor_capacity=_required(actor_capacity,'actor_capacity_required')
+ jurisdiction=(applicability_jurisdiction or '').strip() or None
+ object_type=(document_object_type or '').strip().upper() or None
+ object_id=(document_object_id or '').strip() or None
+ if object_type=='INSTRUMENT': raise ValueError('instrument_object_type_prohibited')
+ if object_type and object_type not in ('DOCUMENT','GENERATED_DOCUMENT'): raise ValueError('invalid_document_object_type')
+ if bool(object_type)!=bool(object_id): raise ValueError('document_object_reference_incomplete')
+ if hierarchy_kind!='GOVERNING_INSTRUMENT' and (object_type or object_id): raise ValueError('document_object_requires_governing_instrument')
+ if decision_origin=='SYSTEM_SUGGESTED' and hierarchy_state!='UNRESOLVED': raise ValueError('machine_hierarchy_finalization_prohibited')
+ if hierarchy_state=='CONTROLLING':
+  if decision_origin not in ('OPERATOR_OR_FIDUCIARY','PROFESSIONAL') or not human_confirmed:
+   raise ValueError('controlling_requires_human_confirmation')
+  if not jurisdiction: raise ValueError('applicability_jurisdiction_required')
+ if hierarchy_kind=='GOVERNING_INSTRUMENT' and hierarchy_state=='CONTROLLING':
+  if not object_type or not _document_exists(object_type,object_id,firm_id):
+   hierarchy_state='UNRESOLVED'
+ if prior_hierarchy_id:
+  prior=_one('SELECT * FROM hub_authority_hierarchy_determinations WHERE hierarchy_id=?',(prior_hierarchy_id,))
+  keys=('firm_id','context_type','context_id','subject','hierarchy_kind')
+  expected=(firm_id,context_type,context_id,subject,hierarchy_kind)
+  if not prior or tuple(prior[k] for k in keys)!=expected: raise ValueError('prior_hierarchy_not_available_in_context')
+ if hierarchy_state=='SUPERSEDED' and not prior_hierarchy_id: raise ValueError('superseded_requires_predecessor')
+ hid=_id('HIER'); _insert('hub_authority_hierarchy_determinations',
+ ('hierarchy_id','firm_id','context_type','context_id','subject','hierarchy_kind','source_reference_id','hierarchy_state','applicability_jurisdiction','document_object_type','document_object_id','basis','provenance','decision_origin','human_confirmed','actor','actor_capacity','prior_hierarchy_id','created_at'),
+ (hid,firm_id,context_type,context_id,subject,hierarchy_kind,source_reference_id,hierarchy_state,jurisdiction,object_type,object_id,basis,provenance,decision_origin,int(bool(human_confirmed)),actor,actor_capacity,prior_hierarchy_id,_now())); return hid
+
+record_hierarchy_determination = record_authority_hierarchy_determination
+
+def get_authority_hierarchy_history(*,firm_id,context_type,context_id,subject,hierarchy_kind):
+ return _rows_applicability('SELECT * FROM hub_authority_hierarchy_determinations WHERE firm_id=? AND context_type=? AND context_id=? AND subject=? AND hierarchy_kind=? ORDER BY created_at,hierarchy_id',(firm_id,context_type,context_id,subject,hierarchy_kind))
+
+get_hierarchy_history = get_authority_hierarchy_history
+
+def compose_authority_hierarchy_state(*,firm_id,context_type,context_id,subject,hierarchy_kind):
+ """Read-only conflict composition; never ranks sources or closes a conflict."""
+ rows=get_authority_hierarchy_history(firm_id=firm_id,context_type=context_type,context_id=context_id,subject=subject,hierarchy_kind=hierarchy_kind)
+ superseded={r['prior_hierarchy_id'] for r in rows if r['hierarchy_state']=='SUPERSEDED' and r['prior_hierarchy_id']}
+ active=[r for r in rows if r['hierarchy_state']=='CONTROLLING' and r['hierarchy_id'] not in superseded]
+ if len(active)==1:
+  return {'hierarchy_state':'CONTROLLING','review_required':False,'winner':active[0],'active_controlling':active}
+ return {'hierarchy_state':'UNRESOLVED','review_required':len(active)>1,'winner':None,'active_controlling':active}
+
+resolve_authority_hierarchy_state = compose_authority_hierarchy_state
+
+def record_authority_change_impact(*,firm_id,context_type,context_id,subject,
+ source_reference_id,change_check_id,impact_state,basis,provenance,decision_origin,
+ actor,actor_capacity,applicability_id=None,hierarchy_id=None,prior_impact_id=None):
+ firm_id=_required(firm_id,'firm_required'); context_id=_required(context_id,'context_required'); subject=_required(subject,'subject_required')
+ if context_type not in CONTEXT_TYPES: raise ValueError('invalid_context_type')
+ if impact_state not in CHANGE_IMPACT_STATES: raise ValueError('invalid_change_impact_state')
+ if decision_origin not in DECISION_ORIGINS: raise ValueError('invalid_decision_origin')
+ source=_canonical_source(source_reference_id,firm_id)
+ check=_one('SELECT * FROM hub_program_source_change_checks WHERE change_check_id=?',(change_check_id,))
+ if not check or check['source_reference_id']!=source_reference_id or check['program_id']!=source['program_id']: raise ValueError('change_check_not_available_in_context')
+ if decision_origin=='SYSTEM_SUGGESTED' and impact_state not in ('REVIEW_REQUIRED','UNRESOLVED'): raise ValueError('machine_change_impact_finalization_prohibited')
+ basis=_required(basis,'change_impact_basis_required'); provenance=_required(provenance,'change_impact_provenance_required')
+ if applicability_id:
+  app=_one('SELECT * FROM hub_authority_applicability WHERE applicability_id=?',(applicability_id,))
+  if not app or any((app['firm_id']!=firm_id,app['context_type']!=context_type,app['context_id']!=context_id,app['subject']!=subject,app['source_reference_id']!=source_reference_id)): raise ValueError('applicability_not_available_in_context')
+ if hierarchy_id:
+  hierarchy=_one('SELECT * FROM hub_authority_hierarchy_determinations WHERE hierarchy_id=?',(hierarchy_id,))
+  if not hierarchy or any((hierarchy['firm_id']!=firm_id,hierarchy['context_type']!=context_type,hierarchy['context_id']!=context_id,hierarchy['subject']!=subject,hierarchy['source_reference_id']!=source_reference_id)): raise ValueError('hierarchy_not_available_in_context')
+ if prior_impact_id:
+  prior=_one('SELECT * FROM hub_authority_change_impacts WHERE impact_id=?',(prior_impact_id,))
+  keys=('firm_id','context_type','context_id','subject','source_reference_id')
+  if not prior or tuple(prior[k] for k in keys)!=(firm_id,context_type,context_id,subject,source_reference_id): raise ValueError('prior_impact_not_available_in_context')
+ iid=_id('IMP'); _insert('hub_authority_change_impacts',('impact_id','firm_id','context_type','context_id','subject','source_reference_id','change_check_id','applicability_id','hierarchy_id','impact_state','basis','provenance','decision_origin','actor','actor_capacity','prior_impact_id','created_at'),(iid,firm_id,context_type,context_id,subject,source_reference_id,change_check_id,applicability_id,hierarchy_id,impact_state,basis,provenance,decision_origin,_required(actor,'actor_required'),_required(actor_capacity,'actor_capacity_required'),prior_impact_id,_now())); return iid
+
+def get_authority_change_impact_history(*,firm_id,context_type,context_id,subject,source_reference_id):
+ return _rows_applicability('SELECT * FROM hub_authority_change_impacts WHERE firm_id=? AND context_type=? AND context_id=? AND subject=? AND source_reference_id=? ORDER BY created_at,impact_id',(firm_id,context_type,context_id,subject,source_reference_id))
+
+record_change_impact = record_authority_change_impact
+get_change_impact_history = get_authority_change_impact_history
 
 def record_source_applicability(*,firm_id,context_type,context_id,subject,
  source_reference_id,legal_scope,applicability_basis,applicability_provenance,
