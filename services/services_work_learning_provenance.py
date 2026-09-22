@@ -7,6 +7,7 @@ institutional authority, legal conclusions, or source-domain lifecycle events.
 from __future__ import annotations
 
 from typing import Any, Callable
+import sqlite3
 
 from services.services_work_learning_program_handoff import (
     SAVED_REVISION,
@@ -54,6 +55,45 @@ def _source_event(
         "trust_id": _text(trust_id) or None,
         "details": dict(details or {}),
     }
+
+
+def _wave1_source_context(db_path: Any, source_ids: list[str], firm_id: str) -> dict[str, list[dict[str, Any]]]:
+    """Read optional 1C tables; absence means an empty, compatible extension."""
+    result = {
+        "source_metadata": [], "authority_classifications": [],
+        "authority_relationships": [], "issue_applicability": [],
+        "authority_reviews": [], "authority_determinations": [],
+    }
+    if not source_ids:
+        return result
+    connection = sqlite3.connect(str(db_path)); connection.row_factory = sqlite3.Row
+    try:
+        tables = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        marks = ",".join("?" for _ in source_ids)
+        if "hub_program_source_metadata" in tables:
+            result["source_metadata"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_program_source_metadata WHERE source_reference_id IN ({marks}) ORDER BY created_at,metadata_id", source_ids)]
+        if "hub_authority_applicability" in tables:
+            result["issue_applicability"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_authority_applicability WHERE firm_id=? AND source_reference_id IN ({marks}) ORDER BY created_at,applicability_id", [firm_id, *source_ids])]
+        if "hub_program_authority_classifications" in tables:
+            result["authority_classifications"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_program_authority_classifications WHERE source_reference_id IN ({marks}) ORDER BY created_at,classification_id", source_ids)]
+        if "hub_program_authority_relationships" in tables:
+            result["authority_relationships"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_program_authority_relationships WHERE source_reference_id IN ({marks}) ORDER BY created_at,relationship_id", source_ids)]
+        if "hub_program_authority_reviews" in tables:
+            result["authority_reviews"] = [dict(row) for row in connection.execute(
+                f"SELECT * FROM hub_program_authority_reviews WHERE supporting_source_reference_id IN ({marks}) ORDER BY created_at,review_id", source_ids)]
+        if "hub_program_authority_determinations" in tables:
+            program_ids = sorted({str(row["program_id"]) for row in result["source_metadata"]})
+            if program_ids:
+                program_marks = ",".join("?" for _ in program_ids)
+                result["authority_determinations"] = [dict(row) for row in connection.execute(
+                    f"SELECT * FROM hub_program_authority_determinations WHERE program_id IN ({program_marks}) ORDER BY created_at,determination_id", program_ids)]
+    finally:
+        connection.close()
+    return result
 
 
 def build_work_learning_provenance_descriptor(
@@ -203,6 +243,7 @@ def build_work_learning_provenance_descriptor(
 
     # P05 source references are attribution, not verification.
     source_references = list(handoff.get("p05_source_references") or [])
+    wave1 = _wave1_source_context(db_path, [str(r.get("source_reference_id")) for r in source_references if isinstance(r, dict) and r.get("source_reference_id")], firm)
     for reference in source_references:
         if not isinstance(reference, dict):
             continue
@@ -319,6 +360,12 @@ def build_work_learning_provenance_descriptor(
         "owner_id": owner,
         "source_revision": selected_revision,
         "source_references": source_references,
+        "source_metadata": wave1["source_metadata"],
+        "authority_classifications": wave1["authority_classifications"],
+        "authority_relationships": wave1["authority_relationships"],
+        "issue_applicability": wave1["issue_applicability"],
+        "authority_reviews": wave1["authority_reviews"],
+        "authority_determinations": wave1["authority_determinations"],
         "handoff_descriptor": handoff,
         "promotion_requests": requests,
         "promotions": promotions,

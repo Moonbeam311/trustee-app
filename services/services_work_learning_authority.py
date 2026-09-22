@@ -14,6 +14,9 @@ VERIFICATION_COMPATIBILITY={'SOURCE_IDENTITY_VERIFIED':('SOURCE_IDENTITY_VERIFIE
 VERIFICATION_STATES=tuple(dict.fromkeys(x for values in VERIFICATION_COMPATIBILITY.values() for x in values))
 REVIEW_STATES=('DETECTED','REVIEW_REQUIRED','UNDER_REVIEW','RESOLVED','UNRESOLVED','CLOSED_NO_CONFLICT'); REVIEW_LANES=('SYSTEM_REVIEW','OPERATOR_OR_FIDUCIARY_REVIEW','PROFESSIONAL_REVIEW')
 DETERMINATION_STATES=('SUPPORTED','PARTIALLY_SUPPORTED','CONTRADICTED','MIXED','INSUFFICIENT_EVIDENCE','UNRESOLVED')
+CONTEXT_TYPES=('PROGRAM','MATTER','TRUST','OTHER')
+LEGAL_SCOPES=('CREATION','ADMINISTRATION','TAX','PROPERTY','TRANSACTION','LITIGATION','DIGITAL_ASSETS','OTHER')
+INDEPENDENT_SUPPORT_STATES=('YES','NO','UNRESOLVED')
 
 def _id(p): return p+'-'+uuid.uuid4().hex[:10].upper()
 def _now(): return datetime.now(timezone.utc).isoformat()
@@ -42,6 +45,34 @@ def _claim(program_id,claim_id):
  r=_one('SELECT * FROM hub_program_authority_claims WHERE claim_id=? AND program_id=?',(claim_id,program_id))
  if not r: raise ValueError('claim_not_available_in_context')
  return r
+
+def record_source_applicability(*,firm_id,context_type,context_id,subject,
+ source_reference_id,legal_scope,applicability_basis,applicability_provenance,
+ decision_origin,actor,actor_capacity,applicability_jurisdiction=None,
+ trust_type_applicability=None,research_only=True,generation_authorized=False,
+ independent_support_state='UNRESOLVED',prior_applicability_id=None):
+ firm_id=_required(firm_id,'firm_required'); context_id=_required(context_id,'context_required')
+ subject=_required(subject,'subject_required')
+ if context_type not in CONTEXT_TYPES: raise ValueError('invalid_context_type')
+ if legal_scope not in LEGAL_SCOPES: raise ValueError('invalid_legal_scope')
+ if independent_support_state not in INDEPENDENT_SUPPORT_STATES: raise ValueError('invalid_independent_support_state')
+ if decision_origin not in DECISION_ORIGINS: raise ValueError('invalid_decision_origin')
+ basis=_required(applicability_basis,'applicability_basis_required'); provenance=_required(applicability_provenance,'applicability_provenance_required')
+ if research_only and generation_authorized: raise ValueError('research_only_generation_prohibited')
+ if generation_authorized and (independent_support_state!='YES' or not (applicability_jurisdiction or '').strip()): raise ValueError('generation_authorization_requirements_not_met')
+ if decision_origin=='SYSTEM_SUGGESTED' and (generation_authorized or independent_support_state=='YES'): raise ValueError('machine_applicability_finalization_prohibited')
+ source=_one('''SELECT s.source_reference_id,p.firm_id FROM hub_program_source_references s JOIN hub_programs p ON p.program_id=s.program_id WHERE s.source_reference_id=?''',(source_reference_id,))
+ if not source or source['firm_id']!=firm_id: raise ValueError('source_not_available_in_context')
+ latest=_one('''SELECT * FROM hub_authority_applicability WHERE firm_id=? AND context_type=? AND context_id=? AND subject=? AND source_reference_id=? ORDER BY created_at DESC,applicability_id DESC LIMIT 1''',(firm_id,context_type,context_id,subject,source_reference_id))
+ if latest and prior_applicability_id!=latest['applicability_id']: raise ValueError('prior_applicability_required')
+ if not latest and prior_applicability_id: raise ValueError('prior_applicability_not_available_in_context')
+ aid=_id('APP'); _insert('hub_authority_applicability',('applicability_id','firm_id','context_type','context_id','subject','source_reference_id','applicability_jurisdiction','trust_type_applicability','legal_scope','research_only','generation_authorized','independent_support_state','applicability_basis','applicability_provenance','decision_origin','actor','actor_capacity','prior_applicability_id','created_at'),(aid,firm_id,context_type,context_id,subject,source_reference_id,(applicability_jurisdiction or '').strip() or None,(trust_type_applicability or '').strip() or None,legal_scope,int(bool(research_only)),int(bool(generation_authorized)),independent_support_state,basis,provenance,decision_origin,_required(actor,'actor_required'),_required(actor_capacity,'actor_capacity_required'),prior_applicability_id,_now())); return aid
+
+def get_source_applicability_history(*,firm_id,context_type,context_id,subject,source_reference_id):
+ return _rows_applicability('''SELECT * FROM hub_authority_applicability WHERE firm_id=? AND context_type=? AND context_id=? AND subject=? AND source_reference_id=? ORDER BY created_at,applicability_id''',(firm_id,context_type,context_id,subject,source_reference_id))
+
+def _rows_applicability(sql,args):
+ c=get_connection(); c.row_factory=sqlite3.Row; rows=[dict(r) for r in c.execute(sql,args).fetchall()]; c.close(); return rows
 
 def classify_source_authority(*,program_id,workspace_id,firm_id,owner_id,source_reference_id,authority_tier,classification_basis,classification_provenance,decision_origin,actor,actor_capacity,prior_classification_id=None,professional_authority=None):
  _scope(program_id=program_id,workspace_id=workspace_id,firm_id=firm_id,owner_id=owner_id); _source(program_id,source_reference_id)

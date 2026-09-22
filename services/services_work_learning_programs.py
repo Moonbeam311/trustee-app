@@ -68,6 +68,10 @@ SOURCE_REFERENCE_TYPES = (
     "other_reference",
 )
 
+SOURCE_LIFECYCLE_STATES = (
+    "CURRENT", "REVIEW_DUE", "SUPERSEDED", "WITHDRAWN", "DEPRECATED", "UNRESOLVED",
+)
+
 
 def _now():
     return datetime.now(timezone.utc).isoformat()
@@ -75,6 +79,65 @@ def _now():
 
 def _id(prefix):
     return prefix + "-" + uuid.uuid4().hex[:10].upper()
+
+
+def _optional_iso_date(value, code):
+    value = str(value or "").strip()
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value).date().isoformat()
+    except ValueError as exc:
+        raise ValueError(code) from exc
+
+
+def record_source_metadata(*, program_id, firm_id, owner_id,
+                           source_reference_id, source_origin_jurisdiction=None,
+                           effective_date=None, current_as_of_date=None,
+                           lifecycle_state="UNRESOLVED", prior_metadata_id=None,
+                           actor):
+    """Append intrinsic metadata to an existing P05 source identity."""
+    if not _program_available(program_id=program_id, firm_id=firm_id, owner_id=owner_id):
+        raise ValueError("program_not_available_in_context")
+    if lifecycle_state not in SOURCE_LIFECYCLE_STATES:
+        raise ValueError("invalid_source_lifecycle_state")
+    conn = get_connection()
+    conn.row_factory = __import__("sqlite3").Row
+    source = conn.execute(
+        "SELECT source_reference_id FROM hub_program_source_references WHERE source_reference_id=? AND program_id=?",
+        (source_reference_id, program_id),
+    ).fetchone()
+    if not source:
+        conn.close()
+        raise ValueError("source_not_available_in_context")
+    latest = conn.execute(
+        "SELECT * FROM hub_program_source_metadata WHERE program_id=? AND source_reference_id=? ORDER BY created_at DESC, metadata_id DESC LIMIT 1",
+        (program_id, source_reference_id),
+    ).fetchone()
+    if latest and prior_metadata_id != latest["metadata_id"]:
+        conn.close(); raise ValueError("prior_metadata_required")
+    if not latest and prior_metadata_id:
+        conn.close(); raise ValueError("prior_metadata_not_available_in_context")
+    metadata_id = _id("META")
+    conn.execute("""INSERT INTO hub_program_source_metadata
+        (metadata_id,program_id,source_reference_id,source_origin_jurisdiction,effective_date,current_as_of_date,lifecycle_state,prior_metadata_id,actor,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?)""", (
+        metadata_id, program_id, source_reference_id,
+        str(source_origin_jurisdiction or "").strip() or None,
+        _optional_iso_date(effective_date, "invalid_effective_date"),
+        _optional_iso_date(current_as_of_date, "invalid_current_as_of_date"),
+        lifecycle_state, prior_metadata_id, str(actor or "").strip(), _now(),
+    ))
+    conn.commit(); conn.close()
+    return metadata_id
+
+
+def get_source_metadata_history(*, program_id, firm_id, owner_id, source_reference_id):
+    if not _program_available(program_id=program_id, firm_id=firm_id, owner_id=owner_id):
+        return []
+    conn = get_connection(); conn.row_factory = __import__("sqlite3").Row
+    rows = conn.execute("SELECT * FROM hub_program_source_metadata WHERE program_id=? AND source_reference_id=? ORDER BY created_at,metadata_id", (program_id, source_reference_id)).fetchall()
+    conn.close(); return [dict(row) for row in rows]
 
 
 def ensure_work_learning_program_tables():
