@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
+from datetime import datetime, timezone
+import uuid
 
 import database.db as execution_db
 import services.services_trust_contract as trust_contract
@@ -37,6 +39,11 @@ TRANSFER_REQUIREMENTS = (
     ("records", "records_complete"),
     ("external_verification", "external_verified"),
 )
+ASSET_OBJECT_TYPES = ("PROPERTY", "ACCOUNT")
+FUNDING_STATES = ("UNRESOLVED", "PROPOSED", "IN_PROCESS", "FUNDED_RECORDED", "NOT_FUNDED_RECORDED")
+OWNERSHIP_STATES = ("UNRESOLVED", "TRUST_TITLE_RECORDED", "BENEFICIAL_INTEREST_RECORDED", "THIRD_PARTY_TITLE_RECORDED")
+CONTROL_STATES = ("UNRESOLVED", "TRUSTEE_CONTROL_RECORDED", "SHARED_CONTROL_RECORDED", "THIRD_PARTY_CONTROL_RECORDED")
+DECISION_ORIGINS = ("SYSTEM_SUGGESTED", "OPERATOR_OR_FIDUCIARY", "PROFESSIONAL")
 
 
 def _text(value: Any) -> str:
@@ -249,3 +256,92 @@ def build_orchestration_context(
         "recommendation_executed": False,
         "mutation_performed": False,
     }
+
+
+def record_trust_asset_control_determination(
+    *, firm_id, trust_id, asset_object_type, asset_object_id,
+    funding_state="UNRESOLVED", ownership_state="UNRESOLVED", control_state="UNRESOLVED",
+    related_transfer_id=None, evidence_reference=None, basis=None, provenance=None,
+    decision_origin, human_confirmed, actor, actor_capacity, prior_asset_control_id=None,
+):
+    """Append a documented determination without asserting automatic legal title."""
+    firm_id, trust_id = _text(firm_id), _text(trust_id)
+    object_type, object_id = _text(asset_object_type).upper(), _text(asset_object_id)
+    if object_type not in ASSET_OBJECT_TYPES: raise ExecutionContractError("Unsupported asset object type.")
+    if funding_state not in FUNDING_STATES: raise ExecutionContractError("Unsupported funding state.")
+    if ownership_state not in OWNERSHIP_STATES: raise ExecutionContractError("Unsupported ownership state.")
+    if control_state not in CONTROL_STATES: raise ExecutionContractError("Unsupported control state.")
+    if decision_origin not in DECISION_ORIGINS: raise ExecutionContractError("Unsupported decision origin.")
+    if not all((firm_id, trust_id, object_id, _text(actor), _text(actor_capacity))):
+        raise ExecutionContractError("Asset-control scope and actor are required.")
+    substantive = funding_state in {"FUNDED_RECORDED", "NOT_FUNDED_RECORDED"} or ownership_state != "UNRESOLVED" or control_state != "UNRESOLVED"
+    if decision_origin == "SYSTEM_SUGGESTED" and (funding_state not in {"UNRESOLVED", "PROPOSED"} or ownership_state != "UNRESOLVED" or control_state != "UNRESOLVED"):
+        raise ExecutionContractError("A machine suggestion cannot finalize asset control.")
+    if substantive:
+        if decision_origin not in {"OPERATOR_OR_FIDUCIARY", "PROFESSIONAL"} or not human_confirmed:
+            raise ExecutionContractError("Substantive asset-control state requires human confirmation.")
+        if not all(map(_text, (evidence_reference, basis, provenance))):
+            raise ExecutionContractError("Substantive asset-control state requires evidence, basis, and provenance.")
+    connection = execution_db.get_connection()
+    try:
+        table, key = ("properties", "property_id") if object_type == "PROPERTY" else ("accounts", "account_id")
+        columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+        asset = connection.execute(f"SELECT * FROM {table} WHERE {key}=?", (object_id,)).fetchone()
+        if asset is None or _text(asset["trust_id"]) != trust_id:
+            raise ExecutionContractError("Canonical asset is unavailable in context.")
+        if "firm_id" in columns:
+            scoped = _text(asset["firm_id"]) == firm_id
+        else:
+            trust = connection.execute("SELECT firm_id FROM trusts WHERE trust_id=?", (trust_id,)).fetchone()
+            scoped = trust is not None and _text(trust["firm_id"]) == firm_id
+        if not scoped: raise ExecutionContractError("Canonical asset firm scope cannot be established.")
+        transfer_id = _text(related_transfer_id) or None
+        if transfer_id and connection.execute(
+            "SELECT 1 FROM transfers WHERE transfer_id=? AND firm_id=? AND trust_id=?",
+            (transfer_id, firm_id, trust_id),
+        ).fetchone() is None:
+            raise ExecutionContractError("Related transfer is unavailable in context.")
+        latest_row = connection.execute(
+            """SELECT * FROM trust_asset_control_determinations
+               WHERE firm_id=? AND trust_id=? AND asset_object_type=? AND asset_object_id=?
+               ORDER BY created_at DESC, asset_control_id DESC LIMIT 1""",
+            (firm_id, trust_id, object_type, object_id),
+        ).fetchone()
+        latest = dict(latest_row) if latest_row else None
+        prior_id = _text(prior_asset_control_id) or None
+        if latest and prior_id != latest["asset_control_id"]: raise ExecutionContractError("Latest asset-control predecessor is required.")
+        if not latest and prior_id: raise ExecutionContractError("Asset-control predecessor is unavailable in context.")
+        record_id = "TAC-" + uuid.uuid4().hex[:10].upper()
+        connection.execute(
+            """INSERT INTO trust_asset_control_determinations
+            (asset_control_id,firm_id,trust_id,asset_object_type,asset_object_id,related_transfer_id,
+             funding_state,ownership_state,control_state,evidence_reference,basis,provenance,
+             decision_origin,human_confirmed,actor,actor_capacity,prior_asset_control_id,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (record_id,firm_id,trust_id,object_type,object_id,transfer_id,funding_state,ownership_state,
+             control_state,_text(evidence_reference) or None,_text(basis) or None,_text(provenance) or None,
+             decision_origin,int(bool(human_confirmed)),_text(actor),_text(actor_capacity),prior_id,
+             datetime.now(timezone.utc).isoformat()),
+        )
+        connection.commit(); return record_id
+    finally:
+        connection.close()
+
+
+def get_trust_asset_control_determination(asset_control_id):
+    connection = execution_db.get_connection()
+    try:
+        row = connection.execute("SELECT * FROM trust_asset_control_determinations WHERE asset_control_id=?", (_text(asset_control_id),)).fetchone()
+        return dict(row) if row else None
+    finally: connection.close()
+
+
+def get_trust_asset_control_history(*, firm_id, trust_id, asset_object_type, asset_object_id):
+    connection = execution_db.get_connection()
+    try:
+        rows = connection.execute("""SELECT * FROM trust_asset_control_determinations
+            WHERE firm_id=? AND trust_id=? AND asset_object_type=? AND asset_object_id=?
+            ORDER BY created_at,asset_control_id""",
+            (_text(firm_id),_text(trust_id),_text(asset_object_type).upper(),_text(asset_object_id))).fetchall()
+        return [dict(row) for row in rows]
+    finally: connection.close()

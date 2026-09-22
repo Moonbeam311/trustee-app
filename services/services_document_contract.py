@@ -6,6 +6,8 @@ from collections.abc import Callable, Mapping
 from typing import Any
 import json
 import re
+import uuid
+from datetime import datetime, timezone
 
 import database.db as document_db
 import services.services_trust_contract as trust_contract
@@ -38,8 +40,133 @@ class DocumentContractError(RuntimeError):
     """Raised when production or rendering cannot proceed safely."""
 
 
+DOCUMENT_LEGAL_STATES = (
+    "UNRESOLVED", "DRAFT_RECORDED", "EXECUTION_RECORDED",
+    "EFFECTIVE_RECORDED", "SUPERSEDED_RECORDED", "REVOKED_RECORDED",
+    "EXPIRED_RECORDED",
+)
+DOCUMENT_OBJECT_TYPES = ("DOCUMENT", "GENERATED_DOCUMENT")
+DECISION_ORIGINS = ("SYSTEM_SUGGESTED", "OPERATOR_OR_FIDUCIARY", "PROFESSIONAL")
+FINAL_DOCUMENT_LEGAL_STATES = {
+    "EFFECTIVE_RECORDED", "SUPERSEDED_RECORDED", "REVOKED_RECORDED",
+    "EXPIRED_RECORDED",
+}
+
+
 def _text(value: Any) -> str:
     return str(value or "").strip()
+
+
+def _legal_state_row(connection, event_id):
+    row = connection.execute(
+        "SELECT * FROM document_legal_state_events WHERE legal_state_event_id=?",
+        (event_id,),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def _canonical_document_scope(connection, object_type, object_id, firm_id, trust_id):
+    if object_type not in DOCUMENT_OBJECT_TYPES:
+        if object_type == "INSTRUMENT":
+            raise DocumentContractError("INSTRUMENT is not a canonical document object type.")
+        raise DocumentContractError("Unsupported document object type.")
+    table = "documents" if object_type == "DOCUMENT" else "generated_documents"
+    columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+    if not {"document_id", "trust_id"}.issubset(columns):
+        raise DocumentContractError("Canonical document owner schema is unavailable.")
+    row = connection.execute(
+        f"SELECT * FROM {table} WHERE document_id=?", (object_id,)
+    ).fetchone()
+    if row is None:
+        raise DocumentContractError("Canonical document object is unavailable in context.")
+    data = dict(row)
+    if _text(data.get("trust_id")) != trust_id:
+        raise DocumentContractError("Canonical document object is unavailable in context.")
+    if "firm_id" in columns:
+        if _text(data.get("firm_id")) != firm_id:
+            raise DocumentContractError("Canonical document object is unavailable in context.")
+    else:
+        trust = connection.execute(
+            "SELECT firm_id FROM trusts WHERE trust_id=?", (trust_id,)
+        ).fetchone()
+        if trust is None or _text(trust["firm_id"]) != firm_id:
+            raise DocumentContractError("Document firm scope cannot be established.")
+
+
+def record_document_legal_state(
+    *, firm_id, trust_id, document_object_type, document_object_id,
+    legal_state, effective_at=None, basis=None, provenance=None,
+    decision_origin, human_confirmed, actor, actor_capacity,
+    prior_legal_state_event_id=None,
+):
+    """Append a recorded legal-state observation, not a legal-validity ruling."""
+    firm_id, trust_id = _text(firm_id), _text(trust_id)
+    object_type, object_id = _text(document_object_type).upper(), _text(document_object_id)
+    actor, actor_capacity = _text(actor), _text(actor_capacity)
+    if not all((firm_id, trust_id, object_id, actor, actor_capacity)):
+        raise DocumentContractError("Document legal-state scope and actor are required.")
+    if legal_state not in DOCUMENT_LEGAL_STATES:
+        raise DocumentContractError("Unsupported document legal state.")
+    if decision_origin not in DECISION_ORIGINS:
+        raise DocumentContractError("Unsupported decision origin.")
+    if decision_origin == "SYSTEM_SUGGESTED" and legal_state not in {"UNRESOLVED", "DRAFT_RECORDED"}:
+        raise DocumentContractError("A machine suggestion cannot record substantive legal state.")
+    if legal_state in FINAL_DOCUMENT_LEGAL_STATES:
+        if decision_origin not in {"OPERATOR_OR_FIDUCIARY", "PROFESSIONAL"} or not human_confirmed:
+            raise DocumentContractError("Final substantive state requires explicit human confirmation.")
+        if not _text(basis) or not _text(provenance):
+            raise DocumentContractError("Final substantive state requires basis and provenance.")
+    connection = document_db.get_connection()
+    try:
+        _canonical_document_scope(connection, object_type, object_id, firm_id, trust_id)
+        prior = _legal_state_row(connection, _text(prior_legal_state_event_id)) if prior_legal_state_event_id else None
+        if prior_legal_state_event_id and (
+            prior is None or any(prior[key] != value for key, value in (
+                ("firm_id", firm_id), ("trust_id", trust_id),
+                ("document_object_type", object_type), ("document_object_id", object_id),
+            ))
+        ):
+            raise DocumentContractError("Predecessor is unavailable in document context.")
+        if legal_state == "SUPERSEDED_RECORDED" and prior is None:
+            raise DocumentContractError("Supersession requires a valid predecessor.")
+        event_id = "DLS-" + uuid.uuid4().hex[:10].upper()
+        connection.execute(
+            """INSERT INTO document_legal_state_events
+            (legal_state_event_id,firm_id,trust_id,document_object_type,document_object_id,
+             legal_state,effective_at,basis,provenance,decision_origin,human_confirmed,
+             actor,actor_capacity,prior_legal_state_event_id,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (event_id, firm_id, trust_id, object_type, object_id, legal_state,
+             _text(effective_at) or None, _text(basis) or None, _text(provenance) or None,
+             decision_origin, int(bool(human_confirmed)), actor, actor_capacity,
+             _text(prior_legal_state_event_id) or None, datetime.now(timezone.utc).isoformat()),
+        )
+        connection.commit()
+        return event_id
+    finally:
+        connection.close()
+
+
+def get_document_legal_state_event(legal_state_event_id):
+    connection = document_db.get_connection()
+    try:
+        return _legal_state_row(connection, _text(legal_state_event_id))
+    finally:
+        connection.close()
+
+
+def get_document_legal_state_history(*, firm_id, trust_id, document_object_type, document_object_id):
+    connection = document_db.get_connection()
+    try:
+        rows = connection.execute(
+            """SELECT * FROM document_legal_state_events
+               WHERE firm_id=? AND trust_id=? AND document_object_type=? AND document_object_id=?
+               ORDER BY created_at, legal_state_event_id""",
+            (_text(firm_id), _text(trust_id), _text(document_object_type).upper(), _text(document_object_id)),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        connection.close()
 
 
 def _assert_no_secret_material(value: Any, path: str = "context") -> None:

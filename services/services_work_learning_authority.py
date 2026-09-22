@@ -19,6 +19,8 @@ LEGAL_SCOPES=('CREATION','ADMINISTRATION','TAX','PROPERTY','TRANSACTION','LITIGA
 INDEPENDENT_SUPPORT_STATES=('YES','NO','UNRESOLVED')
 HIERARCHY_KINDS=('CONTROLLING_LAW','GOVERNING_INSTRUMENT','AUTHORITY_ORDER')
 CHANGE_IMPACT_STATES=('REVIEW_REQUIRED','UNDER_REVIEW','NO_IMPACT','RESOLVED','UNRESOLVED')
+SUFFICIENCY_TARGET_USES=('RESEARCH','DRAFT','GENERATION','FINALIZATION','OPERATIONAL_ACTION')
+SUFFICIENCY_STATES=('SUFFICIENT','INSUFFICIENT','UNRESOLVED')
 
 def _id(p): return p+'-'+uuid.uuid4().hex[:10].upper()
 def _now(): return datetime.now(timezone.utc).isoformat()
@@ -47,6 +49,47 @@ def _claim(program_id,claim_id):
  r=_one('SELECT * FROM hub_program_authority_claims WHERE claim_id=? AND program_id=?',(claim_id,program_id))
  if not r: raise ValueError('claim_not_available_in_context')
  return r
+
+def record_evidence_sufficiency_assessment(*,program_id,firm_id,issue_id,claim_id,
+ target_use,sufficiency_state,evidence_ids=None,verification_ids=None,basis=None,
+ provenance=None,decision_origin,human_confirmed,actor,actor_capacity,
+ prior_sufficiency_id=None):
+ program_id=_required(program_id,'program_required'); firm_id=_required(firm_id,'firm_required')
+ issue_id=_required(issue_id,'issue_required'); claim_id=_required(claim_id,'claim_required')
+ if target_use not in SUFFICIENCY_TARGET_USES: raise ValueError('invalid_target_use')
+ if sufficiency_state not in SUFFICIENCY_STATES: raise ValueError('invalid_sufficiency_state')
+ if decision_origin not in DECISION_ORIGINS: raise ValueError('invalid_decision_origin')
+ program=_one('SELECT program_id,firm_id FROM hub_programs WHERE program_id=?',(program_id,))
+ if not program or program['firm_id']!=firm_id: raise ValueError('program_not_available_in_context')
+ claim=_claim(program_id,claim_id)
+ if claim['issue_id']!=issue_id: raise ValueError('claim_issue_mismatch')
+ evidence_ids=list(dict.fromkeys(evidence_ids or [])); verification_ids=list(dict.fromkeys(verification_ids or []))
+ for evidence_id in evidence_ids:
+  evidence=_one('SELECT evidence_id,program_id,claim_id FROM hub_program_authority_evidence WHERE evidence_id=?',(evidence_id,))
+  if not evidence or evidence['program_id']!=program_id or evidence['claim_id']!=claim_id: raise ValueError('evidence_not_available_in_context')
+ for verification_id in verification_ids:
+  verification=_one('SELECT verification_id,program_id,claim_id,evidence_id FROM hub_program_authority_verifications WHERE verification_id=?',(verification_id,))
+  if not verification or verification['program_id']!=program_id or verification.get('claim_id') not in (None,claim_id): raise ValueError('verification_not_available_in_context')
+  if verification.get('evidence_id'):
+   linked=_one('SELECT program_id,claim_id FROM hub_program_authority_evidence WHERE evidence_id=?',(verification['evidence_id'],))
+   if not linked or linked['program_id']!=program_id or linked['claim_id']!=claim_id: raise ValueError('verification_not_available_in_context')
+ if decision_origin=='SYSTEM_SUGGESTED' and sufficiency_state!='UNRESOLVED': raise ValueError('machine_sufficiency_finalization_prohibited')
+ if sufficiency_state in ('SUFFICIENT','INSUFFICIENT') and (decision_origin not in ('OPERATOR_OR_FIDUCIARY','PROFESSIONAL') or not human_confirmed): raise ValueError('sufficiency_requires_human_confirmation')
+ if sufficiency_state=='SUFFICIENT' and not evidence_ids: raise ValueError('sufficient_requires_evidence')
+ if sufficiency_state=='SUFFICIENT' and target_use in ('FINALIZATION','OPERATIONAL_ACTION') and (not (basis or '').strip() or not (provenance or '').strip()): raise ValueError('final_use_sufficiency_basis_required')
+ if prior_sufficiency_id:
+  prior=_one('SELECT * FROM hub_program_evidence_sufficiency_assessments WHERE sufficiency_id=?',(prior_sufficiency_id,))
+  keys=('program_id','firm_id','issue_id','claim_id','target_use')
+  if not prior or tuple(prior[k] for k in keys)!=(program_id,firm_id,issue_id,claim_id,target_use): raise ValueError('prior_sufficiency_not_available_in_context')
+ sid=_id('SUF'); _insert('hub_program_evidence_sufficiency_assessments',
+ ('sufficiency_id','program_id','firm_id','issue_id','claim_id','target_use','sufficiency_state','evidence_ids_json','verification_ids_json','basis','provenance','decision_origin','human_confirmed','actor','actor_capacity','prior_sufficiency_id','created_at'),
+ (sid,program_id,firm_id,issue_id,claim_id,target_use,sufficiency_state,json.dumps(evidence_ids),json.dumps(verification_ids),(basis or '').strip() or None,(provenance or '').strip() or None,decision_origin,int(bool(human_confirmed)),_required(actor,'actor_required'),_required(actor_capacity,'actor_capacity_required'),prior_sufficiency_id,_now())); return sid
+
+def get_evidence_sufficiency_assessment(sufficiency_id):
+ return _one('SELECT * FROM hub_program_evidence_sufficiency_assessments WHERE sufficiency_id=?',(sufficiency_id,))
+
+def get_evidence_sufficiency_history(*,program_id,firm_id,issue_id,claim_id,target_use):
+ return _rows_applicability('SELECT * FROM hub_program_evidence_sufficiency_assessments WHERE program_id=? AND firm_id=? AND issue_id=? AND claim_id=? AND target_use=? ORDER BY created_at,sufficiency_id',(program_id,firm_id,issue_id,claim_id,target_use))
 
 def _canonical_source(source_reference_id,firm_id):
  r=_one('''SELECT s.*,p.firm_id FROM hub_program_source_references s

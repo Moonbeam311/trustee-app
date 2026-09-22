@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 from datetime import datetime, timezone
+import uuid
 
 import database.db as fiduciary_db
 
@@ -19,6 +20,11 @@ ACTIVE_RECORDED_STATUSES = {
     "Verified",
 }
 PROMOTION_APPROVAL_CAPABILITY = "APPROVE_GOVERNED_PROGRAM_PROMOTION"
+AUTHORITY_LIFECYCLE_STATES = (
+    "UNRESOLVED", "PENDING_AUTHORITY", "ACTIVE_RECORDED", "SUSPENDED_RECORDED",
+    "INCAPACITY_RECORDED", "RESIGNED_RECORDED", "REMOVED_RECORDED", "ENDED_RECORDED",
+)
+DECISION_ORIGINS = ("SYSTEM_SUGGESTED", "OPERATOR_OR_FIDUCIARY", "PROFESSIONAL")
 
 
 class FiduciaryAuthorityContractError(RuntimeError):
@@ -267,3 +273,117 @@ def resolve_promotion_approval_capability(
     finally:
         connection.close()
     return dict(row) if row else None
+
+
+def _lifecycle_one(connection, lifecycle_id):
+    row = connection.execute(
+        "SELECT * FROM fiduciary_authority_lifecycle_records WHERE authority_lifecycle_id=?",
+        (lifecycle_id,),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def _record_authority_lifecycle(
+    *, firm_id, trust_id, fiduciary_id, authority_state, effective_at=None,
+    authority_basis=None, provenance=None, source_reference=None, decision_origin,
+    human_confirmed, actor, actor_capacity, successor_acceptance_id=None,
+    prior_authority_lifecycle_id=None,
+):
+    firm_id, trust_id, fiduciary_id = map(_text, (firm_id, trust_id, fiduciary_id))
+    actor, actor_capacity = _text(actor), _text(actor_capacity)
+    if not all((firm_id, trust_id, fiduciary_id, actor, actor_capacity)):
+        raise FiduciaryAuthorityContractError("Lifecycle scope and actor are required.")
+    if authority_state not in AUTHORITY_LIFECYCLE_STATES:
+        raise FiduciaryAuthorityContractError("Unsupported authority lifecycle state.")
+    if decision_origin not in DECISION_ORIGINS:
+        raise FiduciaryAuthorityContractError("Unsupported decision origin.")
+    substantive = authority_state not in {"UNRESOLVED", "PENDING_AUTHORITY"}
+    if decision_origin == "SYSTEM_SUGGESTED" and substantive:
+        raise FiduciaryAuthorityContractError("A machine suggestion cannot record substantive authority.")
+    if substantive:
+        if decision_origin not in {"OPERATOR_OR_FIDUCIARY", "PROFESSIONAL"} or not human_confirmed:
+            raise FiduciaryAuthorityContractError("Substantive authority state requires human confirmation.")
+        if not all(map(_text, (authority_basis, provenance, source_reference))):
+            raise FiduciaryAuthorityContractError("Substantive authority state requires basis, provenance, and source reference.")
+    connection = fiduciary_db.get_connection()
+    try:
+        fiduciary = connection.execute(
+            "SELECT fiduciary_id FROM fiduciaries WHERE fiduciary_id=? AND firm_id=? AND trust_id=?",
+            (fiduciary_id, firm_id, trust_id),
+        ).fetchone()
+        if fiduciary is None:
+            raise FiduciaryAuthorityContractError("Fiduciary is unavailable in context.")
+        if successor_acceptance_id:
+            acceptance = connection.execute(
+                """SELECT acceptance_id FROM successor_acceptances
+                   WHERE acceptance_id=? AND firm_id=? AND trust_id=? AND fiduciary_id=?""",
+                (_text(successor_acceptance_id), firm_id, trust_id, fiduciary_id),
+            ).fetchone()
+            if acceptance is None:
+                raise FiduciaryAuthorityContractError("Successor acceptance is unavailable in context.")
+        latest_row = connection.execute(
+            """SELECT * FROM fiduciary_authority_lifecycle_records
+               WHERE firm_id=? AND trust_id=? AND fiduciary_id=?
+               ORDER BY created_at DESC, authority_lifecycle_id DESC LIMIT 1""",
+            (firm_id, trust_id, fiduciary_id),
+        ).fetchone()
+        latest = dict(latest_row) if latest_row else None
+        prior_id = _text(prior_authority_lifecycle_id) or None
+        if latest and prior_id != latest["authority_lifecycle_id"]:
+            raise FiduciaryAuthorityContractError("Latest lifecycle predecessor is required.")
+        if not latest and prior_id:
+            raise FiduciaryAuthorityContractError("Lifecycle predecessor is unavailable in context.")
+        lifecycle_id = "FAL-" + uuid.uuid4().hex[:10].upper()
+        connection.execute(
+            """INSERT INTO fiduciary_authority_lifecycle_records
+            (authority_lifecycle_id,firm_id,trust_id,fiduciary_id,authority_state,effective_at,
+             authority_basis,provenance,source_reference,decision_origin,human_confirmed,actor,
+             actor_capacity,successor_acceptance_id,prior_authority_lifecycle_id,created_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (lifecycle_id, firm_id, trust_id, fiduciary_id, authority_state,
+             _text(effective_at) or None, _text(authority_basis) or None,
+             _text(provenance) or None, _text(source_reference) or None, decision_origin,
+             int(bool(human_confirmed)), actor, actor_capacity,
+             _text(successor_acceptance_id) or None, prior_id,
+             datetime.now(timezone.utc).isoformat()),
+        )
+        connection.commit()
+        return lifecycle_id
+    finally:
+        connection.close()
+
+
+def _get_authority_lifecycle_record(authority_lifecycle_id):
+    connection = fiduciary_db.get_connection()
+    try:
+        return _lifecycle_one(connection, _text(authority_lifecycle_id))
+    finally:
+        connection.close()
+
+
+def _get_authority_lifecycle_history(*, firm_id, trust_id, fiduciary_id):
+    connection = fiduciary_db.get_connection()
+    try:
+        rows = connection.execute(
+            """SELECT * FROM fiduciary_authority_lifecycle_records
+               WHERE firm_id=? AND trust_id=? AND fiduciary_id=?
+               ORDER BY created_at, authority_lifecycle_id""",
+            (_text(firm_id), _text(trust_id), _text(fiduciary_id)),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        connection.close()
+
+
+class _LifecycleOperation:
+    def __init__(self, operation):
+        self._operation = operation
+
+    def __call__(self, *args, **kwargs):
+        return self._operation(*args, **kwargs)
+
+
+# Callable API objects preserve the legacy module's function-only inspection contract.
+record_fiduciary_authority_lifecycle = _LifecycleOperation(_record_authority_lifecycle)
+get_fiduciary_authority_lifecycle_record = _LifecycleOperation(_get_authority_lifecycle_record)
+get_fiduciary_authority_lifecycle_history = _LifecycleOperation(_get_authority_lifecycle_history)
