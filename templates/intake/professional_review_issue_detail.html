@@ -14,6 +14,23 @@
 </div>
 
 <div class="card">
+  <h2>Review and Build Status</h2>
+  <p><strong>Professional review:</strong> {% if issue["status"] == "open" %}PENDING{% else %}{{ issue["status"]|upper }}{% endif %}</p>
+  <p><strong>Build assumption:</strong> {% if build_assumption.active %}ASSUMED FOR BUILD{% else %}NOT ASSUMED{% endif %}</p>
+  {% if build_assumption.active %}
+    <p class="warning"><strong>Build-only assumption.</strong> This does not constitute legal or professional verification.</p>
+  {% endif %}
+
+  <form method="POST">
+    <input type="hidden" name="action" value="assume_for_build">
+    <label>Build-only reason / purpose</label>
+    <textarea name="assumption_reason" rows="3" required></textarea>
+    <br><br>
+    <button type="submit">Assume for Non-Final Build/Test</button>
+  </form>
+</div>
+
+<div class="card">
   <h2>Issue Description</h2>
   <p>{{ issue["issue_description"] }}</p>
 

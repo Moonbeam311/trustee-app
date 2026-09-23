@@ -28199,6 +28199,8 @@ def professional_review_issue_detail(issue_id):
 
     from database.db import (
         get_professional_review_issue,
+        get_professional_review_issue_build_assumption,
+        record_professional_review_build_assumption,
         update_professional_review_issue,
     )
 
@@ -28210,6 +28212,26 @@ def professional_review_issue_detail(issue_id):
         return redirect(url_for("intake_dashboard"))
 
     if request.method == "POST":
+        if request.form.get("action") == "assume_for_build":
+            reason = request.form.get("assumption_reason") or ""
+            if not reason.strip():
+                flash("A reason is required for a build-only assumption.", "warning")
+                return redirect(url_for("professional_review_issue_detail", issue_id=issue_id))
+            event_id = record_professional_review_build_assumption(
+                issue_id=issue_id,
+                firm_id=firm_id,
+                reason=reason,
+                actor=session.get("username") or "system",
+                actor_capacity=session.get("role") or "Admin",
+            )
+            if event_id:
+                log_change(
+                    "professional_review_issue", issue_id, "build_assumption_assumed",
+                    f"Event={event_id}; Intake={issue['intake_id']}; Build/test only",
+                )
+                flash("Build-only assumption recorded; professional review remains pending.", "success")
+            return redirect(url_for("professional_review_issue_detail", issue_id=issue_id))
+
         disposition = request.form.get("disposition")
         reviewer_notes = request.form.get("reviewer_notes") or ""
         actor = session.get("username") or "system"
@@ -28249,6 +28271,9 @@ def professional_review_issue_detail(issue_id):
     return render_template(
         "intake/professional_review_issue_detail.html",
         issue=issue,
+        build_assumption=get_professional_review_issue_build_assumption(
+            issue_id, firm_id=firm_id
+        ),
         firm_id=firm_id,
     )
 

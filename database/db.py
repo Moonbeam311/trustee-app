@@ -643,6 +643,35 @@ def update_professional_review_issue(issue_id, firm_id, disposition, reviewer_no
         actor_capacity,
     ))
 
+    if disposition in ("resolved", "accepted_risk", "escalated"):
+        import json
+        latest_assumption = cur.execute("""
+            SELECT event_id, event_type
+            FROM professional_review_issue_events
+            WHERE issue_id = ? AND firm_id = ?
+              AND event_type IN ('build_assumption_assumed',
+                                 'build_assumption_withdrawn',
+                                 'build_assumption_reconciled')
+            ORDER BY id DESC LIMIT 1
+        """, (issue_id, firm_id)).fetchone()
+        if latest_assumption and latest_assumption["event_type"] == "build_assumption_assumed":
+            cur.execute("""
+                INSERT INTO professional_review_issue_events (
+                    event_id, issue_id, intake_id, firm_id, event_type,
+                    event_notes, actor, actor_capacity
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                "PRIE-" + uuid.uuid4().hex[:10].upper(), issue_id,
+                issue["intake_id"], firm_id, "build_assumption_reconciled",
+                json.dumps({
+                    "assumption_status": "RECONCILED",
+                    "professional_disposition": disposition,
+                    "supersedes_event_id": latest_assumption["event_id"],
+                    "professional_approval": False,
+                    "legal_verification": False,
+                }, sort_keys=True), actor, actor_capacity,
+            ))
+
     conn.commit()
     conn.close()
     return event_id
@@ -3883,6 +3912,137 @@ def get_user_by_username(username):
     row = cur.fetchone()
     conn.close()
     return row
+
+
+BUILD_ASSUMPTION_STATUS = "ASSUMED_FOR_BUILD"
+BUILD_ASSUMPTION_WARNING = (
+    "Build-only assumption. This does not constitute legal or professional verification."
+)
+
+
+def get_professional_review_issue_build_assumption(issue_id, firm_id=None):
+    """Derive build-only state from the canonical append-only issue event stream."""
+    import json
+
+    ensure_professional_review_issue_tables()
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    issue = cur.execute(
+        "SELECT status, disposition FROM professional_review_issues "
+        "WHERE issue_id = ?" + (" AND firm_id = ?" if firm_id else ""),
+        ([issue_id, firm_id] if firm_id else [issue_id]),
+    ).fetchone()
+    params = [issue_id]
+    sql = """
+        SELECT * FROM professional_review_issue_events
+        WHERE issue_id = ?
+          AND event_type IN ('build_assumption_assumed', 'build_assumption_withdrawn',
+                             'build_assumption_reconciled')
+    """
+    if firm_id:
+        sql += " AND firm_id = ?"
+        params.append(firm_id)
+    sql += " ORDER BY id"
+    rows = cur.execute(sql, params).fetchall()
+    conn.close()
+
+    history = []
+    for row in rows:
+        try:
+            payload = json.loads(row["event_notes"] or "{}")
+        except (TypeError, ValueError):
+            payload = {"reason": row["event_notes"] or ""}
+        history.append({
+            "event_id": row["event_id"],
+            "event_type": row["event_type"],
+            "issue_id": row["issue_id"],
+            "intake_id": row["intake_id"],
+            "firm_id": row["firm_id"],
+            "actor": row["actor"],
+            "actor_capacity": row["actor_capacity"],
+            "created_at": row["created_at"],
+            **payload,
+        })
+
+    latest = history[-1] if history else None
+    active = bool(latest and latest["event_type"] == "build_assumption_assumed")
+    professional_pending = bool(issue and issue["status"] in ("open", "escalated"))
+    return {
+        "professional_review_status": (
+            "PENDING_PROFESSIONAL_REVIEW"
+            if professional_pending else "PROFESSIONAL_REVIEW_NOT_PENDING"
+        ),
+        "build_assumption_status": BUILD_ASSUMPTION_STATUS if active else None,
+        "professional_legal_verification": False,
+        "active": active,
+        "latest_event": latest,
+        "history": history,
+        "warning": BUILD_ASSUMPTION_WARNING if active else None,
+    }
+
+
+def record_professional_review_build_assumption(
+    issue_id, firm_id, reason, actor, actor_capacity, status=BUILD_ASSUMPTION_STATUS,
+):
+    """Append a non-authoritative build assumption without changing issue truth."""
+    import json
+    import uuid
+
+    allowed = {BUILD_ASSUMPTION_STATUS, "WITHDRAWN"}
+    if status not in allowed:
+        raise ValueError("Unsupported build assumption status.")
+    reason = str(reason or "").strip()
+    if not reason:
+        raise ValueError("Build assumption reason is required.")
+
+    ensure_professional_review_issue_tables()
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+    issue = cur.execute(
+        "SELECT * FROM professional_review_issues WHERE issue_id = ? AND firm_id = ?",
+        (issue_id, firm_id),
+    ).fetchone()
+    if not issue:
+        conn.close()
+        return None
+
+    prior = cur.execute("""
+        SELECT event_id FROM professional_review_issue_events
+        WHERE issue_id = ? AND firm_id = ?
+          AND event_type IN ('build_assumption_assumed', 'build_assumption_withdrawn',
+                             'build_assumption_reconciled')
+        ORDER BY id DESC LIMIT 1
+    """, (issue_id, firm_id)).fetchone()
+    event_id = "PRIE-" + uuid.uuid4().hex[:10].upper()
+    payload = json.dumps({
+        "assumption_status": status,
+        "purpose": "non_final_product_build_and_test",
+        "reason": reason,
+        "linked_record_type": issue["linked_record_type"],
+        "linked_record_id": issue["linked_record_id"],
+        "supersedes_event_id": prior["event_id"] if prior else None,
+        "professional_approval": False,
+        "legal_verification": False,
+        "warning": BUILD_ASSUMPTION_WARNING,
+    }, sort_keys=True)
+    event_type = (
+        "build_assumption_assumed"
+        if status == BUILD_ASSUMPTION_STATUS else "build_assumption_withdrawn"
+    )
+    cur.execute("""
+        INSERT INTO professional_review_issue_events (
+            event_id, issue_id, intake_id, firm_id, event_type,
+            event_notes, actor, actor_capacity
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event_id, issue_id, issue["intake_id"], firm_id, event_type,
+        payload, actor, actor_capacity,
+    ))
+    conn.commit()
+    conn.close()
+    return event_id
 
 
 def get_user_by_username_in_firm(username, firm_id):

@@ -7643,6 +7643,46 @@ def evaluate_final_draft_prep_gate(intake_id, workflow_key, document_key):
     }
 
 
+def evaluate_nonfinal_build_readiness(intake_id, firm_id=None):
+    """Evaluate the designated build/test gate; never grants legal readiness."""
+    from database.db import (
+        get_professional_review_issues,
+        get_professional_review_issue_build_assumption,
+    )
+
+    firm_id = firm_id or get_current_firm_id()
+    issues = list(get_professional_review_issues(intake_id, firm_id=firm_id))
+    blocking = [
+        issue for issue in issues
+        if issue["status"] in ("open", "escalated")
+        and issue["severity"] in ("critical", "major")
+    ]
+    assumptions = {
+        issue["issue_id"]: get_professional_review_issue_build_assumption(
+            issue["issue_id"], firm_id=firm_id
+        )
+        for issue in blocking
+    }
+    unassumed = [
+        issue["issue_id"] for issue in blocking
+        if not assumptions[issue["issue_id"]]["active"]
+    ]
+    return {
+        "build_test_progression_allowed": not unassumed,
+        "gate_scope": "NON_FINAL_BUILD_AND_TEST_ONLY",
+        "professional_legal_verification": False,
+        "final_professional_readiness": False,
+        "blocking_issue_ids": [issue["issue_id"] for issue in blocking],
+        "assumed_issue_ids": [
+            issue_id for issue_id, state in assumptions.items() if state["active"]
+        ],
+        "unassumed_issue_ids": unassumed,
+        "warning": (
+            "Build-only assumptions do not constitute legal or professional verification."
+        ),
+    }
+
+
 def upsert_final_draft_prep_gate(intake_id, workflow_key, document_key, updated_by=None):
     ensure_final_draft_prep_gate_tables()
 
