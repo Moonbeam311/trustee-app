@@ -55,6 +55,10 @@ from database.intake_followup_reconciliation_migration import (
     apply_intake_followup_reconciliation_schema,
     IntakeFollowupReconciliationMigrationError,
 )
+from database.migrations_magc1_wave4 import (
+    apply_magc1_wave4_schema,
+    Magc1Wave4MigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -239,6 +243,20 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        magc1_wave4_result = apply_magc1_wave4_schema(db_path)
+    except Magc1Wave4MigrationError as exc:
+        magc1_wave4_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "rows": {
+                "hub_jurisdiction_module_certifications": 0,
+                "document_template_portability_assessments": 0,
+            },
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -253,6 +271,7 @@ def run_additive_startup_migrations(
         "genealogy_relationship_schema": genealogy_relationship_result,
         "genealogy_relationship_review_schema": genealogy_relationship_review_result,
         "intake_followup_reconciliation": intake_followup_reconciliation_result,
+        "magc1_wave4": magc1_wave4_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
@@ -261,4 +280,5 @@ def run_additive_startup_migrations(
         "generated_document_attribution_records_created": 0,
         "workspace_records_created": 0,
         "execution_task_records_created": 0,
+        "magc1_wave4_records_created": 0,
     }
