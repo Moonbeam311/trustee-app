@@ -3587,7 +3587,14 @@ def create_trust_step1():
             "trust_id": trust_id,
             "trust_name": request.form.get("trust_name"),
             "short_name": request.form.get("short_name"),
-            "jurisdiction": request.form.get("jurisdiction"),
+            # Jurisdiction may legitimately remain unresolved while the
+            # trust identity exists in Draft state.  A blank value is
+            # intentionally preserved as "not yet determined"; do not
+            # substitute residence, firm location, a placeholder state,
+            # or a machine-selected governing-law conclusion.
+            "jurisdiction": str(
+                request.form.get("jurisdiction") or ""
+            ).strip(),
             "effective_date": request.form.get("effective_date"),
             "trust_type": "Not Yet Selected",
             "trust_purpose": "Not Yet Selected",
