@@ -32,7 +32,7 @@
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
     <div style="border:1px solid #ddd; padding:16px; border-radius:8px; background:#fafafa;">
         <h3>Parties</h3>
-        <p><strong>Settlor:</strong> {{ trust.settlor_name }}</p>
+        <p><strong>Grantor / Settlor:</strong> {{ trust.settlor_name or trust.grantor_name or "Not entered" }}</p>
         <p><strong>Trustee:</strong> {{ trust.trustee_name }}</p>
         <p><strong>Successor:</strong> {{ trust.successor_trustee_name }}</p>
         <p><strong>Beneficiary:</strong> {{ trust.beneficiary_name }}</p>
