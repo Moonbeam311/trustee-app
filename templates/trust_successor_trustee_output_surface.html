@@ -122,21 +122,20 @@
 </head>
 <body><div class="trust-doc-wrap">
   <div class="topbar trust-doc-topbar">
-    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">← Back to Trust Execution</a>
+    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">← Back to Formation Preview Hub</a>
   </div>
 
   <div class="meta-panel trust-doc-meta">
     <h1>Successor Trustee Final Surface</h1>
     <p class="muted">
-      This is the bounded final document surface for Successor Trustee Acceptance / Appointment.
-      It remains bounded, review-centered, and isolated from broader package-wide generation.
+      Review the recorded future designation and the conditions that must occur before successor authority can arise.
     </p>
     <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
     <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Current Trustee:</strong> {{ preview_context.trustee_name }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
   </div>
 
   
@@ -176,21 +175,21 @@
       <div class="optional-meta">{{ preview_context.foundation_scripture }}</div>
       {% endif %}
       <div class="gold-divider">────────────────────────────</div>
-      <div class="document-label">Successor Trustee Acceptance</div>
+      <div class="document-label">Successor Trustee Designation / Future Conditional Acceptance</div>
     </div>
 
-        <div class="doc-subtitle">Appointment and Acceptance Instrument</div>
+        <div class="doc-subtitle">Future Designation and Acceptance</div>
 
     <p>
-      This instrument records the appointment and acceptance of a successor trustee in relation to the trust identified below,
-      as presently reflected through the bounded trust workflow and associated review surfaces.
+      This instrument records the designation of a prospective successor trustee and a future, conditional acceptance.
+      It does not confer present trustee authority.
     </p>
 
     <div class="doc-section-title">I. Trust Identification</div>
 <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
 <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
 <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
-<p><strong>Effective Date:</strong> {{ preview_context.effective_date_display or "______________________________" }}</p>
+<p><strong>Trust Effective / Reference Date:</strong> {{ preview_context.effective_date_display or "Not recorded" }}</p>
 <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
 <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
 
@@ -198,13 +197,13 @@
 <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
 <p><strong>Current Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
 <p><strong>Successor Trustee:</strong> {{ preview_context.successor_trustee_name or "______________________________" }}</p>
-<p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
+<p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
 
     <div class="doc-section-title">III. Appointment and Acceptance</div>
 <p>
-  The undersigned acknowledges appointment as successor trustee of the trust identified above and accepts the duties,
-  obligations, and fiduciary responsibilities associated with that office, subject to the trust’s governing documents,
-  {{ preview_context.governing_law or "applicable governing law" }}, and later controlled output generation.
+  The named successor acknowledges the designation and, if and when a succession-triggering event occurs and any required
+  acceptance or other governing conditions are satisfied, agrees to serve according to the governing trust instrument and related records.
+  Merely being named does not grant present authority. Successor authority arises only under the governing instrument and applicable succession conditions.
 </p>
 
     <div class="doc-section-title">IV. Continuity of Administration</div>
@@ -216,16 +215,17 @@
     <div class="doc-section-title">V. Signature Placeholders</div>
     <div class="signature-block">
       <div class="signature-line">Successor Trustee Signature</div>
-      <div class="signature-line">Date</div>
-      <div class="signature-line">Witness / Acknowledgment</div>
+      <p>Printed Name: {{ preview_context.successor_trustee_name or "______________________________" }}</p>
+      <div class="signature-line">Acceptance Date</div>
+      <div class="signature-line">Acknowledgment / Notary / Witness, if required by governing law, governing instrument, or intended use</div>
     </div>
 
     <div class="actions trust-doc-actions">
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
       <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print Successor Trustee Acceptance</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_successor_trustee_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_successor_trustee_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
     </div>
   </div>
 </div>{% include "_institutional_property_notice.html" %}

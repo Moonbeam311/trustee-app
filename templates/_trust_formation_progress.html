@@ -1,0 +1,14 @@
+{% set formation_trust_id = trust.trust_id if trust is defined else preview_context.trust_id %}
+<nav class="formation-progress" aria-label="Trust formation progress">
+  <a class="formation-stage {% if formation_stage == 1 %}current{% endif %}" href="{{ url_for('trust_identity_edit', trust_id=formation_trust_id, return_to='formation_hub') }}"><strong>1. Review / Edit Data</strong></a>
+  <a class="formation-stage {% if formation_stage == 2 %}current{% endif %}" href="{{ url_for('trust_formation_preview_hub', trust_id=formation_trust_id) }}#formation-document-review"><strong>2. Review Documents</strong></a>
+  <a class="formation-stage {% if formation_stage == 3 %}current{% endif %}" href="{{ url_for('trust_articles_output_surface', trust_id=formation_trust_id) }}"><strong>3. Final Document Surfaces</strong></a>
+  <a class="formation-stage {% if formation_stage == 4 %}current{% endif %}" href="{{ url_for('trust_packet_preview', trust_id=formation_trust_id) }}"><strong>4. Packet Preview</strong></a>
+  <a class="formation-stage {% if formation_stage == 5 %}current{% endif %}" href="{{ url_for('trust_controlled_export_review', trust_id=formation_trust_id) }}"><strong>5. Controlled Export</strong></a>
+  <a class="formation-stage {% if formation_stage == 6 %}current{% endif %}" href="{{ url_for('trust_execution_dashboard', trust_id=formation_trust_id) }}"><strong>6. Execution / Funding</strong></a>
+</nav>
+<style>
+  .formation-progress{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px;margin:18px 0 24px}
+  .formation-stage{display:block;border:1px solid #cbd5e1;border-radius:7px;padding:10px;background:#f8fafc;color:#1f4e79;text-decoration:none}
+  .formation-stage.current{background:#1f4e79;color:#fff;border-color:#1f4e79}
+</style>

@@ -127,15 +127,14 @@
   <div class="meta-panel trust-doc-meta">
     <h1>Articles Final Surface</h1>
     <p class="muted">
-      This is the first bounded final-style document surface for Articles of Trust / Controlled Trust Summary Instrument.
-      It remains isolated, deliberate, and review-centered before broader package generation is introduced.
+      Review the Articles of Trust / Controlled Trust Summary Instrument against the canonical trust record.
     </p>
     <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
     <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
   </div>
 
   
@@ -189,29 +188,29 @@
 <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
 <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
 <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
-<p><strong>Effective Date:</strong> {{ preview_context.effective_date_display or "______________________________" }}</p>
+<p><strong>Trust Effective / Reference Date:</strong> {{ preview_context.effective_date_display or "Not recorded" }}</p>
 <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
 <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
 
     <div class="doc-section-title">II. Foundational Parties</div>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
-    <p><strong>Primary Beneficiary:</strong> {{ preview_context.primary_beneficiary or "______________________________" }}</p>
+    <p><strong>Recorded Beneficiary / Destination:</strong> {{ preview_context.primary_beneficiary or "______________________________" }}</p>
+    <p>The relationship classification must be confirmed against the governing trust instrument; this recorded value does not by itself establish a present, remainder, or ownership relationship.</p>
 
     <div class="doc-section-title">III. Trust Standing</div>
-    <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
     <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
     <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
 
     <div class="doc-section-title">IV. Summary Declaration</div>
     <p>
       The undersigned acknowledge that the trust identified above is being formed and reviewed through the controlled trust workflow,
-      and that these Articles of Trust constitute the first bounded final-style summary surface derived from the entered formation data.
+      and that these Articles of Trust summarize the entered formation data for review.
     </p>
 
     <p>
-      This instrument is presented for review, refinement, and later controlled output generation.
-      Full package-wide automation remains deferred until the bounded document surfaces are stabilized.
+      This instrument is presented for review, correction, printing, and controlled export.
     </p>
 
     <div class="doc-section-title">V. Signature Placeholders</div>
@@ -219,15 +218,15 @@
     <div class="signature-block">
       <div class="signature-line">Grantor / Settlor Signature</div>
       <div class="signature-line">Trustee Signature</div>
-      <div class="signature-line">Date</div>
+      <div class="signature-line">Document Execution Date</div>
     </div>
 
     <div class="actions trust-doc-actions">
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
       <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print Articles</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_articles_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_articles_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
     </div>
   </div>
 </div>{% include "_institutional_property_notice.html" %}

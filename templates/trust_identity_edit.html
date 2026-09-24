@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Review / Edit Trust Data</title><link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}"></head>
+<body><div class="trust-page-wrap">
+  <h1>Review / Edit Trust Data</h1>
+  <p>Correct the canonical trust identity record before document export or execution.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <p><label>Trust Name<br><input name="trust_name" value="{{ trust.trust_name or '' }}" required></label></p>
+    <p><label>Short Name<br><input name="short_name" value="{{ trust.short_name or '' }}"></label></p>
+    <p><label>Jurisdiction<br><input name="jurisdiction" value="{{ trust.jurisdiction or '' }}"></label></p>
+    <p><label>Effective Date<br><input type="date" name="effective_date" value="{{ trust.effective_date or '' }}"></label></p>
+    <button type="submit">Save Trust Data</button>
+  </form>
+  <p><a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a></p>
+</div></body></html>

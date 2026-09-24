@@ -59,13 +59,8 @@ def test_step1_preserves_blank_jurisdiction_as_unresolved():
 def test_blank_jurisdiction_does_not_create_governing_law_value():
     html = _read(DECLARATION)
 
-    # Existing downstream contract:
-    # an empty jurisdiction produces no fallback governing-law value.
-    assert (
-        "preview_context.governing_law "
-        "or preview_context.jurisdiction or \"\""
-        in html
-    )
+    assert 'preview_context.governing_law or "Not yet selected"' in html
+    assert "governing_law or preview_context.jurisdiction" not in html
 
 
 def test_step1_still_creates_only_a_draft_shell():

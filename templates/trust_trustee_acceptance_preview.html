@@ -35,11 +35,12 @@
   </style>
 </head>
 <body>
-  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+  <p><a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Back to Formation Preview Hub</a></p>
+  <p><a href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a></p>
 
   <h1>Trustee Acceptance of Appointment Preview</h1>
   <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
-  <p class="muted">Preview-first trust formation layer. This page is for review before deeper wizard integration.</p>
+  <p class="muted">Review this formation document against the trust record before export or execution.</p>
 
   <div class="section">
     <h2>Trust Record Context</h2>
@@ -47,8 +48,8 @@
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Owner ID:</strong> {{ preview_context.owner_id }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
-    <p><strong>Created:</strong> {{ preview_context.created_at_display }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
+    <p><strong>Created:</strong> {{ preview_context.created_at_display or "Not recorded" }}</p>
   </div>
 
   <div class="section">
@@ -58,10 +59,15 @@
 Trust Name:
 {{ trust.trust_name or "[Trust Name]" }}
 
-Date:
-{{ trust.created_at or "[Date]" }}
+Trust Effective / Reference Date:
+{{ preview_context.effective_date_display or "Not recorded" }}
 
-I, ________________________________, accept appointment as Trustee of the above-named Trust.
+Appointment Source / Governing Instrument Reference:
+________________________________
+
+I, {{ preview_context.trustee_name or "______________________________" }}, accept appointment as Trustee of the above-named Trust when this document is actually signed and dated according to governing requirements.
+
+Appointment authority should be traced to the governing instrument or another valid appointment record before formal execution. This generated review document does not itself complete or make operative the acceptance.
 
 I acknowledge that I have received or been given access to the governing trust instrument and related trust records as necessary for administration.
 
@@ -77,7 +83,10 @@ Trustee Signature
 ________________________________
 Printed Name
 
-Date: __________________________</div>
+Acceptance Date: __________________________
+
+Acknowledgment / Notary / Witness, if required by governing law, governing instrument, or intended use:
+________________________________</div>
   </div>
 {% include "_institutional_property_notice.html" %}
 </body>

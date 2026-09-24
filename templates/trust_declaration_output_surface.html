@@ -76,7 +76,7 @@
       <tr><th>Trust Type</th><td>{{ preview_context.trust_type or "" }}</td></tr>
       <tr><th>Effective Date</th><td>{{ preview_context.effective_date_display or "" }}</td></tr>
       <tr><th>Jurisdiction</th><td>{{ preview_context.jurisdiction or "" }}</td></tr>
-      <tr><th>Governing Law</th><td>{{ preview_context.governing_law or preview_context.jurisdiction or "" }}</td></tr>
+      <tr><th>Governing Law</th><td>{{ preview_context.governing_law or "Not yet selected" }}</td></tr>
     </table>
   </div>
 

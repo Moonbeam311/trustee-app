@@ -122,21 +122,20 @@
 </head>
 <body><div class="trust-doc-wrap">
   <div class="topbar trust-doc-topbar">
-    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">← Back to Trust Execution</a>
+    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">← Back to Formation Preview Hub</a>
   </div>
 
   <div class="meta-panel trust-doc-meta">
     <h1>Trustee Acceptance Final Surface</h1>
     <p class="muted">
-      This is the bounded final document surface for Trustee Acceptance of Appointment.
-      It remains bounded, review-centered, and isolated from broader package-wide generation.
+      Review the Trustee Acceptance of Appointment against the canonical trust record before execution.
     </p>
     <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
     <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
   </div>
 
   
@@ -179,25 +178,26 @@
       <div class="document-label">Trustee Acceptance of Appointment</div>
     </div>
 
-        <div class="doc-subtitle">Bounded Final Document Surface</div>
+        <div class="doc-subtitle">Formation Document</div>
 
     <p>
-      This instrument records the acceptance by the named trustee of the appointment associated with the trust identified below,
-      subject to the trust formation details currently entered through the controlled trust workflow.
+      This document is prepared for review and signature. It becomes an executed acceptance only when actually signed and dated according to governing requirements.
     </p>
 
     <div class="doc-section-title">I. Trust Identification</div>
 <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
 <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
 <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
-<p><strong>Effective Date:</strong> {{ preview_context.effective_date_display or "______________________________" }}</p>
+<p><strong>Trust Effective / Reference Date:</strong> {{ preview_context.effective_date_display or "Not recorded" }}</p>
 <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
 <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
 
     <div class="doc-section-title">II. Trustee Identity</div>
     <p><strong>Named Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
+    <p><strong>Appointment Source / Governing Instrument Reference:</strong> ______________________________</p>
+    <p>Appointment authority should be traced to the governing instrument or another valid appointment record before formal execution.</p>
 
     <div class="doc-section-title">III. Acceptance Statement</div>
     <p>
@@ -206,8 +206,7 @@
     </p>
 
     <p>
-      I further acknowledge that this Trustee Acceptance of Appointment is being rendered through the first bounded document pattern
-      expansion beyond Articles, and is presented for review, refinement, print, and later controlled output generation.
+      I further acknowledge that this Trustee Acceptance of Appointment is presented for review, correction, print, and controlled export. Rendering this page does not itself complete or make operative the acceptance.
     </p>
 
     <div class="doc-section-title">IV. Acknowledgment</div>
@@ -219,16 +218,16 @@
     <div class="doc-section-title">V. Signature Placeholders</div>
     <div class="signature-block">
       <div class="signature-line">Trustee Signature</div>
-      <div class="signature-line">Date</div>
-      <div class="signature-line">Witness / Acknowledgment (if required)</div>
+      <div class="signature-line">Acceptance Date</div>
+      <div class="signature-line">Acknowledgment / Notary / Witness, if required by governing law, governing instrument, or intended use</div>
     </div>
 
     <div class="actions trust-doc-actions">
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
       <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print Trustee Acceptance</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_trustee_acceptance_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_trustee_acceptance_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
     </div>
   </div>
 </div>{% include "_institutional_property_notice.html" %}

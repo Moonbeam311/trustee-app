@@ -122,21 +122,20 @@
 </head>
 <body><div class="trust-doc-wrap">
   <div class="topbar trust-doc-topbar">
-    <a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">← Back to Trust Execution</a>
+    <a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">← Back to Formation Preview Hub</a>
   </div>
 
   <div class="meta-panel trust-doc-meta">
     <h1>General Assignment Final Surface</h1>
     <p class="muted">
-      This is the bounded final document surface for General Assignment to Trust.
-      It remains bounded, review-centered, and isolated from broader package-wide generation.
+      Review the General Assignment separately from any asset-specific transfer, title, registration, or institutional action.
     </p>
     <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
     <p><strong>Trust Name:</strong> {{ preview_context.trust_name }}</p>
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
   </div>
 
   
@@ -179,7 +178,7 @@
       <div class="document-label">General Assignment to Trust</div>
     </div>
 
-        <div class="doc-subtitle">Bounded Final Document Surface</div>
+        <div class="doc-subtitle">Formation Document</div>
 
     <p>
       This General Assignment records the intent to assign, transfer, convey, and deliver the assignor’s
@@ -191,16 +190,17 @@
 <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "______________________________" }}</p>
 <p><strong>Trust ID:</strong> {{ preview_context.trust_id or "______________________________" }}</p>
 <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "______________________________" }}</p>
-<p><strong>Effective Date:</strong> {{ preview_context.effective_date_display or "______________________________" }}</p>
+<p><strong>Trust Effective / Reference Date:</strong> {{ preview_context.effective_date_display or "Not recorded" }}</p>
 <p><strong>Jurisdiction:</strong> {{ preview_context.jurisdiction or "______________________________" }}</p>
 <p><strong>Governing Law:</strong> {{ preview_context.governing_law or "______________________________" }}</p>
 
     <div class="doc-section-title">II. Assigning Party</div>
     <p><strong>Assignor / Grantor / Settlor:</strong> {{ preview_context.grantor_name or "______________________________" }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name or "______________________________" }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status or "______________________________" }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
 
     <div class="doc-section-title">III. Assignment Statement</div>
+    <p><strong>Property / Schedule / Record Reference:</strong> ______________________________</p>
     <p>
       The undersigned hereby assigns, transfers, and conveys to the trust identified above all assignable right,
       title, and interest in and to the property, rights, and interests intended to be placed within the trust structure,
@@ -208,8 +208,9 @@
     </p>
 
     <p>
-      This General Assignment is being rendered through the bounded document workflow as a final-style review surface
-      and is intended to support later controlled output generation without triggering package-wide automation.
+      This instrument records the assignor's stated assignment intent for property described or otherwise properly identified in the trust records.
+      It does not by itself establish that title, registration, custody, account ownership, or third-party control has changed where a separate
+      transfer, title, registration, institutional, or other required action remains necessary.
     </p>
 
     <div class="doc-section-title">IV. Scope of Assignment</div>
@@ -236,16 +237,18 @@
     <div class="doc-section-title">V. Signature Placeholders</div>
     <div class="signature-block">
       <div class="signature-line">Assignor Signature</div>
+      <p>Printed Name: {{ preview_context.grantor_name or "______________________________" }}</p>
       <div class="signature-line">Trustee Acknowledgment</div>
-      <div class="signature-line">Date</div>
+      <p>Printed Name: {{ preview_context.trustee_name or "______________________________" }}</p>
+      <div class="signature-line">Assignment / Execution Date</div>
     </div>
 
     <div class="actions trust-doc-actions">
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a>
+      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
       <a class="button-link trust-doc-button" href="#" onclick="window.print(); return false;">Print General Assignment</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_general_assignment_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
       <a class="button-link trust-doc-button" href="{{ url_for('trust_general_assignment_preview', trust_id=trust.trust_id) }}">Open Preview Version</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Return to Execution</a>
-      <a class="button-link trust-doc-button" href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Return to Formation Hub</a>
     </div>
   </div>
 </div>{% include "_institutional_property_notice.html" %}

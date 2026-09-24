@@ -78,6 +78,8 @@
 
   <div class="panel trust-panel">
     <h1 class="trust-page-title">Controlled Trust Packet Preview</h1>
+    {% set formation_stage = 4 %}
+    {% include "_trust_formation_progress.html" %}
     {% if request.args.get("returned_from_correction") == "1" %}
       <div class="panel trust-panel" style="background:#ecfdf5; border-color:#bbf7d0;">
         <strong class="trust-status-ready">Trust details updated.</strong>
@@ -112,7 +114,8 @@
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <!-- BRANDING READINESS PANEL -->
     <div class="panel trust-panel">
-      <h2>Branding Readiness</h2>
+      <h2>Optional Branding (Advisory Only)</h2>
+      <p class="muted">Seal, CAF, CRID, motto, and foundation text are optional presentation metadata. Their presence or absence does not determine trust validity, execution ability, funding status, legal readiness, or professional approval.</p>
       <p><strong>Seal Uploaded:</strong>
         {% if preview_context.seal_path %}<span class="ready">Yes</span>{% else %}<span class="incomplete">No</span>{% endif %}
       </p>
@@ -133,12 +136,13 @@
 
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Trustee:</strong> {{ preview_context.trustee_name }}</p>
-    <p><strong>Last Updated:</strong> {{ trust_last_updated }}</p>
+    <p><strong>Last Updated:</strong> {{ trust_last_updated or "Not recorded" }}</p>
+    <p><a class="button-link" href="{{ url_for('trust_identity_edit', trust_id=preview_context.trust_id, return_to='packet_preview') }}">Review / Edit Trust Data</a></p>
   </div>
 
   <div class="panel trust-panel">
     <h2 style="margin-top:0;">Packet Manifest Status</h2>
-    <p>The controlled packet export includes a packet manifest / cover sheet and the five bounded trust document PDFs.</p>
+    <p>The controlled packet export includes a packet manifest / cover sheet and seven formation document PDFs.</p>
     <p><strong>Manifest Included:</strong> Yes</p>
     <p><strong>Packet Type:</strong> Controlled Trust Packet ZIP Export</p>
     <p><strong>Export Policy:</strong>
@@ -171,7 +175,7 @@
       <p><strong>Ready Documents:</strong> {{ latest_export_activity.ready_count }}</p>
       <p><strong>Incomplete Documents:</strong> {{ latest_export_activity.incomplete_count }}</p>
     {% else %}
-      <p>No packet exports recorded yet for this trust.</p>
+      <p>No current-firm packet export recorded.</p>
     {% endif %}
   </div>
 
@@ -189,11 +193,23 @@
       </thead>
       <tbody>
         <tr>
+          <td>Declaration of Trust</td><td><small>Created: {{ preview_context.created_at_display or "Not recorded" }}<br>Updated: {{ trust_last_updated or "Not recorded" }}</small></td>
+          <td><span class="ready status-ready">Available for review</span></td>
+          <td><a href="{{ url_for('trust_declaration_output_surface', trust_id=preview_context.trust_id) }}">Open / Review</a></td>
+          <td><a href="{{ url_for('trust_declaration_output_surface_pdf', trust_id=preview_context.trust_id) }}">Download PDF</a></td>
+        </tr>
+        <tr>
+          <td>Certificate of Trust</td><td><small>Created: {{ preview_context.created_at_display or "Not recorded" }}<br>Updated: {{ trust_last_updated or "Not recorded" }}</small></td>
+          <td><span class="ready status-ready">Available for review</span></td>
+          <td><a href="{{ url_for('trust_certificate_of_trust_output_surface', trust_id=preview_context.trust_id) }}">Open / Review</a></td>
+          <td><a href="{{ url_for('trust_certificate_of_trust_output_surface_pdf', trust_id=preview_context.trust_id) }}">Download PDF</a></td>
+        </tr>
+        <tr>
           <td>Articles of Trust</td>
           <td>
             <small>
-              Created: {{ preview_context.created_at_display or "—" }}<br>
-              Updated: {{ trust_last_updated or "—" }}
+              Created: {{ preview_context.created_at_display or "Not recorded" }}<br>
+              Updated: {{ trust_last_updated or "Not recorded" }}
             </small>
           </td>
           <td>
@@ -217,8 +233,8 @@
           <td>Trustee Acceptance</td>
           <td>
             <small>
-              Created: {{ preview_context.created_at_display or "—" }}<br>
-              Updated: {{ trust_last_updated or "—" }}
+              Created: {{ preview_context.created_at_display or "Not recorded" }}<br>
+              Updated: {{ trust_last_updated or "Not recorded" }}
             </small>
           </td>
           <td>
@@ -242,8 +258,8 @@
           <td>General Assignment</td>
           <td>
             <small>
-              Created: {{ preview_context.created_at_display or "—" }}<br>
-              Updated: {{ trust_last_updated or "—" }}
+              Created: {{ preview_context.created_at_display or "Not recorded" }}<br>
+              Updated: {{ trust_last_updated or "Not recorded" }}
             </small>
           </td>
           <td>
@@ -267,8 +283,8 @@
           <td>Organizational Minutes</td>
           <td>
             <small>
-              Created: {{ preview_context.created_at_display or "—" }}<br>
-              Updated: {{ trust_last_updated or "—" }}
+              Created: {{ preview_context.created_at_display or "Not recorded" }}<br>
+              Updated: {{ trust_last_updated or "Not recorded" }}
             </small>
           </td>
           <td>
@@ -292,8 +308,8 @@
           <td>Successor Trustee</td>
           <td>
             <small>
-              Created: {{ preview_context.created_at_display or "—" }}<br>
-              Updated: {{ trust_last_updated or "—" }}
+              Created: {{ preview_context.created_at_display or "Not recorded" }}<br>
+              Updated: {{ trust_last_updated or "Not recorded" }}
             </small>
           </td>
           <td>
@@ -317,7 +333,7 @@
     </table>
 
     <div class="actions trust-actions">
-      <a class="button-link trust-button-link" href="{{ url_for('trust_controlled_packet_export', trust_id=preview_context.trust_id) }}">Download Controlled Trust Packet (ZIP)</a>
+      <a class="button-link trust-button-link" href="{{ url_for('trust_controlled_export_review', trust_id=preview_context.trust_id) }}">Review Controlled Export</a>
       <a class="button-link trust-button-link" href="{{ url_for('trust_execution_dashboard', trust_id=preview_context.trust_id) }}">Return to Execution</a>
     </div>
   </div>

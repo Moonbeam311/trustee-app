@@ -35,11 +35,12 @@
   </style>
 </head>
 <body>
-  <p><a href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Back to Trust Execution</a></p>
+  <p><a href="{{ url_for('trust_formation_preview_hub', trust_id=trust.trust_id) }}">Back to Formation Preview Hub</a></p>
+  <p><a href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a></p>
 
   <h1>General Assignment to Trust Preview</h1>
   <p><strong>Trust ID:</strong> {{ trust.trust_id }}</p>
-  <p class="muted">Preview-first trust formation layer. This page is for review before deeper wizard integration.</p>
+  <p class="muted">Review this formation document against the trust record before export or execution.</p>
 
   <div class="section">
     <h2>Trust Record Context</h2>
@@ -47,22 +48,27 @@
     <p><strong>Trust Type:</strong> {{ preview_context.trust_type }}</p>
     <p><strong>Grantor / Settlor:</strong> {{ preview_context.grantor_name }}</p>
     <p><strong>Owner ID:</strong> {{ preview_context.owner_id }}</p>
-    <p><strong>Status:</strong> {{ preview_context.status }}</p>
-    <p><strong>Created:</strong> {{ preview_context.created_at_display }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
+    <p><strong>Created:</strong> {{ preview_context.created_at_display or "Not recorded" }}</p>
   </div>
 
   <div class="section">
     <h2>Preview Draft</h2>
     <div class="doc-block">GENERAL ASSIGNMENT TO TRUST
 
-Date:
-{{ trust.created_at or "[Date]" }}
+Trust Effective / Reference Date:
+{{ preview_context.effective_date_display or "Not recorded" }}
+
+Property / Schedule / Record Reference:
+________________________________
 
 For value received and for purposes of trust administration, the undersigned hereby assigns, transfers, conveys, and delivers to {{ trust.trust_name or "[Trust Name]" }}, and to its acting Trustee(s), all right, title, and interest of the undersigned in and to such property, rights, interests, claims, contract rights, general intangibles, and other assets as are intended to be held, administered, or scheduled as trust property, except as otherwise expressly excluded.
 
 This General Assignment is intended to support and supplement the governing trust instrument and any schedules, assignments, transfers, declarations, certifications, minutes, and related trust records.
 
 The undersigned affirms that this assignment is made for trust administration purposes and shall be read together with the records of the Trust.
+
+This preview records assignment intent only. Generating or leaving this document blank does not by itself complete title, registration, custody, account ownership, third-party control, or any asset-specific transfer requirement, and does not establish that any specific asset was transferred.
 
 Assigned by:
 
@@ -80,7 +86,7 @@ Trustee Signature
 ________________________________
 Printed Name
 
-Date: __________________________</div>
+Assignment / Execution Date: __________________________</div>
   </div>
 {% include "_institutional_property_notice.html" %}
 </body>

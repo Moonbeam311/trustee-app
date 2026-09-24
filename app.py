@@ -1553,7 +1553,8 @@ def build_trust_preview_context(trust):
     jurisdiction_value = _first(trust, ["jurisdiction", "state_of_jurisdiction", "governing_jurisdiction"])
     governing_law_value = _first(trust, ["governing_law", "governing_law_state", "governing_state"])
     created_at_value = _first(trust, ["created_at", "date_created"])
-    effective_date_value = _first(trust, ["effective_date", "trust_date", "date_of_trust", "execution_date", "signed_date", "created_at"])
+    # Trust-record metadata only. Never substitute an execution/signature date.
+    effective_date_value = _first(trust, ["effective_date", "trust_date", "date_of_trust"])
     trust_purpose_value = _first(trust, ["trust_purpose", "purpose", "purpose_statement", "mission"])
     initial_corpus_value = _first(trust, ["initial_corpus_description", "initial_corpus", "corpus_description", "funding_description"])
     asset_categories_value = _first(trust, ["asset_categories", "asset_category", "asset_classes"])
@@ -1579,6 +1580,8 @@ def build_trust_preview_context(trust):
         "effective_date": effective_date_value,
         "effective_date_display": effective_date_display,
         "trust_purpose": trust_purpose_value,
+        "trust_purpose_display": str(trust_purpose_value or "").replace("_", " ").strip().title(),
+        "firm_id": _first(trust, ["firm_id"]),
         "initial_corpus_description": initial_corpus_value,
         "asset_categories": asset_categories_value,
         "property_mapping_timing": property_mapping_timing_value,
@@ -1758,7 +1761,14 @@ def resolve_post_save_return(trust_id, fallback_endpoint, fallback_kwargs=None):
     if return_to == "post_create_console":
         return redirect(url_for("trust_formation_preview_hub", trust_id=trust_id, returned_from_correction=1))
 
+    if return_to == "formation_hub":
+        return redirect(url_for("trust_formation_preview_hub", trust_id=trust_id, returned_from_correction=1))
+
     return redirect(url_for(fallback_endpoint, **fallback_kwargs))
+
+
+def has_post_save_return():
+    return request.args.get("return_to") in {"execution", "packet_preview", "post_create_console", "formation_hub"}
 
 def build_admin_trust_summary(trust):
     preview_context = build_trust_preview_context(trust)
@@ -1903,9 +1913,14 @@ def get_recent_export_activity(limit=25):
     entries = read_export_activity_log()
     return list(reversed(entries))[:limit]
 
-def get_latest_export_for_trust(trust_id):
+def get_latest_export_for_trust(trust_id, firm_id=None):
+    """Return only an export attributable to the requested firm when scoped."""
     entries = read_export_activity_log()
     for entry in reversed(entries):
+        if entry.get("trust_id") != trust_id:
+            continue
+        if firm_id is not None and str(entry.get("firm_id") or "").strip() != str(firm_id).strip():
+            continue
         if entry.get("trust_id") == trust_id:
             return entry
     return None
@@ -1923,6 +1938,7 @@ def build_export_activity_entry(preview_context, document_readiness, packet_read
 
     return {
         "trust_id": preview_context.get("trust_id"),
+        "firm_id": preview_context.get("firm_id"),
         "trust_name": preview_context.get("trust_name") or "Unnamed Trust",
         "trust_type": preview_context.get("trust_type") or "",
         "exported_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -1959,7 +1975,7 @@ def build_trust_branding_context(preview_context):
     return {
         "trust_name": first_value("trust_name") or "Trust Administration Record",
         "trust_id": first_value("trust_id"),
-        "jurisdiction": first_value("jurisdiction", "governing_law"),
+        "jurisdiction": first_value("jurisdiction"),
         "effective_date": first_value("effective_date_display", "effective_date"),
         "seal_path": first_value("seal_path", "trust_seal_path", "logo_path"),
         "caf_number": first_value("caf_number", "caf"),
@@ -2134,7 +2150,7 @@ def generate_declaration_of_trust_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or 'Not yet selected'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Foundational Parties", header_style))
@@ -2470,7 +2486,7 @@ def generate_articles_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", body_style))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", body_style))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", body_style))
-    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Trust Effective / Reference Date:</b> {preview_context.get('effective_date_display') or 'Not recorded'}", body_style))
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", body_style))
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", body_style))
     story.append(Spacer(1, 14))
@@ -2478,12 +2494,13 @@ def generate_articles_pdf(trust, preview_context):
     story.append(Paragraph("Foundational Parties", heading_style))
     story.append(Paragraph(f"<b>Grantor / Settlor:</b> {preview_context.get('grantor_name') or '______________________________'}", body_style))
     story.append(Paragraph(f"<b>Trustee:</b> {preview_context.get('trustee_name') or '______________________________'}", body_style))
-    story.append(Paragraph(f"<b>Primary Beneficiary:</b> {preview_context.get('primary_beneficiary') or '______________________________'}", body_style))
+    story.append(Paragraph(f"<b>Recorded Beneficiary / Destination:</b> {preview_context.get('primary_beneficiary') or '______________________________'}", body_style))
+    story.append(Paragraph("Relationship classification must be confirmed against the governing trust instrument; the recorded value does not itself establish a present, remainder, or ownership relationship.", body_style))
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Purpose", heading_style))
     story.append(Paragraph(
-        preview_context.get('trust_purpose') or
+        preview_context.get('trust_purpose_display') or
         "The purpose of this trust is to hold, manage, and administer property and rights in accordance with its governing provisions.",
         body_style
     ))
@@ -2498,7 +2515,7 @@ def generate_articles_pdf(trust, preview_context):
     story.append(Paragraph("Summary Declaration", heading_style))
     story.append(Paragraph(
         "These Articles of Trust summarize the core trust formation details currently entered through the trust creation workflow. "
-        "This PDF is a bounded final output generated from the controlled trust document system.",
+        "This PDF is a review copy generated from the controlled trust document system.",
         body_style
     ))
     story.append(Spacer(1, 24))
@@ -2507,7 +2524,7 @@ def generate_articles_pdf(trust, preview_context):
     story.append(Spacer(1, 18))
     story.append(Paragraph("Trustee Signature: ______________________________", body_style))
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Date: ______________________________", body_style))
+    story.append(Paragraph("Document Execution Date: ______________________________", body_style))
 
     doc.build(story)
     buffer.seek(0)
@@ -2543,20 +2560,23 @@ def generate_trustee_acceptance_pdf(trust, preview_context):
     )
 
     story.append(Paragraph("Trustee Acceptance of Appointment", title_style))
-    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Paragraph("Formation Document", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
     story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Effective / Reference Date:</b> {preview_context.get('effective_date_display') or 'Not recorded'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Trustee Acceptance", header_style))
     story.append(Paragraph(f"<b>Trustee Name:</b> {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph("<b>Appointment Source / Governing Instrument Reference:</b> ______________________________", styles["BodyText"]))
+    story.append(Paragraph("Appointment authority should be traced to the governing instrument or another valid appointment record before formal execution.", styles["BodyText"]))
+    story.append(Paragraph("This review document becomes an executed acceptance only when actually signed and dated according to governing requirements; generation does not itself complete acceptance.", styles["BodyText"]))
     story.append(Paragraph(
         "The undersigned hereby accepts appointment as Trustee of the above-referenced trust and agrees to perform all duties in accordance with the trust’s governing instrument and applicable law.",
         styles["BodyText"]
@@ -2565,7 +2585,8 @@ def generate_trustee_acceptance_pdf(trust, preview_context):
 
     story.append(Paragraph("Trustee Signature: ______________________________", styles["BodyText"]))
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+    story.append(Paragraph("Acceptance Date: ______________________________", styles["BodyText"]))
+    story.append(Paragraph("Acknowledgment / Notary / Witness, if required by governing law, governing instrument, or intended use: ______________________________", styles["BodyText"]))
 
     doc.build(story)
     buffer.seek(0)
@@ -2601,29 +2622,37 @@ def generate_general_assignment_pdf(trust, preview_context):
     )
 
     story.append(Paragraph("General Assignment to Trust", title_style))
-    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Paragraph("Formation Document", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
     story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Effective / Reference Date:</b> {preview_context.get('effective_date_display') or 'Not recorded'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Scope of Assignment", header_style))
+    story.append(Paragraph("<b>Property / Schedule / Record Reference:</b> ______________________________", styles["BodyText"]))
     story.append(Paragraph(f"<b>Initial Corpus Description:</b> {preview_context.get('initial_corpus_description') or 'Initial trust property and assignable interests to be transferred into the trust structure.'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Asset Categories:</b> {preview_context.get('asset_categories') or 'Personal property, contractual rights, and other assignable interests.'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Property Mapping Timing:</b> {preview_context.get('property_mapping_timing') or 'To be assigned and documented through subsequent trust funding and transfer records.'}", styles["BodyText"]))
+    story.append(Paragraph(
+        "This instrument records the assignor's stated assignment intent for property described or otherwise properly identified in the trust records. "
+        "It does not by itself establish that title, registration, custody, account ownership, or third-party control has changed where a separate transfer, title, registration, institutional, or other required action remains necessary.",
+        styles["BodyText"]
+    ))
     story.append(Spacer(1, 24))
 
     story.append(Paragraph("Assignor Signature: ______________________________", styles["BodyText"]))
+    story.append(Paragraph(f"Printed Name: {preview_context.get('grantor_name') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 18))
     story.append(Paragraph("Trustee Acknowledgment: ______________________________", styles["BodyText"]))
+    story.append(Paragraph(f"Printed Name: {preview_context.get('trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+    story.append(Paragraph("Assignment / Execution Date: ______________________________", styles["BodyText"]))
 
     doc.build(story)
     buffer.seek(0)
@@ -2659,21 +2688,24 @@ def generate_organizational_minutes_pdf(trust, preview_context):
     )
 
     story.append(Paragraph("Initial Trustee Resolution / Organizational Minutes", title_style))
-    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Paragraph("Formation Document", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
     story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Effective / Reference Date:</b> {preview_context.get('effective_date_display') or 'Not recorded'}", styles["BodyText"]))
+    story.append(Paragraph("<b>Action Type:</b> __________________", styles["BodyText"]))
+    story.append(Paragraph("<b>Resolution / Adoption Date:</b> __________________", styles["BodyText"]))
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
 
     story.append(Paragraph("Matters Considered", header_style))
+    story.append(Paragraph("These are proposed resolutions prepared for review. Generation alone does not adopt a resolution; upon actual execution or adoption, the Trustee resolves.", styles["BodyText"]))
     story.append(Paragraph(
-        preview_context.get('trust_purpose') or
+        preview_context.get('trust_purpose_display') or
         "Review of the trust’s formation purpose, administration, and initial fiduciary organization.",
         styles["BodyText"]
     ))
@@ -2681,7 +2713,7 @@ def generate_organizational_minutes_pdf(trust, preview_context):
 
     story.append(Paragraph("Trustee Signature: ______________________________", styles["BodyText"]))
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+    story.append(Paragraph("Resolution / Adoption Date: ______________________________", styles["BodyText"]))
 
     doc.build(story)
     buffer.seek(0)
@@ -2716,15 +2748,15 @@ def generate_successor_trustee_pdf(trust, preview_context):
         spaceAfter=6,
     )
 
-    story.append(Paragraph("Successor Trustee Acceptance / Appointment", title_style))
-    story.append(Paragraph("Bounded Final Document Surface", styles["Heading3"]))
+    story.append(Paragraph("Successor Trustee Designation / Future Conditional Acceptance", title_style))
+    story.append(Paragraph("Future Designation and Acceptance", styles["Heading3"]))
     story.append(Spacer(1, 18))
 
     story.append(Paragraph("Trust Identification", header_style))
     story.append(Paragraph(f"<b>Trust Name:</b> {preview_context.get('trust_name') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust ID:</b> {preview_context.get('trust_id') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Trust Type:</b> {preview_context.get('trust_type') or '______________________________'}", styles["BodyText"]))
-    story.append(Paragraph(f"<b>Effective Date:</b> {preview_context.get('effective_date_display') or '______________________________'}", styles["BodyText"]))
+    story.append(Paragraph(f"<b>Trust Effective / Reference Date:</b> {preview_context.get('effective_date_display') or 'Not recorded'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Jurisdiction:</b> {preview_context.get('jurisdiction') or '______________________________'}", styles["BodyText"]))
     story.append(Paragraph(f"<b>Governing Law:</b> {preview_context.get('governing_law') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 14))
@@ -2735,9 +2767,17 @@ def generate_successor_trustee_pdf(trust, preview_context):
     story.append(Paragraph(f"<b>Successor Trustee:</b> {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
     story.append(Spacer(1, 24))
 
-    story.append(Paragraph("Successor Trustee Signature: ______________________________", styles["BodyText"]))
+    story.append(Paragraph(
+        "The named successor acknowledges the designation and, if and when a succession-triggering event occurs and any required acceptance or other governing conditions are satisfied, agrees to serve according to the governing trust instrument and related records. "
+        "Naming the successor does not grant present trustee authority; successor authority arises only under the governing instrument and applicable succession conditions.",
+        styles["BodyText"]
+    ))
     story.append(Spacer(1, 18))
-    story.append(Paragraph("Date: ______________________________", styles["BodyText"]))
+
+    story.append(Paragraph("Successor Trustee Signature: ______________________________", styles["BodyText"]))
+    story.append(Paragraph(f"Printed Name: {preview_context.get('successor_trustee_name') or '______________________________'}", styles["BodyText"]))
+    story.append(Spacer(1, 18))
+    story.append(Paragraph("Acceptance Date: ______________________________", styles["BodyText"]))
 
     doc.build(story)
     buffer.seek(0)
@@ -3160,6 +3200,7 @@ TRUST_SCOPED_ENDPOINT_RULES = {
     "trust_successor_trustee_preview": {"Admin", "Trustee", "Viewer"},
     "trust_successor_trustee_output_surface": {"Admin", "Trustee", "Viewer"},
     "trust_successor_trustee_output_surface_pdf": {"Admin", "Trustee"},
+    "trust_controlled_export_review": {"Admin", "Trustee"},
     "trust_controlled_packet_export": {"Admin", "Trustee"},
     "trust_packet_preview": {"Admin", "Trustee", "Viewer"},
     "trust_general_assignment_preview": {"Admin", "Trustee", "Viewer"},
@@ -3642,6 +3683,8 @@ def create_trust_step2_grantor(trust_id):
             "grantor_contact": request.form.get("grantor_contact"),
         }, firm_id, owner_id)
 
+        if has_post_save_return():
+            return resolve_post_save_return(trust_id, "create_trust_step2", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step2", trust_id=trust_id))
 
     return render_template("create_trust_step2_grantor.html", trust=trust)
@@ -3661,13 +3704,17 @@ def create_trust_step2(trust_id):
         if not validate_csrf_token():
             return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards(), error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields_in_scope(trust_id, {
+        updates = {
             "trust_type": request.form.get("trust_type"),
             "trust_purpose": request.form.get("trust_purpose"),
             "accounting_method": request.form.get("accounting_method"),
             "workflow_mode": request.form.get("workflow_mode"),
-            "status": "Draft - Step 2 Complete",
-        }, firm_id, owner_id)
+        }
+        if not has_post_save_return():
+            updates["status"] = "Draft - Step 2 Complete"
+        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        if has_post_save_return():
+            return resolve_post_save_return(trust_id, "create_trust_step3", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step3", trust_id=trust_id))
     return render_template("create_trust_step2.html", trust=trust, trust_types=get_trust_type_cards())
 
@@ -3685,13 +3732,17 @@ def create_trust_step3(trust_id):
         if not validate_csrf_token():
             return render_template("create_trust_step3.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields_in_scope(trust_id, {
+        updates = {
             "settlor_name": request.form.get("settlor_name"),
             "trustee_name": request.form.get("trustee_name"),
             "successor_trustee_name": request.form.get("successor_trustee_name"),
             "beneficiary_name": request.form.get("beneficiary_name"),
-            "status": "Draft - Step 3 Complete",
-        }, firm_id, owner_id)
+        }
+        if not has_post_save_return():
+            updates["status"] = "Draft - Step 3 Complete"
+        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        if has_post_save_return():
+            return resolve_post_save_return(trust_id, "create_trust_step4", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step4", trust_id=trust_id))
     return render_template("create_trust_step3.html", trust=trust)
 
@@ -3709,13 +3760,17 @@ def create_trust_step4(trust_id):
         if not validate_csrf_token():
             return render_template("create_trust_step4.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields_in_scope(trust_id, {
+        updates = {
             "record_visibility": request.form.get("record_visibility"),
             "workflow_mode_confirmed": request.form.get("workflow_mode_confirmed"),
             "ai_explanations": request.form.get("ai_explanations"),
             "recommended_guidance": request.form.get("recommended_guidance"),
-            "status": "Draft - Step 4 Complete",
-        }, firm_id, owner_id)
+        }
+        if not has_post_save_return():
+            updates["status"] = "Draft - Step 4 Complete"
+        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        if has_post_save_return():
+            return resolve_post_save_return(trust_id, "create_trust_step5", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step5", trust_id=trust_id))
     return render_template("create_trust_step4.html", trust=trust)
 
@@ -3733,13 +3788,17 @@ def create_trust_step5(trust_id):
         if not validate_csrf_token():
             return render_template("create_trust_step5.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields_in_scope(trust_id, {
+        updates = {
             "initial_corpus_description": request.form.get("initial_corpus_description"),
             "property_mapping_timing": request.form.get("property_mapping_timing"),
             "asset_categories": request.form.get("asset_categories"),
             "generate_schedule_recommendations": request.form.get("generate_schedule_recommendations"),
-            "status": "Draft - Step 5 Complete",
-        }, firm_id, owner_id)
+        }
+        if not has_post_save_return():
+            updates["status"] = "Draft - Step 5 Complete"
+        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        if has_post_save_return():
+            return resolve_post_save_return(trust_id, "create_trust_step6", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step6", trust_id=trust_id))
     return render_template("create_trust_step5.html", trust=trust)
 
@@ -15736,9 +15795,9 @@ def trust_post_create_review(trust_id):
 
 @app.route("/trust/<trust_id>/formation-preview-hub")
 def trust_formation_preview_hub(trust_id):
-    trust = get_trust_by_id(trust_id)
-    if not trust:
-        return f"Trust {trust_id} not found"
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "formation preview")
+    if gate:
+        return gate
     preview_context = build_trust_preview_context(trust)
     document_readiness = build_trust_document_readiness(preview_context)
     packet_readiness = build_trust_packet_readiness(document_readiness)
@@ -15749,6 +15808,29 @@ def trust_formation_preview_hub(trust_id):
         document_readiness=document_readiness,
         packet_readiness=packet_readiness,
     )
+
+
+@app.route("/trust/<trust_id>/identity-edit", methods=["GET", "POST"])
+@csrf.exempt
+def trust_identity_edit(trust_id):
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
+    if not trust:
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
+    if request.method == "POST":
+        if not validate_csrf_token():
+            return render_template("trust_identity_edit.html", trust=trust, error_message="Invalid or missing CSRF token."), 400
+        update_trust_fields_in_scope(trust_id, {
+            "trust_name": str(request.form.get("trust_name") or "").strip(),
+            "short_name": str(request.form.get("short_name") or "").strip(),
+            "jurisdiction": str(request.form.get("jurisdiction") or "").strip(),
+            "effective_date": str(request.form.get("effective_date") or "").strip(),
+        }, firm_id, owner_id)
+        return resolve_post_save_return(trust_id, "trust_formation_preview_hub", {"trust_id": trust_id})
+    return render_template("trust_identity_edit.html", trust=trust)
 
 
 @app.route("/trust/<trust_id>/successor-trustee-preview")
@@ -15824,6 +15906,23 @@ def trust_controlled_packet_export(trust_id):
     )
 
 
+@app.route("/trust/<trust_id>/controlled-export-review")
+def trust_controlled_export_review(trust_id):
+    trust, gate = require_active_firm_trust_or_deny(trust_id, "controlled export review")
+    if gate:
+        return gate
+    preview_context = build_trust_preview_context(trust)
+    document_readiness = build_trust_document_readiness(preview_context)
+    packet_readiness = build_trust_packet_readiness(document_readiness)
+    return render_template(
+        "trust_controlled_export_review.html",
+        trust=trust,
+        preview_context=preview_context,
+        document_readiness=document_readiness,
+        packet_readiness=packet_readiness,
+    )
+
+
 @app.route("/trust/<trust_id>/packet-preview")
 def trust_packet_preview(trust_id):
     gate = deny_unassigned_trust_access(trust_id)
@@ -15837,7 +15936,7 @@ def trust_packet_preview(trust_id):
     packet_readiness = build_trust_packet_readiness(document_readiness)
     correction_links = build_correction_links(trust_id, document_readiness, return_to="execution")
     export_policy = get_export_policy()
-    latest_export_activity = get_latest_export_for_trust(trust_id)
+    latest_export_activity = get_latest_export_for_trust(trust_id, preview_context.get("firm_id"))
     return render_template(
         "trust_packet_preview.html",
         trust=trust,
@@ -16857,7 +16956,7 @@ def trust_execution_dashboard(trust_id):
         packet_readiness=packet_readiness,
         correction_links=correction_links,
         export_policy=get_export_policy(),
-        latest_export_activity=get_latest_export_for_trust(trust_id),
+        latest_export_activity=get_latest_export_for_trust(trust_id, preview_context.get("firm_id")),
         trust_last_updated=get_trust_last_updated_value(trust),
           transfers=filtered_transfers,
           all_transfers=transfers,

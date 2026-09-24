@@ -329,6 +329,18 @@
   </div>
   {% else %}
 
+  {% set formation_stage = 1 %}
+  {% include "_trust_formation_progress.html" %}
+
+  <div class="section">
+    <h2>Governance Status</h2>
+    <p><strong>Private Governance Workflow:</strong> Operational</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == 'Finalized' %}Complete{% else %}In Progress{% endif %}</p>
+    <p><strong>Execution:</strong> Not Yet Completed</p>
+    <p><strong>Funding:</strong> Not Yet Completed</p>
+    <p><strong>Professional Legal Validation:</strong> Not Yet Completed</p>
+  </div>
+
   <div class="packet-banner {% if packet_readiness.ready %}ready{% elif packet_readiness.blocked %}blocked{% else %}warning{% endif %}">
     <h2>Packet Readiness Status</h2>
     <p>
@@ -352,9 +364,9 @@
     <h2>Primary Next Actions</h2>
     <p class="muted">Use these actions in order: review the trust record, inspect packet readiness, download the controlled packet when ready, then move into execution and funding.</p>
     <div class="action-row">
-      <a class="button-link primary" href="#trust-record-context">Review Trust Record</a>
+      <a class="button-link primary" href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='formation_hub') }}">Review / Edit Trust Data</a>
       <a class="button-link" href="{{ url_for('trust_packet_preview', trust_id=trust.trust_id) }}">Open Packet Preview</a>
-      <a class="button-link success" href="{{ url_for('trust_controlled_packet_export', trust_id=trust.trust_id) }}">Download Controlled Packet ZIP</a>
+      <a class="button-link success" href="{{ url_for('trust_controlled_export_review', trust_id=trust.trust_id) }}">Review Controlled Export</a>
       <a class="button-link" href="{{ url_for('trust_execution_dashboard', trust_id=trust.trust_id) }}">Open Execution Dashboard</a>
       <a class="button-link warning" href="{{ url_for('admin_index') }}">Return to Admin Dashboard</a>
     </div>
@@ -367,11 +379,11 @@
       <div class="context-item"><span>Trust ID</span><strong>{{ preview_context.trust_id or "Not entered" }}</strong></div>
       <div class="context-item"><span>Trust Name</span><strong>{{ preview_context.trust_name or "Not entered" }}</strong></div>
       <div class="context-item"><span>Trust Type</span><strong>{{ preview_context.trust_type or "Not entered" }}</strong></div>
-      <div class="context-item"><span>Status</span><strong>{{ preview_context.status or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Formation Record</span><strong>{% if preview_context.status == 'Finalized' %}Complete{% else %}In Progress{% endif %}</strong></div>
       <div class="context-item"><span>Grantor / Settlor</span><strong>{{ preview_context.grantor_name or "Not entered" }}</strong></div>
       <div class="context-item"><span>Trustee</span><strong>{{ preview_context.trustee_name or "Not entered" }}</strong></div>
       <div class="context-item"><span>Successor Trustee</span><strong>{{ preview_context.successor_trustee_name or "Not entered" }}</strong></div>
-      <div class="context-item"><span>Primary Beneficiary</span><strong>{{ preview_context.primary_beneficiary or "Not entered" }}</strong></div>
+      <div class="context-item"><span>Recorded Beneficiary / Destination</span><strong>{{ preview_context.primary_beneficiary or "Not entered" }}</strong></div>
       <div class="context-item"><span>Effective Date</span><strong>{{ preview_context.effective_date_display or "Not entered" }}</strong></div>
       <div class="context-item"><span>Jurisdiction</span><strong>{{ preview_context.jurisdiction or "Not entered" }}</strong></div>
     </div>
@@ -393,7 +405,7 @@
           <span class="readiness-status ready">Ready</span>
         {% else %}
           <span class="readiness-status missing">Needs review</span>
-          <br><a href="{{ url_for('trust_detail', trust_id=trust.trust_id) }}">Review identity fields</a>
+          <br><a href="{{ url_for('trust_identity_edit', trust_id=trust.trust_id, return_to='post_create_console') }}">Review / Edit Trust Data</a>
         {% endif %}
       </div>
 
@@ -442,7 +454,7 @@
       </div>
 
       <div class="readiness-item {% if preview_context.primary_beneficiary %}ready{% else %}missing{% endif %}">
-        <strong>Primary Beneficiary</strong><br>
+        <strong>Recorded Beneficiary / Destination</strong><br>
         <span class="muted">Recommended for full trust context and Articles completeness.</span><br>
         {% if preview_context.primary_beneficiary %}
           <span class="readiness-status ready">Ready</span>
@@ -464,33 +476,19 @@
       </div>
 
       <div class="readiness-item {% if preview_context.status == 'Finalized' %}ready{% else %}missing{% endif %}">
-        <strong>Finalize Status</strong><br>
-        <span class="muted">Trust should be finalized after wizard review.</span><br>
+        <strong>Formation Record</strong><br>
+        <span class="muted">Completion here records the create-trust workflow only.</span><br>
         {% if preview_context.status == 'Finalized' %}
-          <span class="readiness-status ready">Finalized</span>
+          <span class="readiness-status ready">Complete</span>
         {% else %}
-          <span class="readiness-status missing">Draft / Not finalized</span>
+          <span class="readiness-status missing">In Progress</span>
           <br><a href="{{ url_for('create_trust_step6', trust_id=trust.trust_id) }}?return_to=packet_preview">Go to Finalize step</a>
         {% endif %}
       </div>
     </div>
   </div>
 
-  <div class="section">
-    <h2>After Creation Workflow</h2>
-    <p class="muted">This is the intended sequence after the trust wizard is finalized.</p>
-    <div class="flow-grid">
-      <div class="flow-step"><strong>1. Review Data</strong>Confirm wizard values carried forward correctly.</div>
-      <div class="flow-step"><strong>2. Preview Docs</strong>Review each formation document before final output.</div>
-      <div class="flow-step"><strong>3. Final Surfaces</strong>Open print/PDF-ready bounded document surfaces.</div>
-      <div class="flow-step"><strong>4. Packet Preview</strong>Inspect the controlled packet before export.</div>
-      <div class="flow-step"><strong>5. Download ZIP</strong>Export the controlled packet when ready.</div>
-      <div class="flow-step"><strong>6. Execute / Fund</strong>Move into transfers, assets, accounts, records, and ledgers.</div>
-    </div>
-  </div>
-
-
-  <div class="section">
+  <div class="section" id="formation-document-review">
     <h2>Document Readiness Detail Matrix</h2>
     <p class="muted">
       This matrix breaks down each formation document and shows exactly which required values are still missing.
@@ -506,6 +504,26 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><strong>Declaration of Trust</strong><br><span class="muted">Formation declaration for review.</span></td>
+          <td><span class="doc-ready-pill ready">Available for review</span></td>
+          <td><span class="muted">This surface is not evaluated by the five-document field-readiness model.</span></td>
+          <td>
+            <a href="{{ url_for('trust_declaration_output_surface', trust_id=trust.trust_id) }}">Open / Review</a><br>
+            <a href="{{ url_for('trust_declaration_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
+          </td>
+        </tr>
+
+        <tr>
+          <td><strong>Certificate of Trust</strong><br><span class="muted">Administrative certificate surface for review.</span></td>
+          <td><span class="doc-ready-pill ready">Available for review</span></td>
+          <td><span class="muted">Surface availability does not establish legal verification.</span></td>
+          <td>
+            <a href="{{ url_for('trust_certificate_of_trust_output_surface', trust_id=trust.trust_id) }}">Open / Review</a><br>
+            <a href="{{ url_for('trust_certificate_of_trust_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
+          </td>
+        </tr>
+
         <tr>
           <td><strong>Articles of Trust</strong><br><span class="muted">Trust summary / articles layer.</span></td>
           <td>
@@ -681,6 +699,22 @@
     <h2>Formation Document Review</h2>
     <p class="muted">Preview the core formation documents generated from the trust record.</p>
     <div class="card-grid">
+      <div class="card">
+        <h3>Declaration of Trust</h3>
+        <p class="muted">Formation declaration for review.</p>
+        <div class="action-row">
+          <a class="button-link primary" href="{{ url_for('trust_declaration_output_surface', trust_id=trust.trust_id) }}">Open / Review</a>
+          <a class="button-link" href="{{ url_for('trust_declaration_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Certificate of Trust</h3>
+        <p class="muted">Existing administrative certificate surface.</p>
+        <div class="action-row">
+          <a class="button-link primary" href="{{ url_for('trust_certificate_of_trust_output_surface', trust_id=trust.trust_id) }}">Open / Review</a>
+          <a class="button-link" href="{{ url_for('trust_certificate_of_trust_output_surface_pdf', trust_id=trust.trust_id) }}">Download PDF</a>
+        </div>
+      </div>
       <div class="card">
         <h3>Articles of Trust</h3>
         <p class="muted">Trust summary / articles layer.</p>

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Controlled Export Review {{ preview_context.trust_id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='trust_ui.css') }}">
+  <style>
+    body{font-family:Arial,sans-serif;max-width:1040px;margin:28px auto;padding:0 24px 40px;line-height:1.55;color:#111}
+    .panel{border:1px solid #d9d9d9;border-radius:8px;background:#fafafa;padding:16px 18px;margin-bottom:18px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}th,td{text-align:left;padding:8px;border-bottom:1px solid #e5e7eb}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.button-link,button{display:inline-block;padding:10px 14px;background:#1f4e79;color:#fff;border:0;border-radius:6px;text-decoration:none;font-weight:600;cursor:pointer}
+    .secondary{background:#475569}.notice{background:#fff7ed;border-color:#fed7aa}
+  </style>
+</head>
+<body><div class="trust-page-wrap">
+  <h1>Controlled Export Review / Confirmation</h1>
+  {% set formation_stage = 5 %}
+  {% include "_trust_formation_progress.html" %}
+
+  <div class="panel">
+    <p><strong>Trust Name:</strong> {{ preview_context.trust_name or "Not entered" }}</p>
+    <p><strong>Trust ID:</strong> {{ preview_context.trust_id }}</p>
+    <p><strong>Trust Type:</strong> {{ preview_context.trust_type or "Not entered" }}</p>
+    <p><strong>Formation Record:</strong> {% if preview_context.status == "Finalized" %}Complete{% else %}In Progress{% endif %}</p>
+    <p><strong>Execution:</strong> Not Yet Completed</p>
+    <p><strong>Funding:</strong> Not Yet Completed</p>
+    <p><strong>Professional Legal Validation:</strong> Not Yet Completed</p>
+    <p><strong>Packet Readiness:</strong> {{ packet_readiness.status_label }}</p>
+  </div>
+
+  <div class="panel">
+    <h2>Formation Packet Documents</h2>
+    <table>
+      <thead><tr><th>Document</th><th>Readiness</th></tr></thead>
+      <tbody>
+        <tr><td>Declaration of Trust</td><td>Available for review</td></tr>
+        <tr><td>Certificate of Trust</td><td>Available for review</td></tr>
+        <tr><td>Articles of Trust</td><td>{% if document_readiness.articles.ready %}Ready{% else %}Needs review: {{ document_readiness.articles.missing|join(', ') }}{% endif %}</td></tr>
+        <tr><td>Trustee Acceptance</td><td>{% if document_readiness.trustee_acceptance.ready %}Ready{% else %}Needs review: {{ document_readiness.trustee_acceptance.missing|join(', ') }}{% endif %}</td></tr>
+        <tr><td>General Assignment</td><td>{% if document_readiness.general_assignment.ready %}Ready{% else %}Needs review: {{ document_readiness.general_assignment.missing|join(', ') }}{% endif %}</td></tr>
+        <tr><td>Organizational Minutes</td><td>{% if document_readiness.organizational_minutes.ready %}Ready{% else %}Needs review: {{ document_readiness.organizational_minutes.missing|join(', ') }}{% endif %}</td></tr>
+        <tr><td>Successor Trustee</td><td>{% if document_readiness.successor_trustee.ready %}Ready{% else %}Needs review: {{ document_readiness.successor_trustee.missing|join(', ') }}{% endif %}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel notice">
+    <h2>Export Boundary</h2>
+    <p>Export creates a controlled review packet.</p>
+    <p>Export does not itself execute the trust.</p>
+    <p>Export does not itself fund the trust or transfer property.</p>
+    <p>Export does not establish professional or legal validation.</p>
+    <p>Unresolved authority and professional-review matters remain governed separately.</p>
+  </div>
+
+  <form class="panel" method="get" action="{{ url_for('trust_controlled_packet_export', trust_id=preview_context.trust_id) }}">
+    <p><label><input type="checkbox" name="export_confirmation" value="confirmed" required> I have reviewed the packet contents and understand that export is not execution, funding, or professional legal validation.</label></p>
+    <button type="submit">Confirm and Download Controlled Trust Packet (ZIP)</button>
+  </form>
+
+  <div class="actions">
+    <a class="button-link secondary" href="{{ url_for('trust_packet_preview', trust_id=preview_context.trust_id) }}">Return to Packet Preview</a>
+    <a class="button-link secondary" href="{{ url_for('trust_formation_preview_hub', trust_id=preview_context.trust_id) }}">Return to Formation Hub</a>
+  </div>
+</div></body>
+</html>
