@@ -15830,18 +15830,89 @@ def trust_post_create_review(trust_id):
 
 @app.route("/trust/<trust_id>/formation-preview-hub")
 def trust_formation_preview_hub(trust_id):
-    trust, gate = require_active_firm_trust_or_deny(trust_id, "formation preview")
+    trust, gate = require_active_firm_trust_or_deny(
+        trust_id,
+        "formation preview",
+    )
+
     if gate:
         return gate
-    preview_context = build_trust_preview_context(trust)
-    document_readiness = build_trust_document_readiness(preview_context)
-    packet_readiness = build_trust_packet_readiness(document_readiness)
+
+    preview_context = build_trust_preview_context(
+        trust
+    )
+
+    document_readiness = build_trust_document_readiness(
+        preview_context
+    )
+
+    packet_readiness = build_trust_packet_readiness(
+        document_readiness
+    )
+
+    # HOS 1E-C4B:
+    # Derived trust-level property-finalization context only.
+    #
+    # Formation Preview Hub remains a read-only trust-level
+    # status / context / handoff surface.
+    property_finalization_summary = None
+    property_finalization_summary_error = None
+
+    trust_scope = dict(trust)
+
+    firm_id = str(
+        trust_scope.get("firm_id")
+        or ""
+    ).strip()
+
+    if not firm_id:
+        property_finalization_summary_error = (
+            "Firm scope is unavailable for this trust record."
+        )
+    else:
+        from database.db import DB_PATH
+        from services.services_tr001_property_finalization import (
+            PropertyFinalizationReadError,
+            get_trust_property_finalization_summary,
+        )
+
+        try:
+            property_finalization_summary = (
+                get_trust_property_finalization_summary(
+                    DB_PATH,
+                    firm_id,
+                    trust_id,
+                    authorization_check=lambda candidate_trust_id: (
+                        str(
+                            candidate_trust_id
+                            or ""
+                        ).strip()
+                        ==
+                        str(
+                            trust_id
+                            or ""
+                        ).strip()
+                    ),
+                )
+            )
+
+        except PropertyFinalizationReadError as exc:
+            property_finalization_summary_error = str(
+                exc
+            )
+
     return render_template(
         "trust_formation_preview_hub.html",
         trust=trust,
         preview_context=preview_context,
         document_readiness=document_readiness,
         packet_readiness=packet_readiness,
+        property_finalization_summary=(
+            property_finalization_summary
+        ),
+        property_finalization_summary_error=(
+            property_finalization_summary_error
+        ),
     )
 
 

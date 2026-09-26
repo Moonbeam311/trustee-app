@@ -372,7 +372,160 @@
     </div>
   </div>
 
-  <div class="section" id="trust-record-context">
+  <div class="section" id="property-finalization-summary">
+<h2>Trust Property Finalization Context</h2>
+
+<p class="muted">
+This is a read-only summary derived from the canonical property records already
+associated with this trust. Viewing this summary does not transfer property,
+record trustee property acceptance, fund the trust, execute a governing
+document, or complete professional legal validation.
+</p>
+
+{% if property_finalization_summary %}
+
+<div class="context-grid">
+    <div class="context-item">
+        <span>Canonical Properties</span>
+        <strong>{{ property_finalization_summary.property_count }}</strong>
+    </div>
+
+    <div class="context-item">
+        <span>Schedule A Draft Eligible</span>
+        <strong>{{ property_finalization_summary.schedule_a_draft_eligible_count }}</strong>
+    </div>
+
+    <div class="context-item">
+        <span>Transfer Recorded Complete</span>
+        <strong>{{ property_finalization_summary.transfer_complete_count }}</strong>
+    </div>
+
+    <div class="context-item">
+        <span>Trustee Property Acceptance Recorded</span>
+        <strong>{{ property_finalization_summary.trustee_acceptance_complete_count }}</strong>
+    </div>
+
+    <div class="context-item">
+        <span>Funding Recorded Complete</span>
+        <strong>{{ property_finalization_summary.funding_complete_count }}</strong>
+    </div>
+</div>
+
+{% if property_finalization_summary.properties %}
+
+<table>
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Workflow State</th>
+            <th>Schedule A Draft</th>
+            <th>Transfer</th>
+            <th>Trustee Property Acceptance</th>
+            <th>Funding</th>
+            <th>Blockers</th>
+            <th>Canonical Record</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for item in property_finalization_summary.properties %}
+        <tr>
+            <td>
+                <strong>{{ item.property_name }}</strong><br>
+                <span class="muted">
+                    {{ item.property_id }} |
+                    {{ item.property_type }}
+                </span>
+            </td>
+
+            <td>
+                {{ item.derived_workflow_state }}
+            </td>
+
+            <td>
+                {% if item.schedule_a_draft_eligible %}
+                Eligible
+                {% else %}
+                Not Yet Eligible
+                {% endif %}
+            </td>
+
+            <td>
+                {% if item.transfer_complete %}
+                Recorded Complete
+                {% else %}
+                Not Yet Completed
+                {% endif %}
+            </td>
+
+            <td>
+                {% if item.trustee_acceptance_complete %}
+                Recorded Complete
+                {% else %}
+                Not Yet Completed
+                {% endif %}
+            </td>
+
+            <td>
+                {% if item.funding_complete %}
+                Recorded Complete
+                {% else %}
+                Not Yet Completed
+                {% endif %}
+            </td>
+
+            <td>
+                {{ item.blocker_count }}
+            </td>
+
+            <td>
+                <a href="{{ url_for('property_detail', property_id=item.property_id) }}">
+                    Open Property
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% else %}
+
+<p>
+No canonical property records are currently associated with this trust.
+</p>
+
+{% endif %}
+
+{% elif property_finalization_summary_error %}
+
+<p>
+<strong>Property Finalization Context:</strong>
+Unavailable for the current trust scope.
+</p>
+
+<p class="muted">
+{{ property_finalization_summary_error }}
+</p>
+
+{% else %}
+
+<p>
+No trust-level property-finalization summary is currently available.
+</p>
+
+{% endif %}
+
+<p class="muted">
+<strong>Boundary:</strong>
+Schedule A eligibility shown here is preparation status only.
+Property selection is not transfer; transfer is not trustee property
+acceptance; trustee property acceptance is not funding; document generation
+is not execution; and internal workflow certification is not professional
+legal validation.
+</p>
+</div>
+
+<div class="section" id="trust-record-context">
     <h2>Trust Record Context</h2>
     <p class="muted">These values were carried forward from the create-trust wizard into the document preview system.</p>
     <div class="context-grid">

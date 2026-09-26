@@ -267,3 +267,245 @@ def get_property_finalization_snapshot(
         }
         snapshot["schedule_a_draft_context"] = build_schedule_a_context(snapshot)
         return snapshot
+
+
+def get_trust_property_finalization_summary(
+    db_path,
+    firm_id,
+    trust_id,
+    *,
+    authorization_check,
+):
+    # HOS 1E-C4B:
+    # Read-only trust-level composition over the canonical property layer.
+    #
+    # This function must not create or advance:
+    # property identity, transfer, trustee property acceptance,
+    # funding, execution, Schedule A legal effect, Task state,
+    # PRI state, or professional legal validation.
+
+    from database.db import get_current_firm_id
+    from services.services_account_asset_contract import list_trust_assets
+
+    scoped_firm_id = str(firm_id or "").strip()
+    scoped_trust_id = str(trust_id or "").strip()
+
+    if not scoped_firm_id or not scoped_trust_id:
+        raise PropertyFinalizationReadError(
+            "Firm and trust scope are required for trust-level property aggregation."
+        )
+
+    if authorization_check is None:
+        raise PropertyFinalizationReadError(
+            "Authorization check is required for trust-level property aggregation."
+        )
+
+    try:
+        authorized = bool(
+            authorization_check(
+                scoped_trust_id
+            )
+        )
+    except Exception as exc:
+        raise PropertyFinalizationReadError(
+            "Trust authorization check could not be completed."
+        ) from exc
+
+    if not authorized:
+        raise PropertyFinalizationReadError(
+            "Trust scope is not authorized."
+        )
+
+    active_firm_id = str(
+        get_current_firm_id() or ""
+    ).strip()
+
+    if not active_firm_id:
+        raise PropertyFinalizationReadError(
+            "Active firm scope is unavailable."
+        )
+
+    if active_firm_id != scoped_firm_id:
+        raise PropertyFinalizationReadError(
+            "Supplied firm scope does not match the active firm scope."
+        )
+
+    assets = list_trust_assets(
+        scoped_trust_id,
+        authorization_check=authorization_check,
+    )
+
+    property_rows = []
+    workflow_state_counts = {}
+
+    schedule_a_draft_eligible_count = 0
+    transfer_complete_count = 0
+    trustee_acceptance_complete_count = 0
+    funding_complete_count = 0
+
+    for asset in assets:
+
+        property_id = str(
+            asset.get("property_id") or ""
+        ).strip()
+
+        asset_trust_id = str(
+            asset.get("trust_id") or ""
+        ).strip()
+
+        asset_firm_id = str(
+            asset.get("firm_id") or ""
+        ).strip()
+
+        if (
+            not property_id
+            or asset_trust_id != scoped_trust_id
+            or asset_firm_id != scoped_firm_id
+        ):
+            raise PropertyFinalizationReadError(
+                "Canonical trust-property enumeration returned an out-of-scope property."
+            )
+
+        snapshot = get_property_finalization_snapshot(
+            db_path,
+            scoped_firm_id,
+            scoped_trust_id,
+            property_id,
+        )
+
+        workflow_state = str(
+            snapshot.get(
+                "derived_workflow_state"
+            )
+            or UNAVAILABLE
+        )
+
+        workflow_state_counts[
+            workflow_state
+        ] = (
+            workflow_state_counts.get(
+                workflow_state,
+                0,
+            )
+            + 1
+        )
+
+        schedule_context = (
+            snapshot.get(
+                "schedule_a_draft_context"
+            )
+            or {}
+        )
+
+        schedule_a_eligible = (
+            str(
+                schedule_context.get(
+                    "schedule_a_draft_eligible"
+                )
+                or ""
+            ).upper()
+            == "YES"
+        )
+
+        transfer_complete = bool(
+            snapshot.get(
+                "transfer_complete"
+            )
+        )
+
+        trustee_acceptance_complete = bool(
+            snapshot.get(
+                "trustee_acceptance_complete"
+            )
+        )
+
+        funding_complete = bool(
+            snapshot.get(
+                "funding_complete"
+            )
+        )
+
+        if schedule_a_eligible:
+            schedule_a_draft_eligible_count += 1
+
+        if transfer_complete:
+            transfer_complete_count += 1
+
+        if trustee_acceptance_complete:
+            trustee_acceptance_complete_count += 1
+
+        if funding_complete:
+            funding_complete_count += 1
+
+        blockers = (
+            snapshot.get(
+                "blocker_reasons"
+            )
+            or []
+        )
+
+        property_rows.append(
+            {
+                "property_id": property_id,
+                "property_name": (
+                    asset.get(
+                        "property_name"
+                    )
+                    or property_id
+                ),
+                "property_type": (
+                    asset.get(
+                        "property_type"
+                    )
+                    or asset.get(
+                        "asset_class"
+                    )
+                    or "Not entered"
+                ),
+                "derived_workflow_state":
+                    workflow_state,
+                "schedule_a_draft_eligible":
+                    schedule_a_eligible,
+                "transfer_complete":
+                    transfer_complete,
+                "trustee_acceptance_complete":
+                    trustee_acceptance_complete,
+                "funding_complete":
+                    funding_complete,
+                "blocker_count":
+                    len(blockers),
+            }
+        )
+
+    return {
+        "firm_id": scoped_firm_id,
+        "trust_id": scoped_trust_id,
+        "property_count": len(
+            property_rows
+        ),
+        "workflow_state_counts": dict(
+            sorted(
+                workflow_state_counts.items()
+            )
+        ),
+        "schedule_a_draft_eligible_count":
+            schedule_a_draft_eligible_count,
+        "transfer_complete_count":
+            transfer_complete_count,
+        "trustee_acceptance_complete_count":
+            trustee_acceptance_complete_count,
+        "funding_complete_count":
+            funding_complete_count,
+        "properties": property_rows,
+        "derived_read_model_only": True,
+        "source_provenance": {
+            "property_enumerator":
+                "services_account_asset_contract.list_trust_assets",
+            "property_snapshot":
+                "get_property_finalization_snapshot",
+            "canonical_property_ids": [
+                row["property_id"]
+                for row in property_rows
+            ],
+        },
+    }
