@@ -4209,6 +4209,39 @@ def property_detail(property_id):
     linked_ledger = get_ledger_by_property(property_id)
     evidence_profile = build_property_evidence_profile(property_id)
 
+    # HOS 1E-C2:
+    # Read-only institutional finalization status for this exact property.
+    #
+    # Viewing this page must not create or advance:
+    # transfer, trustee property acceptance, execution, funding,
+    # Schedule A legal effect, or professional legal validation.
+    finalization_snapshot = None
+    finalization_snapshot_error = None
+
+    firm_id = prop_data.get("firm_id")
+    trust_id = prop_data.get("trust_id")
+
+    if firm_id and trust_id:
+        from database.db import DB_PATH
+        from services.services_tr001_property_finalization import (
+            PropertyFinalizationReadError,
+            get_property_finalization_snapshot,
+        )
+
+        try:
+            finalization_snapshot = get_property_finalization_snapshot(
+                DB_PATH,
+                firm_id,
+                trust_id,
+                property_id,
+            )
+        except PropertyFinalizationReadError as exc:
+            finalization_snapshot_error = str(exc)
+    else:
+        finalization_snapshot_error = (
+            "Firm / trust scope is unavailable for this property record."
+        )
+
     return render_template(
         "property_detail.html",
         prop=prop_data,
@@ -4216,7 +4249,9 @@ def property_detail(property_id):
         linked_accounts=linked_accounts,
         linked_documents=linked_documents,
         linked_ledger=linked_ledger,
-        evidence_profile=evidence_profile
+        evidence_profile=evidence_profile,
+        finalization_snapshot=finalization_snapshot,
+        finalization_snapshot_error=finalization_snapshot_error,
     )
 
 

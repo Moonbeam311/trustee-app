@@ -75,6 +75,123 @@
     <p><strong>Beneficial / Equitable Notes:</strong> {{ prop.beneficial_notes or 'Not entered' }}</p>
 </div>
 
+<!-- HOS 1E-C2 PROPERTY FINALIZATION STATUS BEGIN -->
+<div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
+    <h3>Property Finalization Status</h3>
+
+    <p>
+        <strong>Read-only institutional status.</strong>
+        This display does not itself transfer property, record trustee acceptance,
+        execute a trust instrument, fund a trust, or establish professional legal validation.
+    </p>
+
+    {% if finalization_snapshot %}
+
+        <p>
+            <strong>Derived workflow state:</strong>
+            {{ finalization_snapshot.get('derived_workflow_state', 'UNAVAILABLE') }}
+        </p>
+
+        <p>
+            <strong>Possession attestations currently recorded:</strong>
+            {{ finalization_snapshot.get('current_possession_attestations', [])|length }}
+        </p>
+
+        <p>
+            <strong>Ownership attestations currently recorded:</strong>
+            {{ finalization_snapshot.get('current_ownership_attestations', [])|length }}
+        </p>
+
+        <p>
+            <strong>Identification revisions:</strong>
+            {{ finalization_snapshot.get('identification_revision_count', 0) }}
+        </p>
+
+        {% set latest_identification = finalization_snapshot.get('latest_identification_revision') %}
+        <p>
+            <strong>Latest identification revision:</strong>
+            {% if latest_identification %}
+                {{ latest_identification.get('revision_id', 'Recorded') }}
+            {% else %}
+                None recorded
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Property evidence media:</strong>
+            {{ finalization_snapshot.get('property_evidence_media', [])|length }}
+        </p>
+
+        {% set custody = finalization_snapshot.get('custody_summary', {}) %}
+        <p>
+            <strong>Custody records:</strong>
+            {{ custody.get('count', 0) }}
+        </p>
+
+        <p>
+            <strong>Transfer completed:</strong>
+            {% if finalization_snapshot.get('transfer_complete') %}
+                Yes — explicitly recorded
+            {% else %}
+                No
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Trustee property acceptance recorded:</strong>
+            {% if finalization_snapshot.get('trustee_acceptance_complete') %}
+                Yes — explicitly recorded
+            {% else %}
+                No
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Funding recorded:</strong>
+            {% if finalization_snapshot.get('funding_complete') %}
+                Yes — explicitly recorded
+            {% else %}
+                No
+            {% endif %}
+        </p>
+
+        <p>
+            <strong>Execution state:</strong>
+            {{ finalization_snapshot.get('execution_state', 'UNAVAILABLE') }}
+        </p>
+
+        {% set schedule_context = finalization_snapshot.get('schedule_a_draft_context', {}) %}
+        <p>
+            <strong>Schedule A derived-draft eligibility:</strong>
+            {{ schedule_context.get('schedule_a_draft_eligible', 'NO') }}
+        </p>
+
+        <p>
+            <em>
+                Schedule A status shown here is prospective and derived from canonical
+                records. It is not a second property registry and does not itself
+                establish transfer, acceptance, execution, or funding.
+            </em>
+        </p>
+
+    {% else %}
+
+        <p>
+            <strong>Status:</strong>
+            Finalization read model unavailable for this property record.
+        </p>
+
+        {% if finalization_snapshot_error %}
+        <p>
+            <strong>Reason:</strong>
+            {{ finalization_snapshot_error }}
+        </p>
+        {% endif %}
+
+    {% endif %}
+</div>
+<!-- HOS 1E-C2 PROPERTY FINALIZATION STATUS END -->
+
 <div style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px; background:#fafafa;">
     <h3>Continuity Asset Profile</h3>
     <p><strong>Continuity Classification:</strong> {{ prop.continuity_classification or 'Not classified' }}</p>
