@@ -59,6 +59,10 @@ from database.migrations_magc1_wave4 import (
     apply_magc1_wave4_schema,
     Magc1Wave4MigrationError,
 )
+from database.migrations_tr001_finalization_workflow_1e import (
+    apply_property_fact_schema,
+    PropertyFactMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -257,6 +261,16 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        property_fact_result = apply_property_fact_schema(db_path)
+    except PropertyFactMigrationError as exc:
+        property_fact_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -272,6 +286,7 @@ def run_additive_startup_migrations(
         "genealogy_relationship_review_schema": genealogy_relationship_review_result,
         "intake_followup_reconciliation": intake_followup_reconciliation_result,
         "magc1_wave4": magc1_wave4_result,
+        "property_fact_schema": property_fact_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,
