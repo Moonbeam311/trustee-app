@@ -31,13 +31,15 @@ From the repository root:
 python -m http.server 8010 --directory public_site
 ```
 
+During local preview, the public **Log In** action resolves directly to the authenticated Hindsfoot OS login at `http://127.0.0.1:5000/login`. The Flask product introduction at port 5000 root remains a separate product surface and is not required in the login path.
+
 Open `http://127.0.0.1:8010/`. During local preview only, `site.js` derives the Hindsfoot OS Login destination from the preview hostname and port 5000. No localhost URL is published in HTML or deployable configuration.
 
 ## Required deployment configuration
 
 Set these values in `assets/js/config.js` before deployment:
 
-- `loginUrl`: reviewed authenticated Hindsfoot OS introduction URL
+- `loginUrl`: reviewed authenticated Hindsfoot OS login URL
 - `demonstrationRequestEndpoint`: remains empty until a separately reviewed collection service exists
 - `contactEmail`: public demonstration contact owned and monitored by the operator
 - `privacyPolicyUrl`: deployed privacy-notice URL

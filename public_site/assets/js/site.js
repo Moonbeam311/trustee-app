@@ -2,7 +2,7 @@
   "use strict";
   const config = window.HINDSFOOT_PUBLIC_CONFIG || {};
   const localPreview = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-  const localLogin = localPreview ? `${location.protocol}//${location.hostname}:5000/` : "";
+  const localLogin = localPreview ? `${location.protocol}//${location.hostname}:5000/login` : "";
   const loginUrl = config.loginUrl || localLogin || "#login-not-configured";
   document.querySelectorAll(".js-login-link").forEach((link) => {
     link.href = loginUrl;
