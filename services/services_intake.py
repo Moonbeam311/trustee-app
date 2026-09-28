@@ -1550,6 +1550,14 @@ def _label_items(values, labels, limit=None):
     return _client_unique(labeled, limit=limit)
 
 
+def build_operational_document_requests(document_requests):
+    return _label_items(
+        document_requests,
+        CLIENT_DOCUMENT_LABELS,
+        limit=None,
+    )
+
+
 def determine_primary_next_session(summary):
     sessions = summary.get("next_sessions", []) or []
     priority_order = [
@@ -2964,7 +2972,12 @@ def task_exists(intake_id, title, task_type=None, source=None):
     return bool(row and row[0])
 
 
-def auto_generate_followup_tasks_from_snapshot(intake_id, snapshot, created_by=None):
+def auto_generate_followup_tasks_from_snapshot(
+    intake_id,
+    snapshot,
+    created_by=None,
+    operational_documents=None,
+):
     """
     Idempotently generates follow-up tasks from the client snapshot.
     It will not duplicate the same generated task title/source pair.
@@ -2974,7 +2987,12 @@ def auto_generate_followup_tasks_from_snapshot(intake_id, snapshot, created_by=N
     created = []
 
     # Document requests become client-facing document tasks.
-    for doc in snapshot.get("documents_to_gather", []) or []:
+    documents = (
+        operational_documents
+        if operational_documents is not None
+        else snapshot.get("documents_to_gather", []) or []
+    )
+    for doc in documents:
         title = f"Gather document: {doc}"
         if not task_exists(intake_id, title, task_type="document", source="auto_snapshot"):
             created.append(create_intake_followup_task(
@@ -3146,7 +3164,9 @@ def build_intake_followup_packet(intake_id):
     task_summary = summarize_followup_tasks(tasks)
     task_groups = group_followup_tasks(tasks)
 
-    documents = snapshot.get("documents_to_gather", []) or []
+    documents = build_operational_document_requests(
+        (result or {}).get("summary", {}).get("document_requests", [])
+    )
     priorities = snapshot.get("top_priorities", []) or []
     review_flags = snapshot.get("review_flags", []) or []
 

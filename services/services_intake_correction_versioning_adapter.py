@@ -7,11 +7,17 @@ from typing import Any, Mapping
 
 def build_governed_proposed_tasks(
     snapshot: Mapping[str, Any],
+    operational_documents=None,
 ) -> list[dict[str, str]]:
     """Mirror legacy snapshot task semantics without creating operational work."""
 
     tasks = []
-    for document in snapshot.get("documents_to_gather", []) or []:
+    documents = (
+        operational_documents
+        if operational_documents is not None
+        else snapshot.get("documents_to_gather", []) or []
+    )
+    for document in documents:
         tasks.append({
             "task_type": "document",
             "priority": "normal",

@@ -132,7 +132,7 @@ from services.services_intake_bridge import (
 )
 from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
-from services.services_intake import build_client_snapshot
+from services.services_intake import build_client_snapshot, build_operational_document_requests
 from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, get_saved_client_snapshot_for_firm, ensure_intake_snapshot_tables
 from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
 from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
@@ -20644,6 +20644,9 @@ def intake_universal_profile(intake_id):
             created_by=created_by
         )
         client_snapshot = build_client_snapshot(result)
+        operational_documents = build_operational_document_requests(
+            result.get("summary", {}).get("document_requests", [])
+        )
         save_client_snapshot(
             intake_id=result["intake_id"],
             snapshot=client_snapshot,
@@ -20657,7 +20660,9 @@ def intake_universal_profile(intake_id):
             )
             snapshot_version = create_snapshot_version(
                 DB_PATH, firm_id, intake_id, revision["answer_revision_id"],
-                result["translations"], build_governed_proposed_tasks(client_snapshot),
+                result["translations"], build_governed_proposed_tasks(
+                    client_snapshot, operational_documents=operational_documents
+                ),
                 created_by,
             )
             governed_state = get_intake_correction_versioning_state(
@@ -20671,7 +20676,8 @@ def intake_universal_profile(intake_id):
             auto_generate_followup_tasks_from_snapshot(
                 intake_id=result["intake_id"],
                 snapshot=client_snapshot,
-                created_by=created_by
+                created_by=created_by,
+                operational_documents=operational_documents,
             )
         notes = []
         note_options = get_review_note_form_options()
@@ -23295,6 +23301,10 @@ def intake_saved_snapshot(intake_id):
         flash("Saved intake snapshot not found.", "warning")
         return redirect(url_for("intake_dashboard"))
 
+    operational_documents = build_operational_document_requests(
+        (result or {}).get("summary", {}).get("document_requests", [])
+    )
+
     matter_intake_links = list_links_for_intake(
         DB_PATH,
         firm_id=firm_id,
@@ -23321,7 +23331,8 @@ def intake_saved_snapshot(intake_id):
         auto_generate_followup_tasks_from_snapshot(
             intake_id=intake_id,
             snapshot=snapshot,
-            created_by=session.get("username") if "session" in globals() else None
+            created_by=session.get("username") if "session" in globals() else None,
+            operational_documents=operational_documents,
         )
     notes = list_intake_review_notes(intake_id)
     note_options = get_review_note_form_options()
