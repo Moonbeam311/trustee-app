@@ -232,6 +232,7 @@ from database.db import (
     update_trust_fields,
     get_trust_by_id_in_scope,
     update_trust_fields_in_scope,
+    update_trust_fields_with_provenance_in_scope,
     get_next_property_id,
     create_property_record,
     get_property_by_id,
@@ -3677,11 +3678,17 @@ def create_trust_step2_grantor(trust_id):
         if not validate_csrf_token():
             return render_template("create_trust_step2_grantor.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields_in_scope(trust_id, {
+        update_trust_fields_with_provenance_in_scope(trust_id, {
             "grantor_name": request.form.get("grantor_name"),
             "grantor_type": request.form.get("grantor_type"),
             "grantor_contact": request.form.get("grantor_contact"),
-        }, firm_id, owner_id)
+        }, firm_id, owner_id,
+            revision_basis="trust_formation_step2_grantor",
+            provenance="app:create_trust_step2_grantor",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
 
         if has_post_save_return():
             return resolve_post_save_return(trust_id, "create_trust_step2", {"trust_id": trust_id})
@@ -3712,7 +3719,14 @@ def create_trust_step2(trust_id):
         }
         if not has_post_save_return():
             updates["status"] = "Draft - Step 2 Complete"
-        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, updates, firm_id, owner_id,
+            revision_basis="trust_formation_step2",
+            provenance="app:create_trust_step2",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         if has_post_save_return():
             return resolve_post_save_return(trust_id, "create_trust_step3", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step3", trust_id=trust_id))
@@ -3740,7 +3754,14 @@ def create_trust_step3(trust_id):
         }
         if not has_post_save_return():
             updates["status"] = "Draft - Step 3 Complete"
-        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, updates, firm_id, owner_id,
+            revision_basis="trust_formation_step3",
+            provenance="app:create_trust_step3",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         if has_post_save_return():
             return resolve_post_save_return(trust_id, "create_trust_step4", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step4", trust_id=trust_id))
@@ -3768,7 +3789,14 @@ def create_trust_step4(trust_id):
         }
         if not has_post_save_return():
             updates["status"] = "Draft - Step 4 Complete"
-        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, updates, firm_id, owner_id,
+            revision_basis="trust_formation_step4",
+            provenance="app:create_trust_step4",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         if has_post_save_return():
             return resolve_post_save_return(trust_id, "create_trust_step5", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step5", trust_id=trust_id))
@@ -3796,7 +3824,14 @@ def create_trust_step5(trust_id):
         }
         if not has_post_save_return():
             updates["status"] = "Draft - Step 5 Complete"
-        update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id)
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, updates, firm_id, owner_id,
+            revision_basis="trust_formation_step5",
+            provenance="app:create_trust_step5",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         if has_post_save_return():
             return resolve_post_save_return(trust_id, "create_trust_step6", {"trust_id": trust_id})
         return redirect(url_for("create_trust_step6", trust_id=trust_id))
@@ -3816,7 +3851,14 @@ def create_trust_step6(trust_id):
         if not validate_csrf_token():
             return render_template("create_trust_step6.html", trust=trust, error_message="Invalid or missing CSRF token.")
 
-        update_trust_fields_in_scope(trust_id, {"status": "Finalized"}, firm_id, owner_id)
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, {"status": "Finalized"}, firm_id, owner_id,
+            revision_basis="trust_formation_completion",
+            provenance="app:create_trust_step6",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         return redirect(url_for("trust_post_create_review", trust_id=trust_id))
     return render_template("create_trust_step6.html", trust=trust)
 
@@ -4019,9 +4061,13 @@ def trust_branding_settings(trust_id):
     if gate:
         return gate
 
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        return f"Trust {trust_id} not found", 404
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
 
     if request.method == "POST":
         update_payload = {
@@ -4062,7 +4108,14 @@ def trust_branding_settings(trust_id):
                 f"Seal uploaded: {stored_filename}"
             )
 
-        update_trust_fields(trust_id, update_payload)
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, update_payload, firm_id, owner_id,
+            revision_basis="trust_branding_settings",
+            provenance="app:trust_branding_settings",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
 
         log_change(
             "trust_branding",
@@ -15929,12 +15982,18 @@ def trust_identity_edit(trust_id):
     if request.method == "POST":
         if not validate_csrf_token():
             return render_template("trust_identity_edit.html", trust=trust, error_message="Invalid or missing CSRF token."), 400
-        update_trust_fields_in_scope(trust_id, {
+        update_trust_fields_with_provenance_in_scope(trust_id, {
             "trust_name": str(request.form.get("trust_name") or "").strip(),
             "short_name": str(request.form.get("short_name") or "").strip(),
             "jurisdiction": str(request.form.get("jurisdiction") or "").strip(),
             "effective_date": str(request.form.get("effective_date") or "").strip(),
-        }, firm_id, owner_id)
+        }, firm_id, owner_id,
+            revision_basis="trust_identity_correction",
+            provenance="app:trust_identity_edit",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         return resolve_post_save_return(trust_id, "trust_formation_preview_hub", {"trust_id": trust_id})
     return render_template("trust_identity_edit.html", trust=trust)
 
@@ -16288,10 +16347,13 @@ def trust_accounting_method_settings(trust_id):
     if gate:
         return gate
 
-    trust = get_trust_by_id(trust_id)
+    firm_id = str(session.get("firm_id") or "").strip()
+    owner_id = str(session.get("owner_id") or "").strip()
+    if not firm_id or not owner_id:
+        return render_template("access_denied.html", reason="Authenticated firm and owner scope are required."), 403
+    trust = get_trust_by_id_in_scope(trust_id, firm_id, owner_id)
     if not trust:
-        flash("Trust not found.", "error")
-        return redirect(url_for("admin_dashboard"))
+        return render_template("access_denied.html", reason="Trust is outside the authenticated scope."), 403
 
     if request.method == "POST":
         if not validate_csrf_token():
@@ -16303,7 +16365,14 @@ def trust_accounting_method_settings(trust_id):
             flash("Select a valid accounting method: cash or accrual.", "error")
             return render_template("trust_accounting_method.html", trust=trust)
 
-        update_trust_fields(trust_id, {"accounting_method": accounting_method})
+        update_trust_fields_with_provenance_in_scope(
+            trust_id, {"accounting_method": accounting_method}, firm_id, owner_id,
+            revision_basis="trust_accounting_method",
+            provenance="app:trust_accounting_method_settings",
+            decision_origin="OPERATOR_OR_FIDUCIARY", human_confirmed=True,
+            actor_id=session.get("user_id") or session.get("username"),
+            actor_capacity=session.get("role") or "Operator",
+        )
         log_change(
             "trust",
             trust_id,

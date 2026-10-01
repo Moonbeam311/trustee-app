@@ -1,8 +1,9 @@
 import os
 import secrets
 import sqlite3
+import uuid
 from pathlib import Path
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from werkzeug.security import check_password_hash, generate_password_hash
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -1423,6 +1424,142 @@ def update_trust_fields_in_scope(trust_id, updates, firm_id, owner_id):
         )
         conn.commit()
         return bool(cur.rowcount)
+    finally:
+        conn.close()
+
+
+def update_trust_fields_with_provenance_in_scope(
+    trust_id,
+    updates,
+    firm_id,
+    owner_id,
+    *,
+    revision_basis,
+    provenance,
+    decision_origin,
+    human_confirmed,
+    actor_id,
+    actor_capacity,
+):
+    """Atomically update canonical Trust state and append per-field revisions."""
+    metadata = {
+        "revision_basis": revision_basis,
+        "provenance": provenance,
+        "decision_origin": decision_origin,
+        "actor_id": actor_id,
+        "actor_capacity": actor_capacity,
+    }
+    missing_metadata = [
+        name for name, value in metadata.items()
+        if value is None or not str(value).strip()
+    ]
+    if missing_metadata:
+        raise ValueError(
+            "missing provenance metadata: " + ", ".join(sorted(missing_metadata))
+        )
+    if decision_origin not in {
+        "SYSTEM_SUGGESTED",
+        "OPERATOR_OR_FIDUCIARY",
+        "PROFESSIONAL",
+    }:
+        raise ValueError("invalid decision_origin")
+    if decision_origin == "SYSTEM_SUGGESTED":
+        raise ValueError("SYSTEM_SUGGESTED cannot finalize a canonical Trust mutation")
+    if human_confirmed is not True and human_confirmed != 1:
+        raise ValueError("canonical Trust mutation requires human confirmation")
+
+    firm_id = str(firm_id or "").strip()
+    owner_id = str(owner_id or "").strip()
+    trust_id = str(trust_id or "").strip()
+    if not firm_id or not owner_id or not trust_id:
+        raise ValueError("trust_id, firm_id, and owner_id are required")
+
+    updates = dict(updates or {})
+    immutable_fields = {"firm_id", "owner_id", "trust_id"}
+    attempted_identity_changes = immutable_fields.intersection(updates)
+    if attempted_identity_changes:
+        raise ValueError(
+            "canonical Trust identity fields cannot change: "
+            + ", ".join(sorted(attempted_identity_changes))
+        )
+    if not updates:
+        return False
+
+    conn = get_connection()
+    try:
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.execute("BEGIN IMMEDIATE")
+
+        trust_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(trusts)").fetchall()
+        }
+        unknown_fields = set(updates) - trust_columns
+        if unknown_fields:
+            raise ValueError(
+                "unknown Trust columns: " + ", ".join(sorted(unknown_fields))
+            )
+
+        current = conn.execute(
+            "SELECT * FROM trusts WHERE trust_id = ? AND firm_id = ? AND owner_id = ?",
+            (trust_id, firm_id, owner_id),
+        ).fetchone()
+        if current is None:
+            raise LookupError("Trust not found in firm and owner scope")
+
+        changed = {
+            field_name: resulting_value
+            for field_name, resulting_value in updates.items()
+            if current[field_name] != resulting_value
+        }
+        if not changed:
+            conn.commit()
+            return False
+
+        created_at = datetime.now(timezone.utc).isoformat(timespec="microseconds")
+        for field_name, resulting_value in changed.items():
+            previous = conn.execute(
+                """
+                SELECT revision_id, revision_number
+                FROM trust_field_revisions
+                WHERE firm_id = ? AND owner_id = ? AND trust_id = ? AND field_name = ?
+                ORDER BY revision_number DESC
+                LIMIT 1
+                """,
+                (firm_id, owner_id, trust_id, field_name),
+            ).fetchone()
+            revision_number = (previous["revision_number"] + 1) if previous else 1
+            prior_revision_id = previous["revision_id"] if previous else None
+            conn.execute(
+                """
+                INSERT INTO trust_field_revisions (
+                    revision_id, firm_id, owner_id, trust_id, field_name,
+                    revision_number, prior_value, resulting_value, revision_basis,
+                    provenance, decision_origin, human_confirmed, actor_id,
+                    actor_capacity, prior_revision_id, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(uuid.uuid4()), firm_id, owner_id, trust_id, field_name,
+                    revision_number, current[field_name], resulting_value,
+                    str(revision_basis), str(provenance), decision_origin, 1,
+                    str(actor_id), str(actor_capacity), prior_revision_id, created_at,
+                ),
+            )
+
+        assignments = ", ".join(f'"{field_name}" = ?' for field_name in changed)
+        values = list(changed.values()) + [trust_id, firm_id, owner_id]
+        cursor = conn.execute(
+            f"UPDATE trusts SET {assignments} "
+            "WHERE trust_id = ? AND firm_id = ? AND owner_id = ?",
+            values,
+        )
+        if cursor.rowcount != 1:
+            raise RuntimeError("canonical Trust update did not affect exactly one row")
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        raise
     finally:
         conn.close()
 

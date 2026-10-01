@@ -63,6 +63,10 @@ from database.migrations_tr001_finalization_workflow_1e import (
     apply_property_fact_schema,
     PropertyFactMigrationError,
 )
+from database.migrations_trust_field_revisions import (
+    apply_trust_field_revision_schema,
+    TrustFieldRevisionMigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -271,6 +275,21 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        apply_trust_field_revision_schema(db_path)
+        trust_field_revision_result = {
+            "schema_complete": True,
+            "deferred": False,
+            "records_created": 0,
+        }
+    except TrustFieldRevisionMigrationError as exc:
+        trust_field_revision_result = {
+            "schema_complete": False,
+            "deferred": True,
+            "reason": str(exc),
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -287,6 +306,7 @@ def run_additive_startup_migrations(
         "intake_followup_reconciliation": intake_followup_reconciliation_result,
         "magc1_wave4": magc1_wave4_result,
         "property_fact_schema": property_fact_result,
+        "trust_field_revision_schema": trust_field_revision_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,

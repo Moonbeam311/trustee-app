@@ -112,13 +112,8 @@ def test_launch_describes_step7_as_formation_record_completion():
 
 
 def test_internal_finalized_status_token_remains_unchanged():
-    token = (
-        'update_trust_fields_in_scope('
-        'trust_id, {"status": "Finalized"}, '
-        'firm_id, owner_id)'
-    )
-
-    assert APP.count(token) == 1
+    assert APP.count('{"status": "Finalized"}') == 1
+    assert 'revision_basis="trust_formation_completion"' in APP
 
 
 def test_terminology_change_does_not_claim_execution_or_funding():
