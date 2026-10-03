@@ -225,3 +225,114 @@ def test_canonical_startup_path_creates_workspaces_on_empty_database(tmp_path):
     assert second["workspace_records_created"] == 0
 
     assert set(REQUIRED_COLUMNS).issubset(_columns(path))
+
+
+def test_workspace_schema_creates_workspace_notes_contract_idempotently(tmp_path):
+    path = tmp_path / "workspace_notes_contract.sqlite3"
+
+    first = apply_workspace_schema(path)
+    second = apply_workspace_schema(path)
+
+    sqlite3 = __import__("sqlite3")
+    connection = sqlite3.connect(path)
+
+    try:
+        table_info = connection.execute(
+            "PRAGMA table_info(workspace_notes)"
+        ).fetchall()
+
+        columns = [row[1] for row in table_info]
+
+        assert columns == [
+            "note_id",
+            "workspace_id",
+            "section_name",
+            "content",
+            "firm_id",
+            "created_at",
+        ]
+
+        note_id = next(
+            row for row in table_info
+            if row[1] == "note_id"
+        )
+
+        assert note_id[5] == 1
+        assert connection.execute(
+            "SELECT COUNT(*) FROM workspace_notes"
+        ).fetchone()[0] == 0
+
+    finally:
+        connection.close()
+
+    assert first["workspace_notes_table_created"] is True
+    assert second["workspace_notes_table_created"] is False
+    assert second["workspace_notes_columns_added"] == []
+    assert second["legacy_note_rows_preserved"] == 0
+
+
+def test_workspace_schema_preserves_existing_workspace_notes_rows(tmp_path):
+    path = tmp_path / "workspace_notes_legacy.sqlite3"
+
+    sqlite3 = __import__("sqlite3")
+    connection = sqlite3.connect(path)
+
+    try:
+        connection.execute(
+            """
+            CREATE TABLE workspace_notes (
+                note_id TEXT PRIMARY KEY,
+                workspace_id TEXT
+            )
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO workspace_notes (
+                note_id,
+                workspace_id
+            ) VALUES (?, ?)
+            """,
+            ("NOTE-LEGACY-001", "WS-LEGACY-001"),
+        )
+        connection.commit()
+
+    finally:
+        connection.close()
+
+    result = apply_workspace_schema(path)
+
+    connection = sqlite3.connect(path)
+
+    try:
+        row = connection.execute(
+            """
+            SELECT note_id, workspace_id
+            FROM workspace_notes
+            WHERE note_id = ?
+            """,
+            ("NOTE-LEGACY-001",),
+        ).fetchone()
+
+        columns = {
+            item[1]
+            for item in connection.execute(
+                "PRAGMA table_info(workspace_notes)"
+            ).fetchall()
+        }
+
+    finally:
+        connection.close()
+
+    assert row == ("NOTE-LEGACY-001", "WS-LEGACY-001")
+    assert {
+        "note_id",
+        "workspace_id",
+        "section_name",
+        "content",
+        "firm_id",
+        "created_at",
+    }.issubset(columns)
+
+    assert result["workspace_notes_table_created"] is False
+    assert result["legacy_note_rows_preserved"] == 1

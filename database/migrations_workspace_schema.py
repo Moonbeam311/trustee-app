@@ -39,6 +39,35 @@ ADDITIVE_COLUMN_DEFINITIONS = {
 }
 
 
+WORKSPACE_NOTES_REQUIRED_COLUMNS = (
+    "note_id",
+    "workspace_id",
+    "section_name",
+    "content",
+    "firm_id",
+    "created_at",
+)
+
+WORKSPACE_NOTES_ADDITIVE_COLUMN_DEFINITIONS = {
+    "workspace_id": "TEXT",
+    "section_name": "TEXT",
+    "content": "TEXT",
+    "firm_id": "TEXT",
+    "created_at": "TEXT",
+}
+
+
+def _workspace_note_column_names(
+    connection: sqlite3.Connection,
+) -> set[str]:
+    return {
+        row[1]
+        for row in connection.execute(
+            "PRAGMA table_info(workspace_notes)"
+        ).fetchall()
+    }
+
+
 def _column_names(connection: sqlite3.Connection) -> set[str]:
     return {
         row[1]
@@ -153,6 +182,98 @@ def apply_workspace_schema(
                 + ", ".join(missing)
             )
 
+        notes_table_exists = bool(
+            connection.execute(
+                '''
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name = 'workspace_notes'
+                '''
+            ).fetchone()
+        )
+
+        workspace_notes_table_created = False
+        workspace_notes_columns_added: list[str] = []
+        legacy_note_rows_preserved = 0
+
+        if not notes_table_exists:
+            connection.execute(
+                '''
+                CREATE TABLE workspace_notes (
+                    note_id TEXT PRIMARY KEY,
+                    workspace_id TEXT,
+                    section_name TEXT,
+                    content TEXT,
+                    firm_id TEXT,
+                    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+                )
+                '''
+            )
+            workspace_notes_table_created = True
+
+        else:
+            before_note_count = connection.execute(
+                "SELECT COUNT(*) FROM workspace_notes"
+            ).fetchone()[0]
+
+            existing_note_columns = _workspace_note_column_names(
+                connection
+            )
+
+            if "note_id" not in existing_note_columns:
+                raise WorkspaceSchemaMigrationError(
+                    "existing workspace_notes table lacks note_id; "
+                    "destructive repair is prohibited"
+                )
+
+            for column_name in WORKSPACE_NOTES_REQUIRED_COLUMNS:
+                if column_name in existing_note_columns:
+                    continue
+
+                if column_name == "note_id":
+                    continue
+
+                column_definition = (
+                    WORKSPACE_NOTES_ADDITIVE_COLUMN_DEFINITIONS[
+                        column_name
+                    ]
+                )
+
+                connection.execute(
+                    f'''
+                    ALTER TABLE workspace_notes
+                    ADD COLUMN {column_name} {column_definition}
+                    '''
+                )
+                workspace_notes_columns_added.append(column_name)
+
+            after_note_count = connection.execute(
+                "SELECT COUNT(*) FROM workspace_notes"
+            ).fetchone()[0]
+
+            if after_note_count != before_note_count:
+                raise WorkspaceSchemaMigrationError(
+                    "legacy workspace note row count changed "
+                    "during additive migration"
+                )
+
+            legacy_note_rows_preserved = after_note_count
+
+        final_note_columns = _workspace_note_column_names(connection)
+
+        missing_note_columns = [
+            column_name
+            for column_name in WORKSPACE_NOTES_REQUIRED_COLUMNS
+            if column_name not in final_note_columns
+        ]
+
+        if missing_note_columns:
+            raise WorkspaceSchemaMigrationError(
+                "canonical workspace_notes schema remains incomplete: "
+                + ", ".join(missing_note_columns)
+            )
+
         connection.commit()
 
         return {
@@ -163,6 +284,9 @@ def apply_workspace_schema(
             "legacy_rows_preserved": legacy_rows_preserved,
             "legacy_rows_updated": 0,
             "records_created": 0,
+            "workspace_notes_table_created": workspace_notes_table_created,
+            "workspace_notes_columns_added": workspace_notes_columns_added,
+            "legacy_note_rows_preserved": legacy_note_rows_preserved,
         }
 
     except WorkspaceSchemaMigrationError:
