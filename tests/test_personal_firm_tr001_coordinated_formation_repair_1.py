@@ -52,11 +52,19 @@ def test_identity_edit_updates_existing_scoped_trust_without_creation():
     end = APP.index('@app.route("/trust/<trust_id>/successor-trustee-preview")', start)
     route = APP[start:end]
     assert "get_trust_by_id_in_scope" in route
-    assert "update_trust_fields_in_scope" in route
+    assert "update_trust_fields_with_provenance_in_scope" in route
+    assert 'revision_basis="trust_identity_correction"' in route
+    assert 'provenance="app:trust_identity_edit"' in route
+    assert 'decision_origin="OPERATOR_OR_FIDUCIARY"' in route
+    assert "human_confirmed=True" in route
     assert "resolve_post_save_return" in route
     assert "create_trust_record" not in route
-    assert '"firm_id"' not in route.split("update_trust_fields_in_scope", 1)[1]
-    assert '"owner_id"' not in route.split("update_trust_fields_in_scope", 1)[1]
+    assert '"firm_id"' not in route.split(
+        "update_trust_fields_with_provenance_in_scope", 1
+    )[1]
+    assert '"owner_id"' not in route.split(
+        "update_trust_fields_with_provenance_in_scope", 1
+    )[1]
 
 
 def test_existing_certificate_generator_and_routes_are_reused_without_new_table():
@@ -112,3 +120,59 @@ def test_missing_timestamps_are_explained():
     packet = template("trust_packet_preview.html")
     assert 'or "—"' not in packet
     assert "Not recorded" in packet
+
+
+def test_controlled_packet_schedule_a_is_conditional_prospective_attachment():
+    start = APP.index(
+        "def build_controlled_packet_schedule_a_documents"
+    )
+    end = APP.index(
+        "def get_support_doc_by_category",
+        start,
+    )
+    packet_block = APP[start:end]
+
+    route_start = APP.index(
+        "def trust_controlled_packet_export(trust_id):"
+    )
+    route_end = APP.index(
+        '@app.route("/trust/<trust_id>/controlled-export-review")',
+        route_start,
+    )
+    export_route = APP[route_start:route_end]
+
+    assert "get_properties_by_trust_id" in packet_block
+    assert "get_property_finalization_snapshot" in packet_block
+    assert "build_schedule_a_draft_text" in packet_block
+
+    assert "DRAFT_PROSPECTIVE" in packet_block
+    assert "NONE_INFERRED" in packet_block
+    assert "not a formation document" in packet_block
+    assert "_Schedule_A_" in packet_block
+
+    assert (
+        "schedule_a_documents = "
+        "build_controlled_packet_schedule_a_documents"
+        in export_route
+    )
+    assert (
+        "schedule_a_documents=schedule_a_documents"
+        in export_route
+    )
+
+    # The established formation set remains seven documents.
+    assert (
+        "seven formation document PDFs"
+        in template("trust_packet_preview.html")
+    )
+
+    # Packet preparation must remain read-only with respect to
+    # transfer / execution / funding lifecycle state.
+    for forbidden in (
+        "INSERT INTO transfers",
+        "UPDATE transfers",
+        "create_transfer",
+        "finalize_transfer",
+        "record_trust_asset_control_determination",
+    ):
+        assert forbidden not in packet_block

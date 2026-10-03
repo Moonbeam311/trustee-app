@@ -2787,16 +2787,229 @@ def generate_successor_trustee_pdf(trust, preview_context):
 
 
 
-def generate_packet_manifest_pdf(trust, preview_context):
+def _controlled_packet_pdf_escape(value):
+    return (
+        str(value if value is not None else "")
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def build_controlled_packet_schedule_a_documents(trust_id, firm_id):
+    """Derive prospective Schedule A attachments from canonical property facts.
+
+    This helper is read-only. It does not create a transfer, record trustee
+    acceptance, establish execution, record funding, or change property state.
+    """
+    from services.services_tr001_property_finalization import (
+        build_schedule_a_draft_text,
+        get_property_finalization_snapshot,
+    )
+
+    trust_key = str(trust_id or "").strip()
+    firm_key = str(firm_id or "").strip()
+
+    if not trust_key or not firm_key:
+        return []
+
+    schedule_documents = []
+
+    for property_row in get_properties_by_trust_id(trust_key):
+        property_data = dict(property_row)
+        property_id = str(
+            property_data.get("property_id") or ""
+        ).strip()
+
+        if not property_id:
+            continue
+
+        # Preserve exact active-firm scope. Do not silently cross firm scope.
+        if str(property_data.get("firm_id") or "").strip() != firm_key:
+            continue
+
+        snapshot = get_property_finalization_snapshot(
+            DB_PATH,
+            firm_key,
+            trust_key,
+            property_id,
+        )
+
+        rendered = build_schedule_a_draft_text(snapshot)
+        context = rendered.get("context") or {}
+
+        if (
+            context.get("schedule_a_draft_eligible") != "YES"
+            or context.get("output_status") != "DRAFT_PROSPECTIVE"
+            or context.get("legal_effect") != "NONE_INFERRED"
+            or not rendered.get("text")
+        ):
+            continue
+
+        schedule_documents.append({
+            "property_id": property_id,
+            "context": context,
+            "text": rendered["text"],
+        })
+
+    return sorted(
+        schedule_documents,
+        key=lambda item: str(item.get("property_id") or ""),
+    )
+
+
+def generate_prospective_schedule_a_pdf(
+    trust,
+    preview_context,
+    schedule_document,
+):
+    """Render a packet attachment without creating legal or lifecycle effect."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=LETTER)
     styles = getSampleStyleSheet()
-    title_style = styles["Title"]
-    header_style = styles["Heading2"]
+
+    title_style = ParagraphStyle(
+        "ProspectiveScheduleATitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=14,
+        leading=18,
+        alignment=1,
+        textColor=colors.HexColor("#111111"),
+        spaceAfter=8,
+    )
     body_style = styles["BodyText"]
+    heading_style = styles["Heading2"]
     story = []
 
-    add_universal_v3_letterhead(story, styles, preview_context, "Packet Manifest")
+    add_universal_v3_letterhead(
+        story,
+        styles,
+        preview_context,
+        "Schedule A / Asset Schedule",
+    )
+
+    context = schedule_document.get("context") or {}
+
+    story.append(
+        Paragraph(
+            "Schedule A / Asset Schedule",
+            title_style,
+        )
+    )
+    story.append(Spacer(1, 8))
+
+    story.append(
+        Paragraph(
+            "<b>Classification:</b> Conditional packet attachment; "
+            "not a formation document.",
+            body_style,
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Output Status:</b> DRAFT_PROSPECTIVE",
+            body_style,
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Legal Effect:</b> NONE_INFERRED",
+            body_style,
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Property ID:</b> "
+            + _controlled_packet_pdf_escape(
+                context.get("property_id")
+            ),
+            body_style,
+        )
+    )
+
+    story.append(Spacer(1, 8))
+
+    story.append(
+        Paragraph(
+            "This is a prospective administrative draft derived from "
+            "canonical property data. Its inclusion in this controlled "
+            "review packet does not by itself establish transfer, trustee "
+            "acceptance, execution, funding, title, custody, ownership, "
+            "or professional legal validation.",
+            body_style,
+        )
+    )
+
+    story.append(Spacer(1, 10))
+    story.append(
+        Paragraph(
+            "Recorded / Derived Boundary",
+            heading_style,
+        )
+    )
+
+    for label, key in (
+        ("Transfer Complete", "transfer_complete"),
+        (
+            "Trustee Acceptance Complete",
+            "trustee_acceptance_complete",
+        ),
+        ("Execution Complete", "execution_complete"),
+        ("Funding Complete", "funding_complete"),
+    ):
+        story.append(
+            Paragraph(
+                f"<b>{label}:</b> "
+                + _controlled_packet_pdf_escape(
+                    context.get(key) or "NO"
+                ),
+                body_style,
+            )
+        )
+
+    story.append(Spacer(1, 12))
+    story.append(
+        Paragraph(
+            "Prospective Schedule A Entry",
+            heading_style,
+        )
+    )
+
+    for raw_line in str(
+        schedule_document.get("text") or ""
+    ).splitlines():
+        if raw_line.strip():
+            story.append(
+                Paragraph(
+                    _controlled_packet_pdf_escape(raw_line),
+                    body_style,
+                )
+            )
+        else:
+            story.append(Spacer(1, 5))
+
+    doc.build(story)
+    buffer.seek(0)
+    return buffer
+
+
+def generate_packet_manifest_pdf(
+    trust,
+    preview_context,
+    schedule_a_documents=None,
+):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=LETTER)
+    styles = getSampleStyleSheet()
+    story = []
+
+    add_universal_v3_letterhead(
+        story,
+        styles,
+        preview_context,
+        "Packet Manifest",
+    )
 
     title_style = ParagraphStyle(
         "PacketManifestTitle",
@@ -2811,18 +3024,60 @@ def generate_packet_manifest_pdf(trust, preview_context):
 
     normal_style = styles["BodyText"]
 
-    trust_id = trust.get("trust_id") if isinstance(trust, dict) else trust["trust_id"]
-    trust_name = trust.get("trust_name") if isinstance(trust, dict) else trust["trust_name"]
+    trust_id = (
+        trust.get("trust_id")
+        if isinstance(trust, dict)
+        else trust["trust_id"]
+    )
+    trust_name = (
+        trust.get("trust_name")
+        if isinstance(trust, dict)
+        else trust["trust_name"]
+    )
 
-    story.append(Paragraph("Controlled Trust Packet Manifest", title_style))
+    story.append(
+        Paragraph(
+            "Controlled Trust Packet Manifest",
+            title_style,
+        )
+    )
     story.append(Spacer(1, 12))
-    story.append(Paragraph(f"<b>Trust ID:</b> {trust_id}", normal_style))
-    story.append(Paragraph(f"<b>Trust Name:</b> {trust_name}", normal_style))
-    story.append(Paragraph("<b>Packet Type:</b> Controlled Trust Packet Export", normal_style))
-    story.append(Paragraph("<b>Status:</b> Generated for review/testing under current export policy.", normal_style))
+    story.append(
+        Paragraph(
+            f"<b>Trust ID:</b> "
+            f"{_controlled_packet_pdf_escape(trust_id)}",
+            normal_style,
+        )
+    )
+    story.append(
+        Paragraph(
+            f"<b>Trust Name:</b> "
+            f"{_controlled_packet_pdf_escape(trust_name)}",
+            normal_style,
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Packet Type:</b> Controlled Trust Packet Export",
+            normal_style,
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Status:</b> Generated for review/testing under "
+            "current export policy.",
+            normal_style,
+        )
+    )
     story.append(Spacer(1, 12))
 
-    story.append(Paragraph("<b>Included Packet Records</b>", normal_style))
+    story.append(
+        Paragraph(
+            "<b>Included Packet Records</b>",
+            normal_style,
+        )
+    )
+
     included_items = [
         "Packet Manifest",
         "Trust Declaration / Summary",
@@ -2832,42 +3087,160 @@ def generate_packet_manifest_pdf(trust, preview_context):
         "Certificate / Registry Records where available",
     ]
 
+    for schedule_document in schedule_a_documents or []:
+        context = schedule_document.get("context") or {}
+        included_items.append(
+            "Schedule A / Asset Schedule — "
+            f"{context.get('property_id') or 'PROPERTY'} — "
+            "DRAFT_PROSPECTIVE / NONE_INFERRED "
+            "(conditional attachment; not a formation document)"
+        )
+
     for item in included_items:
-        story.append(Paragraph(f"• {item}", normal_style))
+        story.append(
+            Paragraph(
+                "• " + _controlled_packet_pdf_escape(item),
+                normal_style,
+            )
+        )
 
     story.append(Spacer(1, 12))
-    story.append(Paragraph(
-        "This manifest was generated by the Trustee App controlled packet export workflow.",
-        normal_style
-    ))
+    story.append(
+        Paragraph(
+            "This manifest was generated by the Trustee App "
+            "controlled packet export workflow.",
+            normal_style,
+        )
+    )
 
     doc.build(story)
     buffer.seek(0)
     return buffer
 
 
-def generate_controlled_trust_packet_zip(trust, preview_context):
+def generate_controlled_trust_packet_zip(
+    trust,
+    preview_context,
+    schedule_a_documents=None,
+):
     packet_buffer = BytesIO()
 
-    with zipfile.ZipFile(packet_buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+    schedule_a_documents = [
+        item
+        for item in (schedule_a_documents or [])
+        if (item.get("context") or {}).get("output_status")
+        == "DRAFT_PROSPECTIVE"
+        and (item.get("context") or {}).get("legal_effect")
+        == "NONE_INFERRED"
+        and (item.get("context") or {}).get(
+            "schedule_a_draft_eligible"
+        )
+        == "YES"
+        and item.get("text")
+    ]
+
+    with zipfile.ZipFile(
+        packet_buffer,
+        "w",
+        zipfile.ZIP_DEFLATED,
+    ) as zf:
         trust_id = preview_context.get("trust_id") or "TRUST"
 
         docs = [
-            (f"{trust_id}_Packet_Manifest.pdf", generate_packet_manifest_pdf(trust, preview_context)),
-            (f"{trust_id}_Declaration_of_Trust.pdf", generate_declaration_of_trust_pdf(trust, preview_context)),
-            (f"{trust_id}_Certificate_of_Trust.pdf", generate_certificate_of_trust_pdf(trust, preview_context)),
-            (f"{trust_id}_Articles_of_Trust.pdf", generate_articles_pdf(trust, preview_context)),
-            (f"{trust_id}_Trustee_Acceptance.pdf", generate_trustee_acceptance_pdf(trust, preview_context)),
-            (f"{trust_id}_General_Assignment.pdf", generate_general_assignment_pdf(trust, preview_context)),
-            (f"{trust_id}_Organizational_Minutes.pdf", generate_organizational_minutes_pdf(trust, preview_context)),
-            (f"{trust_id}_Successor_Trustee_Acceptance.pdf", generate_successor_trustee_pdf(trust, preview_context)),
+            (
+                f"{trust_id}_Packet_Manifest.pdf",
+                generate_packet_manifest_pdf(
+                    trust,
+                    preview_context,
+                    schedule_a_documents,
+                ),
+            ),
+            (
+                f"{trust_id}_Declaration_of_Trust.pdf",
+                generate_declaration_of_trust_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
+            (
+                f"{trust_id}_Certificate_of_Trust.pdf",
+                generate_certificate_of_trust_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
+            (
+                f"{trust_id}_Articles_of_Trust.pdf",
+                generate_articles_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
+            (
+                f"{trust_id}_Trustee_Acceptance.pdf",
+                generate_trustee_acceptance_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
+            (
+                f"{trust_id}_General_Assignment.pdf",
+                generate_general_assignment_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
+            (
+                f"{trust_id}_Organizational_Minutes.pdf",
+                generate_organizational_minutes_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
+            (
+                f"{trust_id}_Successor_Trustee_Acceptance.pdf",
+                generate_successor_trustee_pdf(
+                    trust,
+                    preview_context,
+                ),
+            ),
         ]
 
+        for schedule_document in schedule_a_documents:
+            context = schedule_document.get("context") or {}
+            property_id = str(
+                context.get("property_id") or "PROPERTY"
+            ).strip()
+            property_token = "".join(
+                character
+                if character.isalnum()
+                or character in "-_"
+                else "_"
+                for character in property_id
+            )
+
+            docs.append(
+                (
+                    f"{trust_id}_Schedule_A_"
+                    f"{property_token}_"
+                    "DRAFT_PROSPECTIVE.pdf",
+                    generate_prospective_schedule_a_pdf(
+                        trust,
+                        preview_context,
+                        schedule_document,
+                    ),
+                )
+            )
+
         for filename, pdf_buffer in docs:
-            zf.writestr(filename, pdf_buffer.getvalue())
+            zf.writestr(
+                filename,
+                pdf_buffer.getvalue(),
+            )
 
     packet_buffer.seek(0)
     return packet_buffer
+
 
 def get_support_doc_by_category(transfer, category_key):
     return TransferSupportDoc.query.filter_by(
@@ -16051,7 +16424,15 @@ def trust_controlled_packet_export(trust_id):
 
     # UNIVERSAL EXPORT MODE:
     # Packet readiness is advisory only. Export remains available for review/testing.
-    packet_buffer = generate_controlled_trust_packet_zip(trust, preview_context)
+    schedule_a_documents = build_controlled_packet_schedule_a_documents(
+        trust_id,
+        preview_context.get("firm_id"),
+    )
+    packet_buffer = generate_controlled_trust_packet_zip(
+        trust,
+        preview_context,
+        schedule_a_documents=schedule_a_documents,
+    )
     filename = f"{trust_id}_Controlled_Trust_Packet.zip"
 
     append_export_activity(
@@ -16079,12 +16460,17 @@ def trust_controlled_export_review(trust_id):
     preview_context = build_trust_preview_context(trust)
     document_readiness = build_trust_document_readiness(preview_context)
     packet_readiness = build_trust_packet_readiness(document_readiness)
+    schedule_a_documents = build_controlled_packet_schedule_a_documents(
+        trust_id,
+        preview_context.get("firm_id"),
+    )
     return render_template(
         "trust_controlled_export_review.html",
         trust=trust,
         preview_context=preview_context,
         document_readiness=document_readiness,
         packet_readiness=packet_readiness,
+        schedule_a_documents=schedule_a_documents,
     )
 
 

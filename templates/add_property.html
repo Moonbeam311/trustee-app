@@ -4,7 +4,7 @@
 <h2>Add Asset</h2>
 
 <form method="POST">
-  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="_csrf_token" value="{{ wtf_csrf_token() }}">
 
 
 <label>Trust</label>

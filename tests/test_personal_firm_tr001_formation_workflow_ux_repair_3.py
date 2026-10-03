@@ -135,3 +135,42 @@ def test_locked_completion_and_date_boundaries_are_unchanged():
     assert "governing_law or preview_context.jurisdiction" not in repaired
     assert "1990-02-21" not in repaired
     assert "signature_date" not in repaired
+
+
+def test_controlled_export_review_discloses_conditional_schedule_a_before_confirmation():
+    route = route_block(
+        "trust_controlled_export_review",
+        '@app.route("/trust/<trust_id>/packet-preview")',
+    )
+    review = template("trust_controlled_export_review.html")
+
+    assert "build_controlled_packet_schedule_a_documents" in route
+    assert "schedule_a_documents=schedule_a_documents" in route
+
+    assert "Conditional Packet Attachments" in review
+    assert "Schedule A / Asset Schedule" in review
+    assert "DRAFT_PROSPECTIVE" in review
+    assert "NONE_INFERRED" in review
+    assert "not a formation document" in review
+
+    assert "schedule_context.property_id" in review
+    assert "schedule_context.asset_name" in review
+    assert "schedule_context.transfer_complete" in review
+    assert "schedule_context.trustee_acceptance_complete" in review
+    assert "schedule_context.execution_complete" in review
+    assert "schedule_context.funding_complete" in review
+
+    assert (
+        "Inclusion in this controlled review packet does not itself establish"
+        in review
+    )
+
+    assert review.index("Conditional Packet Attachments") < review.index(
+        'type="checkbox"'
+    )
+
+    assert (
+        "including the seven formation documents and any conditional "
+        "prospective Schedule A attachments shown above"
+        in review
+    )

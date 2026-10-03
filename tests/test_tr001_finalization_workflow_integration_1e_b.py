@@ -24,12 +24,12 @@ def finalization_db(tmp_path):
         CREATE TABLE transfers(transfer_id TEXT PRIMARY KEY,property_id TEXT,trust_id TEXT,firm_id TEXT,status TEXT,assignment_confirmed INTEGER,transfer_complete INTEGER,trustee_decision TEXT,created_at TEXT);
         CREATE TABLE successor_acceptances(acceptance_id TEXT PRIMARY KEY,trust_id TEXT,firm_id TEXT,acceptance_status TEXT,recorded_at TEXT);
         CREATE TABLE trust_asset_control_determinations(asset_control_id TEXT PRIMARY KEY,firm_id TEXT,trust_id TEXT,asset_object_type TEXT,asset_object_id TEXT,related_transfer_id TEXT,funding_state TEXT,ownership_state TEXT,control_state TEXT,created_at TEXT);
-        CREATE TABLE trusts(trust_id TEXT PRIMARY KEY,firm_id TEXT,execution_status TEXT);
+        CREATE TABLE trusts(trust_id TEXT PRIMARY KEY,firm_id TEXT,execution_status TEXT,status TEXT);
         CREATE TABLE execution_tasks(task_id TEXT PRIMARY KEY,firm_id TEXT,trust_id TEXT,status TEXT);
         CREATE TABLE professional_review_issues(issue_id TEXT PRIMARY KEY,firm_id TEXT,status TEXT,disposition TEXT);
         CREATE TABLE generated_documents(document_id TEXT PRIMARY KEY,trust_id TEXT);
         INSERT INTO properties VALUES('P-ASE-2014','TR-001','F-1','2014 American Silver Eagle','proposed');
-        INSERT INTO trusts VALUES('TR-001','F-1','awaiting_execution');
+        INSERT INTO trusts VALUES('TR-001','F-1','awaiting_execution','Finalized');
         INSERT INTO property_attestations VALUES('A-P0','P-ASE-2014','TR-001','F-1','possession','physical possession','past','SET-1','settlor','personal knowledge','2026-01-01','recorded',NULL,'2026-01-01');
         INSERT INTO property_attestations VALUES('A-P1','P-ASE-2014','TR-001','F-1','possession','physical possession','present','SET-1','settlor','personal knowledge','2026-02-01','recorded','A-P0','2026-02-01');
         INSERT INTO property_attestations VALUES('A-O1','P-ASE-2014','TR-001','F-1','ownership','personal ownership','asserted','SET-1','settlor','personal knowledge','2026-02-01','recorded',NULL,'2026-02-01');
@@ -93,6 +93,23 @@ def test_facts_do_not_infer_transfer_acceptance_execution_or_funding(finalizatio
     assert value["execution_state"] == "awaiting_execution"
 
 
+def test_generic_trust_workflow_status_is_not_execution_evidence(finalization_db):
+    with sqlite3.connect(finalization_db) as con:
+        con.execute(
+            "UPDATE trusts SET execution_status=NULL, status='Finalized' "
+            "WHERE trust_id='TR-001'"
+        )
+
+    value = snap(finalization_db)
+
+    assert value["execution_state"] == "awaiting_execution"
+    assert value["execution_complete"] is False
+    assert {
+        "type": "DOCUMENT_EXECUTION",
+        "reason": "AWAITING_EXECUTION",
+    } in value["blocker_reasons"]
+
+
 def test_draft_schedule_a_exists_without_legal_effect(finalization_db):
     value = snap(finalization_db)
     context = value["schedule_a_draft_context"]
@@ -103,6 +120,7 @@ def test_draft_schedule_a_exists_without_legal_effect(finalization_db):
     rendered = build_schedule_a_draft_text(value)
     assert "Schedule A Entry" in rendered["text"]
     assert "2014 American Silver Eagle" in rendered["text"]
+    assert "Date Added:" not in rendered["text"]
     assert rendered["context"]["legal_effect"] == "NONE_INFERRED"
 
 

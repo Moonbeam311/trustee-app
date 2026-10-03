@@ -44,6 +44,67 @@
     </table>
   </div>
 
+  <div class="panel">
+    <h2>Conditional Packet Attachments</h2>
+
+    <p>
+      These attachments are separate from the seven formation documents above.
+      A Schedule A shown here is a prospective administrative draft only and is
+      not a formation document.
+    </p>
+
+    {% if schedule_a_documents %}
+      <p>
+        Only attachments classified
+        <strong>DRAFT_PROSPECTIVE</strong> /
+        <strong>NONE_INFERRED</strong>
+        are shown in this section.
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Attachment</th>
+            <th>Property</th>
+            <th>Output Status</th>
+            <th>Legal Effect</th>
+            <th>Lifecycle Boundary</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for schedule_document in schedule_a_documents %}
+            {% set schedule_context = schedule_document.context %}
+            <tr>
+              <td>Schedule A / Asset Schedule</td>
+              <td>
+                {{ schedule_context.property_id or "Not recorded" }}
+                {% if schedule_context.asset_name %}
+                  — {{ schedule_context.asset_name }}
+                {% endif %}
+              </td>
+              <td>{{ schedule_context.output_status }}</td>
+              <td>{{ schedule_context.legal_effect }}</td>
+              <td>
+                Transfer: {{ schedule_context.transfer_complete }};
+                Trustee Acceptance: {{ schedule_context.trustee_acceptance_complete }};
+                Execution: {{ schedule_context.execution_complete }};
+                Funding: {{ schedule_context.funding_complete }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <p>
+        Inclusion in this controlled review packet does not itself establish
+        transfer, trustee acceptance, execution, funding, title, custody,
+        ownership, or professional legal validation.
+      </p>
+    {% else %}
+      <p>No prospective Schedule A attachments are currently eligible for this packet.</p>
+    {% endif %}
+  </div>
+
   <div class="panel notice">
     <h2>Export Boundary</h2>
     <p>Export creates a controlled review packet.</p>
@@ -54,7 +115,7 @@
   </div>
 
   <form class="panel" method="get" action="{{ url_for('trust_controlled_packet_export', trust_id=preview_context.trust_id) }}">
-    <p><label><input type="checkbox" name="export_confirmation" value="confirmed" required> I have reviewed the packet contents and understand that export is not execution, funding, or professional legal validation.</label></p>
+    <p><label><input type="checkbox" name="export_confirmation" value="confirmed" required> I have reviewed the packet contents, including the seven formation documents and any conditional prospective Schedule A attachments shown above, and understand that export is not execution, funding, or professional legal validation.</label></p>
     <button type="submit">Confirm and Download Controlled Trust Packet (ZIP)</button>
   </form>
 

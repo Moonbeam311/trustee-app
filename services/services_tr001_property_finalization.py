@@ -138,17 +138,23 @@ def build_schedule_a_context(snapshot):
 
 
 def build_schedule_a_draft_text(snapshot):
-    """Call the established formatter without persistence or status promotion."""
-    from services.services_transfer import build_schedule_a_text
+    """Render a prospective Schedule A from canonical facts only.
 
+    Do not inject a runtime-generated "Date Added" value. A property event date
+    must come from a canonical record before it can appear as an asset fact.
+    """
     context = build_schedule_a_context(snapshot)
     if context["schedule_a_draft_eligible"] != "YES":
         return {"context": context, "text": None}
-    transfer = SimpleNamespace(
-        asset_name=context["asset_name"], asset_description=context["asset_description"],
-        estimated_value=context["estimated_value"], transfer_id=context["transfer_id"],
+
+    text = (
+        "Schedule A Entry\n"
+        f"Asset: {context['asset_name']}\n"
+        f"Description: {context['asset_description']}\n"
+        f"Estimated Value: {context['estimated_value']}\n"
+        f"Transfer ID: {context['transfer_id']}\n"
     )
-    return {"context": context, "text": build_schedule_a_text(transfer)}
+    return {"context": context, "text": text}
 
 
 def get_property_finalization_snapshot(
@@ -203,7 +209,13 @@ def get_property_finalization_snapshot(
 
         trust_rows = _rows(connection, "trusts", {"trust_id": trust_id, "firm_id": firm_id})
         trust = trust_rows[0] if trust_rows else None
-        execution_value = next((trust.get(k) for k in ("execution_status", "document_status", "status") if trust and trust.get(k) is not None), None)
+        # Generic trust.status is workflow metadata, not execution evidence.
+        # Never allow values such as "Finalized" to imply document execution.
+        execution_value = (
+            trust.get("execution_status")
+            if trust and str(trust.get("execution_status") or "").strip()
+            else ("awaiting_execution" if trust else None)
+        )
         execution_complete = str(execution_value or "").upper() in {"EXECUTED", "EXECUTION_COMPLETE"}
 
         scope = {"firm_id": firm_id, "trust_id": trust_id}
