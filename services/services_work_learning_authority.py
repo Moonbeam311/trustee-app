@@ -50,6 +50,14 @@ def _claim(program_id,claim_id):
  if not r: raise ValueError('claim_not_available_in_context')
  return r
 
+def _evidence(program_id,evidence_id,require_current=False):
+ r=_one('SELECT * FROM hub_program_authority_evidence WHERE evidence_id=? AND program_id=?',(evidence_id,program_id))
+ if not r: raise ValueError('evidence_not_available_in_context')
+ if require_current:
+  successor=_one('SELECT evidence_id FROM hub_program_authority_evidence WHERE program_id=? AND prior_evidence_id=? LIMIT 1',(program_id,evidence_id))
+  if successor: raise ValueError('evidence_not_current')
+ return r
+
 def record_evidence_sufficiency_assessment(*,program_id,firm_id,issue_id,claim_id,
  target_use,sufficiency_state,evidence_ids=None,verification_ids=None,basis=None,
  provenance=None,decision_origin,human_confirmed,actor,actor_capacity,
@@ -65,14 +73,14 @@ def record_evidence_sufficiency_assessment(*,program_id,firm_id,issue_id,claim_i
  if claim['issue_id']!=issue_id: raise ValueError('claim_issue_mismatch')
  evidence_ids=list(dict.fromkeys(evidence_ids or [])); verification_ids=list(dict.fromkeys(verification_ids or []))
  for evidence_id in evidence_ids:
-  evidence=_one('SELECT evidence_id,program_id,claim_id FROM hub_program_authority_evidence WHERE evidence_id=?',(evidence_id,))
-  if not evidence or evidence['program_id']!=program_id or evidence['claim_id']!=claim_id: raise ValueError('evidence_not_available_in_context')
+  evidence=_evidence(program_id,evidence_id,require_current=True)
+  if evidence['claim_id']!=claim_id: raise ValueError('evidence_not_available_in_context')
  for verification_id in verification_ids:
   verification=_one('SELECT verification_id,program_id,claim_id,evidence_id FROM hub_program_authority_verifications WHERE verification_id=?',(verification_id,))
   if not verification or verification['program_id']!=program_id or verification.get('claim_id') not in (None,claim_id): raise ValueError('verification_not_available_in_context')
   if verification.get('evidence_id'):
-   linked=_one('SELECT program_id,claim_id FROM hub_program_authority_evidence WHERE evidence_id=?',(verification['evidence_id'],))
-   if not linked or linked['program_id']!=program_id or linked['claim_id']!=claim_id: raise ValueError('verification_not_available_in_context')
+   linked=_evidence(program_id,verification['evidence_id'],require_current=True)
+   if linked['claim_id']!=claim_id: raise ValueError('verification_not_available_in_context')
  if decision_origin=='SYSTEM_SUGGESTED' and sufficiency_state!='UNRESOLVED': raise ValueError('machine_sufficiency_finalization_prohibited')
  if sufficiency_state in ('SUFFICIENT','INSUFFICIENT') and (decision_origin not in ('OPERATOR_OR_FIDUCIARY','PROFESSIONAL') or not human_confirmed): raise ValueError('sufficiency_requires_human_confirmation')
  if sufficiency_state=='SUFFICIENT' and not evidence_ids: raise ValueError('sufficient_requires_evidence')
@@ -254,19 +262,31 @@ def record_authority_relationship(*,program_id,workspace_id,firm_id,owner_id,iss
 def create_claim(*,program_id,workspace_id,firm_id,owner_id,issue_id,proposition,created_by):
  _scope(program_id=program_id,workspace_id=workspace_id,firm_id=firm_id,owner_id=owner_id); _issue(program_id,issue_id); cid=_id('CLM'); _insert('hub_program_authority_claims',('claim_id','program_id','issue_id','proposition','created_by','created_at'),(cid,program_id,issue_id,_required(proposition,'claim_proposition_required'),_required(created_by,'actor_required'),_now())); return cid
 
-def add_claim_evidence(*,program_id,workspace_id,firm_id,owner_id,claim_id,source_reference_id,relationship_type,presentation_type,evidence_basis,provenance,actor,actor_capacity,source_locator=None):
+def add_claim_evidence(*,program_id,workspace_id,firm_id,owner_id,claim_id,source_reference_id,relationship_type,presentation_type,evidence_basis,provenance,actor,actor_capacity,source_locator=None,prior_evidence_id=None):
  _scope(program_id=program_id,workspace_id=workspace_id,firm_id=firm_id,owner_id=owner_id); claim=_claim(program_id,claim_id); _source(program_id,source_reference_id,claim['issue_id'])
  if relationship_type not in EVIDENCE_RELATIONSHIPS: raise ValueError('invalid_evidence_relationship')
  if presentation_type not in PRESENTATION_TYPES: raise ValueError('invalid_presentation_type')
- eid=_id('EVD'); _insert('hub_program_authority_evidence',('evidence_id','program_id','claim_id','source_reference_id','relationship_type','presentation_type','source_locator','evidence_basis','provenance','actor','actor_capacity','created_at'),(eid,program_id,claim_id,source_reference_id,relationship_type,presentation_type,(source_locator or '').strip() or None,_required(evidence_basis,'evidence_basis_required'),_required(provenance,'provenance_required'),_required(actor,'actor_required'),_required(actor_capacity,'actor_capacity_required'),_now())); return eid
+ if prior_evidence_id:
+  prior=_evidence(program_id,prior_evidence_id)
+  if prior['claim_id']!=claim_id or prior['source_reference_id']!=source_reference_id:
+   raise ValueError('prior_evidence_not_available_in_context')
+  successor=_one('SELECT evidence_id FROM hub_program_authority_evidence WHERE program_id=? AND prior_evidence_id=? LIMIT 1',(program_id,prior_evidence_id))
+  if successor: raise ValueError('prior_evidence_not_current')
+ eid=_id('EVD')
+ try:
+  _insert('hub_program_authority_evidence',('evidence_id','program_id','claim_id','source_reference_id','relationship_type','presentation_type','source_locator','evidence_basis','provenance','actor','actor_capacity','prior_evidence_id','created_at'),(eid,program_id,claim_id,source_reference_id,relationship_type,presentation_type,(source_locator or '').strip() or None,_required(evidence_basis,'evidence_basis_required'),_required(provenance,'provenance_required'),_required(actor,'actor_required'),_required(actor_capacity,'actor_capacity_required'),prior_evidence_id,_now()))
+ except sqlite3.IntegrityError as exc:
+  if prior_evidence_id and exc.sqlite_errorcode==sqlite3.SQLITE_CONSTRAINT_UNIQUE and str(exc)=='UNIQUE constraint failed: hub_program_authority_evidence.prior_evidence_id':
+   raise ValueError('prior_evidence_not_current') from exc
+  raise
+ return eid
 
 def record_verification(*,program_id,workspace_id,firm_id,owner_id,dimension,result_state,verification_basis,provenance,decision_origin,finalized,actor,actor_capacity,claim_id=None,evidence_id=None,source_reference_id=None,classification_id=None,direct_source_comparison=None,objective_evidence=None,professional_authority=None):
  _scope(program_id=program_id,workspace_id=workspace_id,firm_id=firm_id,owner_id=owner_id)
  if dimension not in VERIFICATION_DIMENSIONS: raise ValueError('invalid_verification_dimension')
  if result_state not in VERIFICATION_COMPATIBILITY[dimension]: raise ValueError('incompatible_verification_result')
  if decision_origin not in DECISION_ORIGINS: raise ValueError('invalid_decision_origin')
- claim=_claim(program_id,claim_id) if claim_id else None; evidence=_one('SELECT * FROM hub_program_authority_evidence WHERE evidence_id=? AND program_id=?',(evidence_id,program_id)) if evidence_id else None
- if evidence_id and not evidence: raise ValueError('evidence_not_available_in_context')
+ claim=_claim(program_id,claim_id) if claim_id else None; evidence=_evidence(program_id,evidence_id,require_current=True) if evidence_id else None
  if dimension in ('SOURCE_IDENTITY_VERIFIED','SOURCE_TEXT_VERIFIED','CITATION_VERIFIED'):
   if not source_reference_id: raise ValueError('source_context_required')
   _source(program_id,source_reference_id)
@@ -291,8 +311,8 @@ def record_verification(*,program_id,workspace_id,firm_id,owner_id,dimension,res
 
 def record_review(*,program_id,workspace_id,firm_id,owner_id,claim_id,supporting_source_reference_id,review_state,review_lane,resolution_basis,provenance,actor,actor_capacity,evidence_id=None,prior_review_id=None,authority_relationship_id=None,professional_authority=None,machine_generated=False):
  _scope(program_id=program_id,workspace_id=workspace_id,firm_id=firm_id,owner_id=owner_id); claim=_claim(program_id,claim_id); _source(program_id,supporting_source_reference_id,claim['issue_id'])
- evidence=_one('SELECT * FROM hub_program_authority_evidence WHERE evidence_id=? AND program_id=?',(evidence_id,program_id)) if evidence_id else None
- if evidence_id and (not evidence or evidence['claim_id']!=claim_id or evidence['source_reference_id']!=supporting_source_reference_id): raise ValueError('evidence_claim_relationship_mismatch')
+ evidence=_evidence(program_id,evidence_id,require_current=True) if evidence_id else None
+ if evidence_id and (evidence['claim_id']!=claim_id or evidence['source_reference_id']!=supporting_source_reference_id): raise ValueError('evidence_claim_relationship_mismatch')
  if prior_review_id:
   prior=_one('SELECT * FROM hub_program_authority_reviews WHERE review_id=? AND program_id=?',(prior_review_id,program_id))
   if not prior or prior['claim_id']!=claim_id: raise ValueError('prior_review_claim_mismatch')
@@ -325,8 +345,12 @@ def record_determination(*,program_id,workspace_id,firm_id,owner_id,claim_id,det
   if not separator: record_id=declared
   prefix=record_id.split('-',1)[0]
   if prefix not in tables or (separator and declared!=prefix): raise ValueError('invalid_determination_backtrace')
-  table,key=tables[prefix]; row=_one(f'SELECT * FROM {table} WHERE {key}=? AND program_id=?',(record_id,program_id))
-  if not row: raise ValueError('invalid_determination_backtrace')
+  table,key=tables[prefix]
+  if prefix=='EVD':
+   row=_evidence(program_id,record_id,require_current=True)
+  else:
+   row=_one(f'SELECT * FROM {table} WHERE {key}=? AND program_id=?',(record_id,program_id))
+   if not row: raise ValueError('invalid_determination_backtrace')
   rows[prefix][record_id]=row; normalized.append(record_id)
  evidence_sources=set()
  for evidence_row in rows['EVD'].values():
@@ -347,8 +371,8 @@ def record_determination(*,program_id,workspace_id,firm_id,owner_id,claim_id,det
   if verification['claim_id'] is not None and verification['claim_id']!=claim_id: raise ValueError('invalid_determination_backtrace')
   source_id=verification['source_reference_id']; evidence_row=None
   if verification['evidence_id']:
-   evidence_row=_one('SELECT * FROM hub_program_authority_evidence WHERE evidence_id=? AND program_id=?',(verification['evidence_id'],program_id))
-   if not evidence_row or evidence_row['claim_id']!=claim_id or evidence_row['source_reference_id']!=source_id: raise ValueError('invalid_determination_backtrace')
+   evidence_row=_evidence(program_id,verification['evidence_id'],require_current=True)
+   if evidence_row['claim_id']!=claim_id or evidence_row['source_reference_id']!=source_id: raise ValueError('invalid_determination_backtrace')
   if verification['dimension']=='CLAIM_SUPPORT_VERIFIED':
    if verification['claim_id']!=claim_id or not evidence_row or source_id not in evidence_sources: raise ValueError('invalid_determination_backtrace')
   elif verification['dimension'] in ('SOURCE_IDENTITY_VERIFIED','SOURCE_TEXT_VERIFIED','CITATION_VERIFIED'):
@@ -361,8 +385,8 @@ def record_determination(*,program_id,workspace_id,firm_id,owner_id,claim_id,det
   source_id=review['supporting_source_reference_id']
   if review['claim_id']!=claim_id or source_id not in evidence_sources: raise ValueError('invalid_determination_backtrace')
   if review['evidence_id']:
-   evidence_row=_one('SELECT * FROM hub_program_authority_evidence WHERE evidence_id=? AND program_id=?',(review['evidence_id'],program_id))
-   if not evidence_row or evidence_row['claim_id']!=claim_id or evidence_row['source_reference_id']!=source_id: raise ValueError('invalid_determination_backtrace')
+   evidence_row=_evidence(program_id,review['evidence_id'],require_current=True)
+   if evidence_row['claim_id']!=claim_id or evidence_row['source_reference_id']!=source_id: raise ValueError('invalid_determination_backtrace')
   if review['authority_relationship_id']:
    relationship=rows['REL'].get(review['authority_relationship_id'])
    if not relationship or relationship['source_reference_id']!=source_id or not connected_relationship(relationship): raise ValueError('invalid_determination_backtrace')
@@ -373,4 +397,10 @@ def record_determination(*,program_id,workspace_id,firm_id,owner_id,claim_id,det
 def get_program_authority_read_model(*,program_id,workspace_id,firm_id,owner_id):
  program=_scope(program_id=program_id,workspace_id=workspace_id,firm_id=firm_id,owner_id=owner_id); c=get_connection(); c.row_factory=sqlite3.Row
  def rows(sql): return [dict(r) for r in c.execute(sql,(program_id,)).fetchall()]
- model={'program':program,'issues':rows('SELECT * FROM hub_program_issues WHERE program_id=? ORDER BY created_at'),'sources':rows('SELECT * FROM hub_program_source_references WHERE program_id=? ORDER BY created_at'),'classifications':rows('SELECT * FROM hub_program_authority_classifications WHERE program_id=? ORDER BY created_at'),'relationships':rows('SELECT * FROM hub_program_authority_relationships WHERE program_id=? ORDER BY created_at'),'claims':rows('SELECT * FROM hub_program_authority_claims WHERE program_id=? ORDER BY created_at'),'evidence':rows('SELECT * FROM hub_program_authority_evidence WHERE program_id=? ORDER BY created_at'),'verifications':rows('SELECT * FROM hub_program_authority_verifications WHERE program_id=? ORDER BY created_at'),'reviews':rows('SELECT * FROM hub_program_authority_reviews WHERE program_id=? ORDER BY created_at'),'determinations':rows('SELECT * FROM hub_program_authority_determinations WHERE program_id=? ORDER BY created_at')}; c.close(); return model
+ evidence=rows('SELECT * FROM hub_program_authority_evidence WHERE program_id=? ORDER BY created_at')
+ successor_by_prior={e['prior_evidence_id']:e['evidence_id'] for e in evidence if e.get('prior_evidence_id')}
+ for e in evidence:
+  e['superseded_by_evidence_id']=successor_by_prior.get(e['evidence_id'])
+  e['is_current']=e['superseded_by_evidence_id'] is None
+ current_evidence=[e for e in evidence if e['is_current']]
+ model={'program':program,'issues':rows('SELECT * FROM hub_program_issues WHERE program_id=? ORDER BY created_at'),'sources':rows('SELECT * FROM hub_program_source_references WHERE program_id=? ORDER BY created_at'),'classifications':rows('SELECT * FROM hub_program_authority_classifications WHERE program_id=? ORDER BY created_at'),'relationships':rows('SELECT * FROM hub_program_authority_relationships WHERE program_id=? ORDER BY created_at'),'claims':rows('SELECT * FROM hub_program_authority_claims WHERE program_id=? ORDER BY created_at'),'evidence':evidence,'current_evidence':current_evidence,'verifications':rows('SELECT * FROM hub_program_authority_verifications WHERE program_id=? ORDER BY created_at'),'reviews':rows('SELECT * FROM hub_program_authority_reviews WHERE program_id=? ORDER BY created_at'),'determinations':rows('SELECT * FROM hub_program_authority_determinations WHERE program_id=? ORDER BY created_at')}; c.close(); return model

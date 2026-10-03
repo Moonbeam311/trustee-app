@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 from unittest.mock import patch
 import pytest
+import database.migrations_work_learning_authority as p09_migration
 from database.migrations_work_learning_authority import TABLES,apply_work_learning_authority_schema
 import services.services_work_learning_authority as p09
 
@@ -84,6 +85,18 @@ def test_evidence_many_to_many_and_append_only(env):
  assert len(ids)==3
  c=sqlite3.connect(path); assert c.execute('select count(distinct claim_id),count(distinct source_reference_id) from hub_program_authority_evidence').fetchone()==(2,2)
  with pytest.raises(sqlite3.IntegrityError): c.execute('update hub_program_authority_evidence set evidence_basis=evidence_basis')
+ c.rollback(); c.close()
+
+def test_evidence_revision_chain_no_branching_and_context_match(env):
+ path,s=env; clm=claim(s); other=claim(s); first=evidence(s,clm); second=evidence(s,clm,prior_evidence_id=first); third=evidence(s,clm,prior_evidence_id=second)
+ assert len({first,second,third})==3
+ with pytest.raises(ValueError,match='not_current'): evidence(s,clm,prior_evidence_id=first)
+ with pytest.raises(ValueError,match='not_available_in_context'): evidence(s,other,prior_evidence_id=third)
+ with pytest.raises(ValueError,match='not_available_in_context'): evidence(s,clm,source='S2',prior_evidence_id=third)
+ c=sqlite3.connect(path)
+ assert c.execute('select evidence_id,prior_evidence_id from hub_program_authority_evidence where evidence_id in (?,?,?) order by created_at,evidence_id',(first,second,third)).fetchall()==[(first,None),(second,first),(third,second)]
+ with pytest.raises(sqlite3.IntegrityError):
+  c.execute("insert into hub_program_authority_evidence values('EVD-BRANCH','P1',?,'S1','DIRECT_SUPPORT','SUMMARY',NULL,'basis','prov','a','Trustee',?,'now')",(clm,second))
  c.rollback(); c.close()
 
 def verify(s,**kw):
@@ -175,8 +188,62 @@ def test_determination_rejects_disconnected_verification_and_review_nodes(env):
  c.execute("INSERT INTO hub_program_authority_reviews VALUES('REVW-HIDDEN','P1',?,?,NULL,?,'UNRESOLVED','OPERATOR_OR_FIDUCIARY_REVIEW','basis','prov','S1','a','Trustee',NULL,0,'now')",(clm,ev,rel)); c.commit(); c.close()
  with pytest.raises(ValueError,match='backtrace'): determine(s,clm,[ev,cid,'REVW-HIDDEN',rel.replace('REL-','REL-MISSING-')])
 
+def test_superseded_evidence_rejected_but_historical_downstream_is_readable(env):
+ _,s=env; clm=claim(s); old=evidence(s,clm); cid=classify(s); rel=relationship(s,cid,clm)
+ old_ver=verify(s,dimension='CLAIM_SUPPORT_VERIFIED',result_state='CLAIM_SUPPORT_VERIFIED',claim_id=clm,evidence_id=old)
+ old_review=p09.record_review(**s,claim_id=clm,evidence_id=old,authority_relationship_id=rel,supporting_source_reference_id='S1',review_state='UNRESOLVED',review_lane='OPERATOR_OR_FIDUCIARY_REVIEW',resolution_basis='basis',provenance='prov',actor='a',actor_capacity='Trustee')
+ old_det=determine(s,clm,[old,cid,rel,old_ver,old_review])
+ current=evidence(s,clm,prior_evidence_id=old)
+ with pytest.raises(ValueError,match='evidence_not_current'): verify(s,dimension='CLAIM_SUPPORT_VERIFIED',result_state='CLAIM_SUPPORT_VERIFIED',claim_id=clm,evidence_id=old)
+ with pytest.raises(ValueError,match='evidence_not_current'): p09.record_review(**s,claim_id=clm,evidence_id=old,supporting_source_reference_id='S1',review_state='UNRESOLVED',review_lane='OPERATOR_OR_FIDUCIARY_REVIEW',resolution_basis='basis',provenance='prov',actor='a',actor_capacity='Trustee')
+ with pytest.raises(ValueError,match='evidence_not_current'): determine(s,clm,[old,cid,rel])
+ model=p09.get_program_authority_read_model(**s)
+ history={row['evidence_id']:row for row in model['evidence']}
+ assert set(history)=={old,current}
+ assert history[old]['prior_evidence_id'] is None and history[old]['superseded_by_evidence_id']==current and history[old]['is_current'] is False
+ assert history[current]['prior_evidence_id']==old and history[current]['superseded_by_evidence_id'] is None and history[current]['is_current'] is True
+ assert [row['evidence_id'] for row in model['current_evidence']]==[current]
+ assert old_ver in {row['verification_id'] for row in model['verifications']}
+ assert old_review in {row['review_id'] for row in model['reviews']}
+ assert old_det in {row['determination_id'] for row in model['determinations']}
+
 def test_migration_idempotent_empty_no_permissions(env):
  path,_=env; apply_work_learning_authority_schema(path); c=sqlite3.connect(path); assert all(c.execute(f'select count(*) from {t}').fetchone()[0]==0 for t in TABLES); c.close()
+
+def test_fresh_and_legacy_evidence_revision_migration_is_idempotent(tmp_path):
+ fresh=tmp_path/'fresh.db'; apply_work_learning_authority_schema(fresh)
+ c=sqlite3.connect(fresh)
+ assert 'prior_evidence_id' in {row[1] for row in c.execute('pragma table_info(hub_program_authority_evidence)')}
+ c.execute("insert into hub_program_authority_evidence values('EVD-R1','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c',NULL,'now')")
+ c.execute("insert into hub_program_authority_evidence values('EVD-R2','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c',NULL,'now')")
+ c.execute("insert into hub_program_authority_evidence values('EVD-S1','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c','EVD-R1','now')")
+ c.commit(); c.close(); apply_work_learning_authority_schema(fresh); c=sqlite3.connect(fresh)
+ assert c.execute('select count(*) from hub_program_authority_evidence where prior_evidence_id is null').fetchone()==(2,)
+ with pytest.raises(sqlite3.IntegrityError): c.execute("insert into hub_program_authority_evidence values('EVD-S2','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c','EVD-R1','now')")
+ c.rollback(); c.close()
+ legacy=tmp_path/'legacy.db'; c=sqlite3.connect(legacy)
+ c.execute("create table hub_program_authority_evidence(evidence_id text primary key,program_id text not null,claim_id text not null,source_reference_id text not null,relationship_type text not null,presentation_type text not null,source_locator text,evidence_basis text not null,provenance text not null,actor text not null,actor_capacity text not null,created_at text not null)")
+ c.execute("insert into hub_program_authority_evidence values('EVD-LEGACY','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c','now')"); c.commit(); c.close()
+ apply_work_learning_authority_schema(legacy); c=sqlite3.connect(legacy)
+ assert c.execute("select prior_evidence_id from hub_program_authority_evidence where evidence_id='EVD-LEGACY'").fetchone()==(None,)
+ c.execute("insert into hub_program_authority_evidence values('EVD-LEGACY-ROOT','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c','now',NULL)")
+ c.execute("insert into hub_program_authority_evidence values('EVD-LEGACY-NEXT','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c','now','EVD-LEGACY')")
+ c.commit(); c.close(); apply_work_learning_authority_schema(legacy); c=sqlite3.connect(legacy)
+ assert c.execute('select count(*) from hub_program_authority_evidence where prior_evidence_id is null').fetchone()==(2,)
+ with pytest.raises(sqlite3.IntegrityError): c.execute("insert into hub_program_authority_evidence values('EVD-LEGACY-BRANCH','P','C','S','DIRECT_SUPPORT','SUMMARY',NULL,'b','p','a','c','now','EVD-LEGACY')")
+ c.rollback(); c.close()
+
+def test_migration_failure_rolls_back_fully_and_retry_succeeds(tmp_path,monkeypatch):
+ path=tmp_path/'rollback.db'; original=p09_migration._execute_statements
+ def fail_after_partial_schema(connection,script):
+  connection.execute('create table migration_partial(id text)')
+  raise sqlite3.OperationalError('forced migration failure')
+ monkeypatch.setattr(p09_migration,'_execute_statements',fail_after_partial_schema)
+ with pytest.raises(p09_migration.WorkLearningAuthorityMigrationError,match='forced migration failure'): apply_work_learning_authority_schema(path)
+ c=sqlite3.connect(path); assert c.execute("select name from sqlite_master where type='table'").fetchall()==[]; c.close()
+ monkeypatch.setattr(p09_migration,'_execute_statements',original)
+ assert apply_work_learning_authority_schema(path)['schema_complete'] is True
+ c=sqlite3.connect(path); assert set(TABLES).issubset({row[0] for row in c.execute("select name from sqlite_master where type='table'")}); c.close()
 
 def test_route_role_scope_and_human_origin_contract():
  app_source=Path('app.py').read_text(encoding='utf-8')
@@ -192,3 +259,47 @@ def test_route_role_scope_and_human_origin_contract():
  assert 'decision_origin="OPERATOR_OR_FIDUCIARY"' in route
  assert 'machine_generated=False' in route
  assert '_workspace_program_context(workspace_id, program_id)' in route
+
+
+def test_authority_template_issue_selectors_show_identity_type_and_status():
+    from pathlib import Path
+
+    template = Path("templates/workspace_program_authority.html").read_text(
+        encoding="utf-8"
+    )
+
+    assert "macro select_issues(name,rows)" in template
+    assert "{{ x['issue_id'] }}" in template
+    assert "{{ x['issue_type'] | replace('_', ' ') | title }}" in template
+    assert "{{ x['status'] | upper }}" in template
+    assert template.count("select_issues('issue_id',model.issues)") == 3
+    assert "select_rows('issue_id',model.issues,'issue_id','statement')" not in template
+
+
+def test_determination_template_uses_current_evidence_and_preserves_backtrace_contract():
+    template = Path("templates/workspace_program_authority.html").read_text(
+        encoding="utf-8"
+    )
+    section = template[template.index('<h2>7. Determination</h2>') :]
+
+    assert "{% for x in model.current_evidence %}" in section
+    assert "{% for x in model.evidence %}" not in section
+    assert "Only CURRENT evidence may support a new determination." in section
+    for rows, identifier, prefix in (
+        ("current_evidence", "evidence_id", "EVD"),
+        ("classifications", "classification_id", "CLS"),
+        ("relationships", "relationship_id", "REL"),
+        ("verifications", "verification_id", "VER"),
+        ("reviews", "review_id", "REVW"),
+        ("determinations", "determination_id", "DET"),
+    ):
+        assert f"{{% for x in model.{rows} %}}" in section
+        assert f'value="{{{{ x.{identifier} }}}}">{prefix}' in section
+    assert '<select id="determination-backtrace" multiple required' in section
+    assert '<input type="hidden" name="backtrace"' in section
+    assert ".selectedOptions" in section
+    assert ".join(',')" in section
+
+    history = template[: template.index('<h2>7. Determination</h2>')]
+    assert "{% for e in model.evidence if e.claim_id==c.claim_id %}" in history
+    assert "HISTORICAL" in history

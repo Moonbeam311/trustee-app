@@ -21,7 +21,7 @@ def wave3_database(monkeypatch, tmp_path):
     CREATE TABLE hub_programs (program_id TEXT PRIMARY KEY, workspace_id TEXT, firm_id TEXT, owner_id TEXT);
     CREATE TABLE hub_program_issues (issue_id TEXT PRIMARY KEY, program_id TEXT);
     CREATE TABLE hub_program_authority_claims (claim_id TEXT PRIMARY KEY, program_id TEXT, issue_id TEXT);
-    CREATE TABLE hub_program_authority_evidence (evidence_id TEXT PRIMARY KEY, program_id TEXT, claim_id TEXT);
+    CREATE TABLE hub_program_authority_evidence (evidence_id TEXT PRIMARY KEY, program_id TEXT, claim_id TEXT, prior_evidence_id TEXT);
     CREATE TABLE hub_program_authority_verifications (verification_id TEXT PRIMARY KEY, program_id TEXT, claim_id TEXT, evidence_id TEXT);
     CREATE TABLE fiduciaries (fiduciary_id TEXT PRIMARY KEY, firm_id TEXT, trust_id TEXT);
     CREATE TABLE successor_acceptances (acceptance_id TEXT PRIMARY KEY, firm_id TEXT, trust_id TEXT, fiduciary_id TEXT);
@@ -37,7 +37,7 @@ def wave3_database(monkeypatch, tmp_path):
     connection.execute("INSERT INTO hub_programs VALUES ('PRG-A','WS-A','FIRM-A','OWNER-A')")
     connection.execute("INSERT INTO hub_program_issues VALUES ('ISS-A','PRG-A')")
     connection.execute("INSERT INTO hub_program_authority_claims VALUES ('CLM-A','PRG-A','ISS-A')")
-    connection.execute("INSERT INTO hub_program_authority_evidence VALUES ('EVD-A','PRG-A','CLM-A')")
+    connection.execute("INSERT INTO hub_program_authority_evidence VALUES ('EVD-A','PRG-A','CLM-A',NULL)")
     connection.execute("INSERT INTO hub_program_authority_verifications VALUES ('VER-A','PRG-A','CLM-A','EVD-A')")
     connection.execute("INSERT INTO fiduciaries VALUES ('FID-A','FIRM-A','TR-A')")
     connection.execute("INSERT INTO successor_acceptances VALUES ('ACC-A','FIRM-A','TR-A','FID-A')")
@@ -107,6 +107,15 @@ def test_sufficiency_never_follows_evidence_or_verification_automatically(wave3_
         authority.record_evidence_sufficiency_assessment(program_id="PRG-A",firm_id="FIRM-A",issue_id="ISS-A",claim_id="CLM-A",target_use="RESEARCH",sufficiency_state="SUFFICIENT",decision_origin="PROFESSIONAL",human_confirmed=True,actor="lawyer",actor_capacity="professional")
     sid = authority.record_evidence_sufficiency_assessment(program_id="PRG-A",firm_id="FIRM-A",issue_id="ISS-A",claim_id="CLM-A",target_use="FINALIZATION",sufficiency_state="SUFFICIENT",evidence_ids=["EVD-A"],verification_ids=["VER-A"],basis="reviewed",provenance="professional review",decision_origin="PROFESSIONAL",human_confirmed=True,actor="lawyer",actor_capacity="professional")
     assert authority.get_evidence_sufficiency_assessment(sid)["sufficiency_state"] == "SUFFICIENT"
+    connection = sqlite3.connect(wave3_database)
+    connection.execute("INSERT INTO hub_program_authority_evidence VALUES ('EVD-B','PRG-A','CLM-A','EVD-A')")
+    connection.commit(); connection.close()
+    with pytest.raises(ValueError, match="evidence_not_current"):
+        authority.record_evidence_sufficiency_assessment(program_id="PRG-A",firm_id="FIRM-A",issue_id="ISS-A",claim_id="CLM-A",target_use="FINALIZATION",sufficiency_state="SUFFICIENT",evidence_ids=["EVD-A"],basis="reviewed",provenance="professional review",decision_origin="PROFESSIONAL",human_confirmed=True,actor="lawyer",actor_capacity="professional")
+    with pytest.raises(ValueError, match="evidence_not_current"):
+        authority.record_evidence_sufficiency_assessment(program_id="PRG-A",firm_id="FIRM-A",issue_id="ISS-A",claim_id="CLM-A",target_use="FINALIZATION",sufficiency_state="SUFFICIENT",evidence_ids=["EVD-B"],verification_ids=["VER-A"],basis="reviewed",provenance="professional review",decision_origin="PROFESSIONAL",human_confirmed=True,actor="lawyer",actor_capacity="professional")
+    assert authority.get_evidence_sufficiency_assessment(sid)["evidence_ids_json"] == '["EVD-A"]'
+    assert [row["sufficiency_id"] for row in authority.get_evidence_sufficiency_history(program_id="PRG-A",firm_id="FIRM-A",issue_id="ISS-A",claim_id="CLM-A",target_use="FINALIZATION")] == [sid]
 
 
 def test_lifecycle_is_separate_latest_only_and_does_not_mutate_sources(wave3_database):
