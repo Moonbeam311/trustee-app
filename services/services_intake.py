@@ -2945,14 +2945,58 @@ def get_intake_followup_task_counts():
     conn = get_connection()
     cur = conn.cursor()
 
+    reconciliation_table_exists = cur.execute("""
+        SELECT 1 FROM sqlite_master
+        WHERE type = 'table'
+          AND name = 'intake_followup_reconciliations'
+    """).fetchone() is not None
+
+    lifecycle_table_exists = cur.execute("""
+        SELECT 1 FROM sqlite_master
+        WHERE type = 'table'
+          AND name = 'intake_followup_task_lifecycle_events'
+    """).fetchone() is not None
+
+    reconciliation_filter = ""
+    retirement_filter = ""
+
+    if reconciliation_table_exists:
+        reconciliation_filter = """
+            AND NOT EXISTS (
+                SELECT 1
+                FROM intake_followup_reconciliations r
+                WHERE r.superseded_followup_task_id = t.id
+                  AND r.firm_id = t.firm_id
+                  AND r.intake_id = t.intake_id
+            )
+        """
+
+    if lifecycle_table_exists:
+        retirement_filter = """
+            AND COALESCE((
+                SELECT e.event_type
+                FROM intake_followup_task_lifecycle_events e
+                WHERE e.task_id = t.id
+                ORDER BY e.id DESC
+                LIMIT 1
+            ), '') != 'no_successor_retired'
+        """
+
     cur.execute("""
-        SELECT intake_id,
+        SELECT t.intake_id,
                COUNT(*) AS total_count,
-               SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_count,
-               SUM(CASE WHEN status != 'completed' THEN 1 ELSE 0 END) AS open_count
-        FROM intake_followup_tasks
-        WHERE firm_id = ?
-        GROUP BY intake_id
+               SUM(
+                   CASE WHEN t.status = 'completed'
+                        THEN 1 ELSE 0 END
+               ) AS completed_count,
+               SUM(
+                   CASE WHEN t.status != 'completed'
+                        THEN 1 ELSE 0 END
+               ) AS open_count
+        FROM intake_followup_tasks t
+        WHERE t.firm_id = ?
+        """ + reconciliation_filter + retirement_filter + """
+        GROUP BY t.intake_id
     """, (firm_id,))
 
     rows = cur.fetchall()
