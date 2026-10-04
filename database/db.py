@@ -1805,18 +1805,54 @@ def get_next_document_id():
     return f"DOC-{count + 1:03d}"
 
 def create_document_record(doc_data):
+    doc_data = dict(doc_data)
     conn = get_connection()
     cur = conn.cursor()
+
+    trust_id = doc_data.get("trust_id")
+    if not trust_id:
+        conn.close()
+        raise ValueError("Document record requires trust_id.")
+
+    cur.execute(
+        "SELECT firm_id, owner_id FROM trusts WHERE trust_id = ?",
+        (trust_id,)
+    )
+    trust_scope = cur.fetchone()
+
+    if not trust_scope:
+        conn.close()
+        raise ValueError(f"Unknown trust_id for document record: {trust_id}")
+
+    firm_id = trust_scope["firm_id"]
+    owner_id = trust_scope["owner_id"]
+
+    if not firm_id or not owner_id:
+        conn.close()
+        raise ValueError(
+            f"Trust {trust_id} is missing canonical firm/owner scope."
+        )
+
     cur.execute("""
         INSERT INTO documents (
             document_id, trust_id, property_id, account_id,
             document_category, document_title, notes,
-            original_filename, stored_filename, file_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            original_filename, stored_filename, file_path,
+            owner_id, firm_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
-        doc_data["document_id"], doc_data["trust_id"], doc_data["property_id"], doc_data["account_id"],
-        doc_data["document_category"], doc_data["document_title"], doc_data["notes"],
-        doc_data["original_filename"], doc_data["stored_filename"], doc_data["file_path"],
+        doc_data["document_id"],
+        trust_id,
+        doc_data["property_id"],
+        doc_data["account_id"],
+        doc_data["document_category"],
+        doc_data["document_title"],
+        doc_data["notes"],
+        doc_data["original_filename"],
+        doc_data["stored_filename"],
+        doc_data["file_path"],
+        owner_id,
+        firm_id,
     ))
     conn.commit()
     conn.close()
