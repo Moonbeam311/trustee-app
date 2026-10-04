@@ -2658,9 +2658,11 @@ def evaluate_no_successor_retirement_eligibility(task_id, connection=None):
             },
             "intake_snapshot_versions": {
                 "snapshot_version_id", "intake_id", "firm_id",
+                "confirmation_status",
             },
             "intake_snapshot_proposed_tasks": {
                 "snapshot_version_id", "title", "materialized_followup_task_id",
+                "proposal_status",
             },
             "professional_review_issues": {
                 "linked_record_type", "linked_record_id",
@@ -2741,8 +2743,10 @@ def evaluate_no_successor_retirement_eligibility(task_id, connection=None):
         if materialized:
             reasons.append("task_materialized_from_governed_proposal")
 
-        governed_title_lineage = connection.execute("""
-            SELECT 1
+        lineage_rows = connection.execute("""
+            SELECT proposed.proposal_status,
+                   proposed.materialized_followup_task_id,
+                   version.confirmation_status
             FROM intake_snapshot_proposed_tasks proposed
             JOIN intake_snapshot_versions version
               ON version.snapshot_version_id = proposed.snapshot_version_id
@@ -2750,8 +2754,25 @@ def evaluate_no_successor_retirement_eligibility(task_id, connection=None):
               AND version.firm_id = ?
               AND LOWER(TRIM(COALESCE(proposed.title, ''))) =
                   LOWER(TRIM(COALESCE(?, '')))
-            LIMIT 1
-        """, (intake_id, firm_id, title)).fetchone() is not None
+        """, (intake_id, firm_id, title)).fetchall()
+
+        governed_title_lineage = False
+        for lineage in lineage_rows:
+            proposal_status = str(lineage[0] or "").strip().lower()
+            materialized_task_id = str(lineage[1] or "").strip()
+            confirmation_status = str(lineage[2] or "").strip().lower()
+
+            conclusively_superseded_unmaterialized = (
+                proposal_status == "superseded"
+                and confirmation_status == "superseded"
+                and not materialized_task_id
+            )
+            if conclusively_superseded_unmaterialized:
+                continue
+
+            governed_title_lineage = True
+            break
+
         if governed_title_lineage:
             reasons.append("governed_same_intake_title_lineage_exists")
 
@@ -2778,6 +2799,9 @@ def evaluate_no_successor_retirement_eligibility(task_id, connection=None):
             "is_reconciliation_replacement": replacement,
             "is_materialized_proposed_task": materialized,
             "has_governed_same_intake_title_lineage": governed_title_lineage,
+            "has_only_superseded_unmaterialized_same_title_lineage": bool(
+                lineage_rows and not governed_title_lineage
+            ),
             "has_professional_review_link": professional_review_link,
             "latest_lifecycle_event": latest_event,
             "effectively_retired": effectively_retired,

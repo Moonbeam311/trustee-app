@@ -49,7 +49,8 @@ def retirement_db(tmp_path, monkeypatch):
             CREATE TABLE intake_snapshot_versions (
                 snapshot_version_id TEXT PRIMARY KEY,
                 intake_id TEXT NOT NULL,
-                firm_id TEXT NOT NULL
+                firm_id TEXT NOT NULL,
+                confirmation_status TEXT
             )
         """)
         connection.execute("""
@@ -58,7 +59,8 @@ def retirement_db(tmp_path, monkeypatch):
                 snapshot_version_id TEXT NOT NULL,
                 generation_batch_id TEXT NOT NULL,
                 title TEXT,
-                materialized_followup_task_id TEXT
+                materialized_followup_task_id TEXT,
+                proposal_status TEXT
             )
         """)
         connection.execute("""
@@ -88,6 +90,7 @@ def retirement_db(tmp_path, monkeypatch):
             (9, "open", "Professional Review", None, None, None, None),
             (10, "pending_staff", "Reconciliation bridge", None, None, None, None),
             (11, "pending_staff", "Ordinary active", None, None, None, None),
+            (12, "pending_client", "Abandoned governed title", None, None, None, None),
         ])
         connection.executemany("""
             INSERT INTO intake_followup_reconciliations VALUES
@@ -96,14 +99,25 @@ def retirement_db(tmp_path, monkeypatch):
             ("R1", 5, 10),
             ("R2", 10, 6),
         ])
-        connection.execute(
-            "INSERT INTO intake_snapshot_versions VALUES ('S1', 'I1', 'F1')"
-        )
         connection.executemany("""
-            INSERT INTO intake_snapshot_proposed_tasks VALUES (?, 'S1', ?, ?, ?)
+            INSERT INTO intake_snapshot_versions
+            VALUES (?, 'I1', 'F1', ?)
         """, [
-            ("P1", "B1", "Different title", "7"),
-            ("P2", "B2", " governed TITLE ", None),
+            ("S1", "confirmed"),
+            ("S2", "superseded"),
+        ])
+        connection.executemany("""
+            INSERT INTO intake_snapshot_proposed_tasks (
+                proposed_task_id, snapshot_version_id, generation_batch_id,
+                title, materialized_followup_task_id, proposal_status
+            ) VALUES (?, ?, ?, ?, ?, ?)
+        """, [
+            ("P1", "S1", "B1", "Different title", "7", "materialized"),
+            ("P2", "S1", "B2", " governed TITLE ", None, "proposed"),
+            (
+                "P3", "S2", "B3", " abandoned governed title ",
+                None, "superseded",
+            ),
         ])
         connection.execute("""
             INSERT INTO professional_review_issues
@@ -183,6 +197,21 @@ def test_eligible_legacy_active_task(retirement_db):
     decision = _evaluate(retirement_db, 1)
     assert decision["eligible"] is True
     assert decision["reason_codes"] == []
+
+
+def test_superseded_unmaterialized_historical_lineage_does_not_block(
+    retirement_db,
+):
+    decision = _evaluate(retirement_db, 12)
+
+    assert decision["eligible"] is True
+    assert decision["reason_codes"] == []
+    assert decision["evidence"][
+        "has_governed_same_intake_title_lineage"
+    ] is False
+    assert decision["evidence"][
+        "has_only_superseded_unmaterialized_same_title_lineage"
+    ] is True
 
 
 @pytest.mark.parametrize(
