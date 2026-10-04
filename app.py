@@ -134,7 +134,7 @@ from services.services_intake import get_trust_instrument_recommendation_menu
 from services.services_intake import get_intake_session, get_universal_intake_questions, save_universal_profile_answers, ensure_intake_translation_tables
 from services.services_intake import build_client_snapshot, build_operational_document_requests
 from services.services_intake import save_client_snapshot, list_intake_dashboard, get_saved_client_snapshot, get_saved_client_snapshot_for_firm, ensure_intake_snapshot_tables
-from services.services_intake import list_intake_dashboard_with_controls, get_intake_resume_target
+from services.services_intake import list_intake_dashboard_with_controls, resolve_intake_continuation
 from services.services_intake import list_intake_dashboard_polished, prepare_snapshot_export_metadata
 from services.services_intake import create_intake_review_note, list_intake_review_notes, list_intake_dashboard_with_review_notes, get_review_note_form_options, ensure_intake_review_note_tables
 from services.services_intake import auto_generate_followup_tasks_from_snapshot, list_intake_followup_tasks, create_intake_followup_task, update_intake_followup_task_status, get_followup_task_form_options, list_intake_dashboard_with_tasks, ensure_intake_followup_task_tables
@@ -23902,16 +23902,31 @@ def intake_confirm_snapshot(intake_id):
 
 @app.route("/intake/<intake_id>/resume")
 def intake_resume(intake_id):
-    target = get_intake_resume_target(intake_id)
+    """
+    Passive governed continuation landing.
 
-    if not target:
-        flash("Intake session not found.", "warning")
+    This GET derives continuation state only. It does not refresh,
+    synchronize, bootstrap, upsert, or otherwise mutate intake state.
+    """
+    firm_id = str(session.get("firm_id") or "").strip()
+
+    if not firm_id:
+        flash("Firm context is unavailable for this intake.", "warning")
         return redirect(url_for("intake_dashboard"))
 
-    if target["route"] == "intake_saved_snapshot":
-        return redirect(url_for("intake_saved_snapshot", intake_id=intake_id))
+    continuation = resolve_intake_continuation(
+        intake_id,
+        firm_id,
+    )
 
-    return redirect(url_for("intake_universal_profile", intake_id=intake_id))
+    if continuation.get("stage") == "not_found":
+        flash("Intake session not found for this firm.", "warning")
+        return redirect(url_for("intake_dashboard"))
+
+    return render_template(
+        "intake/continuation.html",
+        continuation=continuation,
+    )
 
 
 @app.route("/intake/<intake_id>/export-prep")

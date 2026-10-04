@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set c = continuation %}
+
+<div class="card">
+    <h1>Continue Intake</h1>
+
+    <p>
+        Hindsfoot reviewed the governed intake record and derived
+        the current continuation stage without changing the record.
+    </p>
+
+    <p>
+        <strong>Intake ID:</strong>
+        {{ c.intake_id }}
+    </p>
+
+    <p>
+        <strong>Current Stage:</strong>
+        {{ c.stage_label or c.stage or "Unavailable" }}
+    </p>
+
+    <p>
+        <strong>Current State:</strong>
+        {{ c.state_label or c.state or "Unavailable" }}
+    </p>
+
+    {% if c.reason %}
+        <p>
+            <strong>Why:</strong>
+            {{ c.reason }}
+        </p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Current Governed Record</h2>
+
+    <p>
+        <strong>Open Professional Review Issues:</strong>
+        {% if c.open_issue_count is not none %}
+            {{ c.open_issue_count }}
+        {% else %}
+            Unavailable
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Blocking Issues:</strong>
+        {% if c.blocking_issue_count is not none %}
+            {{ c.blocking_issue_count }}
+        {% else %}
+            Unavailable
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Open Follow-Up Tasks:</strong>
+        {% if c.open_task_count is not none %}
+            {{ c.open_task_count }}
+        {% else %}
+            Unavailable
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Completed Follow-Up Tasks:</strong>
+        {% if c.completed_task_count is not none %}
+            {{ c.completed_task_count }}
+        {% else %}
+            Unavailable
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Document Checklist Items:</strong>
+        {% if c.document_count is not none %}
+            {{ c.document_count }}
+        {% else %}
+            Unavailable
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Drafting Questions:</strong>
+        {% if c.drafting_question_count is not none %}
+            {{ c.drafting_question_count }}
+        {% else %}
+            Unavailable
+        {% endif %}
+    </p>
+
+    {% if c.early_next_screen %}
+        <p>
+            <strong>Earlier Intake Checkpoint:</strong>
+            {{ c.early_next_screen }}
+            <br>
+            <small>
+                This is retained as historical intake state and does
+                not override a stronger governed downstream stage.
+            </small>
+        </p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2>Recommended Next Step</h2>
+
+    <p>
+        {{ c.recommended_action or
+           "Review the current continuation state before proceeding." }}
+    </p>
+
+    {% if c.stage == "professional_review" %}
+        <p>
+            <a href="{{ url_for(
+                'professional_review_issue_registry',
+                intake_id=c.intake_id
+            ) }}">
+                Open Professional Review Issues
+            </a>
+        </p>
+
+        <p>
+            <small>
+                Opening Professional Review is a deliberate action.
+                This continuation page itself does not synchronize,
+                refresh, or modify review records.
+            </small>
+        </p>
+
+    {% elif c.stage == "confirmation_review" %}
+        <p>
+            <a href="{{ url_for(
+                'intake_saved_snapshot',
+                intake_id=c.intake_id
+            ) }}">
+                Review Saved Intake Snapshot
+            </a>
+        </p>
+
+    {% elif c.stage == "intake" %}
+        <p>
+            <a href="{{ url_for(
+                'intake_universal_profile',
+                intake_id=c.intake_id
+            ) }}">
+                Continue Intake Questions
+            </a>
+        </p>
+
+    {% elif c.stage in ["snapshot_review", "completed"] %}
+        <p>
+            <a href="{{ url_for(
+                'intake_saved_snapshot',
+                intake_id=c.intake_id
+            ) }}">
+                View Saved Intake Snapshot
+            </a>
+        </p>
+    {% endif %}
+
+    <p>
+        <a href="{{ url_for('intake_dashboard') }}">
+            Return to Intake Dashboard
+        </a>
+    </p>
+</div>
+
+{% endblock %}
