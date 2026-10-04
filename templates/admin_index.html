@@ -67,7 +67,7 @@
       <a class="primary" href="{{ url_for('identity_intake') }}">Start New Intake</a>
       <a href="{{ url_for('intake_dashboard') }}">Continue Intake</a>
       <a href="{{ url_for('create_trust_launch') }}">Create Trust</a>
-      <a href="/resume">Resume Process</a>
+      <a href="/resume">Resume Transfer</a>
     </nav>
   </header>
 
@@ -100,7 +100,7 @@
   <section aria-labelledby="continue-heading">
     <div class="section-heading"><h2 id="continue-heading">Continue work</h2><p>Resume existing workflows without creating new state from the dashboard.</p></div>
     <div class="two-grid">
-      <article class="card"><h3>Resume an institutional workflow</h3><div class="action-list"><a class="primary" href="/resume">Resume Process</a><a href="{{ url_for('intake_dashboard') }}">Saved Intakes</a><a href="{{ url_for('matters_dashboard') }}">Open Matters</a><a href="{{ url_for('execution_dashboard') }}">Execution Work</a><a href="{{ url_for('execution_dashboard') }}">Transfers</a><a href="{{ url_for('document_dashboard') }}">Document Tasks</a></div></article>
+      <article class="card"><h3>Resume an institutional workflow</h3><div class="action-list"><a class="primary" href="/resume">Resume Transfer</a><a href="{{ url_for('intake_dashboard') }}">Saved Intakes</a><a href="{{ url_for('matters_dashboard') }}">Open Matters</a><a href="{{ url_for('execution_dashboard') }}">Execution Work</a><a href="{{ url_for('execution_dashboard') }}">Transfers</a><a href="{{ url_for('document_dashboard') }}">Document Tasks</a></div></article>
       <article class="card"><h3>Recent institutional activity</h3><p>Latest eight firm-scoped audit events; details and sensitive payloads are omitted.</p><ul class="activity-list">{% for item in admin_context.recent_activity %}<li><time>{{ item.created_at }}</time><strong>{{ item.action|replace('_',' ')|title }}</strong> · {{ item.entity_type|replace('_',' ')|title }}{% if item.entity_id %} {{ item.entity_id }}{% endif %}</li>{% else %}<li>No recent activity is available for this firm.</li>{% endfor %}</ul>{% if admin_context.can_view_audit %}<div class="action-list"><a href="{{ url_for('admin_audit_log') }}">Open Audit Log Viewer</a></div>{% endif %}</article>
     </div>
   </section>
