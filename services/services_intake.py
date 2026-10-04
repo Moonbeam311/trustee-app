@@ -1993,6 +1993,736 @@ def get_intake_resume_target(intake_id):
         "label": "Continue intake",
     }
 
+def resolve_intake_continuation(intake_id, firm_id):
+    """
+    Derive the current continuation state for one intake/firm.
+
+    This resolver is read-only. It must not create schema, refresh
+    projections, synchronize records, seed data, or write workflow state.
+    """
+    from database.db import get_readonly_connection
+
+    intake_id = str(intake_id or "").strip()
+    firm_id = str(firm_id or "").strip()
+
+    def base_result():
+        return {
+            "intake_id": intake_id,
+            "firm_id": firm_id,
+            "stage": None,
+            "state": None,
+            "stage_label": None,
+            "state_label": None,
+            "reason_code": None,
+            "reason": None,
+            "confirmed_answer_revision_id": None,
+            "confirmed_snapshot_version_id": None,
+            "pending_confirmation": None,
+            "workflow_key": None,
+            "document_key": None,
+            "open_issue_count": None,
+            "blocking_issue_count": None,
+            "open_task_count": None,
+            "completed_task_count": None,
+            "task_count": None,
+            "document_count": None,
+            "drafting_question_count": None,
+            "recommended_action": None,
+            "recommended_route": None,
+            "early_next_screen": None,
+            "evidence": [],
+            "is_terminal": False,
+            "safe_to_enter_recommended_route": False,
+        }
+
+    result = base_result()
+
+    if not intake_id or not firm_id:
+        result.update({
+            "stage": "not_found",
+            "state": "invalid_scope",
+            "stage_label": "Intake Not Available",
+            "state_label": "Invalid Scope",
+            "reason_code": "missing_intake_or_firm_scope",
+            "reason": "Both intake ID and firm ID are required.",
+        })
+        return result
+
+    connection = get_readonly_connection()
+
+    try:
+        def table_exists(table_name):
+            return connection.execute(
+                """
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'table'
+                  AND name = ?
+                LIMIT 1
+                """,
+                (table_name,),
+            ).fetchone() is not None
+
+        if not table_exists("intake_sessions"):
+            result.update({
+                "stage": "unavailable",
+                "state": "evidence_unavailable",
+                "stage_label": "Continuation Unavailable",
+                "state_label": "Evidence Unavailable",
+                "reason_code": "intake_sessions_table_unavailable",
+                "reason": (
+                    "The canonical intake-session source is unavailable."
+                ),
+            })
+            return result
+
+        intake = connection.execute(
+            """
+            SELECT
+                intake_id,
+                firm_id,
+                next_screen,
+                status,
+                completed_at,
+                created_at,
+                updated_at
+            FROM intake_sessions
+            WHERE intake_id = ?
+              AND firm_id = ?
+            LIMIT 1
+            """,
+            (intake_id, firm_id),
+        ).fetchone()
+
+        if not intake:
+            result.update({
+                "stage": "not_found",
+                "state": "not_found",
+                "stage_label": "Intake Not Found",
+                "state_label": "Not Found",
+                "reason_code": "scoped_intake_not_found",
+                "reason": (
+                    "No intake exists for the supplied intake and firm scope."
+                ),
+            })
+            return result
+
+        intake = dict(intake)
+        session_status = str(intake.get("status") or "").strip().lower()
+        early_next_screen = intake.get("next_screen")
+
+        result["early_next_screen"] = early_next_screen
+        result["evidence"].append({
+            "source": "intake_sessions",
+            "status": intake.get("status"),
+            "next_screen": early_next_screen,
+        })
+
+        # ----------------------------------------------------
+        # Version lifecycle
+        # ----------------------------------------------------
+        answer_table = table_exists("intake_answer_revisions")
+        snapshot_table = table_exists("intake_snapshot_versions")
+
+        answer_rows = []
+        snapshot_rows = []
+
+        if answer_table:
+            answer_rows = [
+                dict(row)
+                for row in connection.execute(
+                    """
+                    SELECT
+                        answer_revision_id,
+                        answer_revision_no,
+                        revision_status,
+                        supersedes_revision_id,
+                        created_at,
+                        confirmed_at
+                    FROM intake_answer_revisions
+                    WHERE intake_id = ?
+                      AND firm_id = ?
+                    ORDER BY answer_revision_no ASC, created_at ASC
+                    """,
+                    (intake_id, firm_id),
+                ).fetchall()
+            ]
+
+        if snapshot_table:
+            snapshot_rows = [
+                dict(row)
+                for row in connection.execute(
+                    """
+                    SELECT
+                        snapshot_version_id,
+                        answer_revision_id,
+                        snapshot_version_no,
+                        generation_batch_id,
+                        confirmation_status,
+                        supersedes_snapshot_id,
+                        generated_at,
+                        confirmed_at
+                    FROM intake_snapshot_versions
+                    WHERE intake_id = ?
+                      AND firm_id = ?
+                    ORDER BY snapshot_version_no ASC, generated_at ASC
+                    """,
+                    (intake_id, firm_id),
+                ).fetchall()
+            ]
+
+        confirmed_answers = [
+            row for row in answer_rows
+            if str(row.get("revision_status") or "").strip().lower()
+            == "confirmed"
+        ]
+
+        confirmed_snapshots = [
+            row for row in snapshot_rows
+            if str(row.get("confirmation_status") or "").strip().lower()
+            == "confirmed"
+        ]
+
+        if confirmed_answers:
+            confirmed_answer = max(
+                confirmed_answers,
+                key=lambda row: (
+                    row.get("answer_revision_no") or -1,
+                    row.get("created_at") or "",
+                ),
+            )
+            result["confirmed_answer_revision_id"] = (
+                confirmed_answer["answer_revision_id"]
+            )
+
+        if confirmed_snapshots:
+            confirmed_snapshot = max(
+                confirmed_snapshots,
+                key=lambda row: (
+                    row.get("snapshot_version_no") or -1,
+                    row.get("generated_at") or "",
+                ),
+            )
+            result["confirmed_snapshot_version_id"] = (
+                confirmed_snapshot["snapshot_version_id"]
+            )
+
+        if answer_table and snapshot_table:
+            pending_answer = any(
+                str(row.get("revision_status") or "").strip().lower()
+                not in {"confirmed", "superseded"}
+                for row in answer_rows
+            )
+
+            pending_snapshot = any(
+                str(row.get("confirmation_status") or "").strip().lower()
+                not in {"confirmed", "superseded"}
+                for row in snapshot_rows
+            )
+
+            result["pending_confirmation"] = (
+                pending_answer or pending_snapshot
+            )
+
+        result["evidence"].append({
+            "source": "version_lifecycle",
+            "answer_table_available": answer_table,
+            "snapshot_table_available": snapshot_table,
+            "confirmed_answer_revision_id": (
+                result["confirmed_answer_revision_id"]
+            ),
+            "confirmed_snapshot_version_id": (
+                result["confirmed_snapshot_version_id"]
+            ),
+            "pending_confirmation": result["pending_confirmation"],
+        })
+
+        # ----------------------------------------------------
+        # Professional Review substantive authority
+        # ----------------------------------------------------
+        issue_table = table_exists("professional_review_issues")
+        unresolved_issues = None
+        blocking_issues = None
+        issue_rows = []
+
+        if issue_table:
+            issue_rows = [
+                dict(row)
+                for row in connection.execute(
+                    """
+                    SELECT
+                        issue_id,
+                        workflow_key,
+                        severity,
+                        status,
+                        disposition,
+                        recommended_action,
+                        linked_record_type,
+                        linked_record_id,
+                        created_at,
+                        updated_at
+                    FROM professional_review_issues
+                    WHERE intake_id = ?
+                      AND firm_id = ?
+                    ORDER BY id ASC
+                    """,
+                    (intake_id, firm_id),
+                ).fetchall()
+            ]
+
+            unresolved_issues = [
+                row for row in issue_rows
+                if str(row.get("status") or "").strip().lower()
+                in {"open", "escalated"}
+            ]
+
+            blocking_issues = [
+                row for row in unresolved_issues
+                if str(row.get("severity") or "").strip().lower()
+                in {"critical", "major"}
+            ]
+
+            result["open_issue_count"] = len(unresolved_issues)
+            result["blocking_issue_count"] = len(blocking_issues)
+
+        result["evidence"].append({
+            "source": "professional_review_issues",
+            "available": issue_table,
+            "open_issue_count": result["open_issue_count"],
+            "blocking_issue_count": result["blocking_issue_count"],
+        })
+
+        # ----------------------------------------------------
+        # Governed follow-up task projection
+        # ----------------------------------------------------
+        task_tables = {
+            name: table_exists(name)
+            for name in (
+                "intake_followup_tasks",
+                "intake_followup_reconciliations",
+                "intake_followup_task_lifecycle_events",
+            )
+        }
+
+        if all(task_tables.values()):
+            task_counts = connection.execute(
+                """
+                WITH latest_lifecycle AS (
+                    SELECT
+                        e.task_id,
+                        e.event_type
+                    FROM intake_followup_task_lifecycle_events AS e
+                    INNER JOIN (
+                        SELECT
+                            task_id,
+                            MAX(id) AS max_id
+                        FROM intake_followup_task_lifecycle_events
+                        WHERE intake_id = ?
+                          AND firm_id = ?
+                        GROUP BY task_id
+                    ) AS latest
+                        ON latest.max_id = e.id
+                )
+                SELECT
+                    COUNT(*) AS task_count,
+                    SUM(
+                        CASE
+                            WHEN LOWER(
+                                TRIM(COALESCE(t.status, ''))
+                            ) = 'completed'
+                            THEN 1
+                            ELSE 0
+                        END
+                    ) AS completed_task_count,
+                    SUM(
+                        CASE
+                            WHEN LOWER(
+                                TRIM(COALESCE(t.status, ''))
+                            ) <> 'completed'
+                            THEN 1
+                            ELSE 0
+                        END
+                    ) AS open_task_count
+                FROM intake_followup_tasks AS t
+                LEFT JOIN latest_lifecycle AS lifecycle
+                    ON lifecycle.task_id = t.id
+                WHERE t.intake_id = ?
+                  AND t.firm_id = ?
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM intake_followup_reconciliations AS r
+                      WHERE r.superseded_followup_task_id = t.id
+                  )
+                  AND COALESCE(
+                      lifecycle.event_type,
+                      ''
+                  ) <> 'no_successor_retired'
+                """,
+                (
+                    intake_id,
+                    firm_id,
+                    intake_id,
+                    firm_id,
+                ),
+            ).fetchone()
+
+            result["task_count"] = int(task_counts["task_count"] or 0)
+            result["completed_task_count"] = int(
+                task_counts["completed_task_count"] or 0
+            )
+            result["open_task_count"] = int(
+                task_counts["open_task_count"] or 0
+            )
+
+        result["evidence"].append({
+            "source": "governed_followup_tasks",
+            "tables": task_tables,
+            "task_count": result["task_count"],
+            "open_task_count": result["open_task_count"],
+            "completed_task_count": result["completed_task_count"],
+        })
+
+        # ----------------------------------------------------
+        # Review gate
+        # ----------------------------------------------------
+        review_gate = None
+
+        if table_exists("intake_review_gate_ledger"):
+            row = connection.execute(
+                """
+                SELECT
+                    id,
+                    workflow_key,
+                    document_key,
+                    gate_name,
+                    gate_status,
+                    gate_reason,
+                    missing_answer_count,
+                    open_issue_count,
+                    open_task_count,
+                    document_status,
+                    created_at,
+                    updated_at
+                FROM intake_review_gate_ledger
+                WHERE intake_id = ?
+                  AND firm_id = ?
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """,
+                (intake_id, firm_id),
+            ).fetchone()
+
+            if row:
+                review_gate = dict(row)
+                result["evidence"].append({
+                    "source": "intake_review_gate_ledger",
+                    "gate_status": review_gate.get("gate_status"),
+                    "workflow_key": review_gate.get("workflow_key"),
+                    "document_key": review_gate.get("document_key"),
+                })
+
+        # ----------------------------------------------------
+        # Final-draft preparation gate
+        # ----------------------------------------------------
+        final_gate = None
+
+        if table_exists("intake_final_draft_prep_gate"):
+            row = connection.execute(
+                """
+                SELECT
+                    id,
+                    workflow_key,
+                    document_key,
+                    gate_status,
+                    gate_reason,
+                    questionnaire_complete,
+                    open_issues_reviewed,
+                    open_tasks_reviewed,
+                    professional_review_recorded,
+                    required_documents_acknowledged,
+                    admin_approved,
+                    created_at,
+                    updated_at
+                FROM intake_final_draft_prep_gate
+                WHERE intake_id = ?
+                  AND firm_id = ?
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """,
+                (intake_id, firm_id),
+            ).fetchone()
+
+            if row:
+                final_gate = dict(row)
+                result["evidence"].append({
+                    "source": "intake_final_draft_prep_gate",
+                    "gate_status": final_gate.get("gate_status"),
+                    "workflow_key": final_gate.get("workflow_key"),
+                    "document_key": final_gate.get("document_key"),
+                })
+
+        # ----------------------------------------------------
+        # Draft-readiness projection
+        # ----------------------------------------------------
+        draft_readiness = None
+
+        if table_exists("intake_draft_readiness_ledger"):
+            row = connection.execute(
+                """
+                SELECT
+                    id,
+                    workflow_key,
+                    draft_packet_type,
+                    readiness,
+                    open_issue_count,
+                    open_task_count,
+                    completed_task_count,
+                    document_count,
+                    drafting_question_count,
+                    status,
+                    created_at,
+                    updated_at
+                FROM intake_draft_readiness_ledger
+                WHERE intake_id = ?
+                  AND firm_id = ?
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """,
+                (intake_id, firm_id),
+            ).fetchone()
+
+            if row:
+                draft_readiness = dict(row)
+                result["document_count"] = (
+                    draft_readiness.get("document_count")
+                )
+                result["drafting_question_count"] = (
+                    draft_readiness.get("drafting_question_count")
+                )
+
+                result["evidence"].append({
+                    "source": "intake_draft_readiness_ledger",
+                    "status": draft_readiness.get("status"),
+                    "readiness": draft_readiness.get("readiness"),
+                    "projection_open_issue_count": (
+                        draft_readiness.get("open_issue_count")
+                    ),
+                    "projection_open_task_count": (
+                        draft_readiness.get("open_task_count")
+                    ),
+                })
+
+        # ----------------------------------------------------
+        # Precedence
+        # ----------------------------------------------------
+        if result["pending_confirmation"] is True:
+            result.update({
+                "stage": "confirmation_review",
+                "state": "confirmation_required",
+                "stage_label": "Answer / Snapshot Confirmation",
+                "state_label": "Confirmation Required",
+                "reason_code": "pending_confirmation",
+                "reason": (
+                    "A current answer revision or snapshot version "
+                    "requires confirmation before downstream continuation."
+                ),
+                "recommended_action": (
+                    "Review and confirm or correct the pending intake version."
+                ),
+            })
+            return result
+
+        if (
+            result["open_issue_count"] is not None
+            and result["open_issue_count"] > 0
+        ):
+            workflow_key = None
+            document_key = None
+
+            if review_gate:
+                workflow_key = review_gate.get("workflow_key")
+                document_key = review_gate.get("document_key")
+            elif issue_rows:
+                workflow_key = issue_rows[0].get("workflow_key")
+
+            result.update({
+                "stage": "professional_review",
+                "state": "blocked",
+                "stage_label": "Professional Review",
+                "state_label": "Review Required",
+                "reason_code": "unresolved_professional_review",
+                "reason": (
+                    "Unresolved Professional Review issues remain."
+                ),
+                "workflow_key": workflow_key,
+                "document_key": document_key,
+                "recommended_action": (
+                    "Continue Professional Review and resolve or "
+                    "properly disposition the remaining issues."
+                ),
+            })
+            return result
+
+        if review_gate:
+            review_status = str(
+                review_gate.get("gate_status") or ""
+            ).strip().lower()
+
+            if review_status == "professional_review_required":
+                result.update({
+                    "stage": "professional_review",
+                    "state": "blocked",
+                    "stage_label": "Professional Review",
+                    "state_label": "Review Required",
+                    "reason_code": "professional_review_required",
+                    "reason": (
+                        review_gate.get("gate_reason")
+                        or "Professional Review is required."
+                    ),
+                    "workflow_key": review_gate.get("workflow_key"),
+                    "document_key": review_gate.get("document_key"),
+                    "recommended_action": (
+                        "Continue the Professional Review workflow."
+                    ),
+                })
+                return result
+
+        if final_gate:
+            final_status = str(
+                final_gate.get("gate_status") or ""
+            ).strip().lower()
+
+            result.update({
+                "stage": "final_draft_preparation",
+                "state": final_status or "in_progress",
+                "stage_label": "Final Draft Preparation",
+                "state_label": (
+                    "Blocked"
+                    if final_status == "blocked"
+                    else (final_gate.get("gate_status") or "In Progress")
+                ),
+                "reason_code": (
+                    "final_draft_gate_blocked"
+                    if final_status == "blocked"
+                    else "final_draft_gate_active"
+                ),
+                "reason": (
+                    final_gate.get("gate_reason")
+                    or "Final-draft preparation has active gate state."
+                ),
+                "workflow_key": final_gate.get("workflow_key"),
+                "document_key": final_gate.get("document_key"),
+                "recommended_action": (
+                    "Address the final-draft preparation gate requirements."
+                    if final_status == "blocked"
+                    else "Continue final-draft preparation."
+                ),
+            })
+            return result
+
+        if review_gate:
+            result.update({
+                "stage": "review_gate",
+                "state": (
+                    str(review_gate.get("gate_status") or "").strip()
+                    or "in_progress"
+                ),
+                "stage_label": "Review Gate",
+                "state_label": (
+                    review_gate.get("gate_status") or "In Progress"
+                ),
+                "reason_code": "review_gate_active",
+                "reason": (
+                    review_gate.get("gate_reason")
+                    or "A governed review gate is active."
+                ),
+                "workflow_key": review_gate.get("workflow_key"),
+                "document_key": review_gate.get("document_key"),
+                "recommended_action": "Continue governed review.",
+            })
+            return result
+
+        if draft_readiness:
+            readiness_status = str(
+                draft_readiness.get("status") or ""
+            ).strip().lower()
+
+            result.update({
+                "stage": "draft_readiness",
+                "state": readiness_status or "in_progress",
+                "stage_label": "Draft Readiness",
+                "state_label": (
+                    draft_readiness.get("status") or "In Progress"
+                ),
+                "reason_code": (
+                    "draft_readiness_blocked"
+                    if readiness_status == "blocked"
+                    else "draft_readiness_active"
+                ),
+                "reason": (
+                    draft_readiness.get("readiness")
+                    or "Draft-readiness state is available."
+                ),
+                "workflow_key": draft_readiness.get("workflow_key"),
+                "recommended_action": (
+                    "Resolve draft-readiness blockers."
+                    if readiness_status == "blocked"
+                    else "Continue draft-readiness work."
+                ),
+            })
+            return result
+
+        if session_status == "completed":
+            result.update({
+                "stage": "completed",
+                "state": "completed",
+                "stage_label": "Intake Complete",
+                "state_label": "Completed",
+                "reason_code": "intake_completed",
+                "reason": "The intake is recorded as completed.",
+                "recommended_action": "Review the completed intake record.",
+                "is_terminal": True,
+            })
+            return result
+
+        if session_status in {"snapshot_saved", "scored"}:
+            result.update({
+                "stage": "snapshot_review",
+                "state": "available",
+                "stage_label": "Saved Intake Snapshot",
+                "state_label": "Available",
+                "reason_code": "saved_snapshot_checkpoint",
+                "reason": (
+                    "A saved/scored intake checkpoint exists, but it is "
+                    "not treated as terminal by the continuation resolver."
+                ),
+                "recommended_action": (
+                    "Review the saved answers or continue from the "
+                    "current governed workflow when one exists."
+                ),
+            })
+            return result
+
+        result.update({
+            "stage": "intake",
+            "state": "in_progress",
+            "stage_label": "Intake",
+            "state_label": "In Progress",
+            "reason_code": "early_intake_fallback",
+            "reason": (
+                "No stronger downstream governed continuation state "
+                "was found."
+            ),
+            "recommended_action": (
+                "Continue the intake from the saved early-intake screen."
+            ),
+        })
+        return result
+
+    finally:
+        connection.close()
+
+
 
 def list_intake_dashboard_with_controls(limit=100):
     items = list_intake_dashboard(limit=limit)

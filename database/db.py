@@ -878,6 +878,21 @@ def get_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+def get_readonly_connection():
+    """
+    Open the configured SQLite database in strict read-only mode.
+
+    This helper must not create parent directories, create a database,
+    bootstrap schema, run migrations, or commit writes.
+    """
+    from pathlib import Path
+
+    database_uri = f"file:{Path(DB_PATH).as_posix()}?mode=ro"
+    conn = sqlite3.connect(database_uri, uri=True)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 
 def ensure_transfer_runtime_columns():
     """
