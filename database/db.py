@@ -678,6 +678,106 @@ def update_professional_review_issue(issue_id, firm_id, disposition, reviewer_no
     return event_id
 
 
+
+def get_professional_review_issue_notes(issue_id, firm_id):
+    """Return append-only clarification/note events for one governed issue."""
+    ensure_professional_review_issue_tables()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT event_id,
+               issue_id,
+               intake_id,
+               firm_id,
+               event_type,
+               event_notes,
+               actor,
+               actor_capacity,
+               created_at
+        FROM professional_review_issue_events
+        WHERE issue_id = ?
+          AND firm_id = ?
+          AND event_type = 'issue_note_added'
+        ORDER BY id DESC
+    """, (issue_id, firm_id))
+
+    rows = cur.fetchall()
+    conn.close()
+    return rows
+
+
+def record_professional_review_issue_note(
+    issue_id,
+    firm_id,
+    note_text,
+    actor,
+    actor_capacity,
+):
+    """
+    Append a Professional Review clarification/note event without changing
+    issue status, disposition, reviewer_notes, resolution timestamps, linked
+    task state, or build-assumption state.
+    """
+    note_text = "" if note_text is None else str(note_text)
+
+    if not note_text.strip():
+        raise ValueError(
+            "Professional review issue note cannot be blank."
+        )
+
+    import uuid
+
+    ensure_professional_review_issue_tables()
+
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    issue = cur.execute("""
+        SELECT issue_id, intake_id, firm_id
+        FROM professional_review_issues
+        WHERE issue_id = ?
+          AND firm_id = ?
+    """, (issue_id, firm_id)).fetchone()
+
+    if not issue:
+        conn.close()
+        return None
+
+    event_id = "PRIE-" + uuid.uuid4().hex[:10].upper()
+
+    cur.execute("""
+        INSERT INTO professional_review_issue_events (
+            event_id,
+            issue_id,
+            intake_id,
+            firm_id,
+            event_type,
+            event_notes,
+            actor,
+            actor_capacity
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        event_id,
+        issue_id,
+        issue["intake_id"],
+        firm_id,
+        "issue_note_added",
+        note_text,
+        actor or "system",
+        actor_capacity or "Admin",
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return event_id
+
+
 def reconcile_professional_review_issue_source_state_for_task(
     task_id,
     actor=None,

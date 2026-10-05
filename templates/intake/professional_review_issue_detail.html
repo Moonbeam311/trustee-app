@@ -39,6 +39,78 @@
 </div>
 
 <div class="card">
+  <h2>Issue Clarification / Note</h2>
+
+  <p>
+    This creates an append-only issue note. It does not change
+    the issue disposition, resolution timestamps, linked task
+    state, or build-assumption state.
+  </p>
+
+  <form method="POST">
+    <input
+      type="hidden"
+      name="action"
+      value="add_issue_note"
+    >
+
+    <label>Reviewer Capacity</label>
+    <input
+      type="text"
+      name="note_actor_capacity"
+      value="Admin Reviewer"
+    >
+
+    <label>Clarification / Note</label>
+    <textarea
+      name="issue_note"
+      rows="6"
+      required
+    ></textarea>
+
+    <br><br>
+
+    <button type="submit">
+      Add Issue Note
+    </button>
+  </form>
+
+  <h3>Issue Note History</h3>
+
+  {% if issue_notes %}
+    {% for note in issue_notes %}
+      <div class="card">
+        <p>
+          <strong>Event:</strong>
+          {{ note["event_id"] }}
+        </p>
+
+        <p>
+          <strong>Recorded:</strong>
+          {{ note["created_at"] }}
+        </p>
+
+        <p>
+          <strong>Actor:</strong>
+          {{ note["actor"] }}
+        </p>
+
+        <p>
+          <strong>Capacity:</strong>
+          {{ note["actor_capacity"] }}
+        </p>
+
+        <pre style="white-space: pre-wrap;">{{ note["event_notes"] }}</pre>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>
+      No append-only issue notes have been recorded.
+    </p>
+  {% endif %}
+</div>
+
+<div class="card">
   <h2>Reviewer Action</h2>
 
   <form method="POST">

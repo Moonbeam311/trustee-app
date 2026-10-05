@@ -52,15 +52,15 @@ def route_client(monkeypatch):
     monkeypatch.setattr(app_module, "log_change", lambda *args, **kwargs: None)
     monkeypatch.setattr(app_module, "get_export_policy", lambda: {"allow_exports": True, "read_only_mode": False})
     app_module.app.config.update(TESTING=True, SECRET_KEY="test-secret")
-    def post(form):
+    def post(form, issue_id=ISSUE_ID):
         with app_module.app.test_request_context(
-            f"/intake/professional-review/issues/{ISSUE_ID}", method="POST", data=form
+            f"/intake/professional-review/issues/{issue_id}", method="POST", data=form
         ):
             app_module.session["user_id"] = "USER-1"
             app_module.session["username"] = "reviewer"
             app_module.session["firm_id"] = FIRM_ID
             app_module.session["role"] = "Admin"
-            response = app_module.professional_review_issue_detail(ISSUE_ID)
+            response = app_module.professional_review_issue_detail(issue_id)
             flashes = list(app_module.session.get("_flashes", []))
             return response, flashes
 
@@ -210,3 +210,326 @@ def test_draft_packet_preserves_legacy_list_and_exposes_truthful_sidecar(monkeyp
     assert [record["issue_description"] for record in packet["open_issue_records"]] == packet["open_issues"]
     assert all(record["linked_record_type"] is None for record in packet["open_issue_records"])
     assert all(record["linked_record_id"] is None for record in packet["open_issue_records"])
+
+# PRI-APPEND-ONLY-NOTE-1A
+def _insert_append_only_note_test_issue(
+    db_module,
+    issue_id,
+    firm_id="FIRM-001",
+):
+    db_module.ensure_professional_review_issue_tables()
+
+    conn = db_module.get_connection()
+
+    conn.execute(
+        """
+        INSERT INTO professional_review_issues (
+            issue_id,
+            intake_id,
+            firm_id,
+            workflow_key,
+            issue_source,
+            issue_category,
+            severity,
+            issue_title,
+            issue_description,
+            linked_record_type,
+            linked_record_id,
+            recommended_action,
+            status,
+            disposition,
+            reviewer_notes,
+            resolved_by,
+            resolved_capacity,
+            resolved_at,
+            created_by,
+            updated_at
+        )
+        VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
+        """,
+        (
+            issue_id,
+            "INTAKE-NOTE-TEST",
+            firm_id,
+            "professional_review_checklist",
+            "draft_packet_open_issue",
+            "Professional Review",
+            "major",
+            "Authority documents should be verified",
+            "Authority documents should be verified",
+            "intake_followup_task",
+            "36",
+            "Review this issue.",
+            "escalated",
+            "escalated",
+            "Original governed reviewer notes.",
+            "personal-admin",
+            "Admin Reviewer",
+            "2026-10-04T21:48:01.244231+00:00",
+            "personal-admin",
+            "2026-10-04T21:48:01.244231+00:00",
+        ),
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def _append_only_note_issue_state(
+    db_module,
+    issue_id,
+    firm_id="FIRM-001",
+):
+    conn = db_module.get_connection()
+
+    row = conn.execute(
+        """
+        SELECT
+            status,
+            disposition,
+            reviewer_notes,
+            resolved_by,
+            resolved_capacity,
+            resolved_at,
+            updated_at
+        FROM professional_review_issues
+        WHERE issue_id = ?
+          AND firm_id = ?
+        """,
+        (issue_id, firm_id),
+    ).fetchone()
+
+    conn.close()
+
+    return tuple(row)
+
+
+def test_issue_note_helper_is_append_only_and_state_neutral(
+    isolated_db,
+):
+    from database import db as db_module
+
+    issue_id = "PRI-NOTE-HELPER-TEST"
+    firm_id = "FIRM-001"
+
+    note_text = (
+        "Administrative clarification.\n"
+        "Second line preserved exactly."
+    )
+
+    _insert_append_only_note_test_issue(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    before = _append_only_note_issue_state(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    event_id = db_module.record_professional_review_issue_note(
+        issue_id=issue_id,
+        firm_id=firm_id,
+        note_text=note_text,
+        actor="personal-admin",
+        actor_capacity="Admin Reviewer",
+    )
+
+    after = _append_only_note_issue_state(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    assert before == after
+    assert event_id
+    assert event_id.startswith("PRIE-")
+
+    conn = db_module.get_connection()
+
+    event = conn.execute(
+        """
+        SELECT
+            event_type,
+            event_notes,
+            actor,
+            actor_capacity
+        FROM professional_review_issue_events
+        WHERE event_id = ?
+        """,
+        (event_id,),
+    ).fetchone()
+
+    conn.close()
+
+    assert tuple(event) == (
+        "issue_note_added",
+        note_text,
+        "personal-admin",
+        "Admin Reviewer",
+    )
+
+    notes = db_module.get_professional_review_issue_notes(
+        issue_id,
+        firm_id,
+    )
+
+    assert len(notes) == 1
+    assert notes[0]["event_id"] == event_id
+    assert notes[0]["event_notes"] == note_text
+
+
+def test_issue_note_helper_rejects_blank_without_event(
+    isolated_db,
+):
+    import pytest
+    from database import db as db_module
+
+    issue_id = "PRI-NOTE-BLANK-TEST"
+    firm_id = "FIRM-001"
+
+    _insert_append_only_note_test_issue(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    with pytest.raises(ValueError):
+        db_module.record_professional_review_issue_note(
+            issue_id=issue_id,
+            firm_id=firm_id,
+            note_text="   ",
+            actor="personal-admin",
+            actor_capacity="Admin Reviewer",
+        )
+
+    conn = db_module.get_connection()
+
+    count = conn.execute(
+        """
+        SELECT COUNT(*)
+        FROM professional_review_issue_events
+        WHERE issue_id = ?
+          AND firm_id = ?
+        """,
+        (issue_id, firm_id),
+    ).fetchone()[0]
+
+    conn.close()
+
+    assert count == 0
+
+
+def test_route_add_issue_note_does_not_reassert_disposition(
+    route_client,
+    isolated_db,
+):
+    from database import db as db_module
+
+    issue_id = "PRI-NOTE-ROUTE-TEST"
+    firm_id = FIRM_ID
+    note_text = "Route-level append-only clarification."
+
+    _insert_append_only_note_test_issue(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    before = _append_only_note_issue_state(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    post, calls = route_client
+
+    response, _ = post(
+        {
+            "action": "add_issue_note",
+            "issue_note": note_text,
+            "note_actor_capacity": "Admin Reviewer",
+        },
+        issue_id=issue_id,
+    )
+
+    assert response.status_code in (302, 303)
+    assert calls == []
+
+    after = _append_only_note_issue_state(
+        db_module,
+        issue_id,
+        firm_id,
+    )
+
+    assert before == after
+
+    conn = db_module.get_connection()
+
+    events = conn.execute(
+        """
+        SELECT event_type, event_notes
+        FROM professional_review_issue_events
+        WHERE issue_id = ?
+          AND firm_id = ?
+        ORDER BY id
+        """,
+        (issue_id, firm_id),
+    ).fetchall()
+
+    conn.close()
+
+    assert [tuple(row) for row in events] == [
+        ("issue_note_added", note_text),
+    ]
+
+
+def test_detail_template_has_separate_blank_append_only_note_form():
+    from pathlib import Path
+
+    text = Path(
+        "templates/intake/"
+        "professional_review_issue_detail.html"
+    ).read_text(
+        encoding="utf-8"
+    )
+
+    start = text.index(
+        "<h2>Issue Clarification / Note</h2>"
+    )
+
+    end = text.index(
+        "<h2>Reviewer Action</h2>"
+    )
+
+    block = text[start:end]
+
+    assert (
+        'name="action"'
+        in block
+    )
+
+    assert (
+        'value="add_issue_note"'
+        in block
+    )
+
+    assert (
+        'name="issue_note"'
+        in block
+    )
+
+    assert (
+        'name="note_actor_capacity"'
+        in block
+    )
+
+    assert (
+        'issue["reviewer_notes"]'
+        not in block
+    )

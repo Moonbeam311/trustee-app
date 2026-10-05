@@ -28893,7 +28893,9 @@ def professional_review_issue_detail(issue_id):
     from database.db import (
         get_professional_review_issue,
         get_professional_review_issue_build_assumption,
+        get_professional_review_issue_notes,
         record_professional_review_build_assumption,
+        record_professional_review_issue_note,
         update_professional_review_issue,
     )
 
@@ -28905,6 +28907,60 @@ def professional_review_issue_detail(issue_id):
         return redirect(url_for("intake_dashboard"))
 
     if request.method == "POST":
+        if request.form.get("action") == "add_issue_note":
+            note_text = request.form.get("issue_note") or ""
+            actor = session.get("username") or "system"
+            actor_capacity = (
+                request.form.get("note_actor_capacity")
+                or session.get("role")
+                or "Admin"
+            )
+
+            if not note_text.strip():
+                flash(
+                    "A clarification/note is required.",
+                    "warning",
+                )
+                return redirect(url_for(
+                    "professional_review_issue_detail",
+                    issue_id=issue_id,
+                ))
+
+            event_id = record_professional_review_issue_note(
+                issue_id=issue_id,
+                firm_id=firm_id,
+                note_text=note_text,
+                actor=actor,
+                actor_capacity=actor_capacity,
+            )
+
+            if event_id:
+                log_change(
+                    "professional_review_issue",
+                    issue_id,
+                    "issue_note_added",
+                    (
+                        f"Event={event_id}; "
+                        f"Intake={issue['intake_id']}; "
+                        f"Actor={actor}"
+                    ),
+                )
+                flash(
+                    "Issue clarification/note added without "
+                    "changing disposition.",
+                    "success",
+                )
+            else:
+                flash(
+                    "Issue clarification/note could not be recorded.",
+                    "warning",
+                )
+
+            return redirect(url_for(
+                "professional_review_issue_detail",
+                issue_id=issue_id,
+            ))
+
         if request.form.get("action") == "assume_for_build":
             reason = request.form.get("assumption_reason") or ""
             if not reason.strip():
@@ -28964,6 +29020,10 @@ def professional_review_issue_detail(issue_id):
     return render_template(
         "intake/professional_review_issue_detail.html",
         issue=issue,
+        issue_notes=get_professional_review_issue_notes(
+            issue_id,
+            firm_id=firm_id,
+        ),
         build_assumption=get_professional_review_issue_build_assumption(
             issue_id, firm_id=firm_id
         ),
