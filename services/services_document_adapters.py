@@ -1,3 +1,5 @@
+import sqlite3
+
 from services.services_document_object_model import build_document_object
 
 
@@ -6,6 +8,49 @@ class DocumentAdapter:
 
     def list_objects(self):
         return []
+
+
+class WillDocumentAdapter(DocumentAdapter):
+    """Expose canonical generated Will candidates without inventing Will truth."""
+
+    document_type = "Will"
+
+    def list_objects(self):
+        from database.db import get_connection
+
+        connection = get_connection()
+        try:
+            tables = {row[0] for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type='table'"
+            )}
+            if "generated_documents" not in tables:
+                return []
+            columns = {row[1] for row in connection.execute(
+                "PRAGMA table_info(generated_documents)"
+            )}
+            if not {"document_id", "template_id", "title", "status"}.issubset(columns):
+                return []
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                "SELECT * FROM generated_documents WHERE template_id='REVIEW-BUNDLE-WILL-V1' ORDER BY document_id"
+            ).fetchall()
+        finally:
+            connection.close()
+        return [build_document_object(
+            document_id=row["document_id"], document_type="Will", title=row["title"],
+            module_name="Professional Review", source_record_type="generated_document",
+            source_record_id=row["document_id"], status=row["status"],
+            lifecycle_status="professional-review-non-execution",
+            governance_policy="Controlled", retention_policy="Permanent",
+            relationships=[], timeline=[{
+                "event_id": f"DADAPT-WILL-{row['document_id']}",
+                "event_type": "Will Review Candidate Generated",
+                "event_status": row["status"],
+                "event_reason": "Existing generated-document candidate exposed through the Universal Document Adapter.",
+                "actor": row["created_by"] if "created_by" in row.keys() else "system",
+            }], verification={"verified": True, "verification_status": "generated-document-attributed"},
+            payload={"template_id": row["template_id"], "non_execution": True},
+        ) for row in rows]
 
 
 class TrustDocumentAdapter(DocumentAdapter):
@@ -454,6 +499,7 @@ class TransferDocumentAdapter(DocumentAdapter):
 
 
 DOCUMENT_ADAPTERS = {
+    "Will": WillDocumentAdapter(),
     "Trust": TrustDocumentAdapter(),
     "Trust Minute": TrustMinuteDocumentAdapter(),
     "Certificate": CertificateDocumentAdapter(),

@@ -1,5 +1,21 @@
 DOCUMENT_TEMPLATES = [
     {
+        "template_id": "DTPL-WILL-REVIEW-001",
+        "name": "Will Professional Review Candidate",
+        "category": "professional-review",
+        "description": "Controlled non-execution layout for governed Will review candidates.",
+        "engine": "Professional Review Bundle Renderer",
+        "page_size": "Letter",
+        "supports_seal": False,
+        "supports_signature": False,
+        "supports_qr": False,
+        "supports_barcode": False,
+        "supports_watermark": True,
+        "supports_packet_cover": True,
+        "default_for": "Will",
+        "status": "ACTIVE",
+    },
+    {
         "template_id": "DTPL-000001",
         "name": "Institutional Standard Document",
         "category": "core",

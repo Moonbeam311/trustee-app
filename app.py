@@ -29,7 +29,7 @@ import base64
 import hashlib
 import secrets
 from flask_wtf.csrf import CSRFProtect, CSRFError, generate_csrf as generate_wtf_csrf_token
-from flask import session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
+from flask import abort, session, Flask, request, render_template, redirect, url_for, make_response, flash, send_file
 from services.services_execution_recovery import get_archive_topology, build_continuity_dashboard_profile
 from services.services_object_dashboard import build_object_dashboard_context
 from services.services_system_workspace import build_system_workspace_oversight
@@ -28882,6 +28882,75 @@ def professional_review_issue_registry(intake_id):
         issues=issues,
         summary=summary,
     )
+
+
+@app.route("/intake/<intake_id>/professional-review/will-bundle", methods=["POST"])
+@csrf.exempt
+def generate_will_professional_review_bundle(intake_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+    from services.services_professional_review_bundles import (
+        WILL_BUNDLE, generate_review_bundle,
+    )
+    result = generate_review_bundle(
+        DB_PATH,
+        Path(os.getenv("REVIEW_BUNDLE_EXPORT_ROOT", str(Path("exports") / "review_bundles"))),
+        bundle_type=WILL_BUNDLE,
+        source_id=intake_id,
+        intake_id=intake_id,
+        matter_id=request.form.get("matter_id") or None,
+        firm_id=session.get("firm_id", "FIRM-001"),
+        owner_id=str(session.get("user_id") or session.get("username")),
+        generated_by=session.get("username") or "system",
+    )
+    flash("Will Professional Review bundle generated without changing issue or task state.", "success")
+    return redirect(url_for("download_professional_review_bundle", bundle_id=result["bundle_id"]))
+
+
+@app.route("/trust/<trust_id>/professional-review/tr001-bundle", methods=["POST"])
+@csrf.exempt
+def generate_tr001_professional_review_bundle(trust_id):
+    gate = deny_unassigned_trust_access(trust_id)
+    if gate:
+        return gate
+    from services.services_professional_review_bundles import (
+        TR001_BUNDLE, generate_review_bundle,
+    )
+    result = generate_review_bundle(
+        DB_PATH,
+        Path(os.getenv("REVIEW_BUNDLE_EXPORT_ROOT", str(Path("exports") / "review_bundles"))),
+        bundle_type=TR001_BUNDLE,
+        source_id=trust_id,
+        intake_id=request.form.get("intake_id") or None,
+        matter_id=request.form.get("matter_id") or None,
+        firm_id=session.get("firm_id", "FIRM-001"),
+        owner_id=str(session.get("user_id") or session.get("username")),
+        generated_by=session.get("username") or "system",
+    )
+    flash("TR-001 Professional Review bundle generated; Trust and review state were not changed.", "success")
+    return redirect(url_for("download_professional_review_bundle", bundle_id=result["bundle_id"]))
+
+
+@app.route("/professional-review/bundles/<bundle_id>/download")
+def download_professional_review_bundle(bundle_id):
+    if not session.get("user_id") and not session.get("username"):
+        return redirect(url_for("login"))
+    from services.services_professional_review_bundles import get_review_bundle
+    metadata = get_review_bundle(
+        DB_PATH,
+        bundle_id=bundle_id,
+        firm_id=session.get("firm_id", "FIRM-001"),
+        owner_id=str(session.get("user_id") or session.get("username")),
+    )
+    if not metadata:
+        abort(404)
+    package_path = Path(metadata["package_path"]).resolve()
+    configured_root = Path(os.getenv("REVIEW_BUNDLE_EXPORT_ROOT", str(Path("exports") / "review_bundles"))).resolve()
+    if configured_root not in package_path.parents or not package_path.is_file():
+        abort(404)
+    if hashlib.sha256(package_path.read_bytes()).hexdigest() != metadata["package_sha256"]:
+        abort(409)
+    return send_file(package_path, as_attachment=True, download_name=f"{bundle_id}.zip")
 
 
 @app.route("/intake/professional-review/issues/<issue_id>", methods=["GET", "POST"])

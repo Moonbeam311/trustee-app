@@ -4,6 +4,7 @@ from services.services_document_object_model import build_document_object
 
 DOCUMENT_TYPES = [
     {"document_type": "Trust", "module_name": "Trust Registry"},
+    {"document_type": "Will", "module_name": "Professional Review"},
     {"document_type": "Trust Minute", "module_name": "Trust Minutes"},
     {"document_type": "Certificate", "module_name": "Certificate Studio"},
     {"document_type": "Transfer", "module_name": "Execution Transfers"},

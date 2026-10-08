@@ -34,6 +34,10 @@
       Back to Draft Readiness Ledger
     </a>
   </p>
+  <form method="post" action="{{ url_for('generate_will_professional_review_bundle', intake_id=intake_id) }}">
+    <button type="submit">Generate Will Professional Review Bundle</button>
+    <p><small>Produces a non-execution candidate from canonical records. Open issues remain unchanged.</small></p>
+  </form>
 </div>
 
 <h2>Issues</h2>

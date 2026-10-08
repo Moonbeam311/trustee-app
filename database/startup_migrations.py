@@ -67,6 +67,10 @@ from database.migrations_trust_field_revisions import (
     apply_trust_field_revision_schema,
     TrustFieldRevisionMigrationError,
 )
+from database.migrations_hindsfoot_review_repair_1c_r3 import (
+    apply_hindsfoot_review_repair_r3_schema,
+    HindsfootReviewRepairR3MigrationError,
+)
 
 
 def run_additive_startup_migrations(
@@ -290,6 +294,14 @@ def run_additive_startup_migrations(
             "records_created": 0,
         }
 
+    try:
+        hindsfoot_r3_result = apply_hindsfoot_review_repair_r3_schema(db_path)
+    except HindsfootReviewRepairR3MigrationError as exc:
+        hindsfoot_r3_result = {
+            "schema_complete": False, "deferred": True, "reason": str(exc),
+            "records_created": 0,
+        }
+
     return {
         "matter_intake_bridge": result,
         "successor_acceptance": acceptance_result,
@@ -307,6 +319,7 @@ def run_additive_startup_migrations(
         "magc1_wave4": magc1_wave4_result,
         "property_fact_schema": property_fact_result,
         "trust_field_revision_schema": trust_field_revision_result,
+        "hindsfoot_review_repair_r3": hindsfoot_r3_result,
         "operational_links_created": result.get("link_rows", 0),
         "operational_events_created": result.get("event_rows", 0),
         "acceptance_records_created": 0,

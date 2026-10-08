@@ -1,5 +1,6 @@
 """Wave-5 clause revision and generation provenance extension service."""
 
+import hashlib
 import re
 import sqlite3
 import uuid
@@ -15,6 +16,43 @@ GENERATION_STATES = {"UNRESOLVED", "PROPOSED", "AUTHORIZED", "APPLIED", "REJECTE
 CONTEXT_TYPES = {"PROGRAM", "MATTER", "TRUST", "OTHER"}
 DECISION_ORIGINS = {"SYSTEM_SUGGESTED", "OPERATOR_OR_FIDUCIARY", "PROFESSIONAL"}
 HUMAN_ORIGINS = {"OPERATOR_OR_FIDUCIARY", "PROFESSIONAL"}
+
+
+def register_clause_revision_content(db_path, *, clause_revision_id,
+                                     renderable_content, created_by,
+                                     content_format="text/plain", created_at=None):
+    """Bind exact UTF-8 text to its hash-owning revision, once."""
+    if not isinstance(renderable_content, str):
+        raise DocumentClauseProvenanceError("renderable_content_required")
+    if content_format != "text/plain":
+        raise DocumentClauseProvenanceError("unsupported_content_format")
+    created_by = _required(created_by, "created_by_required")
+    digest = hashlib.sha256(renderable_content.encode("utf-8")).hexdigest()
+    with sqlite3.connect(str(db_path)) as connection:
+        connection.row_factory = sqlite3.Row
+        revision = connection.execute(
+            "SELECT * FROM document_template_clause_revisions WHERE clause_revision_id=?",
+            (clause_revision_id,),
+        ).fetchone()
+        if not revision: raise DocumentClauseProvenanceError("clause_revision_not_found")
+        existing = connection.execute(
+            "SELECT * FROM document_clause_revision_content WHERE clause_revision_id=?",
+            (clause_revision_id,),
+        ).fetchone()
+        if existing:
+            if existing["renderable_content"] == renderable_content and existing["content_format"] == content_format:
+                return dict(existing)
+            raise DocumentClauseProvenanceError("CLAUSE_REVISION_CONTENT_IMMUTABLE")
+        if digest != revision["content_sha256"]:
+            raise DocumentClauseProvenanceError("CLAUSE_CONTENT_HASH_MISMATCH")
+        connection.execute("""INSERT INTO document_clause_revision_content
+          (clause_revision_id,renderable_content,content_format,created_by,created_at)
+          VALUES (?,?,?,?,?)""", (clause_revision_id,renderable_content,content_format,
+                                  created_by,created_at or _now()))
+        return dict(connection.execute(
+            "SELECT * FROM document_clause_revision_content WHERE clause_revision_id=?",
+            (clause_revision_id,),
+        ).fetchone())
 
 
 def _now():

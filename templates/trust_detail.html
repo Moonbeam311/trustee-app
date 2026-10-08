@@ -56,6 +56,16 @@
     <p><strong>Status:</strong> {{ trust.status }}</p>
 </div>
 
+<section style="border:1px solid #ddd; padding:16px; border-radius:8px; margin-bottom:20px;">
+    <h3>TR-001 Professional Review</h3>
+    <p>Generate controlled New Jersey counsel and tax review material. This does not execute, amend, fund, or accept trusteeship for the Trust.</p>
+    <form method="post" action="{{ url_for('generate_tr001_professional_review_bundle', trust_id=trust.trust_id) }}">
+        <label>Linked intake ID (optional) <input name="intake_id" type="text"></label>
+        <label>Matter ID (optional) <input name="matter_id" type="text"></label>
+        <button type="submit">Generate TR-001 Professional Review Bundle</button>
+    </form>
+</section>
+
 {% include "governance/_trust_governance_panel.html" %}
 {% include "governance/_trust_governance_summary.html" %}
 {% include "governance/_trust_governance_timeline.html" %}
